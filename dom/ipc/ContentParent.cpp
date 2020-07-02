@@ -6057,9 +6057,20 @@ ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
     const MaybeDiscarded<BrowsingContext>& aParentContext,
     const Principal& aTrackingPrincipal, const nsCString& aTrackingOrigin,
     const int& aAllowMode,
+    const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+        aReason,
     StorageAccessPermissionGrantedForOriginResolver&& aResolver) {
   if (aParentContext.IsNullOrDiscarded()) {
     return IPC_OK();
+  }
+
+  // We only report here if we cannot report the console directly in the content
+  // process. In that case, the `aReason` would be given a value. Otherwise, it
+  // will be nothing.
+  if (aReason) {
+    ContentBlockingNotifier::ReportUnblockingToConsole(
+        aParentContext.get_canonical(), NS_ConvertUTF8toUTF16(aTrackingOrigin),
+        aReason.value());
   }
 
   ContentBlocking::SaveAccessForOriginOnParentProcess(
