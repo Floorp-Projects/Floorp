@@ -21,6 +21,8 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tady se zobrazí vaše anonymní panely.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">Jeden otevřený panel. Klepnutím panely přepnete.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s otevřených panelů. Klepnutím přepnete panely.</string>
 
@@ -299,6 +301,8 @@
     <string name="preferences_sync_bookmarks">Záložky</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Přihlašovací údaje</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Otevřené panely</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odhlásit</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -715,6 +719,10 @@
     <string name="collections_header">Sbírky</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Nabídka sbírek</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Uložte si důležité věci do sbírek</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Podobná vyhledávání, stránky a panely si můžete seskupit a poté se k nim snadno vracet.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Vyberte panely</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -899,8 +907,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Po výběru „Ukončit“ z hlavní nabídky aplikace dojde ke smazání soukromých dat</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Po výběru „Ukončit“ z hlavní nabídky aplikace dojde ke smazání soukromých dat</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historie prohlížení</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ukončit</string>
 
@@ -921,6 +927,11 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview je nyní Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly je aktualizován každou noc a obsahuje nové experimentální funkce. Může však být méně stabilní. Stáhněte si náš beta prohlížeč pro stabilnější zážitek.</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Získat Firefox Beta pro Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se mění</string>
@@ -975,6 +986,9 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Přihlášení selhalo</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Automatické soukromí</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Nastavení soukromí a zabezpečení blokuje sledovací prvky, malware a společnosti, které vás sledují.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standardní (výchozí)</string>
     <!-- text for standard blocking option button description -->
@@ -1133,6 +1147,8 @@
     <string name="etp_tracking_content_title">Sledující obsah</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Blokuje načítání reklam, videí a dalšího obsahu, který obsahuje sledující kód. To může ovlivnit fungování některých webových stránek.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Fialový štít znamená, že aplikace %s na stránce zablokovala nějaké sledovací prvky. Klepnutím zobrazíte více informací.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ochrana je na tomto serveru zapnuta</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1292,8 +1308,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Povolit gesto pro přiblížení i na stránkách, které tomu zabraňují.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Názvu (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Naposledy použito</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Seřadit podle</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Přidat vyhledávač</string>
@@ -1396,6 +1417,12 @@
     <string name="dialog_delete_positive">Odstranit</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Možnosti přihlášení</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Textové pole pro webovou adresu pro přihlašovací údaje.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Textové pole pro uživatelské jméno z přihlašovacích údajů.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Textové pole pro heslo z přihlašovacích údajů.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Uložit změny přihlašovacích údajů.</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1412,7 +1439,29 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Přihlašovací údaje s tímto uživatelským jménem už existují</string>
 
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Připojte se k účtu Firefoxu.</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Připojte další zařízení.</string>
 
-    </resources>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Proveďte prosím znovu své ověření.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Zapněte nejdříve synchronizaci panelů.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Ve vašich zařízeních nejsou otevřené žádné panely.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Seznam panelů z ostatních zařízení.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Přihlásit se k synchronizaci</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Dosažen limit počtu top stránek</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Pro přidání další top stránky nejdříve nějakou odeberte. Stačí na ní podržet prst.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, rozumím</string>
+
+</resources>

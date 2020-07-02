@@ -146,6 +146,8 @@
     <string name="search_shortcuts_engine_settings">Axustes de los motores de gueta</string>
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">Y agora gueta con:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Rellenar col enllaz del cartafueyu</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Permitir</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -426,6 +428,8 @@
 
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Compartir les llingüetes</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Guardar llingüetes nuna coleición</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menú de llingüetes</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
@@ -778,8 +782,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Desanicia automáticamente los datos de restolar cuando esbilles «Colar» nel menú principal</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Desanicia automáticamente los datos de restolar cuando esbilles «Colar» nel menú principal</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historial de restolar</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Colar</string>
 
@@ -916,6 +918,8 @@
     <string name="sign_in_instructions"><![CDATA[Nun ordenador abri Firefox y vete a <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Escaniar</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Aniciu de sesión cola cámara</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar una direición de corréu</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
@@ -956,6 +960,8 @@
     <string name="preference_enhanced_tracking_protection_strict_info_button">Lo que la proteición estricta escontra\'l rastrexu bloquia</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Personalizar</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Escueyi los rastrexadores y scripts a bloquiar.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Lo que la proteición personalizada escontra\'l rastrexu bloquia</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1270,6 +1276,9 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Yá esiste un aniciu de sesión con esi nome d\'usuariu</string>
 
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Coneuta con una cuenta de Firefox.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Volvi autenticate, por favor.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->

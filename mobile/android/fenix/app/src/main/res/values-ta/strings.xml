@@ -142,4 +142,72 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">கணக்கு</string>
 
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">புகுபதிகை</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">கருவிப்பட்டி</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">கருப்பொருள்</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">பயர்பாக்சு கணக்கு</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">மொழி</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">தரவுத் தேர்வுகள்</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">தரவுச் சேகரிப்பு</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">தனியுரிமை அறிவிப்பு</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">உருவாக்குநர் கருவிகள்</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">USB மூலமாகத் தொலைநிலை வழுநீக்கல்</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">தேடல் குறுக்குவழிகளைக் காட்டு</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">தேடல் பரிந்துரைகளைக் காட்டு</string>
+
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">கமுக்க அமர்வுகளில் காட்டு</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">ஒட்டுப்பலகைப் பரிந்துரைகளைக் காட்டு</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">உலாவல் வரலாற்றைத் தேடு</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">புத்தகக்குறிகளைத் தேடு</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">கணக்கு அமைப்புகள்</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">இப்போது ஒத்திசை</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">ஒத்திசைக்க வேண்டியதைத் தேர்</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">வரலாறு</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">புத்தகக்குறிகள்</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">புகுபதிகைகள்</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">விடுபதிகை</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">சாதனப் பெயர்</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">சாதனப் பெயர் காலியாக இருக்க முடியாது.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">ஒத்திசைக்கிறது…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">ஒத்திசைவு தோல்வி. கடைசியாக வெற்றியடைந்தது: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">ஒத்திசைவு தோல்வி. கடைசியாக ஒத்திசைக்கப்பட்டது: இல்லை</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">கடைசி ஒத்திசைவு: %@</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">கடைசி ஒத்திசைவு: இல்லை</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">பெறப்பட்ட கீற்றுகள்</string>
+
     </resources>

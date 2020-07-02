@@ -91,6 +91,8 @@
     <string name="preferences_category_account">ఖాతా</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">అలంకారం</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox ఖాతా</string>
     <!-- Preference for language -->
     <string name="preferences_language">భాష</string>
 
@@ -99,6 +101,10 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection"></string>
 
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">అంతరంగికతా విధానం</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">డెవలపర్ పనిముట్లు</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ఖాతా అమరికలు</string>
 
@@ -163,6 +169,8 @@
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">తెరిచివున్న ట్యాబులు</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">అంతరంగికం</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">తెరిచివున్న ట్యాబులు</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -195,6 +203,13 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d అంశాలను తొలగించు</string>
+
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">గత 30 రోజులు</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">పాతవి</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">ఇక్కడ చరిత్రేమీ లేదు</string>
 
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">ట్యాబును మూసివేయి</string>
@@ -237,6 +252,9 @@
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">రద్దుచేయి</string>
 
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">ఫాంటు పరిమాణం</string>
+
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">తెరిచివున్న ట్యాబులు</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -259,6 +277,16 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">తొలగించు</string>
 
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">%sకి స్వాగతం!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">ఇప్పటికే ఖాతా ఉందా?</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">కొత్తవేమిటో చూడండి</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">ఇక్కడ సమాధానాలు పొందండి</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">మూసివేయి</string>
 

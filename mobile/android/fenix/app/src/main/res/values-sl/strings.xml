@@ -20,6 +20,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tu bodo prikazani vaši zasebni zavihki.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 odprt zavihek. Tapnite za preklop zavihkov.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">Odprtih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s izdeluje Mozilla.</string>
 
@@ -291,6 +296,8 @@
     <string name="preferences_sync_bookmarks">Zaznamki</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Odprti zavihki</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odjava</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -452,6 +459,10 @@
     <string name="add_tab">Dodaj zavihek</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Dodaj zasebni zavihek</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Zasebno</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Odprti zavihki</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Shrani v zbirko</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -697,6 +708,10 @@
     <string name="collections_header">Zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meni zbirk</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Zbirajte stvari, ki vam kaj pomenijo</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Združite podobna iskanja, spletne strani in zavihke za hitrejši dostop.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Izberi zavihke</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -960,6 +975,9 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Prijava ni uspela</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Samodejna zasebnost</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Nastavitve zasebnosti in varnosti zavračajo sledilce, zlonamerno programsko opremo in podjetja, ki vam sledijo.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Običajno (privzeto)</string>
     <!-- text for standard blocking option button description -->
@@ -1433,6 +1451,11 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Prijava v Sync</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Omejitev glavnih strani je dosežena</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Če želite dodati novo glavno stran, eno odstranite. Podržite prst na njej in izberite &quot;Odstrani&quot;.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">V redu, razumem</string>
 
