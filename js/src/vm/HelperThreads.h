@@ -544,6 +544,9 @@ bool StartOffThreadIonCompile(jit::IonCompileTask* task,
 bool StartOffThreadIonFree(jit::IonCompileTask* task,
                            const AutoLockHelperThreadState& lock);
 
+void FinishOffThreadIonCompile(jit::IonCompileTask* task,
+                               const AutoLockHelperThreadState& lock);
+
 struct ZonesInState {
   JSRuntime* runtime;
   JS::shadow::Zone::GCState state;

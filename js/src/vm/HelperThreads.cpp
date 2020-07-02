@@ -240,8 +240,8 @@ bool js::StartOffThreadIonFree(jit::IonCompileTask* task,
  * or been cancelled into the global finished compilation list. All off thread
  * compilations which are started must eventually be finished.
  */
-static void FinishOffThreadIonCompile(jit::IonCompileTask* task,
-                                      const AutoLockHelperThreadState& lock) {
+void js::FinishOffThreadIonCompile(jit::IonCompileTask* task,
+                                   const AutoLockHelperThreadState& lock) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!HelperThreadState().ionFinishedList(lock).append(task)) {
     oomUnsafe.crash("FinishOffThreadIonCompile");
@@ -2100,31 +2100,9 @@ void HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked) {
   jit::IonCompileTask* task =
       HelperThreadState().highestPriorityPendingIonCompile(locked);
 
-  // The build is taken by this thread. Unfreeze the LifoAlloc to allow
-  // mutations.
-  task->alloc().lifoAlloc()->setReadWrite();
-
   currentTask.emplace(task);
 
-  JSRuntime* rt = task->script()->runtimeFromAnyThread();
-
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-
-    task->runTask();
-  }
-
-  FinishOffThreadIonCompile(task, locked);
-
-  // Ping the main thread so that the compiled code can be incorporated at the
-  // next interrupt callback.
-  //
-  // This must happen before the current task is reset. DestroyContext
-  // cancels in progress Ion compilations before destroying its target
-  // context, and after we reset the current task we are no longer considered
-  // to be Ion compiling.
-  rt->mainContextFromAnyThread()->requestInterrupt(
-      InterruptReason::AttachIonCompilations);
+  task->runTaskLocked(locked);
 
   currentTask.reset();
 
