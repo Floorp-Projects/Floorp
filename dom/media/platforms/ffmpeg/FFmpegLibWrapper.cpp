@@ -197,6 +197,17 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
     VAW_FUNC_OPTION_SILENT(vaGetDisplayWl)
   }
 #  undef VAW_FUNC_OPTION_SILENT
+
+#  define VAD_FUNC_OPTION_SILENT(func)                               \
+    if (!(func = (decltype(func))PR_FindSymbol(mVALibDrm, #func))) { \
+      FFMPEG_LOG("Couldn't load function " #func);                   \
+    }
+
+  // mVALibDrm is optional and may not be present.
+  if (mVALibDrm) {
+    VAD_FUNC_OPTION_SILENT(vaGetDisplayDRM)
+  }
+#  undef VAD_FUNC_OPTION_SILENT
 #endif
 
   avcodec_register_all();
@@ -235,6 +246,9 @@ void FFmpegLibWrapper::Unlink() {
   if (mVALibWayland) {
     PR_UnloadLibrary(mVALibWayland);
   }
+  if (mVALibDrm) {
+    PR_UnloadLibrary(mVALibDrm);
+  }
 #endif
   PodZero(this);
 }
@@ -252,7 +266,8 @@ bool FFmpegLibWrapper::IsVAAPIAvailable() {
          VA_FUNC_LOADED(av_dict_free) &&
          VA_FUNC_LOADED(vaExportSurfaceHandle) &&
          VA_FUNC_LOADED(vaSyncSurface) && VA_FUNC_LOADED(vaInitialize) &&
-         VA_FUNC_LOADED(vaTerminate) && VA_FUNC_LOADED(vaGetDisplayWl);
+         VA_FUNC_LOADED(vaTerminate) &&
+         (VA_FUNC_LOADED(vaGetDisplayWl) || VA_FUNC_LOADED(vaGetDisplayDRM));
 }
 #endif
 

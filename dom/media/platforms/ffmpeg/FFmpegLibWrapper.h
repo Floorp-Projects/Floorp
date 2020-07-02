@@ -135,6 +135,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   int (*vaInitialize)(void* dpy, int* major_version, int* minor_version);
   int (*vaTerminate)(void* dpy);
   void* (*vaGetDisplayWl)(struct wl_display* display);
+  void* (*vaGetDisplayDRM)(int fd);
 #endif
 
   PRLibrary* mAVCodecLib;
@@ -142,6 +143,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 #ifdef MOZ_WAYLAND
   PRLibrary* mVALib;
   PRLibrary* mVALibWayland;
+  PRLibrary* mVALibDrm;
 #endif
 
  private:
