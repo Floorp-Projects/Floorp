@@ -24,3 +24,9 @@ with Files('sqlite3/**'):
 
 with Files('rlbox/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
+
+JAR_MANIFESTS += ['js/jar.mn']
+
+DIRS += [
+     'python',
+]

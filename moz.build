@@ -152,7 +152,7 @@ DIRS += [
     'config',
     'python',
     'testing/mozbase',
-    'third_party/python',
+    'third_party',
 ]
 
 if not CONFIG['JS_STANDALONE']:
