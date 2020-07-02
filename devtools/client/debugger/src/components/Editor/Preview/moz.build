@@ -11,7 +11,3 @@ CompiledModules(
     'index.js',
     'Popup.js',
 )
-
-DevToolsModules(
-    'Popup.css',
-)

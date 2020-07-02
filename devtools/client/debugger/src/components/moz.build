@@ -18,13 +18,3 @@ CompiledModules(
     'ShortcutsModal.js',
     'WelcomeBox.js',
 )
-
-DevToolsModules(
-    'A11yIntention.css',
-    'App.css',
-    'ProjectSearch.css',
-    'QuickOpenModal.css',
-    'ShortcutsModal.css',
-    'variables.css',
-    'WelcomeBox.css',
-)
