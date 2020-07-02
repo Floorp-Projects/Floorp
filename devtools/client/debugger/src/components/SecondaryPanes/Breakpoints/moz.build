@@ -15,7 +15,3 @@ CompiledModules(
     'ExceptionOption.js',
     'index.js',
 )
-
-DevToolsModules(
-    'Breakpoints.css',
-)
