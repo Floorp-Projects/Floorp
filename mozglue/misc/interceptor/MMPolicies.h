@@ -128,8 +128,8 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyInProcessPrimitive {
     SIZE_T result = nt::VirtualQuery(reinterpret_cast<LPCVOID>(aVAddress), &mbi,
                                      sizeof(mbi));
 
-    return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
-           mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
+    return result && mbi.AllocationProtect && mbi.State == MEM_COMMIT &&
+           mbi.Protect != PAGE_NOACCESS;
   }
 };
 
@@ -773,8 +773,8 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
     SIZE_T result = nt::VirtualQueryEx(
         mProcess, reinterpret_cast<LPCVOID>(aVAddress), &mbi, sizeof(mbi));
 
-    return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
-           mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
+    return result && mbi.AllocationProtect && mbi.State == MEM_COMMIT &&
+           mbi.Protect != PAGE_NOACCESS;
   }
 
   bool FlushInstructionCache() const {
