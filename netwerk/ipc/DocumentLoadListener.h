@@ -468,9 +468,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // passed to the childChannel in order to identify it in the new process.
   uint64_t mLoadIdentifier = 0;
 
-  // True if cancelled.
-  bool mCancelled = false;
-
   Maybe<nsCString> mOriginalUriString;
 
   bool mSupportsRedirectToRealChannel = true;
