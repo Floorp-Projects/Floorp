@@ -43,8 +43,6 @@ browser/components/translation/cld2/
 # Screenshots is imported as a system add-on and has
 # their own lint rules currently.
 browser/extensions/screenshots/
-browser/extensions/pdfjs/content/build
-browser/extensions/pdfjs/content/web
 # generated or library files in pocket
 browser/components/pocket/content/panels/js/tmpl.js
 
@@ -200,6 +198,10 @@ toolkit/components/extensions/profiler_get_symbols.js
 
 # Intentionally invalid JS
 toolkit/components/workerloader/tests/moduleF-syntax-error.js
+
+# Built files
+toolkit/components/pdfjs/content/build
+toolkit/components/pdfjs/content/web
 
 # External code:
 toolkit/components/reader/Readability.js
