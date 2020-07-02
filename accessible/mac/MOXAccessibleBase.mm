@@ -90,6 +90,11 @@ using namespace mozilla::a11y;
       }
     }
 
+    // If we have a delegate add all the text marker attributes.
+    if ([self moxTextMarkerDelegate]) {
+      [attributes addObjectsFromArray:[mac::TextAttributeGetters() allKeys]];
+    }
+
     // We store a hash table with types as keys, and atttribute lists as values.
     // This lets us cache the atttribute list of each subclass so we only
     // need to gather its MOXAccessible methods once.
@@ -114,6 +119,17 @@ using namespace mozilla::a11y;
     SEL selector = NSSelectorFromString(getters[attribute]);
     if ([self isSelectorSupported:selector]) {
       value = [self performSelector:selector];
+    }
+  } else if (id textMarkerDelegate = [self moxTextMarkerDelegate]) {
+    // If we have a delegate, check if attribute is a text marker
+    // attribute and call the associated selector on the delegate
+    // if so.
+    NSDictionary* textMarkerGetters = mac::TextAttributeGetters();
+    if (textMarkerGetters[attribute]) {
+      SEL selector = NSSelectorFromString(textMarkerGetters[attribute]);
+      if ([textMarkerDelegate respondsToSelector:selector]) {
+        value = [textMarkerDelegate performSelector:selector];
+      }
     }
   }
 
@@ -243,6 +259,11 @@ using namespace mozilla::a11y;
     }
   }
 
+  // If we have a delegate add all the text marker attributes.
+  if ([self moxTextMarkerDelegate]) {
+    [attributeNames addObjectsFromArray:[mac::ParameterizedTextAttributeGetters() allKeys]];
+  }
+
   return attributeNames;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -260,6 +281,17 @@ using namespace mozilla::a11y;
     SEL selector = NSSelectorFromString(getters[attribute]);
     if ([self isSelectorSupported:selector]) {
       return [self performSelector:selector withObject:parameter];
+    }
+  } else if (id textMarkerDelegate = [self moxTextMarkerDelegate]) {
+    // If we have a delegate, check if attribute is a text marker
+    // attribute and call the associated selector on the delegate
+    // if so.
+    NSDictionary* textMarkerGetters = mac::ParameterizedTextAttributeGetters();
+    if (textMarkerGetters[attribute]) {
+      SEL selector = NSSelectorFromString(textMarkerGetters[attribute]);
+      if ([textMarkerDelegate respondsToSelector:selector]) {
+        return [textMarkerDelegate performSelector:selector withObject:parameter];
+      }
     }
   }
 
@@ -318,6 +350,10 @@ using namespace mozilla::a11y;
 
 - (BOOL)moxBlockSelector:(SEL)selector {
   return NO;
+}
+
+- (id<MOXTextMarkerSupport>)moxTextMarkerDelegate {
+  return nil;
 }
 
 #pragma mark -

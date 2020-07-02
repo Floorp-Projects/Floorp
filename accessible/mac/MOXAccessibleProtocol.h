@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@protocol MOXTextMarkerSupport;
+
 // This protocol's primary use is for abstracting the NSAccessibility informal protocol
 // into a formal internal API. Conforming classes get to choose a subset of the optional
 // methods to implement. Those methods will be mapped to NSAccessibility attributes or actions.
@@ -28,6 +30,9 @@
 // - accessibilityActionNames
 // - accessibilityIsAttributeSettable
 - (BOOL)moxBlockSelector:(SEL _Nonnull)selector;
+
+// Return text delegate if it exists.
+- (id<MOXTextMarkerSupport> _Nullable)moxTextMarkerDelegate;
 
 @optional
 
@@ -295,5 +300,30 @@
 
 // AttributedStringForRange
 - (NSAttributedString* _Nullable)moxAttributedStringForRange:(NSValue* _Nonnull)range;
+
+@end
+
+// This protocol maps text marker and text marker range parameters to
+// methods. It is implemented by a delegate of a MOXAccessible.
+@protocol MOXTextMarkerSupport
+
+#pragma mark - TextAttributeGetters
+
+// AXStartTextMarker
+- (id _Nullable)moxStartTextMarker;
+
+// AXEndTextMarker
+- (id _Nullable)moxEndTextMarker;
+
+#pragma mark - ParameterizedTextAttributeGetters
+
+// AXLengthForTextMarkerRange
+- (NSNumber* _Nullable)moxLengthForTextMarkerRange:(id _Nonnull)textMarkerRange;
+
+// AXStringForTextMarkerRange
+- (NSString* _Nullable)moxStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
+
+// AXTextMarkerRangeForUnorderedTextMarkers
+- (id _Nullable)moxTextMarkerRangeForUnorderedTextMarkers:(NSArray* _Nonnull)textMarkers;
 
 @end

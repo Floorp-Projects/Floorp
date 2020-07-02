@@ -122,6 +122,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // override
 - (id)moxFocusedUIElement;
 
+- (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;
+
 // Attribute getters
 
 // override
