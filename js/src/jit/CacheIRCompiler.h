@@ -1172,6 +1172,9 @@ class CacheIRStubInfo {
 
   uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const;
   uintptr_t getStubRawWord(ICStub* stub, uint32_t offset) const;
+
+  int64_t getStubRawInt64(const uint8_t* stubData, uint32_t offset) const;
+  int64_t getStubRawInt64(ICStub* stub, uint32_t offset) const;
 };
 
 template <typename T>
