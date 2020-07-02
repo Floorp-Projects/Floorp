@@ -10,9 +10,6 @@
 
 #include "LayerTransactionParent.h"   // for LayerTransactionParent
 #include "apz/src/APZCTreeManager.h"  // for APZCTreeManager
-#include "base/message_loop.h"        // for MessageLoop
-#include "base/task.h"                // for CancelableTask, etc
-#include "base/thread.h"              // for Thread
 #include "gfxUtils.h"
 #ifdef XP_WIN
 #  include "mozilla/gfx/DeviceManagerDx.h"  // for DeviceManagerDx
@@ -68,7 +65,7 @@ void ContentCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   // We must keep this object alive untill the code handling message
   // reception is finished on this thread.
-  MessageLoop::current()->PostTask(NewRunnableMethod(
+  GetCurrentSerialEventTarget()->Dispatch(NewRunnableMethod(
       "layers::ContentCompositorBridgeParent::DeferredDestroy", this,
       &ContentCompositorBridgeParent::DeferredDestroy));
 }

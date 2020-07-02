@@ -2858,7 +2858,7 @@ void ContentChild::ShutdownInternal() {
     // We're in a nested event loop. Let's delay for an arbitrary period of
     // time (100ms) in the hopes that the event loop will have finished by
     // then.
-    MessageLoop::current()->PostDelayedTask(
+    GetCurrentSerialEventTarget()->DelayedDispatch(
         NewRunnableMethod("dom::ContentChild::RecvShutdown", this,
                           &ContentChild::ShutdownInternal),
         100);

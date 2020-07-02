@@ -243,7 +243,7 @@ void RDDProcessHost::DestroyProcess() {
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->PostTask(
+  GetCurrentSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("DestroyProcessRunnable", [this] { Destroy(); }));
 }
 

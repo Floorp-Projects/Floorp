@@ -1558,7 +1558,7 @@ void ContentParent::MaybeAsyncSendShutDownMessage() {
 
   // In the case of normal shutdown, send a shutdown message to child to
   // allow it to perform shutdown tasks.
-  MessageLoop::current()->PostTask(NewRunnableMethod<ShutDownMethod>(
+  GetCurrentSerialEventTarget()->Dispatch(NewRunnableMethod<ShutDownMethod>(
       "dom::ContentParent::ShutDownProcess", this,
       &ContentParent::ShutDownProcess, SEND_SHUTDOWN_MESSAGE));
 }
@@ -1899,7 +1899,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
            this, mSubprocess,
            mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
   // FIXME (bug 1520997): does this really need an additional dispatch?
-  MessageLoop::current()->PostTask(NS_NewRunnableFunction(
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       "DelayedDeleteSubprocessRunnable", [subprocess = mSubprocess] {
         MOZ_LOG(
             ContentParent::GetLog(), LogLevel::Debug,

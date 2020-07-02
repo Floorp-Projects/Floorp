@@ -5,12 +5,12 @@
 
 #include "SocketProcessHost.h"
 
-#include "nsAppRunner.h"
-#include "nsIObserverService.h"
-#include "nsIOService.h"
-#include "SocketProcessParent.h"
 #include "ProcessUtils.h"
+#include "SocketProcessParent.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "nsAppRunner.h"
+#include "nsIOService.h"
+#include "nsIObserverService.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxBroker.h"
@@ -224,7 +224,7 @@ void SocketProcessHost::DestroyProcess() {
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->PostTask(NS_NewRunnableFunction(
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       "DestroySocketProcessRunnable", [this] { Destroy(); }));
 }
 

@@ -155,7 +155,7 @@ void SocketProcessBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (os) {
     os->RemoveObserver(this, "content-child-shutdown");
   }
-  MessageLoop::current()->PostTask(
+  GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod("net::SocketProcessBridgeChild::DeferredDestroy", this,
                         &SocketProcessBridgeChild::DeferredDestroy));
   mShuttingDown = true;
