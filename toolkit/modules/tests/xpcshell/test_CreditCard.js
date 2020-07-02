@@ -528,3 +528,29 @@ add_task(async function test_getType() {
     );
   }
 });
+
+add_task(async function test_getNetworkFromName() {
+  const RECOGNIZED_NAMES = [
+    ["amex", "amex"],
+    ["American Express", "amex"],
+    ["american express", "amex"],
+    ["mastercard", "mastercard"],
+    ["master card", "mastercard"],
+    ["MasterCard", "mastercard"],
+    ["Master Card", "mastercard"],
+    ["Union Pay", "unionpay"],
+    ["UnionPay", "unionpay"],
+    ["Unionpay", "unionpay"],
+    ["unionpay", "unionpay"],
+
+    ["Unknown", null],
+    ["", null],
+  ];
+  for (let [value, type] of RECOGNIZED_NAMES) {
+    Assert.equal(
+      CreditCard.getNetworkFromName(value),
+      type,
+      `Expected ${value} to be recognized as ${type}`
+    );
+  }
+});

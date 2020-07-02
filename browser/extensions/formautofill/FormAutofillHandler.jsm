@@ -52,6 +52,10 @@ XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
   );
 });
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
+});
+
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
@@ -954,6 +958,35 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     this.matchSelectOptions(profile);
     this.creditCardExpDateTransformer(profile);
     this.adaptFieldMaxLength(profile);
+  }
+
+  computeFillingValue(value, fieldDetail, element) {
+    if (
+      fieldDetail.fieldName != "cc-type" ||
+      ChromeUtils.getClassName(element) !== "HTMLSelectElement"
+    ) {
+      return value;
+    }
+
+    if (CreditCard.isValidNetwork(value)) {
+      return value;
+    }
+
+    // Don't save the record when the option value is empty *OR* there
+    // are multiple options being selected. The empty option is usually
+    // assumed to be default along with a meaningless text to users.
+    if (value && element.selectedOptions.length == 1) {
+      let selectedOption = element.selectedOptions[0];
+      let networkType =
+        CreditCard.getNetworkFromName(selectedOption.text) ??
+        CreditCard.getNetworkFromName(selectedOption.value);
+      if (networkType) {
+        return networkType;
+      }
+    }
+    // If we couldn't match the value to any network, we'll
+    // strip this field when submitting.
+    return value;
   }
 
   /**
