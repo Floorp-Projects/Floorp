@@ -25,6 +25,10 @@ window.onmessage = async event => {
     };
     navigator.mediaSession.metadata = new window.MediaMetadata(metadata);
     w.postMessage(metadata, "*");
+  } else if (event.data == "setPositionState") {
+    navigator.mediaSession.setPositionState({
+      duration: 60, // The value doesn't matter
+    });
   }
 }
 
