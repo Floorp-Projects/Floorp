@@ -11,6 +11,7 @@
 #include "MediaTrackListener.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -39,6 +40,7 @@ using dom::MediaTrackSettings;
 using dom::VideoFacingModeEnum;
 
 static nsString DefaultVideoName() {
+  MOZ_ASSERT(!NS_IsMainThread());
   // For the purpose of testing we allow to change the name of the fake device
   // by pref.
   nsAutoString cameraNameFromPref;
@@ -47,12 +49,11 @@ static nsString DefaultVideoName() {
   // InvokeAsync, instead of "soft" block, provided by sync dispatch which
   // allows the waiting thread to spin its event loop. The latter would allow
   // miltiple enumeration requests being processed out-of-order.
-  media::Await(do_AddRef(GetMainThreadSerialEventTarget()),
-               InvokeAsync(GetMainThreadSerialEventTarget(), __func__, [&]() {
-                 rv = Preferences::GetString(
-                     "media.getusermedia.fake-camera-name", cameraNameFromPref);
-                 return GenericPromise::CreateAndResolve(true, __func__);
-               }));
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(__func__, [&]() {
+    rv = Preferences::GetString("media.getusermedia.fake-camera-name",
+                                cameraNameFromPref);
+  });
+  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable);
 
   if (NS_SUCCEEDED(rv)) {
     return std::move(cameraNameFromPref);
