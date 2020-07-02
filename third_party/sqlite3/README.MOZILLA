@@ -3,8 +3,8 @@ Check sqlite3.h for the version number and source id.
 
 See http://www.sqlite.org/ for more info.
 
-We have a mozilla-specific Makefile.in in src/ (normally no
-Makefile.in there) that we use to build.
+We have a mozilla-specific moz.build in src/ (normally no
+moz.build there) that we use to build.
 
 To move to a new version:
 
