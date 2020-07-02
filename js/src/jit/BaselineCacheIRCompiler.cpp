@@ -2283,17 +2283,13 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   MOZ_CRASH("Invalid kind");
 }
 
-uint8_t* ICCacheIR_Regular::stubDataStart() {
+template <typename Base>
+uint8_t* ICCacheIR_Trait<Base>::stubDataStart() {
   return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
 }
 
-uint8_t* ICCacheIR_Monitored::stubDataStart() {
-  return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
-}
-
-uint8_t* ICCacheIR_Updated::stubDataStart() {
-  return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
-}
+template uint8_t* ICCacheIR_Trait<ICStub>::stubDataStart();
+template uint8_t* ICCacheIR_Trait<ICMonitoredStub>::stubDataStart();
 
 bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
     ValOperandId lhsId, ValOperandId rhsId) {
