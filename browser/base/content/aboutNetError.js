@@ -661,11 +661,14 @@ async function getFailedCertificatesAsPEMString() {
   let errorMessage = failedCertInfo.errorMessage;
   let hasHSTS = failedCertInfo.hasHSTS.toString();
   let hasHPKP = failedCertInfo.hasHPKP.toString();
-  let [hstsLabel] = await document.l10n.formatValues([
+  let [
+    hstsLabel,
+    hpkpLabel,
+    failedChainLabel,
+  ] = await document.l10n.formatValues([
     { id: "cert-error-details-hsts-label", args: { hasHSTS } },
-  ]);
-  let [hpkpLabel] = await document.l10n.formatValues([
     { id: "cert-error-details-key-pinning-label", args: { hasHPKP } },
+    { id: "cert-error-details-cert-chain-label" },
   ]);
 
   let certStrings = failedCertInfo.certChainStrings;
@@ -677,9 +680,6 @@ async function getFailedCertificatesAsPEMString() {
       wrapped +
       "\r\n-----END CERTIFICATE-----\r\n";
   }
-  let [failedChainLabel] = await document.l10n.formatValues([
-    { id: "cert-error-details-cert-chain-label" },
-  ]);
 
   let details =
     location +

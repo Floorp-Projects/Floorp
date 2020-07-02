@@ -128,6 +128,7 @@ module.exports = {
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
     "mozilla/prefer-boolean-length-check": "error",
+    "mozilla/prefer-formatValues": "error",
     "mozilla/reject-chromeutils-import-null": "error",
     "mozilla/reject-importGlobalProperties": ["error", "allownonwebidl"],
     "mozilla/rejects-requires-await": "error",

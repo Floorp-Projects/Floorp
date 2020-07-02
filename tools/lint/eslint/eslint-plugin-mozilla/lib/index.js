@@ -53,6 +53,7 @@ module.exports = {
     "no-useless-removeEventListener": require("../lib/rules/no-useless-removeEventListener"),
     "no-useless-run-test": require("../lib/rules/no-useless-run-test"),
     "prefer-boolean-length-check": require("../lib/rules/prefer-boolean-length-check"),
+    "prefer-formatValues": require("../lib/rules/prefer-formatValues"),
     "reject-chromeutils-import-null": require("../lib/rules/reject-chromeutils-import-null"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
     "reject-relative-requires": require("../lib/rules/reject-relative-requires"),
