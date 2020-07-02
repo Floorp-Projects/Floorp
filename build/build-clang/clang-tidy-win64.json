@@ -11,7 +11,6 @@
     "patches": [
         "clang-tidy-ci.patch",
         "clang-tidy-no-errors.patch",
-        "clang_format_10.patch",
-        "run-clang-tidy-escape.patch"
+        "clang_format_10.patch"
     ]
 }

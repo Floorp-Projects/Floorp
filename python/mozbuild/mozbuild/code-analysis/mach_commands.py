@@ -287,6 +287,9 @@ class StaticAnalysis(MachCommandBase):
                      "cannot be used for analysis since they do not consist compilation units.")
             return 0
 
+        # Escape the files from source
+        source = [re.escape(f) for f in source]
+
         cwd = self.topobjdir
         self._compilation_commands_path = self.topobjdir
         if self._clang_tidy_config is None:
