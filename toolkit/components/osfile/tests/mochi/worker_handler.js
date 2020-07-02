@@ -1,19 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * Sets the worker message and error event handlers to respond to SimpleTest
- * style messages.
- */
-function listenForTests(worker, opts = { verbose: true }) {
+function worker_handler(worker) {
   worker.onerror = function(error) {
     error.preventDefault();
     ok(false, "Worker error " + error.message);
   };
   worker.onmessage = function(msg) {
-    if (opts && opts.verbose) {
-      ok(true, "MAIN: onmessage " + JSON.stringify(msg.data));
-    }
+    ok(true, "MAIN: onmessage " + JSON.stringify(msg.data));
     switch (msg.data.kind) {
       case "is":
         SimpleTest.ok(
