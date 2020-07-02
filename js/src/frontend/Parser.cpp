@@ -9895,12 +9895,17 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> range(chars.begin(), chars.length());
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
+  uint32_t offset = anyChars.currentToken().pos.begin;
+  uint32_t line, column;
+  tokenStream.computeLineAndColumn(offset, &line, &column);
+
   if (!handler_.canSkipRegexpSyntaxParse()) {
     // Verify that the Regexp will syntax parse when the time comes to
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
     LifoAllocScope allocScope(&cx_->tempLifoAlloc());
-    if (!irregexp::CheckPatternSyntax(cx_, anyChars, range, flags)) {
+    if (!irregexp::CheckPatternSyntax(cx_, anyChars, range, flags, Some(line),
+                                      Some(column))) {
       return nullptr;
     }
   }
@@ -9926,10 +9931,15 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   const auto& chars = tokenStream.getCharBuffer();
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
+  uint32_t offset = anyChars.currentToken().pos.begin;
+  uint32_t line, column;
+  tokenStream.computeLineAndColumn(offset, &line, &column);
+
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   {
     LifoAllocScope scopeAlloc(&alloc_);
-    if (!irregexp::CheckPatternSyntax(cx_, anyChars, source, flags)) {
+    if (!irregexp::CheckPatternSyntax(cx_, anyChars, source, flags, Some(line),
+                                      Some(column))) {
       return null();
     }
   }
