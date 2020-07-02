@@ -14,16 +14,22 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'Accordion.css',
     'Accordion.js',
     'Frame.js',
     'HSplitBox.js',
+    'List.css',
     'List.js',
+    'MdnLink.css',
     'MdnLink.js',
+    'NotificationBox.css',
     'NotificationBox.js',
     'SearchBox.js',
     'SearchBoxAutocompletePopup.js',
     'Sidebar.js',
+    'SidebarToggle.css',
     'SidebarToggle.js',
+    'SmartTrace.css',
     'SmartTrace.js',
     'StackTrace.js',
     'VirtualizedTree.js',
