@@ -2030,10 +2030,7 @@ Toolbox.prototype = {
   tellRDMAboutPickerState: async function(state, pickerType) {
     const { localTab } = this.target;
 
-    if (
-      !ResponsiveUIManager.isActiveForTab(localTab) ||
-      (await !this.target.actorHasMethod("responsive", "setElementPickerState"))
-    ) {
+    if (!ResponsiveUIManager.isActiveForTab(localTab)) {
       return;
     }
 
