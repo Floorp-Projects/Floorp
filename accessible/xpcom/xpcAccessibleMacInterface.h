@@ -16,21 +16,36 @@ class nsIAccessibleMacInterface;
 namespace mozilla {
 namespace a11y {
 
-class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
+class xpcAccessibleMacNSObjectWrapper : public nsIAccessibleMacNSObjectWrapper {
  public:
+  explicit xpcAccessibleMacNSObjectWrapper(id aTextMarker);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLEMACNSOBJECTWRAPPER;
+
+  // Get the wrapped NSObject for this interface.
+  id GetNativeObject() const final;
+
+ protected:
+  virtual ~xpcAccessibleMacNSObjectWrapper();
+
+  id mNativeObject;
+};
+
+class xpcAccessibleMacInterface : public xpcAccessibleMacNSObjectWrapper,
+                                  public nsIAccessibleMacInterface {
+ public:
+  // Construct an xpcAccessibleMacInterface using this
+  // native object that conforms to the NSAccessibility protocol.
+  explicit xpcAccessibleMacInterface(id aNativeObj)
+      : xpcAccessibleMacNSObjectWrapper(aNativeObj) {}
+
   // Construct an xpcAccessibleMacInterface using the native object
   // associated with this accessible or proxy.
   explicit xpcAccessibleMacInterface(AccessibleOrProxy aObj);
 
-  // Construct an xpcAccessibleMacInterface using this
-  // native object that conforms to the NSAccessibility protocol.
-  explicit xpcAccessibleMacInterface(id aNativeObj);
-
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEMACINTERFACE
-
-  // Get the wrapped NSObject for this intterface.
-  id GetNativeMacAccessible() const final;
 
   // This sends notifications via nsIObserverService to be consumed by our
   // mochitests. aNativeObj is a NSAccessibility protocol object,
@@ -38,7 +53,7 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
   static void FireEvent(id aNativeObj, id aNotification);
 
  protected:
-  virtual ~xpcAccessibleMacInterface();
+  virtual ~xpcAccessibleMacInterface() {}
 
   // Return true if our native object responds to this selector and
   // if it implements isAccessibilitySelectorAllowed check that it returns true
@@ -60,8 +75,6 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
   // a "value" and "valueType" property.
   id JsValueToNSValue(JS::HandleObject aObject, JSContext* aCx,
                       nsresult* aResult);
-
-  id mNativeObject;
 
  private:
   xpcAccessibleMacInterface(const xpcAccessibleMacInterface&) = delete;

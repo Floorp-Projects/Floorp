@@ -15,18 +15,26 @@
 
 using namespace mozilla::a11y;
 
-NS_IMPL_ISUPPORTS(xpcAccessibleMacInterface, nsIAccessibleMacInterface)
+// xpcAccessibleMacNSObjectWrapper
 
-xpcAccessibleMacInterface::xpcAccessibleMacInterface(AccessibleOrProxy aObj) {
-  mNativeObject = GetNativeFromGeckoAccessible(aObj);
+NS_IMPL_ISUPPORTS(xpcAccessibleMacNSObjectWrapper, nsIAccessibleMacNSObjectWrapper)
+
+xpcAccessibleMacNSObjectWrapper::xpcAccessibleMacNSObjectWrapper(id aNativeObj)
+    : mNativeObject(aNativeObj) {
   [mNativeObject retain];
 }
 
-xpcAccessibleMacInterface::xpcAccessibleMacInterface(id aNativeObj) : mNativeObject(aNativeObj) {
-  [mNativeObject retain];
-}
+xpcAccessibleMacNSObjectWrapper::~xpcAccessibleMacNSObjectWrapper() { [mNativeObject release]; }
 
-xpcAccessibleMacInterface::~xpcAccessibleMacInterface() { [mNativeObject release]; }
+id xpcAccessibleMacNSObjectWrapper::GetNativeObject() const { return mNativeObject; }
+
+// xpcAccessibleMacInterface
+
+NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleMacInterface, xpcAccessibleMacNSObjectWrapper,
+                            nsIAccessibleMacInterface)
+
+xpcAccessibleMacInterface::xpcAccessibleMacInterface(AccessibleOrProxy aObj)
+    : xpcAccessibleMacNSObjectWrapper(GetNativeFromGeckoAccessible(aObj)) {}
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames) {
@@ -208,11 +216,6 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
              strcmp([(NSValue*)aObj objCType], @encode(NSRange)) == 0) {
     NSRange range = [(NSValue*)aObj rangeValue];
     return NSObjectToJsValue(@[ @(range.location), @(range.length) ], aCx, aResult);
-  } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
-    // We expect all of our accessibility objects to implement isAccessibilityElement
-    // at the very least. If it is implemented we will assume its an accessibility object.
-    nsCOMPtr<nsIAccessibleMacInterface> obj = new xpcAccessibleMacInterface(aObj);
-    return nsContentUtils::WrapNative(aCx, obj, &NS_GET_IID(nsIAccessibleMacInterface), aResult);
   } else if ([aObj isKindOfClass:[NSArray class]]) {
     NSArray* objArr = (NSArray*)aObj;
 
@@ -230,8 +233,18 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
       return NS_ERROR_FAILURE;
     }
     aResult.setObject(*arrayObj);
+  } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
+    // We expect all of our accessibility objects to implement isAccessibilityElement
+    // at the very least. If it is implemented we will assume its an accessibility object.
+    nsCOMPtr<nsIAccessibleMacInterface> obj = new xpcAccessibleMacInterface(aObj);
+    return nsContentUtils::WrapNative(aCx, obj, &NS_GET_IID(nsIAccessibleMacInterface), aResult);
   } else {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // If this is any other kind of NSObject, just wrap it and return it.
+    // It will be opaque and immutable on the JS side, but it can be
+    // brought back to us in an argument.
+    nsCOMPtr<nsIAccessibleMacNSObjectWrapper> obj = new xpcAccessibleMacNSObjectWrapper(aObj);
+    return nsContentUtils::WrapNative(aCx, obj, &NS_GET_IID(nsIAccessibleMacNSObjectWrapper),
+                                      aResult);
   }
 
   return NS_OK;
@@ -281,8 +294,8 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
     nsresult rv = xpc->GetWrappedNativeOfJSObject(aCx, obj, getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nil);
-    nsCOMPtr<nsIAccessibleMacInterface> macIface = do_QueryInterface(wrappedObj->Native());
-    return macIface->GetNativeMacAccessible();
+    nsCOMPtr<nsIAccessibleMacNSObjectWrapper> macObjIface = do_QueryInterface(wrappedObj->Native());
+    return macObjIface->GetNativeObject();
   }
 
   *aResult = NS_ERROR_FAILURE;
@@ -361,5 +374,3 @@ void xpcAccessibleMacInterface::FireEvent(id aNativeObj, id aNotification) {
     }
   }
 }
-
-id xpcAccessibleMacInterface::GetNativeMacAccessible() const { return mNativeObject; }
