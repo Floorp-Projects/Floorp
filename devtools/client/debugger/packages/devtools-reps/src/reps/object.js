@@ -28,7 +28,6 @@ ObjectRep.propTypes = {
 function ObjectRep(props) {
   const object = props.object;
   const { shouldRenderTooltip = true } = props;
-  const propsArray = safePropIterator(props, object);
 
   if (props.mode === MODE.TINY) {
     const tinyModeItems = [];
@@ -42,7 +41,7 @@ function ObjectRep(props) {
           },
           "{"
         ),
-        propsArray.length > 0 ? ellipsisElement : null,
+        Object.keys(object).length > 0 ? ellipsisElement : null,
         span(
           {
             className: "objectRightBrace",
@@ -60,6 +59,8 @@ function ObjectRep(props) {
       ...tinyModeItems
     );
   }
+
+  const propsArray = safePropIterator(props, object);
 
   return span(
     {

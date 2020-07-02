@@ -404,7 +404,7 @@ export type ThreadFront = {
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
   detach: () => Promise<void>,
   fetchAncestorFramePositions: Function => Promise<*>,
-  get: string => FrameFront,
+  getActorByID: string => FrameFront,
   dumpThread: Function => void,
 };
 

@@ -42,7 +42,7 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   _onTargetDestroyed(form) {
-    const front = this.actor(form.actor);
+    const front = this.getActorByID(form.actor);
     this.emit("target-destroyed", front);
   }
 

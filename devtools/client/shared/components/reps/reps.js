@@ -206,7 +206,7 @@ class TreeNode extends Component {
 
   constructor(props) {
     super(props);
-    this.treeNodeRef = _react.default.createRef();
+    this.treeNodeRef = /*#__PURE__*/_react.default.createRef();
     this._onKeyDown = this._onKeyDown.bind(this);
   }
 
@@ -608,7 +608,7 @@ class Tree extends Component {
     this.state = {
       autoExpanded: new Set()
     };
-    this.treeRef = _react.default.createRef();
+    this.treeRef = /*#__PURE__*/_react.default.createRef();
 
     const opaf = fn => oncePerAnimationFrame(fn, {
       getDocument: () => this.treeRef.current && this.treeRef.current.ownerDocument
@@ -4954,7 +4954,6 @@ const {
   rawCropString,
   sanitizeString,
   wrapRender,
-  isGrip,
   ELLIPSIS,
   uneatLastUrlCharsRegex,
   urlRegex
@@ -5276,11 +5275,17 @@ function isLongString(object) {
 }
 
 function supportsObject(object, noGrip = false) {
-  if (noGrip === false && isGrip(object)) {
+  // Accept the object if the grip-type (or type for noGrip objects) is "string"
+  if (getGripType(object, noGrip) == "string") {
+    return true;
+  } // Also accept longString objects if we're expecting grip
+
+
+  if (!noGrip) {
     return isLongString(object);
   }
 
-  return getGripType(object, noGrip) == "string";
+  return false;
 } // Exports from this module
 
 
@@ -5840,7 +5845,6 @@ function ObjectRep(props) {
   const {
     shouldRenderTooltip = true
   } = props;
-  const propsArray = safePropIterator(props, object);
 
   if (props.mode === MODE.TINY) {
     const tinyModeItems = [];
@@ -5850,7 +5854,7 @@ function ObjectRep(props) {
     } else {
       tinyModeItems.push(span({
         className: "objectLeftBrace"
-      }, "{"), propsArray.length > 0 ? ellipsisElement : null, span({
+      }, "{"), Object.keys(object).length > 0 ? ellipsisElement : null, span({
         className: "objectRightBrace"
       }, "}"));
     }
@@ -5861,6 +5865,7 @@ function ObjectRep(props) {
     }, ...tinyModeItems);
   }
 
+  const propsArray = safePropIterator(props, object);
   return span({
     className: "objectBox objectBox-object",
     title: shouldRenderTooltip ? getTitle(props) : null

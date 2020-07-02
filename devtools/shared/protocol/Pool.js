@@ -115,17 +115,12 @@ class Pool extends EventEmitter {
     return this.__poolMap && this._poolMap.has(actorID);
   }
 
-  // The actor for a given actor id stored in this pool
-  actor(actorID) {
-    if (this.__poolMap) {
-      return this._poolMap.get(actorID);
-    }
-    return null;
-  }
-
-  // Same as actor, should update debugger connection to use 'actor'
-  // and then remove this.
-  get(actorID) {
+  /**
+   * Search for an actor in this pool, given an actorID
+   * @param {String} actorID
+   * @returns {Actor/null} Returns null if the actor wasn't found
+   */
+  getActorByID(actorID) {
     if (this.__poolMap) {
       return this._poolMap.get(actorID);
     }
