@@ -2,7 +2,7 @@
 
 # SystemEngine
 
-`class SystemEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngine.kt#L27)
+`class SystemEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngine.kt#L28)
 
 WebView-based implementation of the Engine interface.
 
@@ -16,6 +16,7 @@ WebView-based implementation of the Engine interface.
 
 | Name | Summary |
 |---|---|
+| [profiler](profiler.md) | `val profiler: `[`Profiler`](../../mozilla.components.concept.engine.profiler/-profiler/index.md)`?`<br>See [Engine.profiler](../../mozilla.components.concept.engine/-engine/profiler.md). |
 | [settings](settings.md) | `val settings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)<br>See [Engine.settings](../../mozilla.components.concept.engine/-engine/settings.md) |
 | [version](version.md) | `val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md)<br>Returns the version of the engine as [EngineVersion](../../mozilla.components.concept.engine.utils/-engine-version/index.md) object. |
 

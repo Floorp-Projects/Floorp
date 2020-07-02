@@ -2,7 +2,7 @@
 
 # isInMigrationState
 
-`abstract fun isInMigrationState(): `[`InFlightMigrationState`](../-in-flight-migration-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L216)
+`abstract fun isInMigrationState(): `[`InFlightMigrationState`](../-in-flight-migration-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L222)
 
 Checks if there's a migration in-flight. An in-flight migration means that we've tried to migrate
 via either [migrateFromSessionTokenAsync](migrate-from-session-token-async.md) or [copyFromSessionTokenAsync](copy-from-session-token-async.md), and failed for intermittent

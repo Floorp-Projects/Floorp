@@ -15,6 +15,12 @@
 | [SyncConfig](-sync-config/index.md) | `data class SyncConfig`<br>Configuration for sync. |
 | [SyncEngine](-sync-engine/index.md) | `sealed class SyncEngine`<br>Describes possible sync engines that device can support. |
 
+### Exceptions
+
+| Name | Summary |
+|---|---|
+| [AccountManagerException](-account-manager-exception/index.md) | `sealed class AccountManagerException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Exceptions related to the account manager. |
+
 ### Type Aliases
 
 | Name | Summary |

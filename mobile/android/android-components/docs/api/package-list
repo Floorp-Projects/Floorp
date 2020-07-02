@@ -94,6 +94,7 @@ mozilla.components.browser.engine.gecko.fetch
 mozilla.components.browser.engine.gecko.glean
 mozilla.components.browser.engine.gecko.integration
 mozilla.components.browser.engine.gecko.permission
+mozilla.components.browser.engine.gecko.profiler
 mozilla.components.browser.engine.gecko.prompt
 mozilla.components.browser.engine.gecko.selection
 mozilla.components.browser.engine.gecko.webextension
@@ -155,6 +156,7 @@ mozilla.components.concept.engine.manifest
 mozilla.components.concept.engine.media
 mozilla.components.concept.engine.mediaquery
 mozilla.components.concept.engine.permission
+mozilla.components.concept.engine.profiler
 mozilla.components.concept.engine.prompt
 mozilla.components.concept.engine.request
 mozilla.components.concept.engine.search
