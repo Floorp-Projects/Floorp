@@ -75,20 +75,14 @@
 
 #if defined(MOZ_WIDGET_GTK)
 #  include "mozilla/widget/GtkCompositorWidget.h"
-#endif
-
-#if defined(MOZ_WAYLAND)
-#  include "nsDataHashtable.h"
-
-#  include <gtk/gtk.h>
-#  include <gdk/gdkx.h>
-#  include <gdk/gdkwayland.h>
-#  include <wayland-egl.h>
-#  include <dlfcn.h>
-
-#  define IS_WAYLAND_DISPLAY()    \
-    (gdk_display_get_default() && \
-     !GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+#  if defined(MOZ_WAYLAND)
+#    include <dlfcn.h>
+#    include <gdk/gdkwayland.h>
+#    include <wayland-egl.h>
+#    define IS_WAYLAND_DISPLAY()    \
+      (gdk_display_get_default() && \
+       GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
+#  endif
 #endif
 
 using namespace mozilla::gfx;
@@ -242,9 +236,10 @@ static EGLSurface CreateSurfaceFromNativeWindow(
 class GLContextEGLFactory {
  public:
   static already_AddRefed<GLContext> Create(EGLNativeWindowType aWindow,
-                                            bool aWebRender);
+                                            bool aWebRender, int32_t aDepth);
   static already_AddRefed<GLContext> CreateImpl(EGLNativeWindowType aWindow,
-                                                bool aWebRender, bool aUseGles);
+                                                bool aWebRender, bool aUseGles,
+                                                int32_t aDepth);
 
  private:
   GLContextEGLFactory() = default;
@@ -252,7 +247,8 @@ class GLContextEGLFactory {
 };
 
 already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
-    EGLNativeWindowType aWindow, bool aWebRender, bool aUseGles) {
+    EGLNativeWindowType aWindow, bool aWebRender, bool aUseGles,
+    int32_t aDepth) {
   nsCString discardFailureId;
   if (!GLLibraryEGL::EnsureInitialized(false, &discardFailureId)) {
     gfxCriticalNote << "Failed to load EGL library 3!";
@@ -273,10 +269,18 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
       return nullptr;
     }
   } else {
-    if (!CreateConfigScreen(egl, &config, /* aEnableDepthBuffer */ aWebRender,
-                            aUseGles)) {
-      gfxCriticalNote << "Failed to create EGLConfig!";
-      return nullptr;
+    if (aDepth) {
+      if (!CreateConfig(egl, &config, aDepth, aWebRender, aUseGles)) {
+        gfxCriticalNote
+            << "Failed to create EGLConfig for WebRender with depth!";
+        return nullptr;
+      }
+    } else {
+      if (!CreateConfigScreen(egl, &config, /* aEnableDepthBuffer */ aWebRender,
+                              aUseGles)) {
+        gfxCriticalNote << "Failed to create EGLConfig!";
+        return nullptr;
+      }
     }
   }
 
@@ -320,14 +324,14 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
 }
 
 already_AddRefed<GLContext> GLContextEGLFactory::Create(
-    EGLNativeWindowType aWindow, bool aWebRender) {
+    EGLNativeWindowType aWindow, bool aWebRender, int32_t aDepth) {
   RefPtr<GLContext> glContext;
 #if !defined(MOZ_WIDGET_ANDROID)
-  glContext = CreateImpl(aWindow, aWebRender, /* aUseGles */ false);
+  glContext = CreateImpl(aWindow, aWebRender, /* aUseGles */ false, aDepth);
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
   if (!glContext) {
-    glContext = CreateImpl(aWindow, aWebRender, /* aUseGles */ true);
+    glContext = CreateImpl(aWindow, aWebRender, /* aUseGles */ true, aDepth);
   }
   return glContext.forget();
 }
@@ -953,10 +957,14 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aWebRender,
     bool aForceAccelerated) {
   EGLNativeWindowType window = nullptr;
+  int32_t depth = 0;
   if (aCompositorWidget) {
     window = GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget);
+#if defined(MOZ_WIDGET_GTK)
+    depth = aCompositorWidget->AsX11()->GetDepth();
+#endif
   }
-  return GLContextEGLFactory::Create(window, aWebRender);
+  return GLContextEGLFactory::Create(window, aWebRender, depth);
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
