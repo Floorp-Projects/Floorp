@@ -25,67 +25,6 @@ using namespace mozilla::tasktracer;
 
 using namespace mozilla;
 
-namespace {
-
-class DelayedRunnable : public Runnable, public nsITimerCallback {
- public:
-  DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
-                  already_AddRefed<nsIRunnable> aRunnable, uint32_t aDelay)
-      : mozilla::Runnable("DelayedRunnable"),
-        mTarget(aTarget),
-        mWrappedRunnable(aRunnable),
-        mDelayedFrom(TimeStamp::NowLoRes()),
-        mDelay(aDelay) {}
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsresult Init() {
-    return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mDelay,
-                                   nsITimer::TYPE_ONE_SHOT, mTarget);
-  }
-
-  nsresult DoRun() {
-    nsCOMPtr<nsIRunnable> r = std::move(mWrappedRunnable);
-    return r->Run();
-  }
-
-  NS_IMETHOD Run() override {
-    // Already ran?
-    if (!mWrappedRunnable) {
-      return NS_OK;
-    }
-
-    // Are we too early?
-    if ((TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() < mDelay) {
-      return NS_OK;  // Let the nsITimer run us.
-    }
-
-    mTimer->Cancel();
-    return DoRun();
-  }
-
-  NS_IMETHOD Notify(nsITimer* aTimer) override {
-    // If we already ran, the timer should have been canceled.
-    MOZ_ASSERT(mWrappedRunnable);
-    MOZ_ASSERT(aTimer == mTimer);
-
-    return DoRun();
-  }
-
- private:
-  ~DelayedRunnable() = default;
-
-  nsCOMPtr<nsIEventTarget> mTarget;
-  nsCOMPtr<nsIRunnable> mWrappedRunnable;
-  nsCOMPtr<nsITimer> mTimer;
-  TimeStamp mDelayedFrom;
-  uint32_t mDelay;
-};
-
-NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback)
-
-}  // anonymous namespace
-
 ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
                                      bool aIsMainThread)
     : mSink(aSink), mIsMainThread(aIsMainThread) {
