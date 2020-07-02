@@ -82,7 +82,6 @@
 #include "nsXPCOMCID.h"
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
-#include "nsZipArchive.h"
 #include "plbase64.h"
 #include "PLDHashTable.h"
 #include "plstr.h"
@@ -4312,7 +4311,7 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir,
   return rv;
 }
 
-static nsresult pref_ReadPrefFromJar(nsZipArchive* aJarReader,
+static nsresult pref_ReadPrefFromJar(CacheAwareZipReader* aJarReader,
                                      const char* aName) {
   TimeStamp startTime = TimeStamp::Now();
 
@@ -4329,8 +4328,8 @@ static nsresult pref_ReadPrefFromJar(nsZipArchive* aJarReader,
   return NS_OK;
 }
 
-static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
-                                      const char* path) {
+static nsresult pref_ReadDefaultPrefs(
+    const RefPtr<CacheAwareZipReader>& jarReader, const char* path) {
   UniquePtr<nsZipFind> find;
   nsTArray<nsCString> prefEntries;
   const char* entryName;
@@ -4509,7 +4508,7 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
   const char* entryName;
   uint16_t entryNameLen;
 
-  RefPtr<nsZipArchive> jarReader = Omnijar::GetReader(Omnijar::GRE);
+  RefPtr<CacheAwareZipReader> jarReader = Omnijar::GetReader(Omnijar::GRE);
   if (jarReader) {
 #ifdef MOZ_WIDGET_ANDROID
     // Try to load an architecture-specific greprefs.js first. This will be
@@ -4591,7 +4590,7 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
 
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
   // or jar:$gre/omni.jar!/defaults/preferences/*.js.
-  RefPtr<nsZipArchive> appJarReader = Omnijar::GetReader(Omnijar::APP);
+  RefPtr<CacheAwareZipReader> appJarReader = Omnijar::GetReader(Omnijar::APP);
 
   // GetReader(Omnijar::APP) returns null when `$app == $gre`, in
   // which case we look for app-specific default preferences in $gre.
