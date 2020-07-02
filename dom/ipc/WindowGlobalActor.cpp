@@ -46,6 +46,8 @@ WindowGlobalInit WindowGlobalActor::BaseInitializer(
   // can initialize them here.
   mozilla::Get<WindowContext::IDX_EmbedderPolicy>(ctx.mFields) =
       InheritedPolicy(aBrowsingContext);
+  mozilla::Get<WindowContext::IDX_AutoplayPermission>(init.context().mFields) =
+      nsIPermissionManager::UNKNOWN_ACTION;
   return init;
 }
 
