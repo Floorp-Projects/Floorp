@@ -1137,7 +1137,7 @@ class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
         timeout = self.timeout_multiplier * test.timeout if self.debug_info is None else None
 
         test_url = self.test_url(test)
-        self.page_ranges = page_ranges.get(test)
+        self.page_ranges = page_ranges.get(test.url)
 
         return ExecuteAsyncScriptRun(self.logger,
                                      self._render,

@@ -648,30 +648,30 @@ class SourceFile(object):
 
     @cached_property
     def page_ranges(self):
-        # type: () -> Dict[Text, List[List[Optional[Int]]]]
+        # type: () -> Dict[Text, List[List[Optional[int]]]]
         """List of ElementTree Elements corresponding to nodes in a test that
         specify print-reftest page ranges"""
-        rv = {}
+        rv = {}  # type: Dict[Text, List[List[Optional[int]]]]
         for node in self.page_ranges_nodes:
-            key, value = self.parse_ref_keyed_meta(node)
+            key_data, value = self.parse_ref_keyed_meta(node)
             # Just key by url
-            if key is None:
+            if key_data is None:
                 key = self.url
             else:
-                key = key[1]
+                key = key_data[1]
             if key in rv:
                 raise ValueError("Duplicate page-ranges value")
             rv[key] = []
             for range_str in value.split(","):
                 range_str = range_str.strip()
                 if "-" in range_str:
-                     range_parts = [item.strip() for item in range_str.split("-")]
-                     try:
-                         range_parts = [int(item) if item else None for item in range_parts]
-                     except ValueError:
-                         raise ValueError("Malformed page-range value %s" % range_str)
-                     if any(item == 0 for item in range_parts):
-                         raise ValueError("Malformed page-range value %s" % range_str)
+                    range_parts_str = [item.strip() for item in range_str.split("-")]
+                    try:
+                        range_parts = [int(item) if item else None for item in range_parts_str]
+                    except ValueError:
+                        raise ValueError("Malformed page-range value %s" % range_str)
+                    if any(item == 0 for item in range_parts):
+                        raise ValueError("Malformed page-range value %s" % range_str)
                 else:
                     try:
                         range_parts = [int(range_str)]
