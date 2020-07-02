@@ -198,6 +198,8 @@ void StructuredSpewer::parseSpewFlags(const char* flags) {
         "  ScriptStats        Dump statistics collected by tracelogger that\n"
         "                     is aggregated by script. Requires\n"
         "                     JS_TRACE_LOGGING=1\n"
+        "  RateMyCacheIR      Dump the CacheIR information and associated "
+        "rating\n"
         // End Channel list
         "\n\n"
         "By default output goes to a file called spew_output.$PID.$THREAD\n"
