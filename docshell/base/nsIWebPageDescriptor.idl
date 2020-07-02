@@ -12,19 +12,18 @@
 [scriptable, uuid(6f30b676-3710-4c2c-80b1-0395fb26516e)]
 interface nsIWebPageDescriptor : nsISupports
 {
-  const unsigned long DISPLAY_AS_SOURCE = 0x0001;
-  const unsigned long DISPLAY_NORMAL    = 0x0002;
-
  /**
-  * Tells the object to load the page specified by the page descriptor
+  * Tells the object to load the page specified by the page descriptor.
+  * @note, currently aPageDescriptor must be an nsISHEntry object.
   *
   * @throws NS_ERROR_FAILURE -
   */
-  void loadPage(in nsISupports aPageDescriptor, in unsigned long aDisplayType);
+  void loadPageAsViewSource(in nsISupports aPageDescriptor);
 
 
  /**
   * Retrieves the page descriptor for the curent document.
+  * @note, currentDescriptor is currently always an nsISHEntry object or null.
   */
   readonly attribute nsISupports currentDescriptor;
 };
