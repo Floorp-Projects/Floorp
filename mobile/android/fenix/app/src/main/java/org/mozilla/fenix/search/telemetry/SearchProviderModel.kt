@@ -39,23 +39,8 @@ data class SearchProviderModel(
      * Checks if any of the given URLs represent an ad from the search engine.
      * Used to check if a clicked link was for an ad.
      */
-    fun containsAds(urlList: List<String>) = urlList.containsAds(extraAdServersRegexps)
+    fun containsAds(urlList: List<String>) = urlList.any { url -> isAd(url) }
 
-    private fun String.isAd(adRegexps: List<Regex>): Boolean {
-        for (adsRegex in adRegexps) {
-            if (adsRegex.containsMatchIn(this)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun List<String>.containsAds(adRegexps: List<Regex>): Boolean {
-        for (url in this) {
-            if (url.isAd(adRegexps)) {
-                return true
-            }
-        }
-        return false
-    }
+    private fun isAd(url: String) =
+        extraAdServersRegexps.any { adsRegex -> adsRegex.containsMatchIn(url) }
 }

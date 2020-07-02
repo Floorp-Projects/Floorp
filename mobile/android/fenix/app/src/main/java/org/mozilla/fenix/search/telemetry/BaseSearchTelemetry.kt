@@ -82,14 +82,8 @@ abstract class BaseSearchTelemetry {
 
     abstract fun install(engine: Engine, store: BrowserStore)
 
-    internal fun getProviderForUrl(url: String): SearchProviderModel? {
-        for (provider in providerList) {
-            if (Regex(provider.regexp).containsMatchIn(url)) {
-                return provider
-            }
-        }
-        return null
-    }
+    internal fun getProviderForUrl(url: String): SearchProviderModel? =
+        providerList.find { provider -> provider.regexp.containsMatchIn(url) }
 
     internal fun installWebExtension(
         engine: Engine,
