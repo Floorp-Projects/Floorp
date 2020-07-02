@@ -716,6 +716,9 @@ class ICFallbackStub : public ICStub {
 // Shared trait for all CacheIR stubs.
 template <typename Base>
 class ICCacheIR_Trait : public Base {
+  // Flags stored in the uint16_t extra_ field in ICStub.
+  static constexpr uint16_t PreliminaryObjectBit = 1 << 0;
+
  protected:
   const CacheIRStubInfo* stubInfo_;
 
@@ -738,8 +741,10 @@ class ICCacheIR_Trait : public Base {
   uint32_t enteredCount() const { return enteredCount_; }
   void resetEnteredCount() { enteredCount_ = 0; }
 
-  void notePreliminaryObject() { this->extra_ = 1; }
-  bool hasPreliminaryObject() const { return this->extra_; }
+  void notePreliminaryObject() { this->extra_ |= PreliminaryObjectBit; }
+  bool hasPreliminaryObject() const {
+    return (this->extra_ & PreliminaryObjectBit) != 0;
+  }
 
   static constexpr size_t offsetOfEnteredCount() {
     using T = ICCacheIR_Trait<Base>;
