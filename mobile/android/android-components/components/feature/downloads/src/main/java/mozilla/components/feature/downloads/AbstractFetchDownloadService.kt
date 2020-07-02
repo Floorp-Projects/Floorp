@@ -586,6 +586,15 @@ abstract class AbstractFetchDownloadService : Service() {
             setDownloadJobStatus(download, FAILED)
         } else if (getDownloadJobStatus(download) == DownloadJobStatus.ACTIVE) {
             setDownloadJobStatus(download, COMPLETED)
+            /**
+             * In cases when we don't get the file size provided initially, we have to
+             * use downloadState.currentBytesCopied as a fallback.
+             */
+            val fileSizeNotFound = download.state.contentLength == null || download.state.contentLength == 0L
+            if (fileSizeNotFound) {
+                val newState = download.state.copy(contentLength = download.currentBytesCopied)
+                updateDownloadState(newState)
+            }
         }
     }
 
