@@ -196,6 +196,9 @@ class FrameInfo {
     return Address(BaselineFrameReg,
                    BaselineFrame::reverseOffsetOfEnvironmentChain());
   }
+  Address addressOfICScript() const {
+    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfICScript());
+  }
   Address addressOfFlags() const {
     return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
   }
@@ -323,11 +326,6 @@ class CompilerFrameInfo : public FrameInfo {
     MOZ_ASSERT(slot < stackDepth());
     return Address(BaselineFrameReg,
                    BaselineFrame::reverseOffsetOfLocal(nlocals() + slot));
-  }
-
-  Address addressOfICScript() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfCompilerICScript());
   }
 
   void popValue(ValueOperand dest);

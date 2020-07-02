@@ -114,6 +114,9 @@ void BaselineFrame::setInterpreterFields(JSScript* script, jsbytecode* pc) {
   interpreterScript_ = script;
   interpreterPC_ = pc;
   interpreterICEntry_ = jitScript->interpreterICEntryFromPCOffset(pcOffset);
+  if (JitOptions.warpBuilder) {
+    icScript_ = jitScript->icScript();
+  }
 }
 
 void BaselineFrame::setInterpreterFieldsForPrologue(JSScript* script) {
@@ -127,6 +130,9 @@ void BaselineFrame::setInterpreterFieldsForPrologue(JSScript* script) {
     // scripts) the interpreterICEntry_ field won't be used. Just set it to
     // nullptr.
     interpreterICEntry_ = nullptr;
+  }
+  if (JitOptions.warpBuilder) {
+    icScript_ = jitScript->icScript();
   }
 }
 
