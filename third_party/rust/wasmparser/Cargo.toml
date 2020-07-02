@@ -13,13 +13,17 @@
 [package]
 edition = "2018"
 name = "wasmparser"
-version = "0.57.0"
+version = "0.58.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
-homepage = "https://github.com/bytecodealliance/wasm-tools/tree/master/crates/wasmparser"
+homepage = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser"
 keywords = ["parser", "WebAssembly", "wasm"]
 license = "Apache-2.0 WITH LLVM-exception"
-repository = "https://github.com/bytecodealliance/wasm-tools/tree/master/crates/wasmparser"
+repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser"
+
+[[bench]]
+name = "benchmark"
+harness = false
 [dev-dependencies.anyhow]
 version = "1.0"
 

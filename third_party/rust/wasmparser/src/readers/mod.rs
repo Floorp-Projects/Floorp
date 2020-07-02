@@ -14,9 +14,8 @@
  */
 
 use super::{
-    BinaryReader, BinaryReaderError, CustomSectionKind, ExternalKind, FuncType, GlobalType,
-    ImportSectionEntryType, LinkingType, MemoryType, NameType, Naming, Operator, Range, RelocType,
-    Result, SectionCode, TableType, Type,
+    BinaryReader, BinaryReaderError, CustomSectionKind, ExternalKind, GlobalType, LinkingType,
+    MemoryType, NameType, Naming, Operator, Range, RelocType, Result, SectionCode, TableType, Type,
 };
 
 use super::SectionHeader;
@@ -56,6 +55,7 @@ pub use self::section_reader::SectionIteratorLimited;
 pub use self::section_reader::SectionReader;
 pub use self::section_reader::SectionWithLimitedItems;
 
+pub use self::name_section::FunctionLocalReader;
 pub use self::name_section::FunctionName;
 pub use self::name_section::LocalName;
 pub use self::name_section::ModuleName;
@@ -77,6 +77,12 @@ use self::sourcemappingurl_section::read_sourcemappingurl_section_content;
 
 pub use self::operators::OperatorsReader;
 
+pub use self::alias_section::*;
+pub use self::instance_section::*;
+pub use self::module_code_section::*;
+pub use self::module_section::*;
+
+mod alias_section;
 mod code_section;
 mod data_count_section;
 mod data_section;
@@ -86,9 +92,12 @@ mod function_section;
 mod global_section;
 mod import_section;
 mod init_expr;
+mod instance_section;
 mod linking_section;
 mod memory_section;
 mod module;
+mod module_code_section;
+mod module_section;
 mod name_section;
 mod operators;
 mod producers_section;

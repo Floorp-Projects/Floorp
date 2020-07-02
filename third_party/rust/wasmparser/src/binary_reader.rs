@@ -18,16 +18,14 @@ use std::convert::TryInto;
 use std::str;
 use std::vec::Vec;
 
-use crate::limits::{
-    MAX_WASM_FUNCTION_LOCALS, MAX_WASM_FUNCTION_PARAMS, MAX_WASM_FUNCTION_RETURNS,
-    MAX_WASM_FUNCTION_SIZE, MAX_WASM_STRING_SIZE,
-};
+use crate::limits::*;
 
 use crate::primitives::{
     BinaryReaderError, BrTable, CustomSectionKind, ExternalKind, FuncType, GlobalType, Ieee32,
     Ieee64, LinkingType, MemoryImmediate, MemoryType, NameType, Operator, RelocType,
     ResizableLimits, Result, SIMDLaneIndex, SectionCode, TableType, Type, TypeOrFuncType, V128,
 };
+use crate::{ExportType, Import, ImportSectionEntryType, InstanceType, ModuleType};
 
 const MAX_WASM_BR_TABLE_SIZE: usize = MAX_WASM_FUNCTION_SIZE;
 
@@ -43,6 +41,7 @@ const WASM_MAGIC_NUMBER: &[u8; 4] = b"\0asm";
 const WASM_EXPERIMENTAL_VERSION: u32 = 0xd;
 const WASM_SUPPORTED_VERSION: u32 = 0x1;
 
+#[derive(Clone)]
 pub(crate) struct SectionHeader<'a> {
     pub code: SectionCode<'a>,
     pub payload_start: usize,
@@ -235,6 +234,9 @@ impl<'a> BinaryReader<'a> {
             1 => Ok(ExternalKind::Table),
             2 => Ok(ExternalKind::Memory),
             3 => Ok(ExternalKind::Global),
+            5 => Ok(ExternalKind::Module),
+            6 => Ok(ExternalKind::Instance),
+            7 => Ok(ExternalKind::Type),
             _ => Err(BinaryReaderError::new(
                 "Invalid external kind",
                 self.original_position() - 1,
@@ -243,13 +245,6 @@ impl<'a> BinaryReader<'a> {
     }
 
     pub(crate) fn read_func_type(&mut self) -> Result<FuncType> {
-        if self.read_type()? != Type::Func {
-            return Err(BinaryReaderError::new(
-                "type signature is not a func",
-                self.original_position() - 1,
-            ));
-        }
-
         let params_len = self.read_var_u32()? as usize;
         if params_len > MAX_WASM_FUNCTION_PARAMS {
             return Err(BinaryReaderError::new(
@@ -275,6 +270,77 @@ impl<'a> BinaryReader<'a> {
         Ok(FuncType {
             params: params.into_boxed_slice(),
             returns: returns.into_boxed_slice(),
+        })
+    }
+
+    pub(crate) fn read_module_type(&mut self) -> Result<ModuleType<'a>> {
+        let pos = self.original_position();
+        let imports_len = self.read_var_u32()? as usize;
+        if imports_len > MAX_WASM_IMPORTS {
+            return Err(BinaryReaderError::new("imports size is out of bounds", pos));
+        }
+        Ok(ModuleType {
+            imports: (0..imports_len)
+                .map(|_| self.read_import())
+                .collect::<Result<_>>()?,
+            exports: self.read_export_types()?,
+        })
+    }
+
+    pub(crate) fn read_instance_type(&mut self) -> Result<InstanceType<'a>> {
+        Ok(InstanceType {
+            exports: self.read_export_types()?,
+        })
+    }
+
+    fn read_export_types(&mut self) -> Result<Box<[ExportType<'a>]>> {
+        let pos = self.original_position();
+        let exports_len = self.read_var_u32()? as usize;
+        if exports_len > MAX_WASM_EXPORTS {
+            return Err(BinaryReaderError::new("exports size is out of bound", pos));
+        }
+        (0..exports_len).map(|_| self.read_export_type()).collect()
+    }
+
+    pub(crate) fn read_import(&mut self) -> Result<Import<'a>> {
+        let module = self.read_string()?;
+
+        // For the `field`, figure out if we're the experimental encoding of
+        // single-level imports for the module linking proposal (a single-byte
+        // string which is 0xc0, which is invalid utf-8) or if we have a second
+        // level of import.
+        let mut clone = self.clone();
+        let field = if clone.read_var_u32()? == 1 && clone.read_u8()? == 0xc0 {
+            *self = clone;
+            None
+        } else {
+            Some(self.read_string()?)
+        };
+
+        let ty = self.read_import_desc()?;
+        Ok(Import { module, field, ty })
+    }
+
+    pub(crate) fn read_export_type(&mut self) -> Result<ExportType<'a>> {
+        let name = self.read_string()?;
+        let ty = self.read_import_desc()?;
+        Ok(ExportType { name, ty })
+    }
+
+    pub(crate) fn read_import_desc(&mut self) -> Result<ImportSectionEntryType> {
+        Ok(match self.read_external_kind()? {
+            ExternalKind::Function => ImportSectionEntryType::Function(self.read_var_u32()?),
+            ExternalKind::Table => ImportSectionEntryType::Table(self.read_table_type()?),
+            ExternalKind::Memory => ImportSectionEntryType::Memory(self.read_memory_type()?),
+            ExternalKind::Global => ImportSectionEntryType::Global(self.read_global_type()?),
+            ExternalKind::Module => ImportSectionEntryType::Module(self.read_var_u32()?),
+            ExternalKind::Instance => ImportSectionEntryType::Instance(self.read_var_u32()?),
+            ExternalKind::Type => {
+                return Err(BinaryReaderError::new(
+                    "cannot import types",
+                    self.original_position() - 1,
+                ))
+            }
         })
     }
 
@@ -362,6 +428,10 @@ impl<'a> BinaryReader<'a> {
             10 => Ok(SectionCode::Code),
             11 => Ok(SectionCode::Data),
             12 => Ok(SectionCode::DataCount),
+            100 => Ok(SectionCode::Module),
+            101 => Ok(SectionCode::Instance),
+            102 => Ok(SectionCode::Alias),
+            103 => Ok(SectionCode::ModuleCode),
             _ => Err(BinaryReaderError::new("Invalid section code", offset)),
         }
     }
@@ -1526,6 +1596,7 @@ impl<'a> BinaryReader<'a> {
             0x61 => Operator::I8x16Neg,
             0x62 => Operator::I8x16AnyTrue,
             0x63 => Operator::I8x16AllTrue,
+            0x64 => Operator::I8x16Bitmask,
             0x65 => Operator::I8x16NarrowI16x8S,
             0x66 => Operator::I8x16NarrowI16x8U,
             0x6b => Operator::I8x16Shl,
@@ -1546,6 +1617,7 @@ impl<'a> BinaryReader<'a> {
             0x81 => Operator::I16x8Neg,
             0x82 => Operator::I16x8AnyTrue,
             0x83 => Operator::I16x8AllTrue,
+            0x84 => Operator::I16x8Bitmask,
             0x85 => Operator::I16x8NarrowI32x4S,
             0x86 => Operator::I16x8NarrowI32x4U,
             0x87 => Operator::I16x8WidenLowI8x16S,
@@ -1571,6 +1643,7 @@ impl<'a> BinaryReader<'a> {
             0xa1 => Operator::I32x4Neg,
             0xa2 => Operator::I32x4AnyTrue,
             0xa3 => Operator::I32x4AllTrue,
+            0xa4 => Operator::I32x4Bitmask,
             0xa7 => Operator::I32x4WidenLowI16x8S,
             0xa8 => Operator::I32x4WidenHighI16x8S,
             0xa9 => Operator::I32x4WidenLowI16x8U,

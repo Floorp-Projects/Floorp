@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
+use std::fmt;
+
 use super::{
     BinaryReader, BinaryReaderError, CustomSectionKind, Range, Result, SectionCode, SectionHeader,
 };
 
 use super::{
     read_data_count_section_content, read_sourcemappingurl_section_content,
-    read_start_section_content, CodeSectionReader, DataSectionReader, ElementSectionReader,
-    ExportSectionReader, FunctionSectionReader, GlobalSectionReader, ImportSectionReader,
-    LinkingSectionReader, MemorySectionReader, NameSectionReader, ProducersSectionReader,
+    read_start_section_content, AliasSectionReader, CodeSectionReader, DataSectionReader,
+    ElementSectionReader, ExportSectionReader, FunctionSectionReader, GlobalSectionReader,
+    ImportSectionReader, InstanceSectionReader, LinkingSectionReader, MemorySectionReader,
+    ModuleCodeSectionReader, ModuleSectionReader, NameSectionReader, ProducersSectionReader,
     RelocSectionReader, TableSectionReader, TypeSectionReader,
 };
 
@@ -232,11 +235,55 @@ impl<'a> Section<'a> {
         }
     }
 
+    pub fn get_module_section_reader<'b>(&self) -> Result<ModuleSectionReader<'b>>
+    where
+        'a: 'b,
+    {
+        match self.code {
+            SectionCode::Module => ModuleSectionReader::new(self.data, self.offset),
+            _ => panic!("Invalid state for get_module_section_reader"),
+        }
+    }
+
+    pub fn get_alias_section_reader<'b>(&self) -> Result<AliasSectionReader<'b>>
+    where
+        'a: 'b,
+    {
+        match self.code {
+            SectionCode::Alias => AliasSectionReader::new(self.data, self.offset),
+            _ => panic!("Invalid state for get_alias_section_reader"),
+        }
+    }
+
+    pub fn get_instance_section_reader<'b>(&self) -> Result<InstanceSectionReader<'b>>
+    where
+        'a: 'b,
+    {
+        match self.code {
+            SectionCode::Instance => InstanceSectionReader::new(self.data, self.offset),
+            _ => panic!("Invalid state for get_instance_section_reader"),
+        }
+    }
+
+    pub fn get_module_code_section_reader<'b>(&self) -> Result<ModuleCodeSectionReader<'b>>
+    where
+        'a: 'b,
+    {
+        match self.code {
+            SectionCode::ModuleCode => ModuleCodeSectionReader::new(self.data, self.offset),
+            _ => panic!("Invalid state for get_module_code_section_reader"),
+        }
+    }
+
     pub fn get_binary_reader<'b>(&self) -> BinaryReader<'b>
     where
         'a: 'b,
     {
         BinaryReader::new_with_offset(self.data, self.offset)
+    }
+
+    pub fn content_raw(&self) -> &'a [u8] {
+        self.data
     }
 
     pub fn range(&self) -> Range {
@@ -262,6 +309,12 @@ impl<'a> Section<'a> {
             SectionCode::Table => SectionContent::Table(self.get_table_section_reader()?),
             SectionCode::Element => SectionContent::Element(self.get_element_section_reader()?),
             SectionCode::Start => SectionContent::Start(self.get_start_section_content()?),
+            SectionCode::Module => SectionContent::Module(self.get_module_section_reader()?),
+            SectionCode::Alias => SectionContent::Alias(self.get_alias_section_reader()?),
+            SectionCode::Instance => SectionContent::Instance(self.get_instance_section_reader()?),
+            SectionCode::ModuleCode => {
+                SectionContent::ModuleCode(self.get_module_code_section_reader()?)
+            }
             SectionCode::DataCount => {
                 SectionContent::DataCount(self.get_data_count_section_content()?)
             }
@@ -323,6 +376,10 @@ pub enum SectionContent<'a> {
         binary: BinaryReader<'a>,
         content: Option<CustomSectionContent<'a>>,
     },
+    Module(ModuleSectionReader<'a>),
+    Alias(AliasSectionReader<'a>),
+    Instance(InstanceSectionReader<'a>),
+    ModuleCode(ModuleCodeSectionReader<'a>),
 }
 
 pub enum CustomSectionContent<'a> {
@@ -334,6 +391,7 @@ pub enum CustomSectionContent<'a> {
 }
 
 /// Reads top-level WebAssembly file structure: header and sections.
+#[derive(Clone)]
 pub struct ModuleReader<'a> {
     reader: BinaryReader<'a>,
     version: u32,
@@ -342,7 +400,11 @@ pub struct ModuleReader<'a> {
 
 impl<'a> ModuleReader<'a> {
     pub fn new(data: &[u8]) -> Result<ModuleReader> {
-        let mut reader = BinaryReader::new(data);
+        ModuleReader::new_with_offset(data, 0)
+    }
+
+    pub(crate) fn new_with_offset(data: &[u8], offset: usize) -> Result<ModuleReader> {
+        let mut reader = BinaryReader::new_with_offset(data, offset);
         let version = reader.read_file_header()?;
         Ok(ModuleReader {
             reader,
@@ -360,6 +422,10 @@ impl<'a> ModuleReader<'a> {
             Some((position, _)) => position,
             _ => self.reader.current_position(),
         }
+    }
+
+    pub fn original_position(&self) -> usize {
+        self.reader.original_position()
     }
 
     pub fn eof(&self) -> bool {
@@ -412,11 +478,12 @@ impl<'a> ModuleReader<'a> {
         };
         let payload_end = payload_start + payload_len;
         self.verify_section_end(payload_end)?;
+        let offset = self.reader.original_position();
         let body_start = self.reader.position;
         self.reader.skip_to(payload_end);
         Ok(Section {
             code,
-            offset: body_start,
+            offset,
             data: &self.reader.buffer[body_start..payload_end],
         })
     }
@@ -478,6 +545,14 @@ impl<'a> IntoIterator for ModuleReader<'a> {
             reader: self,
             err: false,
         }
+    }
+}
+
+impl<'a> fmt::Debug for ModuleReader<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ModuleReader")
+            .field("version", &self.version)
+            .finish()
     }
 }
 

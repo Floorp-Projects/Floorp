@@ -1,3 +1,6 @@
+// |jit-test| skip-if: wasmCompilersPresent().match("cranelift")
+// (Reason: the Cranelift backend does not support shared memory yet.)
+
 // Tests of limits of memory and table types
 
 const PageSize = 65536;

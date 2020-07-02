@@ -22,6 +22,7 @@ use cranelift_codegen::ir::types::*;
 use cranelift_codegen::ir::{self, InstBuilder};
 use cranelift_codegen::isa::TargetFrontendConfig;
 use cranelift_entity::{EntityRef, PrimaryMap, SecondaryMap};
+use cranelift_frontend::FunctionBuilder;
 use std::boxed::Box;
 use std::string::String;
 use std::vec::Vec;
@@ -196,6 +197,14 @@ impl<'dummy_environment> DummyFuncEnvironment<'dummy_environment> {
             ir::ArgumentPurpose::VMContext,
         ));
         sig
+    }
+
+    fn reference_type(&self) -> ir::Type {
+        match self.pointer_type() {
+            ir::types::I32 => ir::types::R32,
+            ir::types::I64 => ir::types::R64,
+            _ => panic!("unsupported pointer type"),
+        }
     }
 }
 
@@ -435,6 +444,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
         &mut self,
         mut pos: FuncCursor,
         _table_index: TableIndex,
+        _table: ir::Table,
         _delta: ir::Value,
         _init_value: ir::Value,
     ) -> WasmResult<ir::Value> {
@@ -443,17 +453,19 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
 
     fn translate_table_get(
         &mut self,
-        mut pos: FuncCursor,
+        builder: &mut FunctionBuilder,
         _table_index: TableIndex,
+        _table: ir::Table,
         _index: ir::Value,
     ) -> WasmResult<ir::Value> {
-        Ok(pos.ins().null(self.reference_type()))
+        Ok(builder.ins().null(self.reference_type()))
     }
 
     fn translate_table_set(
         &mut self,
-        _pos: FuncCursor,
+        _builder: &mut FunctionBuilder,
         _table_index: TableIndex,
+        _table: ir::Table,
         _value: ir::Value,
         _index: ir::Value,
     ) -> WasmResult<()> {
@@ -505,7 +517,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     fn translate_ref_func(
         &mut self,
         mut pos: FuncCursor,
-        _func_index: u32,
+        _func_index: FuncIndex,
     ) -> WasmResult<ir::Value> {
         Ok(pos.ins().null(self.reference_type()))
     }

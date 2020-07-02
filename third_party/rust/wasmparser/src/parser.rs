@@ -22,19 +22,12 @@ use crate::limits::{
 };
 
 use crate::primitives::{
-    BinaryReaderError, CustomSectionKind, ExternalKind, FuncType, GlobalType,
-    ImportSectionEntryType, LinkingType, MemoryType, Naming, Operator, RelocType, Result,
-    SectionCode, TableType, Type,
+    BinaryReaderError, CustomSectionKind, ExternalKind, GlobalType, ImportSectionEntryType,
+    LinkingType, MemoryType, Naming, Operator, RelocType, Result, SectionCode, TableType, Type,
+    TypeDef,
 };
 
-use crate::readers::{
-    CodeSectionReader, Data, DataKind, DataSectionReader, Element, ElementItem, ElementItems,
-    ElementKind, ElementSectionReader, Export, ExportSectionReader, FunctionBody,
-    FunctionSectionReader, Global, GlobalSectionReader, Import, ImportSectionReader,
-    LinkingSectionReader, MemorySectionReader, ModuleReader, Name, NameSectionReader, NamingReader,
-    OperatorsReader, Reloc, RelocSectionReader, Section, SectionReader, TableSectionReader,
-    TypeSectionReader,
-};
+use crate::readers::*;
 
 use crate::binary_reader::{BinaryReader, Range};
 
@@ -85,10 +78,10 @@ pub enum ParserState<'a> {
     ReadingSectionRawData,
     SectionRawData(&'a [u8]),
 
-    TypeSectionEntry(FuncType),
+    TypeSectionEntry(TypeDef<'a>),
     ImportSectionEntry {
         module: &'a str,
-        field: &'a str,
+        field: Option<&'a str>,
         ty: ImportSectionEntryType,
     },
     FunctionSectionEntry(u32),
@@ -140,6 +133,19 @@ pub enum ParserState<'a> {
     LinkingSectionEntry(LinkingType),
 
     SourceMappingURL(&'a str),
+
+    ModuleSectionEntry(u32),
+    AliasSectionEntry(Alias),
+    BeginInstantiate {
+        module: u32,
+        count: u32,
+    },
+    InstantiateParameter {
+        kind: ExternalKind,
+        index: u32,
+    },
+    EndInstantiate,
+    InlineModule(ModuleCode<'a>),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -183,6 +189,10 @@ enum ParserSectionReader<'a> {
     NameSectionReader(NameSectionReader<'a>),
     LinkingSectionReader(LinkingSectionReader<'a>),
     RelocSectionReader(RelocSectionReader<'a>),
+    ModuleSectionReader(ModuleSectionReader<'a>),
+    AliasSectionReader(AliasSectionReader<'a>),
+    InstanceSectionReader(InstanceSectionReader<'a>),
+    ModuleCodeSectionReader(ModuleCodeSectionReader<'a>),
 }
 
 macro_rules! section_reader {
@@ -221,6 +231,7 @@ pub struct Parser<'a> {
     current_data_segment: Option<&'a [u8]>,
     binary_reader: Option<BinaryReader<'a>>,
     operators_reader: Option<OperatorsReader<'a>>,
+    instance_args: Option<InstanceArgsReader<'a>>,
     section_entries_left: u32,
 }
 
@@ -247,6 +258,7 @@ impl<'a> Parser<'a> {
             current_data_segment: None,
             binary_reader: None,
             operators_reader: None,
+            instance_args: None,
             section_entries_left: 0,
         }
     }
@@ -681,6 +693,63 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    fn read_module_entry(&mut self) -> Result<()> {
+        if self.section_entries_left == 0 {
+            return self.check_section_end();
+        }
+        let module_ty = section_reader!(self, ModuleSectionReader).read()?;
+        self.state = ParserState::ModuleSectionEntry(module_ty);
+        self.section_entries_left -= 1;
+        Ok(())
+    }
+
+    fn read_alias_entry(&mut self) -> Result<()> {
+        if self.section_entries_left == 0 {
+            return self.check_section_end();
+        }
+        let alias_ty = section_reader!(self, AliasSectionReader).read()?;
+        self.state = ParserState::AliasSectionEntry(alias_ty);
+        self.section_entries_left -= 1;
+        Ok(())
+    }
+
+    fn read_instance_entry(&mut self) -> Result<()> {
+        if self.section_entries_left == 0 {
+            return self.check_section_end();
+        }
+        let instance = section_reader!(self, InstanceSectionReader).read()?;
+        let args = instance.args()?;
+        self.state = ParserState::BeginInstantiate {
+            module: instance.module(),
+            count: args.get_count(),
+        };
+        self.instance_args = Some(args);
+        self.section_entries_left -= 1;
+        Ok(())
+    }
+
+    fn read_instantiate_field(&mut self) -> Result<()> {
+        let instance = self.instance_args.as_mut().unwrap();
+        if instance.eof() {
+            self.instance_args = None;
+            self.state = ParserState::EndInstantiate;
+        } else {
+            let (kind, index) = self.instance_args.as_mut().unwrap().read()?;
+            self.state = ParserState::InstantiateParameter { kind, index };
+        }
+        Ok(())
+    }
+
+    fn read_module_code_entry(&mut self) -> Result<()> {
+        if self.section_entries_left == 0 {
+            return self.check_section_end();
+        }
+        let module = section_reader!(self, ModuleCodeSectionReader).read()?;
+        self.state = ParserState::InlineModule(module);
+        self.section_entries_left -= 1;
+        Ok(())
+    }
+
     fn read_section_body(&mut self) -> Result<()> {
         match self.state {
             ParserState::BeginSection {
@@ -776,6 +845,38 @@ impl<'a> Parser<'a> {
                 self.state = ParserState::DataCountSectionEntry(func_index);
             }
             ParserState::BeginSection {
+                code: SectionCode::Module,
+                ..
+            } => {
+                start_section_reader!(self, ModuleSectionReader, get_module_section_reader);
+                self.read_module_entry()?;
+            }
+            ParserState::BeginSection {
+                code: SectionCode::Alias,
+                ..
+            } => {
+                start_section_reader!(self, AliasSectionReader, get_alias_section_reader);
+                self.read_alias_entry()?;
+            }
+            ParserState::BeginSection {
+                code: SectionCode::Instance,
+                ..
+            } => {
+                start_section_reader!(self, InstanceSectionReader, get_instance_section_reader);
+                self.read_instance_entry()?;
+            }
+            ParserState::BeginSection {
+                code: SectionCode::ModuleCode,
+                ..
+            } => {
+                start_section_reader!(
+                    self,
+                    ModuleCodeSectionReader,
+                    get_module_code_section_reader
+                );
+                self.read_module_code_entry()?;
+            }
+            ParserState::BeginSection {
                 code: SectionCode::Custom { .. },
                 ..
             } => {
@@ -849,6 +950,10 @@ impl<'a> Parser<'a> {
             ParserSectionReader::TypeSectionReader(ref reader) => reader.ensure_end()?,
             ParserSectionReader::LinkingSectionReader(ref reader) => reader.ensure_end()?,
             ParserSectionReader::RelocSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::ModuleSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::ModuleCodeSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::InstanceSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::AliasSectionReader(ref reader) => reader.ensure_end()?,
             _ => unreachable!(),
         }
         self.position_to_section_end()
@@ -984,6 +1089,13 @@ impl<'a> Parser<'a> {
             ParserState::ReadingSectionRawData | ParserState::SectionRawData(_) => {
                 self.read_section_body_bytes()?
             }
+            ParserState::ModuleSectionEntry(_) => self.read_module_entry()?,
+            ParserState::AliasSectionEntry(_) => self.read_alias_entry()?,
+            ParserState::BeginInstantiate { .. } | ParserState::InstantiateParameter { .. } => {
+                self.read_instantiate_field()?
+            }
+            ParserState::EndInstantiate => self.read_instance_entry()?,
+            ParserState::InlineModule(_) => self.read_module_code_entry()?,
         }
         Ok(())
     }
@@ -1085,7 +1197,7 @@ impl<'a> WasmDecoder<'a> for Parser<'a> {
     /// #              0x80, 0x80, 0x0, 0x0, 0xa, 0x91, 0x80, 0x80, 0x80, 0x0,
     /// #              0x2, 0x83, 0x80, 0x80, 0x80, 0x0, 0x0, 0x1, 0xb, 0x83,
     /// #              0x80, 0x80, 0x80, 0x0, 0x0, 0x0, 0xb];
-    /// use wasmparser::{WasmDecoder, Parser, ParserState};
+    /// use wasmparser::{WasmDecoder, Parser, ParserState, TypeDef};
     /// let mut parser = Parser::new(data);
     /// let mut types = Vec::new();
     /// let mut function_types = Vec::new();
@@ -1094,7 +1206,7 @@ impl<'a> WasmDecoder<'a> for Parser<'a> {
     ///     match parser.read() {
     ///         ParserState::Error(_) |
     ///         ParserState::EndWasm => break,
-    ///         ParserState::TypeSectionEntry(ty) => {
+    ///         ParserState::TypeSectionEntry(TypeDef::Func(ty)) => {
     ///             types.push(ty.clone());
     ///         }
     ///         ParserState::FunctionSectionEntry(id) => {
@@ -1180,5 +1292,22 @@ impl<'a> WasmDecoder<'a> for Parser<'a> {
 
     fn last_state(&self) -> &ParserState<'a> {
         &self.state
+    }
+}
+
+impl<'a> From<ModuleReader<'a>> for Parser<'a> {
+    fn from(reader: ModuleReader<'a>) -> Parser<'a> {
+        let mut parser = Parser::default();
+        parser.state = ParserState::BeginWasm {
+            version: reader.get_version(),
+        };
+        parser.module_reader = Some(reader);
+        return parser;
+    }
+}
+
+impl<'a> Default for Parser<'a> {
+    fn default() -> Parser<'a> {
+        Parser::new(&[])
     }
 }

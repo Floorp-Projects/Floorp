@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-use super::{
-    BinaryReader, FuncType, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems,
+use crate::{
+    BinaryReader, BinaryReaderError, Result, SectionIteratorLimited, SectionReader,
+    SectionWithLimitedItems, TypeDef,
 };
 
 pub struct TypeSectionReader<'a> {
@@ -53,13 +54,23 @@ impl<'a> TypeSectionReader<'a> {
     ///     println!("Type {:?}", ty);
     /// }
     /// ```
-    pub fn read(&mut self) -> Result<FuncType> {
-        self.reader.read_func_type()
+    pub fn read(&mut self) -> Result<TypeDef<'a>> {
+        Ok(match self.reader.read_u8()? {
+            0x60 => TypeDef::Func(self.reader.read_func_type()?),
+            0x61 => TypeDef::Module(self.reader.read_module_type()?),
+            0x62 => TypeDef::Instance(self.reader.read_instance_type()?),
+            _ => {
+                return Err(BinaryReaderError::new(
+                    "invalid leading byte in type definition",
+                    self.original_position() - 1,
+                ))
+            }
+        })
     }
 }
 
 impl<'a> SectionReader for TypeSectionReader<'a> {
-    type Item = FuncType;
+    type Item = TypeDef<'a>;
     fn read(&mut self) -> Result<Self::Item> {
         TypeSectionReader::read(self)
     }
@@ -78,7 +89,7 @@ impl<'a> SectionWithLimitedItems for TypeSectionReader<'a> {
 }
 
 impl<'a> IntoIterator for TypeSectionReader<'a> {
-    type Item = Result<FuncType>;
+    type Item = Result<TypeDef<'a>>;
     type IntoIter = SectionIteratorLimited<TypeSectionReader<'a>>;
 
     /// Implements iterator over the type section.
