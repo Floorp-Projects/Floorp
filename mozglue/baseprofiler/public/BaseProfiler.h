@@ -197,19 +197,31 @@ class RacyFeatures {
 
   MFBT_API static void SetUnpaused();
 
+  MFBT_API static void SetSamplingPaused();
+
+  MFBT_API static void SetSamplingUnpaused();
+
   MFBT_API static bool IsActive();
 
   MFBT_API static bool IsActiveWithFeature(uint32_t aFeature);
 
+  // True if profiler is active, and not fully paused.
+  // Note that periodic sampling *could* be paused!
   MFBT_API static bool IsActiveAndUnpaused();
+
+  // True if profiler is active, and sampling is not paused (though generic
+  // `SetPaused()` or specific `SetSamplingPaused()`).
+  MFBT_API static bool IsActiveAndSamplingUnpaused();
 
  private:
   static constexpr uint32_t Active = 1u << 31;
   static constexpr uint32_t Paused = 1u << 30;
+  static constexpr uint32_t SamplingPaused = 1u << 29;
 
 // Ensure Active/Paused don't overlap with any of the feature bits.
-#  define NO_OVERLAP(n_, str_, Name_, desc_) \
-    static_assert(ProfilerFeature::Name_ != Paused, "bad feature value");
+#  define NO_OVERLAP(n_, str_, Name_, desc_)                \
+    static_assert(ProfilerFeature::Name_ != SamplingPaused, \
+                  "bad feature value");
 
   BASE_PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
 
@@ -357,11 +369,15 @@ MFBT_API void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 // Pause and resume the profiler. No-ops if the profiler is inactive. While
 // paused the profile will not take any samples and will not record any data
 // into its buffers. The profiler remains fully initialized in this state.
-// Timeline markers will still be stored. This feature will keep JavaScript
-// profiling enabled, thus allowing toggling the profiler without invalidating
-// the JIT.
+// This feature will keep JavaScript profiling enabled, thus allowing toggling
+// the profiler without invalidating the JIT.
 MFBT_API void profiler_pause();
 MFBT_API void profiler_resume();
+
+// Only pause and resume the periodic sampling loop, including stack sampling,
+// counters, and profiling overheads.
+MFBT_API void profiler_pause_sampling();
+MFBT_API void profiler_resume_sampling();
 
 // These functions tell the profiler that a thread went to sleep so that we can
 // avoid sampling it while it's sleeping. Calling profiler_thread_sleep()
@@ -420,6 +436,10 @@ inline bool profiler_thread_is_being_profiled() {
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
 MFBT_API bool profiler_is_paused();
+
+// Is the profiler active and sampling is paused? Returns false if the profiler
+// is inactive.
+MFBT_API bool profiler_is_sampling_paused();
 
 // Is the current thread sleeping?
 MFBT_API bool profiler_thread_is_sleeping();

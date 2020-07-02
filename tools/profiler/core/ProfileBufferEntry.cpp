@@ -1627,6 +1627,8 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
       switch (e.Get().GetKind()) {
         case ProfileBufferEntry::Kind::Pause:
         case ProfileBufferEntry::Kind::Resume:
+        case ProfileBufferEntry::Kind::PauseSampling:
+        case ProfileBufferEntry::Kind::ResumeSampling:
         case ProfileBufferEntry::Kind::CollectionStart:
         case ProfileBufferEntry::Kind::CollectionEnd:
         case ProfileBufferEntry::Kind::ThreadId:
