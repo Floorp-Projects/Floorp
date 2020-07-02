@@ -98,7 +98,8 @@ void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
   }
 }
 
-void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset) {
+void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
+                               bool aIsSelectionCollapsed) {
   SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
