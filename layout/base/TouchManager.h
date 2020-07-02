@@ -59,9 +59,9 @@ class TouchManager {
                                           const WidgetTouchEvent* aEvent);
 
  private:
-  void EvictTouches();
+  void EvictTouches(dom::Document* aLimitToDocument = nullptr);
   static void EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
-                              dom::Document* aLimitToDocument = nullptr);
+                              dom::Document* aLimitToDocument);
   static void AppendToTouchList(WidgetTouchEvent::TouchArrayBase* aTouchList);
 
   RefPtr<PresShell> mPresShell;
