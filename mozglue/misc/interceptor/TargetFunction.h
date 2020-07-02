@@ -437,7 +437,7 @@ class ReadOnlyTargetBytes {
     }
 
     // Otherwise, let's query |adjusted|
-    return mMMPolicy.IsPageAccessible(reinterpret_cast<void*>(adjusted));
+    return mMMPolicy.IsPageAccessible(adjusted);
   }
 
   /**
@@ -571,7 +571,7 @@ class ReadOnlyTargetBytes<MMPolicyOutOfProcess> {
     }
 
     // Otherwise, let's query |adjusted|
-    return mMMPolicy.IsPageAccessible(reinterpret_cast<void*>(adjusted));
+    return mMMPolicy.IsPageAccessible(adjusted);
   }
 
   /**
@@ -771,7 +771,47 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
     return result;
   }
 
-#endif
+  bool IsRelativeShortJump(uintptr_t* aOutTarget) {
+    if ((*this)[0] == 0xeb) {
+      int8_t offset = static_cast<int8_t>((*this)[1]);
+      *aOutTarget = GetAddress() + 2 + offset;
+      return true;
+    }
+    return false;
+  }
+
+#  if defined(_M_X64)
+  // Currently this function is used only in x64.
+  bool IsRelativeNearJump(uintptr_t* aOutTarget) {
+    if ((*this)[0] == 0xe9) {
+      *aOutTarget = (*this + 1).ReadDisp32AsAbsolute();
+      return true;
+    }
+    return false;
+  }
+#  endif  // defined(_M_X64)
+
+  bool IsIndirectNearJump(uintptr_t* aOutTarget) {
+    if ((*this)[0] == 0xff && (*this)[1] == 0x25) {
+#  if defined(_M_X64)
+      *aOutTarget = (*this + 2).ChasePointerFromDisp();
+#  else
+      *aOutTarget = (*this + 2).template ChasePointer<uintptr_t*>();
+#  endif  // defined(_M_X64)
+      return true;
+    }
+#  if defined(_M_X64)
+    else if ((*this)[0] == 0x48 && (*this)[1] == 0xff && (*this)[2] == 0x25) {
+      // According to Intel SDM, JMP does not have REX.W except JMP m16:64,
+      // but CPU can execute JMP r/m32 with REX.W.  We handle it just in case.
+      *aOutTarget = (*this + 3).ChasePointerFromDisp();
+      return true;
+    }
+#  endif  // defined(_M_X64)
+    return false;
+  }
+
+#endif  // defined(_M_ARM64)
 
   void Rewind() { mOffset = 0; }
 
