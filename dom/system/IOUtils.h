@@ -23,6 +23,9 @@ class PR_CloseDelete {
  public:
   constexpr PR_CloseDelete() = default;
   PR_CloseDelete(const PR_CloseDelete& aOther) = default;
+  PR_CloseDelete(PR_CloseDelete&& aOther) = default;
+  PR_CloseDelete& operator=(const PR_CloseDelete& aOther) = default;
+  PR_CloseDelete& operator=(PR_CloseDelete&& aOther) = default;
 
   void operator()(PRFileDesc* aPtr) const { PR_Close(aPtr); }
 };
