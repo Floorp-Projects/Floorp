@@ -2762,16 +2762,6 @@ nsDOMWindowUtils::GetDisplayDPI(float* aDPI) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetContainerElement(Element** aResult) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  RefPtr<Element> element = window->GetFrameElementInternal();
-  element.forget(aResult);
-  return NS_OK;
-}
-
 #ifdef DEBUG
 static bool CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset,
                             nsIntRegion* aCoveredRegion) {
