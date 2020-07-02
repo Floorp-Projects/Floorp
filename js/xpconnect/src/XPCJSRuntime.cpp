@@ -2620,9 +2620,6 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_NURSERY_BYTES:
       Telemetry::Accumulate(Telemetry::GC_NURSERY_BYTES_2, sample);
       break;
-    case JS_TELEMETRY_GC_PRETENURE_COUNT:
-      Telemetry::Accumulate(Telemetry::GC_PRETENURE_COUNT, sample);
-      break;
     case JS_TELEMETRY_GC_PRETENURE_COUNT_2:
       Telemetry::Accumulate(Telemetry::GC_PRETENURE_COUNT_2, sample);
       break;
