@@ -418,7 +418,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         return options
 
     def populate_webroot(self):
-        """Populate the production test slaves' webroots"""
+        """Populate the production test machines' webroots"""
         self.talos_path = os.path.join(
             self.query_abs_dirs()['abs_test_install_dir'], 'talos'
         )

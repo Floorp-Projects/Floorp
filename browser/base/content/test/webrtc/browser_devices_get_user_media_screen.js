@@ -344,7 +344,7 @@ var gTests = [
       let sharingNonScaryWindow = typeof nonScaryWindowIndex == "number";
 
       // If we have a non-scary window, select it and verify the warning isn't displayed.
-      // A non-scary window may not always exist on test slaves.
+      // A non-scary window may not always exist on test machines.
       if (sharingNonScaryWindow) {
         menulist.getItemAtIndex(nonScaryWindowIndex).doCommand();
         ok(
@@ -366,7 +366,7 @@ var gTests = [
           "the scary warning is hidden"
         );
       } else {
-        info("no non-scary window available on this test slave");
+        info("no non-scary window available on this test machine");
       }
 
       let indicator = promiseIndicatorWindow();

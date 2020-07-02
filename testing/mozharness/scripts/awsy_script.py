@@ -141,7 +141,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         self.register_virtualenv_module('awsy', self.awsy_path)
 
     def populate_webroot(self):
-        """Populate the production test slaves' webroots"""
+        """Populate the production test machines' webroots"""
         self.info("Downloading pageset with tooltool...")
         manifest_file = os.path.join(self.awsy_path, 'tp5n-pageset.manifest')
         page_load_test_dir = os.path.join(self.webroot_dir, 'page_load_test')

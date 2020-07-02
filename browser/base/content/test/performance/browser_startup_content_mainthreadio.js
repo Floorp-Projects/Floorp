@@ -328,7 +328,7 @@ add_task(async function() {
         continue;
       }
 
-      // Convert to lower case before comparing because the OS X test slaves
+      // Convert to lower case before comparing because the OS X test machines
       // have the 'Firefox' folder in 'Library/Application Support' created
       // as 'firefox' for some reason.
       let filename = marker.filename.toLowerCase();

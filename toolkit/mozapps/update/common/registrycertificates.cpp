@@ -45,7 +45,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
   if (retCode != ERROR_SUCCESS) {
     LOG_WARN(("Could not open key.  (%d)", retCode));
     // Our tests run with a different apply directory for each test.
-    // We use this registry key on our test slaves to store the
+    // We use this registry key on our test machines to store the
     // allowed name/issuers.
     retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, TEST_ONLY_FALLBACK_KEY_PATH, 0,
                             KEY_READ | KEY_WOW64_64KEY, &baseKey);
