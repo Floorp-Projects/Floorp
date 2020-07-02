@@ -138,18 +138,15 @@ browsertime-tp6m:
                             cold:
                                 by-test-platform:
                                     &android-cold-settings
-                                    # Ignore platforms without `shippable` in the name
-                                    android-hw-.*(?<!api-16)(?<!-shippable)/opt: []
-                                    # Exclude api-16 P2 builds
-                                    android-hw-p2-.*api-16.*: []
-                                    # Run tests on G5 arm, and P2 aarch64 shippable builds
-                                    default: ['trunk', 'mozilla-beta']
+                                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
+                                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
+                                    default: []
                             warm:
                                 by-test-platform:
                                     &android-warm-settings
-                                    android-hw-.*(?<!api-16)(?<!-shippable)/opt: []
-                                    android-hw-p2-.*api-16.*: []
-                                    default: ['mozilla-central']
+                                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['mozilla-central']
+                                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['mozilla-central']
+                                    default: []
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
@@ -168,8 +165,7 @@ browsertime-tp6m:
                                 by-test-platform: *android-warm-settings
                     default:
                         by-test-platform:
-                            android-hw-p2-.*aarch64.*/pgo: ["mozilla-central"]
-                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
+                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                             default: []
             default:
                 by-pageload:
