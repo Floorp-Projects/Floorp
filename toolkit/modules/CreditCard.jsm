@@ -21,6 +21,14 @@ const SUPPORTED_NETWORKS = Object.freeze([
   "visa",
 ]);
 
+// This lists stores lower cased variations of popular credit card network
+// names for matching against strings.
+const NETWORK_NAMES = {
+  "american express": "amex",
+  "master card": "mastercard",
+  "union pay": "unionpay",
+};
+
 // Based on https://en.wikipedia.org/wiki/Payment_card_number
 //
 // Notice:
@@ -226,6 +234,33 @@ class CreditCard {
         if (prefix >= range.start && prefix <= range.end) {
           return range.type;
         }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Attempts to retrieve a card network identifier based
+   * on a name.
+   *
+   * @param {string|undefined|null} name
+   *
+   * @returns {string|null}
+   */
+  static getNetworkFromName(name) {
+    if (!name) {
+      return null;
+    }
+    let lcName = name
+      .trim()
+      .toLowerCase()
+      .normalize("NFKC");
+    if (SUPPORTED_NETWORKS.includes(lcName)) {
+      return lcName;
+    }
+    for (let term in NETWORK_NAMES) {
+      if (lcName.includes(term)) {
+        return NETWORK_NAMES[term];
       }
     }
     return null;

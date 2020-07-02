@@ -248,16 +248,18 @@ const TESTCASES = [
   },
   {
     description:
-      "A credit card form with the value of cc-number, cc-exp, and cc-name.",
+      "A credit card form with the value of cc-number, cc-exp, cc-name and cc-type.",
     document: `<form>
                 <input id="cc-number" autocomplete="cc-number">
                 <input id="cc-name" autocomplete="cc-name">
                 <input id="cc-exp" autocomplete="cc-exp">
+                <input id="cc-type" autocomplete="cc-type">
                </form>`,
     formValue: {
       "cc-number": "5105105105105100",
       "cc-name": "Foo Bar",
       "cc-exp": "2022-06",
+      "cc-type": "Visa",
     },
     expectedRecord: {
       address: [],
@@ -266,6 +268,7 @@ const TESTCASES = [
           "cc-number": "5105105105105100",
           "cc-name": "Foo Bar",
           "cc-exp": "2022-06",
+          "cc-type": "Visa",
         },
       ],
     },
@@ -391,6 +394,52 @@ const TESTCASES = [
           "cc-number": "5105105105105100",
           "cc-name": "Foo Bar",
           "cc-exp": "2026-26",
+        },
+      ],
+    },
+  },
+  {
+    description: "A credit card form with a cc-type select.",
+    document: `<form>
+                <input id="cc-number" autocomplete="cc-number">
+                <label for="field1">Card Type:</label>
+                <select id="field1">
+                  <option value="visa" selected>Visa</option>
+                </select>
+               </form>`,
+    formValue: {
+      "cc-number": "5105105105105100",
+    },
+    expectedRecord: {
+      address: [],
+      creditCard: [
+        {
+          "cc-number": "5105105105105100",
+          "cc-type": "visa",
+        },
+      ],
+    },
+  },
+  {
+    description: "A credit card form with a cc-type select from label.",
+    document: `<form>
+                <input id="cc-number" autocomplete="cc-number">
+                <label for="cc-type">Card Type:</label>
+                <select id="cc-type">
+                  <option value="V" selected>Visa</option>
+                  <option value="A">American Express</option>
+                </select>
+               </form>`,
+    formValue: {
+      "cc-number": "5105105105105100",
+      "cc-type": "A",
+    },
+    expectedRecord: {
+      address: [],
+      creditCard: [
+        {
+          "cc-number": "5105105105105100",
+          "cc-type": "amex",
         },
       ],
     },
