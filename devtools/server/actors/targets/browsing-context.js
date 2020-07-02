@@ -310,14 +310,14 @@ const browsingContextTargetPrototype = {
     this._onWorkerTargetActorListChanged = this._onWorkerTargetActorListChanged.bind(
       this
     );
-    this.onResourceAvailable = this.onResourceAvailable.bind(this);
+    this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
 
     TargetActorRegistry.registerTargetActor(this);
   },
 
   /**
    * These two methods will create and destroy resource watchers
-   * for each resource type. This will end up calling `onResourceAvailable`
+   * for each resource type. This will end up calling `notifyResourceAvailable`
    * whenever new resources are observed.
    *
    * We have these shortcut methods in this module, because this is called from DevToolsFrameChild
@@ -338,12 +338,11 @@ const browsingContextTargetPrototype = {
    *        List of all available resources. A resource is a JSON object piped over to the client.
    *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
-  onResourceAvailable(resources) {
+  notifyResourceAvailable(resources) {
     if (!this.actorID) {
       // Don't try to emit if the actor was destroyed.
       return;
     }
-
     this.emit("resource-available-form", resources);
   },
 
