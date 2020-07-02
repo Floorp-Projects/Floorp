@@ -7,7 +7,6 @@
 DIRS += [
     'doh-rollout',
     'formautofill',
-    'pdfjs',
     'screenshots',
     'webcompat',
     'report-site-issue'
