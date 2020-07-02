@@ -7,8 +7,7 @@
       var uniqueMessageId =
         TRESIZE_PREFIX +
         content.document.documentURI +
-        // eslint-disable-next-line mozilla/avoid-Date-timing
-        Date.now() +
+        content.window.performance.now() +
         Math.random();
 
       addMessageListener(TRESIZE_PREFIX + "chrome-run-reply", function done(
