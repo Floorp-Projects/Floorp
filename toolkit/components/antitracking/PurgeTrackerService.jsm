@@ -178,7 +178,7 @@ PurgeTrackerService.prototype = {
       );
       permissionAgeHistogram.add(timeRemaining);
 
-      this._telemetryData.notPurged++;
+      this._telemetryData.notPurged.add(principal.baseDomain);
 
       logger.debug(`${origin} is a tracker with interaction, exiting.`);
       return;
@@ -225,7 +225,7 @@ PurgeTrackerService.prototype = {
     });
     logger.log(`Data deleted from:`, origin);
 
-    this._telemetryData.numPurged++;
+    this._telemetryData.purged.add(principal.baseDomain);
   },
 
   resetPurgeList() {
@@ -240,7 +240,7 @@ PurgeTrackerService.prototype = {
   },
 
   submitTelemetry() {
-    let { numPurged, notPurged, durationIntervals } = this._telemetryData;
+    let { purged, notPurged, durationIntervals } = this._telemetryData;
     let now = Date.now();
     let lastPurge = Number(
       Services.prefs.getStringPref("privacy.purge_trackers.last_purge", now)
@@ -252,7 +252,7 @@ PurgeTrackerService.prototype = {
     let hoursBetween = Math.floor((now - lastPurge) / 1000 / 60 / 60);
     intervalHistogram.add(hoursBetween);
 
-    Services.prefs.setIntPref(
+    Services.prefs.setStringPref(
       "privacy.purge_trackers.last_purge",
       now.toString()
     );
@@ -260,12 +260,12 @@ PurgeTrackerService.prototype = {
     let purgedHistogram = Services.telemetry.getHistogramById(
       "COOKIE_PURGING_ORIGINS_PURGED"
     );
-    purgedHistogram.add(numPurged);
+    purgedHistogram.add(purged.size);
 
     let notPurgedHistogram = Services.telemetry.getHistogramById(
       "COOKIE_PURGING_TRACKERS_WITH_USER_INTERACTION"
     );
-    notPurgedHistogram.add(notPurged);
+    notPurgedHistogram.add(notPurged.size);
 
     let duration = durationIntervals
       .map(([start, end]) => end - start)
@@ -312,8 +312,8 @@ PurgeTrackerService.prototype = {
     if (this._firstIteration) {
       this._telemetryData = {
         durationIntervals: [],
-        numPurged: 0,
-        notPurged: 0,
+        purged: new Set(),
+        notPurged: new Set(),
       };
 
       this._baseDomainsWithInteraction = new Map();
