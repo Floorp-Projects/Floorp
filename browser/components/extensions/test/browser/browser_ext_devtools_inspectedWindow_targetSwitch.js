@@ -3,7 +3,7 @@
 "use strict";
 
 // Like most of the mochitest-browser devtools test,
-// on debug test slave, it takes about 50s to run the test.
+// on debug test machine, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
 loadTestSubscript("head_devtools.js");

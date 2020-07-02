@@ -175,7 +175,7 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
 
             # Only 4 GB RAM or less available? Use custom ASan options to reduce
             # the amount of resources required to do the tests. Standard options
-            # will otherwise lead to OOM conditions on the current test slaves.
+            # will otherwise lead to OOM conditions on the current test machines.
             message = "INFO | runtests.py | ASan running in %s configuration"
             asanOptions = []
             if totalMemory <= 1024 * 1024 * 4:

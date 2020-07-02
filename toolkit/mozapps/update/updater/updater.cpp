@@ -2843,7 +2843,7 @@ int NS_main(int argc, NS_tchar** argv) {
   noServiceFallback = EnvHasValue("MOZ_NO_SERVICE_FALLBACK");
   putenv(const_cast<char*>("MOZ_NO_SERVICE_FALLBACK="));
   // Our tests run with a different apply directory for each test.
-  // We use this registry key on our test slaves to store the
+  // We use this registry key on our test machines to store the
   // allowed name/issuers.
   testOnlyFallbackKeyExists = DoesFallbackKeyExist();
 #    endif

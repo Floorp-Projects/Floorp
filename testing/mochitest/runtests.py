@@ -492,7 +492,7 @@ class MochitestServer(object):
 
         # When running with an ASan build, our xpcshell server will also be ASan-enabled,
         # thus consuming too much resources when running together with the browser on
-        # the test slaves. Try to limit the amount of resources by disabling certain
+        # the test machines. Try to limit the amount of resources by disabling certain
         # features.
         env["ASAN_OPTIONS"] = "quarantine_size=1:redzone=32:malloc_context_size=5"
 

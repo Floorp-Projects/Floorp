@@ -18,7 +18,7 @@ const { BrowserToolboxLauncher } = ChromeUtils.import("resource://devtools/clien
 let gProcess = undefined;
 
 add_task(async function() {
-  // Windows XP and 8.1 test slaves are terribly slow at this test.
+  // Windows XP and 8.1 test machines are terribly slow at this test.
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
 

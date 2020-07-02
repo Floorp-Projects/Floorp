@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// On debug test slave, it takes about 50s to run the test.
+// On debug test machine, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
 /**

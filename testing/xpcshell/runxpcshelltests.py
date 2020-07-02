@@ -1797,7 +1797,7 @@ class XPCShellTests(object):
 
         # Clean up any slacker directories that might be lying around
         # Some might fail because of windows taking too long to unlock them.
-        # We don't do anything if this fails because the test slaves will have
+        # We don't do anything if this fails because the test machines will have
         # their $TEMP dirs cleaned up on reboot anyway.
         for directory in self.cleanup_dir_list:
             try:
