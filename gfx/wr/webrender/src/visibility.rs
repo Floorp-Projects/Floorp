@@ -419,42 +419,6 @@ pub fn update_primitive_visibility(
                         prim_instance.is_chased(),
                     );
 
-                // Primitive visibility flags default to empty, but may be supplied
-                // by the `update_prim_dependencies` method below when picture caching
-                // is active.
-                let mut vis_flags = PrimitiveVisibilityFlags::empty();
-
-                if let Some(ref mut tile_cache) = frame_state.tile_cache {
-                    // TODO(gw): Refactor how tile_cache is stored in frame_state
-                    //           so that we can pass frame_state directly to
-                    //           update_prim_dependencies, rather than splitting borrows.
-                    match tile_cache.update_prim_dependencies(
-                        prim_instance,
-                        cluster.spatial_node_index,
-                        clip_chain.as_ref(),
-                        prim_local_rect,
-                        frame_context,
-                        frame_state.data_stores,
-                        frame_state.clip_store,
-                        &store.pictures,
-                        frame_state.resource_cache,
-                        &store.color_bindings,
-                        &frame_state.surface_stack,
-                        &mut frame_state.composite_state,
-                    ) {
-                        Some(flags) => {
-                            vis_flags = flags;
-                        }
-                        None => {
-                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                            // Ensure the primitive clip is popped - perhaps we can use
-                            // some kind of scope to do this automatically in future.
-                            frame_state.clip_chain_stack.pop_clip();
-                            continue;
-                        }
-                    }
-                }
-
                 // Ensure the primitive clip is popped
                 frame_state.clip_chain_stack.pop_clip();
 
@@ -524,6 +488,41 @@ pub fn update_primitive_visibility(
                         }
                         prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                         continue;
+                    }
+                }
+
+                // Primitive visibility flags default to empty, but may be supplied
+                // by the `update_prim_dependencies` method below when picture caching
+                // is active.
+                let mut vis_flags = PrimitiveVisibilityFlags::empty();
+
+                if let Some(ref mut tile_cache) = frame_state.tile_cache {
+                    // TODO(gw): Refactor how tile_cache is stored in frame_state
+                    //           so that we can pass frame_state directly to
+                    //           update_prim_dependencies, rather than splitting borrows.
+                    match tile_cache.update_prim_dependencies(
+                        prim_instance,
+                        cluster.spatial_node_index,
+                        &clip_chain,
+                        prim_local_rect,
+                        frame_context,
+                        frame_state.data_stores,
+                        frame_state.clip_store,
+                        &store.pictures,
+                        frame_state.resource_cache,
+                        &store.color_bindings,
+                        &frame_state.surface_stack,
+                        &mut frame_state.composite_state,
+                    ) {
+                        Some(flags) => {
+                            vis_flags = flags;
+                        }
+                        None => {
+                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                            // Ensure the primitive clip is popped - perhaps we can use
+                            // some kind of scope to do this automatically in future.
+                            continue;
+                        }
                     }
                 }
 
