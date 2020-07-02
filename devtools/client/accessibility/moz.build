@@ -16,6 +16,7 @@ DevToolsModules(
     'accessibility-proxy.js',
     'accessibility-startup.js',
     'accessibility-view.js',
+    'accessibility.css',
     'constants.js',
     'panel.js',
     'picker.js',

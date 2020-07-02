@@ -6,7 +6,7 @@
 
 const Services = require("Services");
 
-const variableFileContents = require("raw!chrome://devtools/skin/variables.css");
+const variableFileContents = require("theme-loader!devtools/client/themes/variables.css");
 
 const THEME_SELECTOR_STRINGS = {
   light: ":root.theme-light {",

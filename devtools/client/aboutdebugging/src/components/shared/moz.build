@@ -4,6 +4,8 @@
 
 DevToolsModules(
     'DetailsLog.js',
+    'IconLabel.css',
     'IconLabel.js',
+    'Message.css',
     'Message.js',
 )

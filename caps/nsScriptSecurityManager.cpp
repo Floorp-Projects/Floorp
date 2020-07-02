@@ -881,12 +881,24 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
                            &targetURIIsUIResource);
   NS_ENSURE_SUCCESS(rv, rv);
   if (targetURIIsUIResource) {
-    // ALLOW_CHROME is a flag that we pass on all loads _except_ docshell
-    // loads (since docshell loads run the loaded content with its origin
-    // principal). We are effectively allowing resource:// and chrome://
-    // URIs to load as long as they are content accessible and as long
-    // they're not loading it as a document.
     if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) {
+      // Allow a URI_IS_UI_RESOURCE source to link to a URI_IS_UI_RESOURCE
+      // target if ALLOW_CHROME is set.
+      //
+      // ALLOW_CHROME is a flag that we pass on all loads _except_ docshell
+      // loads (since docshell loads run the loaded content with its origin
+      // principal). So we're effectively allowing resource://, chrome://,
+      // and moz-icon:// source URIs to load resource://, chrome://, and
+      // moz-icon:// files, so long as they're not loading it as a document.
+      bool sourceIsUIResource;
+      rv = NS_URIChainHasFlags(aSourceBaseURI,
+                               nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                               &sourceIsUIResource);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (sourceIsUIResource) {
+        return NS_OK;
+      }
+
       if (targetScheme.EqualsLiteral("resource")) {
         if (StaticPrefs::security_all_resource_uri_content_accessible()) {
           return NS_OK;
