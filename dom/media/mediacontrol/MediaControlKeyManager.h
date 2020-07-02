@@ -30,6 +30,9 @@ class MediaControlKeyManager final : public MediaControlKeySource,
   bool Open() override;
   bool IsOpened() const override;
 
+  void SetControlledTabBrowsingContextId(
+      Maybe<uint64_t> aTopLevelBrowsingContextId) override;
+
   void SetPlaybackState(MediaSessionPlaybackState aState) override;
   MediaSessionPlaybackState GetPlaybackState() const override;
 

@@ -332,6 +332,7 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
 
   if (!mMainController) {
     LOG_MAINCONTROLLER_INFO("Clear main controller");
+    mSource->SetControlledTabBrowsingContextId(Nothing());
     mSource->SetPlaybackState(MediaSessionPlaybackState::None);
     mSource->SetMediaMetadata(MediaMetadataBase::EmptyData());
     mSource->SetSupportedMediaKeys(MediaKeysArray());
@@ -339,6 +340,7 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
   } else {
     LOG_MAINCONTROLLER_INFO("Set controller %" PRId64 " as main controller",
                             mMainController->Id());
+    mSource->SetControlledTabBrowsingContextId(Some(mMainController->Id()));
     mSource->SetPlaybackState(mMainController->GetState());
     mSource->SetMediaMetadata(mMainController->GetCurrentMediaMetadata());
     mSource->SetSupportedMediaKeys(mMainController->GetSupportedMediaKeys());
