@@ -29,17 +29,14 @@ static bool IsValidHost(const nsACString& host) {
     return false;
   }
 
-  if (host.EqualsLiteral("addons.mozilla.org") ||
-      host.EqualsLiteral("discovery.addons.mozilla.org")) {
+  if (host.EqualsLiteral("addons.mozilla.org")) {
     return true;
   }
 
   // When testing allow access to the developer sites.
   if (Preferences::GetBool("extensions.webapi.testing", false)) {
     if (host.LowerCaseEqualsLiteral("addons.allizom.org") ||
-        host.LowerCaseEqualsLiteral("discovery.addons.allizom.org") ||
         host.LowerCaseEqualsLiteral("addons-dev.allizom.org") ||
-        host.LowerCaseEqualsLiteral("discovery.addons-dev.allizom.org") ||
         host.LowerCaseEqualsLiteral("example.com")) {
       return true;
     }
