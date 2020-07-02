@@ -8,7 +8,7 @@ const { PromiseTestUtils } = ChromeUtils.import(
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 
-// On debug test slave, it takes about 50s to run the test.
+// On debug test machine, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
 // This test is used to test fission-like features via the Browser Toolbox:
