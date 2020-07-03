@@ -701,9 +701,15 @@ var PlacesUIUtils = {
       : "window";
     if (where == "window") {
       // There is no browser window open, thus open a new one.
-      var uriList = PlacesUtils.toISupportsString(urls.join("|"));
-      var args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-      args.appendElement(uriList);
+      let args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+      let stringsToLoad = Cc["@mozilla.org/array;1"].createInstance(
+        Ci.nsIMutableArray
+      );
+      urls.forEach(url =>
+        stringsToLoad.appendElement(PlacesUtils.toISupportsString(url))
+      );
+      args.appendElement(stringsToLoad);
+
       browserWindow = Services.ww.openWindow(
         aWindow,
         AppConstants.BROWSER_CHROME_URL,
