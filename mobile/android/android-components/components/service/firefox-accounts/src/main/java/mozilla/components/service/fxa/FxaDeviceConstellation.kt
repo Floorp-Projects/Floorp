@@ -22,9 +22,11 @@ import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.DeviceCommandOutgoing
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.sync.telemetry.SyncTelemetry
 
 /**
  * Provides an implementation of [DeviceConstellation] backed by a [FirefoxAccount].
@@ -32,7 +34,8 @@ import mozilla.components.support.base.observer.ObserverRegistry
 @SuppressWarnings("TooManyFunctions")
 class FxaDeviceConstellation(
     private val account: FirefoxAccount,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val crashReporter: CrashReporting? = null
 ) : DeviceConstellation, Observable<AccountEventsObserver> by ObserverRegistry() {
     private val logger = Logger("FxaDeviceConstellation")
 
@@ -111,6 +114,7 @@ class FxaDeviceConstellation(
                 when (outgoingCommand) {
                     is DeviceCommandOutgoing.SendTab -> {
                         account.sendSingleTab(targetDeviceId, outgoingCommand.title, outgoingCommand.url)
+                        SyncTelemetry.processFxaTelemetry(account.gatherTelemetry(), crashReporter)
                     }
                     else -> logger.debug("Skipped sending unsupported command type: $outgoingCommand")
                 }
@@ -130,6 +134,7 @@ class FxaDeviceConstellation(
                 false
             } else {
                 processEvents(events)
+                SyncTelemetry.processFxaTelemetry(account.gatherTelemetry(), crashReporter)
                 true
             }
         }

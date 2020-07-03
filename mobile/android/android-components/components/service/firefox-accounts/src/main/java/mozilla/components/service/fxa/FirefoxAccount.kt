@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 
@@ -27,7 +28,8 @@ typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.Persist
  */
 @Suppress("TooManyFunctions")
 class FirefoxAccount internal constructor(
-    private val inner: InternalFxAcct
+    private val inner: InternalFxAcct,
+    private val crashReporter: CrashReporting? = null
 ) : OAuthAccount {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
@@ -65,7 +67,7 @@ class FirefoxAccount internal constructor(
     }
 
     private var persistCallback = WrappingPersistenceCallback()
-    private val deviceConstellation = FxaDeviceConstellation(inner, scope)
+    private val deviceConstellation = FxaDeviceConstellation(inner, scope, crashReporter)
 
     init {
         inner.registerPersistCallback(persistCallback)
@@ -82,13 +84,16 @@ class FirefoxAccount internal constructor(
      * is saved in a secure location, as it can contain Sync Keys and
      * OAuth tokens.
      *
+     * @param crashReporter A crash reporter instance.
+     *
      * Note that it is not necessary to `close` the Config if this constructor is used (however
      * doing so will not cause an error).
      */
     constructor(
         config: ServerConfig,
-        persistCallback: PersistCallback? = null
-    ) : this(InternalFxAcct(config, persistCallback))
+        persistCallback: PersistCallback? = null,
+        crashReporter: CrashReporting? = null
+    ) : this(InternalFxAcct(config, persistCallback), crashReporter)
 
     override fun close() {
         job.cancel()

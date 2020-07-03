@@ -491,3 +491,58 @@ bookmarks_sync:
       - sync-core@mozilla.com
     expires: never
     lifetime: ping
+fxa_tab:
+  sent:
+    type: event
+    description: >
+      Recorded when a tab is sent. Also sent by desktop - see also the docs at
+      https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/sync-ping.html
+    send_in_pings:
+      - sync
+    extra_keys:
+      flow_id:
+        description: >
+          A guid, unique for the URL being sent but common for all target
+          devices. The value is randomly generated so can not identify details
+          about the user or tab.
+      stream_id:
+        description: >
+          A guid, unique for both the URL being sent and the target device. The
+          value is randomly generated so can not identify details about the
+          user or tab.
+    bugs:
+      - https://github.com/mozilla/application-services/pull/3308
+      - https://github.com/mozilla-mobile/android-components/pull/7618
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1652902
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+  received:
+    type: event
+    description: >
+      Recorded when a tab is received.  Also sent by desktop - see also the
+      docs at
+      https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/sync-ping.html
+    send_in_pings:
+      - sync
+    extra_keys:
+      flow_id:
+        description: >
+          A guid, unique for the URL being sent but common for all target
+          devices.
+      stream_id:
+        description: >
+          A guid, unique for both the URL being sent and the target device.
+      reason:
+        description: >
+          The reason we discovered the tab. Will be one of 'push', 'push-missed'
+          or 'poll'.
+    bugs:
+      - https://github.com/mozilla/application-services/pull/3308
+      - https://github.com/mozilla-mobile/android-components/pull/7618
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1652902
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never

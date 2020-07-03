@@ -1015,7 +1015,7 @@ open class FxaAccountManager(
 
     @VisibleForTesting
     open fun createAccount(config: ServerConfig): OAuthAccount {
-        return FirefoxAccount(config)
+        return FirefoxAccount(config, null, crashReporter)
     }
 
     @VisibleForTesting

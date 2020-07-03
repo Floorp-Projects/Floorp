@@ -15,12 +15,17 @@ import mozilla.appservices.sync15.SyncInfo
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.appservices.sync15.ValidationInfo
 import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
+import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.json.JSONException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -30,6 +35,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.times
 import java.util.Date
 import java.util.UUID
 
@@ -1114,6 +1121,75 @@ class SyncTelemetryTest {
             ),
             pings
         )
+    }
+
+    @Test
+    fun `checks sent tab telemetry records what it should`() {
+        val json = """
+            {
+                "commands_sent":[{
+                    "flow_id":"test-flow-id",
+                    "stream_id":"test-stream-id"
+                }],
+                "commands_received":[]
+            }
+        """
+        SyncTelemetry.processFxaTelemetry(json)
+        assertTrue(FxaTab.sent.testHasValue())
+        val events = FxaTab.sent.testGetValue()
+        assertEquals(1, events.size)
+        assertEquals("test-flow-id", events.elementAt(0).extra!!["flow_id"])
+        assertEquals("test-stream-id", events.elementAt(0).extra!!["stream_id"])
+
+        assertFalse(FxaTab.received.testHasValue())
+    }
+
+    @Test
+    fun `checks received tab telemetry records what it should`() {
+        val json = """
+            {
+                "commands_received":[{
+                    "flow_id":"test-flow-id",
+                    "stream_id":"test-stream-id",
+                    "reason":"test-reason"
+                }]
+            }
+        """
+        SyncTelemetry.processFxaTelemetry(json)
+        assertTrue(FxaTab.received.testHasValue())
+        val events = FxaTab.received.testGetValue()
+        assertEquals(1, events.size)
+        assertEquals("test-flow-id", events.elementAt(0).extra!!["flow_id"])
+        assertEquals("test-stream-id", events.elementAt(0).extra!!["stream_id"])
+        assertEquals("test-reason", events.elementAt(0).extra!!["reason"])
+
+        assertFalse(FxaTab.sent.testHasValue())
+    }
+
+    @Test
+    fun `checks invalid tab telemetry doesn't record anything and doesn't crash`() {
+        val crashReporter: CrashReporting = mock()
+        // commands_sent is missing the stream_id, command_received is missing a reason
+        val json = """
+            {
+                "commands_sent":[{
+                    "flow_id":"test-flow-id"
+                }],
+                "commands_received":[{
+                    "flow_id":"test-flow-id",
+                    "stream_id":"test-stream-id"
+                }]
+            }
+        """
+        SyncTelemetry.processFxaTelemetry(json, crashReporter)
+        // one exception for each of 'send' and 'received'
+        verify(crashReporter, times(2)).submitCaughtException(any<JSONException>())
+        // completely invalid json
+        SyncTelemetry.processFxaTelemetry(""" foo bar """, crashReporter)
+        assertFalse(FxaTab.sent.testHasValue())
+        assertFalse(FxaTab.received.testHasValue())
+        // One more exception, making it the 3rd time
+        verify(crashReporter, times(3)).submitCaughtException(any<JSONException>())
     }
 
     private fun MutableMap<String, Int>.incrementForKey(key: String) {
