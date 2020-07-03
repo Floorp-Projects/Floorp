@@ -533,6 +533,10 @@ class HTMLEditUtils final {
    * <table> element of aContent.
    */
   static Element* GetClosestAncestorTableElement(const nsIContent& aContent) {
+    // TODO: the method name and its documentation clash with the
+    // implementation. Split this method into
+    // `GetClosestAncestorTableElement` and
+    // `GetClosestInclusiveAncestorTableElement`.
     if (!aContent.GetParent()) {
       return nullptr;
     }
@@ -543,6 +547,8 @@ class HTMLEditUtils final {
     }
     return nullptr;
   }
+
+  static Element* GetClosestAncestorAnyListElement(const nsIContent& aContent);
 
   /**
    * GetElementIfOnlyOneSelected() returns an element if aRange selects only

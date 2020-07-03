@@ -654,6 +654,18 @@ bool HTMLEditUtils::IsSingleLineContainer(nsINode& aNode) {
          aNode.IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::dt, nsGkAtoms::dd);
 }
 
+// static
+Element* HTMLEditUtils::GetClosestAncestorAnyListElement(
+    const nsIContent& aContent) {
+  for (Element* element : aContent.AncestorsOfType<Element>()) {
+    if (HTMLEditUtils::IsAnyListElement(element)) {
+      return element;
+    }
+  }
+
+  return nullptr;
+}
+
 EditAction HTMLEditUtils::GetEditActionForInsert(const nsAtom& aTagName) {
   // This method may be in a hot path.  So, return only necessary
   // EditAction::eInsert*Element.
