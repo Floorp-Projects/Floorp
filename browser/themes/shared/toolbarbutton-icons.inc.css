@@ -256,7 +256,7 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/developer.svg");
 }
 
-#profiler-button {
+#profiler-button > .toolbarbutton-icon {
   list-style-image: url("chrome://devtools/skin/images/tool-profiler.svg");
 }
 
@@ -269,16 +269,25 @@ toolbar[brighttext] {
   fill-opacity: 1;
 }
 
-#profiler-button.profiler-active image {
+#profiler-button.profiler-active > image {
   background-color: #0060df33;
 }
 
-#profiler-button.profiler-active:hover image {
+#profiler-button.profiler-active:hover > image {
   background-color: #0060df22;
 }
 
-#profiler-button.profiler-paused image {
+#profiler-button.profiler-paused > image {
   opacity: 0.4;
+}
+
+#profiler-button > .toolbarbutton-menu-dropmarker {
+  -moz-context-properties: fill, fill-opacity;
+}
+
+.widget-overflow-list #profiler-button > .toolbarbutton-menu-dropmarker,
+#customization-palette #profiler-button > .toolbarbutton-menu-dropmarker {
+  display: none;
 }
 
 #preferences-button {
