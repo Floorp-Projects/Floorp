@@ -34,7 +34,12 @@ AppCacheStorage::~AppCacheStorage() {
 NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(
     nsIURI* aURI, const nsACString& aIdExtension, uint32_t aFlags,
     nsICacheEntryOpenCallback* aCallback) {
-  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
+  if (!CacheStorageService::Self()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (!LoadInfo()) {
+    return NS_ERROR_CACHE_KEY_NOT_FOUND;
+  }
 
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG(aCallback);
@@ -106,6 +111,9 @@ NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(
   if (!mAppCache) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+  if (!LoadInfo()) {
+    return NS_ERROR_CACHE_KEY_NOT_FOUND;
+  }
 
   RefPtr<_OldStorage> old = new _OldStorage(LoadInfo(), WriteToDisk(),
                                             LookupAppCache(), true, mAppCache);
@@ -114,7 +122,12 @@ NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(
 
 NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(
     nsICacheEntryDoomCallback* aCallback) {
-  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
+  if (!CacheStorageService::Self()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (!LoadInfo()) {
+    return NS_ERROR_CACHE_KEY_NOT_FOUND;
+  }
 
   nsresult rv;
 
@@ -143,7 +156,12 @@ NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(
 
 NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(
     nsICacheStorageVisitor* aVisitor, bool aVisitEntries) {
-  if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
+  if (!CacheStorageService::Self()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (!LoadInfo()) {
+    return NS_ERROR_CACHE_KEY_NOT_FOUND;
+  }
 
   LOG(("AppCacheStorage::AsyncVisitStorage [this=%p, cb=%p]", this, aVisitor));
 

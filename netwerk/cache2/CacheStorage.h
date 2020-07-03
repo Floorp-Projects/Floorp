@@ -58,7 +58,8 @@ class CacheStorage : public nsICacheStorage {
  public:
   nsILoadContextInfo* LoadInfo() const { return mLoadContextInfo; }
   bool WriteToDisk() const {
-    return mWriteToDisk && !mLoadContextInfo->IsPrivate();
+    return mWriteToDisk &&
+           (!mLoadContextInfo || !mLoadContextInfo->IsPrivate());
   }
   bool LookupAppCache() const { return mLookupAppCache; }
   bool SkipSizeCheck() const { return mSkipSizeCheck; }
