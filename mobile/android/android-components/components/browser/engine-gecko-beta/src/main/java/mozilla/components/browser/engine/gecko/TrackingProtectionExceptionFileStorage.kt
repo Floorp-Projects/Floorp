@@ -103,10 +103,10 @@ internal class TrackingProtectionExceptionFileStorage(
         persist()
     }
 
-    override fun removeAll(activeSessions: List<EngineSession?>?) {
+    override fun removeAll(activeSessions: List<EngineSession>?) {
         runtime.contentBlockingController.clearExceptionList()
-        activeSessions?.forEach {
-            it?.notifyObservers {
+        activeSessions?.forEach { engineSession ->
+            engineSession.notifyObservers {
                 onExcludedOnTrackingProtectionChange(false)
             }
         }

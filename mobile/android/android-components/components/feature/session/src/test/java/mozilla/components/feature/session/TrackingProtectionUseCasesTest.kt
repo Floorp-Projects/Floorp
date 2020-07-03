@@ -4,14 +4,19 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
@@ -20,21 +25,37 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.times
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class TrackingProtectionUseCasesTest {
-
-    private val mockSessionManager = mock<SessionManager>()
-    private val mockSession = mock<EngineSession>()
-    private val mockEngine = mock<Engine>()
-    private val mockStore = mock<TrackingProtectionExceptionStorage>()
-    private val useCases = TrackingProtectionUseCases(mockSessionManager, mockEngine)
+    private lateinit var exceptionStore: TrackingProtectionExceptionStorage
+    private lateinit var engine: Engine
+    private lateinit var store: BrowserStore
+    private lateinit var engineSession: EngineSession
+    private lateinit var useCases: TrackingProtectionUseCases
 
     @Before
-    fun setup() {
-        whenever(mockSessionManager.getEngineSession(any())).thenReturn(mockSession)
-        whenever(mockEngine.trackingProtectionExceptionStore).thenReturn(mockStore)
+    fun setUp() {
+        exceptionStore = mock()
+
+        engine = mock()
+        whenever(engine.trackingProtectionExceptionStore).thenReturn(exceptionStore)
+
+        engineSession = mock()
+
+        store = BrowserStore(BrowserState(
+            tabs = listOf(
+                TabSessionState(
+                    id = "A",
+                    content = ContentState("https://www.mozilla.org"),
+                    engineState = EngineState(engineSession)
+                )
+            ),
+            selectedTabId = "A"
+        ))
+
+        useCases = TrackingProtectionUseCases(store, engine)
     }
 
     @Test
@@ -47,18 +68,19 @@ class TrackingProtectionUseCasesTest {
             onSuccessCalled = true
         }
 
-        whenever(mockEngine.getTrackersLog(any(), any(), any())).then {
+        whenever(engine.getTrackersLog(any(), any(), any())).then {
             onSuccess(emptyList())
         }
 
-        useCases.fetchTrackingLogs(mock(), onSuccess = {
+        val useCases = TrackingProtectionUseCases(store, engine)
+
+        useCases.fetchTrackingLogs("A", onSuccess = {
             trackersLog = it
             onSuccessCalled = true
         }, onError = {
             onErrorCalled = true
         })
 
-        verify(mockSessionManager).getEngineSession(any())
         assertNotNull(trackersLog)
         assertTrue(onSuccessCalled)
         assertFalse(onErrorCalled)
@@ -73,13 +95,17 @@ class TrackingProtectionUseCasesTest {
             trackersLog = it
             onSuccessCalled = true
         }
-        whenever(mockSessionManager.getEngineSession(any())).thenReturn(null)
 
-        whenever(mockEngine.getTrackersLog(any(), any(), any())).then {
+        store.dispatch(
+            EngineAction.UnlinkEngineSessionAction("A")
+        ).joinBlocking()
+
+        whenever(engine.getTrackersLog(any(), any(), any())).then {
             onSuccess(emptyList())
         }
 
-        useCases.fetchTrackingLogs(mock(),
+        useCases.fetchTrackingLogs(
+            "A",
             onSuccess = {
                 trackersLog = it
                 onSuccessCalled = true
@@ -88,7 +114,6 @@ class TrackingProtectionUseCasesTest {
                 onErrorCalled = true
             })
 
-        verify(mockSessionManager).getEngineSession(any())
         assertNull(trackersLog)
         assertTrue(onErrorCalled)
         assertFalse(onSuccessCalled)
@@ -96,68 +121,82 @@ class TrackingProtectionUseCasesTest {
 
     @Test
     fun `add exception`() {
-        useCases.addException(mock())
-        verify(mockSessionManager).getEngineSession(any())
-        verify(mockStore).add(any())
+        useCases.addException("A")
+
+        verify(exceptionStore).add(engineSession)
     }
 
     @Test
     fun `add exception with a null engine session will not call the store`() {
-        whenever(mockSessionManager.getEngineSession(any())).thenReturn(null)
+        store.dispatch(
+            EngineAction.UnlinkEngineSessionAction("A")
+        ).joinBlocking()
 
-        useCases.addException(mock())
-        verify(mockStore, times(0)).add(any())
+        useCases.addException("A")
+
+        verify(exceptionStore, never()).add(any())
     }
 
     @Test
     fun `remove a session exception`() {
-        useCases.removeException(mock<Session>())
-        verify(mockSessionManager).getEngineSession(any())
-        verify(mockStore).remove(any<EngineSession>())
+        useCases.removeException("A")
+
+        verify(exceptionStore).remove(engineSession)
     }
 
     @Test
     fun `remove a tracking protection exception`() {
-        useCases.removeException(mock<TrackingProtectionException>())
-        verify(mockStore).remove(any<TrackingProtectionException>())
+        val exception: TrackingProtectionException = mock()
+
+        useCases.removeException(exception)
+        verify(exceptionStore).remove(exception)
     }
 
     @Test
     fun `remove exception with a null engine session will not call the store`() {
-        whenever(mockSessionManager.getEngineSession(any())).thenReturn(null)
+        store.dispatch(
+            EngineAction.UnlinkEngineSessionAction("A")
+        ).joinBlocking()
 
-        useCases.removeException(mock<Session>())
-        verify(mockStore, times(0)).remove(any<EngineSession>())
+        useCases.removeException("A")
+
+        verify(exceptionStore, never()).remove(any<EngineSession>())
     }
 
     @Test
     fun `removeAll exceptions`() {
         useCases.removeAllExceptions()
-        verify(mockStore).removeAll(any())
+
+        verify(exceptionStore).removeAll(any())
     }
 
     @Test
     fun `contains exception`() {
-        useCases.containsException(mock()) {}
-        verify(mockStore).contains(any(), any())
+        val callback: (Boolean) -> Unit = {}
+        useCases.containsException("A", callback)
+
+        verify(exceptionStore).contains(engineSession, callback)
     }
 
     @Test
     fun `contains exception with a null engine session will not call the store`() {
         var contains = true
-        whenever(mockSessionManager.getEngineSession(any())).thenReturn(null)
 
-        useCases.containsException(mock()) {
+        store.dispatch(
+            EngineAction.UnlinkEngineSessionAction("A")
+        ).joinBlocking()
+
+        useCases.containsException("A") {
             contains = it
         }
 
         assertFalse(contains)
-        verify(mockStore, times(0)).contains(any(), any())
+        verify(exceptionStore, never()).contains(any(), any())
     }
 
     @Test
     fun `fetch exceptions`() {
         useCases.fetchExceptions {}
-        verify(mockStore).fetchAll(any())
+        verify(exceptionStore).fetchAll(any())
     }
 }

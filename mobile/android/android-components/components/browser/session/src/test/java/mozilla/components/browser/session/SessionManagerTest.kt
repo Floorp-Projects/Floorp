@@ -5,7 +5,9 @@
 package mozilla.components.browser.session
 
 import android.graphics.Bitmap
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -664,20 +666,21 @@ class SessionManagerTest {
         val privateEngineSession: EngineSession = mock()
         doReturn(privateEngineSession).`when`(engine).createSession(true)
 
-        val sessionManager = SessionManager(engine)
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine, store)
 
         val session = Session("https://www.mozilla.org")
         sessionManager.add(session)
 
-        assertNull(sessionManager.getEngineSession(session))
+        assertNull(store.state.findTab(session.id)!!.engineState.engineSession)
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
+        assertEquals(actualEngineSession, store.state.findTab(session.id)!!.engineState.engineSession)
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
         assertEquals(actualEngineSession, session.engineSessionHolder.engineSession)
 
         val privateSession = Session("https://www.mozilla.org", true, Session.Source.NONE)
         sessionManager.add(privateSession)
-        assertNull(sessionManager.getEngineSession(privateSession))
+        assertNull(store.state.findTab(privateSession.id)!!.engineState.engineSession)
         assertEquals(privateEngineSession, sessionManager.getOrCreateEngineSession(privateSession))
         assertEquals(privateEngineSession, privateSession.engineSessionHolder.engineSession)
     }
@@ -758,8 +761,9 @@ class SessionManagerTest {
     fun `add will link an engine session if provided`() {
         val engine: Engine = mock()
 
+        val store = BrowserStore()
         val actualEngineSession: EngineSession = mock()
-        val sessionManager = SessionManager(engine)
+        val sessionManager = SessionManager(engine, store)
 
         val session = Session("https://www.mozilla.org")
         assertNull(session.engineSessionHolder.engineSession)
@@ -771,7 +775,7 @@ class SessionManagerTest {
         assertNotNull(session.engineSessionHolder.engineObserver)
 
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
+        assertEquals(actualEngineSession, store.state.findTab(session.id)!!.engineState.engineSession)
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
     }
 

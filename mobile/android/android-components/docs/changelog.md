@@ -15,6 +15,13 @@ permalink: /changelog/
 * **feature-session**
   * ⚠️ **This is a breaking change**: `FullScreenFeature`, `SettingsUseCases`, `SwipeRefreshFeature` and `SessionFeature` now require a `BrowserStore` instead of a `SessionManager`.
   * ⚠️ **This is a breaking change**: `SessionFeature` now requires an `EngineSessionUseCases` instance.
+  * ⚠️ **This is a breaking change**: `TrackingProtectionUseCases` now requires a `BrowserStore` instead of a `SessionManager`.
+
+* **feature-tabs**
+  * ⚠️ **This is a breaking change**: `TabsUseCases.AddNewTabUseCase` and `TabsUseCases.AddNewPrivateTabUseCase` now require a `BrowserStore` instead of a `SessionManager`.
+
+* **browser-session**
+  * `SessionManager.getEngineSession()` is now deprecated. From now on please read `EngineSession` instances of tabs from `BrowserState`.
 
 * **service-sync-logins**
   * ⚠️ **This is a breaking change**: removed `isAutofillEnabled` lambda from `GeckoLoginStorageDelegate` because setting has been exposed through GV

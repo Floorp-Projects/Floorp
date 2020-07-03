@@ -840,7 +840,7 @@ class SessionManagerMigrationTest {
         val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
         sessionManager.add(session)
 
-        assertNull(sessionManager.getEngineSession(session))
+        assertNull(store.state.findTab("session")!!.engineState.engineSession)
         assertEquals(engineSession1, sessionManager.getOrCreateEngineSession(session))
         store.state.findTab("session")!!.also { tab ->
             assertEquals(engineSession1, tab.engineState.engineSession)
