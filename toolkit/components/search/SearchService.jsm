@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  getVerificationHash: "resource://gre/modules/SearchEngine.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
+  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -1626,7 +1626,7 @@ SearchService.prototype = {
       try {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(osfile.path);
-        addedEngine = new SearchEngine({
+        addedEngine = new OpenSearchEngine({
           fileURI: file,
           isAppProvided: true,
         });
@@ -2612,7 +2612,7 @@ SearchService.prototype = {
     await this.init();
     let errCode;
     try {
-      var engine = new SearchEngine({
+      var engine = new OpenSearchEngine({
         uri: engineURL,
         isAppProvided: false,
       });
@@ -2832,7 +2832,7 @@ SearchService.prototype = {
         engine &&
         (engine.isAppProvided ||
           this._cache.getAttribute(this._cache.getHashName(attributeName)) ==
-            getVerificationHash(name))
+            SearchUtils.getVerificationHash(name))
       ) {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
@@ -2925,7 +2925,9 @@ SearchService.prototype = {
       if (!newCurrentEngine._loadPath) {
         newCurrentEngine._loadPath = "[other]unknown";
       }
-      let loadPathHash = getVerificationHash(newCurrentEngine._loadPath);
+      let loadPathHash = SearchUtils.getVerificationHash(
+        newCurrentEngine._loadPath
+      );
       let currentHash = newCurrentEngine.getAttr("loadPathHash");
       if (!currentHash || currentHash != loadPathHash) {
         newCurrentEngine.setAttr("loadPathHash", loadPathHash);
@@ -3055,7 +3057,7 @@ SearchService.prototype = {
       if (!currentHash) {
         engineData.origin = "unverified";
       } else {
-        let loadPathHash = getVerificationHash(engine._loadPath);
+        let loadPathHash = SearchUtils.getVerificationHash(engine._loadPath);
         engineData.origin =
           currentHash == loadPathHash ? "verified" : "invalid";
       }
@@ -3552,7 +3554,7 @@ var engineUpdateService = {
       }
 
       logConsole.debug("updating", engine.name, updateURI.spec);
-      testEngine = new SearchEngine({
+      testEngine = new OpenSearchEngine({
         uri: updateURI,
         isAppProvided: false,
       });
