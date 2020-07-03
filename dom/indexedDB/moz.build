@@ -74,6 +74,7 @@ UNIFIED_SOURCES += [
     'IndexedDatabaseManager.cpp',
     'KeyPath.cpp',
     'PermissionRequestBase.cpp',
+    'ProfilerHelpers.cpp',
     'ReportInternalError.cpp',
     'ScriptErrorHelper.cpp',
 ]
