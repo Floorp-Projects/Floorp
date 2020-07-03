@@ -720,16 +720,17 @@ var snapshotFormatters = {
             let m = /#BLOCKLIST_FEATURE_FAILURE_BUG_(\d+)/.exec(entry.message);
             if (m) {
               let bugSpan = $.new("span");
-              document.l10n.setAttributes(bugSpan, "blocklisted-bug");
 
               let bugHref = $.new("a");
               bugHref.href =
                 "https://bugzilla.mozilla.org/show_bug.cgi?id=" + m[1];
-              document.l10n.setAttributes(bugHref, "bug-link", {
+              bugHref.setAttribute("data-l10n-name", "bug-link");
+              bugSpan.append(bugHref);
+              document.l10n.setAttributes(bugSpan, "support-blocklisted-bug", {
                 bugNumber: m[1],
               });
 
-              contents = [bugSpan, bugHref];
+              contents = [bugSpan];
             } else {
               let unknownFailure = $.new("span");
               document.l10n.setAttributes(unknownFailure, "unknown-failure", {

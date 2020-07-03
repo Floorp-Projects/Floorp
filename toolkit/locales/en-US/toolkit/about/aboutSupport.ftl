@@ -267,11 +267,10 @@ webgl2-renderer = WebGL 2 Driver Renderer
 webgl2-version = WebGL 2 Driver Version
 webgl2-driver-extensions = WebGL 2 Driver Extensions
 webgl2-extensions = WebGL 2 Extensions
-blocklisted-bug = Blocklisted due to known issues
 
 # Variables
-# $bugNumber (string) - String of bug number from Bugzilla
-bug-link = bug { $bugNumber }
+#   $bugNumber (string) - Bug number on Bugzilla
+support-blocklisted-bug = Blocklisted due to known issues: <a data-l10n-name="bug-link">bug { $bugNumber }</a>
 
 # Variables
 # $failureCode (string) - String that can be searched in the source tree.
