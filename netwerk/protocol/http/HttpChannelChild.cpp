@@ -214,7 +214,8 @@ HttpChannelChild::HttpChannelChild()
 HttpChannelChild::~HttpChannelChild() {
   LOG(("Destroying HttpChannelChild @%p\n", this));
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if 0
+#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy && mAsyncOpenSucceeded &&
       !mSuccesfullyRedirected && !mOnStopRequestCalled) {
     bool emptyBgChildQueue, nullBgChild;
@@ -246,6 +247,7 @@ HttpChannelChild::~HttpChannelChild() {
         static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1),
         flags);
   }
+#  endif
 #endif
 
   ReleaseMainThreadOnlyReferences();
