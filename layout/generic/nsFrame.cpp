@@ -8111,8 +8111,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
           break;
         // always try previous on THAT line if that fails go the other way
-        frameTraversal->Prev();
-        resultFrame = frameTraversal->CurrentItem();
+        resultFrame = frameTraversal->Traverse(/* aForward = */ false);
         if (!resultFrame) return NS_ERROR_FAILURE;
       }
 
@@ -8151,8 +8150,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
           break;
         // previous didnt work now we try "next"
-        frameTraversal->Next();
-        nsIFrame* tempFrame = frameTraversal->CurrentItem();
+        nsIFrame* tempFrame = frameTraversal->Traverse(/* aForward = */ true);
         if (!tempFrame) break;
         resultFrame = tempFrame;
       }
@@ -8871,9 +8869,15 @@ nsresult nsIFrame::GetFrameFromDirection(
   *aOutJumpedLine = false;
   *aOutMovedOverNonSelectableText = false;
 
-  nsresult result;
   nsPresContext* presContext = PresContext();
   bool needsVisualTraversal = aVisual && presContext->BidiEnabled();
+  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  MOZ_TRY(NS_NewFrameTraversal(getter_AddRefs(frameTraversal), presContext,
+                               this, eLeaf, needsVisualTraversal,
+                               aScrollViewStop,
+                               true,  // aFollowOOFs
+                               false  // aSkipPopupChecks
+                               ));
 
   // Find the prev/next selectable frame
   bool selectable = false;
@@ -8899,21 +8903,7 @@ nsresult nsIFrame::GetFrameFromDirection(
         return NS_ERROR_FAILURE;  // we are done. cannot jump lines
     }
 
-    nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-    result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), presContext,
-                                  traversedFrame, eLeaf, needsVisualTraversal,
-                                  aScrollViewStop,
-                                  true,  // aFollowOOFs
-                                  false  // aSkipPopupChecks
-    );
-    if (NS_FAILED(result)) return result;
-
-    if (aDirection == eDirNext)
-      frameTraversal->Next();
-    else
-      frameTraversal->Prev();
-
-    traversedFrame = frameTraversal->CurrentItem();
+    traversedFrame = frameTraversal->Traverse(aDirection == eDirNext);
     if (!traversedFrame) {
       return NS_ERROR_FAILURE;
     }

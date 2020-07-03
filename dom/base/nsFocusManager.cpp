@@ -3901,20 +3901,14 @@ nsresult nsFocusManager::GetNextTabbableContent(
         } else if (aRootContent->IsFocusable()) {
           frameTraversal->Next();
         }
-        frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+        frame = frameTraversal->CurrentItem();
       } else if (getNextFrame &&
                  (!iterStartContent ||
                   !iterStartContent->IsHTMLElement(nsGkAtoms::area))) {
         // Need to do special check in case we're in an imagemap which has
         // multiple content nodes per frame, so don't skip over the starting
         // frame.
-        if (aForward) {
-          frameTraversal->Next();
-        } else {
-          frameTraversal->Prev();
-        }
-
-        frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+        frame = frameTraversal->Traverse(aForward);
       }
     }
 
