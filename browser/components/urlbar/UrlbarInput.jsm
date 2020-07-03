@@ -1551,6 +1551,7 @@ class UrlbarInput {
       }
     }
     uri = this.makeURIReadable(uri);
+    let displaySpec = uri.displaySpec;
 
     // If the entire URL is selected, just use the actual loaded URI,
     // unless we want a decoded URI, or it's a data: or javascript: URI,
@@ -1561,19 +1562,17 @@ class UrlbarInput {
       !uri.schemeIs("data") &&
       !UrlbarPrefs.get("decodeURLsOnCopy")
     ) {
-      return uri.displaySpec;
+      return displaySpec;
     }
 
     // Just the beginning of the URL is selected, or we want a decoded
     // url. First check for a trimmed value.
-    let spec = uri.displaySpec;
-    let trimmedSpec = this._trimValue(spec);
-    if (spec != trimmedSpec) {
-      // Prepend the portion that _trimValue removed from the beginning.
-      // This assumes _trimValue will only truncate the URL at
-      // the beginning or end (or both).
-      let trimmedSegments = spec.split(trimmedSpec);
-      selectedVal = trimmedSegments[0] + selectedVal;
+
+    if (
+      !selectedVal.startsWith(BrowserUtils.trimURLProtocol) &&
+      displaySpec != this._trimValue(displaySpec)
+    ) {
+      selectedVal = BrowserUtils.trimURLProtocol + selectedVal;
     }
 
     return selectedVal;
