@@ -517,6 +517,11 @@ TextInputSelectionController::SetCaretReadOnly(bool aReadOnly) {
   if (!caret) {
     return NS_ERROR_FAILURE;
   }
+
+  if (!mFrameSelection) {
+    return NS_ERROR_FAILURE;
+  }
+
   Selection* selection = mFrameSelection->GetSelection(SelectionType::eNormal);
   if (selection) {
     caret->SetCaretReadOnly(aReadOnly);
