@@ -99,6 +99,7 @@ FINAL_LIBRARY = 'xul'
 JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser-serviceworker.ini',
     'test/browser/browser.ini',
 ]
 
