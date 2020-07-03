@@ -102,11 +102,9 @@ class RetAddrEntry {
     // A callVM for an op.
     CallVM,
 
-    // A callVM not for an op (e.g., in the prologue).
+    // A callVM not for an op (e.g., in the prologue) that can't
+    // trigger debug mode.
     NonOpCallVM,
-
-    // A callVM for the warmup counter.
-    WarmupCounter,
 
     // A callVM for the over-recursion check on function entry.
     StackCheck,
