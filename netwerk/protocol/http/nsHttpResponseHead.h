@@ -42,6 +42,7 @@ class nsHttpResponseHead {
       : mVersion(HttpVersion::v1_1),
         mStatus(200),
         mContentLength(-1),
+        mHasCacheControl(false),
         mCacheControlPublic(false),
         mCacheControlPrivate(false),
         mCacheControlNoStore(false),
@@ -192,6 +193,11 @@ class nsHttpResponseHead {
     return ParseDateHeader(nsHttp::Last_Modified, result);
   }
 
+  bool NoCache_locked() const {
+    // We ignore Pragma: no-cache if Cache-Control is set.
+    return mHasCacheControl ? mCacheControlNoCache : mPragmaNoCache;
+  }
+
  private:
   // All members must be copy-constructable and assignable
   nsHttpHeaderArray mHeaders;
@@ -201,6 +207,7 @@ class nsHttpResponseHead {
   int64_t mContentLength;
   nsCString mContentType;
   nsCString mContentCharset;
+  bool mHasCacheControl;
   bool mCacheControlPublic;
   bool mCacheControlPrivate;
   bool mCacheControlNoStore;
