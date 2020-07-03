@@ -15,10 +15,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Assertions.h"
 
-#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ <= 9
-#  define CLANG_CRASH_BUG 1
-#endif
-
 namespace mozilla {
 
 /**
@@ -146,10 +142,8 @@ class CSSOrderAwareFrameIteratorT {
   }
 
   void SetItemCount(size_t aItemCount) {
-#ifndef CLANG_CRASH_BUG
     MOZ_ASSERT(mIter.isSome() || aItemCount <= mArray->Length(),
                "item count mismatch");
-#endif
     mItemCount.emplace(aItemCount);
     // Note: it's OK if mItemIndex underflows -- ItemIndex()
     // will not be called unless there is at least one item.
@@ -178,10 +172,7 @@ class CSSOrderAwareFrameIteratorT {
   }
 
   bool AtEnd() const {
-#ifndef CLANG_CRASH_BUG
-    // Clang 3.6.2 crashes when compiling this assertion:
     MOZ_ASSERT(mIter.isSome() || mArrayIndex <= mArray->Length());
-#endif
     return mIter ? (*mIter == *mIterEnd) : mArrayIndex >= mArray->Length();
   }
 
