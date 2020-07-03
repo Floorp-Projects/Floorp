@@ -3,9 +3,10 @@ Selectors
 
 These are the currently implemented try selectors:
 
-* :doc:`chooser <chooser>`: Select tasks using a web interface.
+* :doc:`auto <auto>`: Have tasks chosen for you automatically.
 * :doc:`fuzzy <fuzzy>`: Select tasks using a fuzzy finding algorithm and
   a terminal interface.
+* :doc:`chooser <chooser>`: Select tasks using a web interface.
 * :doc:`again <again>`: Re-run a previous ``try_task_config.json`` based
   push.
 * :doc:`empty <empty>`: Don't select any tasks. Taskcluster will still run
@@ -32,8 +33,9 @@ See selector specific options by running:
   :maxdepth: 1
   :hidden:
 
-  Chooser <chooser>
+  Auto <auto>
   Fuzzy <fuzzy>
+  Chooser <chooser>
   Again <again>
   Empty <empty>
   Syntax <syntax>
