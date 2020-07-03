@@ -17,11 +17,6 @@ namespace mozilla {
 // In our scenario, the producer threads are real-time, they can't block. The
 // consummer thread runs every now and then and empties the queue to a log
 // file, on disk.
-//
-// Having fixed size messages and jemalloc is probably not the fastest, but
-// allows having a simpler design, we count on the fact that jemalloc will get
-// the memory from a thread-local source most of the time.  We'll replace
-// this with a fixed-size ring buffer if this becomes an issue.
 const size_t MPSC_MSG_RESERVERD = sizeof(std::atomic<void*>);
 
 template <typename T>
@@ -35,19 +30,6 @@ class MPSCQueue {
     std::atomic<Message*> mNext;
     T data;
   };
-
-  // The goal here is to make it easy on the allocator. We pack a pointer in the
-  // message struct, and we still want to do power of two allocations to
-  // minimize allocator slop. The allocation size are going to be constant, so
-  // the allocation is probably going to hit the thread local cache in jemalloc,
-  // making it cheap and, more importantly, lock-free enough. This has been
-  // measured to be cheap and reliable enough, but will be replaced in the
-  // longer run.
-#if !(defined(ANDROID) && defined(__i386__))
-  static_assert(IsPowerOfTwo(sizeof(MPSCQueue<T>::Message)),
-                "MPSCQueue internal allocations must have a size that is a "
-                "power of two ");
-#endif
 
   // Creates a new MPSCQueue. Initially, the queue has a single sentinel node,
   // pointed to by both mHead and mTail.
