@@ -16,7 +16,11 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("cookies", ["siteDataGroup", "trackingGroup"]);
+  await evaluateSearchResults("cookies", [
+    "siteDataGroup",
+    "trackingGroup",
+    "pane-experimental-featureGates",
+  ]);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

@@ -36,6 +36,18 @@ registerCleanupFunction(function() {
 });
 
 var tests = [
+  function setup(done) {
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["network.cookie.sameSite.laxByDefault", false],
+          ["network.cookie.sameSite.noneRequiresSecure", false],
+        ],
+      },
+      done
+    );
+  },
+
   function snapshotSchema(done) {
     Troubleshoot.snapshot(function(snapshot) {
       try {

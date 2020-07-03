@@ -19,3 +19,15 @@ experimental-features-web-gpu-description = Experimental API for graphics and co
 experimental-features-avif =
     .label = AVIF
 experimental-features-avif-description = Experimental support for AVIF: AV1 Image File Format
+
+# The title of the experiment should be kept in English as it may be referenced
+# by various online articles and is technical in nature.
+experimental-features-cookie-samesite-lax-by-default =
+    .label = Cookies: SameSite=lax by default
+experimental-features-cookie-samesite-lax-by-default-description = Treat cookies as “sameSite=lax” by default if no “sameSite” attribute is specified. Developers must opt-in to the current status quo of unrestricted use by explicitly asserting “sameSite=none”.
+
+# The title of the experiment should be kept in English as it may be referenced
+# by various online articles and is technical in nature.
+experimental-features-cookie-samesite-none-requires-secure =
+    .label = Cookies: SameSite=none requires secure attribute
+experimental-features-cookie-samesite-none-requires-secure-description = Cookies with “sameSite=none” attribute require the secure attribute. This feature requires “Cookies: SameSite=lax by default”.
