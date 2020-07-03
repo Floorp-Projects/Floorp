@@ -670,21 +670,20 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   if (!HTMLEditUtils::IsTable(lastInsertedPoint.GetChild())) {
     containerContent = GetLastEditableLeaf(*lastInsertedPoint.GetChild());
     if (containerContent) {
-      Element* mostAncestorTableRelatedElement = nullptr;
-      for (Element* maybeTableRelatedElement =
+      Element* mostDistantInclusiveAncestorTableElement = nullptr;
+      for (Element* maybeTableElement =
                containerContent->GetAsElementOrParentElement();
-           maybeTableRelatedElement &&
-           maybeTableRelatedElement != lastInsertedPoint.GetChild();
-           maybeTableRelatedElement =
-               maybeTableRelatedElement->GetParentElement()) {
-        if (HTMLEditUtils::IsTable(maybeTableRelatedElement)) {
-          mostAncestorTableRelatedElement = maybeTableRelatedElement;
+           maybeTableElement &&
+           maybeTableElement != lastInsertedPoint.GetChild();
+           maybeTableElement = maybeTableElement->GetParentElement()) {
+        if (HTMLEditUtils::IsTable(maybeTableElement)) {
+          mostDistantInclusiveAncestorTableElement = maybeTableElement;
         }
       }
       // If we're in table elements, we should put caret into the most ancestor
       // table element.
-      if (mostAncestorTableRelatedElement) {
-        containerContent = mostAncestorTableRelatedElement;
+      if (mostDistantInclusiveAncestorTableElement) {
+        containerContent = mostDistantInclusiveAncestorTableElement;
       }
     }
   }
