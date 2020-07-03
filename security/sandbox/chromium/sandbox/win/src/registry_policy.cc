@@ -20,7 +20,8 @@ namespace {
 
 static const uint32_t kAllowedRegFlags =
     KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY | KEY_READ |
-    GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL;
+    GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL | KEY_WOW64_64KEY |
+    KEY_WOW64_32KEY;
 
 // Opens the key referenced by |obj_attributes| with |access| and
 // checks what permission was given. Remove the WRITE flags and update
