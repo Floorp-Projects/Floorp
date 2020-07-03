@@ -86,6 +86,7 @@ ToastBgThread
 TRR Background
 URL Classifier
 Update Watcher
+VRService
 VsyncIOThread
 Wifi Monitor
 Worker Launcher

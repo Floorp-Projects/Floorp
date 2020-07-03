@@ -5,14 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRService.h"
-#include "../VRShMem.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "../gfxVRMutex.h"
-#include "base/thread.h"  // for Thread
-#include "nsXULAppAPI.h"
+
 #include <cstring>  // for memcmp
 
+#include "../VRShMem.h"
+#include "../gfxVRMutex.h"
 #include "PuppetSession.h"
+#include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "nsThread.h"
+#include "nsXULAppAPI.h"
 
 #if defined(XP_WIN)
 #  include "OculusSession.h"
@@ -61,7 +63,6 @@ already_AddRefed<VRService> VRService::Create(
 VRService::VRService(volatile VRExternalShmem* aShmem)
     : mSystemState{},
       mBrowserState{},
-      mServiceThread(nullptr),
       mShutdownRequested(false),
       mLastHapticState{},
       mFrameStartTime{} {
@@ -95,28 +96,37 @@ void VRService::Start() {
      */
     memset(&mSystemState, 0, sizeof(mSystemState));
     PushState(mSystemState);
+    RefPtr<VRService> self = this;
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_NewNamedThread(
+        "VRService", getter_AddRefs(thread),
+        NS_NewRunnableFunction("VRService::ServiceThreadStartup", [self]() {
+          self->mBackgroundHangMonitor =
+              MakeUnique<mozilla::BackgroundHangMonitor>(
+                  "VRService",
+                  /* Timeout values are powers-of-two to enable us get better
+                     data. 128ms is chosen for transient hangs because 8Hz
+                     should be the minimally acceptable goal for Compositor
+                     responsiveness (normal goal is 60Hz). */
+                  128,
+                  /* 2048ms is chosen for permanent hangs because it's longer
+                   * than most Compositor hangs seen in the wild, but is short
+                   * enough to not miss getting native hang stacks. */
+                  2048);
+          static_cast<nsThread*>(NS_GetCurrentThread())
+              ->SetUseHangMonitor(true);
+        }));
 
-    mServiceThread = new base::Thread("VRService");
-    base::Thread::Options options;
-    /* Timeout values are powers-of-two to enable us get better data.
-       128ms is chosen for transient hangs because 8Hz should be the minimally
-       acceptable goal for Compositor responsiveness (normal goal is 60Hz). */
-    options.transient_hang_timeout = 128;  // milliseconds
-    /* 2048ms is chosen for permanent hangs because it's longer than most
-     * Compositor hangs seen in the wild, but is short enough to not miss
-     * getting native hang stacks. */
-    options.permanent_hang_timeout = 2048;  // milliseconds
-
-    if (!mServiceThread->StartWithOptions(options)) {
-      mServiceThread->Stop();
-      delete mServiceThread;
-      mServiceThread = nullptr;
+    if (NS_FAILED(rv)) {
       return;
     }
-
-    mServiceThread->message_loop()->PostTask(
+    thread.swap(mServiceThread);
+    // ServiceInitialize needs mServiceThread to be set in order to be able to
+    // assert that it's running on the right thread as well as dispatching new
+    // tasks. It can't be run within the NS_NewRunnableFunction initial event.
+    MOZ_ALWAYS_SUCCEEDS(mServiceThread->Dispatch(
         NewRunnableMethod("gfx::VRService::ServiceInitialize", this,
-                          &VRService::ServiceInitialize));
+                          &VRService::ServiceInitialize)));
   }
 }
 
@@ -124,9 +134,17 @@ void VRService::Stop() { StopInternal(false /*aFromDtor*/); }
 
 void VRService::StopInternal(bool aFromDtor) {
   if (mServiceThread) {
+    // We must disable the background hang monitor before we can shutdown this
+    // thread. Dispatched a last task to do so. No task will be allowed to run
+    // on the service thread after this one.
+    mServiceThread->Dispatch(NS_NewRunnableFunction(
+        "VRService::StopInternal", [self = RefPtr<VRService>(this), this] {
+          static_cast<nsThread*>(NS_GetCurrentThread())
+              ->SetUseHangMonitor(false);
+          mBackgroundHangMonitor = nullptr;
+        }));
     mShutdownRequested = true;
-    mServiceThread->Stop();
-    delete mServiceThread;
+    mServiceThread->Shutdown();
     mServiceThread = nullptr;
   }
 
@@ -145,8 +163,7 @@ void VRService::StopInternal(bool aFromDtor) {
 bool VRService::InitShmem() { return mShmem->JoinShMem(); }
 
 bool VRService::IsInServiceThread() {
-  return (mServiceThread != nullptr) &&
-         mServiceThread->thread_id() == PlatformThread::CurrentId();
+  return mServiceThread && mServiceThread->IsOnCurrentThread();
 }
 
 void VRService::ServiceInitialize() {
@@ -217,7 +234,7 @@ void VRService::ServiceInitialize() {
     mSystemState.enumerationCompleted = true;
     PushState(mSystemState);
 
-    MessageLoop::current()->PostTask(
+    mServiceThread->Dispatch(
         NewRunnableMethod("gfx::VRService::ServiceWaitForImmersive", this,
                           &VRService::ServiceWaitForImmersive));
   } else {
@@ -269,7 +286,7 @@ void VRService::ServiceWaitForImmersive() {
 
   if (mSession->ShouldQuit() || mShutdownRequested) {
     // Shut down
-    MessageLoop::current()->PostTask(NewRunnableMethod(
+    mServiceThread->Dispatch(NewRunnableMethod(
         "gfx::VRService::ServiceShutdown", this, &VRService::ServiceShutdown));
   } else if (IsImmersiveContentActive(mBrowserState)) {
     // Enter Immersive Mode
@@ -277,12 +294,12 @@ void VRService::ServiceWaitForImmersive() {
     mSession->StartFrame(mSystemState);
     PushState(mSystemState);
 
-    MessageLoop::current()->PostTask(
+    mServiceThread->Dispatch(
         NewRunnableMethod("gfx::VRService::ServiceImmersiveMode", this,
                           &VRService::ServiceImmersiveMode));
   } else {
     // Continue waiting for immersive mode
-    MessageLoop::current()->PostTask(
+    mServiceThread->Dispatch(
         NewRunnableMethod("gfx::VRService::ServiceWaitForImmersive", this,
                           &VRService::ServiceWaitForImmersive));
   }
@@ -299,7 +316,7 @@ void VRService::ServiceImmersiveMode() {
 
   if (mSession->ShouldQuit() || mShutdownRequested) {
     // Shut down
-    MessageLoop::current()->PostTask(NewRunnableMethod(
+    mServiceThread->Dispatch(NewRunnableMethod(
         "gfx::VRService::ServiceShutdown", this, &VRService::ServiceShutdown));
     return;
   }
@@ -308,7 +325,7 @@ void VRService::ServiceImmersiveMode() {
     // Exit immersive mode
     mSession->StopAllHaptics();
     mSession->StopPresentation();
-    MessageLoop::current()->PostTask(
+    mServiceThread->Dispatch(
         NewRunnableMethod("gfx::VRService::ServiceWaitForImmersive", this,
                           &VRService::ServiceWaitForImmersive));
     return;
@@ -345,7 +362,7 @@ void VRService::ServiceImmersiveMode() {
   }
 
   // Continue immersive mode
-  MessageLoop::current()->PostTask(
+  mServiceThread->Dispatch(
       NewRunnableMethod("gfx::VRService::ServiceImmersiveMode", this,
                         &VRService::ServiceImmersiveMode));
 }
