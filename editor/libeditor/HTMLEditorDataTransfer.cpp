@@ -3122,11 +3122,11 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
 }
 
 // static
-Element*
-HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
-    const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
-    const nsTArray<OwningNonNull<Element>>&
-        aArrayOfListAndTableRelatedElements) {
+Element* HTMLEditor::AutoHTMLFragmentBoundariesFixer::
+    GetMostDistantAncestorListOrTableElement(
+        const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
+        const nsTArray<OwningNonNull<Element>>&
+            aInclusiveAncestorsTableOrListElements) {
   Element* lastFoundAncestorListOrTableElement = nullptr;
   for (auto& content : aArrayOfTopMostChildContents) {
     if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
@@ -3140,12 +3140,12 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
       // aArrayOfNodes, return the last found list or `<table>` element.
       // XXX Is that really expected that this returns a list element in this
       //     case?
-      if (!aArrayOfListAndTableRelatedElements.Contains(tableElement)) {
+      if (!aInclusiveAncestorsTableOrListElements.Contains(tableElement)) {
         return lastFoundAncestorListOrTableElement;
       }
       // If we find a `<table>` element which is topmost list or `<table>`
       // element at first or last of aArrayOfNodes, return it.
-      if (aArrayOfListAndTableRelatedElements.LastElement().get() ==
+      if (aInclusiveAncestorsTableOrListElements.LastElement().get() ==
           tableElement) {
         return tableElement;
       }
@@ -3168,12 +3168,12 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
     // found list or `<table>` element.
     // XXX Is that really expected that this returns a `<table>` element in
     //     this case?
-    if (!aArrayOfListAndTableRelatedElements.Contains(listElement)) {
+    if (!aInclusiveAncestorsTableOrListElements.Contains(listElement)) {
       return lastFoundAncestorListOrTableElement;
     }
     // If we find a list element which is topmost list or `<table>` element at
     // first or last of aArrayOfNodes, return it.
-    if (aArrayOfListAndTableRelatedElements.LastElement().get() ==
+    if (aInclusiveAncestorsTableOrListElements.LastElement().get() ==
         listElement) {
       return listElement;
     }
@@ -3267,21 +3267,20 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
 
   // Collect list elements and table related elements at first or last node
   // in aArrayOfTopMostChildContents.
-  AutoTArray<OwningNonNull<Element>, 4>
-      arrayOfListAndTableRelatedElementsAtEdge;
+  AutoTArray<OwningNonNull<Element>, 4> inclusiveAncestorsListOrTableElements;
   CollectTableAndAnyListElementsOfInclusiveAncestorsAt(
       aStartOrEnd == StartOrEnd::end
           ? aArrayOfTopMostChildContents.LastElement()
           : aArrayOfTopMostChildContents[0],
-      arrayOfListAndTableRelatedElementsAtEdge);
-  if (arrayOfListAndTableRelatedElementsAtEdge.IsEmpty()) {
+      inclusiveAncestorsListOrTableElements);
+  if (inclusiveAncestorsListOrTableElements.IsEmpty()) {
     return;
   }
 
   // Get most ancestor list or `<table>` element in
-  // arrayOfListAndTableRelatedElementsAtEdge which contains earlier
+  // inclusiveAncestorsListOrTableElements which contains earlier
   // node in aArrayOfTopMostChildContents as far as possible.
-  // XXX With arrayOfListAndTableRelatedElementsAtEdge, this returns a
+  // XXX With inclusiveAncestorsListOrTableElements, this returns a
   //     list or `<table>` element which contains first or last node of
   //     aArrayOfTopMostChildContents.  However, this seems slow when
   //     aStartOrEnd is StartOrEnd::end and only the last node is in
@@ -3289,8 +3288,8 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
   //     possible case or not.  We need to add tests to
   //     test_content_iterator_subtree.html for checking how
   //     SubtreeContentIterator works.
-  Element* listOrTableElement = GetMostAncestorListOrTableElement(
-      aArrayOfTopMostChildContents, arrayOfListAndTableRelatedElementsAtEdge);
+  Element* listOrTableElement = GetMostDistantAncestorListOrTableElement(
+      aArrayOfTopMostChildContents, inclusiveAncestorsListOrTableElements);
   if (!listOrTableElement) {
     return;
   }
