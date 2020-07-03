@@ -40,7 +40,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       // This should be fixed in Bug 1625027.
       this.browsingContextID = this._browser.browsingContext.id;
     }
-    this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
   },
 
   destroy: function() {
@@ -176,17 +175,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   /**
-   * Called by Resource Watchers, when new resources are available.
-   *
-   * @param Array<json> resources
-   *        List of all available resources. A resource is a JSON object piped over to the client.
-   *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
-   */
-  notifyResourceAvailable(resources) {
-    this.emit("resource-available-form", resources);
-  },
-
-  /**
    * Start watching for a list of resource types.
    * This should only resolve once all "already existing" resources of these types
    * are notified to the client via resource-available-form event on related target actors.
@@ -195,19 +183,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        List of all types to listen to.
    */
   async watchResources(resourceTypes) {
-    // First process resources which have to be listened from the parent process
-    // (the watcher actor always runs in the parent process)
-    const contentProcessResourceTypes = Resources.watchParentProcessResources(
-      this,
-      resourceTypes
-    );
-
-    // Bail out early if all resources were watched from parent process
-    if (contentProcessResourceTypes.length == 0) {
-      return;
-    }
-
-    WatcherRegistry.watchResources(this, contentProcessResourceTypes);
+    WatcherRegistry.watchResources(this, resourceTypes);
 
     // Fetch resources from all existing targets
     for (const targetType in TARGET_HELPERS) {
@@ -222,7 +198,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       const targetHelperModule = TARGET_HELPERS[targetType];
       await targetHelperModule.watchResources({
         watcher: this,
-        resourceTypes: contentProcessResourceTypes,
+        resourceTypes,
       });
     }
 
@@ -260,23 +236,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        List of all types to listen to.
    */
   unwatchResources(resourceTypes) {
-    // First process resources which are listened from the parent process
-    // (the watcher actor always runs in the parent process)
-    const resourcesUnwatchedInParentProcess = Resources.unwatchParentProcessResources(
-      this,
-      resourceTypes
-    );
-    // These resource types won't be saved in the WatcherRegistry because content processes
-    // do not need to know about them.
-    resourceTypes = resourceTypes.filter(
-      resource => !resourcesUnwatchedInParentProcess.includes(resource)
-    );
-
-    // Bail out early if all resources were watched from parent process
-    if (resourceTypes.length == 0) {
-      return;
-    }
-
     const isWatchingResources = WatcherRegistry.unwatchResources(
       this,
       resourceTypes

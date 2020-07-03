@@ -76,12 +76,6 @@ class ResourceWatcher {
       const supportsWatcher = this.descriptorFront?.traits?.watcher;
       if (supportsWatcher) {
         this.watcher = await this.descriptorFront.getWatcher();
-        // Resources watched from the parent process will be emitted on the Watcher Actor.
-        // So that we also have to listen for this event on it, in addition to all targets.
-        this.watcher.on(
-          "resource-available-form",
-          this._onResourceAvailable.bind(this, { watcherFront: this.watcher })
-        );
       }
     }
 
@@ -206,11 +200,11 @@ class ResourceWatcher {
     // are available from the target's process/thread.
     targetFront.on(
       "resource-available-form",
-      this._onResourceAvailable.bind(this, { targetFront })
+      this._onResourceAvailable.bind(this, targetFront)
     );
     targetFront.on(
       "resource-destroyed-form",
-      this._onResourceDestroyed.bind(this, { targetFront })
+      this._onResourceDestroyed.bind(this, targetFront)
     );
   }
 
@@ -232,41 +226,19 @@ class ResourceWatcher {
    * whenever an already existing resource is being listed or when a new one
    * has been created.
    *
-   * @param {Object} source
-   *        A dictionary object with only one of these two attributes:
-   *        - targetFront: a Target Front, if the resource is watched from the target process or thread
-   *        - watcherFront: a Watcher Front, if the resource is watched from the parent process
+   * @param {Front} targetFront
+   *        The Target Front from which this resource comes from.
    * @param {Array<json/Front>} resources
    *        Depending on the resource Type, it can be an Array composed of either JSON objects or Fronts,
    *        which describes the resource.
    */
-  async _onResourceAvailable({ targetFront, watcherFront }, resources) {
+  _onResourceAvailable(targetFront, resources) {
     for (const resource of resources) {
-      const { resourceType } = resource;
-
-      // Compute the target front if the resource comes from the Watcher Actor.
-      // (`targetFront` will be null as the watcher is in the parent process
-      // and targets are in distinct processes)
-      if (watcherFront) {
-        // Resource emitted from the Watcher Actor should all have a browsingContextID attribute
-        const { browsingContextID } = resource;
-        if (!browsingContextID) {
-          console.error(
-            `Resource of ${resourceType} is missing a browsingContextID attribute`
-          );
-          continue;
-        }
-        targetFront = await this.watcher.getBrowsingContextTarget(
-          browsingContextID
-        );
-      }
-
       // Put the targetFront on the resource for easy retrieval.
-      // (Resources from the legacy listeners may already have the attribute set)
       if (!resource.targetFront) {
         resource.targetFront = targetFront;
       }
-
+      const { resourceType } = resource;
       if (resourceType == ResourceWatcher.TYPES.CONSOLE_MESSAGE) {
         if (Array.isArray(resource.message.arguments)) {
           // We might need to create fronts for each of the message arguments.
@@ -375,7 +347,7 @@ class ResourceWatcher {
    * type of resource from a given target.
    */
   _watchResourcesForTarget(targetFront, resourceType) {
-    const onAvailable = this._onResourceAvailable.bind(this, { targetFront });
+    const onAvailable = this._onResourceAvailable.bind(this, targetFront);
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
