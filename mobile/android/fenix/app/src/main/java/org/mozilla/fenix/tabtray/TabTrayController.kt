@@ -38,9 +38,11 @@ class DefaultTabTrayController(
     private val registerCollectionStorageObserver: () -> Unit
 ) : TabTrayController {
     override fun onNewTabTapped(private: Boolean) {
+        val startTime = activity.components.core.engine.profiler?.getProfilerTime()
         activity.browsingModeManager.mode = BrowsingMode.fromBoolean(private)
         navController.navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
         dismissTabTray()
+        activity.components.core.engine.profiler?.addMarker("DefaultTabTrayController.onNewTabTapped", startTime)
     }
 
     override fun onTabTrayDismissed() {

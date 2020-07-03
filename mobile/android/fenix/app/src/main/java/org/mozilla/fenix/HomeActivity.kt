@@ -522,6 +522,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         engine: SearchEngine?,
         forceSearch: Boolean
     ) {
+        val startTime = components.core.engine.profiler?.getProfilerTime()
         val mode = browsingModeManager.mode
 
         val loadUrlUseCase = if (newTab) {
@@ -548,6 +549,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl())
         } else {
             searchUseCase.invoke(searchTermOrURL)
+        }
+
+        if (components.core.engine.profiler?.isProfilerActive() == true) {
+            // Wrapping the `addMarker` method with `isProfilerActive` even though it's no-op when
+            // profiler is not active. That way, `text` argument will not create a string builder all the time.
+            components.core.engine.profiler?.addMarker("HomeActivity.load", startTime, "newTab: $newTab")
         }
     }
 
