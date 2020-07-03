@@ -41,7 +41,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1268195
         SimpleTest.is(document.body.scrollTop > 0, true, "Scrolled body");
 
         // Do a frame reconstruction on the body while also shortening the
-        // height.
+        // height, but still keep it long enough to be scrollable.
+        document.body.classList.toggle('noscroll');
+        document.documentElement.classList.toggle('reconstruct-body');
+        document.getElementById('spacer').style.height = '1000px';
+        var reducedMax = document.body.scrollTopMax;
+        SimpleTest.is(document.body.scrollTop, reducedMax, `Scroll forced to new bottom ${reducedMax}`);
+
+        // Do another frame reconstruction while lengthening the height again.
+        document.body.classList.toggle('noscroll');
+        document.documentElement.classList.toggle('reconstruct-body');
+        document.getElementById('spacer').style.height = '5000px';
+        SimpleTest.is(document.body.scrollTop, reducedMax, "Scroll remained at reduced height");
+
+        // Do a frame reconstruction on the body while also shortening the
+        // height, this time down to a non-scrollable height.
         document.body.classList.toggle('noscroll');
         document.documentElement.classList.toggle('reconstruct-body');
         document.getElementById('spacer').style.height = '1px';
