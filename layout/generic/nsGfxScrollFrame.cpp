@@ -4764,7 +4764,7 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
       if (!weakFrame.IsAlive()) {
         return;
       }
-      if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
+      if (mIsRoot) {
         mOuter->PresShell()->ScrollToVisual(
             visualScrollToPos, FrameMetrics::eRestore, ScrollMode::Instant);
       }
