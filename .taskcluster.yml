@@ -201,9 +201,6 @@ tasks:
                             # This causes cached_task digest generation to be random for
                             # some tasks. Disable bytecode generation to work around that.
                             PYTHONDONTWRITEBYTECODE: '1'
-                            # someday, these will be provided by the worker - Bug 1492664
-                            TASKCLUSTER_ROOT_URL: https://taskcluster.net
-                            TASKCLUSTER_PROXY_URL: http://taskcluster
                           - $if: 'tasks_for == "action"'
                             then:
                                 ACTION_TASK_GROUP_ID: '${action.taskGroupId}'  # taskGroupId of the target task
