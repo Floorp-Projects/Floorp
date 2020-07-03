@@ -55,6 +55,7 @@
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/AspectRatio.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 #include "mozilla/SmallPointerArray.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
@@ -628,6 +629,8 @@ class nsIFrame : public nsQueryFrame {
   using BaselineSharingGroup = mozilla::BaselineSharingGroup;
   template <typename T>
   using Maybe = mozilla::Maybe<T>;
+  template <typename T, typename E>
+  using Result = mozilla::Result<T, E>;
   using Nothing = mozilla::Nothing;
   using OnNonvisible = mozilla::OnNonvisible;
   template <typename T = void>
@@ -3778,6 +3781,15 @@ class nsIFrame : public nsQueryFrame {
                                  bool* aOutJumpedLine,
                                  bool* aOutMovedOverNonSelectableText);
 
+ private:
+  Result<bool, nsresult> IsVisuallyAtLineEdge(nsILineIterator* aLineIterator,
+                                              int32_t aLine,
+                                              nsDirection aDirection);
+  Result<bool, nsresult> IsLogicallyAtLineEdge(nsILineIterator* aLineIterator,
+                                               int32_t aLine,
+                                               nsDirection aDirection);
+
+ public:
   // Return the line number of the aFrame, and (optionally) the containing block
   // frame.
   // If aScrollLock is true, don't break outside scrollframes when looking for a
