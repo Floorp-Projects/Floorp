@@ -26,6 +26,7 @@
 #include "nsTHashtable.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
+#include "ThreadLocal.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
