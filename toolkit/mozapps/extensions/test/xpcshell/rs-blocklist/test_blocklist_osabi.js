@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+// useMLBF=true only supports blocking by version+ID, not by OS/ABI.
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
