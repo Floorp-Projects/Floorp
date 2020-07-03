@@ -2,12 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+/* import-globals-from ../../../rules/test/head.js */
 
-/* import-globals-from ../../../test/head.js */
-
-// Import the inspector's head.js first (which itself imports shared-head.js).
+// Import the rule view's head.js first (which itself imports inspector's head.js and shared-head.js).
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
+  "chrome://mochitests/content/browser/devtools/client/inspector/rules/test/head.js",
   this
 );
 
