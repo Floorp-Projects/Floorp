@@ -20,7 +20,8 @@
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:layout_marginStart="@dimen/search_bar_search_engine_icon_padding"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
     <TextView
         android:id="@+id/engine_text"
         android:textColor="?primaryText"
@@ -29,8 +30,9 @@
         android:layout_marginStart="@dimen/search_bar_search_icon_margin"
         android:layout_marginEnd="@dimen/radio_button_padding_horizontal"
         android:text="@string/search_add_custom_engine_label_other"
+        android:textSize="16sp"
         app:layout_constraintStart_toEndOf="@id/radio_button"
-        app:layout_constraintTop_toTopOf="@id/radio_button"
-        app:layout_constraintBottom_toBottomOf="@id/radio_button"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
