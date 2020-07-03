@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test to ensure touch events for OOP iframes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(runAsyncContinuation(test))
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestDone);
+
+
+let code_for_oopif_to_run = function() {
+  let listener = function(e) {
+    let result = { type: e.type, touches: [] };
+    dump(`OOPIF got ${e.type}\n`);
+    for (let touch of e.touches) {
+      result.touches.push({
+        identifier: touch.identifier,
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      dump(`  identifier ${touch.identifier} at ${touch.clientX},${touch.clientY}\n`);
+    }
+    FissionTestHelper.fireEventInEmbedder("OOPIF:TouchEvent", result);
+  };
+  document.addEventListener("touchstart", listener, {once: true});
+  document.addEventListener("touchmove", listener, {once: true});
+  document.addEventListener("touchend", listener, {once: true});
+  dump("OOPIF registered touch listener\n");
+  return true;
+};
+
+function failsafe() {
+  let failListener = function(e) {
+    dump(`${location.href} got ${e.type}\n`);
+    ok(false, `The OOPIF hosting page should not have gotten the ${e.type}`);
+    setTimeout(FissionTestHelper.subtestDone, 0);
+  };
+  // Catch and fail faster on the case where the touch event ends up not going
+  // to the iframe like it should. Otherwise the test hangs until timeout which
+  // is more painful.
+  document.addEventListener("touchstart", failListener, {once: true});
+  document.addEventListener("touchmove", failListener, {once: true});
+  document.addEventListener("touchend", failListener, {once: true});
+}
+
+function waitForTouchEvent(aType) {
+  return promiseOneEvent(window, "OOPIF:TouchEvent", function(e) {
+    return e.data.type === aType;
+  });
+}
+
+async function* test() {
+  let iframeElement = document.getElementById("testframe");
+
+  let iframeResponse = await FissionTestHelper.sendToOopif(iframeElement, `(${code_for_oopif_to_run})()`);
+  dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
+  ok(iframeResponse, "code_for_oopif_to_run successfully installed");
+
+  iframePromise = Promise.all([waitForTouchEvent("touchstart"),
+                               waitForTouchEvent("touchmove"),
+                               waitForTouchEvent("touchend")]);
+  yield* synthesizeNativeTouchSequences(document.body,
+    [[{x: 100, y: 100}], [{x: 150, y: 150}], [{x: 150, y: 150}]], function() {
+    dump("Finished synthesizing touch tap, waiting for OOPIF message...\n");
+  });
+  await iframePromise;
+}
+
+  </script>
+  <style>
+    body, html {
+        margin: 0;
+    }
+    div {
+        width: 500px;
+    }
+    iframe {
+        width: 400px;
+        height: 300px;
+        border: solid 1px black;
+    }
+  </style>
+</head>
+<body onload="failsafe()">
+<div><iframe id="testframe"></iframe></div>
+</body>
+</html>

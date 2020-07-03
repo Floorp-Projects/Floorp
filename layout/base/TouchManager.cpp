@@ -19,12 +19,14 @@ namespace mozilla {
 
 nsDataHashtable<nsUint32HashKey, TouchManager::TouchInfo>*
     TouchManager::sCaptureTouchList;
+layers::LayersId TouchManager::sCaptureTouchLayersId;
 
 /*static*/
 void TouchManager::InitializeStatics() {
   NS_ASSERTION(!sCaptureTouchList, "InitializeStatics called multiple times!");
   sCaptureTouchList =
       new nsDataHashtable<nsUint32HashKey, TouchManager::TouchInfo>;
+  sCaptureTouchLayersId = layers::LayersId{0};
 }
 
 /*static*/
@@ -98,6 +100,7 @@ void TouchManager::EvictTouches(Document* aLimitToDocument) {
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     EvictTouchPoint(touches[i], aLimitToDocument);
   }
+  sCaptureTouchLayersId = layers::LayersId{0};
 }
 
 /* static */
@@ -225,6 +228,14 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
       // queue
       if (touchEvent->mTouches.Length() == 1) {
         EvictTouches();
+        // Per
+        // https://w3c.github.io/touch-events/#touchevent-implementer-s-note,
+        // all touch event should be dispatched to the same document that first
+        // touch event associated to. We cache layers id of the first touchstart
+        // event, all subsequent touch events will use the same layers id.
+        sCaptureTouchLayersId = aEvent->mLayersId;
+      } else {
+        touchEvent->mLayersId = sCaptureTouchLayersId;
       }
       // Add any new touches to the queue
       WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
@@ -253,6 +264,7 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
       // Check for touches that changed. Mark them add to queue
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      touchEvent->mLayersId = sCaptureTouchLayersId;
       bool haveChanged = false;
       for (int32_t i = touches.Length(); i;) {
         --i;
@@ -326,6 +338,7 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
       // need to make sure we only remove touches that are ending here
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      touchEvent->mLayersId = sCaptureTouchLayersId;
       for (int32_t i = touches.Length(); i;) {
         --i;
         Touch* touch = touches[i];
@@ -363,6 +376,7 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
       // is received.
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      touchEvent->mLayersId = sCaptureTouchLayersId;
       for (uint32_t i = 0; i < touches.Length(); ++i) {
         Touch* touch = touches[i];
         if (!touch) {
