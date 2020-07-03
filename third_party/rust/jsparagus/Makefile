@@ -102,4 +102,10 @@ update-stencil:
 update-unicode:
 	$(PYTHON) update_unicode.py UNIDATA ./
 
-.PHONY: all check static-check dyn-check jsdemo rust update-opcodes-m-u
+smoosh-status:
+	$(PYTHON) smoosh_status.py
+
+smoosh-status-ci:
+	$(PYTHON) smoosh_status.py ci
+
+.PHONY: all check static-check dyn-check jsdemo rust update-opcodes-m-u smoosh-status smoosh-status-ci

@@ -4,14 +4,14 @@ import json
 import re
 import unicodedata
 import sys
+from contextlib import contextmanager
 
 from ..runtime import (ERROR, ErrorToken, SPECIAL_CASE_TAG)
 from ..ordered import OrderedSet
 
-from ..grammar import (CallMethod, Some, is_concrete_element, Nt, InitNt, Optional, End,
-                       ErrorSymbol)
-from ..actions import (Accept, Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag,
-                       PopFlag, FunCall, Seq)
+from ..grammar import (Some, Nt, InitNt, End, ErrorSymbol)
+from ..actions import (Accept, Action, Replay, Unwind, Reduce, CheckNotOnNewLine, FilterStates,
+                       PushFlag, PopFlag, FunCall, Seq)
 
 from .. import types
 
@@ -75,6 +75,20 @@ TERMINAL_NAMES = {
     '...': 'Ellipsis',
 }
 
+
+@contextmanager
+def indent(writer):
+    """This function is meant to be used with the `with` keyword of python, and
+    allow the user of it to add an indentation level to the code which is
+    enclosed in the `with` statement.
+
+    This has the advantage that the indentation of the python code is reflected
+    to the generated code when `with indent(self):` is used. """
+    writer.indent += 1
+    yield None
+    writer.indent -= 1
+
+
 class RustActionWriter:
     """Write epsilon state transitions for a given action function."""
     ast_builder = types.Type("AstBuilderDelegate", (types.Lifetime("alloc"),))
@@ -105,7 +119,7 @@ class RustActionWriter:
     def collect_uses(self, act):
         "Generator which visit all used variables."
         assert isinstance(act, Action)
-        if isinstance(act, Reduce):
+        if isinstance(act, (Reduce, Unwind)):
             yield "value"
         elif isinstance(act, FunCall):
             def map_with_offset(args):
@@ -131,11 +145,11 @@ class RustActionWriter:
 
     def write_state_transitions(self, state):
         "Given a state, generate the code corresponding to all outgoing epsilon edges."
-        assert not state.is_inconsistent()
-        assert len(list(state.shifted_edges())) == 0
-        for ctx in self.writer.parse_table.debug_context(state.index, None):
-            self.write("// {}", ctx)
         try:
+            assert not state.is_inconsistent()
+            assert len(list(state.shifted_edges())) == 0
+            for ctx in self.writer.parse_table.debug_context(state.index, None):
+                self.write("// {}", ctx)
             first, dest = next(state.edges(), (None, None))
             if first is None:
                 return
@@ -178,11 +192,27 @@ class RustActionWriter:
             assert -act.offset > 0
             self.write("// {}", str(act))
             self.write("if !parser.check_not_on_new_line({})? {{", -act.offset)
-            self.indent += 1
-            self.write("return Ok(false);")
-            self.indent -= 1
+            with indent(self):
+                self.write("return Ok(false);")
             self.write("}")
             self.write_epsilon_transition(dest)
+        elif isinstance(first_act, FilterStates):
+            if len(state.epsilon) == 1:
+                # This is an attempt to avoid huge unending compilations.
+                _, dest = next(iter(state.epsilon), (None, None))
+                self.write("// parser.top_state() in [{}]", " | ".join(map(str, first_act.states)))
+                self.write_epsilon_transition(dest)
+            else:
+                self.write("match parser.top_state() {")
+                with indent(self):
+                    for act, dest in state.edges():
+                        assert first_act.check_same_variable(act)
+                        self.write("{} => {{", " | ".join(map(str, act.states)))
+                        with indent(self):
+                            self.write_epsilon_transition(dest)
+                        self.write("}")
+                    self.write("_ => panic!(\"Unexpected state value.\")")
+                self.write("}")
         else:
             raise ValueError("Unexpected action type")
 
@@ -224,7 +254,9 @@ class RustActionWriter:
 
     def write_single_action(self, act, is_packed):
         self.write("// {}", str(act))
-        if isinstance(act, Reduce):
+        if isinstance(act, Replay):
+            self.write_replay(act)
+        elif isinstance(act, (Reduce, Unwind)):
             self.write_reduce(act, is_packed)
         elif isinstance(act, Accept):
             self.write_accept()
@@ -236,6 +268,10 @@ class RustActionWriter:
             self.write_funcall(act, is_packed)
         else:
             raise ValueError("Unexpected action type")
+
+    def write_replay(self, act):
+        for shift_state in act.replay_steps:
+            self.write("parser.shift_replayed({});", shift_state)
 
     def write_reduce(self, act, is_packed):
         value = "value"
@@ -256,12 +292,14 @@ class RustActionWriter:
             value = "value"
 
         stack_diff = act.update_stack_with()
+        assert stack_diff.nt is not None
         self.write("let term = NonterminalId::{}.into();",
                    self.writer.nonterminal_to_camel(stack_diff.nt))
         if value != "value":
             self.write("let value = {};", value)
         self.write("parser.replay(TermValue { term, value });")
-        self.write("return Ok(false)")
+        if not act.follow_edge():
+            self.write("return Ok(false)")
 
     def write_accept(self):
         self.write("return Ok(true);")
@@ -445,7 +483,7 @@ class RustParserWriter:
         self.write(1, "}")
         self.write(1, "pub fn to_terminal(&self) -> TerminalId {")
         self.write(2, "assert!(self.is_terminal());")
-        self.write(2, "unsafe {{ std::mem::transmute(self.0) }}")
+        self.write(2, "unsafe { std::mem::transmute(self.0) }")
         self.write(1, "}")
         self.write(0, "}")
         self.write(0, "")
@@ -660,7 +698,8 @@ class RustParserWriter:
             table_holder_name = self.to_camel_case(mode)
             table_holder_type = table_holder_name + "<'alloc, Handler>"
             self.write(0, "struct {} {{", table_holder_type)
-            self.write(1, "fns: [fn(&mut Handler) -> Result<'alloc, bool>; {}]", self.action_from_shift_count)
+            self.write(1, "fns: [fn(&mut Handler) -> Result<'alloc, bool>; {}]",
+                       self.action_from_shift_count)
             self.write(0, "}")
             self.write(0, "impl<'alloc, Handler> {}", table_holder_type)
             self.write(0, "where")
@@ -681,7 +720,8 @@ class RustParserWriter:
             self.write(0, "where")
             self.write(1, "Handler: {}", traits_text)
             self.write(0, "{")
-            self.write(1, "{}::<'alloc, Handler>::TABLE.fns[state - {}](parser)", table_holder_name, start_at)
+            self.write(1, "{}::<'alloc, Handler>::TABLE.fns[state - {}](parser)",
+                       table_holder_name, start_at)
             self.write(0, "}")
             self.write(0, "")
             for state in self.states[self.shift_count:]:

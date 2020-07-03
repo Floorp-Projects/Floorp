@@ -1035,9 +1035,8 @@ impl InstructionWriter {
         self.write_g_c_thing_index(name_index);
     }
 
-    pub fn try_(&mut self, jump_at_end_offset: i32) {
+    pub fn try_(&mut self) {
         self.emit_op(Opcode::Try);
-        self.write_i32(jump_at_end_offset);
     }
 
     pub fn try_destructuring(&mut self) {
