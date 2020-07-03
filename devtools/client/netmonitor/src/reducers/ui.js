@@ -25,6 +25,7 @@ const {
   PANELS,
   MIN_COLUMN_WIDTH,
   SET_COLUMNS_WIDTH,
+  SET_HEADERS_URL_PREVIEW_EXPANDED,
 } = require("devtools/client/netmonitor/src/constants");
 
 const cols = {
@@ -85,6 +86,7 @@ function UI(initialState = {}) {
     waterfallWidth: null,
     networkActionOpen: false,
     selectedActionBarTabId: null,
+    shouldExpandHeadersUrlPreview: false,
     ...initialState,
   };
 }
@@ -158,6 +160,13 @@ function setActionBarTab(state, action) {
   return {
     ...state,
     selectedActionBarTabId: action.id,
+  };
+}
+
+function setHeadersUrlPreviewExpanded(state, action) {
+  return {
+    ...state,
+    shouldExpandHeadersUrlPreview: action.expanded,
   };
 }
 
@@ -235,6 +244,8 @@ function ui(state = UI(), action) {
       return setColumnsWidth(state, action);
     case OPEN_ACTION_BAR:
       return openNetworkAction(state, action);
+    case SET_HEADERS_URL_PREVIEW_EXPANDED:
+      return setHeadersUrlPreviewExpanded(state, action);
     default:
       return state;
   }
