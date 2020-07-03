@@ -15,7 +15,7 @@ const PREF_TEST_ADDON_INSTALLED = "toolkit.pioneer.testAddonInstalled";
 
 const CACHED_ADDONS = [
   {
-    id: "pioneer-v2-example@pioneer.mozilla.org",
+    addon_id: "pioneer-v2-example@pioneer.mozilla.org",
     icons: {
       "32":
         "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
@@ -96,7 +96,7 @@ add_task(async function() {
   );
 
   for (const cachedAddon of CACHED_ADDONS) {
-    const addonId = cachedAddon.id;
+    const addonId = cachedAddon.addon_id;
     const joinButton = content.document.getElementById(
       `${addonId}-join-button`
     );
@@ -125,7 +125,7 @@ add_task(async function() {
   );
 
   for (const cachedAddon of CACHED_ADDONS) {
-    const addonId = cachedAddon.id;
+    const addonId = cachedAddon.addon_id;
     const joinButton = content.document.getElementById(
       `${addonId}-join-button`
     );
