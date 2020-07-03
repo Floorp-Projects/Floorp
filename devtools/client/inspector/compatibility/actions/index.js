@@ -8,14 +8,15 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum(
   [
-    // Append node using internal helper that caused issues.
-    "COMPATIBILITY_INTERNAL_APPEND_NODE",
-
     // Append node and their children on DOM mutation
     "COMPATIBILITY_APPEND_NODE_START",
     "COMPATIBILITY_APPEND_NODE_SUCCESS",
     "COMPATIBILITY_APPEND_NODE_FAILURE",
     "COMPATIBILITY_APPEND_NODE_COMPLETE",
+
+    // Remove references to node that is removed
+    // programmatically whose fronts are destroyed.
+    "COMPATIBILITY_CLEAR_DESTROYED_NODES",
 
     // Init user settings.
     "COMPATIBILITY_INIT_USER_SETTINGS_START",
@@ -23,14 +24,31 @@ createEnum(
     "COMPATIBILITY_INIT_USER_SETTINGS_FAILURE",
     "COMPATIBILITY_INIT_USER_SETTINGS_COMPLETE",
 
+    // Append node using internal helper that caused issues.
+    "COMPATIBILITY_INTERNAL_APPEND_NODE",
+
+    // Updates a node via the internal helper
+    "COMPATIBILITY_INTERNAL_NODE_UPDATE",
+
+    // Remove references to node that is removed
+    // in Markup Inspector but retained by DevTools
+    // using the internal helper.
+    "COMPATIBILITY_INTERNAL_REMOVE_NODE",
+
+    // Updates the selected node issues using internal helper.
+    "COMPATIBILITY_INTERNAL_UPDATE_SELECTED_NODE_ISSUES",
+
+    // Clean up removed node from node list
+    "COMPATIBILITY_REMOVE_NODE_START",
+    "COMPATIBILITY_REMOVE_NODE_SUCCESS",
+    "COMPATIBILITY_REMOVE_NODE_FAILURE",
+    "COMPATIBILITY_REMOVE_NODE_COMPLETE",
+
     // Update node on attribute mutation
     "COMPATIBILITY_UPDATE_NODE_START",
     "COMPATIBILITY_UPDATE_NODE_SUCCESS",
     "COMPATIBILITY_UPDATE_NODE_FAILURE",
     "COMPATIBILITY_UPDATE_NODE_COMPLETE",
-
-    // Updates a node via the internal helper
-    "COMPATIBILITY_INTERNAL_NODE_UPDATE",
 
     // Updates nodes.
     "COMPATIBILITY_UPDATE_NODES_START",
@@ -43,9 +61,6 @@ createEnum(
     "COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS",
     "COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE",
     "COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE",
-
-    // Updates the selected node issues using internal helper.
-    "COMPATIBILITY_INTERNAL_UPDATE_SELECTED_NODE_ISSUES",
 
     // Updates the settings panel visibility.
     "COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY",
@@ -61,20 +76,6 @@ createEnum(
     "COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_SUCCESS",
     "COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE",
     "COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE",
-
-    // Remove references to node that is removed
-    // in Markup Inspector but retained by DevTools
-    // using the internal helper.
-    "COMPATIBILITY_INTERNAL_REMOVE_NODE",
-    // Remove references to node that is removed
-    // programmatically whose fronts are destroyed.
-    "COMPATIBILITY_CLEAR_DESTROYED_NODES",
-
-    // Clean up removed node from node list
-    "COMPATIBILITY_REMOVE_NODE_START",
-    "COMPATIBILITY_REMOVE_NODE_SUCCESS",
-    "COMPATIBILITY_REMOVE_NODE_FAILURE",
-    "COMPATIBILITY_REMOVE_NODE_COMPLETE",
   ],
   module.exports
 );
