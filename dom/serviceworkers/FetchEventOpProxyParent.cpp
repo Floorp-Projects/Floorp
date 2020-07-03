@@ -47,9 +47,14 @@ nsresult MaybeDeserializeAndWrapForMainThread(
 
   MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(uuid));
 
-  RemoteLazyInputStreamStorage::Get()->AddStream(deserialized, uuid,
-                                                 aBodyStreamSize, 0);
+  auto storageOrErr = RemoteLazyInputStreamStorage::Get();
 
+  if (NS_WARN_IF(storageOrErr.isErr())) {
+    return storageOrErr.unwrapErr();
+  }
+
+  auto storage = storageOrErr.unwrap();
+  storage->AddStream(deserialized, uuid, aBodyStreamSize, 0);
   return NS_OK;
 }
 
@@ -80,8 +85,9 @@ nsresult MaybeDeserializeAndWrapForMainThread(
     auto streamLength = copyRequest.bodySize();
     const auto& uuid =
         copyRequest.body().ref().get_ParentToParentStream().uuid();
-    RemoteLazyInputStreamStorage* storage = RemoteLazyInputStreamStorage::Get();
 
+    auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+    MOZ_DIAGNOSTIC_ASSERT(storage);
     storage->GetStream(uuid, 0, streamLength, getter_AddRefs(stream));
     storage->ForgetStream(uuid);
 

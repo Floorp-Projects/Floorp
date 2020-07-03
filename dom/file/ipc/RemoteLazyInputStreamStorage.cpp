@@ -30,9 +30,15 @@ NS_IMPL_ADDREF(RemoteLazyInputStreamStorage)
 NS_IMPL_RELEASE(RemoteLazyInputStreamStorage)
 
 /* static */
-RemoteLazyInputStreamStorage* RemoteLazyInputStreamStorage::Get() {
+Result<RefPtr<RemoteLazyInputStreamStorage>, nsresult>
+RemoteLazyInputStreamStorage::Get() {
   mozilla::StaticMutexAutoLock lock(gMutex);
-  return gStorage;
+  if (gStorage) {
+    RefPtr<RemoteLazyInputStreamStorage> storage = gStorage;
+    return storage;
+  }
+
+  return Err(NS_ERROR_NOT_INITIALIZED);
 }
 
 /* static */

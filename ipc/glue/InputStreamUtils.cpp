@@ -286,9 +286,11 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
       const RemoteLazyInputStreamRef& ref =
           params.get_RemoteLazyInputStreamRef();
 
+      auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+      MOZ_ASSERT(storage);
       nsCOMPtr<nsIInputStream> stream;
-      RemoteLazyInputStreamStorage::Get()->GetStream(
-          ref.id(), ref.start(), ref.length(), getter_AddRefs(stream));
+      storage->GetStream(ref.id(), ref.start(), ref.length(),
+                         getter_AddRefs(stream));
       return stream.forget();
     }
 

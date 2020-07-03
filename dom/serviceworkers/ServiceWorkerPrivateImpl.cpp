@@ -782,8 +782,14 @@ nsresult MaybeStoreStreamForBackgroundThread(nsIInterceptedChannel* aChannel,
       MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(
           body->get_ParentToParentStream().uuid()));
 
-      RemoteLazyInputStreamStorage::Get()->AddStream(
-          uploadStream, body->get_ParentToParentStream().uuid(), bodySize, 0);
+      auto storageOrErr = RemoteLazyInputStreamStorage::Get();
+      if (NS_WARN_IF(storageOrErr.isErr())) {
+        return storageOrErr.unwrapErr();
+      }
+
+      auto storage = storageOrErr.unwrap();
+      storage->AddStream(uploadStream, body->get_ParentToParentStream().uuid(),
+                         bodySize, 0);
     }
   }
 

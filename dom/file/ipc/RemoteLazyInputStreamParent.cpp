@@ -27,8 +27,15 @@ RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
     return nullptr;
   }
 
-  RemoteLazyInputStreamStorage::Get()->AddStream(aInputStream, id, aSize,
-                                                 aChildID);
+  auto storageOrErr = RemoteLazyInputStreamStorage::Get();
+
+  if (NS_WARN_IF(storageOrErr.isErr())) {
+    *aRv = storageOrErr.unwrapErr();
+    return nullptr;
+  }
+
+  auto storage = storageOrErr.unwrap();
+  storage->AddStream(aInputStream, id, aSize, aChildID);
 
   RefPtr<RemoteLazyInputStreamParent> parent =
       new RemoteLazyInputStreamParent(id, aSize, aManager);
@@ -42,9 +49,14 @@ RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
   RefPtr<RemoteLazyInputStreamParent> actor =
       new RemoteLazyInputStreamParent(aID, aSize, aManager);
 
-  actor->mCallback = RemoteLazyInputStreamStorage::Get()->TakeCallback(aID);
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
 
-  return actor.forget();
+  if (storage) {
+    actor->mCallback = storage->TakeCallback(aID);
+    return actor.forget();
+  }
+
+  return nullptr;
 }
 
 template already_AddRefed<RemoteLazyInputStreamParent>
@@ -59,9 +71,14 @@ RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
   RefPtr<RemoteLazyInputStreamParent> actor =
       new RemoteLazyInputStreamParent(aID, aSize, aManager);
 
-  actor->mCallback = RemoteLazyInputStreamStorage::Get()->TakeCallback(aID);
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
 
-  return actor.forget();
+  if (storage) {
+    actor->mCallback = storage->TakeCallback(aID);
+    return actor.forget();
+  }
+
+  return nullptr;
 }
 
 template already_AddRefed<RemoteLazyInputStreamParent>
@@ -112,8 +129,7 @@ void RemoteLazyInputStreamParent::ActorDestroy(
   RefPtr<RemoteLazyInputStreamParentCallback> callback;
   mCallback.swap(callback);
 
-  RefPtr<RemoteLazyInputStreamStorage> storage =
-      RemoteLazyInputStreamStorage::Get();
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
 
   if (mMigrating) {
     if (callback && storage) {
@@ -144,8 +160,11 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvStreamNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  RemoteLazyInputStreamStorage::Get()->GetStream(mID, 0, mSize,
-                                                 getter_AddRefs(stream));
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+  if (storage) {
+    storage->GetStream(mID, 0, mSize, getter_AddRefs(stream));
+  }
+
   if (!stream) {
     if (!SendStreamReady(Nothing())) {
       return IPC_FAIL(this, "SendStreamReady failed");
@@ -182,8 +201,11 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvLengthNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  RemoteLazyInputStreamStorage::Get()->GetStream(mID, 0, mSize,
-                                                 getter_AddRefs(stream));
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+  if (storage) {
+    storage->GetStream(mID, 0, mSize, getter_AddRefs(stream));
+  }
+
   if (!stream) {
     if (!SendLengthReady(-1)) {
       return IPC_FAIL(this, "SendLengthReady failed");
@@ -223,7 +245,8 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamParent::Recv__delete__() {
 }
 
 bool RemoteLazyInputStreamParent::HasValidStream() const {
-  return RemoteLazyInputStreamStorage::Get()->HasStream(mID);
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+  return storage ? storage->HasStream(mID) : false;
 }
 
 }  // namespace mozilla
