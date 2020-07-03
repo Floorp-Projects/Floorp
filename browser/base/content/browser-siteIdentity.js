@@ -148,6 +148,14 @@ var gIdentityHandler = {
     );
   },
 
+  get _isAboutBlockedPage() {
+    return (
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith("blocked")
+    );
+  },
+
   _popupInitialized: false,
   _initializePopup() {
     if (!this._popupInitialized) {
@@ -748,8 +756,8 @@ var gIdentityHandler = {
     } else if (this._isAboutCertErrorPage) {
       // We show a warning lock icon for 'about:certerror' page.
       this._identityBox.className = "certErrorPage";
-    } else if (this._isAboutNetErrorPage) {
-      // Network errors get a more neutral icon
+    } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
+      // Network errors and blocked pages get a more neutral icon
       this._identityBox.className = "unknownIdentity";
     } else if (this._isPotentiallyTrustworthy) {
       // This is a local resource (and shouldn't be marked insecure).
@@ -932,7 +940,7 @@ var gIdentityHandler = {
       customRoot = this._hasCustomRoot();
     } else if (this._isAboutCertErrorPage) {
       connection = "cert-error-page";
-    } else if (this._isAboutNetErrorPage) {
+    } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
       connection = "not-secure";
     } else if (this._isPotentiallyTrustworthy) {
       connection = "file";

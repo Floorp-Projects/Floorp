@@ -450,6 +450,48 @@ add_task(async function test_about_net_error_uri_from_navigation_tab() {
   await noCertErrorFromNavigationTest(false);
 });
 
+async function aboutBlockedTest(secureCheck) {
+  let url = "http://www.itisatrap.org/firefox/its-an-attack.html";
+  let oldTab = await loadNewTab("about:robots");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [INSECURE_ICON_PREF, secureCheck],
+      ["urlclassifier.blockedTable", "moztest-block-simple"],
+    ],
+  });
+  let newTab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = newTab;
+
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url,
+    true
+  );
+
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown.");
+  is(getConnectionState(), "not-secure", "Connection should be not secure.");
+
+  gBrowser.selectedTab = oldTab;
+  is(getIdentityMode(), "localResource", "Identity should be localResource");
+
+  gBrowser.selectedTab = newTab;
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown.");
+  is(getConnectionState(), "not-secure", "Connection should be not secure.");
+
+  gBrowser.removeTab(newTab);
+  gBrowser.removeTab(oldTab);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_about_blocked() {
+  await aboutBlockedTest(true);
+  await aboutBlockedTest(false);
+});
+
 add_task(async function noCertErrorSecurityConnectionBGTest() {
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
