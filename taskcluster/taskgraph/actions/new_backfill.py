@@ -6,7 +6,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import logging
+from functools import partial
 
 
 from taskgraph.util.taskcluster import get_task_definition
@@ -22,12 +24,22 @@ from .util import (
 logger = logging.getLogger(__name__)
 
 
-def input_for_support_action(task):
+def input_for_support_action(revision, task):
     '''Generate input for action to be scheduled.
 
     Define what label to schedule with 'label'.
+    If it is a test task that uses explicit manifests add that information.
     '''
-    return {'label': task['metadata']['name']}
+    input = {
+        'label': task['metadata']['name'],
+        'revision': revision,
+        # We want the backfilled tasks to share the same symbol as the originating task
+        'symbol': task['extra']['treeherder']['symbol']
+    }
+    if task['payload']['env'].get('MOZHARNESS_TEST_PATHS'):
+        input['test_manifests'] = json.loads(task['payload']['env']['MOZHARNESS_TEST_PATHS'])
+
+    return input
 
 
 @register_callback_action(
@@ -35,7 +47,8 @@ def input_for_support_action(task):
     name='new-backfill',
     permission='backfill',
     symbol='Bk',
-    description=('Trigger the selected task on previous pushes for the same project.'),
+    description=('Trigger the selected task on previous pushes for the same project. '
+                 'If the task uses test manifests then re-use it there.'),
     order=200,
     # When we are ready to promote this new backfill we can support all tasks
     context=[{"kind": "test"}],
@@ -79,11 +92,63 @@ def new_backfill_action(parameters, graph_config, input, task_group_id, task_id)
                 action_name='backfill-task',
                 # This lets the action know on which push we want to add a new task
                 decision_task_id=get_decision_task_id(parameters['project'], push_id),
-                input=input_for_support_action(task),
+                input=input_for_support_action(parameters['head_rev'], task),
             )
         except Exception as e:
             logger.warning('Failure to trigger action for {}'.format(push_id))
             logger.exception(e)
+
+
+def test_manifests_modifier(task, label, symbol, revision, test_manifests):
+    '''In the case of test tasks we can modify the test paths they execute.'''
+    if task.label != label:
+        return task
+
+    try:
+        logger.debug('Modifying test_manifests for {}'.format(task.label))
+        test_manifests = test_manifests
+        task.attributes['test_manifests'] = test_manifests
+        task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = json.dumps(test_manifests)
+        # The name/label might have been modify in new_label, thus, change it here as well
+        task.task['metadata']['name'] = task.label
+        th_info = task.task['extra']['treeherder']
+        # Use a job symbol of the originating task as defined in the backfill action
+        th_info['symbol'] = '{}-{}-bk'.format(
+            symbol,
+            revision[0:11]
+        )
+        if th_info.get('groupSymbol'):
+            # Group all backfilled tasks together
+            th_info['groupSymbol'] = '{}-bk'.format(th_info['groupSymbol'])
+    except KeyError as e:
+        logger.exception(e)
+        logger.warning('The task will be scheduled without intended modifications.')
+    finally:
+        return task
+
+
+def do_not_modify(task):
+    return task
+
+
+def new_label(label, tasks):
+    ''' This is to handle the case when a previous push does not contain a specific task label
+    and we try to find a label we can reuse.
+
+    For instance, we try to backfill chunk #3, however, a previous push does not contain such
+    chunk, thus, we try to reuse another task/label.
+    '''
+    begining_label, ending = label.rsplit('-', 1)
+    if ending.isdigit():
+        # We assume that the taskgraph has chunk #1 OR unnumbered chunk and we hijack it
+        if begining_label in tasks:
+            return begining_label
+        elif begining_label + '-1' in tasks:
+            return begining_label + '-1'
+        else:
+            raise Exception('New label ({}) was not found in the task-graph'.format(label))
+    else:
+        raise Exception('{} was not found in the task-graph'.format(label))
 
 
 @register_callback_action(
@@ -101,14 +166,30 @@ def new_backfill_action(parameters, graph_config, input, task_group_id, task_id)
             'label': {
                 'type': 'string',
                 'description': 'A task label'
+            },
+            'revision': {
+                'type': 'string',
+                'description': 'Revision of the original push from where we backfill.'
+            },
+            'symbol': {
+                'type': 'string',
+                'description': 'Symbol to be used by the scheduled task.'
+            },
+            'test_manifests': {
+                'type': 'array',
+                'default': [],
+                'description': 'An array of test manifest paths',
+                'items': {
+                    'type': 'string'
+                }
             }
         }
     }
 )
-def add_test_task(parameters, graph_config, input, task_group_id, task_id):
+def add_task_with_original_manifests(parameters, graph_config, input, task_group_id, task_id):
     '''
     This action is normally scheduled by the backfill action. The intent is to schedule a test
-    task on previous pushes.
+    task with the test manifests from the original task (if available).
 
     The push in which we want to schedule a new task is defined by the parameters object.
 
@@ -120,12 +201,29 @@ def add_test_task(parameters, graph_config, input, task_group_id, task_id):
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)
 
+    label = input.get('label')
+    if label not in full_task_graph.tasks:
+        label = new_label(label, full_task_graph.tasks)
+
+    modifier = do_not_modify
+    test_manifests = input.get('test_manifests')
+    # If the original task has defined test paths
+    if test_manifests:
+        modifier = partial(
+            test_manifests_modifier,
+            label=label,
+            revision=input.get('revision'),
+            symbol=input.get('symbol'),
+            test_manifests=test_manifests
+        )
+
     logger.info("Creating tasks...")
     create_tasks(
         graph_config,
-        [input.get('label')],
+        [label],
         full_task_graph,
         label_to_taskid,
         parameters,
-        decision_task_id=decision_task_id
+        decision_task_id=decision_task_id,
+        modifier=modifier,
     )
