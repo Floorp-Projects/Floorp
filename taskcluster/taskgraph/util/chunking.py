@@ -21,7 +21,7 @@ from moztest.resolve import (
 )
 
 from taskgraph import GECKO
-from taskgraph.util.bugbug import CT_MEDIUM, push_schedules
+from taskgraph.util.bugbug import CT_LOW, push_schedules
 
 here = os.path.abspath(os.path.dirname(__file__))
 resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
@@ -207,7 +207,7 @@ class DefaultLoader(BaseManifestLoader):
 class BugbugLoader(DefaultLoader):
     """Load manifests using metadata from the TestResolver, and then
     filter them based on a query to bugbug."""
-    CONFIDENCE_THRESHOLD = CT_MEDIUM
+    CONFIDENCE_THRESHOLD = CT_LOW
 
     @memoize
     def get_manifests(self, suite, mozinfo):
