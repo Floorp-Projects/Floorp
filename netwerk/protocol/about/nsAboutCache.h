@@ -168,10 +168,6 @@ class nsAboutCache final : public nsIAboutModule {
     // Cancelation flag
     bool mCancel;
 
-    // The context we are working with.
-    nsCOMPtr<nsILoadContextInfo> mLoadInfo;
-    nsCString mContextString;
-
     // The list of all storage names we want to visit
     nsTArray<nsCString> mStorageList;
     nsCString mStorageName;

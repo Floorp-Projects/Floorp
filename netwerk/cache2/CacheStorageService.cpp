@@ -249,15 +249,17 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
 
       if (!CacheStorageService::IsRunning()) return NS_ERROR_NOT_INITIALIZED;
 
-      CacheEntryTable* entries;
-      if (sGlobalEntryTables->Get(mContextKey, &entries)) {
+      for (auto iterGlobal = sGlobalEntryTables->Iter(); !iterGlobal.Done();
+           iterGlobal.Next()) {
+        CacheEntryTable* entries = iterGlobal.UserData();
+        if (entries->Type() != CacheEntryTable::MEMORY_ONLY) {
+          continue;
+        }
+
         for (auto iter = entries->Iter(); !iter.Done(); iter.Next()) {
           CacheEntry* entry = iter.UserData();
 
-          // Ignore disk entries
-          if (entry->IsUsingDisk()) {
-            continue;
-          }
+          MOZ_ASSERT(!entry->IsUsingDisk());
 
           mSize += entry->GetMetadataMemoryConsumption();
 
@@ -705,7 +707,6 @@ nsresult Run(OriginAttributes& aOa) {
 
 NS_IMETHODIMP CacheStorageService::MemoryCacheStorage(
     nsILoadContextInfo* aLoadContextInfo, nsICacheStorage** _retval) {
-  NS_ENSURE_ARG(aLoadContextInfo);
   NS_ENSURE_ARG(_retval);
 
   nsCOMPtr<nsICacheStorage> storage =
@@ -717,7 +718,6 @@ NS_IMETHODIMP CacheStorageService::MemoryCacheStorage(
 NS_IMETHODIMP CacheStorageService::DiskCacheStorage(
     nsILoadContextInfo* aLoadContextInfo, bool aLookupAppCache,
     nsICacheStorage** _retval) {
-  NS_ENSURE_ARG(aLoadContextInfo);
   NS_ENSURE_ARG(_retval);
 
   // TODO save some heap granularity - cache commonly used storages.
@@ -753,7 +753,6 @@ NS_IMETHODIMP CacheStorageService::PinningCacheStorage(
 NS_IMETHODIMP CacheStorageService::AppCacheStorage(
     nsILoadContextInfo* aLoadContextInfo,
     nsIApplicationCache* aApplicationCache, nsICacheStorage** _retval) {
-  NS_ENSURE_ARG(aLoadContextInfo);
   NS_ENSURE_ARG(_retval);
 
   nsCOMPtr<nsICacheStorage> storage;

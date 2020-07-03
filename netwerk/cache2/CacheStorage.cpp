@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS(CacheStorage, nsICacheStorage)
 CacheStorage::CacheStorage(nsILoadContextInfo* aInfo, bool aAllowDisk,
                            bool aLookupAppCache, bool aSkipSizeCheck,
                            bool aPinning)
-    : mLoadContextInfo(GetLoadContextInfo(aInfo)),
+    : mLoadContextInfo(aInfo ? GetLoadContextInfo(aInfo) : nullptr),
       mWriteToDisk(aAllowDisk),
       mLookupAppCache(aLookupAppCache),
       mSkipSizeCheck(aSkipSizeCheck),

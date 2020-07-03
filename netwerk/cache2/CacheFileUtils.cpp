@@ -195,6 +195,10 @@ void AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString& _retval) {
    * Keep the attributes list sorted according their ASCII code.
    */
 
+  if (!aInfo) {
+    return;
+  }
+
   OriginAttributes const* oa = aInfo->OriginAttributesPtr();
   nsAutoCString suffix;
   oa->CreateSuffix(suffix);
