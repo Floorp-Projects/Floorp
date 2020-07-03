@@ -188,7 +188,7 @@ tasks:
 
               payload:
                   env:
-                      # checkout-gecko uses these to check out the source; the inputs
+                      # run-task uses these to check out the source; the inputs
                       # to `mach taskgraph decision` are all on the command line.
                       $merge:
                           - GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
