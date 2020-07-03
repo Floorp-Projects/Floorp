@@ -518,7 +518,12 @@ void ServiceWorkerUpdateJob::ContinueAfterInstallEvent(
     return;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(mRegistration->GetInstalling());
+  // Abort the update Job if the installWorker is null (e.g. when an extension
+  // is shutting down and all its workers have been terminated).
+  if (!mRegistration->GetInstalling()) {
+    return FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
+  }
+
   mRegistration->TransitionInstallingToWaiting();
 
   Finish(NS_OK);
