@@ -9,14 +9,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 // eslint-disable-next-line mozilla/reject-some-requires
 const { gDevTools } = require("devtools/client/framework/devtools");
 
-// eslint-disable-next-line mozilla/reject-some-requires
-loader.lazyRequireGetter(
-  this,
-  "getAdHocFrontOrPrimitiveGrip",
-  "devtools/client/fronts/object",
-  true
-);
-
 class ResourceWatcher {
   /**
    * This class helps retrieving existing and listening to resources.
@@ -233,19 +225,20 @@ class ResourceWatcher {
    *        which describes the resource.
    */
   _onResourceAvailable(targetFront, resources) {
-    for (const resource of resources) {
+    for (let resource of resources) {
       // Put the targetFront on the resource for easy retrieval.
       if (!resource.targetFront) {
         resource.targetFront = targetFront;
       }
       const { resourceType } = resource;
-      if (resourceType == ResourceWatcher.TYPES.CONSOLE_MESSAGE) {
-        if (Array.isArray(resource.message.arguments)) {
-          // We might need to create fronts for each of the message arguments.
-          resource.message.arguments = resource.message.arguments.map(arg =>
-            getAdHocFrontOrPrimitiveGrip(arg, targetFront)
-          );
-        }
+
+      if (ResourceTransformers[resourceType]) {
+        resource = ResourceTransformers[resourceType]({
+          resource,
+          targetList: this.targetList,
+          targetFront,
+          isFissionEnabledOnContentToolbox: gDevTools.isFissionContentToolboxEnabled(),
+        });
       }
 
       this._availableListeners.emit(resourceType, {
@@ -455,4 +448,13 @@ const LegacyListeners = {
   },
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/legacy-listeners/root-node"),
+};
+
+// Optional transformers for each type of resource.
+// Each module added here should be a function that will receive the resource, the target, …
+// and perform some transformation on the resource before it will be emitted.
+// This is a good place to handle backward compatibility and manual resource marshalling.
+const ResourceTransformers = {
+  [ResourceWatcher.TYPES
+    .CONSOLE_MESSAGE]: require("devtools/shared/resources/transformers/console-messages"),
 };
