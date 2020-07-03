@@ -54,43 +54,19 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
   LoggingString(Event* aEvent, const char16_t* aDefault);
 };
 
-void MOZ_FORMAT_PRINTF(2, 3)
-    LoggingHelper(bool aUseProfiler, const char* aFmt, ...);
+// Both the aDetailedFmt and the aConciseFmt need to match the variable argument
+// list, so we use MOZ_FORMAT_PRINTF twice here.
+void MOZ_FORMAT_PRINTF(1, 3) MOZ_FORMAT_PRINTF(2, 3)
+    LoggingHelper(const char* aDetailedFmt, const char* aConciseFmt, ...);
 
 }  // namespace indexedDB
 }  // namespace dom
 }  // namespace mozilla
 
-#define IDB_LOG_MARK2(_detailedFmt, _conciseFmt, ...)                          \
-  do {                                                                         \
-    using namespace mozilla::dom::indexedDB;                                   \
-                                                                               \
-    const IndexedDatabaseManager::LoggingMode mode =                           \
-        IndexedDatabaseManager::GetLoggingMode();                              \
-                                                                               \
-    if (mode != IndexedDatabaseManager::Logging_Disabled) {                    \
-      const char* _fmt;                                                        \
-      if (mode == IndexedDatabaseManager::Logging_Concise ||                   \
-          mode == IndexedDatabaseManager::Logging_ConciseProfilerMarks) {      \
-        _fmt = _conciseFmt;                                                    \
-      } else {                                                                 \
-        MOZ_ASSERT(mode == IndexedDatabaseManager::Logging_Detailed ||         \
-                   mode ==                                                     \
-                       IndexedDatabaseManager::Logging_DetailedProfilerMarks); \
-        _fmt = _detailedFmt;                                                   \
-      }                                                                        \
-                                                                               \
-      const bool _useProfiler =                                                \
-          mode == IndexedDatabaseManager::Logging_ConciseProfilerMarks ||      \
-          mode == IndexedDatabaseManager::Logging_DetailedProfilerMarks;       \
-                                                                               \
-      LoggingHelper(_useProfiler, _fmt, ##__VA_ARGS__);                        \
-    }                                                                          \
-  } while (0)
-
-#define IDB_LOG_MARK(_detailedFmt, _conciseFmt, _loggingId, ...)             \
-  IDB_LOG_MARK2("IndexedDB %s: " _detailedFmt, "IndexedDB %s: " _conciseFmt, \
-                _loggingId, ##__VA_ARGS__)
+#define IDB_LOG_MARK(_detailedFmt, _conciseFmt, _loggingId, ...)        \
+  mozilla::dom::indexedDB::LoggingHelper("IndexedDB %s: " _detailedFmt, \
+                                         "IndexedDB %s: " _conciseFmt,  \
+                                         _loggingId, ##__VA_ARGS__)
 
 #define IDB_LOG_ID_STRING(...) \
   mozilla::dom::indexedDB::LoggingIdString(__VA_ARGS__).get()

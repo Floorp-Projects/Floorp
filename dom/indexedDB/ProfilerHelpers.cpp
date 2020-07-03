@@ -26,6 +26,35 @@ static const char kOpenBracket = '[';
 static const char kCloseBracket = ']';
 static const char kOpenParen = '(';
 static const char kCloseParen = ')';
+
+void LoggingHelper(bool aUseProfiler, const char* aFmt, va_list args) {
+  MOZ_ASSERT(IndexedDatabaseManager::GetLoggingMode() !=
+             IndexedDatabaseManager::Logging_Disabled);
+  MOZ_ASSERT(aFmt);
+
+  mozilla::LogModule* logModule = IndexedDatabaseManager::GetLoggingModule();
+  MOZ_ASSERT(logModule);
+
+  static const mozilla::LogLevel logLevel = LogLevel::Warning;
+
+  if (MOZ_LOG_TEST(logModule, logLevel) ||
+#ifdef MOZ_GECKO_PROFILER
+      (aUseProfiler && profiler_thread_is_being_profiled())
+#else
+      false
+#endif
+  ) {
+    nsAutoCString message;
+
+    message.AppendPrintf(aFmt, args);
+
+    MOZ_LOG(logModule, logLevel, ("%s", message.get()));
+
+    if (aUseProfiler) {
+      PROFILER_ADD_MARKER(message.get(), DOM);
+    }
+  }
+}
 }  // namespace
 
 LoggingIdString::LoggingIdString() {
@@ -225,40 +254,31 @@ LoggingString::LoggingString(Event* aEvent, const char16_t* aDefault)
   Append(kQuote);
 }
 
-void MOZ_FORMAT_PRINTF(2, 3)
-    LoggingHelper(bool aUseProfiler, const char* aFmt, ...) {
-  MOZ_ASSERT(IndexedDatabaseManager::GetLoggingMode() !=
-             IndexedDatabaseManager::Logging_Disabled);
-  MOZ_ASSERT(aFmt);
+void LoggingHelper(const char* aDetailedFmt, const char* aConciseFmt, ...) {
+  const IndexedDatabaseManager::LoggingMode mode =
+      IndexedDatabaseManager::GetLoggingMode();
 
-  mozilla::LogModule* logModule = IndexedDatabaseManager::GetLoggingModule();
-  MOZ_ASSERT(logModule);
-
-  static const mozilla::LogLevel logLevel = LogLevel::Warning;
-
-  if (MOZ_LOG_TEST(logModule, logLevel) ||
-#ifdef MOZ_GECKO_PROFILER
-      (aUseProfiler && profiler_thread_is_being_profiled())
-#else
-      false
-#endif
-  ) {
-    nsAutoCString message;
-
-    {
-      va_list args;
-      va_start(args, aFmt);
-
-      message.AppendPrintf(aFmt, args);
-
-      va_end(args);
+  if (mode != IndexedDatabaseManager::Logging_Disabled) {
+    const char* fmt;
+    if (mode == IndexedDatabaseManager::Logging_Concise ||
+        mode == IndexedDatabaseManager::Logging_ConciseProfilerMarks) {
+      fmt = aConciseFmt;
+    } else {
+      MOZ_ASSERT(mode == IndexedDatabaseManager::Logging_Detailed ||
+                 mode == IndexedDatabaseManager::Logging_DetailedProfilerMarks);
+      fmt = aDetailedFmt;
     }
 
-    MOZ_LOG(logModule, logLevel, ("%s", message.get()));
+    const bool useProfiler =
+        mode == IndexedDatabaseManager::Logging_ConciseProfilerMarks ||
+        mode == IndexedDatabaseManager::Logging_DetailedProfilerMarks;
 
-    if (aUseProfiler) {
-      PROFILER_ADD_MARKER(message.get(), DOM);
-    }
+    va_list args;
+    va_start(args, aConciseFmt);
+
+    LoggingHelper(useProfiler, fmt, args);
+
+    va_end(args);
   }
 }
 
