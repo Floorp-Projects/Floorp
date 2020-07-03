@@ -345,7 +345,9 @@ var FullScreen = {
   },
 
   exitDomFullScreen() {
-    document.exitFullscreen();
+    if (document.fullscreen) {
+      document.exitFullscreen();
+    }
   },
 
   handleEvent(event) {
@@ -508,8 +510,15 @@ var FullScreen = {
 
   /**
    * Search for the first ancestor of aActor that lives in a different process.
-   * If found, that ancestor is sent the message. Otherwise, the recipient should
-   * be the actor of the request origin.
+   * If found, that ancestor is sent the message and return false.
+   * Otherwise, the recipient should be the actor of the request origin and return true
+   * from this function.
+   *
+   * The method will be called again as a result of targeted child process doing
+   * "FullScreen.enterDomFullscreen()" or "FullScreen.cleanupDomFullscreen()".
+   * The return value is used to postpone entering or exiting Full Screen in the parent
+   * until there is no ancestor anymore.
+   *
    *
    * @param {JSWindowActorParent} aActor
    *        The actor that called this function.
@@ -517,6 +526,10 @@ var FullScreen = {
    *        Message to be sent.
    *
    * @return {boolean}
+   *         The return value is used to postpone entering or exiting Full Screen in the
+   *         parent until there is no ancestor anymore.
+   *         Return false if the message is send to the first ancestor of aActor that
+   *         lives in a different process
    *         Return true if the message is sent to the request source
    *         or false otherwise.
    */
@@ -530,6 +543,9 @@ var FullScreen = {
     let parentBC = childBC.parent;
 
     while (parentBC) {
+      if (!childBC.currentWindowGlobal || !parentBC.currentWindowGlobal) {
+        break;
+      }
       let childPid = childBC.currentWindowGlobal.osPid;
       let parentPid = parentBC.currentWindowGlobal.osPid;
 
@@ -541,7 +557,7 @@ var FullScreen = {
       }
     }
 
-    if (parentBC) {
+    if (parentBC && parentBC.currentWindowGlobal) {
       let parentActor = parentBC.currentWindowGlobal.getActor("DOMFullscreen");
       parentActor.sendAsyncMessage(aMessage, {
         remoteFrameBC: childBC,
@@ -554,8 +570,10 @@ var FullScreen = {
     // have entered or exited fullscreen at this point.
     // So let's notify the process where the original request
     // comes from.
-    aActor.requestOrigin.sendAsyncMessage(aMessage, {});
-    aActor.requestOrigin = null;
+    if (!aActor.requestOrigin.hasBeenDestroyed()) {
+      aActor.requestOrigin.sendAsyncMessage(aMessage, {});
+      aActor.requestOrigin = null;
+    }
     return true;
   },
 
