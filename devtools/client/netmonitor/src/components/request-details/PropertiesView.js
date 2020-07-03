@@ -63,6 +63,7 @@ class PropertiesView extends Component {
       mode: PropTypes.symbol,
       defaultSelectFirstNode: PropTypes.bool,
       useQuotes: PropTypes.bool,
+      onClickRow: PropTypes.func,
     };
   }
 
@@ -186,19 +187,11 @@ class PropertiesView extends Component {
 
   render() {
     const {
-      decorator,
-      enableInput,
-      expandableStrings,
       expandedNodes,
       object,
-      renderRow,
       renderValue,
-      provider,
       targetSearchResult,
       selectPath,
-      cropLimit,
-      defaultSelectFirstNode,
-      useQuotes,
     } = this.props;
 
     return div(
@@ -206,14 +199,9 @@ class PropertiesView extends Component {
       div(
         { className: "tree-container" },
         TreeView({
+          ...this.props,
           ref: () => this.scrollSelectedIntoView(),
-          object,
-          provider,
           columns: [{ id: "value", width: "100%" }],
-          decorator,
-          enableInput,
-          expandableStrings,
-          useQuotes,
           expandedNodes:
             expandedNodes ||
             TreeViewClass.getExpandedNodes(object, {
@@ -221,15 +209,12 @@ class PropertiesView extends Component {
               maxNodes: AUTO_EXPAND_MAX_NODES,
             }),
           onFilter: props => this.onFilter(props),
-          renderRow,
           renderValue: renderValue || this.renderValueWithRep,
           onContextMenuRow: this.onContextMenuRow,
           selected:
             typeof selectPath == "function"
               ? selectPath(targetSearchResult)
               : this.getSelectedPath(targetSearchResult),
-          defaultSelectFirstNode,
-          cropLimit,
         })
       )
     );
