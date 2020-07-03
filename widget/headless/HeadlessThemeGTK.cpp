@@ -35,7 +35,6 @@ LayoutDeviceIntMargin HeadlessThemeGTK::GetWidgetBorder(
       result.left = 7;
       break;
     case StyleAppearance::FocusOutline:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
       result.top = 5;
@@ -223,7 +222,6 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->width = 14;
       aResult->height = 26;
       break;
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
       aResult->width = 0;
@@ -369,7 +367,6 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistText:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::ScaleHorizontal:
     case StyleAppearance::ScaleVertical:
     case StyleAppearance::ScalethumbHorizontal:
