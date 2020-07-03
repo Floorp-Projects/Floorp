@@ -426,20 +426,20 @@ class experimental(object):
         ./mach try auto --strategy relevant_tests
     """
 
-    bugbug_all = {
-        'test': Any('skip-unless-schedules', 'bugbug', split_args=tuple),
+    bugbug_tasks_medium = {
+        'test': Any('skip-unless-schedules', 'bugbug-tasks-medium', split_args=tuple),
     }
     """Doesn't limit platforms, medium confidence threshold."""
 
-    bugbug_all_high = {
-        'test': Any('skip-unless-schedules', 'bugbug-high', split_args=tuple),
+    bugbug_tasks_high = {
+        'test': Any('skip-unless-schedules', 'bugbug-tasks-high', split_args=tuple),
     }
     """Doesn't limit platforms, high confidence threshold."""
 
     bugbug_debug_disperse = {
         'test': Any(
             'skip-unless-schedules',
-            Any('bugbug', 'platform-debug', 'platform-disperse'),
+            Any('bugbug-low', 'platform-debug', 'platform-disperse'),
             split_args=tuple
         ),
     }
@@ -454,14 +454,42 @@ class experimental(object):
     }
     """Disperse tests across platforms, low confidence threshold."""
 
-    bugbug_disperse = {
+    bugbug_disperse_medium = {
         'test': Any(
             'skip-unless-schedules',
-            Any('bugbug', 'platform-disperse'),
+            Any('bugbug-medium', 'platform-disperse'),
             split_args=tuple
         ),
     }
     """Disperse tests across platforms, medium confidence threshold."""
+
+    bugbug_disperse_reduced_medium = {
+        'test': Any(
+            'skip-unless-schedules',
+            Any('bugbug-reduced-manifests', 'platform-disperse'),
+            split_args=tuple
+        ),
+    }
+    """Disperse tests across platforms, medium confidence threshold with reduced tasks."""
+
+    bugbug_disperse_medium_no_unseen = {
+        'test': Any(
+            'skip-unless-schedules',
+            Any('bugbug-medium', 'platform-disperse-no-unseen'),
+            split_args=tuple
+        ),
+    }
+    """Disperse tests across platforms (no modified for unseen configurations), medium confidence
+    threshold."""
+
+    bugbug_disperse_medium_only_one = {
+        'test': Any(
+            'skip-unless-schedules',
+            Any('bugbug-medium', 'platform-disperse-only-one'),
+            split_args=tuple
+        ),
+    }
+    """Disperse tests across platforms (one platform per group), medium confidence threshold."""
 
     bugbug_disperse_high = {
         'test': Any(

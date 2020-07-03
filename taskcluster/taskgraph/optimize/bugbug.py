@@ -18,12 +18,15 @@ from taskgraph.util.bugbug import (
 )
 
 
-@register_strategy("bugbug", args=(CT_MEDIUM,))
 @register_strategy("bugbug-low", args=(CT_LOW,))
+@register_strategy("bugbug-medium", args=(CT_MEDIUM,))
 @register_strategy("bugbug-high", args=(CT_HIGH,))
+@register_strategy("bugbug-tasks-medium", args=(CT_MEDIUM, True))
+@register_strategy("bugbug-tasks-high", args=(CT_HIGH, True))
 @register_strategy("bugbug-reduced", args=(CT_MEDIUM, True, True))
 @register_strategy("bugbug-reduced-fallback", args=(CT_MEDIUM, True, True, True))
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True, True))
+@register_strategy("bugbug-reduced-manifests", args=(CT_MEDIUM, False, True))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 
@@ -120,6 +123,13 @@ class SkipUnlessDebug(OptimizationStrategy):
 
 
 @register_strategy("platform-disperse")
+@register_strategy("platform-disperse-no-unseen", args=(None, 0))
+@register_strategy("platform-disperse-only-one", args=({
+    'high': 1,
+    'medium': 1,
+    'low': 1,
+    'lowest': 0,
+}, 0))
 class DisperseGroups(OptimizationStrategy):
     """Disperse groups across test configs.
 
