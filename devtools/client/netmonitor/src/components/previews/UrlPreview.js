@@ -63,6 +63,8 @@ class UrlPreview extends Component {
       url: PropTypes.string,
       method: PropTypes.string,
       address: PropTypes.string,
+      shouldExpandPreview: PropTypes.bool,
+      onTogglePreview: PropTypes.func,
     };
   }
 
@@ -70,6 +72,14 @@ class UrlPreview extends Component {
     super(props);
     this.parseUrl = this.parseUrl.bind(this);
     this.renderValue = this.renderValue.bind(this);
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return (
+      nextProps.url !== this.props.url ||
+      nextProps.method !== this.props.method ||
+      nextProps.address !== this.props.address
+    );
   }
 
   renderRow(props) {
@@ -189,8 +199,18 @@ class UrlPreview extends Component {
   }
 
   render() {
-    const { url } = this.props;
+    const {
+      url,
+      method,
+      shouldExpandPreview = false,
+      onTogglePreview,
+    } = this.props;
+
     const { urlObject, expandedNodes } = this.parseUrl(url);
+
+    if (shouldExpandPreview) {
+      expandedNodes.add(`/${method}`);
+    }
 
     return div(
       { className: "url-preview" },
@@ -203,6 +223,14 @@ class UrlPreview extends Component {
         renderRow: this.renderRow,
         renderValue: this.renderValue,
         enableInput: false,
+        onClickRow: (path, evt, member) => {
+          // Only track when the root is toggled
+          // as all the others are always expanded by
+          // default.
+          if (path == `/${method}`) {
+            onTogglePreview(!member.open);
+          }
+        },
       })
     );
   }
