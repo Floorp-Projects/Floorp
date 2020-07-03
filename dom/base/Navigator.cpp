@@ -1485,7 +1485,7 @@ void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
     auto msg =
         u"The Gamepad API is only available in "
         "secure contexts (e.g., https). Please see "
-        "https://hacks.mozilla.org/2020/06/securing-gamepad-api/ for more "
+        "https://hacks.mozilla.org/2020/07/securing-gamepad-api/ for more "
         "info."_ns;
     nsContentUtils::ReportToConsoleNonLocalized(
         msg, nsIScriptError::warningFlag, "DOM"_ns, win->GetExtantDoc());
