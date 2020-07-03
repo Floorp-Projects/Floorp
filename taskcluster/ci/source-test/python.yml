@@ -190,7 +190,16 @@ mozlint:
         subsuite: mozlint
     fetches:
         toolchain:
-            - linux64-clang-tidy
+            by-platform:
+                linux1804-64/opt:
+                    - linux64-clang-tidy
+                    - linux64-node
+                macosx1014-64/opt:
+                    - macosx64-clang-tidy
+                    - macosx64-node
+                windows10-64/opt:
+                    - win64-clang-tidy
+                    - win64-node
     when:
         files-changed:
             - 'python/mozlint/**'
