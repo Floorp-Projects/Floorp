@@ -47,9 +47,6 @@ namespace base {
 // template internal to the .cc file.
 namespace internal {
 
-BASE_EXPORT void CopyToString(const StringPiece& self, std::string* target);
-BASE_EXPORT void CopyToString(const StringPiece16& self, string16* target);
-
 BASE_EXPORT void AppendToString(const StringPiece& self, std::string* target);
 BASE_EXPORT void AppendToString(const StringPiece16& self, string16* target);
 
@@ -141,21 +138,12 @@ BASE_EXPORT StringPiece16 substr(const StringPiece16& self,
                                  size_t pos,
                                  size_t n);
 
-#if DCHECK_IS_ON()
-// Asserts that begin <= end to catch some errors with iterator usage.
-BASE_EXPORT void AssertIteratorsInOrder(std::string::const_iterator begin,
-                                        std::string::const_iterator end);
-BASE_EXPORT void AssertIteratorsInOrder(string16::const_iterator begin,
-                                        string16::const_iterator end);
-#endif
-
 }  // namespace internal
 
 // BasicStringPiece ------------------------------------------------------------
 
 // Defines the types, methods, operators, and data members common to both
-// StringPiece and StringPiece16. Do not refer to this class directly, but
-// rather to BasicStringPiece, StringPiece, or StringPiece16.
+// StringPiece and StringPiece16.
 //
 // This is templatized by string class type rather than character type, so
 // BasicStringPiece<std::string> or BasicStringPiece<base::string16>.
@@ -190,11 +178,7 @@ template <typename STRING_TYPE> class BasicStringPiece {
       : ptr_(offset), length_(len) {}
   BasicStringPiece(const typename STRING_TYPE::const_iterator& begin,
                    const typename STRING_TYPE::const_iterator& end) {
-#if DCHECK_IS_ON()
-    // This assertion is done out-of-line to avoid bringing in logging.h and
-    // instantiating logging macros for every instantiation.
-    internal::AssertIteratorsInOrder(begin, end);
-#endif
+    DCHECK(begin <= end) << "StringPiece iterators swapped or invalid.";
     length_ = static_cast<size_t>(std::distance(begin, end));
 
     // The length test before assignment is to avoid dereferencing an iterator
@@ -210,19 +194,6 @@ template <typename STRING_TYPE> class BasicStringPiece {
   constexpr size_type size() const noexcept { return length_; }
   constexpr size_type length() const noexcept { return length_; }
   bool empty() const { return length_ == 0; }
-
-  void clear() {
-    ptr_ = NULL;
-    length_ = 0;
-  }
-  void set(const value_type* data, size_type len) {
-    ptr_ = data;
-    length_ = len;
-  }
-  void set(const value_type* str) {
-    ptr_ = str;
-    length_ = str ? STRING_TYPE::traits_type::length(str) : 0;
-  }
 
   constexpr value_type operator[](size_type i) const {
     CHECK(i < length_);
@@ -279,12 +250,6 @@ template <typename STRING_TYPE> class BasicStringPiece {
 
   size_type max_size() const { return length_; }
   size_type capacity() const { return length_; }
-
-  // Sets the value of the given string target type to be the current string.
-  // This saves a temporary over doing |a = b.as_string()|
-  void CopyToString(STRING_TYPE* target) const {
-    internal::CopyToString(*this, target);
-  }
 
   void AppendToString(STRING_TYPE* target) const {
     internal::AppendToString(*this, target);
