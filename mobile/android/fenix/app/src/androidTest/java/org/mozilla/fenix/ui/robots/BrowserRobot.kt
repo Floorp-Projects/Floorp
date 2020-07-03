@@ -16,9 +16,11 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -34,7 +36,7 @@ import org.hamcrest.CoreMatchers.containsString
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.Constants.LongClickDuration
+import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -165,9 +167,9 @@ class BrowserRobot {
         verifyMenuButton()
     }
 
-    fun verifyNoLinkImageContextMenuItems(containsTitle: String) {
+    fun verifyNoLinkImageContextMenuItems(containsURL: Uri) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(Until.findObject(By.textContains(containsTitle)))
+        mDevice.waitNotNull(Until.findObject(By.textContains(containsURL.toString())))
         mDevice.waitNotNull(
             Until.findObject(text("Open image in new tab")),
             waitingTime
@@ -176,6 +178,13 @@ class BrowserRobot {
         mDevice.waitNotNull(
             Until.findObject(text("Copy image location")), waitingTime
         )
+    }
+
+    fun dismissContentContextMenu(containsURL: Uri) {
+        onView(withText(containsURL.toString()))
+            .inRoot(isDialog())
+            .check(matches(isDisplayed()))
+            .perform(ViewActions.pressBack())
     }
 
     fun clickEnhancedTrackingProtectionPanel() = enhancedTrackingProtectionPanel().click()
@@ -291,7 +300,7 @@ class BrowserRobot {
         mDevice.waitNotNull(Until.findObject(text(expectedText)), waitingTime)
 
         val element = mDevice.findObject(text(expectedText))
-        element.click(LongClickDuration.LONG_CLICK_DURATION)
+        element.click(LONG_CLICK_DURATION)
     }
 
     fun snackBarButtonClick(expectedText: String) {

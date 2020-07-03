@@ -123,7 +123,7 @@ private fun clickDownloadButton() =
     onView(withText("Download")).inRoot(isDialog()).check(matches(isDisplayed()))
 
 private fun clickOpenButton() =
-    onView(withId(R.id.download_dialog_action_button)).inRoot(isDialog()).check(
+    onView(withId(R.id.download_dialog_action_button)).check(
         matches(isDisplayed())
     )
 

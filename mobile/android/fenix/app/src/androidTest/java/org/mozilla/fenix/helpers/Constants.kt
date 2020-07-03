@@ -7,7 +7,5 @@ object Constants {
         const val GOOGLE_APPS_PHOTOS = "com.google.android.apps.photos"
     }
 
-    object LongClickDuration {
-        const val LONG_CLICK_DURATION: Long = 5000
-    }
+    const val LONG_CLICK_DURATION: Long = 5000
 }
