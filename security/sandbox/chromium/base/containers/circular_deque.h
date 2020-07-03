@@ -14,6 +14,7 @@
 #include "base/containers/vector_buffer.h"
 #include "base/logging.h"
 #include "base/macros.h"
+#include "base/stl_util.h"
 #include "base/template_util.h"
 
 // base::circular_deque is similar to std::deque. Unlike std::deque, the
@@ -521,14 +522,14 @@ class circular_deque {
     return buffer_[i - right_size];
   }
   value_type& at(size_type i) {
-    return const_cast<value_type&>(
-        const_cast<const circular_deque*>(this)->at(i));
+    return const_cast<value_type&>(as_const(*this).at(i));
   }
 
-  value_type& operator[](size_type i) { return at(i); }
-  const value_type& operator[](size_type i) const {
-    return const_cast<circular_deque*>(this)->at(i);
+  value_type& operator[](size_type i) {
+    return const_cast<value_type&>(as_const(*this)[i]);
   }
+
+  const value_type& operator[](size_type i) const { return at(i); }
 
   value_type& front() {
     DCHECK(!empty());

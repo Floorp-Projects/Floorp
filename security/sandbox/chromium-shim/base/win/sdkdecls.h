@@ -330,6 +330,30 @@ DeriveAppContainerSidFromAppContainerName(
 #define PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY \
     ProcThreadAttributeValue (ProcThreadAttributeAllApplicationPackagesPolicy, FALSE, TRUE, FALSE)
 
-#endif // (_WIN32_WINNT >= 0x0A00)
+//
+// Define functions declared only when _WIN32_WINNT >= 0x0A00
+//
+
+WINBASEAPI
+BOOL
+WINAPI
+IsWow64Process2(
+    _In_ HANDLE hProcess,
+    _Out_ USHORT* pProcessMachine,
+    _Out_opt_ USHORT* pNativeMachine
+    );
+
+#endif // (_WIN32_WINNT < 0x0A00)
+
+#if defined(__MINGW32__)
+
+// winnt.h
+#define THREAD_DYNAMIC_CODE_ALLOW   1     // Opt-out of dynamic code generation.
+
+// Mingw uses an old version THREAD_INFORMATION_CLASS defined in winbase.h
+// where ThreadDynamicCodePolicy does not exist.
+#define ThreadDynamicCodePolicy static_cast<THREAD_INFORMATION_CLASS>(2)
+
+#endif // defined(__MINGW32__)
 
 #endif // _SECURITY_SANDBOX_BASE_SHIM_SDKDECLS_H_

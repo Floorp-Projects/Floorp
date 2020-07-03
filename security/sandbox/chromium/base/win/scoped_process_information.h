@@ -49,30 +49,22 @@ class BASE_EXPORT ScopedProcessInformation {
   HANDLE TakeThreadHandle();
 
   // Returns the held process handle, if any, while retaining ownership.
-  HANDLE process_handle() const {
-    return process_handle_.Get();
-  }
+  HANDLE process_handle() const { return process_handle_.Get(); }
 
   // Returns the held thread handle, if any, while retaining ownership.
-  HANDLE thread_handle() const {
-    return thread_handle_.Get();
-  }
+  HANDLE thread_handle() const { return thread_handle_.Get(); }
 
   // Returns the held process id, if any.
-  DWORD process_id() const {
-    return process_id_;
-  }
+  DWORD process_id() const { return process_id_; }
 
   // Returns the held thread id, if any.
-  DWORD thread_id() const {
-    return thread_id_;
-  }
+  DWORD thread_id() const { return thread_id_; }
 
  private:
   ScopedHandle process_handle_;
   ScopedHandle thread_handle_;
-  DWORD process_id_;
-  DWORD thread_id_;
+  DWORD process_id_ = 0;
+  DWORD thread_id_ = 0;
 
   DISALLOW_COPY_AND_ASSIGN(ScopedProcessInformation);
 };
