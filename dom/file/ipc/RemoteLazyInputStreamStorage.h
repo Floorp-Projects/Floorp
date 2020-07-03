@@ -26,7 +26,7 @@ class RemoteLazyInputStreamStorage final : public nsIObserver {
   // This initializes the singleton and it must be called on the main-thread.
   static void Initialize();
 
-  static RemoteLazyInputStreamStorage* Get();
+  static Result<RefPtr<RemoteLazyInputStreamStorage>, nsresult> Get();
 
   void AddStream(nsIInputStream* aInputStream, const nsID& aID, uint64_t aSize,
                  uint64_t aChildID);
