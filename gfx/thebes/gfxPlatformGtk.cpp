@@ -727,8 +727,7 @@ bool gfxPlatformGtk::UseDMABufTextures() {
   return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufTexturesEnabled();
 }
 bool gfxPlatformGtk::UseDMABufVideoTextures() {
-  return IsWaylandDisplay() &&
-         (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
+  return (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
           StaticPrefs::media_ffmpeg_vaapi_enabled());
 }
 bool gfxPlatformGtk::UseHardwareVideoDecoding() {
