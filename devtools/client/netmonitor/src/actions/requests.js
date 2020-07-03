@@ -83,7 +83,7 @@ function cloneSelectedRequest() {
  * Send a new HTTP request using the data in the custom request form.
  */
 function sendCustomRequest(connector, requestId = null) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     let request;
     if (requestId) {
       request = getRequestById(getState(), requestId);

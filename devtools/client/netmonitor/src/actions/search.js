@@ -50,7 +50,7 @@ function search(connector, query) {
   // data from the backend and performing search over it.
   // This `ongoingSearch` is stored in the Search reducer, so it can
   // be canceled if needed (e.g. when new search is executed).
-  const newOngoingSearch = async (dispatch, getState) => {
+  const newOngoingSearch = async ({ dispatch, getState }) => {
     const state = getState();
 
     dispatch(stopOngoingSearch());
@@ -121,7 +121,7 @@ async function loadResource(connector, resource) {
  * Search through all data within the specified resource.
  */
 function searchResource(resource, query) {
-  return async (dispatch, getState) => {
+  return async ({ dispatch, getState }) => {
     const state = getState();
     const ongoingSearch = getOngoingSearch(state);
 
@@ -176,7 +176,7 @@ function clearSearchResults() {
  * @returns {Function}
  */
 function clearSearchResultAndCancel() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     dispatch(stopOngoingSearch());
     dispatch(clearSearchResults());
   };
@@ -196,7 +196,7 @@ function updateSearchStatus(status) {
  * Close the entire search panel.
  */
 function closeSearch() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     dispatch(stopOngoingSearch());
     dispatch({ type: OPEN_ACTION_BAR, open: false });
   };
@@ -207,7 +207,7 @@ function closeSearch() {
  * @returns {Function}
  */
 function openSearch() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     dispatch({ type: OPEN_ACTION_BAR, open: true });
   };
 }
@@ -217,7 +217,7 @@ function openSearch() {
  * @returns {Function}
  */
 function toggleCaseSensitiveSearch() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     dispatch({ type: TOGGLE_SEARCH_CASE_SENSITIVE_SEARCH });
   };
 }
@@ -226,7 +226,7 @@ function toggleCaseSensitiveSearch() {
  * Toggle visibility of search panel in network panel
  */
 function toggleSearchPanel() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const state = getState();
 
     state.ui.networkActionOpen &&
@@ -256,7 +256,7 @@ function addOngoingSearch(ongoingSearch) {
  * Cancel the current ongoing search.
  */
 function stopOngoingSearch() {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const state = getState();
     const ongoingSearch = getOngoingSearch(state);
     const status = getSearchStatus(state);
@@ -275,7 +275,7 @@ function stopOngoingSearch() {
  * clicked search result.
  */
 function navigate(searchResult) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     // Store target search result in Search reducer. It's used
     // for search result navigation within the side panels.
     dispatch(setTargetSearchResult(searchResult));
