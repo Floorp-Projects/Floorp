@@ -109,6 +109,22 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   void addListener(in nsIServiceWorkerRegistrationInfoListener listener);
 
   void removeListener(in nsIServiceWorkerRegistrationInfoListener listener);
+
+  // Terminate all the service worker relate to this registration.
+  // This is used by the WebExtensions framework to shutdown the extension's
+  // background service workers as part of shutdown, which happens when:
+  // - the extension has been disabled.
+  // - the extension is shutting down to be updated.
+  // - the extension is shutting down as part of the uninstall flow.
+  //
+  // All the service workers instances related to this registration are expected
+  // to be terminate immediately.
+  //
+  // TODO - Bug 1638099: This method should also allow the WebExtension framework
+  // to mark the registration as disabled (e.g. through an additional parameter),
+  // to avoid it to be started again until the WebExtensions framework does explicitly 
+  // mark it back to enabled.
+  void forceShutdown();
 };
 
 [scriptable, uuid(9e523e7c-ad6f-4df0-8077-c74aebbc679d)]
