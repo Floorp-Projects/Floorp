@@ -13,19 +13,23 @@ import os
 import re
 from functools import reduce
 
-from six import text_type, string_types
-
+import jsone
+import requests
 from requests.exceptions import HTTPError
+from six import text_type, string_types
 
 from taskgraph import create
 from taskgraph.decision import read_artifact, write_artifact, rename_artifact
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.optimize import optimize_task_graph
 from taskgraph.util.taskcluster import (
-    get_session,
+    find_task_id,
     get_artifact,
+    get_task_definition,
+    get_session,
     list_tasks,
     parse_time,
+    trigger_hook,
     CONCURRENCY,
 )
 from taskgraph.util.taskgraph import (
@@ -33,6 +37,116 @@ from taskgraph.util.taskgraph import (
 )
 
 logger = logging.getLogger(__name__)
+
+INDEX_TMPL = 'gecko.v2.{}.pushlog-id.{}.decision'
+PUSHLOG_TMPL = '{}/json-pushes?version=2&startID={}&endID={}'
+
+
+def _tags_within_context(tags, context=[]):
+    '''A context of [] means that it *only* applies to a task group'''
+    return any(
+        all(tag in tags and tags[tag] == tag_set[tag] for tag in tag_set.keys())
+        for tag_set in context
+    )
+
+
+def _extract_applicable_action(actions_json, action_name, task_group_id, task_id):
+    '''Extract action that applies to the given task or task group.
+
+    A task (as defined by its tags) is said to match a tag-set if its
+    tags are a super-set of the tag-set. A tag-set is a set of key-value pairs.
+
+    An action (as defined by its context) is said to be relevant for
+    a given task, if the task's tags match one of the tag-sets given
+    in the context property of the action.
+
+    The order of the actions is significant. When multiple actions apply to a
+    task the first one takes precedence.
+
+    For more details visit:
+    https://docs.taskcluster.net/docs/manual/design/conventions/actions/spec
+    '''
+    if task_id:
+        tags = get_task_definition(task_id).get('tags')
+    action = None
+
+    for _action in actions_json['actions']:
+        if action_name != _action['name']:
+            continue
+
+        context = _action.get('context', [])
+        # Ensure the task is within the context of the action
+        if task_id and tags and _tags_within_context(tags, context):
+            action = _action
+        elif context == []:
+            action = _action
+
+    if not action:
+        available_actions = ", ".join(sorted({a["name"] for a in actions_json['actions']}))
+        raise LookupError(
+            "{} action is not available for this task. Available: {}".format(
+                action_name, available_actions)
+        )
+
+    return action
+
+
+def trigger_action(action_name, decision_task_id, task_id=None, input={}):
+    if not decision_task_id:
+        raise ValueError("No decision task. We can't find the actions artifact.")
+    actions_json = get_artifact(decision_task_id, 'public/actions.json')
+    if actions_json['version'] != 1:
+        raise RuntimeError('Wrong version of actions.json, unable to continue')
+
+    # These values substitute $eval in the template
+    context = {
+        'input': input,
+        'taskId': task_id,
+        'taskGroupId': decision_task_id,
+    }
+    # https://docs.taskcluster.net/docs/manual/design/conventions/actions/spec#variables
+    context.update(actions_json['variables'])
+    action = _extract_applicable_action(actions_json, action_name, decision_task_id, task_id)
+    kind = action['kind']
+    if kind == 'hook':
+        hook_payload = jsone.render(action['hookPayload'], context)
+        trigger_hook(action['hookGroupId'], action['hookId'], hook_payload)
+    else:
+        raise NotImplementedError("Unable to submit actions with {} kind.".format(kind))
+
+
+def get_pushes_from_params_input(parameters, input):
+    inclusive_tweak = 1 if input.get('inclusive') else 0
+    return get_pushes(
+        project=parameters['head_repository'],
+        end_id=int(parameters['pushlog_id']) - (1 - inclusive_tweak),
+        depth=input.get('depth', 9) + inclusive_tweak
+    )
+
+
+def get_pushes(project, end_id, depth):
+    pushes = []
+    while True:
+        start_id = max(end_id - depth, 0)
+        pushlog_url = PUSHLOG_TMPL.format(project, start_id, end_id)
+        logger.debug(pushlog_url)
+        r = requests.get(pushlog_url)
+        r.raise_for_status()
+        pushes = pushes + r.json()['pushes'].keys()
+        if len(pushes) >= depth:
+            break
+
+        end_id = start_id - 1
+        start_id -= depth
+        if start_id < 0:
+            break
+
+    pushes = sorted(pushes)[-depth:]
+    return pushes
+
+
+def get_decision_task_id(project, push_id):
+    return find_task_id(INDEX_TMPL.format(project, push_id))
 
 
 def get_parameters(decision_task_id):
@@ -44,9 +158,11 @@ def fetch_graph_and_labels(parameters, graph_config):
 
     # First grab the graph and labels generated during the initial decision task
     full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
+    logger.info("Load taskgraph from JSON.")
     _, full_task_graph = TaskGraph.from_json(full_task_graph)
     label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
 
+    logger.info("Fetching additional tasks from action and cron tasks.")
     # fetch everything in parallel; this avoids serializing any delay in downloading
     # each artifact (such as waiting for the artifact to be mirrored locally)
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:

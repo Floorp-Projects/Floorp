@@ -177,6 +177,6 @@ def load_graph_config(root_dir):
 
     logger.debug("loading config from `{}`".format(config_yml))
     config = load_yaml(config_yml)
-
+    logger.debug("validating the graph config.")
     validate_graph_config(config)
     return GraphConfig(config=config, root_dir=root_dir)
