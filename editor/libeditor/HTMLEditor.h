@@ -4449,9 +4449,9 @@ class HTMLEditor final : public TextEditor,
      * If first or last node of aArrayOfTopMostChildContents is in list and/or
      * `<table>` element, looks for topmost list element or `<table>` element
      * with `CollectTableAndAnyListElementsOfInclusiveAncestorsAt()` and
-     * `GetMostAncestorListOrTableElement()`.  Then, checks whether
-     * some nodes are in aArrayOfTopMostChildContents are the topmost list/table
-     * element or its descendant and if so, removes the nodes from
+     * `GetMostDistantAncestorListOrTableElement()`.  Then, checks
+     * whether some nodes are in aArrayOfTopMostChildContents are the topmost
+     * list/table element or its descendant and if so, removes the nodes from
      * aArrayOfTopMostChildContents and inserts the list/table element instead.
      * Then, aArrayOfTopMostChildContents won't start/end with list-item nor
      * table cells.
@@ -4472,14 +4472,15 @@ class HTMLEditor final : public TextEditor,
         nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements);
 
     /**
-     * GetMostAncestorListOrTableElement() returns a list or a `<table>`
-     * element which is in aArrayOfListAndTableElements and they are
-     * actually valid ancestor of at least one of aArrayOfTopMostChildContents.
+     * GetMostDistantAncestorListOrTableElement() returns a list or a
+     * `<table>` element which is in
+     * aInclusiveAncestorsTableOrListElements and they are actually
+     * valid ancestor of at least one of aArrayOfTopMostChildContents.
      */
-    static Element* GetMostAncestorListOrTableElement(
+    static Element* GetMostDistantAncestorListOrTableElement(
         const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
         const nsTArray<OwningNonNull<Element>>&
-            aArrayOfListAndTableRelatedElements);
+            aInclusiveAncestorsTableOrListElements);
 
     /**
      * FindReplaceableTableElement() is a helper method of
