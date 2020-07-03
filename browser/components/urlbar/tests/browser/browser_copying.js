@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const trimPref = "browser.urlbar.trimURLs";
-const phishyUserPassPref = "network.http.phishy-userpass-length";
-const decodeURLpref = "browser.urlbar.decodeURLsOnCopy";
-
 function getUrl(hostname, file) {
   return (
     getRootDirectory(gTestPath).replace(
@@ -14,25 +10,60 @@ function getUrl(hostname, file) {
   );
 }
 
-function test() {
-  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
-    Services.prefs.clearUserPref(trimPref);
-    Services.prefs.clearUserPref(phishyUserPassPref);
-    Services.prefs.clearUserPref(decodeURLpref);
-
     gURLBar.setURI();
   });
 
-  Services.prefs.setBoolPref(trimPref, true);
-  Services.prefs.setIntPref(phishyUserPassPref, 32); // avoid prompting about phishing
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trimURLs", true],
+      // avoid prompting about phishing
+      ["network.http.phishy-userpass-length", 32],
+    ],
+  });
 
-  waitForExplicitFinish();
+  for (let testCase of tests) {
+    if (testCase.setup) {
+      await testCase.setup();
+    }
 
-  nextTest();
-}
+    if (testCase.loadURL) {
+      info(`Loading : ${testCase.loadURL}`);
+      let expectedLoad = testCase.expectedLoad || testCase.loadURL;
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testCase.loadURL);
+      await BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser,
+        false,
+        expectedLoad
+      );
+    } else if (testCase.setURL) {
+      gURLBar.value = testCase.setURL;
+    }
+    if (testCase.setURL || testCase.loadURL) {
+      gURLBar.valueIsTyped = !!testCase.setURL;
+      is(
+        gURLBar.value,
+        testCase.expectedURL,
+        "url bar value set to " + gURLBar.value
+      );
+    }
+
+    gURLBar.focus();
+    if (testCase.expectedValueOnFocus) {
+      Assert.equal(
+        gURLBar.value,
+        testCase.expectedValueOnFocus,
+        "Check value on focus"
+      );
+    }
+    await testCopy(testCase.copyVal, testCase.copyExpected);
+    gURLBar.blur();
+  }
+});
 
 var tests = [
   // pageproxystate="invalid"
@@ -225,8 +256,10 @@ var tests = [
     copyExpected: "data:text/html,(%C3%A9 %25P",
   },
   {
-    setup() {
-      Services.prefs.setBoolPref(decodeURLpref, true);
+    async setup() {
+      await SpecialPowers.pushPrefEnv({
+        set: [["browser.urlbar.decodeURLsOnCopy", true]],
+      });
     },
     loadURL:
       "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
@@ -237,47 +270,44 @@ var tests = [
     copyVal: "<example.com/би>ография",
     copyExpected: "http://example.com/би",
   },
+  {
+    setup() {
+      // Setup a valid intranet url that resolves but is not yet known.
+      const proxyService = Cc[
+        "@mozilla.org/network/protocol-proxy-service;1"
+      ].getService(Ci.nsIProtocolProxyService);
+      let proxyInfo = proxyService.newProxyInfo(
+        "http",
+        "localhost",
+        8888,
+        "",
+        "",
+        0,
+        4096,
+        null
+      );
+      const proxyFilter = {
+        applyFilter(channel, defaultProxyInfo, callback) {
+          callback.onProxyFilterResult(
+            channel.URI.host === "mytest" ? proxyInfo : defaultProxyInfo
+          );
+        },
+      };
+      proxyService.registerChannelFilter(proxyFilter, 0);
+      registerCleanupFunction(() => {
+        proxyService.unregisterChannelFilter(proxyFilter);
+      });
+    },
+    loadURL: "http://mytest/",
+    expectedURL: "mytest",
+    expectedValueOnFocus: "http://mytest/",
+    copyExpected: "http://mytest/",
+  },
 ];
 
-function nextTest() {
-  let testCase = tests.shift();
-  if (!tests.length) {
-    runTest(testCase, finish);
-  } else {
-    runTest(testCase, nextTest);
-  }
-}
-
-function runTest(testCase, cb) {
-  function doCheck() {
-    if (testCase.setURL || testCase.loadURL) {
-      gURLBar.valueIsTyped = !!testCase.setURL;
-      is(gURLBar.value, testCase.expectedURL, "url bar value set");
-    }
-
-    testCopy(testCase.copyVal, testCase.copyExpected, cb);
-  }
-
-  if (testCase.setup) {
-    testCase.setup();
-  }
-
-  if (testCase.loadURL) {
-    info(`Loading : ${testCase.loadURL}\n`);
-    let expectedLoad = testCase.expectedLoad || testCase.loadURL;
-    loadURL(testCase.loadURL, expectedLoad, doCheck);
-  } else {
-    if (testCase.setURL) {
-      gURLBar.value = testCase.setURL;
-    }
-    doCheck();
-  }
-}
-
-function testCopy(copyVal, targetValue, cb) {
+function testCopy(copyVal, targetValue) {
   info("Expecting copy of: " + targetValue);
 
-  gURLBar.focus();
   if (copyVal) {
     let offsets = [];
     while (true) {
@@ -314,21 +344,7 @@ function testCopy(copyVal, targetValue, cb) {
     gURLBar.select();
   }
 
-  waitForClipboard(
-    targetValue,
-    function() {
-      goDoCommand("cmd_copy");
-    },
-    cb,
-    cb
+  return SimpleTest.promiseClipboardChange(targetValue, () =>
+    goDoCommand("cmd_copy")
   );
-}
-
-function loadURL(aURL, aExpectedLoad, aCB) {
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, aURL);
-  BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    aExpectedLoad
-  ).then(aCB);
 }
