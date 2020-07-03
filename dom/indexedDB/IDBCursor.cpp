@@ -397,16 +397,18 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "cursor(%s).continue(%s)",
-        "IDBCursor.continue()", mTransaction->LoggingSerialNumber(),
-        requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+        "IDBCursor.continue(%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), requestSerialNumber,
+        IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(mSource),
         IDB_LOG_STRINGIFY(mDirection), IDB_LOG_STRINGIFY(key));
   } else {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "index(%s).cursor(%s).continue(%s)",
-        "IDBCursor.continue()", mTransaction->LoggingSerialNumber(),
-        requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+        "IDBCursor.continue(%.0s%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), requestSerialNumber,
+        IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction),
         IDB_LOG_STRINGIFY(GetSourceRef().ObjectStore()),
         IDB_LOG_STRINGIFY(mSource), IDB_LOG_STRINGIFY(mDirection),
@@ -511,8 +513,9 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "index(%s).cursor(%s).continuePrimaryKey(%s, %s)",
-        "IDBCursor.continuePrimaryKey()", mTransaction->LoggingSerialNumber(),
-        requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+        "IDBCursor.continuePrimaryKey(%.0s%.0s%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), requestSerialNumber,
+        IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction),
         IDB_LOG_STRINGIFY(&GetSourceObjectStoreRef()),
         IDB_LOG_STRINGIFY(mSource), IDB_LOG_STRINGIFY(mDirection),
@@ -551,17 +554,19 @@ void IDBTypedCursor<CursorType>::Advance(const uint32_t aCount,
   if constexpr (IsObjectStoreCursor) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
-        "cursor(%s).advance(%ld)",
-        "IDBCursor.advance()", mTransaction->LoggingSerialNumber(),
-        requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+        "cursor(%s).advance(%" PRIi32 ")",
+        "IDBCursor.advance(%.0s%.0s%.0s%.0s%" PRIi32 ")",
+        mTransaction->LoggingSerialNumber(), requestSerialNumber,
+        IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(mSource),
         IDB_LOG_STRINGIFY(mDirection), aCount);
   } else {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
-        "index(%s).cursor(%s).advance(%ld)",
-        "IDBCursor.advance()", mTransaction->LoggingSerialNumber(),
-        requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+        "index(%s).cursor(%s).advance(%" PRIi32 ")",
+        "IDBCursor.advance(%.0s%.0s%.0s%.0s%.0s%" PRIi32 ")",
+        mTransaction->LoggingSerialNumber(), requestSerialNumber,
+        IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction),
         IDB_LOG_STRINGIFY(GetSourceRef().ObjectStore()),
         IDB_LOG_STRINGIFY(mSource), IDB_LOG_STRINGIFY(mDirection), aCount);
@@ -657,8 +662,8 @@ RefPtr<IDBRequest> IDBTypedCursor<CursorType>::Update(
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
           "database(%s).transaction(%s).objectStore(%s)."
           "cursor(%s).update(%s)",
-          "IDBCursor.update()", mTransaction->LoggingSerialNumber(),
-          request->LoggingSerialNumber(),
+          "IDBCursor.update(%.0s%.0s%.0s%.0s%.0s)",
+          mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
           IDB_LOG_STRINGIFY(mTransaction->Database()),
           IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(&objectStore),
           IDB_LOG_STRINGIFY(mDirection),
@@ -667,8 +672,8 @@ RefPtr<IDBRequest> IDBTypedCursor<CursorType>::Update(
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
           "database(%s).transaction(%s).objectStore(%s)."
           "index(%s).cursor(%s).update(%s)",
-          "IDBCursor.update()", mTransaction->LoggingSerialNumber(),
-          request->LoggingSerialNumber(),
+          "IDBCursor.update(%.0s%.0s%.0s%.0s%.0s%.0s)",
+          mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
           IDB_LOG_STRINGIFY(mTransaction->Database()),
           IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(&objectStore),
           IDB_LOG_STRINGIFY(mSource), IDB_LOG_STRINGIFY(mDirection),
@@ -729,8 +734,8 @@ RefPtr<IDBRequest> IDBTypedCursor<CursorType>::Delete(JSContext* const aCx,
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
           "database(%s).transaction(%s).objectStore(%s)."
           "cursor(%s).delete(%s)",
-          "IDBCursor.delete()", mTransaction->LoggingSerialNumber(),
-          request->LoggingSerialNumber(),
+          "IDBCursor.delete(%.0s%.0s%.0s%.0s%.0s)",
+          mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
           IDB_LOG_STRINGIFY(mTransaction->Database()),
           IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(&objectStore),
           IDB_LOG_STRINGIFY(mDirection),
@@ -739,8 +744,8 @@ RefPtr<IDBRequest> IDBTypedCursor<CursorType>::Delete(JSContext* const aCx,
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
           "database(%s).transaction(%s).objectStore(%s)."
           "index(%s).cursor(%s).delete(%s)",
-          "IDBCursor.delete()", mTransaction->LoggingSerialNumber(),
-          request->LoggingSerialNumber(),
+          "IDBCursor.delete(%.0s%.0s%.0s%.0s%.0s%.0s)",
+          mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
           IDB_LOG_STRINGIFY(mTransaction->Database()),
           IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(&objectStore),
           IDB_LOG_STRINGIFY(mSource), IDB_LOG_STRINGIFY(mDirection),

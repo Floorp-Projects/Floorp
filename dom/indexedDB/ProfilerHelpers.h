@@ -106,11 +106,11 @@ void MOZ_FORMAT_PRINTF(2, 3)
 #define IDB_LOG_MARK_CONCISE_PARENT "P"
 #define IDB_LOG_MARK_CONCISE_CHILD "C"
 
-#define IDB_LOG_MARK_DETAILED_TRANSACTION "Transaction[%lld]"
-#define IDB_LOG_MARK_DETAILED_REQUEST "Request[%llu]"
+#define IDB_LOG_MARK_DETAILED_TRANSACTION "Transaction[%" PRIi64 "]"
+#define IDB_LOG_MARK_DETAILED_REQUEST "Request[%" PRIu64 "]"
 
-#define IDB_LOG_MARK_CONCISE_TRANSACTION "T[%lld]"
-#define IDB_LOG_MARK_CONCISE_REQUEST "R[%llu]"
+#define IDB_LOG_MARK_CONCISE_TRANSACTION "T[%" PRIi64 "]"
+#define IDB_LOG_MARK_CONCISE_REQUEST "R[%" PRIu64 "]"
 
 #define IDB_LOG_MARK_TRANSACTION_REQUEST(                                      \
     _detailedPeer, _concisePeer, _detailedFmt, _conciseFmt, _loggingId,        \
