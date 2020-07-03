@@ -1800,10 +1800,9 @@ def build_task(config, tasks):
             branch_rev = get_branch_rev(config)
 
             routes.append(
-                '{}.v2.{}.{}.{}'.format(TREEHERDER_ROUTE_ROOT,
-                                        config.params['project'],
-                                        branch_rev,
-                                        config.params['pushlog_id'])
+                "{}.v2.{}.{}".format(
+                    TREEHERDER_ROUTE_ROOT, config.params["project"], branch_rev,
+                )
             )
 
         if 'expires-after' not in task:
