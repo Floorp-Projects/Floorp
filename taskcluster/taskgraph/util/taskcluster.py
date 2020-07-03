@@ -15,6 +15,7 @@ import logging
 import taskcluster_urls as liburls
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
+from taskcluster import Hooks
 from taskgraph.task import Task
 from taskgraph.util import yaml
 
@@ -258,6 +259,16 @@ def rerun_task(task_id):
         logger.info('Would have rerun {}.'.format(task_id))
     else:
         _do_request(get_task_url(task_id, use_proxy=True) + '/rerun', json={})
+
+
+def trigger_hook(hook_group_id, hook_id, hook_payload):
+    hooks = Hooks({'rootUrl': get_root_url(use_proxy=True)})
+    response = hooks.triggerHook(hook_group_id, hook_id, hook_payload)
+
+    logger.info('Task seen here: {}/tasks/{}'.format(
+        get_root_url(os.environ.get('TASKCLUSTER_PROXY_URL')),
+        response['status']['taskId'])
+    )
 
 
 def get_current_scopes():
