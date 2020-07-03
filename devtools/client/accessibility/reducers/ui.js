@@ -9,7 +9,6 @@ const Services = require("Services");
 const {
   AUDIT,
   ENABLE,
-  DISABLE,
   RESET,
   SELECT,
   HIGHLIGHT,
@@ -50,8 +49,6 @@ function ui(state = getInitialState(), action) {
   switch (action.type) {
     case ENABLE:
       return onToggle(state, action, true);
-    case DISABLE:
-      return onToggle(state, action, false);
     case UPDATE_CAN_BE_DISABLED:
       return onCanBeDisabledChange(state, action);
     case UPDATE_CAN_BE_ENABLED:
