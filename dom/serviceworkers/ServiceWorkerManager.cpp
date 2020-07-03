@@ -43,6 +43,7 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/NotificationEvent.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RootedDictionary.h"
@@ -51,11 +52,13 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/PermissionManager.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
@@ -1736,6 +1739,20 @@ void ServiceWorkerManager::LoadRegistration(
   }
   nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
+  // Purge extensions registrations if they are disabled by prefs.
+  if (!StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup()) {
+    nsCOMPtr<nsIURI> uri = principal->GetURI();
+
+    // We do check the URI scheme here because when this is going to run
+    // the extension may not have been loaded yet and the WebExtensionPolicy
+    // may not exist yet.
+    if (uri->SchemeIs("moz-extension")) {
+      const auto& cacheName = aRegistration.cacheName();
+      serviceWorkerScriptCache::PurgeCache(principal, cacheName);
+    }
+    return;
+  }
+
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(principal, aRegistration.scope());
   if (!registration) {
@@ -2848,6 +2865,89 @@ ServiceWorkerManager::GetRegistration(const PrincipalInfo& aPrincipalInfo,
   }
 
   return GetRegistration(scopeKey, aScope);
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::RegisterForAddonPrincipal(nsIPrincipal* aPrincipal,
+                                                JSContext* aCx,
+                                                dom::Promise** aPromise) {
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult erv;
+  RefPtr<Promise> outer = Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  auto enabled =
+      StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
+  if (!enabled) {
+    outer->MaybeRejectWithNotAllowedError(
+        "Disabled. extensions.backgroundServiceWorker.enabled is false");
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(aPrincipal);
+  auto* addonPolicy = BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+  if (!addonPolicy) {
+    outer->MaybeRejectWithNotAllowedError("Not an extension principal");
+    return NS_OK;
+  }
+
+  nsCString scope;
+  auto result = addonPolicy->GetURL(EmptyString());
+  if (result.isOk()) {
+    scope.Assign(NS_ConvertUTF16toUTF8(result.unwrap()));
+  } else {
+    outer->MaybeRejectWithUnknownError("Unable to resolve addon scope URL");
+    return NS_OK;
+  }
+
+  nsString scriptURL;
+  addonPolicy->GetBackgroundWorker(scriptURL);
+
+  if (scriptURL.IsEmpty()) {
+    outer->MaybeRejectWithNotFoundError("Missing background worker script url");
+    return NS_OK;
+  }
+
+  Maybe<ClientInfo> clientInfo =
+      dom::ClientManager::CreateInfo(ClientType::All, aPrincipal);
+
+  if (!clientInfo.isSome()) {
+    outer->MaybeRejectWithUnknownError("Error creating clientInfo");
+    return NS_OK;
+  }
+
+  auto regPromise =
+      Register(clientInfo.ref(), scope, NS_ConvertUTF16toUTF8(scriptURL),
+               dom::ServiceWorkerUpdateViaCache::Imports);
+  const RefPtr<ServiceWorkerManager> self(this);
+  const nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  regPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self, outer, principal,
+       scope](const ServiceWorkerRegistrationDescriptor& regDesc) {
+        RefPtr<ServiceWorkerRegistrationInfo> registration =
+            self->GetRegistration(principal, scope);
+        if (registration) {
+          outer->MaybeResolve(registration);
+        } else {
+          outer->MaybeRejectWithUnknownError(
+              "Failed to retrieve ServiceWorkerRegistrationInfo");
+        }
+      },
+      [outer](const mozilla::CopyableErrorResult& err) {
+        CopyableErrorResult result(err);
+        outer->MaybeReject(std::move(result));
+      });
+
+  outer.forget(aPromise);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
