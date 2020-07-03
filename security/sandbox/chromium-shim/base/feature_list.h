@@ -10,8 +10,6 @@
 #ifndef BASE_FEATURE_LIST_H_
 #define BASE_FEATURE_LIST_H_
 
-#include "base/macros.h"
-
 namespace base {
 
 // Specifies whether a given feature is enabled or disabled by default.

@@ -4,9 +4,8 @@
 
 #include "base/win/scoped_handle_verifier.h"
 
-#include <windows.h>
-
 #include <stddef.h>
+#include <windows.h>
 
 #include <unordered_map>
 
@@ -26,13 +25,13 @@ void* GetHandleVerifier() {
 
 namespace {
 
-base::win::internal::ScopedHandleVerifier* g_active_verifier = nullptr;
-using GetHandleVerifierFn = void* (*)();
-using HandleMap =
-    std::unordered_map<HANDLE,
-                       base::win::internal::ScopedHandleVerifierInfo,
-                       base::win::internal::HandleHash>;
-using NativeLock = base::internal::LockImpl;
+base::win::internal::ScopedHandleVerifier* g_active_verifier = NULL;
+typedef void* (*GetHandleVerifierFn)();
+typedef std::unordered_map<HANDLE,
+                           base::win::internal::ScopedHandleVerifierInfo,
+                           base::win::internal::HandleHash>
+    HandleMap;
+typedef base::internal::LockImpl NativeLock;
 
 NativeLock* GetLock() {
   static auto* native_lock = new NativeLock();

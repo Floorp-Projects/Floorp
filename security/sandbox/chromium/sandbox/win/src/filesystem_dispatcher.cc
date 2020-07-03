@@ -24,29 +24,29 @@ namespace sandbox {
 FilesystemDispatcher::FilesystemDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-      {IpcTag::NTCREATEFILE,
+      {IPC_NTCREATEFILE_TAG,
        {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE,
         UINT32_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtCreateFile)};
 
   static const IPCCall open_file = {
-      {IpcTag::NTOPENFILE,
+      {IPC_NTOPENFILE_TAG,
        {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtOpenFile)};
 
   static const IPCCall attribs = {
-      {IpcTag::NTQUERYATTRIBUTESFILE, {WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE}},
+      {IPC_NTQUERYATTRIBUTESFILE_TAG, {WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE}},
       reinterpret_cast<CallbackGeneric>(
           &FilesystemDispatcher::NtQueryAttributesFile)};
 
   static const IPCCall full_attribs = {
-      {IpcTag::NTQUERYFULLATTRIBUTESFILE,
+      {IPC_NTQUERYFULLATTRIBUTESFILE_TAG,
        {WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE}},
       reinterpret_cast<CallbackGeneric>(
           &FilesystemDispatcher::NtQueryFullAttributesFile)};
 
   static const IPCCall set_info = {
-      {IpcTag::NTSETINFO_RENAME,
+      {IPC_NTSETINFO_RENAME_TAG,
        {VOIDPTR_TYPE, INOUTPTR_TYPE, INOUTPTR_TYPE, UINT32_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(
           &FilesystemDispatcher::NtSetInformationFile)};
@@ -59,23 +59,23 @@ FilesystemDispatcher::FilesystemDispatcher(PolicyBase* policy_base)
 }
 
 bool FilesystemDispatcher::SetupService(InterceptionManager* manager,
-                                        IpcTag service) {
+                                        int service) {
   switch (service) {
-    case IpcTag::NTCREATEFILE:
+    case IPC_NTCREATEFILE_TAG:
       return INTERCEPT_NT(manager, NtCreateFile, CREATE_FILE_ID, 48);
 
-    case IpcTag::NTOPENFILE:
+    case IPC_NTOPENFILE_TAG:
       return INTERCEPT_NT(manager, NtOpenFile, OPEN_FILE_ID, 28);
 
-    case IpcTag::NTQUERYATTRIBUTESFILE:
+    case IPC_NTQUERYATTRIBUTESFILE_TAG:
       return INTERCEPT_NT(manager, NtQueryAttributesFile, QUERY_ATTRIB_FILE_ID,
                           12);
 
-    case IpcTag::NTQUERYFULLATTRIBUTESFILE:
+    case IPC_NTQUERYFULLATTRIBUTESFILE_TAG:
       return INTERCEPT_NT(manager, NtQueryFullAttributesFile,
                           QUERY_FULL_ATTRIB_FILE_ID, 12);
 
-    case IpcTag::NTSETINFO_RENAME:
+    case IPC_NTSETINFO_RENAME_TAG:
       return INTERCEPT_NT(manager, NtSetInformationFile, SET_INFO_FILE_ID, 24);
 
     default:
@@ -84,7 +84,7 @@ bool FilesystemDispatcher::SetupService(InterceptionManager* manager,
 }
 
 bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
-                                        std::wstring* name,
+                                        base::string16* name,
                                         uint32_t attributes,
                                         uint32_t desired_access,
                                         uint32_t file_attributes,
@@ -111,7 +111,7 @@ bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
   // are just middlemen in the operation since is the FileSystemPolicy which
   // knows what to do.
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::NTCREATEFILE, params.GetBase());
+      policy_base_->EvalPolicy(IPC_NTCREATEFILE_TAG, params.GetBase());
 
   // If the policies forbid access (any result other than ASK_BROKER),
   // then check for user-granted access to file.
@@ -140,7 +140,7 @@ bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
 }
 
 bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
-                                      std::wstring* name,
+                                      base::string16* name,
                                       uint32_t attributes,
                                       uint32_t desired_access,
                                       uint32_t share_access,
@@ -166,7 +166,7 @@ bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
   // are just middlemen in the operation since is the FileSystemPolicy which
   // knows what to do.
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::NTOPENFILE, params.GetBase());
+      policy_base_->EvalPolicy(IPC_NTOPENFILE_TAG, params.GetBase());
 
   // If the policies forbid access (any result other than ASK_BROKER),
   // then check for user-granted access to file.
@@ -194,7 +194,7 @@ bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
 }
 
 bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
-                                                 std::wstring* name,
+                                                 base::string16* name,
                                                  uint32_t attributes,
                                                  CountedBuffer* info) {
   if (sizeof(FILE_BASIC_INFORMATION) != info->Size())
@@ -216,7 +216,7 @@ bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
   // are just middlemen in the operation since is the FileSystemPolicy which
   // knows what to do.
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::NTQUERYATTRIBUTESFILE, params.GetBase());
+      policy_base_->EvalPolicy(IPC_NTQUERYATTRIBUTESFILE_TAG, params.GetBase());
 
   // If the policies forbid access (any result other than ASK_BROKER),
   // then check for user-granted access to file.
@@ -243,7 +243,7 @@ bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
 }
 
 bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
-                                                     std::wstring* name,
+                                                     base::string16* name,
                                                      uint32_t attributes,
                                                      CountedBuffer* info) {
   if (sizeof(FILE_NETWORK_OPEN_INFORMATION) != info->Size())
@@ -265,7 +265,7 @@ bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
   // are just middlemen in the operation since is the FileSystemPolicy which
   // knows what to do.
   EvalResult result = policy_base_->EvalPolicy(
-      IpcTag::NTQUERYFULLATTRIBUTESFILE, params.GetBase());
+      IPC_NTQUERYFULLATTRIBUTESFILE_TAG, params.GetBase());
 
   // If the policies forbid access (any result other than ASK_BROKER),
   // then check for user-granted access to file.
@@ -308,7 +308,7 @@ bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
   if (!IsSupportedRenameCall(rename_info, length, info_class))
     return false;
 
-  std::wstring name;
+  base::string16 name;
   name.assign(rename_info->FileName,
               rename_info->FileNameLength / sizeof(rename_info->FileName[0]));
   if (!PreProcessName(&name)) {
@@ -327,7 +327,7 @@ bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
   // are just middlemen in the operation since is the FileSystemPolicy which
   // knows what to do.
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::NTSETINFO_RENAME, params.GetBase());
+      policy_base_->EvalPolicy(IPC_NTSETINFO_RENAME_TAG, params.GetBase());
 
   // If the policies forbid access (any result other than ASK_BROKER),
   // then check for user-granted write access to file.  We only permit

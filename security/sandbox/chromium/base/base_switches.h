@@ -20,7 +20,6 @@ extern const char kEnableFeatures[];
 extern const char kEnableLowEndDeviceMode[];
 extern const char kForceFieldTrials[];
 extern const char kFullMemoryCrashReport[];
-extern const char kLogBestEffortTasks[];
 extern const char kNoErrorDialogs[];
 extern const char kProfilingAtStart[];
 extern const char kProfilingFile[];
@@ -34,7 +33,6 @@ extern const char kVModule[];
 extern const char kWaitForDebugger[];
 
 #if defined(OS_WIN)
-extern const char kDisableHighResTimer[];
 extern const char kDisableUsbKeyboardDetect[];
 #endif
 
@@ -49,10 +47,6 @@ extern const char kEnableCrashReporterForTesting[];
 #if defined(OS_ANDROID)
 extern const char kEnableReachedCodeProfiler[];
 extern const char kOrderfileMemoryOptimization[];
-#endif
-
-#if defined(OS_LINUX)
-extern const char kEnableThreadInstructionCount[];
 #endif
 
 }  // namespace switches

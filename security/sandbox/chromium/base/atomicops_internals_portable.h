@@ -52,6 +52,16 @@ typedef volatile std::atomic<Atomic32>* AtomicLocation32;
 static_assert(sizeof(*(AtomicLocation32) nullptr) == sizeof(Atomic32),
               "incompatible 32-bit atomic layout");
 
+inline void MemoryBarrier() {
+#if defined(__GLIBCXX__)
+  // Work around libstdc++ bug 51038 where atomic_thread_fence was declared but
+  // not defined, leading to the linker complaining about undefined references.
+  __atomic_thread_fence(std::memory_order_seq_cst);
+#else
+  std::atomic_thread_fence(std::memory_order_seq_cst);
+#endif
+}
+
 inline Atomic32 NoBarrier_CompareAndSwap(volatile Atomic32* ptr,
                                          Atomic32 old_value,
                                          Atomic32 new_value) {
@@ -109,7 +119,7 @@ inline void NoBarrier_Store(volatile Atomic32* ptr, Atomic32 value) {
 
 inline void Acquire_Store(volatile Atomic32* ptr, Atomic32 value) {
   ((AtomicLocation32)ptr)->store(value, std::memory_order_relaxed);
-  std::atomic_thread_fence(std::memory_order_seq_cst);
+  MemoryBarrier();
 }
 
 inline void Release_Store(volatile Atomic32* ptr, Atomic32 value) {
@@ -125,7 +135,7 @@ inline Atomic32 Acquire_Load(volatile const Atomic32* ptr) {
 }
 
 inline Atomic32 Release_Load(volatile const Atomic32* ptr) {
-  std::atomic_thread_fence(std::memory_order_seq_cst);
+  MemoryBarrier();
   return ((AtomicLocation32)ptr)->load(std::memory_order_relaxed);
 }
 
@@ -192,7 +202,7 @@ inline void NoBarrier_Store(volatile Atomic64* ptr, Atomic64 value) {
 
 inline void Acquire_Store(volatile Atomic64* ptr, Atomic64 value) {
   ((AtomicLocation64)ptr)->store(value, std::memory_order_relaxed);
-  std::atomic_thread_fence(std::memory_order_seq_cst);
+  MemoryBarrier();
 }
 
 inline void Release_Store(volatile Atomic64* ptr, Atomic64 value) {
@@ -208,7 +218,7 @@ inline Atomic64 Acquire_Load(volatile const Atomic64* ptr) {
 }
 
 inline Atomic64 Release_Load(volatile const Atomic64* ptr) {
-  std::atomic_thread_fence(std::memory_order_seq_cst);
+  MemoryBarrier();
   return ((AtomicLocation64)ptr)->load(std::memory_order_relaxed);
 }
 
