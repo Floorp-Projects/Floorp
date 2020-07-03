@@ -4,12 +4,8 @@
 
 DevToolsModules(
     'RefreshDevicesButton.js',
-    'Sidebar.css',
     'Sidebar.js',
-    'SidebarFixedItem.css',
     'SidebarFixedItem.js',
-    'SidebarItem.css',
     'SidebarItem.js',
-    'SidebarRuntimeItem.css',
     'SidebarRuntimeItem.js',
 )

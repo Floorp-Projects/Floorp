@@ -10,9 +10,3 @@ DIRS += [
 CompiledModules(
 
 )
-
-DevToolsModules(
-    'CloseButton.css',
-    'CommandBarButton.css',
-    'PaneToggleButton.css',
-)
