@@ -4,9 +4,9 @@
 
 // The rejection "The fetching process for the media resource was aborted by the
 // user agent at the user's request." is left unhandled in some cases. This bug
-// should be fixed, but for the moment this file is whitelisted.
+// should be fixed, but for the moment this file allows a class of rejections.
 //
-// NOTE: Whitelisting a class of rejections should be limited. Normally you
+// NOTE: Allowing a whole class of rejections should be avoided. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/aborted by the user agent/);
