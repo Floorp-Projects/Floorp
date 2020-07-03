@@ -7,6 +7,7 @@
 #include "IDBIndex.h"
 
 #include "IDBCursorType.h"
+#include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBKeyRange.h"
 #include "IDBObjectStore.h"
