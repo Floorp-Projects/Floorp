@@ -25,7 +25,7 @@ class FileDescriptorSet {
 
   // Mac and Linux both limit the number of file descriptors per message to
   // slightly more than 250.
-  enum { MAX_DESCRIPTORS_PER_MESSAGE = 250 };
+  enum { MAX_DESCRIPTORS_PER_MESSAGE = 200 };
 
   void CopyFrom(const FileDescriptorSet& other);
 
