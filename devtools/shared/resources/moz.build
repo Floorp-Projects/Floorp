@@ -5,6 +5,7 @@
 DIRS += [
     'legacy-listeners',
     'legacy-target-watchers',
+    'transformers',
 ]
 
 DevToolsModules(
