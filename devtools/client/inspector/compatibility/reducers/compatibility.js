@@ -5,19 +5,19 @@
 "use strict";
 
 const {
-  COMPATIBILITY_INTERNAL_APPEND_NODE,
   COMPATIBILITY_APPEND_NODE_FAILURE,
+  COMPATIBILITY_CLEAR_DESTROYED_NODES,
   COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,
   COMPATIBILITY_INIT_USER_SETTINGS_FAILURE,
-  COMPATIBILITY_INTERNAL_REMOVE_NODE,
-  COMPATIBILITY_CLEAR_DESTROYED_NODES,
-  COMPATIBILITY_REMOVE_NODE_FAILURE,
+  COMPATIBILITY_INTERNAL_APPEND_NODE,
   COMPATIBILITY_INTERNAL_NODE_UPDATE,
-  COMPATIBILITY_UPDATE_NODES_FAILURE,
+  COMPATIBILITY_INTERNAL_REMOVE_NODE,
+  COMPATIBILITY_INTERNAL_UPDATE_SELECTED_NODE_ISSUES,
+  COMPATIBILITY_REMOVE_NODE_FAILURE,
   COMPATIBILITY_UPDATE_NODE_FAILURE,
+  COMPATIBILITY_UPDATE_NODES_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
-  COMPATIBILITY_INTERNAL_UPDATE_SELECTED_NODE_ISSUES,
   COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_START,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_SUCCESS,
@@ -41,17 +41,15 @@ const INITIAL_STATE = {
 };
 
 const reducers = {
-  [COMPATIBILITY_INTERNAL_APPEND_NODE](state, { node, issues }) {
-    const topLevelTargetIssues = _appendTopLevelTargetIssues(
-      state.topLevelTargetIssues,
-      node,
-      issues
-    );
-    return Object.assign({}, state, { topLevelTargetIssues });
-  },
   [COMPATIBILITY_APPEND_NODE_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_APPEND_NODE_FAILURE, error);
     return state;
+  },
+  [COMPATIBILITY_CLEAR_DESTROYED_NODES](state) {
+    const topLevelTargetIssues = _clearDestroyedNodes(
+      state.topLevelTargetIssues
+    );
+    return Object.assign({}, state, { topLevelTargetIssues });
   },
   [COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS](
     state,
@@ -63,6 +61,22 @@ const reducers = {
     _showError(COMPATIBILITY_INIT_USER_SETTINGS_FAILURE, error);
     return state;
   },
+  [COMPATIBILITY_INTERNAL_APPEND_NODE](state, { node, issues }) {
+    const topLevelTargetIssues = _appendTopLevelTargetIssues(
+      state.topLevelTargetIssues,
+      node,
+      issues
+    );
+    return Object.assign({}, state, { topLevelTargetIssues });
+  },
+  [COMPATIBILITY_INTERNAL_NODE_UPDATE](state, { node, issues }) {
+    const topLevelTargetIssues = _updateTopLevelTargetIssues(
+      state.topLevelTargetIssues,
+      node,
+      issues
+    );
+    return Object.assign({}, state, { topLevelTargetIssues });
+  },
   [COMPATIBILITY_INTERNAL_REMOVE_NODE](state, { node }) {
     const topLevelTargetIssues = _removeNodeOrIssues(
       state.topLevelTargetIssues,
@@ -71,29 +85,18 @@ const reducers = {
     );
     return Object.assign({}, state, { topLevelTargetIssues });
   },
-  [COMPATIBILITY_CLEAR_DESTROYED_NODES](state) {
-    const topLevelTargetIssues = _clearDestroyedNodes(
-      state.topLevelTargetIssues
-    );
-    return Object.assign({}, state, { topLevelTargetIssues });
+  [COMPATIBILITY_INTERNAL_UPDATE_SELECTED_NODE_ISSUES](state, { issues }) {
+    return Object.assign({}, state, { selectedNodeIssues: issues });
   },
   [COMPATIBILITY_REMOVE_NODE_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
     return state;
   },
-  [COMPATIBILITY_INTERNAL_NODE_UPDATE](state, { node, issues }) {
-    const topLevelTargetIssues = _updateTopLebelTargetIssues(
-      state.topLevelTargetIssues,
-      node,
-      issues
-    );
-    return Object.assign({}, state, { topLevelTargetIssues });
-  },
-  [COMPATIBILITY_UPDATE_NODES_FAILURE](state, { error }) {
+  [COMPATIBILITY_UPDATE_NODE_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
     return state;
   },
-  [COMPATIBILITY_UPDATE_NODE_FAILURE](state, { error }) {
+  [COMPATIBILITY_UPDATE_NODES_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
     return state;
   },
@@ -103,9 +106,6 @@ const reducers = {
   [COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE, error);
     return state;
-  },
-  [COMPATIBILITY_INTERNAL_UPDATE_SELECTED_NODE_ISSUES](state, { issues }) {
-    return Object.assign({}, state, { selectedNodeIssues: issues });
   },
   [COMPATIBILITY_UPDATE_SETTINGS_VISIBILITY](state, { visibility }) {
     return Object.assign({}, state, { isSettingsVisibile: visibility });
@@ -166,16 +166,6 @@ function _appendTopLevelTargetIssues(targetIssues, node, issues) {
   return targetIssues;
 }
 
-function _indexOfIssue(issues, issue) {
-  return issues.findIndex(
-    i => i.type === issue.type && i.property === issue.property
-  );
-}
-
-function _indexOfNode(issue, node) {
-  return issue.nodes.findIndex(n => n.actorID === node.actorID);
-}
-
 function _clearDestroyedNodes(targetIssues) {
   return targetIssues.reduce((newIssues, targetIssue) => {
     const retainedNodes = targetIssue.nodes.filter(n => n.targetFront?.actorID);
@@ -189,6 +179,16 @@ function _clearDestroyedNodes(targetIssues) {
     targetIssue.nodes = retainedNodes;
     return [...newIssues, targetIssue];
   }, []);
+}
+
+function _indexOfIssue(issues, issue) {
+  return issues.findIndex(
+    i => i.type === issue.type && i.property === issue.property
+  );
+}
+
+function _indexOfNode(issue, node) {
+  return issue.nodes.findIndex(n => n.actorID === node.actorID);
 }
 
 function _removeNodeOrIssues(targetIssues, node, issues) {
@@ -219,7 +219,7 @@ function _removeNodeOrIssues(targetIssues, node, issues) {
   }, []);
 }
 
-function _updateTopLebelTargetIssues(targetIssues, node, issues) {
+function _updateTopLevelTargetIssues(targetIssues, node, issues) {
   // Remove issues or node.
   targetIssues = _removeNodeOrIssues(targetIssues, node, issues);
 
