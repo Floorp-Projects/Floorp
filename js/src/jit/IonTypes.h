@@ -738,6 +738,13 @@ static inline MIRType ScalarTypeToMIRType(Scalar::Type type) {
   MOZ_CRASH("unexpected kind");
 }
 
+static constexpr bool NeedsPostBarrier(MIRType type) {
+  MOZ_ASSERT(type != MIRType::Value);
+  MOZ_ASSERT(type != MIRType::ObjectOrNull);
+  return type == MIRType::Object || type == MIRType::String ||
+         type == MIRType::BigInt;
+}
+
 #ifdef DEBUG
 
 // Track the pipeline of opcodes which has produced a snapshot.

@@ -5452,11 +5452,8 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
   }
 
   TypedOrValueRegister reg = val.reg();
-  if (reg.hasTyped()) {
-    if (reg.type() != MIRType::Object && reg.type() != MIRType::String &&
-        reg.type() != MIRType::BigInt) {
-      return;
-    }
+  if (reg.hasTyped() && !NeedsPostBarrier(reg.type())) {
+    return;
   }
 
   Label skipBarrier;

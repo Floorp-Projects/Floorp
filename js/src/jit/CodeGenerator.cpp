@@ -4868,6 +4868,8 @@ void CodeGenerator::maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal,
 template <class LPostBarrierType, MIRType nurseryType>
 void CodeGenerator::visitPostWriteBarrierCommon(LPostBarrierType* lir,
                                                 OutOfLineCode* ool) {
+  static_assert(NeedsPostBarrier(nurseryType));
+
   addOutOfLineCode(ool, lir->mir());
 
   Register temp = ToTempRegisterOrInvalid(lir->temp());
@@ -4884,16 +4886,16 @@ void CodeGenerator::visitPostWriteBarrierCommon(LPostBarrierType* lir,
   maybeEmitGlobalBarrierCheck(lir->object(), ool);
 
   Register value = ToRegister(lir->value());
-  if (nurseryType == MIRType::Object) {
+  if constexpr (nurseryType == MIRType::Object) {
     if (lir->mir()->value()->type() == MIRType::ObjectOrNull) {
       masm.branchTestPtr(Assembler::Zero, value, value, ool->rejoin());
     } else {
       MOZ_ASSERT(lir->mir()->value()->type() == MIRType::Object);
     }
-  } else if (nurseryType == MIRType::String) {
+  } else if constexpr (nurseryType == MIRType::String) {
     MOZ_ASSERT(lir->mir()->value()->type() == MIRType::String);
   } else {
-    MOZ_ASSERT(nurseryType == MIRType::BigInt);
+    static_assert(nurseryType == MIRType::BigInt);
     MOZ_ASSERT(lir->mir()->value()->type() == MIRType::BigInt);
   }
   masm.branchPtrInNurseryChunk(Assembler::Equal, value, temp, ool->entry());
