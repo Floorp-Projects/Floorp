@@ -6621,7 +6621,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (errorHandler == null) {
             return;
         }
-        errNoCheck("An \u201C" + name + "\u201D start tag seen but an element of the same type was already open.");
+        errNoCheck("Start tag \u201C" + name + "\u201D seen but an element of the same type was already open.");
     }
 
     private void errHeadingWhenHeadingOpen() throws SAXException {
