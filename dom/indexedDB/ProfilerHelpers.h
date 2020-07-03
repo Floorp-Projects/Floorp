@@ -30,8 +30,8 @@ namespace indexedDB {
 
 class Key;
 
-class MOZ_STACK_CLASS LoggingIdString final
-    : public nsAutoCStringN<NSID_LENGTH> {
+template <bool CheckLoggingMode>
+class LoggingIdString final : public nsAutoCStringN<NSID_LENGTH> {
  public:
   LoggingIdString();
 
@@ -69,7 +69,7 @@ void MOZ_FORMAT_PRINTF(1, 3) MOZ_FORMAT_PRINTF(2, 3)
                                          _loggingId, ##__VA_ARGS__)
 
 #define IDB_LOG_ID_STRING(...) \
-  mozilla::dom::indexedDB::LoggingIdString(__VA_ARGS__).get()
+  mozilla::dom::indexedDB::LoggingIdString<true>(__VA_ARGS__).get()
 
 #define IDB_LOG_STRINGIFY(...) \
   mozilla::dom::indexedDB::LoggingString(__VA_ARGS__).get()

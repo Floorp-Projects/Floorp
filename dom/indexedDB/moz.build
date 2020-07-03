@@ -52,6 +52,7 @@ EXPORTS.mozilla.dom.indexedDB += [
     'KeyPath.h',
     'PermissionRequestBase.h',
     'SerializationHelpers.h',
+    'ThreadLocal.h',
 ]
 
 UNIFIED_SOURCES += [

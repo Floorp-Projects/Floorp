@@ -53,6 +53,7 @@
 #include "PermissionRequestBase.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
+#include "ThreadLocal.h"
 
 #ifdef DEBUG
 #  include "IndexedDatabaseManager.h"
@@ -92,14 +93,9 @@ const uint32_t kFileCopyBufferSize = 32768;
  ******************************************************************************/
 
 ThreadLocal::ThreadLocal(const nsID& aBackgroundChildLoggingId)
-    : mLoggingInfo(aBackgroundChildLoggingId, 1, -1, 1) {
+    : mLoggingInfo(aBackgroundChildLoggingId, 1, -1, 1),
+      mLoggingIdString(aBackgroundChildLoggingId) {
   MOZ_COUNT_CTOR(mozilla::dom::indexedDB::ThreadLocal);
-
-  // NSID_LENGTH counts the null terminator, SetLength() does not.
-  mLoggingIdString.SetLength(NSID_LENGTH - 1);
-
-  aBackgroundChildLoggingId.ToProvidedString(
-      *reinterpret_cast<char(*)[NSID_LENGTH]>(mLoggingIdString.BeginWriting()));
 }
 
 ThreadLocal::~ThreadLocal() {
