@@ -417,9 +417,10 @@ RefPtr<IDBObjectStore> IDBDatabase::CreateObjectStore(
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).createObjectStore(%s)",
-      "IDBDatabase.createObjectStore()", transaction->LoggingSerialNumber(),
-      requestSerialNumber, IDB_LOG_STRINGIFY(this),
-      IDB_LOG_STRINGIFY(*transaction), IDB_LOG_STRINGIFY(objectStore));
+      "IDBDatabase.createObjectStore(%.0s%.0s%.0s)",
+      transaction->LoggingSerialNumber(), requestSerialNumber,
+      IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(*transaction),
+      IDB_LOG_STRINGIFY(objectStore));
 
   return objectStore;
 }
@@ -466,9 +467,10 @@ void IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv) {
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).deleteObjectStore(\"%s\")",
-      "IDBDatabase.deleteObjectStore()", transaction->LoggingSerialNumber(),
-      requestSerialNumber, IDB_LOG_STRINGIFY(this),
-      IDB_LOG_STRINGIFY(*transaction), NS_ConvertUTF16toUTF8(aName).get());
+      "IDBDatabase.deleteObjectStore(%.0s%.0s%.0s)",
+      transaction->LoggingSerialNumber(), requestSerialNumber,
+      IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(*transaction),
+      NS_ConvertUTF16toUTF8(aName).get());
 }
 
 RefPtr<IDBTransaction> IDBDatabase::Transaction(
@@ -603,7 +605,7 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
       new BackgroundTransactionChild(transaction.clonePtr());
 
   IDB_LOG_MARK_CHILD_TRANSACTION(
-      "database(%s).transaction(%s)", "IDBDatabase.transaction()",
+      "database(%s).transaction(%s)", "IDBDatabase.transaction(%.0s%.0s)",
       transaction->LoggingSerialNumber(), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(*transaction));
 
@@ -662,9 +664,9 @@ RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
       new BackgroundDatabaseRequestChild(this, request);
 
   IDB_LOG_MARK_CHILD_REQUEST(
-      "database(%s).createMutableFile(%s)", "IDBDatabase.createMutableFile()",
-      request->LoggingSerialNumber(), IDB_LOG_STRINGIFY(this),
-      NS_ConvertUTF16toUTF8(aName).get());
+      "database(%s).createMutableFile(%s)",
+      "IDBDatabase.createMutableFile(%.0s%.0s)", request->LoggingSerialNumber(),
+      IDB_LOG_STRINGIFY(this), NS_ConvertUTF16toUTF8(aName).get());
 
   mBackgroundActor->SendPBackgroundIDBDatabaseRequestConstructor(actor, params);
 

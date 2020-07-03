@@ -529,14 +529,16 @@ void DispatchErrorEvent(
 
   if (aTransaction) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-        "Firing %s event with error 0x%x", "%s (0x%x)",
+        "Firing %s event with error 0x%x", "%s (0x%" PRIx32 ")",
         aTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
-        IDB_LOG_STRINGIFY(aEvent, kErrorEventType), aErrorCode);
+        IDB_LOG_STRINGIFY(aEvent, kErrorEventType),
+        static_cast<uint32_t>(aErrorCode));
   } else {
-    IDB_LOG_MARK_CHILD_REQUEST("Firing %s event with error 0x%x", "%s (0x%x)",
+    IDB_LOG_MARK_CHILD_REQUEST("Firing %s event with error 0x%x",
+                               "%s (0x%" PRIx32 ")",
                                request->LoggingSerialNumber(),
                                IDB_LOG_STRINGIFY(aEvent, kErrorEventType),
-                               aErrorCode);
+                               static_cast<uint32_t>(aErrorCode));
   }
 
   IgnoredErrorResult rv;
@@ -2977,7 +2979,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
             if (discard) {
               IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
                   "PRELOAD: Continue to key %s, discarding cached key %s/%s",
-                  "Continue, discarding", transactionSerialNumber,
+                  "Continue, discarding%.0s%.0s%.0s", transactionSerialNumber,
                   requestSerialNumber, key.GetBuffer().get(),
                   cachedSortKey.GetBuffer().get(),
                   currentCachedResponse.GetObjectStoreKeyForLogging());
@@ -2985,7 +2987,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
               IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
                   "PRELOAD: Continue to key %s, keeping cached key %s/%s and "
                   "further",
-                  "Continue, keeping", transactionSerialNumber,
+                  "Continue, keeping%.0s%.0s%.0s", transactionSerialNumber,
                   requestSerialNumber, key.GetBuffer().get(),
                   cachedSortKey.GetBuffer().get(),
                   currentCachedResponse.GetObjectStoreKeyForLogging());
@@ -3033,7 +3035,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
             IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
                 "PRELOAD: Continue to key %s with primary key %s, discarding "
                 "cached key %s with cached primary key %s",
-                "Continue, discarding", transactionSerialNumber,
+                "Continue, discarding%.0s%.0s%.0s%.0s", transactionSerialNumber,
                 requestSerialNumber, key.GetBuffer().get(),
                 primaryKey.GetBuffer().get(), cachedSortKey.GetBuffer().get(),
                 cachedSortPrimaryKey.GetBuffer().get());
@@ -3041,7 +3043,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
             IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
                 "PRELOAD: Continue to key %s with primary key %s, keeping "
                 "cached key %s with cached primary key %s and further",
-                "Continue, keeping", transactionSerialNumber,
+                "Continue, keeping%.0s%.0s%.0s%.0s", transactionSerialNumber,
                 requestSerialNumber, key.GetBuffer().get(),
                 primaryKey.GetBuffer().get(), cachedSortKey.GetBuffer().get(),
                 cachedSortPrimaryKey.GetBuffer().get());
@@ -3059,7 +3061,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
     case CursorRequestParams::TAdvanceParams: {
       uint32_t& advanceCount = params.get_AdvanceParams().count();
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-          "PRELOAD: Advancing %" PRIu32 " records", "Advancing",
+          "PRELOAD: Advancing %" PRIu32 " records", "Advancing %" PRIu32,
           mTransaction->LoggingSerialNumber(),
           GetRequest()->LoggingSerialNumber(), advanceCount);
 
@@ -3130,8 +3132,8 @@ void BackgroundCursorChild<CursorType>::CompleteContinueRequestFromCache() {
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "PRELOAD: Consumed 1 cached response, %zu cached responses remaining",
-      "Consumed cached response", mTransaction->LoggingSerialNumber(),
-      GetRequest()->LoggingSerialNumber(),
+      "Consumed cached response, %zu remaining",
+      mTransaction->LoggingSerialNumber(), GetRequest()->LoggingSerialNumber(),
       mDelayedResponses.size() + mCachedResponses.size());
 
   SetResultAndDispatchSuccessEvent(
@@ -3178,7 +3180,7 @@ void BackgroundCursorChild<CursorType>::InvalidateCachedResponses() {
   // need to care, etc.
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-      "PRELOAD: Invalidating all %zu cached responses", "Invalidating",
+      "PRELOAD: Invalidating all %zu cached responses", "Invalidating %zu",
       mTransaction->LoggingSerialNumber(), GetRequest()->LoggingSerialNumber(),
       mCachedResponses.size());
 
@@ -3210,9 +3212,10 @@ void BackgroundCursorChild<CursorType>::DiscardCachedResponses(
     ++discardedCount;
   }
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-      "PRELOAD: Discarded %zu cached responses, %zu remaining", "Discarded",
-      mTransaction->LoggingSerialNumber(), GetRequest()->LoggingSerialNumber(),
-      discardedCount, mCachedResponses.size());
+      "PRELOAD: Discarded %zu cached responses, %zu remaining",
+      "Discarded %zu; remaining %zu", mTransaction->LoggingSerialNumber(),
+      GetRequest()->LoggingSerialNumber(), discardedCount,
+      mCachedResponses.size());
 }
 
 void BackgroundCursorChildBase::HandleResponse(nsresult aResponse) {
@@ -3292,7 +3295,7 @@ void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
   MOZ_ASSERT(aResponses.Length() > 0);
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-      "PRELOAD: Received %zu cursor responses", "Received",
+      "PRELOAD: Received %zu cursor responses", "Received %zu",
       mTransaction->LoggingSerialNumber(), GetRequest()->LoggingSerialNumber(),
       aResponses.Length());
   MOZ_ASSERT_IF(aResponses.Length() > 1, mCachedResponses.empty());
@@ -3304,7 +3307,7 @@ void BackgroundCursorChild<CursorType>::HandleMultipleCursorResponses(
   bool isFirst = true;
   for (auto& response : aResponses) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-        "PRELOAD: Processing response for key %s", "Processing",
+        "PRELOAD: Processing response for key %s", "Processing%.0s",
         mTransaction->LoggingSerialNumber(),
         GetRequest()->LoggingSerialNumber(), response.key().GetBuffer().get());
 

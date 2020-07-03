@@ -696,11 +696,11 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
 
   if (aDeleting) {
     IDB_LOG_MARK_CHILD_REQUEST(
-        "indexedDB.deleteDatabase(\"%s\")", "IDBFactory.deleteDatabase()",
+        "indexedDB.deleteDatabase(\"%s\")", "IDBFactory.deleteDatabase(%.0s)",
         request->LoggingSerialNumber(), NS_ConvertUTF16toUTF8(aName).get());
   } else {
     IDB_LOG_MARK_CHILD_REQUEST(
-        "indexedDB.open(\"%s\", %s)", "IDBFactory.open()",
+        "indexedDB.open(\"%s\", %s)", "IDBFactory.open(%.0s%.0s)",
         request->LoggingSerialNumber(), NS_ConvertUTF16toUTF8(aName).get(),
         IDB_LOG_STRINGIFY(aVersion));
   }

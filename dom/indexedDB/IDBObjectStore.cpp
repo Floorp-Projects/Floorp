@@ -907,16 +907,16 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
     if (aOverwrite) {
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
           "database(%s).transaction(%s).objectStore(%s).put(%s)",
-          "IDBObjectStore.put()", mTransaction->LoggingSerialNumber(),
-          request->LoggingSerialNumber(),
+          "IDBObjectStore.put(%.0s%.0s%.0s%.0s)",
+          mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
           IDB_LOG_STRINGIFY(mTransaction->Database()),
           IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
           IDB_LOG_STRINGIFY(key));
     } else {
       IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
           "database(%s).transaction(%s).objectStore(%s).add(%s)",
-          "IDBObjectStore.add()", mTransaction->LoggingSerialNumber(),
-          request->LoggingSerialNumber(),
+          "IDBObjectStore.add(%.0s%.0s%.0s%.0s)",
+          mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
           IDB_LOG_STRINGIFY(mTransaction->Database()),
           IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
           IDB_LOG_STRINGIFY(key));
@@ -975,8 +975,8 @@ RefPtr<IDBRequest> IDBObjectStore::GetAllInternal(
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "getAllKeys(%s, %s)",
-        "IDBObjectStore.getAllKeys()", mTransaction->LoggingSerialNumber(),
-        request->LoggingSerialNumber(),
+        "IDBObjectStore.getAllKeys(%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
         IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aLimit));
@@ -984,8 +984,8 @@ RefPtr<IDBRequest> IDBObjectStore::GetAllInternal(
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "getAll(%s, %s)",
-        "IDBObjectStore.getAll()", mTransaction->LoggingSerialNumber(),
-        request->LoggingSerialNumber(),
+        "IDBObjectStore.getAll(%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
         IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aLimit));
@@ -1071,7 +1071,7 @@ RefPtr<IDBRequest> IDBObjectStore::Clear(JSContext* aCx, ErrorResult& aRv) {
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).clear()",
-      "IDBObjectStore.clear()", mTransaction->LoggingSerialNumber(),
+      "IDBObjectStore.clear(%.0s%.0s%.0s)", mTransaction->LoggingSerialNumber(),
       request->LoggingSerialNumber(),
       IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this));
@@ -1289,8 +1289,8 @@ RefPtr<IDBRequest> IDBObjectStore::GetInternal(bool aKeyOnly, JSContext* aCx,
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).get(%s)",
-      "IDBObjectStore.get()", mTransaction->LoggingSerialNumber(),
-      request->LoggingSerialNumber(),
+      "IDBObjectStore.get(%.0s%.0s%.0s%.0s)",
+      mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
       IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(keyRange));
@@ -1347,8 +1347,8 @@ RefPtr<IDBRequest> IDBObjectStore::DeleteInternal(JSContext* aCx,
   if (!aFromCursor) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s).delete(%s)",
-        "IDBObjectStore.delete()", mTransaction->LoggingSerialNumber(),
-        request->LoggingSerialNumber(),
+        "IDBObjectStore.delete(%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
         IDB_LOG_STRINGIFY(keyRange));
@@ -1457,8 +1457,9 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).createIndex(%s)",
-      "IDBObjectStore.createIndex()", mTransaction->LoggingSerialNumber(),
-      requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+      "IDBObjectStore.createIndex(%.0s%.0s%.0s%.0s)",
+      mTransaction->LoggingSerialNumber(), requestSerialNumber,
+      IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(index));
 
@@ -1523,8 +1524,9 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s)."
       "deleteIndex(\"%s\")",
-      "IDBObjectStore.deleteIndex()", mTransaction->LoggingSerialNumber(),
-      requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+      "IDBObjectStore.deleteIndex(%.0s%.0s%.0s%.0s)",
+      mTransaction->LoggingSerialNumber(), requestSerialNumber,
+      IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
       NS_ConvertUTF16toUTF8(aName).get());
 
@@ -1565,8 +1567,8 @@ RefPtr<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).count(%s)",
-      "IDBObjectStore.count()", mTransaction->LoggingSerialNumber(),
-      request->LoggingSerialNumber(),
+      "IDBObjectStore.count(%.0s%.0s%.0s%.0s)",
+      mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
       IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(keyRange));
@@ -1629,8 +1631,8 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "openKeyCursor(%s, %s)",
-        "IDBObjectStore.openKeyCursor()", mTransaction->LoggingSerialNumber(),
-        request->LoggingSerialNumber(),
+        "IDBObjectStore.openKeyCursor(%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
         IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aDirection));
@@ -1638,8 +1640,8 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
         "openCursor(%s, %s)",
-        "IDBObjectStore.openCursor()", mTransaction->LoggingSerialNumber(),
-        request->LoggingSerialNumber(),
+        "IDBObjectStore.openCursor(%.0s%.0s%.0s%.0s%.0s)",
+        mTransaction->LoggingSerialNumber(), request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(*mTransaction), IDB_LOG_STRINGIFY(this),
         IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aDirection));
@@ -1764,8 +1766,9 @@ void IDBObjectStore::SetName(const nsAString& aName, ErrorResult& aRv) {
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).rename(%s)",
-      "IDBObjectStore.rename()", mTransaction->LoggingSerialNumber(),
-      requestSerialNumber, IDB_LOG_STRINGIFY(mTransaction->Database()),
+      "IDBObjectStore.rename(%.0s%.0s%.0s%.0s)",
+      mTransaction->LoggingSerialNumber(), requestSerialNumber,
+      IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(*mTransaction), loggingOldObjectStore.get(),
       IDB_LOG_STRINGIFY(this));
 
