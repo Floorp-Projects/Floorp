@@ -125,8 +125,6 @@ class CSSOrderAwareFrameIteratorT {
   }
 
   bool IsForward() const;
-  Iterator begin(const nsFrameList& aList);
-  Iterator end(const nsFrameList& aList);
 
   nsIFrame* operator*() const {
     MOZ_ASSERT(!AtEnd());
@@ -241,6 +239,9 @@ class CSSOrderAwareFrameIteratorT {
                                            nsIFrame* const& b);
 
  private:
+  Iterator begin(const nsFrameList& aList);
+  Iterator end(const nsFrameList& aList);
+
   nsFrameList mChildren;
   // Used if child list is already in ascending 'order'.
   Maybe<Iterator> mIter;
