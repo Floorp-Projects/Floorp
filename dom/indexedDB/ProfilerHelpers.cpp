@@ -6,7 +6,6 @@
 
 #include "ProfilerHelpers.h"
 
-#include "ActorsChild.h"
 #include "BackgroundChildImpl.h"
 #include "GeckoProfiler.h"
 #include "IDBDatabase.h"
@@ -15,6 +14,7 @@
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "Key.h"
+#include "ThreadLocal.h"
 
 namespace mozilla {
 namespace dom {
@@ -57,11 +57,12 @@ void LoggingHelper(bool aUseProfiler, const char* aFmt, va_list args) {
 }
 }  // namespace
 
-LoggingIdString::LoggingIdString() {
+template <bool CheckLoggingMode>
+LoggingIdString<CheckLoggingMode>::LoggingIdString() {
   using mozilla::ipc::BackgroundChildImpl;
 
-  if (IndexedDatabaseManager::GetLoggingMode() !=
-      IndexedDatabaseManager::Logging_Disabled) {
+  if (!CheckLoggingMode || IndexedDatabaseManager::GetLoggingMode() !=
+                               IndexedDatabaseManager::Logging_Disabled) {
     const BackgroundChildImpl::ThreadLocal* threadLocal =
         BackgroundChildImpl::GetThreadLocalForCurrentThread();
     if (threadLocal) {
@@ -73,15 +74,16 @@ LoggingIdString::LoggingIdString() {
   }
 }
 
-LoggingIdString::LoggingIdString(const nsID& aID) {
+template <bool CheckLoggingMode>
+LoggingIdString<CheckLoggingMode>::LoggingIdString(const nsID& aID) {
   static_assert(NSID_LENGTH > 1, "NSID_LENGTH is set incorrectly!");
   static_assert(NSID_LENGTH <= kStorageSize,
                 "nsID string won't fit in our storage!");
   // Capacity() excludes the null terminator; NSID_LENGTH includes it.
   MOZ_ASSERT(Capacity() + 1 == NSID_LENGTH);
 
-  if (IndexedDatabaseManager::GetLoggingMode() !=
-      IndexedDatabaseManager::Logging_Disabled) {
+  if (!CheckLoggingMode || IndexedDatabaseManager::GetLoggingMode() !=
+                               IndexedDatabaseManager::Logging_Disabled) {
     // NSID_LENGTH counts the null terminator, SetLength() does not.
     SetLength(NSID_LENGTH - 1);
 
@@ -89,6 +91,9 @@ LoggingIdString::LoggingIdString(const nsID& aID) {
         *reinterpret_cast<char(*)[NSID_LENGTH]>(BeginWriting()));
   }
 }
+
+template class LoggingIdString<false>;
+template class LoggingIdString<true>;
 
 LoggingString::LoggingString(IDBDatabase* aDatabase) : nsAutoCString(kQuote) {
   MOZ_ASSERT(aDatabase);
