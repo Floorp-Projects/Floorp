@@ -2562,6 +2562,8 @@ AbortReasonOr<Ok> IonBuilder::replaceTypeSet(MDefinition* subject,
     return Ok();
   }
 
+  MOZ_ASSERT(!type->hasType(TypeSet::MagicArgType()));
+
   // Don't emit MFilterTypeSet if it doesn't improve the typeset.
   if (subject->resultTypeSet()) {
     if (subject->resultTypeSet()->equals(type)) {
@@ -2685,7 +2687,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins,
                 alloc_->lifoAlloc());
   }
 
-  if (inputTypes->unknown()) {
+  if (inputTypes->unknown() || inputTypes->hasType(TypeSet::MagicArgType())) {
     return Ok();
   }
 
@@ -2776,7 +2778,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtNullOrUndefinedCompare(
                 alloc_->lifoAlloc());
   }
 
-  if (inputTypes->unknown()) {
+  if (inputTypes->unknown() || inputTypes->hasType(TypeSet::MagicArgType())) {
     return Ok();
   }
 
@@ -2859,7 +2861,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
                     alloc_->lifoAlloc());
       }
 
-      if (oldType->unknown()) {
+      if (oldType->unknown() || oldType->hasType(TypeSet::MagicArgType())) {
         return Ok();
       }
 
@@ -2893,7 +2895,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
       }
 
       // If ins does not have a typeset we return as we cannot optimize.
-      if (oldType->unknown()) {
+      if (oldType->unknown() || oldType->hasType(TypeSet::MagicArgType())) {
         return Ok();
       }
 
@@ -2942,7 +2944,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
   }
 
   // If ins does not have a typeset we return as we cannot optimize.
-  if (oldType->unknown()) {
+  if (oldType->unknown() || oldType->hasType(TypeSet::MagicArgType())) {
     return Ok();
   }
 
