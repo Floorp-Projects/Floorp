@@ -18,7 +18,7 @@ from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
 NDK_VERSION = 'r20'
 
 ANDROID_NDK_EXISTS = '''
-Looks like you have the Android NDK installed at:
+Looks like you have the correct version of the Android NDK installed at:
 %s
 '''
 
@@ -69,6 +69,10 @@ ac_add_options --enable-artifact-builds
 # Write build artifacts to:
 mk_add_options MOZ_OBJDIR=./objdir-frontend
 '''
+
+
+class GetNdkVersionError(Exception):
+    pass
 
 
 def install_mobile_android_sdk_or_ndk(url, path):
@@ -134,6 +138,40 @@ def install_mobile_android_sdk_or_ndk(url, path):
         os.chdir(old_path)
         # Remove the download directory
         os.rmdir(download_path)
+
+
+def get_ndk_version(ndk_path):
+    """Given the path to the NDK, return the version as a 3-tuple of (major,
+    minor, human).
+    """
+    with open(os.path.join(ndk_path, 'source.properties'), 'r') as f:
+        revision = [line for line in f if line.startswith('Pkg.Revision')]
+        if not revision:
+            raise GetNdkVersionError(
+                'Cannot determine NDK version from source.properties')
+        if len(revision) != 1:
+            raise GetNdkVersionError(
+                'Too many Pkg.Revision lines in source.properties')
+
+        (_, version) = revision[0].split('=')
+        if not version:
+            raise GetNdkVersionError(
+                'Unexpected Pkg.Revision line in source.properties')
+
+        (major, minor, revision) = version.strip().split('.')
+        if not major or not minor:
+            raise GetNdkVersionError(
+                'Unexpected NDK version string: ' + version)
+
+        # source.properties contains a $MAJOR.$MINOR.$PATCH revision number,
+        # but the more common nomenclature that Google uses is alphanumeric
+        # version strings like "r20" or "r19c".  Convert the source.properties
+        # notation into an alphanumeric string.
+        int_minor = int(minor)
+        alphas = "abcdefghijklmnop"
+        ascii_minor = alphas[int_minor] if int_minor > 0 else ''
+        human = "r%s%s" % (major, ascii_minor)
+        return (major, minor, human)
 
 
 def get_paths(os_name):
@@ -211,9 +249,16 @@ def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_pa
     # may prompt about licensing, so we do this first.
     # Check for Android NDK only if we are not in artifact mode.
     if not artifact_mode and not emulator_only:
+        install_ndk = True
         if os.path.isdir(ndk_path):
-            print(ANDROID_NDK_EXISTS % ndk_path)
-        else:
+            try:
+                _, _, human = get_ndk_version(ndk_path)
+                if human == NDK_VERSION:
+                    print(ANDROID_NDK_EXISTS % ndk_path)
+                    install_ndk = False
+            except GetNdkVersionError:
+                pass  # Just do the install.
+        if install_ndk:
             # The NDK archive unpacks into a top-level android-ndk-$VER directory.
             install_mobile_android_sdk_or_ndk(ndk_url, mozbuild_path)
 
