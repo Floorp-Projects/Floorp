@@ -18,6 +18,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
@@ -877,6 +878,58 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
   nsCOMPtr<nsIRequest> request;
   rv = aLoader->GetRequest(getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  MOZ_ASSERT(channel, "How come we don't have any channel?");
+
+  nsCOMPtr<nsIURI> uri;
+  channel->GetOriginalURI(getter_AddRefs(uri));
+  bool isExtension = uri->SchemeIs("moz-extension");
+
+  if (isExtension &&
+      !StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup()) {
+    // Return earlier with error is the worker script is a moz-extension url
+    // but the feature isn't enabled by prefs.
+    return NS_ERROR_FAILURE;
+  }
+
+  if (isExtension) {
+    // NOTE: trying to register any moz-extension use that doesn't ends
+    // with .js/.jsm/.mjs seems to be already completing with an error
+    // in aStatus and they never reach this point.
+
+    // TODO: look into avoid duplicated parts that could be shared with the HTTP
+    // channel scenario.
+    nsCOMPtr<nsIURI> channelURL;
+    rv = channel->GetURI(getter_AddRefs(channelURL));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCString channelURLSpec;
+    MOZ_ALWAYS_SUCCEEDS(channelURL->GetSpec(channelURLSpec));
+
+    // Append the final URL (which for an extension worker script is going to
+    // be a file or jar url).
+    MOZ_DIAGNOSTIC_ASSERT(!mURLList.IsEmpty());
+    if (channelURLSpec != mURLList[0]) {
+      mURLList.AppendElement(channelURLSpec);
+    }
+
+    char16_t* buffer = nullptr;
+    size_t len = 0;
+
+    rv = ScriptLoader::ConvertToUTF16(channel, aString, aLen, u"UTF-8"_ns,
+                                      nullptr, buffer, len);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mBuffer.Adopt(buffer, len);
+
+    rv = NS_OK;
     return NS_OK;
   }
 

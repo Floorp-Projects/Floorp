@@ -159,6 +159,10 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
         aInit.mBackgroundScripts.Value());
   }
 
+  if (!aInit.mBackgroundWorkerScript.IsEmpty()) {
+    mBackgroundWorkerScript.Assign(aInit.mBackgroundWorkerScript);
+  }
+
   if (mExtensionPageCSP.IsVoid()) {
     EPS().GetDefaultCSP(mExtensionPageCSP);
   }
@@ -334,6 +338,11 @@ bool WebExtensionPolicy::UseRemoteWebExtensions(GlobalObject& aGlobal) {
 /* static */
 bool WebExtensionPolicy::IsExtensionProcess(GlobalObject& aGlobal) {
   return EPS().IsExtensionProcess();
+}
+
+/* static */
+bool WebExtensionPolicy::BackgroundServiceWorkerEnabled(GlobalObject& aGlobal) {
+  return StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
 }
 
 namespace {
