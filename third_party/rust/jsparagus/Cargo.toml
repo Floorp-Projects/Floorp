@@ -12,6 +12,10 @@ edition = "2018"
 
 [lib]
 
+[[bin]]
+name = "smoosh_tools"
+path = "src/bin/smoosh_tools.rs"
+
 [dependencies]
 jsparagus-ast = { path = "crates/ast" }
 jsparagus-driver = { path = "crates/driver", optional = true }

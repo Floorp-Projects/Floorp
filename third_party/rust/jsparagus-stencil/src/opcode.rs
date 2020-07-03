@@ -177,7 +177,7 @@ macro_rules! using_opcode_database {
                 (Throw, throw_, NULL, 1, 1, 0, JOF_BYTE),
                 (ThrowMsg, throw_msg, NULL, 2, 0, 0, JOF_UINT8),
                 (ThrowSetConst, throw_set_const, NULL, 5, 0, 0, JOF_ATOM|JOF_NAME),
-                (Try, try_, NULL, 5, 0, 0, JOF_CODE_OFFSET),
+                (Try, try_, NULL, 1, 0, 0, JOF_BYTE),
                 (TryDestructuring, try_destructuring, NULL, 1, 0, 0, JOF_BYTE),
                 (Exception, exception, NULL, 1, 0, 1, JOF_BYTE),
                 (ResumeIndex, resume_index, NULL, 4, 0, 1, JOF_RESUMEINDEX),
@@ -349,9 +349,6 @@ const JOF_BIGINT: u32 = 21;
 
 /// uint32_t atom index, sourceStart, sourceEnd
 const JOF_CLASS_CTOR: u32 = 22;
-
-/// int32_t bytecode offset
-const JOF_CODE_OFFSET: u32 = 23;
 
 /// mask for above immediate types
 const JOF_TYPEMASK: u32 = 0x001f;

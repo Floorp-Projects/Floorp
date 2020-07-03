@@ -1,0 +1,87 @@
+name: SmooshMonkey status
+
+on:
+  schedule:
+    # Every hour
+    - cron:  '0 * * * *'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - name: Initialize venv
+      run: make init-venv
+    - name: Setup Git Profile
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    - name: Check SmooshMonkey status
+      run: make smoosh-status-ci
+      id: status
+    - name: Checkout ci_smoosh_status
+      run: |
+        if git ls-remote origin | grep refs/heads/ci_smoosh_status; then
+          # If the remote branch exists.
+          git fetch origin ci_smoosh_status
+          git checkout -b ci_smoosh_status origin/ci_smoosh_status
+        else
+          # Otherwise, create a branch.
+          git checkout -b ci_smoosh_status-master
+          # And reset all history
+          git reset --hard deb48a2460abf091705d9972318bbb6e7349de9c
+          # And also remove remaining files
+          rm README.md gen.py
+          echo jsparagus_build_venv > .gitignore
+        fi
+    - name: Update files
+      run: |
+        echo ${{steps.status.outputs.mc}} > latest_mc
+        echo ${{steps.status.outputs.jsparagus}} > latest_jsparagus
+        echo ${{steps.status.outputs.build}} > latest_build
+        echo ${{steps.status.outputs.test}} > latest_test
+
+        if [ ${{steps.status.outputs.build}} == "OK" ]; then
+            BUILD_COLOR="green"
+        elif [ ${{steps.status.outputs.build}} == "NG" ]; then
+            BUILD_COLOR="red"
+        else
+            BUILD_COLOR="yellow"
+        fi
+
+        if [ ${{steps.status.outputs.test}} == "OK" ]; then
+            echo ${{steps.status.outputs.mc}} > known_good_mc
+            echo ${{steps.status.outputs.jsparagus}} > known_good_jsparagus
+            TEST_COLOR="green"
+        elif [ ${{steps.status.outputs.test}} == "NG" ]; then
+            TEST_COLOR="red"
+        else
+            TEST_COLOR="yellow"
+        fi
+
+        echo "{ \"schemaVersion\": 1, \"label\": \"SmooshMonkey Build\", \"message\": \"${{steps.status.outputs.build}}\", \"color\": \"$BUILD_COLOR\" }" > smoosh_build.json
+        echo "{ \"schemaVersion\": 1, \"label\": \"SmooshMonkey Test\", \"message\": \"${{steps.status.outputs.test}}\", \"color\": \"$TEST_COLOR\" }" > smoosh_test.json
+    - name: Add files
+      run: |
+        git add .
+        set +e
+        git diff --cached --quiet
+        echo "##[set-output name=modified;]$?"
+        set -e
+      id: status_add
+    - name: Commit files
+      if: steps.status_add.outputs.modified == '1'
+      run: |
+        git commit -m "Update Smoosh Status" -a
+    - name: Push changes
+      if: steps.status_add.outputs.modified == '1'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ci_smoosh_status

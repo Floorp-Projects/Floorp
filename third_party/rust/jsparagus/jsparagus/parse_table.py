@@ -6,6 +6,7 @@ import hashlib
 import os
 import pickle
 import typing
+import itertools
 
 from . import types
 from .utils import consume, keep_until, split
@@ -115,18 +116,20 @@ class StateAndTransitions:
         elif len(self.epsilon) > 1:
             if any(k.is_inconsistent() for k, s in self.epsilon):
                 return True
-            # If all the out-going edges are FilterFlags, with the same flag
-            # and different values, then this state remains consistent, as this
-            # can be implemented as a deterministic switch statement.
+            # NOTE: We can accept multiple conditions as epsilon transitions
+            # iff they are checking the same variable with non-overlapping
+            # values. This implies that we can implement these conditions as a
+            # deterministic switch statement in the code emitter.
             if any(not k.is_condition() for k, s in self.epsilon):
                 return True
-            if any(not isinstance(k.condition(), FilterFlag) for k, s in self.epsilon):
+            iterator = iter(self.epsilon)
+            first, _ = next(iterator)
+            if any(not first.check_same_variable(k) for k, s in iterator):
                 return True
             # "type: ignore" because mypy does not see that the preceding if-statement
             # means all k.condition() actions are FilterFlags.
-            if len(set(k.condition().flag for k, s in self.epsilon)) > 1:  # type: ignore
-                return True
-            if len(self.epsilon) != len(set(k.condition().value for k, s in self.epsilon)):  # type: ignore
+            pairs = itertools.combinations((k for k, s in self.epsilon), 2)
+            if any(not k1.check_different_values(k2) for k1, k2 in pairs):
                 return True
         else:
             try:
