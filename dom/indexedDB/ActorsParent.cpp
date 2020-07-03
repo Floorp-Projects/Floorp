@@ -9922,7 +9922,7 @@ struct CommonPopulateResponseHelper {
     }
 
     IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
-        "PRELOAD: Populating response with key %s", "Populating%.0s",
+        "PRELOAD: Populating response with key %s", "Populating",
         IDB_LOG_ID_STRING(mOp.BackgroundChildLoggingId()),
         mOp.TransactionLoggingSerialNumber(), mOp.LoggingSerialNumber(),
         mPosition.GetBuffer().get());
@@ -26490,7 +26490,7 @@ void CursorOpBaseHelperBase<CursorType>::PopulateExtraResponses(
       IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
           "PRELOAD: %s: Dropping entries because maximum message size is "
           "exceeded: %" PRIu32 "/%zu bytes",
-          "%.0s Dropping too large (%" PRIu32 "/%zu)",
+          "Dropping too large",
           IDB_LOG_ID_STRING(mOp.mBackgroundChildLoggingId),
           mOp.mTransactionLoggingSerialNumber, mOp.mLoggingSerialNumber,
           aOperation.get(), extraCount, accumulatedResponseSize);
@@ -26504,8 +26504,7 @@ void CursorOpBaseHelperBase<CursorType>::PopulateExtraResponses(
 
   IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
       "PRELOAD: %s: Number of extra results populated: %" PRIu32 "/%" PRIu32,
-      "%.0s Populated (%" PRIu32 "/%" PRIu32 ")",
-      IDB_LOG_ID_STRING(mOp.mBackgroundChildLoggingId),
+      "Populated", IDB_LOG_ID_STRING(mOp.mBackgroundChildLoggingId),
       mOp.mTransactionLoggingSerialNumber, mOp.mLoggingSerialNumber,
       aOperation.get(), extraCount, aMaxExtraCount);
 }
