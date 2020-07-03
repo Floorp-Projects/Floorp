@@ -132,10 +132,10 @@ By default, it will run the test 25 times. In order to run it just once, do:
 
 Also, you can record a profile while running the test. To do that, execute:
 ```
-./mach talos-test --activeTests damp --subtest ${your-test-name} --cycles 1 --tppagecycles 1 --geckoProfile --geckoProfileEntries 100000000
+./mach talos-test --activeTests damp --subtest ${your-test-name} --cycles 1 --tppagecycles 1 --gecko-profile --gecko-profile-entries 100000000
 ```
-`--geckoProfiler` enables the profiler
-`--geckoProfileEntries` defines the profiler buffer size, which needs to be large while recording performance tests
+`--gecko-profile` enables the profiler
+`--gecko-profile-entries` defines the profiler buffer size, which needs to be large while recording performance tests
 
 Once it is done executing, the profile lives in a zip file you have to uncompress like this:
 ```

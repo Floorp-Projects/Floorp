@@ -37,12 +37,12 @@ includes the subtest label. Firefox won't automatically close so that you can vi
 #### Recording a profile
 
 ```bash
-./mach talos-test --activeTests damp --geckoProfile --geckoProfileEntries 100000000
+./mach talos-test --activeTests damp --gecko-profile --gecko-profile-entries 100000000
 ```
 This will automatically record the tests and open the profile. You may use the following command in order
 to focus on just one subtest run:
 ```bash
-./mach talos-test --activeTests damp --subtests custom.webconsole --cycles 1 --tppagecycles 1 --geckoProfile --geckoProfileEntries 100000000
+./mach talos-test --activeTests damp --subtests custom.webconsole --cycles 1 --tppagecycles 1 --gecko-profile --gecko-profile-entries 100000000
 ```
 
 ## How to run it on try?
