@@ -75,7 +75,7 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTOPENTHREAD, desired_access,
+    ResultCode code = CrossCall(ipc, IPC_NTOPENTHREAD_TAG, desired_access,
                                 thread_id, &answer);
     if (SBOX_ALL_OK != code)
       break;
@@ -154,7 +154,7 @@ NTSTATUS WINAPI TargetNtOpenProcess(NtOpenProcessFunction orig_OpenProcess,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTOPENPROCESS, desired_access,
+    ResultCode code = CrossCall(ipc, IPC_NTOPENPROCESS_TAG, desired_access,
                                 process_id, &answer);
     if (SBOX_ALL_OK != code)
       break;
@@ -201,7 +201,7 @@ TargetNtOpenProcessToken(NtOpenProcessTokenFunction orig_OpenProcessToken,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTOPENPROCESSTOKEN, process,
+    ResultCode code = CrossCall(ipc, IPC_NTOPENPROCESSTOKEN_TAG, process,
                                 desired_access, &answer);
     if (SBOX_ALL_OK != code)
       break;
@@ -251,7 +251,7 @@ TargetNtOpenProcessTokenEx(NtOpenProcessTokenExFunction orig_OpenProcessTokenEx,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTOPENPROCESSTOKENEX, process,
+    ResultCode code = CrossCall(ipc, IPC_NTOPENPROCESSTOKENEX_TAG, process,
                                 desired_access, handle_attributes, &answer);
     if (SBOX_ALL_OK != code)
       break;
@@ -325,7 +325,7 @@ BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
                                  sizeof(PROCESS_INFORMATION));
 
     ResultCode code =
-        CrossCall(ipc, IpcTag::CREATEPROCESSW, application_name, command_line,
+        CrossCall(ipc, IPC_CREATEPROCESSW_TAG, application_name, command_line,
                   cur_dir, current_directory, proc_info, &answer);
     if (SBOX_ALL_OK != code)
       break;
@@ -423,7 +423,7 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
     InOutCountedBuffer proc_info(process_information,
                                  sizeof(PROCESS_INFORMATION));
 
-    ResultCode code = CrossCall(ipc, IpcTag::CREATEPROCESSW, app_name, cmd_line,
+    ResultCode code = CrossCall(ipc, IPC_CREATEPROCESSW_TAG, app_name, cmd_line,
                                 cur_dir, cwd, proc_info, &answer);
 
     operator delete(cmd_unicode, NT_ALLOC);
@@ -493,7 +493,7 @@ HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
 
     // NOTE: we don't pass the thread_attributes through. This matches the
     // approach in CreateProcess and in CreateThreadInternal().
-    ResultCode code = CrossCall(ipc, IpcTag::CREATETHREAD,
+    ResultCode code = CrossCall(ipc, IPC_CREATETHREAD_TAG,
                                 reinterpret_cast<LPVOID>(stack_size),
                                 reinterpret_cast<LPVOID>(start_address),
                                 parameter, creation_flags, &answer);

@@ -23,8 +23,8 @@ namespace {
 
 // Builds a path using the root directory and the name.
 bool GetCompletePath(HANDLE root,
-                     const std::wstring& name,
-                     std::wstring* complete_name) {
+                     const base::string16& name,
+                     base::string16* complete_name) {
   if (root) {
     if (!sandbox::GetPathFromHandle(root, complete_name))
       return false;
@@ -45,13 +45,13 @@ namespace sandbox {
 RegistryDispatcher::RegistryDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-      {IpcTag::NTCREATEKEY,
+      {IPC_NTCREATEKEY_TAG,
        {WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE,
         UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtCreateKey)};
 
   static const IPCCall open_params = {
-      {IpcTag::NTOPENKEY, {WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE}},
+      {IPC_NTOPENKEY_TAG, {WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtOpenKey)};
 
   ipc_calls_.push_back(create_params);
@@ -59,11 +59,11 @@ RegistryDispatcher::RegistryDispatcher(PolicyBase* policy_base)
 }
 
 bool RegistryDispatcher::SetupService(InterceptionManager* manager,
-                                      IpcTag service) {
-  if (IpcTag::NTCREATEKEY == service)
+                                      int service) {
+  if (IPC_NTCREATEKEY_TAG == service)
     return INTERCEPT_NT(manager, NtCreateKey, CREATE_KEY_ID, 32);
 
-  if (IpcTag::NTOPENKEY == service) {
+  if (IPC_NTOPENKEY_TAG == service) {
     bool result = INTERCEPT_NT(manager, NtOpenKey, OPEN_KEY_ID, 16);
     result &= INTERCEPT_NT(manager, NtOpenKeyEx, OPEN_KEY_EX_ID, 20);
     return result;
@@ -73,14 +73,14 @@ bool RegistryDispatcher::SetupService(InterceptionManager* manager,
 }
 
 bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
-                                     std::wstring* name,
+                                     base::string16* name,
                                      uint32_t attributes,
                                      HANDLE root,
                                      uint32_t desired_access,
                                      uint32_t title_index,
                                      uint32_t create_options) {
   base::win::ScopedHandle root_handle;
-  std::wstring real_path = *name;
+  base::string16 real_path = *name;
 
   // If there is a root directory, we need to duplicate the handle to make
   // it valid in this process.
@@ -102,7 +102,7 @@ bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
   params[OpenKey::ACCESS] = ParamPickerMake(desired_access);
 
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::NTCREATEKEY, params.GetBase());
+      policy_base_->EvalPolicy(IPC_NTCREATEKEY_TAG, params.GetBase());
 
   HANDLE handle;
   NTSTATUS nt_status;
@@ -122,12 +122,12 @@ bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
 }
 
 bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc,
-                                   std::wstring* name,
+                                   base::string16* name,
                                    uint32_t attributes,
                                    HANDLE root,
                                    uint32_t desired_access) {
   base::win::ScopedHandle root_handle;
-  std::wstring real_path = *name;
+  base::string16 real_path = *name;
 
   // If there is a root directory, we need to duplicate the handle to make
   // it valid in this process.
@@ -148,7 +148,7 @@ bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc,
   params[OpenKey::ACCESS] = ParamPickerMake(desired_access);
 
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::NTOPENKEY, params.GetBase());
+      policy_base_->EvalPolicy(IPC_NTOPENKEY_TAG, params.GetBase());
   HANDLE handle;
   NTSTATUS nt_status;
   if (!RegistryPolicy::OpenKeyAction(result, *ipc->client_info, *name,
