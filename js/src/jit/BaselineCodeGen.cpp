@@ -1418,10 +1418,8 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
     masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    const RetAddrEntry::Kind kind = RetAddrEntry::Kind::WarmupCounter;
-
     using Fn = bool (*)(JSContext*, BaselineFrame*);
-    if (!callVM<Fn, IonCompileScriptForBaselineAtEntry>(kind)) {
+    if (!callVMNonOp<Fn, IonCompileScriptForBaselineAtEntry>()) {
       return false;
     }
   }
