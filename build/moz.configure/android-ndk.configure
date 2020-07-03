@@ -82,43 +82,26 @@ add_old_configure_assignment('android_ndk', ndk)
 @checking('for android ndk version')
 @imports(_from='__builtin__', _import='open')
 @imports(_from='mozboot.android', _import='NDK_VERSION')
+@imports(_from='mozboot.android', _import='get_ndk_version')
+@imports(_from='mozboot.android', _import='GetNdkVersionError')
 def ndk_version(ndk):
     if not ndk:
         # Building 'js/src' for non-Android.
         return
-    with open(os.path.join(ndk, 'source.properties'), 'r') as f:
-        revision = [line for line in f if line.startswith('Pkg.Revision')]
-        if not revision:
-            die('Cannot determine NDK version from source.properties')
-        if len(revision) != 1:
-            die('Too many Pkg.Revision lines in source.properties')
 
-        (_, version) = revision[0].split('=')
-        if not version:
-            die('Unexpected Pkg.Revision line in source.properties')
+    try:
+        major, minor, human = get_ndk_version(ndk)
+    except GetNdkVersionError as e:
+        die(str(e))
 
-        (major, minor, revision) = version.strip().split('.')
-        if not major or not minor:
-            die('Unexpected NDK version string: ' + version)
-
-        # source.properties contains a $MAJOR.$MINOR.$PATCH revision number,
-        # but the more common nomenclature that Google uses is alphanumeric
-        # version strings like "r20" or "r19c".  Convert the source.properties
-        # notation into an alphanumeric string.
-        int_minor = int(minor)
-        alphas = "abcdefghijklmnop"
-        ascii_minor = alphas[int_minor] if int_minor > 0 else ''
-        human = "r%s%s" % (major, ascii_minor)
-
-        if NDK_VERSION != human:
-            die('The only supported version of the NDK is %s (have %s)\n'
-                'Please run |mach bootstrap| '
-                'to install the correct NDK.' % (NDK_VERSION, human))
-
-        return namespace(
-            major=major,
-            minor=minor,
-        )
+    if NDK_VERSION != human:
+        die('The only supported version of the NDK is %s (have %s)\n'
+            'Please run |mach bootstrap| '
+            'to install the correct NDK.' % (NDK_VERSION, human))
+    return namespace(
+        major=major,
+        minor=minor,
+    )
 
 
 set_config('ANDROID_NDK_MAJOR_VERSION', ndk_version.major)
