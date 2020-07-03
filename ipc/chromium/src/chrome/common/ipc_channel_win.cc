@@ -97,6 +97,9 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id,
 }
 
 void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
+  // Verify that we fit in a "quantum-spaced" jemalloc bucket.
+  static_assert(sizeof(*this) <= 512, "Exceeded expected size class");
+
   pipe_ = INVALID_HANDLE_VALUE;
   listener_ = listener;
   waiting_connect_ = (mode == MODE_SERVER);
@@ -104,6 +107,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   closed_ = false;
   output_queue_length_ = 0;
   input_buf_offset_ = 0;
+  input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
 }
 
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
@@ -340,7 +344,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
       if (INVALID_HANDLE_VALUE == pipe_) return false;
 
       // Read from pipe...
-      BOOL ok = ReadFile(pipe_, input_buf_ + input_buf_offset_,
+      BOOL ok = ReadFile(pipe_, input_buf_.get() + input_buf_offset_,
                          Channel::kReadBufferSize - input_buf_offset_,
                          &bytes_read, &input_state_.context.overlapped);
       if (!ok) {
@@ -361,8 +365,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 
     // Process messages from input buffer.
 
-    const char* p = input_buf_;
-    const char* end = input_buf_ + input_buf_offset_ + bytes_read;
+    const char* p = input_buf_.get();
+    const char* end = input_buf_.get() + input_buf_offset_ + bytes_read;
 
     while (p < end) {
       // Try to figure out how big the message is. Size is 0 if we haven't read
@@ -381,7 +385,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
         // Move everything we have to the start of the buffer. We'll finish
         // reading this message when we get more data. For now we leave it in
         // input_buf_.
-        memmove(input_buf_, p, end - p);
+        memmove(input_buf_.get(), p, end - p);
         input_buf_offset_ = end - p;
 
         break;

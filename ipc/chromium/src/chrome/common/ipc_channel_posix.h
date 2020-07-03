@@ -101,27 +101,26 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // Messages to be sent are queued here.
   std::queue<mozilla::UniquePtr<Message>> output_queue_;
 
-  // We read from the pipe into this buffer
-  char input_buf_[Channel::kReadBufferSize];
+  // We read from the pipe into these buffers.
   size_t input_buf_offset_;
+  mozilla::UniquePtr<char[]> input_buf_;
+  mozilla::UniquePtr<char[]> input_cmsg_buf_;
 
-  // We want input_cmsg_buf_ to be big enough to hold
-  // MAX_DESCRIPTORS_PER_MESSAGE worth of file descriptors. However, CMSG_SPACE
-  // is apparently not a constant on Macs, so we can't use it in the array size.
-  // Consequently, we pick a number here that is at least CMSG_SPACE(0) on all
-  // platforms. And we assert at runtime, in Channel::ChannelImpl::Init, that
+  // The control message buffer will hold all of the file descriptors that will
+  // be read in during a single recvmsg call. Message::WriteFileDescriptor
+  // always writes one word of data for every file descriptor added to the
+  // message, and the number of file descriptors per message will not exceed
+  // MAX_DESCRIPTORS_PER_MESSAGE.
+  //
+  // This buffer also holds a control message header of size CMSG_SPACE(0)
+  // bytes. However, CMSG_SPACE is not a constant on Macs, so we can't use it
+  // here. Consequently, we pick a number here that is at least CMSG_SPACE(0) on
+  // all platforms. We assert at runtime, in Channel::ChannelImpl::Init, that
   // it's big enough.
-  enum { kControlBufferSlopBytes = 32 };
-
-  // This is a control message buffer large enough to hold all the file
-  // descriptors that will be read in when reading Channel::kReadBufferSize
-  // bytes of data. Message::WriteFileDescriptor always writes one
-  // word of data for every file descriptor added to the message. The number of
-  // file descriptors per message will not exceed MAX_DESCRIPTORS_PER_MESSAGE.
-  // We add kControlBufferSlopBytes bytes for the control header.
-  char input_cmsg_buf_[FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE *
-                           sizeof(int) +
-                       kControlBufferSlopBytes];
+  static constexpr size_t kControlBufferHeaderSize = 32;
+  static constexpr size_t kControlBufferSize =
+      FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE * sizeof(int) +
+      kControlBufferHeaderSize;
 
   // Large incoming messages that span multiple pipe buffers get built-up in the
   // buffers of this message.
