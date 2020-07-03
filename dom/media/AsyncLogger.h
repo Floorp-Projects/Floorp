@@ -84,6 +84,15 @@ class AsyncLogger {
     TracingPhase mPhase;
   };
 #undef PADDING
+
+  // The goal here is to make it easy on the allocator. We pack a pointer in the
+  // message struct, and we still want to do power of two allocations to
+  // minimize allocator slop.
+#if !(defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID) && \
+      (defined(__arm__) || defined(__aarch64__)))
+  static_assert(sizeof(MPSCQueue<TracePayload>::Message) <= PAYLOAD_TOTAL_SIZE,
+                "MPSCQueue internal allocations too big.");
+#endif
   // aLogModuleName is the name of the MOZ_LOG module.
   explicit AsyncLogger(const char* aLogModuleName,
                        AsyncLogger::AsyncLoggerOutputMode aMode =
