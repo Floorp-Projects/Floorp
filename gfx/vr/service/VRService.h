@@ -7,14 +7,13 @@
 #ifndef GFX_VR_SERVICE_VRSERVICE_H
 #define GFX_VR_SERVICE_VRSERVICE_H
 
-#include "mozilla/Atomics.h"
 #include "moz_external_vr.h"
 #include "base/process.h"  // for base::ProcessHandle
+#include "mozilla/UniquePtr.h"
 
-namespace base {
-class Thread;
-}  // namespace base
+class nsIThread;
 namespace mozilla {
+class BackgroundHangMonitor;
 namespace gfx {
 
 class VRSession;
@@ -58,7 +57,10 @@ class VRService {
   VRBrowserState mBrowserState;
 
   UniquePtr<VRSession> mSession;
-  base::Thread* mServiceThread;
+  nsCOMPtr<nsIThread> mServiceThread;
+  // Only ever accessed on the service thread.
+  UniquePtr<mozilla::BackgroundHangMonitor> mBackgroundHangMonitor;
+
   bool mShutdownRequested;
 
   // Note: mShmem doesn't support RefPtr; thus, do not share this private
