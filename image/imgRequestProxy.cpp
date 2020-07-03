@@ -250,8 +250,6 @@ void imgRequestProxy::ClearValidating() {
   }
 }
 
-bool imgRequestProxy::IsOnEventTarget() const { return true; }
-
 already_AddRefed<nsIEventTarget> imgRequestProxy::GetEventTarget() const {
   nsCOMPtr<nsIEventTarget> target(mEventTarget);
   return target.forget();
@@ -272,17 +270,6 @@ nsresult imgRequestProxy::DispatchWithTargetIfAvailable(
   }
 
   return NS_DispatchToMainThread(CreateMediumHighRunnable(std::move(aEvent)));
-}
-
-void imgRequestProxy::DispatchWithTarget(already_AddRefed<nsIRunnable> aEvent) {
-  LOG_FUNC(gImgLog, "imgRequestProxy::DispatchWithTarget");
-
-  MOZ_ASSERT(mListener);
-  MOZ_ASSERT(mEventTarget);
-
-  mHadDispatch = true;
-  mEventTarget->Dispatch(CreateMediumHighRunnable(std::move(aEvent)),
-                         NS_DISPATCH_NORMAL);
 }
 
 void imgRequestProxy::AddToOwner(Document* aLoadingDocument) {
@@ -987,21 +974,6 @@ void imgRequestProxy::Notify(int32_t aType,
     return;
   }
 
-  if (!IsOnEventTarget()) {
-    RefPtr<imgRequestProxy> self(this);
-    if (aRect) {
-      const mozilla::gfx::IntRect rect = *aRect;
-      DispatchWithTarget(NS_NewRunnableFunction(
-          "imgRequestProxy::Notify",
-          [self, rect, aType]() -> void { self->Notify(aType, &rect); }));
-    } else {
-      DispatchWithTarget(NS_NewRunnableFunction(
-          "imgRequestProxy::Notify",
-          [self, aType]() -> void { self->Notify(aType, nullptr); }));
-    }
-    return;
-  }
-
   // Make sure the listener stays alive while we notify.
   nsCOMPtr<imgINotificationObserver> listener(mListener);
 
@@ -1015,13 +987,6 @@ void imgRequestProxy::OnLoadComplete(bool aLastPart) {
   // on the listener, the removal from the loadgroup, the release of the
   // listener, etc).  Don't let them do it.
   RefPtr<imgRequestProxy> self(this);
-
-  if (!IsOnEventTarget()) {
-    DispatchWithTarget(NS_NewRunnableFunction(
-        "imgRequestProxy::OnLoadComplete",
-        [self, aLastPart]() -> void { self->OnLoadComplete(aLastPart); }));
-    return;
-  }
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
