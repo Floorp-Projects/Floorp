@@ -200,6 +200,83 @@ nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
   return EditorBase::ToGenericNSResult(rv);
 }
 
+EditorDOMPoint HTMLEditor::GetNewCaretPointAfterInsertingHTML(
+    const EditorDOMPoint& lastInsertedPoint) const {
+  EditorDOMPoint pointToPutCaret;
+
+  // but don't cross tables
+  nsIContent* containerContent = nullptr;
+  if (!HTMLEditUtils::IsTable(lastInsertedPoint.GetChild())) {
+    containerContent = GetLastEditableLeaf(*lastInsertedPoint.GetChild());
+    if (containerContent) {
+      Element* mostDistantInclusiveAncestorTableElement = nullptr;
+      for (Element* maybeTableElement =
+               containerContent->GetAsElementOrParentElement();
+           maybeTableElement &&
+           maybeTableElement != lastInsertedPoint.GetChild();
+           maybeTableElement = maybeTableElement->GetParentElement()) {
+        if (HTMLEditUtils::IsTable(maybeTableElement)) {
+          mostDistantInclusiveAncestorTableElement = maybeTableElement;
+        }
+      }
+      // If we're in table elements, we should put caret into the most ancestor
+      // table element.
+      if (mostDistantInclusiveAncestorTableElement) {
+        containerContent = mostDistantInclusiveAncestorTableElement;
+      }
+    }
+  }
+  // If we are not in table elements, we should put caret in the last inserted
+  // node.
+  if (!containerContent) {
+    containerContent = lastInsertedPoint.GetChild();
+  }
+
+  // If the container is a text node or a container element except `<table>`
+  // element, put caret a end of it.
+  if (containerContent->IsText() ||
+      (HTMLEditUtils::IsContainerNode(*containerContent) &&
+       !HTMLEditUtils::IsTable(containerContent))) {
+    pointToPutCaret.SetToEndOf(containerContent);
+  }
+  // Otherwise, i.e., it's an atomic element, `<table>` element or data node,
+  // put caret after it.
+  else {
+    pointToPutCaret.Set(containerContent);
+    DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced, "Failed to advance offset from found node");
+  }
+
+  // Make sure we don't end up with selection collapsed after an invisible
+  // `<br>` element.
+  WSRunScanner wsRunScannerAtCaret(this, pointToPutCaret);
+  if (wsRunScannerAtCaret
+          .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
+          .ReachedBRElement() &&
+      !IsVisibleBRElement(wsRunScannerAtCaret.GetStartReasonContent())) {
+    WSRunScanner wsRunScannerAtStartReason(
+        this, EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
+    WSScanResult backwardScanFromPointToCaretResult =
+        wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
+            pointToPutCaret);
+    if (backwardScanFromPointToCaretResult.InNormalWhiteSpacesOrText()) {
+      pointToPutCaret = backwardScanFromPointToCaretResult.Point();
+    } else if (backwardScanFromPointToCaretResult.ReachedSpecialContent()) {
+      // XXX In my understanding, this is odd.  The end reason may not be
+      //     same as the reached special content because the equality is
+      //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
+      //     However, looks like that this code assumes that
+      //     GetStartReasonContent() returns the content.
+      NS_ASSERTION(wsRunScannerAtStartReason.GetStartReasonContent() ==
+                       backwardScanFromPointToCaretResult.GetContent(),
+                   "Start reason is not the reached special content");
+      pointToPutCaret.SetAfter(
+          wsRunScannerAtStartReason.GetStartReasonContent());
+    }
+  }
+
+  return pointToPutCaret;
+}
 nsresult HTMLEditor::DoInsertHTMLWithContext(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, const nsAString& aFlavor, Document* aSourceDoc,
@@ -662,79 +739,9 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     return NS_OK;
   }
 
+  const EditorDOMPoint pointToPutCaret =
+      GetNewCaretPointAfterInsertingHTML(lastInsertedPoint);
   // Now collapse the selection to the end of what we just inserted.
-  EditorDOMPoint pointToPutCaret;
-
-  // but don't cross tables
-  nsIContent* containerContent = nullptr;
-  if (!HTMLEditUtils::IsTable(lastInsertedPoint.GetChild())) {
-    containerContent = GetLastEditableLeaf(*lastInsertedPoint.GetChild());
-    if (containerContent) {
-      Element* mostDistantInclusiveAncestorTableElement = nullptr;
-      for (Element* maybeTableElement =
-               containerContent->GetAsElementOrParentElement();
-           maybeTableElement &&
-           maybeTableElement != lastInsertedPoint.GetChild();
-           maybeTableElement = maybeTableElement->GetParentElement()) {
-        if (HTMLEditUtils::IsTable(maybeTableElement)) {
-          mostDistantInclusiveAncestorTableElement = maybeTableElement;
-        }
-      }
-      // If we're in table elements, we should put caret into the most ancestor
-      // table element.
-      if (mostDistantInclusiveAncestorTableElement) {
-        containerContent = mostDistantInclusiveAncestorTableElement;
-      }
-    }
-  }
-  // If we are not in table elements, we should put caret in the last inserted
-  // node.
-  if (!containerContent) {
-    containerContent = lastInsertedPoint.GetChild();
-  }
-
-  // If the container is a text node or a container element except `<table>`
-  // element, put caret a end of it.
-  if (containerContent->IsText() ||
-      (HTMLEditUtils::IsContainerNode(*containerContent) &&
-       !HTMLEditUtils::IsTable(containerContent))) {
-    pointToPutCaret.SetToEndOf(containerContent);
-  }
-  // Otherwise, i.e., it's an atomic element, `<table>` element or data node,
-  // put caret after it.
-  else {
-    pointToPutCaret.Set(containerContent);
-    DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
-    NS_WARNING_ASSERTION(advanced, "Failed to advance offset from found node");
-  }
-
-  // Make sure we don't end up with selection collapsed after an invisible
-  // `<br>` element.
-  WSRunScanner wsRunScannerAtCaret(this, pointToPutCaret);
-  if (wsRunScannerAtCaret
-          .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
-          .ReachedBRElement() &&
-      !IsVisibleBRElement(wsRunScannerAtCaret.GetStartReasonContent())) {
-    WSRunScanner wsRunScannerAtStartReason(
-        this, EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
-    WSScanResult backwardScanFromPointToCaretResult =
-        wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
-            pointToPutCaret);
-    if (backwardScanFromPointToCaretResult.InNormalWhiteSpacesOrText()) {
-      pointToPutCaret = backwardScanFromPointToCaretResult.Point();
-    } else if (backwardScanFromPointToCaretResult.ReachedSpecialContent()) {
-      // XXX In my understanding, this is odd.  The end reason may not be
-      //     same as the reached special content because the equality is
-      //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
-      //     However, looks like that this code assumes that
-      //     GetStartReasonContent() returns the content.
-      NS_ASSERTION(wsRunScannerAtStartReason.GetStartReasonContent() ==
-                       backwardScanFromPointToCaretResult.GetContent(),
-                   "Start reason is not the reached special content");
-      pointToPutCaret.SetAfter(
-          wsRunScannerAtStartReason.GetStartReasonContent());
-    }
-  }
   rv = CollapseSelectionTo(pointToPutCaret);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
