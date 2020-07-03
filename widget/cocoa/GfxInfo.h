@@ -81,14 +81,16 @@ class GfxInfo : public GfxInfoBase {
   void GetSelectedCityInfo();
   void AddCrashReportAnnotations();
 
-  uint32_t mAdapterRAM;
-  nsString mDeviceID;
-  nsString mDriverVersion;
-  nsString mDriverDate;
-  nsString mDeviceKey;
+  uint32_t mNumGPUsDetected;
 
-  nsString mAdapterVendorID;
-  nsString mAdapterDeviceID;
+  uint32_t mAdapterRAM[2];
+  nsString mDeviceID[2];
+  nsString mDriverVersion[2];
+  nsString mDriverDate[2];
+  nsString mDeviceKey[2];
+
+  nsString mAdapterVendorID[2];
+  nsString mAdapterDeviceID[2];
 
   uint32_t mOSXVersion;
 };
