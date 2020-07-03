@@ -26,6 +26,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Logging.h"
 
+#include "ActorsChild.h"
 #include "FileManager.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
