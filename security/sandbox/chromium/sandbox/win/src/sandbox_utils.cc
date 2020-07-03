@@ -11,7 +11,7 @@
 
 namespace sandbox {
 
-void InitObjectAttribs(const std::wstring& name,
+void InitObjectAttribs(const base::string16& name,
                        ULONG attributes,
                        HANDLE root,
                        OBJECT_ATTRIBUTES* obj_attr,

@@ -7,7 +7,7 @@
 
 namespace switches {
 
-// Delays execution of TaskPriority::BEST_EFFORT tasks until shutdown.
+// Delays execution of base::TaskPriority::BEST_EFFORT tasks until shutdown.
 const char kDisableBestEffortTasks[] = "disable-best-effort-tasks";
 
 // Disables the crash reporting.
@@ -15,9 +15,6 @@ const char kDisableBreakpad[]               = "disable-breakpad";
 
 // Comma-separated list of feature names to disable. See also kEnableFeatures.
 const char kDisableFeatures[] = "disable-features";
-
-// Force disabling of low-end device mode when set.
-const char kDisableLowEndDeviceMode[] = "disable-low-end-device-mode";
 
 // Indicates that crash reporting should be enabled. On platforms where helper
 // processes cannot access to files needed to make this decision, this flag is
@@ -27,8 +24,14 @@ const char kEnableCrashReporter[]           = "enable-crash-reporter";
 // Comma-separated list of feature names to enable. See also kDisableFeatures.
 const char kEnableFeatures[] = "enable-features";
 
+// Generates full memory crash dump.
+const char kFullMemoryCrashReport[]         = "full-memory-crash-report";
+
 // Force low-end device mode when set.
 const char kEnableLowEndDeviceMode[]        = "enable-low-end-device-mode";
+
+// Force disabling of low-end device mode when set.
+const char kDisableLowEndDeviceMode[]       = "disable-low-end-device-mode";
 
 // This option can be used to force field trials when testing changes locally.
 // The argument is a list of name and value pairs, separated by slashes. If a
@@ -40,18 +43,43 @@ const char kEnableLowEndDeviceMode[]        = "enable-low-end-device-mode";
 // FieldTrialList::CreateTrialsFromString() in field_trial.h for details.
 const char kForceFieldTrials[]              = "force-fieldtrials";
 
-// Generates full memory crash dump.
-const char kFullMemoryCrashReport[] = "full-memory-crash-report";
-
-// Logs information about all tasks posted with TaskPriority::BEST_EFFORT. Use
-// this to diagnose issues that are thought to be caused by
-// TaskPriority::BEST_EFFORT execution fences. Note: Tasks posted to a
-// non-BEST_EFFORT UpdateableSequencedTaskRunner whose priority is later lowered
-// to BEST_EFFORT are not logged.
-const char kLogBestEffortTasks[] = "log-best-effort-tasks";
-
 // Suppresses all error dialogs when present.
 const char kNoErrorDialogs[]                = "noerrdialogs";
+
+// When running certain tests that spawn child processes, this switch indicates
+// to the test framework that the current process is a child process.
+const char kTestChildProcess[]              = "test-child-process";
+
+// When running certain tests that spawn child processes, this switch indicates
+// to the test framework that the current process should not initialize ICU to
+// avoid creating any scoped handles too early in startup.
+const char kTestDoNotInitializeIcu[]        = "test-do-not-initialize-icu";
+
+// Gives the default maximal active V-logging level; 0 is the default.
+// Normally positive values are used for V-logging levels.
+const char kV[]                             = "v";
+
+// Gives the per-module maximal V-logging levels to override the value
+// given by --v.  E.g. "my_module=2,foo*=3" would change the logging
+// level for all code in source files "my_module.*" and "foo*.*"
+// ("-inl" suffixes are also disregarded for this matching).
+//
+// Any pattern containing a forward or backward slash will be tested
+// against the whole pathname and not just the module.  E.g.,
+// "*/foo/bar/*=2" would change the logging level for all code in
+// source files under a "foo/bar" directory.
+const char kVModule[]                       = "vmodule";
+
+// Will wait for 60 seconds for a debugger to come to attach to the process.
+const char kWaitForDebugger[]               = "wait-for-debugger";
+
+// Sends trace events from these categories to a file.
+// --trace-to-file on its own sends to default categories.
+const char kTraceToFile[]                   = "trace-to-file";
+
+// Specifies the file name for --trace-to-file. If unspecified, it will
+// go to a default file name.
+const char kTraceToFileName[]               = "trace-to-file-name";
 
 // Starts the sampling based profiler for the browser process at startup. This
 // will only work if chrome has been built with the gn arg enable_profiling =
@@ -74,45 +102,7 @@ const char kProfilingFile[] = "profiling-file";
 // specified.
 const char kProfilingFlush[] = "profiling-flush";
 
-// When running certain tests that spawn child processes, this switch indicates
-// to the test framework that the current process is a child process.
-const char kTestChildProcess[] = "test-child-process";
-
-// When running certain tests that spawn child processes, this switch indicates
-// to the test framework that the current process should not initialize ICU to
-// avoid creating any scoped handles too early in startup.
-const char kTestDoNotInitializeIcu[] = "test-do-not-initialize-icu";
-
-// Sends trace events from these categories to a file.
-// --trace-to-file on its own sends to default categories.
-const char kTraceToFile[] = "trace-to-file";
-
-// Specifies the file name for --trace-to-file. If unspecified, it will
-// go to a default file name.
-const char kTraceToFileName[] = "trace-to-file-name";
-
-// Gives the default maximal active V-logging level; 0 is the default.
-// Normally positive values are used for V-logging levels.
-const char kV[] = "v";
-
-// Gives the per-module maximal V-logging levels to override the value
-// given by --v.  E.g. "my_module=2,foo*=3" would change the logging
-// level for all code in source files "my_module.*" and "foo*.*"
-// ("-inl" suffixes are also disregarded for this matching).
-//
-// Any pattern containing a forward or backward slash will be tested
-// against the whole pathname and not just the module.  E.g.,
-// "*/foo/bar/*=2" would change the logging level for all code in
-// source files under a "foo/bar" directory.
-const char kVModule[] = "vmodule";
-
-// Will wait for 60 seconds for a debugger to come to attach to the process.
-const char kWaitForDebugger[] = "wait-for-debugger";
-
 #if defined(OS_WIN)
-// Disable high-resolution timer on Windows.
-const char kDisableHighResTimer[] = "disable-highres-timer";
-
 // Disables the USB keyboard detection for blocking the OSK on Win8+.
 const char kDisableUsbKeyboardDetect[]      = "disable-usb-keyboard-detect";
 #endif
@@ -136,14 +126,17 @@ const char kEnableCrashReporterForTesting[] =
 // Enables the reached code profiler that samples all threads in all processes
 // to determine which functions are almost never executed.
 const char kEnableReachedCodeProfiler[] = "enable-reached-code-profiler";
-#endif
 
-#if defined(OS_LINUX)
-// Controls whether or not retired instruction counts are surfaced for threads
-// in trace events on Linux.
+// Specifies optimization of memory layout of the native library using the
+// orderfile symbols given in base/android/library_loader/anchor_functions.h,
+// via madvise and changing the library prefetch behavior.
 //
-// This flag requires the BPF sandbox to be disabled.
-const char kEnableThreadInstructionCount[] = "enable-thread-instruction-count";
+// If this switch is not specified, an optimization may be done depending on a
+// synthetic trial. If specified, its values may be 'on' or 'off'. These
+// override the synthetic trial.
+//
+// This flag is only used on architectures with SUPPORTS_CODE_ORDERING defined.
+const char kOrderfileMemoryOptimization[] = "orderfile-memory-optimization";
 #endif
 
 }  // namespace switches

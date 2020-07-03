@@ -69,7 +69,7 @@ class BASE_EXPORT RefCountedBase {
 
   // Returns true if the object should self-delete.
   bool Release() const {
-    ReleaseImpl();
+    --ref_count_;
 
     // TODO(maruel): Add back once it doesn't assert 500 times/sec.
     // Current thread books the critical section "AddRelease"
@@ -126,10 +126,8 @@ class BASE_EXPORT RefCountedBase {
 
 #if defined(ARCH_CPU_64_BITS)
   void AddRefImpl() const;
-  void ReleaseImpl() const;
 #else
   void AddRefImpl() const { ++ref_count_; }
-  void ReleaseImpl() const { --ref_count_; }
 #endif
 
 #if DCHECK_IS_ON()
@@ -137,8 +135,6 @@ class BASE_EXPORT RefCountedBase {
 #endif
 
   mutable uint32_t ref_count_ = 0;
-  static_assert(std::is_unsigned<decltype(ref_count_)>::value,
-                "ref_count_ must be an unsigned type.");
 
 #if DCHECK_IS_ON()
   mutable bool needs_adopt_ref_ = false;
@@ -447,16 +443,6 @@ class RefCountedData
   friend class base::RefCountedThreadSafe<base::RefCountedData<T> >;
   ~RefCountedData() = default;
 };
-
-template <typename T>
-bool operator==(const RefCountedData<T>& lhs, const RefCountedData<T>& rhs) {
-  return lhs.data == rhs.data;
-}
-
-template <typename T>
-bool operator!=(const RefCountedData<T>& lhs, const RefCountedData<T>& rhs) {
-  return !(lhs == rhs);
-}
 
 }  // namespace base
 

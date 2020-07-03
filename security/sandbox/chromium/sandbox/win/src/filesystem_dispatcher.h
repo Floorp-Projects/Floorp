@@ -7,11 +7,9 @@
 
 #include <stdint.h>
 
-#include <string>
-
 #include "base/macros.h"
+#include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
-#include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
 
 namespace sandbox {
@@ -23,12 +21,12 @@ class FilesystemDispatcher : public Dispatcher {
   ~FilesystemDispatcher() override {}
 
   // Dispatcher interface.
-  bool SetupService(InterceptionManager* manager, IpcTag service) override;
+  bool SetupService(InterceptionManager* manager, int service) override;
 
  private:
   // Processes IPC requests coming from calls to NtCreateFile in the target.
   bool NtCreateFile(IPCInfo* ipc,
-                    std::wstring* name,
+                    base::string16* name,
                     uint32_t attributes,
                     uint32_t desired_access,
                     uint32_t file_attributes,
@@ -38,7 +36,7 @@ class FilesystemDispatcher : public Dispatcher {
 
   // Processes IPC requests coming from calls to NtOpenFile in the target.
   bool NtOpenFile(IPCInfo* ipc,
-                  std::wstring* name,
+                  base::string16* name,
                   uint32_t attributes,
                   uint32_t desired_access,
                   uint32_t share_access,
@@ -47,14 +45,14 @@ class FilesystemDispatcher : public Dispatcher {
   // Processes IPC requests coming from calls to NtQueryAttributesFile in the
   // target.
   bool NtQueryAttributesFile(IPCInfo* ipc,
-                             std::wstring* name,
+                             base::string16* name,
                              uint32_t attributes,
                              CountedBuffer* info);
 
   // Processes IPC requests coming from calls to NtQueryFullAttributesFile in
   // the target.
   bool NtQueryFullAttributesFile(IPCInfo* ipc,
-                                 std::wstring* name,
+                                 base::string16* name,
                                  uint32_t attributes,
                                  CountedBuffer* info);
 
