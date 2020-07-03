@@ -660,12 +660,18 @@ class SearchEngine {
    *   Indicates whether the engine is provided by Firefox, either
    *   shipped in omni.ja or via Normandy. If it is, it will
    *   be treated as read-only.
+   * @param {string} options.loadPath
+   *   The path of the engine was originally loaded from. Should be anonymized.
    */
   constructor(options = {}) {
     if (!("isAppProvided" in options)) {
       throw new Error("isAppProvided missing from options.");
     }
+    if (!("loadPath" in options)) {
+      throw new Error("loadPath missing from options.");
+    }
     this._isAppProvided = options.isAppProvided;
+    this._loadPath = options.loadPath;
 
     if ("name" in options) {
       this._shortName = SearchUtils.sanitizeName(options.name);
@@ -1064,7 +1070,6 @@ class SearchEngine {
   _initWithJSON(json) {
     this._name = json._name;
     this._shortName = json._shortName;
-    this._loadPath = json._loadPath;
     this._description = json.description;
     this._hasPreferredIcon = json._hasPreferredIcon == undefined;
     this._queryCharset = json.queryCharset || SearchUtils.DEFAULT_QUERY_CHARSET;
