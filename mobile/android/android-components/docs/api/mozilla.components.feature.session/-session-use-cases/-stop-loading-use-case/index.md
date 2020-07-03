@@ -2,7 +2,7 @@
 
 # StopLoadingUseCase
 
-`class StopLoadingUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L120)
+`class StopLoadingUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L129)
 
 ### Functions
 
