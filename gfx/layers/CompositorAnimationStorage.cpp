@@ -143,6 +143,13 @@ void CompositorAnimationStorage::SetAnimations(uint64_t aId,
 
   mAnimations[aId] = std::make_unique<AnimationStorageData>(
       AnimationHelper::ExtractAnimations(aValue));
+
+  // If there is the last animated value, then we need to store the id to remove
+  // the value if the new animation doesn't produce any animated data (i.e. in
+  // the delay phase) when we sample this new animation.
+  if (mAnimatedValues.Contains(aId)) {
+    mNewAnimations.insert(aId);
+  }
 }
 
 bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
@@ -150,6 +157,7 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
   MutexAutoLock lock(mLock);
 
   bool isAnimating = false;
+  auto cleanup = MakeScopeExit([&] { mNewAnimations.clear(); });
 
   // Do nothing if there are no compositor animations
   if (mAnimations.empty()) {
@@ -171,6 +179,9 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
             animationStorageData->mAnimation, animationValues);
 
     if (sampleResult != AnimationHelper::SampleResult::Sampled) {
+      if (mNewAnimations.find(iter.first) != mNewAnimations.end()) {
+        mAnimatedValues.Remove(iter.first);
+      }
       continue;
     }
 
