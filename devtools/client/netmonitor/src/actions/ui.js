@@ -17,6 +17,7 @@ const {
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
   SET_COLUMNS_WIDTH,
+  SET_HEADERS_URL_PREVIEW_EXPANDED,
   OPEN_ACTION_BAR,
 } = require("devtools/client/netmonitor/src/constants");
 
@@ -228,6 +229,13 @@ function toggleStatistics(connector) {
     dispatch(openStatistics(connector, !getState().ui.statisticsOpen));
 }
 
+function setHeadersUrlPreviewExpanded(expanded) {
+  return {
+    type: SET_HEADERS_URL_PREVIEW_EXPANDED,
+    expanded,
+  };
+}
+
 module.exports = {
   openNetworkDetails,
   openNetworkActionBar,
@@ -246,4 +254,5 @@ module.exports = {
   togglePersistentLogs,
   toggleBrowserCache,
   toggleStatistics,
+  setHeadersUrlPreviewExpanded,
 };

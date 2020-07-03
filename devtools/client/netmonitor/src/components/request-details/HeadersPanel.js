@@ -119,6 +119,8 @@ class HeadersPanel extends Component {
       openRequestBlockingAndAddUrl: PropTypes.func.isRequired,
       cloneRequest: PropTypes.func,
       sendCustomRequest: PropTypes.func,
+      shouldExpandPreview: PropTypes.bool,
+      setHeadersUrlPreviewExpanded: PropTypes.func,
     };
   }
 
@@ -520,6 +522,8 @@ class HeadersPanel extends Component {
         transferredSize,
       },
       openRequestBlockingAndAddUrl,
+      shouldExpandPreview,
+      setHeadersUrlPreviewExpanded,
     } = this.props;
     const {
       rawResponseHeadersOpened,
@@ -760,6 +764,8 @@ class HeadersPanel extends Component {
             address: remoteAddress
               ? getFormattedIPAndPort(remoteAddress, remotePort)
               : null,
+            shouldExpandPreview,
+            onTogglePreview: expanded => setHeadersUrlPreviewExpanded(expanded),
           }),
           div({ className: "summary" }, summaryItems)
         ),
@@ -769,9 +775,17 @@ class HeadersPanel extends Component {
   }
 }
 
-module.exports = connect(null, (dispatch, props) => ({
-  openRequestBlockingAndAddUrl: url =>
-    dispatch(Actions.openRequestBlockingAndAddUrl(url)),
-  cloneRequest: id => dispatch(Actions.cloneRequest(id)),
-  sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
-}))(HeadersPanel);
+module.exports = connect(
+  state => ({
+    shouldExpandPreview: state.ui.shouldExpandHeadersUrlPreview,
+  }),
+  (dispatch, props) => ({
+    setHeadersUrlPreviewExpanded: expanded =>
+      dispatch(Actions.setHeadersUrlPreviewExpanded(expanded)),
+    openRequestBlockingAndAddUrl: url =>
+      dispatch(Actions.openRequestBlockingAndAddUrl(url)),
+    cloneRequest: id => dispatch(Actions.cloneRequest(id)),
+    sendCustomRequest: () =>
+      dispatch(Actions.sendCustomRequest(props.connector)),
+  })
+)(HeadersPanel);
