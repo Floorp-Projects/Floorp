@@ -86,9 +86,11 @@ already_AddRefed<ContentClient> ContentClient::CreateContentClient(
 #endif
   {
 #ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WAYLAND
     if (gfxPlatformGtk::GetPlatform()->UseDMABufTextures()) {
       useDoubleBuffering = true;
     } else
+#  endif
         // We can't use double buffering when using image content with
         // Xrender support on Linux, as ContentHostDoubleBuffered is not
         // suited for direct uploads to the server.
