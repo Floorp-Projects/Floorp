@@ -96,6 +96,7 @@ class VersionControlCommands(object):
                 bootstrap.update_vct(vcs, self._context.state_dir)
         else:
             if repo.name == 'git':
-                bootstrap.configure_git(vcs, self._context.state_dir, self._context.topdir)
+                bootstrap.configure_git(
+                    vcs, which('git-cinnabar'), self._context.state_dir, self._context.topdir)
             else:
                 bootstrap.configure_mercurial(vcs, self._context.state_dir)
