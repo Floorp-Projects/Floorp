@@ -13,11 +13,8 @@ import mozilla.components.service.fxa.ServerConfig
  */
 
 object FxaServer {
-    const val CLIENT_ID = "a2270f727f45f648"
-    const val REDIRECT_URL = "https://accounts.stage.mozaws.net/oauth/success/$CLIENT_ID"
-
-    @Suppress("UNUSED_PARAMETER")
-    fun redirectUrl(context: Context) = REDIRECT_URL
+    private const val CLIENT_ID = "a2270f727f45f648"
+    const val REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
 
     @Suppress("UNUSED_PARAMETER")
     fun config(context: Context): ServerConfig {
