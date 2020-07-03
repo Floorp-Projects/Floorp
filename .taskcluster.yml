@@ -71,7 +71,7 @@ tasks:
                   then:
                       '${action.taskGroupId}'
                   else:
-                      '${ownTaskId}'  # same as taskId; this is how automation identifies a decision tsak
+                      '${ownTaskId}'  # same as taskId; this is how automation identifies a decision task
               schedulerId: '${trust_domain}-level-${repository.level}'
 
               created: {$fromNow: ''}
