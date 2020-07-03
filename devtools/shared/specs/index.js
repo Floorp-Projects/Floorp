@@ -85,7 +85,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["environment"],
     spec: "devtools/shared/specs/environment",
-    front: "devtools/client/fronts/environment",
+    front: null,
   },
   {
     types: ["eventSource"],

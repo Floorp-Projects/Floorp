@@ -21,7 +21,6 @@ DevToolsModules(
     'content-viewer.js',
     'css-properties.js',
     'device.js',
-    'environment.js',
     'eventsource.js',
     'frame.js',
     'framerate.js',

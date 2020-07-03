@@ -248,17 +248,6 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   }
 
   /**
-   * Request the scope of the object.
-   */
-  getScope() {
-    if (this._grip.class !== "Function") {
-      console.error("scope is only valid for function grips.");
-      return null;
-    }
-    return super.scope();
-  }
-
-  /**
    * Request the target and handler internal slots of a proxy.
    */
   async getProxySlots() {

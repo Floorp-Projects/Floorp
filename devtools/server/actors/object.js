@@ -817,35 +817,6 @@ const proto = {
   },
 
   /**
-   * Handle a protocol request to provide the lexical scope of a function.
-   */
-  scope: function() {
-    if (this.obj.class !== "Function") {
-      return this.throwError(
-        "objectNotFunction",
-        "scope request is only valid for grips with a 'Function' class."
-      );
-    }
-
-    const { createEnvironmentActor } = this.hooks;
-    const envActor = createEnvironmentActor(
-      this.obj.environment,
-      this.getParent()
-    );
-
-    if (!envActor) {
-      return this.throwError(
-        "notDebuggee",
-        "cannot access the environment of this function."
-      );
-    }
-
-    return {
-      scope: envActor,
-    };
-  },
-
-  /**
    * Handle a protocol request to get the target and handler internal slots of a proxy.
    */
   proxySlots: function() {
