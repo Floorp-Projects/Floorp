@@ -444,7 +444,8 @@ class SystemEngineSessionTest {
                 uri: String,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
-                isRedirect: Boolean
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
@@ -517,7 +518,8 @@ class SystemEngineSessionTest {
                 uri: String,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
-                isRedirect: Boolean
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
             }
@@ -550,7 +552,8 @@ class SystemEngineSessionTest {
                 uri: String,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
-                isRedirect: Boolean
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
@@ -605,7 +608,8 @@ class SystemEngineSessionTest {
                 uri: String,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
-                isRedirect: Boolean
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return null
