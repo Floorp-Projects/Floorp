@@ -3248,15 +3248,8 @@ bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
                    "The list element which is looking for is ignored");
       continue;
     }
-    Element* listElement = nullptr;
-    for (Element* maybeListElement = element->GetParentElement();
-         maybeListElement;
-         maybeListElement = maybeListElement->GetParentElement()) {
-      if (HTMLEditUtils::IsAnyListElement(maybeListElement)) {
-        listElement = maybeListElement;
-        break;
-      }
-    }
+    Element* listElement =
+        HTMLEditUtils::GetClosestAncestorAnyListElement(*element);
     if (listElement == &aListElement) {
       return true;
     }
