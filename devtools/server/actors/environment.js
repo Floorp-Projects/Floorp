@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global Debugger */
-
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { environmentSpec } = require("devtools/shared/specs/environment");
@@ -83,42 +81,6 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     }
 
     return form;
-  },
-
-  /**
-   * Handle a protocol request to change the value of a variable bound in this
-   * lexical environment.
-   *
-   * @param string name
-   *        The name of the variable to be changed.
-   * @param any value
-   *        The value to be assigned.
-   */
-  assign: function(name, value) {
-    // TODO: enable the commented-out part when getVariableDescriptor lands
-    // (bug 725815).
-    /* let desc = this.obj.getVariableDescriptor(name);
-
-    if (!desc.writable) {
-      return { error: "immutableBinding",
-               message: "Changing the value of an immutable binding is not " +
-                        "allowed" };
-    }*/
-
-    try {
-      this.obj.setVariable(name, value);
-    } catch (e) {
-      if (e instanceof Debugger.DebuggeeWouldRun) {
-        const errorObject = {
-          error: "threadWouldRun",
-          message: "Assigning a value would cause the debuggee to run",
-        };
-        throw errorObject;
-      } else {
-        throw e;
-      }
-    }
-    return { from: this.actorID };
   },
 
   /**
