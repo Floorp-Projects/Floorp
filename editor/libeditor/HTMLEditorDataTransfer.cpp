@@ -3130,15 +3130,8 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
   Element* lastFoundAncestorListOrTableElement = nullptr;
   for (auto& content : aArrayOfTopMostChildContents) {
     if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
-      Element* tableElement = nullptr;
-      for (Element* maybeTableElement = content->GetParentElement();
-           maybeTableElement;
-           maybeTableElement = maybeTableElement->GetParentElement()) {
-        if (maybeTableElement->IsHTMLElement(nsGkAtoms::table)) {
-          tableElement = maybeTableElement;
-          break;
-        }
-      }
+      Element* tableElement =
+          HTMLEditUtils::GetClosestAncestorTableElement(*content);
       if (!tableElement) {
         continue;
       }
@@ -3165,15 +3158,8 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
     if (!HTMLEditUtils::IsListItem(content)) {
       continue;
     }
-    Element* listElement = nullptr;
-    for (Element* maybeListElement = content->GetParentElement();
-         maybeListElement;
-         maybeListElement = maybeListElement->GetParentElement()) {
-      if (HTMLEditUtils::IsAnyListElement(maybeListElement)) {
-        listElement = maybeListElement;
-        break;
-      }
-    }
+    Element* listElement =
+        HTMLEditUtils::GetClosestAncestorAnyListElement(*content);
     if (!listElement) {
       continue;
     }
