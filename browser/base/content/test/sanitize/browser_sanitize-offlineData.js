@@ -84,7 +84,7 @@ add_task(async function testWithRange() {
   // We have intermittent occurrences of NS_ERROR_ABORT being
   // thrown at closing database instances when using Santizer.sanitize().
   // This does not seem to impact cleanup, since our tests run fine anyway.
-  PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_ABORT/);
+  PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_ABORT/);
 
   await SpecialPowers.pushPrefEnv({
     set: [

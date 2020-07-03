@@ -213,14 +213,14 @@ var PromiseTestUtils = {
   },
 
   /**
-   * Whitelists an entire class of Promise rejections. Usage of this function
+   * Allows an entire class of Promise rejections. Usage of this function
    * should be kept to a minimum because it has a broad scope and doesn't
    * prevent new unhandled rejections of this class from being added.
    *
    * @param regExp
    *        This should match the error message of the rejection.
    */
-  whitelistRejectionsGlobally(regExp) {
+  allowMatchingRejectionsGlobally(regExp) {
     this._globalRejectionIgnoreFns.push(rejection =>
       regExp.test(rejection.message)
     );

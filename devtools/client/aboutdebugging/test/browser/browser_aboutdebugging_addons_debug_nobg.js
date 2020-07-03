@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 
 const ADDON_NOBG_ID = "test-devtools-webextension-nobg@mozilla.org";
 const ADDON_NOBG_NAME = "test-devtools-webextension-nobg";
