@@ -1576,6 +1576,7 @@ SearchService.prototype = {
         // We renamed isBuiltin to isAppProvided in 1631898,
         // keep checking isBuiltin for older caches.
         isAppProvided: !!json._isAppProvided || !!json._isBuiltin,
+        loadPath: json._loadPath,
       });
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
@@ -2245,7 +2246,12 @@ SearchService.prototype = {
     return null;
   },
 
-  async addEngineWithDetails(name, details, isReload = false) {
+  async addEngineWithDetails(
+    name,
+    details,
+    initEngine = false,
+    isReload = false
+  ) {
     if (!name) {
       throw Components.Exception(
         "Empty name passed to addEngineWithDetails!",
@@ -2266,7 +2272,7 @@ SearchService.prototype = {
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!gInitialized && !isAppProvided && !params.initEngine) {
+    if (!gInitialized && !isAppProvided && !initEngine) {
       await this.init();
     }
     let existingEngine = this._engines.get(name);
@@ -2300,15 +2306,17 @@ SearchService.prototype = {
       }
     }
 
+    let loadPath = "[other]addEngineWithDetails";
+    if (params.extensionID) {
+      loadPath += ":" + params.extensionID;
+    }
+
     let newEngine = new SearchEngine({
       name,
       isAppProvided,
+      loadPath,
     });
     newEngine._initFromMetadata(name, params);
-    newEngine._loadPath = "[other]addEngineWithDetails";
-    if (params.extensionID) {
-      newEngine._loadPath += ":" + params.extensionID;
-    }
     if (isReload && this._engines.has(newEngine.name)) {
       newEngine._engineToUpdate = this._engines.get(newEngine.name);
     }
@@ -2442,24 +2450,31 @@ SearchService.prototype = {
       params
     );
 
+    let loadPath = "[other]addEngineWithDetails";
+    if (engineParams.extensionID) {
+      loadPath += ":" + engineParams.extensionID;
+    }
+
     let engine = new SearchEngine({
       // No need to sanitize the name, as shortName uses the WebExtension id
       // which should already be sanitized.
       shortName: engineParams.shortName,
       isAppProvided: engineParams.isAppProvided,
+      loadPath,
     });
     engine._initFromMetadata(engineParams.name, engineParams);
-    engine._loadPath = "[other]addEngineWithDetails";
-    if (engineParams.extensionID) {
-      engine._loadPath += ":" + engineParams.extensionID;
-    }
     if (isReload && this._engines.has(engine.name)) {
       engine._engineToUpdate = this._engines.get(engine.name);
     }
     return engine;
   },
 
-  async _installExtensionEngine(extension, locales, initEngine, isReload) {
+  async _installExtensionEngine(
+    extension,
+    locales,
+    initEngine = false,
+    isReload = false
+  ) {
     logConsole.debug("installExtensionEngine:", extension.id);
 
     let installLocale = async locale => {
@@ -2512,10 +2527,8 @@ SearchService.prototype = {
         return engine;
       }
     }
-    let params = this.getEngineParams(extension, manifest, locale, {
-      initEngine,
-    });
-    return this.addEngineWithDetails(params.name, params, isReload);
+    let params = this.getEngineParams(extension, manifest, locale);
+    return this.addEngineWithDetails(params.name, params, initEngine, isReload);
   },
 
   getEngineParams(extension, manifest, locale, engineParams = {}) {
@@ -2601,7 +2614,6 @@ SearchService.prototype = {
       queryCharset: searchProvider.encoding || "UTF-8",
       mozParams,
       telemetryId: engineParams.telemetryId,
-      initEngine: engineParams.initEngine || false,
     };
 
     return params;
