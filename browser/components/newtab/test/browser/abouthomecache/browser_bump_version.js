@@ -21,9 +21,6 @@ add_task(async function test_bump_version() {
     );
     cacheEntry.setMetaDataElement("version", "somethingnew");
     await simulateRestart(browser, false /* withAutoShutdownWrite */);
-    await ensureDynamicAboutHome(
-      browser,
-      AboutHomeStartupCache.CACHE_RESULT_SCALARS.INVALIDATED
-    );
+    await ensureDynamicAboutHome(browser);
   });
 });
