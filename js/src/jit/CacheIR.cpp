@@ -6806,10 +6806,10 @@ void CallIRGenerator::trackAttached(const char* name) {
     sp.valueProperty("argc", Int32Value(argc_));
 
     // Try to log the first two arguments.
-    if (argc_ >= 1) {
+    if (args_.length() >= 1) {
       sp.valueProperty("arg0", args_[0]);
     }
-    if (argc_ >= 2) {
+    if (args_.length() >= 2) {
       sp.valueProperty("arg1", args_[1]);
     }
   }
