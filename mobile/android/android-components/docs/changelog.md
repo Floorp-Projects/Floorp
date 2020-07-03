@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **support-ktx**
+  * Adds `Bundle.contentEquals` function to check if two bundles are equal.
+
 # 49.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v48.0.0...v49.0.0)
