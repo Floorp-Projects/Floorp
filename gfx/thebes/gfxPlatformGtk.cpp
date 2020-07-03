@@ -732,7 +732,7 @@ bool gfxPlatformGtk::UseDMABufVideoTextures() {
           StaticPrefs::media_ffmpeg_vaapi_enabled());
 }
 bool gfxPlatformGtk::UseHardwareVideoDecoding() {
-  return IsWaylandDisplay() && gfxPlatform::CanUseHardwareVideoDecoding() &&
+  return gfxPlatform::CanUseHardwareVideoDecoding() &&
          StaticPrefs::media_ffmpeg_vaapi_enabled();
 }
 bool gfxPlatformGtk::UseDRMVAAPIDisplay() {
