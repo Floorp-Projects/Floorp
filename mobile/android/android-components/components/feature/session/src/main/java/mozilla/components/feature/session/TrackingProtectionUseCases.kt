@@ -83,12 +83,6 @@ class TrackingProtectionUseCases(
     ) {
         /**
          * Removes all domains from the exception list.
-         *
-         * As we are applying this on all the sessions it could cause a
-         * performance hit, right now we don't have a straightforward way to
-         * avoid it, as it will required that we introduce the browser store,
-         * we are going to address this on #6283
-         * (https://github.com/mozilla-mobile/android-components/issues/6283).
          */
         operator fun invoke() {
             val engineSessions = (store.state.tabs + store.state.customTabs).mapNotNull { tab ->
