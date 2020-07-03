@@ -651,7 +651,6 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
       PaintMenulist(dt, devPxRect, eventState, dpi);
       break;
     case StyleAppearance::MozMenulistArrowButton:
@@ -722,8 +721,7 @@ LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     }
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield: {
+    case StyleAppearance::MenulistButton: {
       const LayoutDeviceIntCoord w = kMenulistBorderWidth * dpi;
       return LayoutDeviceIntMargin(w, w, w, w);
     }
@@ -768,7 +766,6 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
       aResult->SizeTo(6 * dpi, 7 * dpi, 6 * dpi, 7 * dpi);
       return true;
@@ -887,7 +884,6 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::SpinnerUpbutton:

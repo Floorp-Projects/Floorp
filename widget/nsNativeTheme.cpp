@@ -264,7 +264,6 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
 
   return (aAppearance == StyleAppearance::NumberInput ||
           aAppearance == StyleAppearance::Button ||
-          aAppearance == StyleAppearance::MenulistTextfield ||
           aAppearance == StyleAppearance::Textfield ||
           aAppearance == StyleAppearance::Textarea ||
           aAppearance == StyleAppearance::Listbox ||

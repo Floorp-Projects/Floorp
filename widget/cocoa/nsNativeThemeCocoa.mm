@@ -1224,7 +1224,6 @@ void nsNativeThemeCocoa::DrawMenuSeparator(CGContextRef cgContext, const CGRect&
 static bool ShouldUnconditionallyDrawFocusRingIfFocused(nsIFrame* aFrame) {
   // Mac always draws focus rings for textboxes and lists.
   switch (aFrame->StyleDisplay()->mAppearance) {
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -2846,14 +2845,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
           WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState), buttonType}));
     }
 
-    case StyleAppearance::ButtonBevel: {
-      bool isDefaultButton = IsDefaultButton(aFrame);
-      ButtonType buttonType =
-          isDefaultButton ? ButtonType::eDefaultBevelButton : ButtonType::eRegularBevelButton;
-      return Some(
-          WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState), buttonType}));
-    }
-
     case StyleAppearance::InnerSpinButton: {
       case StyleAppearance::Spinner:
         bool isSpinner = (aAppearance == StyleAppearance::Spinner);
@@ -2951,7 +2942,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::Groupbox:
       return Some(WidgetInfo::GroupBox());
 
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput: {
       // See ShouldUnconditionallyDrawFocusRingIfFocused.
@@ -2966,8 +2956,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       }
 
       bool isDisabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
-      bool borderless = (aAppearance == StyleAppearance::MenulistTextfield && !isFocused);
-      return Some(WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused, borderless}));
+      return Some(WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused, /* borderless = */ false}));
     }
 
     case StyleAppearance::Searchfield:
@@ -3414,7 +3403,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::MozMacHelpButton:
     case StyleAppearance::MozMacDisclosureButtonOpen:
     case StyleAppearance::MozMacDisclosureButtonClosed:
-    case StyleAppearance::ButtonBevel:
     case StyleAppearance::Spinner:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
@@ -3424,7 +3412,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::Statusbar:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::Groupbox:
@@ -3583,7 +3570,6 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
       result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield: {
       SInt32 frameOutset = 0;
@@ -3697,7 +3683,6 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistArrowButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
     case StyleAppearance::Tab:
@@ -3817,7 +3802,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       break;
     }
 
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -4103,7 +4087,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::Button:
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown:
-    case StyleAppearance::ButtonBevel:
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::InnerSpinButton:
     case StyleAppearance::Spinner:
@@ -4135,7 +4118,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::Treeheadersortarrow:
     case StyleAppearance::Treeitem:
     case StyleAppearance::Treeline:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MozMacSourceList:
     case StyleAppearance::MozMacSourceListSelection:
     case StyleAppearance::MozMacActiveSourceListSelection:
@@ -4253,7 +4235,6 @@ bool nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aA
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::Separator:
     case StyleAppearance::Toolbox:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Treeview:

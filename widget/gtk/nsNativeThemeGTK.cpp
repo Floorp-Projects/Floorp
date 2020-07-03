@@ -315,7 +315,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       if (aAppearance == StyleAppearance::NumberInput ||
           aAppearance == StyleAppearance::Textfield ||
           aAppearance == StyleAppearance::Textarea ||
-          aAppearance == StyleAppearance::MenulistTextfield ||
           aAppearance == StyleAppearance::SpinnerTextfield ||
           aAppearance == StyleAppearance::RadioContainer ||
           aAppearance == StyleAppearance::RadioLabel) {
@@ -626,9 +625,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       break;
     case StyleAppearance::MenulistText:
       return false;  // nothing to do, but prevents the bg from being drawn
-    case StyleAppearance::MenulistTextfield:
-      aGtkWidgetType = MOZ_GTK_DROPDOWN_ENTRY;
-      break;
     case StyleAppearance::MozMenulistArrowButton:
       aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
       break;
@@ -1660,7 +1656,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->width += border.left + border.right;
       aResult->height += border.top + border.bottom;
     } break;
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield: {
       gint contentHeight = 0;
@@ -1885,7 +1880,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Resizerpanel:
     case StyleAppearance::Resizer:
     case StyleAppearance::Listbox:
-      // case StyleAppearance::Listitem:
     case StyleAppearance::Treeview:
       // case StyleAppearance::Treeitem:
     case StyleAppearance::Treetwisty:
@@ -1921,7 +1915,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarNonDisappearing:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -2004,7 +1997,6 @@ bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
     case StyleAppearance::Button:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::Treeheadercell:

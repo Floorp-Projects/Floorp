@@ -131,13 +131,6 @@ static MARGINS GetCheckboxMargins(HANDLE theme, HDC hdc) {
   return checkboxContent;
 }
 
-static COLORREF GetTextfieldFillColor(HANDLE theme, int32_t part,
-                                      int32_t state) {
-  COLORREF color = {0};
-  GetThemeColor(theme, part, state, TMT_FILLCOLOR, &color);
-  return color;
-}
-
 static SIZE GetCheckboxBGSize(HANDLE theme, HDC hdc) {
   SIZE checkboxSize;
   GetThemePartSize(theme, hdc, MENU_POPUPCHECK, MC_CHECKMARKNORMAL, nullptr,
@@ -690,7 +683,6 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Checkbox:
     case StyleAppearance::Groupbox:
       return Some(eUXButton);
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -754,7 +746,6 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Treeheadersortarrow:
       return Some(eUXHeader);
     case StyleAppearance::Listbox:
-    case StyleAppearance::Listitem:
     case StyleAppearance::Treeview:
     case StyleAppearance::Treetwistyopen:
     case StyleAppearance::Treeitem:
@@ -907,7 +898,6 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       // same as GBS_NORMAL don't bother supporting GBS_DISABLED.
       return NS_OK;
     }
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea: {
@@ -1833,22 +1823,10 @@ RENDER_AGAIN:
            aAppearance == StyleAppearance::MozMenulistArrowButton) {
     DrawThemeBGRTLAware(theme, hdc, part, state, &widgetRect, &clipRect,
                         IsFrameRTL(aFrame));
-  } else if (aAppearance == StyleAppearance::MenulistTextfield ||
-             aAppearance == StyleAppearance::NumberInput ||
+  } else if (aAppearance == StyleAppearance::NumberInput ||
              aAppearance == StyleAppearance::Textfield ||
              aAppearance == StyleAppearance::Textarea) {
-    if (aAppearance == StyleAppearance::MenulistTextfield &&
-        state != TFS_EDITBORDER_FOCUSED) {
-      // We want 'menulist-textfield' to behave like 'textfield', except we
-      // don't want a border unless it's focused.  We have to handle the
-      // non-focused case manually here.
-      COLORREF color = GetTextfieldFillColor(theme, part, state);
-      HBRUSH brush = CreateSolidBrush(color);
-      ::FillRect(hdc, &widgetRect, brush);
-      DeleteObject(brush);
-    } else {
-      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-    }
+    DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
 
     if (state == TFS_EDITBORDER_DISABLED) {
       InflateRect(&widgetRect, -1, -1);
@@ -2032,8 +2010,7 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
       result.left = 0;
   }
 
-  if (aFrame && (aAppearance == StyleAppearance::MenulistTextfield ||
-                 aAppearance == StyleAppearance::NumberInput ||
+  if (aFrame && (aAppearance == StyleAppearance::NumberInput ||
                  aAppearance == StyleAppearance::Textfield ||
                  aAppearance == StyleAppearance::Textarea)) {
     nsIContent* content = aFrame->GetContent();
@@ -2125,8 +2102,7 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     return ok;
   }
 
-  if (aAppearance == StyleAppearance::MenulistTextfield ||
-      aAppearance == StyleAppearance::NumberInput ||
+  if (aAppearance == StyleAppearance::NumberInput ||
       aAppearance == StyleAppearance::Textfield ||
       aAppearance == StyleAppearance::Textarea ||
       aAppearance == StyleAppearance::MenulistButton ||
@@ -2144,8 +2120,7 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
    * Instead, we add 2px padding for the contents and fix this. (Used to be 1px
    * added, see bug 430212)
    */
-  if (aAppearance == StyleAppearance::MenulistTextfield ||
-      aAppearance == StyleAppearance::NumberInput ||
+  if (aAppearance == StyleAppearance::NumberInput ||
       aAppearance == StyleAppearance::Textfield ||
       aAppearance == StyleAppearance::Textarea) {
     aResult->top = aResult->bottom = 2;
@@ -2279,7 +2254,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
   switch (aAppearance) {
     case StyleAppearance::Groupbox:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Toolbox:
@@ -2617,7 +2591,6 @@ bool nsNativeThemeWin::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
@@ -2775,7 +2748,6 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::ScalethumbVertical:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::InnerSpinButton:
     case StyleAppearance::SpinnerUpbutton:
@@ -2833,7 +2805,6 @@ LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     case StyleAppearance::Treeview:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Tab:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
@@ -2995,7 +2966,6 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Statusbar:
     case StyleAppearance::Statusbarpanel:
     case StyleAppearance::Resizerpanel:
@@ -3242,7 +3212,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Textarea:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
     case StyleAppearance::ScrollbarthumbVertical:
@@ -3660,13 +3629,9 @@ RENDER_AGAIN:
     case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield: {
-      // Paint the border, except for 'menulist-textfield' that isn't focused:
-      if (aAppearance != StyleAppearance::MenulistTextfield || focused) {
-        // Draw inset edge
-        ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
-      }
+    case StyleAppearance::MenulistButton: {
+      // Draw inset edge
+      ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
       EventStates eventState = GetContentState(aFrame, aAppearance);
 
@@ -4019,7 +3984,6 @@ uint32_t nsNativeThemeWin::GetWidgetNativeDrawingFlags(
     case StyleAppearance::Textarea:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MenulistTextfield:
       return gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
              gfxWindowsNativeDrawing::CAN_AXIS_ALIGNED_SCALE |
              gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
