@@ -3,7 +3,7 @@ let JSMPromise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {})
   .Promise;
 
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.allowRejectionsGlobally(/Allowed rejection./);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Allowed rejection./);
 PromiseTestUtils.expectUncaughtRejection(/Promise.jsm rejection./);
 PromiseTestUtils.expectUncaughtRejection(/Promise.jsm rejection./);
 PromiseTestUtils.expectUncaughtRejection(/Promise rejection./);
