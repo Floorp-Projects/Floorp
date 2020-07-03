@@ -1032,12 +1032,7 @@ nsresult nsFrameSelection::GetFrameFromLevel(nsIFrame* aFrameIn,
 
   do {
     *aFrameOut = foundFrame;
-    if (aDirection == eDirNext)
-      frameTraversal->Next();
-    else
-      frameTraversal->Prev();
-
-    foundFrame = frameTraversal->CurrentItem();
+    foundFrame = frameTraversal->Traverse(aDirection == eDirNext);
     if (!foundFrame) return NS_ERROR_FAILURE;
     foundLevel = foundFrame->GetEmbeddingLevel();
 

@@ -27,6 +27,15 @@ class nsIFrameEnumerator : public nsISupports {
 
   virtual void Last() = 0;
   virtual void Prev() = 0;
+
+  inline nsIFrame* Traverse(bool aForward) {
+    if (aForward) {
+      Next();
+    } else {
+      Prev();
+    }
+    return CurrentItem();
+  };
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameEnumerator, NS_IFRAMEENUMERATOR_IID)
