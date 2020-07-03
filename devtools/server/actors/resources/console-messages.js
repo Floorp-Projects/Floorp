@@ -4,27 +4,23 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const {
   TYPES: { CONSOLE_MESSAGE },
 } = require("devtools/server/actors/resources/index");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
 const {
   ConsoleAPIListener,
 } = require("devtools/server/actors/webconsole/listeners/console-api");
+const { isArray } = require("devtools/server/actors/object/utils");
+
 const {
-  createValueGrip,
-  isArray,
+  makeDebuggeeValue,
+  createValueGripForTarget,
 } = require("devtools/server/actors/object/utils");
 
-const { ObjectActor } = require("devtools/server/actors/object");
-loader.lazyRequireGetter(
-  this,
-  "EnvironmentActor",
-  "devtools/server/actors/environment",
-  true
-);
+const {
+  getActorIdForInternalSourceId,
+} = require("devtools/server/actors/utils/dbg-source");
 
 /**
  * Start watching for all console messages related to a given Target Actor.
@@ -116,140 +112,6 @@ class ConsoleMessageWatcher {
 }
 
 module.exports = ConsoleMessageWatcher;
-
-/**
- * Given a target actor and a source platform internal ID,
- * return the related SourceActor ID.
-
- * @param TargetActor targetActor
- *        The Target Actor from which this source originates.
- * @param String id
- *        Platform Source ID
- * @return String
- *         The SourceActor ID
- */
-function getActorIdForInternalSourceId(targetActor, id) {
-  const actor = targetActor.sources.getSourceActorByInternalSourceId(id);
-  return actor ? actor.actorID : null;
-}
-
-/**
- * Create a grip for the given value.
- *
- * @param TargetActor targetActor
- *        The Target Actor from which this object originates.
- * @param mixed value
- *        The value you want to get a debuggee value for.
- * @param Number depth
- *        Depth of the object compared to the top level object,
- *        when we are inspecting nested attributes.
- * @return object
- */
-function createValueGripForTarget(targetActor, value, depth = 0) {
-  return createValueGrip(
-    value,
-    targetActor,
-    createObjectGrip.bind(null, targetActor, depth)
-  );
-}
-
-/**
- * Create and return an environment actor that corresponds to the provided
- * Debugger.Environment. This is a straightforward clone of the ThreadActor's
- * method except that it stores the environment actor in the web console
- * actor's pool.
- *
- * @param Debugger.Environment environment
- *        The lexical environment we want to extract.
- * @param TargetActor targetActor
- *        The Target Actor to use as parent actor.
- * @return The EnvironmentActor for |environment| or |undefined| for host
- *         functions or functions scoped to a non-debuggee global.
- */
-function createEnvironmentActor(environment, targetActor) {
-  if (!environment) {
-    return undefined;
-  }
-
-  if (environment.actor) {
-    return environment.actor;
-  }
-
-  const actor = new EnvironmentActor(environment, targetActor);
-  targetActor.manage(actor);
-  environment.actor = actor;
-
-  return actor;
-}
-
-/**
- * Create a grip for the given object.
- *
- * @param TargetActor targetActor
- *        The Target Actor from which this object originates.
- * @param Number depth
- *        Depth of the object compared to the top level object,
- *        when we are inspecting nested attributes.
- * @param object object
- *        The object you want.
- * @param object pool
- *        A Pool where the new actor instance is added.
- * @param object
- *        The object grip.
- */
-function createObjectGrip(targetActor, depth, object, pool) {
-  let gripDepth = depth;
-  const actor = new ObjectActor(
-    object,
-    {
-      thread: targetActor.threadActor,
-      getGripDepth: () => gripDepth,
-      incrementGripDepth: () => gripDepth++,
-      decrementGripDepth: () => gripDepth--,
-      createValueGrip: v => createValueGripForTarget(targetActor, v, gripDepth),
-      createEnvironmentActor: env => createEnvironmentActor(env, targetActor),
-      sources: () =>
-        DevToolsUtils.reportException(
-          "WebConsoleActor",
-          Error("sources not yet implemented")
-        ),
-    },
-    targetActor.conn
-  );
-  pool.manage(actor);
-  return actor.form();
-}
-
-function isObject(value) {
-  return Object(value) === value;
-}
-
-/**
- * Make a debuggee value for the given value.
- *
- * @param TargetActor targetActor
- *        The Target Actor from which this object originates.
- * @param mixed value
- *        The value you want to get a debuggee value for.
- * @return object
- *         Debuggee value for |value|.
- */
-function makeDebuggeeValue(targetActor, value) {
-  if (isObject(value)) {
-    try {
-      const global = Cu.getGlobalForObject(value);
-      const dbgGlobal = targetActor.dbg.makeGlobalObjectReference(global);
-      return dbgGlobal.makeDebuggeeValue(value);
-    } catch (ex) {
-      // The above can throw an exception if value is not an actual object
-      // or 'Object in compartment marked as invisible to Debugger'
-    }
-  }
-  const dbgGlobal = targetActor.dbg.makeGlobalObjectReference(
-    targetActor.window
-  );
-  return dbgGlobal.makeDebuggeeValue(value);
-}
 
 /**
  * Return the properties needed to display the appropriate table for a given
