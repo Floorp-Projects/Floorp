@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/NeckoTargetHolder.h"
@@ -134,7 +135,10 @@ class nsPACMan final : public nsIStreamLoaderObserver,
   /**
    * Returns true if we are currently loading the PAC file.
    */
-  bool IsLoading() { return mLoader != nullptr; }
+  bool IsLoading() {
+    auto loader = mLoader.Lock();
+    return loader.ref() != nullptr;
+  }
 
   /**
    * Returns true if the given URI matches the URI of our PAC file or the
@@ -270,7 +274,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
   nsCString mPACURIRedirectSpec;
   nsCString mNormalPACURISpec;
 
-  nsCOMPtr<nsIStreamLoader> mLoader;
+  DataMutex<nsCOMPtr<nsIStreamLoader>> mLoader;
   bool mLoadPending;
   Atomic<bool, Relaxed> mShutdown;
   TimeStamp mScheduledReload;
