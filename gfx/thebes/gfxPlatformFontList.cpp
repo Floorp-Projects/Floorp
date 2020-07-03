@@ -726,9 +726,12 @@ gfxFontEntry* gfxPlatformFontList::LookupInSharedFaceNameList(
   if (list->NumLocalFaces()) {
     fontlist::LocalFaceRec* rec = list->FindLocalFace(keyName);
     if (rec) {
-      family = &list->Families()[rec->mFamilyIndex];
-      face = static_cast<fontlist::Face*>(
-          family->Faces(list)[rec->mFaceIndex].ToPtr(list));
+      auto* families = list->Families();
+      if (families) {
+        family = &families[rec->mFamilyIndex];
+        face = static_cast<fontlist::Face*>(
+            family->Faces(list)[rec->mFaceIndex].ToPtr(list));
+      }
     }
   } else {
     list->SearchForLocalFace(keyName, &family, &face);
@@ -794,14 +797,16 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
   if (SharedFontList()) {
     fontlist::FontList* list = SharedFontList();
     const fontlist::Family* families = list->Families();
-    for (uint32_t i = 0; i < list->NumFamilies(); i++) {
-      auto& f = families[i];
-      if (!IsVisibleToCSS(f)) {
-        continue;
+    if (families) {
+      for (uint32_t i = 0; i < list->NumFamilies(); i++) {
+        auto& f = families[i];
+        if (!IsVisibleToCSS(f)) {
+          continue;
+        }
+        // XXX TODO: filter families for aGenericFamily, if supported by platform
+        aListOfFonts.AppendElement(
+            NS_ConvertUTF8toUTF16(f.DisplayName().AsString(list)));
       }
-      // XXX TODO: filter families for aGenericFamily, if supported by platform
-      aListOfFonts.AppendElement(
-          NS_ConvertUTF8toUTF16(f.DisplayName().AsString(list)));
     }
     return;
   }
@@ -996,20 +1001,22 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
   GlobalFontMatch data(aCh, *aMatchStyle);
   if (SharedFontList()) {
     fontlist::Family* families = SharedFontList()->Families();
-    for (uint32_t i = 0; i < SharedFontList()->NumFamilies(); i++) {
-      fontlist::Family& family = families[i];
-      if (!IsVisibleToCSS(family)) {
-        continue;
+    if (families) {
+      for (uint32_t i = 0; i < SharedFontList()->NumFamilies(); i++) {
+        fontlist::Family& family = families[i];
+        if (!IsVisibleToCSS(family)) {
+          continue;
+        }
+        family.SearchAllFontsForChar(SharedFontList(), &data);
+        if (data.mMatchDistance == 0.0) {
+          // no better style match is possible, so stop searching
+          break;
+        }
       }
-      family.SearchAllFontsForChar(SharedFontList(), &data);
-      if (data.mMatchDistance == 0.0) {
-        // no better style match is possible, so stop searching
-        break;
+      if (data.mBestMatch) {
+        aMatchedFamily = FontFamily(data.mMatchedSharedFamily);
+        return data.mBestMatch;
       }
-    }
-    if (data.mBestMatch) {
-      aMatchedFamily = FontFamily(data.mMatchedSharedFamily);
-      return data.mBestMatch;
     }
   } else {
     // iterate over all font families to find a font that support the
@@ -1258,7 +1265,11 @@ bool gfxPlatformFontList::InitializeFamily(fontlist::Family* aFamily) {
   MOZ_ASSERT(SharedFontList());
   auto list = SharedFontList();
   if (!XRE_IsParentProcess()) {
-    uint32_t index = aFamily - list->Families();
+    auto* families = list->Families();
+    if (!families) {
+      return false;
+    }
+    uint32_t index = aFamily - families;
     MOZ_ASSERT(index < list->NumFamilies());
     if (NS_IsMainThread()) {
       dom::ContentChild::GetSingleton()->SendInitializeFamily(
@@ -1917,10 +1928,12 @@ void gfxPlatformFontList::GetFontFamilyNames(
   if (SharedFontList()) {
     fontlist::FontList* list = SharedFontList();
     const fontlist::Family* families = list->Families();
-    for (uint32_t i = 0, n = list->NumFamilies(); i < n; i++) {
-      const fontlist::Family& family = families[i];
-      if (!family.IsHidden()) {
-        aFontFamilyNames.AppendElement(family.DisplayName().AsString(list));
+    if (families) {
+      for (uint32_t i = 0, n = list->NumFamilies(); i < n; i++) {
+        const fontlist::Family& family = families[i];
+        if (!family.IsHidden()) {
+          aFontFamilyNames.AppendElement(family.DisplayName().AsString(list));
+        }
       }
     }
   } else {

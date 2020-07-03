@@ -49,6 +49,14 @@ struct Pointer {
 
   Pointer(Pointer&& aOther) { mBlockAndOffset.store(aOther.mBlockAndOffset); }
 
+  /**
+   * Check if a Pointer has the null value.
+   *
+   * NOTE!
+   * In a child process, it is possible that conversion to a "real" pointer
+   * using ToPtr() will fail even when IsNull() is false, so calling code
+   * that may run in child processes must be prepared to handle this.
+   */
   bool IsNull() const { return mBlockAndOffset == kNullValue; }
 
   uint32_t Block() const { return mBlockAndOffset >> kBlockShift; }
@@ -59,6 +67,10 @@ struct Pointer {
    * Convert a fontlist::Pointer to a standard C++ pointer. This requires the
    * FontList, which will know where the shared memory block is mapped in
    * the current process's address space.
+   *
+   * NOTE!
+   * In child processes this may fail and return nullptr, even if IsNull() is
+   * false, in cases where the font list is in the process of being rebuilt.
    */
   void* ToPtr(FontList* aFontList) const;
 
@@ -104,11 +116,21 @@ struct String {
 
   const char* BeginReading(FontList* aList) const {
     MOZ_ASSERT(!mPointer.IsNull());
-    return static_cast<const char*>(mPointer.ToPtr(aList));
+    auto str = static_cast<const char*>(mPointer.ToPtr(aList));
+    return str ? str : "";
   }
 
   uint32_t Length() const { return mLength; }
 
+  /**
+   * Return whether the String has been set to a value.
+   *
+   * NOTE!
+   * In a child process, accessing the value could fail even if IsNull()
+   * returned false. In this case, the nsCString constructor used by AsString()
+   * will be passed a null pointer, and return an empty string despite the
+   * non-zero Length() recorded here.
+   */
   bool IsNull() const { return mPointer.IsNull(); }
 
  private:

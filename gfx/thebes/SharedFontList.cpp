@@ -55,7 +55,9 @@ void* Pointer::ToPtr(FontList* aFontList) const {
     // about to receive a notification of the new font list anyhow, at which
     // point it will flush its caches and reflow everything, so the temporary
     // failure of this font will be forgotten.
-    if (!aFontList->UpdateShmBlocks()) {
+    // We also return null if we're not on the main thread, as we cannot safely
+    // do the IPC messaging needed here.
+    if (!NS_IsMainThread() || !aFontList->UpdateShmBlocks()) {
       return nullptr;
     }
     MOZ_ASSERT(block < aFontList->mBlocks.Length());
@@ -281,8 +283,11 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
       }
     }
 
-    // this can't happen unless we have totally broken the font-list manager!
-    MOZ_ASSERT_UNREACHABLE("no face found in simple font family!");
+    // We can only reach here if we failed to resolve the face pointer, which
+    // can happen if we're on a stylo thread and caught the font list being
+    // updated; in that case we just fail quietly and let font fallback do
+    // something for the time being.
+    return;
   }
 
   // Pick the font(s) that are closest to the desired weight, style, and
@@ -300,19 +305,21 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
   Face* matched = nullptr;
   for (uint32_t i = 0; i < NumFaces(); i++) {
     Face* face = static_cast<Face*>(facePtrs[i].ToPtr(aList));
-    // weight/style/stretch priority: stretch >> style >> weight
-    double distance = WSSDistance(face, aStyle);
-    if (distance < minDistance) {
-      matched = face;
-      if (!aFaceList.IsEmpty()) {
-        aFaceList.Clear();
+    if (face) {
+      // weight/style/stretch priority: stretch >> style >> weight
+      double distance = WSSDistance(face, aStyle);
+      if (distance < minDistance) {
+        matched = face;
+        if (!aFaceList.IsEmpty()) {
+          aFaceList.Clear();
+        }
+        minDistance = distance;
+      } else if (distance == minDistance) {
+        if (matched) {
+          aFaceList.AppendElement(matched);
+        }
+        matched = face;
       }
-      minDistance = distance;
-    } else if (distance == minDistance) {
-      if (matched) {
-        aFaceList.AppendElement(matched);
-      }
-      matched = face;
     }
   }
 
@@ -776,7 +783,7 @@ void FontList::SetLocalNames(
     faces[i].mKey.Assign(faceArray[i], this);
     const auto* family = FindFamily(rec.mFamilyName);
     if (!family) {
-      // Skip this record if family was excluded by the font whitelist pref.
+      // Skip this record if the family was excluded by the font whitelist pref.
       continue;
     }
     faces[i].mFamilyIndex = family - families;
@@ -788,8 +795,8 @@ void FontList::SetLocalNames(
           static_cast<const Pointer*>(family->Faces(this));
       for (uint32_t j = 0; j < family->NumFaces(); j++) {
         if (!faceList[j].IsNull()) {
-          const Face* face = static_cast<const Face*>(faceList[j].ToPtr(this));
-          if (rec.mFaceDescriptor == face->mDescriptor.AsString(this)) {
+          const Face* f = static_cast<const Face*>(faceList[j].ToPtr(this));
+          if (f && rec.mFaceDescriptor == f->mDescriptor.AsString(this)) {
             faces[i].mFaceIndex = j;
             break;
           }
@@ -821,16 +828,17 @@ Family* FontList::FindFamily(const nsCString& aName) {
 
   Family* families = Families();
   size_t match;
-  if (BinarySearchIf(families, 0, header.mFamilyCount,
-                     FamilyNameComparator(this, aName), &match)) {
+  if (families && BinarySearchIf(families, 0, header.mFamilyCount,
+                                 FamilyNameComparator(this, aName), &match)) {
     return &families[match];
   }
 
   if (header.mAliasCount) {
     families = AliasFamilies();
     size_t match;
-    if (BinarySearchIf(families, 0, header.mAliasCount,
-                       FamilyNameComparator(this, aName), &match)) {
+    if (families && BinarySearchIf(families, 0, header.mAliasCount,
+                                   FamilyNameComparator(this, aName),
+                                   &match)) {
       return &families[match];
     }
   }
@@ -863,8 +871,9 @@ Family* FontList::FindFamily(const nsCString& aName) {
         nsAutoCString strippedName(aName.BeginReading(),
                                    aName.Length() - styleName.Length());
         families = Families();
-        if (BinarySearchIf(families, 0, header.mFamilyCount,
-                           FamilyNameComparator(this, strippedName), &match)) {
+        if (families && BinarySearchIf(families, 0, header.mFamilyCount,
+                                       FamilyNameComparator(this, strippedName),
+                                       &match)) {
           // If so, this may be a possible family to satisfy the search; check
           // if the extended family name was actually found as an alternate
           // (either it's already in mAliasTable, or it gets added there when
@@ -910,8 +919,8 @@ LocalFaceRec* FontList::FindLocalFace(const nsCString& aName) {
 
   LocalFaceRec* faces = LocalFaces();
   size_t match;
-  if (BinarySearchIf(faces, 0, header.mLocalFaceCount,
-                     FaceNameComparator(this, aName), &match)) {
+  if (faces && BinarySearchIf(faces, 0, header.mLocalFaceCount,
+                              FaceNameComparator(this, aName), &match)) {
     return &faces[match];
   }
 
@@ -927,9 +936,12 @@ void FontList::SearchForLocalFace(const nsACString& aName, Family** aFamily,
       ("(shared-fontlist) local face search for (%s)", aName.BeginReading()));
   char initial = aName[0];
   Family* families = Families();
+  if (!families) {
+    return;
+  }
   for (uint32_t i = 0; i < header.mFamilyCount; i++) {
     Family* family = &families[i];
-    if (family->Key().AsString(this)[0] != initial) {
+    if (family->Key().BeginReading(this)[0] != initial) {
       continue;
     }
     LOG_FONTLIST(("(shared-fontlist) checking family (%s)",
