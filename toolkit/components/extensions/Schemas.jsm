@@ -279,6 +279,17 @@ const POSTPROCESSORS = {
 
     return string;
   },
+  requireBackgroundServiceWorkerEnabled(value, context) {
+    if (WebExtensionPolicy.backgroundServiceWorkerEnabled) {
+      return value;
+    }
+
+    // Add an error to the manifest validations and throw the
+    // same error.
+    const msg = "background.service_worker is currently disabled";
+    context.logError(context.makeError(msg));
+    throw new Error(msg);
+  },
 };
 
 // Parses a regular expression, with support for the Python extended

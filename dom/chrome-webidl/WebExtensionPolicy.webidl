@@ -117,6 +117,19 @@ interface WebExtensionPolicy {
   static readonly attribute boolean isExtensionProcess;
 
   /**
+   * Whether the background.service_worker in the extension manifest.json file
+   * is enabled.
+   *
+   * NOTE: **do not use Services.prefs to retrieve the value of the undelying pref**
+   *
+   * It is defined in StaticPrefs.yaml as `mirror: once` and so checking
+   * its current value using Services.prefs doesn't guarantee that it does
+   * match the value as accessible from the C++ layers, and unexpected issue
+   * may be possible if different code has a different idea of its value.
+   */
+  static readonly attribute boolean backgroundServiceWorkerEnabled;
+
+  /**
    * Set based on the manifest.incognito value:
    * If "spanning" or "split" will be true.
    * If "not_allowed" will be false.
@@ -222,6 +235,12 @@ interface WebExtensionPolicy {
    * type.
    */
   readonly attribute object? readyPromise;
+
+  /**
+   * Returns true if the given worker script URL matches the background
+   * service worker url declared in the extension manifest.json file.
+   */
+  boolean isManifestBackgroundWorker(DOMString workerURL);
 };
 
 dictionary WebExtensionInit {
@@ -249,6 +268,7 @@ dictionary WebExtensionInit {
   DOMString? contentScriptCSP = null;
 
   sequence<DOMString>? backgroundScripts = null;
+  DOMString? backgroundWorkerScript = null;
 
   Promise<WebExtensionPolicy> readyPromise;
 };
