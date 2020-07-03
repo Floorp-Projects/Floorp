@@ -6,7 +6,9 @@
 # Parent  96707276b26997ea2a8e9fd8fdacc0c863717e7b
 Allow a special all paths rule in the Windows process sandbox when using semantics FILES_ALLOW_READONLY. r=jimm
 
-This also changes the read only related status checks in filesystem_interception.cc to include STATUS_NETWORK_OPEN_RESTRICTION (0xC0000201), which gets returned in some cases and fails because we never ask the broker.
+This also changes the read only related status checks in filesystem_interception.cc
+to include STATUS_NETWORK_OPEN_RESTRICTION (0xC0000201), which gets returned in
+some cases and fails because we never ask the broker.
 
 diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
@@ -52,7 +54,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
  
    do {
      if (!ValidParameter(file, sizeof(HANDLE), WRITE))
-@@ -106,17 +111,18 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
+@@ -106,17 +111,18 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
                                   ACCESS_MASK desired_access,
                                   POBJECT_ATTRIBUTES object_attributes,
                                   PIO_STATUS_BLOCK io_status,
@@ -92,7 +94,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
  
    do {
      if (!ValidParameter(file_attributes, sizeof(FILE_BASIC_INFORMATION), WRITE))
-@@ -232,17 +239,18 @@ NTSTATUS WINAPI TargetNtQueryAttributesF
+@@ -232,17 +239,18 @@ TargetNtQueryAttributesFile(NtQueryAttri
  
  NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
      NtQueryFullAttributesFileFunction orig_QueryFullAttributes,
@@ -119,7 +121,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/se
  bool FileSystemPolicy::GenerateRules(const wchar_t* name,
                                       TargetPolicy::Semantics semantics,
                                       LowLevelPolicy* policy) {
-   base::string16 mod_name(name);
+   std::wstring mod_name(name);
    if (mod_name.empty()) {
      return false;
    }
