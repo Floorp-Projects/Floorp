@@ -3,7 +3,7 @@
 
 /*
  * Detects and reports unhandled rejections during test runs. Test harnesses
- * will fail tests in this case, unless the test whitelists itself.
+ * will fail tests in this case, unless the test explicitly allows rejections.
  */
 
 "use strict";
@@ -125,7 +125,7 @@ var PromiseTestUtils = {
   },
 
   /**
-   * Called by tests that have been whitelisted, disables the observers in this
+   * Called by tests with uncaught rejections to disable the observers in this
    * module. For new tests where uncaught rejections are expected, you should
    * use the more granular expectUncaughtRejection function instead.
    */
@@ -228,7 +228,7 @@ var PromiseTestUtils = {
 
   /**
    * Fails the test if there are any uncaught rejections at this time that have
-   * not been whitelisted using expectUncaughtRejection.
+   * not been explicitly allowed using expectUncaughtRejection.
    *
    * Depending on the configuration of the test suite, this function might only
    * report the details of the first uncaught rejection that was generated.
@@ -251,7 +251,7 @@ var PromiseTestUtils = {
         continue;
       }
 
-      // Check the global whitelisting functions.
+      // Check the global ignore functions.
       if (this._globalRejectionIgnoreFns.some(fn => fn(rejection))) {
         continue;
       }

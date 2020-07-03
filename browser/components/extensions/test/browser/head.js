@@ -32,10 +32,12 @@
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
-// This bug should be fixed, but for the moment this directory is whitelisted.
+// This bug should be fixed, but for the moment all tests in this directory
+// allow various classes of promise rejections.
 //
-// NOTE: Entire directory whitelisting should be kept to a minimum. Normally you
-//       should use "expectUncaughtRejection" to flag individual failures.
+// NOTE: Allowing rejections on an entire directory should be avoided.
+//       Normally you should use "expectUncaughtRejection" to flag individual
+//       failures.
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
