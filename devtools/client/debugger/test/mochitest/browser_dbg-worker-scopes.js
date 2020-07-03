@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Current state is running/);
-PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Current state is running/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
 // Test that unusual objects have their contents shown in worker thread scopes.
 add_task(async function() {

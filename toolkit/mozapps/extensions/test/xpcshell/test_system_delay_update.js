@@ -4,7 +4,9 @@
 
 // This verifies that delaying a system add-on update works.
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Message manager disconnected/
+);
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");

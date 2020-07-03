@@ -4,7 +4,9 @@ const { ExtensionStorageIDB } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageIDB.jsm"
 );
 
-PromiseTestUtils.whitelistRejectionsGlobally(/WebExtension context not found/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /WebExtension context not found/
+);
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));

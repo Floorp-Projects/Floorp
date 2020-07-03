@@ -39,7 +39,7 @@ async function enableApplicationPanel() {
   const { PromiseTestUtils } = ChromeUtils.import(
     "resource://testing-common/PromiseTestUtils.jsm"
   );
-  PromiseTestUtils.whitelistRejectionsGlobally(
+  PromiseTestUtils.allowMatchingRejectionsGlobally(
     /this._frontCreationListeners is null/
   );
 
