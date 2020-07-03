@@ -1537,16 +1537,9 @@ pub enum Appearance {
     ButtonArrowPrevious,
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ButtonArrowUp,
-    /// A rectangular button that contains complex content
-    /// like images (e.g. HTML <button> elements)
-    #[css(skip)]
-    ButtonBevel,
     /// The focus outline box inside of a button.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ButtonFocus,
-    /// The caret of a text area
-    #[css(skip)]
-    Caret,
     /// A dual toolbar button (e.g., a Back button with a dropdown)
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Dualbutton,
@@ -1557,9 +1550,6 @@ pub enum Appearance {
     InnerSpinButton,
     /// List boxes.
     Listbox,
-    /// A listbox item.
-    #[css(skip)]
-    Listitem,
     /// Menu Bar background
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menubar,
@@ -1580,9 +1570,6 @@ pub enum Appearance {
     /// The text part of a dropdown list, to left of button.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MenulistText,
-    /// An editable textfield with a dropdown list (a combobox).
-    #[css(skip)]
-    MenulistTextfield,
     /// Menu Popup background.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menupopup,
