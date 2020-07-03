@@ -789,6 +789,10 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
     } else {
       nsCOMPtr<nsIPrincipal> principal =
           AntiTrackingUtils::GetPrincipal(topContext);
+      if (!principal) {
+        continue;
+      }
+
       nsAutoCString key;
       PermissionManager::GetKeyForPrincipal(principal, false, key);
       // Make sure we only apply to frames that have the same top-level.
