@@ -967,6 +967,14 @@ NetworkObserver.prototype = {
   },
 
   /**
+   * Returns a list of blocked requests
+   * Useful as blockedURLs is mutated by both console & netmonitor
+   */
+  getBlockedUrls() {
+    return this.blockedURLs;
+  },
+
+  /**
    * Setup the network response listener for the given HTTP activity. The
    * NetworkResponseListener is responsible for storing the response body.
    *

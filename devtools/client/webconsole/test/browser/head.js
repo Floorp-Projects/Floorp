@@ -851,6 +851,25 @@ async function openInspector(options = {}) {
 }
 
 /**
+ * Open the netmonitor for the given tab, or the current one if none given.
+ *
+ * @param Element tab
+ *        Optional tab element for which you want open the netmonitor.
+ *        Defaults to current selected tab.
+ * @return Promise
+ *         A promise that is resolved with the netmonitor panel once the netmonitor is open.
+ */
+async function openNetMonitor(tab) {
+  const target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
+  let toolbox = await gDevTools.getToolbox(target);
+  if (!toolbox) {
+    toolbox = await gDevTools.showToolbox(target);
+  }
+  await toolbox.selectTool("netmonitor");
+  return toolbox.getCurrentPanel();
+}
+
+/**
  * Open the Web Console for the given tab, or the current one if none given.
  *
  * @param Element tab

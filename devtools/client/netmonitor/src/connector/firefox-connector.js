@@ -375,6 +375,16 @@ class FirefoxConnector {
     return this.webConsoleFront.unblockRequest(filter);
   }
 
+  /*
+   * Get the list of blocked URLs
+   */
+  getBlockedUrls() {
+    if (!this.webConsoleFront.traits.blockedUrls) {
+      return [];
+    }
+    return this.webConsoleFront.getBlockedUrls();
+  }
+
   /**
    * Updates the list of blocked URLs
    *

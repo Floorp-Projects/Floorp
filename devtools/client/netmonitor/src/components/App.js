@@ -54,9 +54,10 @@ class App extends Component {
       statisticsOpen: PropTypes.bool.isRequired,
       // Document which settings menu will be injected to
       toolboxDoc: PropTypes.object.isRequired,
+      // Syncing blocked requests
+      addBlockedUrl: PropTypes.func,
     };
   }
-
   // Rendering
 
   render() {

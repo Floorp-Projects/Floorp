@@ -227,7 +227,7 @@ function handleHelperResult(response) {
           dispatch(
             messagesActions.messagesAdd([
               {
-                type: "logMessage",
+                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
                 message: l10n.getFormatStr(
                   "webconsole.message.commands.blockedURL",
                   [blockURL]
@@ -247,7 +247,7 @@ function handleHelperResult(response) {
           dispatch(
             messagesActions.messagesAdd([
               {
-                type: "logMessage",
+                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
                 message: l10n.getFormatStr(
                   "webconsole.message.commands.unblockedURL",
                   [unblockURL]

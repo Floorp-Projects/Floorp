@@ -33,6 +33,13 @@ add_task(async function() {
     }
   };
 
+  // wait for the add input to get focus
+  await waitUntil(() => {
+    return document.querySelector(
+      "#network-action-bar-blocked-panel .request-blocking-add-form input.devtools-searchinput:focus"
+    );
+  });
+
   // Add patterns which should block some of the requests
   type("test1");
   EventUtils.synthesizeKey("KEY_Enter");

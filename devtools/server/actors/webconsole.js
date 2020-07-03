@@ -215,6 +215,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this.traits = {
       // Supports new cached messages structure for 77+
       newCacheStructure: true,
+      // Supports retrieving blocked urls
+      blockedUrls: true,
     };
   },
   /**
@@ -1901,23 +1903,24 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   async _sendMessageToNetmonitors(messageName, responseName, args) {
     if (!this.netmonitors) {
-      return;
+      return null;
     }
-    await Promise.all(
+    const results = await Promise.all(
       this.netmonitors.map(({ messageManager }) => {
         const onResponseReceived = new Promise(resolve => {
-          messageManager.addMessageListener(
-            responseName,
-            function onResponse() {
-              messageManager.removeMessageListener(responseName, onResponse);
-              resolve();
-            }
-          );
+          messageManager.addMessageListener(responseName, function onResponse(
+            response
+          ) {
+            messageManager.removeMessageListener(responseName, onResponse);
+            resolve(response);
+          });
         });
         messageManager.sendAsyncMessage(messageName, args);
         return onResponseReceived;
       })
     );
+
+    return results;
   },
 
   /**
@@ -1958,6 +1961,28 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     );
 
     return {};
+  },
+
+  /*
+   * Gets the list of blocked request urls as per the backend
+   */
+  async getBlockedUrls() {
+    const responses =
+      (await this._sendMessageToNetmonitors(
+        "debug:get-blocked-urls",
+        "debug:get-blocked-urls:response"
+      )) || [];
+    if (!responses || responses.length == 0) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        responses
+          .filter(response => response.data)
+          .map(response => response.data)
+      )
+    );
   },
 
   /**
