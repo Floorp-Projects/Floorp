@@ -12,6 +12,7 @@
 #include "mozilla/Variant.h"
 #include "X11UndefineNone.h"
 #include <unordered_map>
+#include <unordered_set>
 
 namespace mozilla {
 namespace layers {
@@ -194,6 +195,7 @@ class CompositorAnimationStorage final {
  private:
   AnimatedValueTable mAnimatedValues;
   AnimationsTable mAnimations;
+  std::unordered_set<uint64_t> mNewAnimations;
   mutable Mutex mLock;
 };
 
