@@ -20,5 +20,4 @@ Interface to be implemented by classes that want to observe the session manager.
 
 | Name | Summary |
 |---|---|
-| [EngineViewPresenter](../../../mozilla.components.feature.session/-engine-view-presenter/index.md) | `class EngineViewPresenter : `[`Observer`](./index.md)<br>Presenter implementation for EngineView. |
 | [SelectionAwareSessionObserver](../../-selection-aware-session-observer/index.md) | `abstract class SelectionAwareSessionObserver : `[`Observer`](./index.md)`, `[`Observer`](../../-session/-observer/index.md)<br>This class is a combination of [Session.Observer](../../-session/-observer/index.md) and [SessionManager.Observer](./index.md). It provides functionality to observe changes to a specified or selected session, and can automatically take care of switching over the observer in case a different session gets selected (see [observeFixed](../../-selection-aware-session-observer/observe-fixed.md) and [observeSelected](../../-selection-aware-session-observer/observe-selected.md)). |

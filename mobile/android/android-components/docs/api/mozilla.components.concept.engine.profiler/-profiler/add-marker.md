@@ -29,7 +29,7 @@ This is an overload of [Profiler.addMarker](./add-marker.md) for convenience.
 
 `aStartTime` - Start time as Double. It can be null if you want to mark a point of time.
 
-`aText` - An optional string field for more information about the marker.`abstract fun addMarker(markerName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, startTime: `[`Double`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/profiler/Profiler.kt#L113)
+`aText` - An optional string field for more information about the marker.`abstract fun addMarker(markerName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, startTime: `[`Double`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/profiler/Profiler.kt#L113)
 
 Add a profiler marker to Gecko Profiler with the given arguments.
 End time will be added automatically with the current profiler time when the function is called.

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SwipeRefreshFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, reloadUrlUseCase: `[`ReloadUrlUseCase`](../-session-use-cases/-reload-url-use-case/index.md)`, swipeRefreshLayout: SwipeRefreshLayout, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`
+`SwipeRefreshFeature(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, reloadUrlUseCase: `[`ReloadUrlUseCase`](../-session-use-cases/-reload-url-use-case/index.md)`, swipeRefreshLayout: SwipeRefreshLayout, tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`
 
 Feature implementation to add pull to refresh functionality to browsers.
 

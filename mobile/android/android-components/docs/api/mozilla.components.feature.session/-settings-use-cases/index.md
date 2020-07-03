@@ -2,7 +2,7 @@
 
 # SettingsUseCases
 
-`class SettingsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L19)
+`class SettingsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L20)
 
 Contains use cases related to engine [Settings](../../mozilla.components.concept.engine/-settings/index.md).
 
@@ -10,20 +10,19 @@ Contains use cases related to engine [Settings](../../mozilla.components.concept
 
 `engine` - reference to the application's browser [Engine](../../mozilla.components.concept.engine/-engine/index.md).
 
-`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).*
+`store` - the application's [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md).
 
 ### Types
 
 | Name | Summary |
 |---|---|
-| [UpdateSettingUseCase](-update-setting-use-case/index.md) | `abstract class UpdateSettingUseCase<T>`<br>Use case to update a setting and then change all active browsing sessions to use the new setting. |
-| [UpdateTrackingProtectionUseCase](-update-tracking-protection-use-case/index.md) | `class UpdateTrackingProtectionUseCase : `[`UpdateSettingUseCase`](-update-setting-use-case/index.md)`<`[`TrackingProtectionPolicy`](../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.md)`>`<br>Updates the tracking protection policy to the given policy value when invoked. All active sessions are automatically updated with the new policy. |
+| [UpdateTrackingProtectionUseCase](-update-tracking-protection-use-case/index.md) | `class UpdateTrackingProtectionUseCase`<br>Updates the tracking protection policy to the given policy value when invoked. All active sessions are automatically updated with the new policy. |
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SettingsUseCases(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to engine [Settings](../../mozilla.components.concept.engine/-settings/index.md). |
+| [&lt;init&gt;](-init-.md) | `SettingsUseCases(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`)`<br>Contains use cases related to engine [Settings](../../mozilla.components.concept.engine/-settings/index.md). |
 
 ### Properties
 
