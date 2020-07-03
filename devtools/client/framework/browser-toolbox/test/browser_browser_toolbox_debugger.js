@@ -8,7 +8,7 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 
 // On debug test runner, it takes about 50s to run the test.
 requestLongerTimeout(4);

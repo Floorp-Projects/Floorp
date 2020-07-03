@@ -12,7 +12,7 @@
  */
 
 // Breakpoint position calculations can throw when interrupted by a navigation.
-PromiseTestUtils.whitelistRejectionsGlobally(/Resource .*? does not exist/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Resource .*? does not exist/);
 
 const server = createTestHTTPServer();
 

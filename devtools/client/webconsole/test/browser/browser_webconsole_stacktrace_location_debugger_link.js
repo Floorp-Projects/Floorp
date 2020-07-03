@@ -8,8 +8,8 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
-PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/this\.worker is null/);
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +

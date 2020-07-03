@@ -9,7 +9,7 @@
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/aborted by the user agent/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/aborted by the user agent/);
 ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", this);
 
 const permissionError =

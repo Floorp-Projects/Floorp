@@ -13,7 +13,7 @@ const PERMISSIONS_PAGE =
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/The request is not allowed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/The request is not allowed/);
 
 const EXPIRE_TIME_MS = 100;
 const TIMEOUT_MS = 500;

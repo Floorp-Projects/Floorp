@@ -8,8 +8,8 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
-PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
 /**
  * Tests if on clicking the stack frame, UI switches to the Debugger panel.

@@ -19,7 +19,7 @@ Services.scriptloader.loadSubScript(
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-PromiseTestUtils.whitelistRejectionsGlobally(/connection just closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/connection just closed/);
 
 const TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";

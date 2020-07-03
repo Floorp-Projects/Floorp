@@ -2,7 +2,9 @@
 
 Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 
-PromiseTestUtils.whitelistRejectionsGlobally(/WebExtension context not found/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /WebExtension context not found/
+);
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));

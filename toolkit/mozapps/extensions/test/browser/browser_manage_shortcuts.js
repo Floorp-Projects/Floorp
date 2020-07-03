@@ -3,7 +3,9 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Message manager disconnected/
+);
 
 function extensionShortcutsReady(id) {
   let extension = WebExtensionPolicy.getByID(id).extension;

@@ -12,8 +12,12 @@ const TEST_URL = "http://example.com/";
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Message manager disconnected/
+);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Receiving end does not exist/
+);
 
 const extension = ExtensionTestUtils.loadExtension({
   manifest: {

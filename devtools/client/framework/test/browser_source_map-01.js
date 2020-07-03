@@ -14,8 +14,8 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
-PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/this\.worker is null/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
 
 // Empty page
 const PAGE_URL = `${URL_ROOT}doc_empty-tab-01.html`;

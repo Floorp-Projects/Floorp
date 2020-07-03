@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
 // Test that sources appear in the debugger when navigating using the BFCache.
 add_task(async function() {

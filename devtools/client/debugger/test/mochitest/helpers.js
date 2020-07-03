@@ -2016,9 +2016,9 @@ const { PromiseTestUtils } = ChromeUtils.import(
 // Debugger operations that are canceled because they were rendered obsolete by
 // a navigation or pause/resume end up as uncaught rejections. These never
 // indicate errors and are whitelisted in all debugger tests.
-PromiseTestUtils.whitelistRejectionsGlobally(/Page has navigated/);
-PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has changed/);
-PromiseTestUtils.whitelistRejectionsGlobally(
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Page has navigated/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Current thread has changed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Current thread has paused or resumed/
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);

@@ -12,7 +12,7 @@
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_ILLEGAL_VALUE/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_ILLEGAL_VALUE/);
 
 const kEnginePref = "browser.translation.engine";
 const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";

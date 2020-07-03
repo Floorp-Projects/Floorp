@@ -10,7 +10,7 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
 add_task(async function() {
   await addTab(`data:text/html;charset=utf-8,

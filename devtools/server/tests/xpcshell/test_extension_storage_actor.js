@@ -23,7 +23,9 @@ const {
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Message manager disconnected/
+);
 
 const { createAppInfo, promiseStartupManager } = AddonTestUtils;
 

@@ -5,7 +5,9 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Message manager disconnected/
+);
 
 add_task(async function test_management_themes() {
   const TEST_ID = "test_management_themes@tests.mozilla.com";

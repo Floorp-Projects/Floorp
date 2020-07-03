@@ -8,7 +8,7 @@
 
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
-PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/this\.worker is null/);
 
 requestLongerTimeout(2);
 

@@ -8,7 +8,7 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(
+PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Permission denied to access property "document" on cross-origin object/
 );
 

@@ -7,7 +7,7 @@
 
 // FIXME bug 1524374 removing breakpoints in this test can cause uncaught
 // rejections and make bug 1512742 permafail.
-PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");

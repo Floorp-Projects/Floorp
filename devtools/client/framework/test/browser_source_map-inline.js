@@ -10,8 +10,8 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
-PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/this\.worker is null/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
 
 const TEST_ROOT = "http://example.com/browser/devtools/client/framework/test/";
 // Empty page

@@ -3,8 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Ignore strange errors when shutting down.
-PromiseTestUtils.whitelistRejectionsGlobally(/No such actor/);
-PromiseTestUtils.whitelistRejectionsGlobally(/connection just closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/No such actor/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(/connection just closed/);
 
 const MAXIMUM_ITEMS = 10;
 
