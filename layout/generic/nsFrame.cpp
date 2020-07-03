@@ -8496,11 +8496,11 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       nsIFrame* blockFrame = this;
 
       while (NS_FAILED(result)) {
-        int32_t thisLine = nsIFrame::GetLineNumber(
-            blockFrame, aPos->mScrollViewStop, &blockFrame);
-        if (thisLine < 0) return NS_ERROR_FAILURE;
+        int32_t thisLine;
+        MOZ_TRY_VAR(thisLine, blockFrame->GetLineNumber(aPos->mScrollViewStop,
+                                                        &blockFrame));
         iter = blockFrame->GetLineIterator();
-        NS_ASSERTION(iter, "GetLineNumber() succeeded but no block frame?");
+        MOZ_ASSERT(iter, "GetLineNumber() succeeded but no block frame?");
 
         int edgeCase = 0;  // no edge case. this should look at thisLine
 
@@ -8592,11 +8592,11 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
     case eSelectEndLine: {
       // Adjusted so that the caret can't get confused when content changes
       nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
-      int32_t thisLine = nsIFrame::GetLineNumber(
-          blockFrame, aPos->mScrollViewStop, &blockFrame);
-      if (thisLine < 0) return NS_ERROR_FAILURE;
+      int32_t thisLine;
+      MOZ_TRY_VAR(thisLine, blockFrame->GetLineNumber(aPos->mScrollViewStop,
+                                                      &blockFrame));
       nsAutoLineIterator it = blockFrame->GetLineIterator();
-      NS_ASSERTION(it, "GetLineNumber() succeeded but no block frame?");
+      MOZ_ASSERT(it, "GetLineNumber() succeeded but no block frame?");
 
       int32_t lineFrameCount;
       nsIFrame* firstFrame;
@@ -8764,37 +8764,45 @@ nsresult nsIFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-int32_t nsIFrame::GetLineNumber(nsIFrame* aFrame, bool aLockScroll,
-                                nsIFrame** aContainingBlock) {
-  NS_ASSERTION(aFrame, "null aFrame");
-  nsIFrame* blockFrame = aFrame;
-  nsIFrame* thisBlock;
+Result<int32_t, nsresult> nsIFrame::GetLineNumber(bool aLockScroll,
+                                                  nsIFrame** aContainingBlock) {
+  MOZ_ASSERT(aContainingBlock);
+
+  nsIFrame* parentFrame = this;
+  nsIFrame* frame;
   nsAutoLineIterator it;
-  nsresult result = NS_ERROR_FAILURE;
-  while (NS_FAILED(result) && blockFrame) {
-    thisBlock = blockFrame;
-    if (thisBlock->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+  while (!it && parentFrame) {
+    frame = parentFrame;
+    if (frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
       // if we are searching for a frame that is not in flow we will not find
       // it. we must instead look for its placeholder
-      if (thisBlock->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+      if (frame->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
         // abspos continuations don't have placeholders, get the fif
-        thisBlock = thisBlock->FirstInFlow();
+        frame = frame->FirstInFlow();
       }
-      thisBlock = thisBlock->GetPlaceholderFrame();
-      if (!thisBlock) return -1;
+      frame = frame->GetPlaceholderFrame();
+      if (!frame) {
+        return Err(NS_ERROR_FAILURE);
+      }
     }
-    blockFrame = thisBlock->GetParent();
-    result = NS_OK;
-    if (blockFrame) {
-      if (aLockScroll && blockFrame->IsScrollFrame()) return -1;
-      it = blockFrame->GetLineIterator();
-      if (!it) result = NS_ERROR_FAILURE;
+    parentFrame = frame->GetParent();
+    if (parentFrame) {
+      if (aLockScroll && parentFrame->IsScrollFrame()) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      it = parentFrame->GetLineIterator();
     }
   }
-  if (!blockFrame || !it) return -1;
+  if (!parentFrame || !it) {
+    return Err(NS_ERROR_FAILURE);
+  }
 
-  if (aContainingBlock) *aContainingBlock = blockFrame;
-  return it->FindLineContaining(thisBlock);
+  *aContainingBlock = parentFrame;
+  int32_t line = it->FindLineContaining(frame);
+  if (line < 0) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  return line;
 }
 
 Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
@@ -8885,9 +8893,9 @@ nsresult nsIFrame::GetFrameFromDirection(
   while (!selectable) {
     nsIFrame* blockFrame;
 
-    int32_t thisLine =
-        nsIFrame::GetLineNumber(traversedFrame, aScrollViewStop, &blockFrame);
-    if (thisLine < 0) return NS_ERROR_FAILURE;
+    int32_t thisLine;
+    MOZ_TRY_VAR(thisLine,
+                traversedFrame->GetLineNumber(aScrollViewStop, &blockFrame));
 
     nsILineIterator* it = blockFrame->GetLineIterator();
 
