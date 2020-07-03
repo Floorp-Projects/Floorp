@@ -15,7 +15,10 @@ const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const compatibilityReducer = require("devtools/client/inspector/compatibility/reducers/compatibility");
 const {
+  appendNode,
+  clearDestroyedNodes,
   initUserSettings,
+  removeNode,
   updateNodes,
   updateSelectedNode,
   updateTopLevelTarget,
@@ -170,8 +173,11 @@ class CompatibilityView {
         (mutation.attributeName === "style" ||
           mutation.attributeName === "class")
     );
+    const childListMutation = mutations.filter(
+      mutation => mutation.type === "childList"
+    );
 
-    if (attributeMutation.length === 0) {
+    if (attributeMutation.length === 0 && childListMutation.length === 0) {
       return;
     }
 
@@ -188,6 +194,28 @@ class CompatibilityView {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1506160
     for (const { target } of attributeMutation) {
       this.inspector.store.dispatch(updateNode(target));
+    }
+
+    // Destroyed nodes can be cleaned up
+    // once at the end if necessary
+    let cleanupDestroyedNodes = false;
+    for (const { removed, target } of childListMutation) {
+      if (!removed.length) {
+        this.inspector.store.dispatch(appendNode(target));
+        continue;
+      }
+
+      const retainedNodes = removed.filter(node => node?.actorID);
+      cleanupDestroyedNodes =
+        cleanupDestroyedNodes || retainedNodes.length !== removed.length;
+
+      for (const retainedNode of retainedNodes) {
+        this.inspector.store.dispatch(removeNode(retainedNode));
+      }
+    }
+
+    if (cleanupDestroyedNodes) {
+      this.inspector.store.dispatch(clearDestroyedNodes());
     }
   }
 
