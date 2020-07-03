@@ -20,11 +20,15 @@ const {
   COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,
   COMPATIBILITY_INIT_USER_SETTINGS_FAILURE,
   COMPATIBILITY_INIT_USER_SETTINGS_COMPLETE,
-  COMPATIBILITY_UPDATE_NODE,
+  COMPATIBILITY_INTERNAL_NODE_UPDATE,
   COMPATIBILITY_UPDATE_NODES_START,
   COMPATIBILITY_UPDATE_NODES_SUCCESS,
   COMPATIBILITY_UPDATE_NODES_FAILURE,
   COMPATIBILITY_UPDATE_NODES_COMPLETE,
+  COMPATIBILITY_UPDATE_NODE_START,
+  COMPATIBILITY_UPDATE_NODE_SUCCESS,
+  COMPATIBILITY_UPDATE_NODE_FAILURE,
+  COMPATIBILITY_UPDATE_NODE_COMPLETE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_START,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
@@ -79,16 +83,7 @@ function updateNodes(selector) {
       const nodeList = await walker.querySelectorAll(walker.rootNode, selector);
 
       for (const node of await nodeList.items()) {
-        if (selectedNode.actorID === node.actorID) {
-          await _updateSelectedNodeIssues(node, targetBrowsers, dispatch);
-        }
-
-        const issues = await _getNodeIssues(node, targetBrowsers);
-        dispatch({
-          type: COMPATIBILITY_UPDATE_NODE,
-          node,
-          issues,
-        });
+        await _updateNode(node, selectedNode, targetBrowsers, dispatch);
       }
       dispatch({ type: COMPATIBILITY_UPDATE_NODES_SUCCESS });
     } catch (error) {
@@ -182,6 +177,38 @@ function updateTopLevelTarget(target) {
   };
 }
 
+function updateNode(node) {
+  return async ({ dispatch, getState }) => {
+    dispatch({ type: COMPATIBILITY_UPDATE_NODE_START });
+
+    try {
+      const { selectedNode, targetBrowsers } = getState().compatibility;
+      await _updateNode(node, selectedNode, targetBrowsers, dispatch);
+      dispatch({ type: COMPATIBILITY_UPDATE_NODE_SUCCESS });
+    } catch (error) {
+      dispatch({
+        type: COMPATIBILITY_UPDATE_NODE_FAILURE,
+        error,
+      });
+    }
+
+    dispatch({ type: COMPATIBILITY_UPDATE_NODE_COMPLETE });
+  };
+}
+
+async function _updateNode(node, selectedNode, targetBrowsers, dispatch) {
+  if (selectedNode.actorID === node.actorID) {
+    await _updateSelectedNodeIssues(node, targetBrowsers, dispatch);
+  }
+
+  const issues = await _getNodeIssues(node, targetBrowsers);
+  dispatch({
+    type: COMPATIBILITY_INTERNAL_NODE_UPDATE,
+    node,
+    issues,
+  });
+}
+
 async function _getNodeIssues(node, targetBrowsers) {
   let declarationBlocksIssues = [];
   const compatibility = await node.inspectorFront.getCompatibilityFront();
@@ -268,4 +295,5 @@ module.exports = {
   updateSettingsVisibility,
   updateTargetBrowsers,
   updateTopLevelTarget,
+  updateNode,
 };

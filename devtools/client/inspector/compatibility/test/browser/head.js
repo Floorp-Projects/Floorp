@@ -132,10 +132,17 @@ function getIssueItem(property, element) {
 async function togglePropStatusOnRuleView(inspector, ruleIndex, propIndex) {
   const ruleView = inspector.getPanel("ruleview").view;
   const rule = getRuleViewRuleEditor(ruleView, ruleIndex).rule;
+  // In case of inline style changes, we track the mutations via the
+  // inspector's markupmutation event to react to dynamic style changes
+  // which Resource Watcher doesn't cover yet.
+  // If an inline style is applied to the element, we need to wait on the
+  // markupmutation event
+  const onMutation =
+    ruleIndex === 0 ? inspector.once("markupmutation") : Promise.resolve();
   const textProp = rule.textProps[propIndex];
   const onRuleviewChanged = ruleView.once("ruleview-changed");
   textProp.editor.enable.click();
-  await onRuleviewChanged;
+  await Promise.all([onRuleviewChanged, onMutation]);
 }
 
 /**

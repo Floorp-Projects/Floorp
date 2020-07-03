@@ -8,8 +8,9 @@ const {
   COMPATIBILITY_APPEND_NODE,
   COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,
   COMPATIBILITY_INIT_USER_SETTINGS_FAILURE,
-  COMPATIBILITY_UPDATE_NODE,
+  COMPATIBILITY_INTERNAL_NODE_UPDATE,
   COMPATIBILITY_UPDATE_NODES_FAILURE,
+  COMPATIBILITY_UPDATE_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_ISSUES,
@@ -54,7 +55,7 @@ const reducers = {
     _showError(COMPATIBILITY_INIT_USER_SETTINGS_FAILURE, error);
     return state;
   },
-  [COMPATIBILITY_UPDATE_NODE](state, { node, issues }) {
+  [COMPATIBILITY_INTERNAL_NODE_UPDATE](state, { node, issues }) {
     const topLevelTargetIssues = _updateTopLebelTargetIssues(
       state.topLevelTargetIssues,
       node,
@@ -63,6 +64,10 @@ const reducers = {
     return Object.assign({}, state, { topLevelTargetIssues });
   },
   [COMPATIBILITY_UPDATE_NODES_FAILURE](state, { error }) {
+    _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
+    return state;
+  },
+  [COMPATIBILITY_UPDATE_NODE_FAILURE](state, { error }) {
     _showError(COMPATIBILITY_UPDATE_NODES_FAILURE, error);
     return state;
   },
