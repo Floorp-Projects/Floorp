@@ -1593,7 +1593,7 @@ void nsHtml5TreeBuilder::errIsindex() {
 
 void nsHtml5TreeBuilder::errFooSeenWhenFooOpen(nsAtom* aName) {
   if (MOZ_UNLIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentRun("errFooSeenWhenFooOpen", aName);
+    mViewSource->AddErrorToCurrentRun("errFooSeenWhenFooOpen2", aName);
   }
 }
 
