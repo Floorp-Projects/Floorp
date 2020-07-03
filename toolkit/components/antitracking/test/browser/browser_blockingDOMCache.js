@@ -70,11 +70,7 @@ AntiTracking.runTest(
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    if (allowListed) {
-      await hasStorageAccessInitially();
-    } else {
-      await noStorageAccessInitially();
-    }
+    await hasStorageAccessInitially();
 
     await caches.open("wow").then(
       _ => {

@@ -86,11 +86,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
     }
 
     /* import-globals-from storageAccessAPIHelpers.js */
-    if (allowListed) {
-      await hasStorageAccessInitially();
-    } else {
-      await noStorageAccessInitially();
-    }
+    await hasStorageAccessInitially();
 
     let blob = new Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
