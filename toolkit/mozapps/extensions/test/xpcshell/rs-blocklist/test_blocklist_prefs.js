@@ -5,6 +5,10 @@
 // Tests resetting of preferences in blocklist entry when an add-on is blocked.
 // See bug 802434.
 
+// useMLBF=true only supports blocking, not resetting prefs, since extensions
+// cannot set arbitrary prefs any more after the removal of legacy addons.
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+
 const BLOCKLIST_DATA = [
   {
     guid: "block1@tests.mozilla.org",
