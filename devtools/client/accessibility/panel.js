@@ -10,7 +10,18 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const Telemetry = require("devtools/client/shared/telemetry");
 
-const { Picker } = require("devtools/client/accessibility/picker");
+loader.lazyRequireGetter(
+  this,
+  "AccessibilityProxy",
+  "devtools/client/accessibility/accessibility-proxy",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "Picker",
+  "devtools/client/accessibility/picker",
+  true
+);
 const {
   A11Y_SERVICE_DURATION,
 } = require("devtools/client/accessibility/constants");
@@ -39,10 +50,9 @@ const EVENTS = {
  * render Accessibility Tree of the current debugger target and the sidebar that
  * displays current relevant accessible details.
  */
-function AccessibilityPanel(iframeWindow, toolbox, startup) {
+function AccessibilityPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
-  this.startup = startup;
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
   this.onTargetAvailable = this.onTargetAvailable.bind(this);
@@ -95,7 +105,8 @@ AccessibilityPanel.prototype = {
 
     this.shouldRefresh = true;
 
-    await this.startup.initAccessibility();
+    this.accessibilityProxy = new AccessibilityProxy(this._toolbox);
+    await this.accessibilityProxy.initialize();
 
     await this._toolbox.targetList.watchTargets(
       [this._toolbox.targetList.TYPES.FRAME],
@@ -305,10 +316,6 @@ AccessibilityPanel.prototype = {
     this.picker && this.picker.stop();
   },
 
-  get accessibilityProxy() {
-    return this.startup.accessibilityProxy;
-  },
-
   /**
    * Return true if the Accessibility panel is currently selected.
    */
@@ -329,7 +336,19 @@ AccessibilityPanel.prototype = {
 
     this.postContentMessage("destroy");
 
-    this.accessibilityProxy.currentTarget.off("navigate", this.onTabNavigated);
+    if (this.accessibilityProxy) {
+      this.accessibilityProxy.currentTarget.off(
+        "navigate",
+        this.onTabNavigated
+      );
+      this.accessibilityProxy.stopListeningForLifecycleEvents({
+        init: this.onLifecycleEvent,
+        shutdown: this.onLifecycleEvent,
+      });
+      this.accessibilityProxy.destroy();
+      this.accessibilityProxy = null;
+    }
+
     this._toolbox.off("select", this.onPanelVisibilityChange);
 
     this.panelWin.off(
@@ -346,11 +365,6 @@ AccessibilityPanel.prototype = {
       this.picker.release();
       this.picker = null;
     }
-
-    this.accessibilityProxy.stopListeningForLifecycleEvents({
-      init: this.onLifecycleEvent,
-      shutdown: this.onLifecycleEvent,
-    });
 
     this._telemetry = null;
     this.panelWin.gTelemetry = null;
