@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  getVerificationHash: "resource://gre/modules/SearchEngine.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -274,7 +273,9 @@ class SearchCache {
    */
   setVerifiedAttribute(name, val) {
     this._metaData[name] = val;
-    this._metaData[this.getHashName(name)] = getVerificationHash(val);
+    this._metaData[this.getHashName(name)] = SearchUtils.getVerificationHash(
+      val
+    );
     this._delayedWrite();
   }
 
@@ -303,7 +304,8 @@ class SearchCache {
     let val = this.getAttribute(name);
     if (
       val &&
-      this.getAttribute(this.getHashName(name)) != getVerificationHash(val)
+      this.getAttribute(this.getHashName(name)) !=
+        SearchUtils.getVerificationHash(val)
     ) {
       logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
       return "";

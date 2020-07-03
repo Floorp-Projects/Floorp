@@ -16,9 +16,6 @@ const { AppConstants } = ChromeUtils.import(
 const { getAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 );
-const { getVerificationHash } = ChromeUtils.import(
-  "resource://gre/modules/SearchEngine.jsm"
-);
 
 var cacheTemplate, appPluginsPath, profPlugins;
 
@@ -71,13 +68,13 @@ add_task(async function setup() {
   Services.locale.requestedLocales = ["en-US"];
 
   // We dynamically generate the hashes because these depend on the profile.
-  enginesCache.metaData.searchDefaultHash = getVerificationHash(
+  enginesCache.metaData.searchDefaultHash = SearchUtils.getVerificationHash(
     enginesCache.metaData.searchDefault
   );
-  enginesCache.metaData.hash = getVerificationHash(
+  enginesCache.metaData.hash = SearchUtils.getVerificationHash(
     enginesCache.metaData.current
   );
-  enginesCache.metaData.visibleDefaultEnginesHash = getVerificationHash(
+  enginesCache.metaData.visibleDefaultEnginesHash = SearchUtils.getVerificationHash(
     enginesCache.metaData.visibleDefaultEngines
   );
   const appInfo = getAppInfo();
