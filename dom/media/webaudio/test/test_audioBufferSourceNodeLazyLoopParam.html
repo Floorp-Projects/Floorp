@@ -27,12 +27,12 @@ var gTest = {
     source.loopStart = 1024 / context.sampleRate;
     source.loopEnd = 2048 / context.sampleRate;
     source.buffer = buffer;
-    source.start(0, 1024 / context.sampleRate, 2048 / context.sampleRate);
+    source.start(0, 1024 / context.sampleRate, 1024 / context.sampleRate);
     return source;
   },
   createExpectedBuffers(context) {
     var expectedBuffer = context.createBuffer(1, 4096, context.sampleRate);
-    for (var i = 0; i < 2048; i++) {
+    for (var i = 0; i < 4096; i++) {
       expectedBuffer.getChannelData(0)[i] = 1;
     }
     return expectedBuffer;
