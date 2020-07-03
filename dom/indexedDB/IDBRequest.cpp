@@ -34,9 +34,7 @@
 #include "nsIScriptContext.h"
 #include "nsJSUtils.h"
 #include "nsString.h"
-
-// Include this last to avoid path problems on Windows.
-#include "ActorsChild.h"
+#include "ThreadLocal.h"
 
 namespace mozilla {
 namespace dom {
