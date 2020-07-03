@@ -52,66 +52,7 @@ def test_notebookupload_with_filter(notebook, no_filter):
                     for data in data_dict["data"]:
                         assert type(data["value"]) in (int, float)
 
-    notebook.assert_has_calls(
-        mock.call().post_to_iodide(["scatterplot"], start_local_server=True)
-    )
-
-
-@pytest.mark.parametrize("stats", [False, True])
-@mock.patch("mozperftest.metrics.notebookupload.PerftestNotebook")
-def test_compare_to_success(notebook, stats):
-    options = {
-        "notebook-metrics": ["firstPaint"],
-        "notebook-prefix": "",
-        "notebook-analysis": [],
-        "notebook": True,
-        "notebook-compare-to": [str(BT_DATA.parent)],
-        "notebook-stats": stats,
-    }
-
-    metrics, metadata, env = setup_env(options)
-
-    with temp_file() as output:
-        env.set_arg("output", output)
-        with metrics as m, silence():
-            m(metadata)
-
-    args, kwargs = notebook.call_args_list[0]
-    if not stats:
-        assert len(args[0]) == 2
-        assert args[0][0]["name"] == "browsertime-newestRun"
-        assert args[0][1]["name"] == "browsertime-results"
-    else:
-        assert any(["statistics" in element["subtest"] for element in args[0]])
-
-    notebook.assert_has_calls(
-        mock.call().post_to_iodide(["compare"], start_local_server=True)
-    )
-
-
-@pytest.mark.parametrize("filepath", ["invalidPath", str(BT_DATA)])
-@mock.patch("mozperftest.metrics.notebookupload.PerftestNotebook")
-def test_compare_to_invalid_parameter(notebook, filepath):
-    options = {
-        "notebook-metrics": ["firstPaint"],
-        "notebook-prefix": "",
-        "notebook-analysis": [],
-        "notebook": True,
-        "notebook-compare-to": [filepath],
-    }
-
-    metrics, metadata, env = setup_env(options)
-
-    with pytest.raises(Exception) as einfo:
-        with temp_file() as output:
-            env.set_arg("output", output)
-            with metrics as m, silence():
-                m(metadata)
-
-    if filepath == "invalidPath":
-        assert "does not exist" in str(einfo.value)
-    else:
-        assert "not a directory" in str(einfo.value)
+    notebook.assert_has_calls(mock.call().post_to_iodide(["scatterplot"]))
 
 
 if __name__ == "__main__":
