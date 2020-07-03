@@ -41,7 +41,7 @@ class BreadcrumbTest {
         ).install(testContext))
 
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
         )
 
         assertEquals(reporter.crashBreadcrumbs.elementAt(0).message, testMessage)

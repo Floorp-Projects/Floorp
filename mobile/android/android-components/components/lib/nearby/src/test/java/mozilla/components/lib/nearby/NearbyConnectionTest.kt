@@ -7,7 +7,6 @@ package mozilla.components.lib.nearby
 import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -29,15 +28,14 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
 
-@RunWith(AndroidJUnit4::class)
 class NearbyConnectionTest {
+
     private val DEVICE_NAME = "Name"
     private val NEIGHBOR_ID = "123ABC"
     private val NEIGHBOR_NAME = "Neighbor"
@@ -177,7 +175,7 @@ class NearbyConnectionTest {
         assertState(ConnectionState.Sending::class)
 
         // Should have right payload.
-        var payload = argumentCaptor<Payload>()
+        val payload = argumentCaptor<Payload>()
         string = argumentCaptor<String>()
         verify(mockConnectionsClient).sendPayload(string.capture(), payload.capture())
         assertEquals(returnedPayloadId, payload.value.id)
@@ -299,7 +297,7 @@ class NearbyConnectionTest {
 
         // Should call requestConnection() with right arguments.
         val name = argumentCaptor<String>()
-        var neighborId = argumentCaptor<String>()
+        val neighborId = argumentCaptor<String>()
         val connectionLifecycleCallback = argumentCaptor<ConnectionLifecycleCallback>()
         verify(mockConnectionsClient).requestConnection(
             name.capture(),
@@ -377,7 +375,7 @@ class NearbyConnectionTest {
     @Test
     fun `Should encode and decode borderline message as bytes`() {
         // This tests the case where the message length is exactly equal to the bytes limit.
-        val bytes = ByteArray(ConnectionsClient.MAX_BYTES_DATA_SIZE, { _ -> 0 })
+        val bytes = ByteArray(ConnectionsClient.MAX_BYTES_DATA_SIZE) { 0 }
         val message = String(bytes, NearbyConnection.PAYLOAD_ENCODING)
         val payload = message.toPayload()
         assertTrue(payload.type == Payload.Type.BYTES)
@@ -385,9 +383,10 @@ class NearbyConnectionTest {
         assertEquals(0, errors.count())
     }
 
+    @Test
     fun `Should encode and decode long message as stream`() {
         // This tests the case where the message length is one more than the bytes limit.
-        val bytes = ByteArray(ConnectionsClient.MAX_BYTES_DATA_SIZE, { _ -> 0 })
+        val bytes = ByteArray(ConnectionsClient.MAX_BYTES_DATA_SIZE + 1) { 0 }
         val message = String(bytes, NearbyConnection.PAYLOAD_ENCODING)
         val payload = message.toPayload()
         assertEquals(Payload.Type.STREAM, payload.type)
@@ -395,6 +394,7 @@ class NearbyConnectionTest {
         assertEquals(0, errors.count())
     }
 
+    @Test
     fun `Should report error and return null when decoding invalid payload of type FILE`() {
         val mockPayload = mock<Payload>()
         whenever(mockPayload.type).thenReturn(Payload.Type.FILE)
