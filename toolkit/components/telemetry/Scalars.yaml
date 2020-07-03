@@ -506,6 +506,52 @@ browser.startup:
     record_in_processes:
       - 'main'
 
+  abouthome_cache_result:
+    bug_numbers:
+      - 1622263
+      - 1614351
+    description: >
+      How the about:home startup cache functioned on startup.
+
+      0: Result value was never set (error case)
+      1: Cache did not exist
+      2: Cache page stream was corrupt / inaccessible
+      3: Cache script stream was corrupt / inaccessible
+      4: Cache was invalidated by a version bump
+      5: Cache was valid, but read too late to be useful.
+      6: Cache was valid and used.
+      7: Cache is disabled.
+      8: User did not load about:home on its own by default.
+      9: Cache is disabled because about:newtab preloading is disabled.
+
+    expires: "87"
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  abouthome_cache_shutdownwrite:
+    bug_numbers:
+      - 1622263
+      - 1614351
+    description: >
+      True if the about:home startup cache was written via the AsyncShutdown
+      blocker.
+
+    expires: "87"
+    kind: boolean
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser usage scalars.
 browser.usage:
   graphite:
