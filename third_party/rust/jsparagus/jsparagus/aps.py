@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import typing
 from dataclasses import dataclass
-from .grammar import Nt
 from .lr0 import ShiftedTerm, Term
-from .actions import Action
+from .actions import Action, FilterStates
 
 # Avoid circular reference between this module and parse_table.py
 if typing.TYPE_CHECKING:
@@ -20,10 +19,13 @@ def shifted_path_to(pt: ParseTable, n: int, right_of: Path) -> typing.Iterator[P
     state = right_of[0].src
     assert isinstance(state, int)
     for edge in pt.states[state].backedges:
-        if not pt.term_is_shifted(edge.term):
-            print(repr(edge))
-            print(pt.states[edge.src])
         assert pt.term_is_shifted(edge.term)
+        if isinstance(edge.term, Action) and edge.term.update_stack():
+            # Some Action such as Unwind and Replay are actions which are
+            # forking the execution state from the parse stable state.
+            # While computing the shifted_path_to, we only iterate over the
+            # parse table states.
+            continue
         if pt.term_is_stacked(edge.term):
             s_n = n - 1
             if n == 0:
@@ -45,6 +47,7 @@ def reduce_path(pt: ParseTable, shifted: Path) -> typing.Iterator[Path]:
     assert action.update_stack()
     stack_diff = action.update_stack_with()
     nt = stack_diff.nt
+    assert nt is not None
     depth = stack_diff.pop + stack_diff.replay
     if depth > 0:
         # We are reducing at least one element from the stack.
@@ -129,7 +132,22 @@ class APS:
     # As the parse table is explored, new APS are produced by
     # `aps.shift_next(parse_table)`, which are containing the new state of the
     # parser and the history which has been seen by the APS since it started.
-    __slots__ = ['stack', 'shift', 'lookahead', 'replay', 'history', 'reducing']
+    slots = [
+        'state',
+        'stack',
+        'shift',
+        'lookahead',
+        'replay',
+        'history',
+        'reducing'
+    ]
+
+    # This the state at which we are at, and from which edges would be listed.
+    # In most cases, this corresponds to the source of last edge of the shift
+    # list. However, it differs only after executing actions which are mutating
+    # the parser state while following the out-going edge such as Unwind and
+    # Replay.
+    state: StateId
 
     # This is the known stack at the location where we started investigating.
     # As more history is discovered by resolving unwind actions, this stack
@@ -164,7 +182,7 @@ class APS:
     def start(state: StateId) -> APS:
         "Return an Abstract Parser State starting at a given state of a parse table"
         edge = Edge(state, None)
-        return APS([edge], [edge], [], [], [], False)
+        return APS(state, [edge], [edge], [], [], [], False)
 
     def shift_next(self, pt: ParseTable) -> typing.Iterator[APS]:
         """Yield an APS for each state reachable from this APS in a single step,
@@ -191,43 +209,62 @@ class APS:
         st, sh, la, rp, hs = self.stack, self.shift, self.lookahead, self.replay, self.history
         last_edge = sh[-1]
         state = pt.states[last_edge.src]
+        state_match_shift_end = self.state == self.shift[-1].src
         if self.replay == []:
+            assert state_match_shift_end
             for term, to in state.shifted_edges():
-                edge = Edge(last_edge.src, term)
+                edge = Edge(self.state, term)
                 new_sh = self.shift[:-1] + [edge]
                 edge_to = Edge(to, None)
-                yield APS(st, new_sh + [edge_to], la + [term], rp, hs + [edge], False)
-        else:
+                yield APS(to, st, new_sh + [edge_to], la + [term], rp, hs + [edge], False)
+        elif state_match_shift_end:
             term = self.replay[0]
             rp = self.replay[1:]
             if term in state:
-                edge = Edge(last_edge.src, term)
+                edge = Edge(self.state, term)
                 new_sh = self.shift[:-1] + [edge]
                 to = state[term]
                 edge_to = Edge(to, None)
-                yield APS(st, new_sh + [edge_to], la, rp, hs + [edge], False)
+                yield APS(to, st, new_sh + [edge_to], la, rp, hs + [edge], False)
 
         rp = self.replay
         for a, to in state.epsilon:
-            edge = Edge(last_edge.src, a)
+            edge = Edge(self.state, a)
             prev_sh = self.shift[:-1] + [edge]
             # TODO: Add support for Lookahead and flag manipulation rules, as
             # both of these would invalide potential reduce paths.
             if a.update_stack():
+                stack_diff = a.update_stack_with()
+                if stack_diff.replay < 0:
+                    assert stack_diff.pop == 0
+                    assert stack_diff.nt is None
+                    num_replay = -stack_diff.replay
+                    assert len(self.replay) >= num_replay
+                    new_rp = self.replay[:]
+                    new_sh = self.shift[:]
+                    while num_replay > 0:
+                        num_replay -= 1
+                        term = new_rp[0]
+                        del new_rp[0]
+                        sh_state = new_sh[-1].src
+                        sh_edge = Edge(sh_state, term)
+                        sh_to = pt.states[sh_state][term]
+                        sh_edge_to = Edge(sh_to, None)
+                        del new_sh[-1]
+                        new_sh = new_sh + [sh_edge, sh_edge_to]
+                    yield APS(to, st, new_sh, la, new_rp, hs + [edge], False)
+                    continue
+
                 if self.reducing:
                     # When reducing, do not attempt to execute any actions
                     # which might update the stack. Without this restriction,
                     # we might loop on Optional rules. Which would not match
                     # the expected behaviour of the parser.
                     continue
-                # TODO: When unwinding, do not add the reduced_path back to the
-                # shifted state, but add the non-terminal to the list of terms
-                # to be replayed. This is more accruate with the actual inner
-                # working of the parser and allow to extract the Unwind part of
-                # the Reduce action. This also imply that we might have an
-                # action state which is independent of the stack top.
-                assert not a.follow_edge()  # Not supported yet.
-                stack_diff = a.update_stack_with()
+                reducing = not a.follow_edge()
+                assert stack_diff.pop >= 0
+                assert stack_diff.nt is not None
+                assert stack_diff.replay >= 0
                 for path in reduce_path(pt, prev_sh):
                     # path contains the chains of state shifted, including
                     # epsilon transitions. The head of the path should be able
@@ -278,7 +315,7 @@ class APS:
                     replay = stack_diff.replay
                     nt = stack_diff.nt
                     assert nt is not None
-                    new_rp: typing.List[ShiftedTerm] = [nt]
+                    new_rp = [nt]
                     if replay > 0:
                         stacked_terms = [
                             typing.cast(ShiftedTerm, edge.term)
@@ -287,19 +324,46 @@ class APS:
                         new_rp = new_rp + stacked_terms[-replay:]
                     new_rp = new_rp + rp
                     new_la = la[:max(len(la) - replay, 0)]
-                    yield APS(new_st, new_sh, new_la, new_rp, hs + [edge], True)
+
+                    # If we are reducing, this implies that we are not
+                    # following the edge of the reducing action, and resume the
+                    # execution at the last edge of the shift action. At this
+                    # point the execution and the stack diverge from standard
+                    # LR parser. However, the stack is still manipulated
+                    # through Unwind and Replay actions but the state which is
+                    # executed no longer matches the last element of the
+                    # shifted term or action.
+                    if reducing:
+                        to = new_sh[-1].src
+                    yield APS(to, new_st, new_sh, new_la, new_rp, hs + [edge], reducing)
+            elif isinstance(a, FilterStates):
+                # FilterStates is added by the graph transformation and is
+                # expected to be added after the replacement of
+                # Reduce(Unwind(...)) by Unwind, FilterStates and Replay
+                # actions. Thus, at the time when FilterStates is encountered,
+                # we do not expect `self.states` to match the last element of
+                # the `shift` list to match.
+                assert not state_match_shift_end
+
+                # Emulate FilterStates condition, which is to branch to the
+                # destination if the state value from the top of the stack is
+                # in the list of states of this condition.
+                if self.shift[-1].src in a.states:
+                    yield APS(to, st, sh, la, rp, hs + [edge], False)
             else:
                 edge_to = Edge(to, None)
-                yield APS(st, prev_sh + [edge_to], la, rp, hs + [edge], self.reducing)
+                yield APS(to, st, prev_sh + [edge_to], la, rp, hs + [edge], self.reducing)
 
     def stable_str(self, states: typing.List[StateAndTransitions], name: str = "aps") -> str:
-        return """{}.stack = [{}]
+        return """{}.state = {}
+{}.stack = [{}]
 {}.shift = [{}]
 {}.lookahead = [{}]
 {}.replay = [{}]
 {}.history = [{}]
 {}.reducing = {}
         """.format(
+            name, self.state,
             name, " ".join(e.stable_str(states) for e in self.stack),
             name, " ".join(e.stable_str(states) for e in self.shift),
             name, ", ".join(repr(e) for e in self.lookahead),
@@ -309,13 +373,15 @@ class APS:
         )
 
     def string(self, name: str = "aps") -> str:
-        return """{}.stack = [{}]
+        return """{}.state = {}
+{}.stack = [{}]
 {}.shift = [{}]
 {}.lookahead = [{}]
 {}.replay = [{}]
 {}.history = [{}]
 {}.reducing = {}
         """.format(
+            name, self.state,
             name, " ".join(str(e) for e in self.stack),
             name, " ".join(str(e) for e in self.shift),
             name, ", ".join(repr(e) for e in self.lookahead),

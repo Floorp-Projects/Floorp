@@ -68,6 +68,11 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
         }
         Ok(false)
     }
+    fn shift_replayed(&mut self, state: usize) {
+        let tv = self.replay_stack.pop().unwrap();
+        self.sim_state_stack.push(state);
+        self.sim_node_stack.push(tv);
+    }
     fn unshift(&mut self) {
         let tv = self.pop();
         self.replay(tv)
@@ -94,6 +99,9 @@ impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
             self.sp -= 1;
         }
         *self.sim_state_stack.last_mut().unwrap() = state;
+    }
+    fn top_state(&self) -> usize {
+        self.state()
     }
     fn check_not_on_new_line(&mut self, _peek: usize) -> Result<'alloc, bool> {
         Ok(true)

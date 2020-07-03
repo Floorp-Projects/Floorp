@@ -21,6 +21,7 @@ pub struct TermValue<Value> {
 /// with variable lookahead which can be replayed.
 pub trait ParserTrait<'alloc, Value> {
     fn shift(&mut self, tv: TermValue<Value>) -> Result<'alloc, bool>;
+    fn shift_replayed(&mut self, state: usize);
     fn unshift(&mut self);
     fn rewind(&mut self, n: usize) {
         for _ in 0..n {
@@ -30,5 +31,6 @@ pub trait ParserTrait<'alloc, Value> {
     fn pop(&mut self) -> TermValue<Value>;
     fn replay(&mut self, tv: TermValue<Value>);
     fn epsilon(&mut self, state: usize);
+    fn top_state(&self) -> usize;
     fn check_not_on_new_line(&mut self, peek: usize) -> Result<'alloc, bool>;
 }
