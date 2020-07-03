@@ -83,7 +83,8 @@ class TestOptimize(unittest.TestCase):
             target_task_graph=graph,
             optimizations=optimize._get_optimizations(graph, strategies),
             params={},
-            do_not_optimize=do_not_optimize)
+            do_not_optimize=do_not_optimize,
+            requested_tasks=graph)
         self.assertEqual(got_removed, exp_removed)
 
     def test_remove_tasks_never(self):
