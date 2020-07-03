@@ -27,7 +27,7 @@ function selectRequest(id, request) {
  * Select request with a given index (sorted order)
  */
 function selectRequestByIndex(index) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const requests = getSortedRequests(getState());
     let itemId;
     if (index >= 0 && index < requests.length) {
@@ -44,7 +44,7 @@ function selectRequestByIndex(index) {
  * - +Infinity | -Infinity: move to the start or end of the list
  */
 function selectDelta(delta) {
-  return (dispatch, getState) => {
+  return ({ dispatch, getState }) => {
     const state = getState();
     const requests = getDisplayedRequests(state);
 
