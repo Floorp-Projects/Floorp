@@ -69,7 +69,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val id = R.string.tip_add_to_homescreen
             val name = context.resources.getString(id)
             val homescreenURL =
-                    "https://support.mozilla.org/en-US/kb/add-web-page-shortcuts-your-home-screen"
+                    "https://support.mozilla.org/kb/add-web-page-shortcuts-your-home-screen"
 
             val deepLinkAddToHomescreen = {
                 val session = createTab(homescreenURL, source = SessionState.Source.MENU)
@@ -112,7 +112,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val id = R.string.tip_autocomplete_url
             val name = context.resources.getString(id)
             val autocompleteURL =
-                    "https://support.mozilla.org/en-US/kb/autocomplete-settings-firefox-focus-address-bar"
+                    "https://support.mozilla.org/kb/autocomplete-settings-firefox-focus-address-bar"
 
             val shouldDisplayAutocompleteUrl = {
                 !Settings.getInstance(context).shouldAutocompleteFromCustomDomainList()
@@ -131,7 +131,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val id = R.string.tip_open_in_new_tab
             val name = context.resources.getString(id)
             val newTabURL =
-                    "https://support.mozilla.org/en-US/kb/open-new-tab-firefox-focus-android"
+                    "https://support.mozilla.org/kb/open-new-tab-firefox-focus-android"
 
             val shouldDisplayOpenInNewTab = {
                 !Settings.getInstance(context).hasOpenedInNewTab()
@@ -150,7 +150,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val id = R.string.tip_request_desktop
             val name = context.resources.getString(id)
             val requestDesktopURL =
-                    "https://support.mozilla.org/en-US/kb/switch-desktop-view-firefox-focus-android"
+                    "https://support.mozilla.org/kb/switch-desktop-view-firefox-focus-android"
 
             val shouldDisplayRequestDesktop = {
                 !Settings.getInstance(context).hasRequestedDesktop()
