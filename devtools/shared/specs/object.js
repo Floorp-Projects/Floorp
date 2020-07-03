@@ -63,10 +63,6 @@ types.addDictType("object.bindings", {
   variables: "json",
 });
 
-types.addDictType("object.scope", {
-  scope: "environment",
-});
-
 types.addDictType("object.enumProperties.Options", {
   enumEntries: "nullable:boolean",
   ignoreNonIndexedProperties: "nullable:boolean",
@@ -225,10 +221,6 @@ const objectSpec = generateActorSpec({
       oneway: true,
     },
     release: { release: true },
-    scope: {
-      request: {},
-      response: RetVal("object.scope"),
-    },
     // Needed for the PauseScopedObjectActor which extends the ObjectActor.
     threadGrip: {
       request: {},
