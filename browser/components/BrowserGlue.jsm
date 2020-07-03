@@ -4945,6 +4945,7 @@ var AboutHomeStartupCache = {
   // to create the cached document, and then to receive that document.
   CACHE_REQUEST_MESSAGE: "AboutHomeStartupCache:CacheRequest",
   CACHE_RESPONSE_MESSAGE: "AboutHomeStartupCache:CacheResponse",
+  CACHE_USAGE_RESULT_MESSAGE: "AboutHomeStartupCache:UsageResult",
 
   // When a "privileged about content process" is launched, this message is
   // sent to give it some nsIInputStream's for the about:home document they
@@ -4955,6 +4956,27 @@ var AboutHomeStartupCache = {
   // all about:newtab's, or the preloaded about:newtab. We use those
   // messages as a signal that it's likely time to refresh the cache.
   CACHE_DEBOUNCE_RATE_MS: 5000,
+
+  // The following values are as possible values for the
+  // browser.startup.abouthome_cache_result scalar. Keep these in sync with the
+  // scalar definition in Scalars.yaml. See setDeferredResult for more
+  // information.
+  CACHE_RESULT_SCALARS: {
+    UNSET: 0,
+    DOES_NOT_EXIST: 1,
+    CORRUPT_PAGE: 2,
+    CORRUPT_SCRIPT: 3,
+    INVALIDATED: 4,
+    LATE: 5,
+    VALID_AND_USED: 6,
+    DISABLED: 7,
+    NOT_LOADING_ABOUTHOME: 8,
+    PRELOADING_DISABLED: 9,
+  },
+
+  // This will be set to one of the values of CACHE_RESULT_SCALARS
+  // once it is determined which result best suits what occurred.
+  _cacheDeferredResultScalar: -1,
 
   // A reference to the nsICacheEntry to read from and write to.
   _cacheEntry: null,
@@ -4981,9 +5003,12 @@ var AboutHomeStartupCache = {
       throw new Error("AboutHomeStartupCache already initted.");
     }
 
+    this.setDeferredResult(this.CACHE_RESULT_SCALARS.UNSET);
+
     this._enabled = Services.prefs.getBoolPref(this.ENABLED_PREF, false);
 
     if (!this._enabled) {
+      this.recordResult(this.CACHE_RESULT_SCALARS.DISABLED);
       return;
     }
 
@@ -5003,11 +5028,13 @@ var AboutHomeStartupCache = {
 
     if (!willLoadAboutHome) {
       this.log.trace("Not configured to load about:home by default.");
+      this.recordResult(this.CACHE_RESULT_SCALARS.NOT_LOADING_ABOUTHOME);
       return;
     }
 
     if (!Services.prefs.getBoolPref(this.PRELOADED_NEWTAB_PREF, false)) {
       this.log.trace("Preloaded about:newtab disabled.");
+      this.recordResult(this.CACHE_RESULT_SCALARS.PRELOADING_DISABLED);
       return;
     }
 
@@ -5072,6 +5099,7 @@ var AboutHomeStartupCache = {
     this._hasWrittenThisSession = false;
     this._cacheEntryPromise = null;
     this._cacheEntryResolver = null;
+    this._cacheDeferredResultScalar = -1;
 
     this.log.trace("Uninitialized.");
     this.log.removeAppender(this._appender);
@@ -5114,6 +5142,11 @@ var AboutHomeStartupCache = {
       this.log.trace("Never wrote a cache this session. Arming cache task.");
       this._cacheTask.arm();
     }
+
+    Services.telemetry.scalarSet(
+      "browser.startup.abouthome_cache_shutdownwrite",
+      this._cacheTask.isArmed
+    );
 
     if (this._cacheTask.isArmed) {
       this.log.trace("Finalizing cache task on shutdown");
@@ -5250,6 +5283,7 @@ var AboutHomeStartupCache = {
         this.log.debug("Cache meta data does not exist. Closing streams.");
         this.pagePipe.outputStream.close();
         this.scriptPipe.outputStream.close();
+        this.setDeferredResult(this.CACHE_RESULT_SCALARS.DOES_NOT_EXIST);
         return;
       }
 
@@ -5264,6 +5298,7 @@ var AboutHomeStartupCache = {
       this.clearCache();
       this.pagePipe.outputStream.close();
       this.scriptPipe.outputStream.close();
+      this.setDeferredResult(this.CACHE_RESULT_SCALARS.INVALIDATED);
       return;
     }
 
@@ -5275,6 +5310,7 @@ var AboutHomeStartupCache = {
       this.log.error("Failed to open main input stream for cache entry", e);
       this.pagePipe.outputStream.close();
       this.scriptPipe.outputStream.close();
+      this.setDeferredResult(this.CACHE_RESULT_SCALARS.CORRUPT_PAGE);
       return;
     }
 
@@ -5304,11 +5340,13 @@ var AboutHomeStartupCache = {
         // to dynamically generating the page.
         this.log.error("Script stream not available! Closing pipe.");
         this.scriptPipe.outputStream.close();
+        this.setDeferredResult(this.CACHE_RESULT_SCALARS.CORRUPT_SCRIPT);
       } else {
         throw e;
       }
     }
 
+    this.setDeferredResult(this.CACHE_RESULT_SCALARS.VALID_AND_USED);
     this.log.trace("Streams connected to pipes. Dropping references to pipes.");
     this._pagePipe = null;
     this._scriptPipe = null;
@@ -5494,6 +5532,7 @@ var AboutHomeStartupCache = {
       );
       this.sendCacheInputStreams(procManager);
       procManager.addMessageListener(this.CACHE_RESPONSE_MESSAGE, this);
+      procManager.addMessageListener(this.CACHE_USAGE_RESULT_MESSAGE, this);
       this._procManager = procManager;
       this._procManagerID = childID;
     }
@@ -5512,6 +5551,10 @@ var AboutHomeStartupCache = {
     if (this._procManagerID == childID) {
       this._procManager.removeMessageListener(
         this.CACHE_RESPONSE_MESSAGE,
+        this
+      );
+      this._procManager.removeMessageListener(
+        this.CACHE_USAGE_RESULT_MESSAGE,
         this
       );
       this._procManager = null;
@@ -5535,6 +5578,86 @@ var AboutHomeStartupCache = {
     this._cacheTask.arm();
   },
 
+  /**
+   * Stores the CACHE_RESULT_SCALARS value that most accurately represents
+   * the current notion of how the cache has operated so far. It is stored
+   * temporarily like this because we need to hear from the privileged
+   * about content process to hear whether or not retrieving the cache
+   * actually worked on that end. The success state reported back from
+   * the privileged about content process will be compared against the
+   * deferred result scalar to compute what will be recorded to
+   * Telemetry.
+   *
+   * Note that this value will only be recorded if its value is GREATER
+   * than the currently recorded value. This is because it's possible for
+   * certain functions that record results to re-enter - but we want to record
+   * the _first_ condition that caused the cache to not be read from.
+   *
+   * @param result (Number)
+   *   One of the CACHE_RESULT_SCALARS values. If this value is less than
+   *   the currently recorded value, it is ignored.
+   */
+  setDeferredResult(result) {
+    if (this._cacheDeferredResultScalar < result) {
+      this._cacheDeferredResultScalar = result;
+    }
+  },
+
+  /**
+   * Records the final result of how the cache operated for the user
+   * during this session to Telemetry.
+   */
+  recordResult(result) {
+    // Note: this can be called very early on in the lifetime of
+    // AboutHomeStartupCache, so things like this.log might not exist yet.
+    Services.telemetry.scalarSet(
+      "browser.startup.abouthome_cache_result",
+      result
+    );
+  },
+
+  /**
+   * Called when the parent process receives a message from the privileged
+   * about content process saying whether or not reading from the cache
+   * was successful.
+   *
+   * @param success (boolean)
+   *   True if reading from the cache succeeded.
+   */
+  onUsageResult(success) {
+    this.log.trace(`Received usage result. Success = ${success}`);
+    if (success) {
+      if (
+        this._cacheDeferredResultScalar !=
+        this.CACHE_RESULT_SCALARS.VALID_AND_USED
+      ) {
+        this.log.error(
+          "Somehow got a success result despite having never " +
+            "successfully sent down the cache streams"
+        );
+        this.recordResult(this._cacheDeferredResultScalar);
+      } else {
+        this.recordResult(this.CACHE_RESULT_SCALARS.VALID_AND_USED);
+      }
+
+      return;
+    }
+
+    if (
+      this._cacheDeferredResultScalar ==
+      this.CACHE_RESULT_SCALARS.VALID_AND_USED
+    ) {
+      // We failed to read from the cache despite having successfully
+      // sent it down to the content process. We presume then that the
+      // streams just didn't provide any bytes in time.
+      this.recordResult(this.CACHE_RESULT_SCALARS.LATE);
+    } else {
+      // We failed to read the cache, but already knew why. We can
+      // now record that value.
+      this.recordResult(this._cacheDeferredResultScalar);
+    }
+  },
+
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsICacheEntryOpenallback,
     Ci.nsIObserver,
@@ -5551,15 +5674,22 @@ var AboutHomeStartupCache = {
       return;
     }
 
-    if (message.name == this.CACHE_RESPONSE_MESSAGE) {
-      this.log.trace("Parent received cache streams.");
-      if (!this._cacheDeferred) {
-        this.log.error("Parent doesn't have _cacheDeferred set up!");
-        return;
-      }
+    switch (message.name) {
+      case this.CACHE_RESPONSE_MESSAGE: {
+        this.log.trace("Parent received cache streams.");
+        if (!this._cacheDeferred) {
+          this.log.error("Parent doesn't have _cacheDeferred set up!");
+          return;
+        }
 
-      this._cacheDeferred(message.data);
-      this._cacheDeferred = null;
+        this._cacheDeferred(message.data);
+        this._cacheDeferred = null;
+        break;
+      }
+      case this.CACHE_USAGE_RESULT_MESSAGE: {
+        this.onUsageResult(message.data.success);
+        break;
+      }
     }
   },
 

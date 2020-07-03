@@ -155,6 +155,23 @@ async function clearCache() {
 }
 
 /**
+ * Checks that the browser.startup.abouthome_cache_result scalar was
+ * recorded at a particular value.
+ *
+ * @param cacheResultScalar (Number)
+ *   One of the AboutHomeStartupCache.CACHE_RESULT_SCALARS values.
+ */
+function assertCacheResultScalar(cacheResultScalar) {
+  let parentScalars = Services.telemetry.getSnapshotForScalars("main").parent;
+  Assert.equal(
+    parentScalars["browser.startup.abouthome_cache_result"],
+    cacheResultScalar,
+    "Expected the right value set to browser.startup.abouthome_cache_result " +
+      "scalar."
+  );
+}
+
+/**
  * Tests that the about:home document loaded in a passed <xul:browser> was
  * one from the cache.
  *
@@ -194,6 +211,9 @@ async function ensureCachedAboutHome(browser) {
       "Should have found the Discovery Stream top sites."
     );
   });
+  assertCacheResultScalar(
+    AboutHomeStartupCache.CACHE_RESULT_SCALARS.VALID_AND_USED
+  );
 }
 
 /**
