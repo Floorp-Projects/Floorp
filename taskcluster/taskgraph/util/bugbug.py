@@ -16,8 +16,8 @@ RETRY_TIMEOUT = 8 * 60  # seconds
 RETRY_INTERVAL = 10      # seconds
 
 # Preset confidence thresholds.
-CT_LOW = 0.5
-CT_MEDIUM = 0.7
+CT_LOW = 0.7
+CT_MEDIUM = 0.8
 CT_HIGH = 0.9
 
 GROUP_TRANSLATIONS = {
