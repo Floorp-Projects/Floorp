@@ -2212,8 +2212,6 @@ pref("devtools.dom.enabled", false);
 
 // Enable the Accessibility panel.
 pref("devtools.accessibility.enabled", true);
-// Enable accessibility panel auto initialization.
-pref("devtools.accessibility.auto-init.enabled", true);
 
 // Web console filters
 pref("devtools.webconsole.filter.error", true);
