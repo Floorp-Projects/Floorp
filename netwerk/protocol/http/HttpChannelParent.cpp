@@ -829,6 +829,10 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(
       Unused << mChannel->Resume();
       mSuspendedForFlowControl = false;
     }
+  } else if (!mIPCClosed) {
+    // Make sure that the child correctly delivers all stream listener
+    // notifications.
+    Unused << SendFailedAsyncOpen(status);
   }
 
   // We won't need flow control anymore. Toggle the flag to avoid |Suspend|
