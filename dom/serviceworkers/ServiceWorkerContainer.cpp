@@ -23,6 +23,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
@@ -224,7 +225,7 @@ already_AddRefed<nsIURI> GetBaseURIFromGlobal(nsIGlobalObject* aGlobal,
 
 already_AddRefed<Promise> ServiceWorkerContainer::Register(
     const nsAString& aScriptURL, const RegistrationOptions& aOptions,
-    ErrorResult& aRv) {
+    const CallerType aCallerType, ErrorResult& aRv) {
   // Note, we can't use GetGlobalIfValid() from the start here.  If we
   // hit a storage failure we want to log a message with the final
   // scope string we put together below.
@@ -257,6 +258,25 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
       NS_NewURI(getter_AddRefs(scriptURI), scriptURL, nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(scriptURL);
+    return nullptr;
+  }
+
+  // Never allow script URL with moz-extension scheme if support is fully
+  // disabled by the 'extensions.background_service_worker.enabled' pref.
+  if (scriptURI->SchemeIs("moz-extension") &&
+      !StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  // Allow a webextension principal to register a service worker script with
+  // a moz-extension url only if 'extensions.service_worker_register.allowed'
+  // is true.
+  if (scriptURI->SchemeIs("moz-extension") &&
+      aCallerType == CallerType::NonSystem &&
+      (!baseURI->SchemeIs("moz-extension") ||
+       !StaticPrefs::extensions_serviceWorkerRegister_allowed())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 

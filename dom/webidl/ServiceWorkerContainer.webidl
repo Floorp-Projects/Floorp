@@ -19,7 +19,7 @@ interface ServiceWorkerContainer : EventTarget {
   [Throws]
   readonly attribute Promise<ServiceWorkerRegistration> ready;
 
-  [NewObject]
+  [NewObject, NeedsCallerType]
   Promise<ServiceWorkerRegistration> register(USVString scriptURL,
                                               optional RegistrationOptions options = {});
 
