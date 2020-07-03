@@ -117,7 +117,7 @@ tasks:
 
               routes:
                   $flattenDeep:
-                      - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+                      - "tc-treeherder.v2.${repository.project}.${push.revision}"
                       - $if: 'tasks_for == "hg-push"'
                         then:
                             - "index.${trustDomain}.v2.${repository.project}.latest.taskgraph.decision"
