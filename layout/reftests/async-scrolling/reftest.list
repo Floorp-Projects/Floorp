@@ -35,7 +35,7 @@ skip-if(!asyncPan) == sticky-pos-scrollable-4.html sticky-pos-scrollable-4-ref.h
 skip-if(!asyncPan) == sticky-pos-scrollable-5.html sticky-pos-scrollable-5-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html
-skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
+skip-if(!asyncPan) fuzzy(0-2,0-2) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 fails-if(browserIsFission) skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 fails-if(browserIsFission) skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
@@ -48,7 +48,7 @@ skip-if(!asyncPan) == sticky-inside-fixed-1.html sticky-inside-fixed-1-ref.html
 skip-if(!asyncPan) fails-if(!webrender) == sticky-inside-transform-1.html sticky-inside-transform-1-ref.html
 fuzzy(0-1,0-60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 fuzzy-if(Android,0-1,0-197) fuzzy-if(webrender,0-9,0-99) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
-skip-if(!asyncPan) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
+skip-if(!asyncPan) fuzzy-if(webrender&&cocoaWidget,1-1,396-396) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
 fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) fuzzy-if(webrender&&gtkWidget,34-34,32-32) fuzzy-if(webrender&&cocoaWidget,7-7,37-37) skip-if(!asyncPan) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-4) fuzzy-if(webrender&&gtkWidget,34-34,32-32) fuzzy-if(webrender&&cocoaWidget,7-7,37-37) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
