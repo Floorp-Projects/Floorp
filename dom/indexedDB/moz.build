@@ -52,7 +52,6 @@ EXPORTS.mozilla.dom.indexedDB += [
     'KeyPath.h',
     'PermissionRequestBase.h',
     'SerializationHelpers.h',
-    'ThreadLocal.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -75,7 +74,6 @@ UNIFIED_SOURCES += [
     'IndexedDatabaseManager.cpp',
     'KeyPath.cpp',
     'PermissionRequestBase.cpp',
-    'ProfilerHelpers.cpp',
     'ReportInternalError.cpp',
     'ScriptErrorHelper.cpp',
 ]
