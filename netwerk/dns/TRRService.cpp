@@ -277,8 +277,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
     nsAutoCString old(mConfirmationNS);
     Preferences::GetCString(TRR_PREF("confirmationNS"), mConfirmationNS);
     if (name && !old.IsEmpty() && !mConfirmationNS.Equals(old) &&
-        (mConfirmationState > CONFIRM_TRYING) &&
-        (mMode == MODE_TRRFIRST || mMode == MODE_TRRONLY)) {
+        (mConfirmationState > CONFIRM_TRYING)) {
       LOG(("TRR::ReadPrefs: restart confirmationNS state\n"));
       mConfirmationState = CONFIRM_TRYING;
       MaybeConfirm_locked();
