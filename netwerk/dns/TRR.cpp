@@ -410,6 +410,13 @@ nsresult TRR::SendHTTPRequest() {
     return rv;
   }
 
+  // If the asyncOpen succeeded we can say that we actually attempted to
+  // use the TRR connection.
+  RefPtr<AddrHostRecord> addrRec = do_QueryObject(mRec);
+  if (addrRec) {
+    addrRec->mTRRUsed = true;
+  }
+
   NS_NewTimerWithCallback(getter_AddRefs(mTimeout), this,
                           gTRRService->GetRequestTimeout(),
                           nsITimer::TYPE_ONE_SHOT);
