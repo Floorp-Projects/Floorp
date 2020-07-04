@@ -113,6 +113,8 @@ interface nsILoginManager : nsISupports {
    * Fetch all logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
    *
+   * @deprecated Use `getAllLoginsAsync` instead.
+   *
    * @return An array of nsILoginInfo objects.
    */
   Array<nsILoginInfo> getAllLogins();
@@ -156,6 +158,8 @@ interface nsILoginManager : nsISupports {
   /**
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
+   *
+   * @deprecated Use `searchLoginsAsync` instead.
    *
    * @param aOrigin
    *        The origin to restrict searches to. For example: "http://www.site.com".
@@ -207,7 +211,8 @@ interface nsILoginManager : nsISupports {
    * @param {object} matchData
    *        The data used to search as a JS object. This does not follow the same
    *        requirements as findLogins for those fields. Wildcard matches are
-   *        simply not specified.
+   *        simply not specified. If a `guid` is specified then no other properties
+   *        are used (outside of GeckoView).
    * @return A promise resolving to an array of nsILoginInfo objects.
    */
   Promise searchLoginsAsync(in jsval matchData);
@@ -221,7 +226,8 @@ interface nsILoginManager : nsISupports {
    * @param matchData
    *        The data used to search. This does not follow the same
    *        requirements as findLogins for those fields. Wildcard matches are
-   *        simply not specified.
+   *        simply not specified. If a `guid` is specified then no other properties
+   *        are used (outside of GeckoView).
    * @return An array of nsILoginInfo objects.
    */
   Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);

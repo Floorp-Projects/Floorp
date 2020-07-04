@@ -125,6 +125,10 @@ class AboutLoginsChild extends JSWindowActorChild {
         });
         break;
       }
+      case "AboutLoginsExportPasswords": {
+        this.sendAsyncMessage("AboutLogins:ExportPasswords");
+        break;
+      }
       case "AboutLoginsGetHelp": {
         this.sendAsyncMessage("AboutLogins:GetHelp");
         break;
@@ -133,10 +137,18 @@ class AboutLoginsChild extends JSWindowActorChild {
         this.sendAsyncMessage("AboutLogins:HideFooter");
         break;
       }
-      case "AboutLoginsImport": {
+      case "AboutLoginsImportFromBrowser": {
         this.sendAsyncMessage("AboutLogins:Import");
         recordTelemetryEvent({
           object: "import_from_browser",
+          method: "mgmt_menu_item_used",
+        });
+        break;
+      }
+      case "AboutLoginsImportFromFile": {
+        this.sendAsyncMessage("AboutLogins:ImportPasswords");
+        recordTelemetryEvent({
+          object: "import_from_csv",
           method: "mgmt_menu_item_used",
         });
         break;
@@ -201,10 +213,6 @@ class AboutLoginsChild extends JSWindowActorChild {
         this.sendAsyncMessage("AboutLogins:UpdateLogin", {
           login: event.detail,
         });
-        break;
-      }
-      case "AboutLoginsExportPasswords": {
-        this.sendAsyncMessage("AboutLogins:ExportPasswords");
         break;
       }
     }
