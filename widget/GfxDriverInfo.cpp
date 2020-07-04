@@ -680,7 +680,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       // Renoir
       APPEND_DEVICE(0x1636);
 
-
 #ifdef EARLY_BETA_OR_EARLIER
       // Stoney
       APPEND_DEVICE(0x98e4);

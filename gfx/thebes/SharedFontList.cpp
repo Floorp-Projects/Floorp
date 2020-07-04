@@ -837,8 +837,7 @@ Family* FontList::FindFamily(const nsCString& aName) {
     families = AliasFamilies();
     size_t match;
     if (families && BinarySearchIf(families, 0, header.mAliasCount,
-                                   FamilyNameComparator(this, aName),
-                                   &match)) {
+                                   FamilyNameComparator(this, aName), &match)) {
       return &families[match];
     }
   }
@@ -871,9 +870,9 @@ Family* FontList::FindFamily(const nsCString& aName) {
         nsAutoCString strippedName(aName.BeginReading(),
                                    aName.Length() - styleName.Length());
         families = Families();
-        if (families && BinarySearchIf(families, 0, header.mFamilyCount,
-                                       FamilyNameComparator(this, strippedName),
-                                       &match)) {
+        if (families &&
+            BinarySearchIf(families, 0, header.mFamilyCount,
+                           FamilyNameComparator(this, strippedName), &match)) {
           // If so, this may be a possible family to satisfy the search; check
           // if the extended family name was actually found as an alternate
           // (either it's already in mAliasTable, or it gets added there when

@@ -1459,7 +1459,7 @@ nsTSubstringSplitter<T> nsTSubstring<T>::Split(const char_type aChar) const {
 
 template <typename T>
 const nsTDependentSubstring<T>&
-    nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator*() const {
+nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator*() const {
   return mObj.Get(mPos);
 }
 

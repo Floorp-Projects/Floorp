@@ -818,7 +818,7 @@ class CopyableErrorResult
 
   // Allow conversion to ErrorResult&& so we can move out of ourselves into
   // an ErrorResult.
-  operator ErrorResult &&() && {
+  operator ErrorResult&&() && {
     auto* val = reinterpret_cast<ErrorResult*>(this);
     return std::move(*val);
   }

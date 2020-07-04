@@ -803,7 +803,8 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
         if (!IsVisibleToCSS(f)) {
           continue;
         }
-        // XXX TODO: filter families for aGenericFamily, if supported by platform
+        // XXX TODO: filter families for aGenericFamily, if supported by
+        // platform
         aListOfFonts.AppendElement(
             NS_ConvertUTF8toUTF16(f.DisplayName().AsString(list)));
       }

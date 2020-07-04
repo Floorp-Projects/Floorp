@@ -9,8 +9,8 @@
 #include "gfxFontFeatures.h"  // for gfxFontFeature, etc
 #include "gfxFontUtils.h"     // for TRUETYPE_TAG
 #include "mozilla/ServoStyleConstsInlines.h"
-#include "nsCRT.h"            // for nsCRT
-#include "nsDebug.h"          // for NS_ASSERTION
+#include "nsCRT.h"    // for nsCRT
+#include "nsDebug.h"  // for NS_ASSERTION
 #include "nsISupports.h"
 #include "nsUnicharUtils.h"
 #include "nscore.h"  // for char16_t

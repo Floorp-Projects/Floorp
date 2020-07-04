@@ -9,7 +9,7 @@
 #ifndef builtin_streams_PipeToState_h
 #define builtin_streams_PipeToState_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Assertions.h"          // MOZ_ASSERT
 #include "mozilla/WrappingOperations.h"  // mozilla::WrapToSigned
 
 #include <stdint.h>  // uint32_t
