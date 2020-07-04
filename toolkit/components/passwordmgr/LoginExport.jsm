@@ -50,13 +50,8 @@ class LoginExport {
    *
    * @param {string} path
    *        The file path to save the login to.
-   * @param {nsILoginInfo[]} [logins = null]
-   *        An optional list of logins.
    */
-  static async exportAsCSV(path, logins = null) {
-    if (!logins) {
-      logins = await Services.logins.getAllLoginsAsync();
-    }
+  static async exportAsCSV(path) {
     let columns = [
       "origin",
       "username",
@@ -77,6 +72,7 @@ class LoginExport {
 
     let rows = [];
     rows.push(csvHeader);
+    let logins = await Services.logins.getAllLoginsAsync();
     for (let login of logins) {
       rows.push(LoginExport._buildCSVRow(login, columns));
     }

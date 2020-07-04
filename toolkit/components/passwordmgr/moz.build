@@ -53,7 +53,6 @@ if CONFIG['OS_TARGET'] == 'Android':
     ]
 else:
     EXTRA_JS_MODULES += [
-        'LoginCSVImport.jsm',
         'LoginExport.jsm',
         'LoginStore.jsm',
     ]

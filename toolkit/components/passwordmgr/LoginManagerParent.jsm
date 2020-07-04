@@ -724,7 +724,7 @@ class LoginManagerParent extends JSWindowActorParent {
     if (autoFilledLoginGuid) {
       let loginsForGuid = await Services.logins.searchLoginsAsync({
         guid: autoFilledLoginGuid,
-        origin: formOrigin, // Ignored outside of GV.
+        origin: formOrigin,
       });
       if (
         loginsForGuid.length == 1 &&
@@ -971,7 +971,7 @@ class LoginManagerParent extends JSWindowActorParent {
     if (autoFilledLoginGuid) {
       let [matchedLogin] = await Services.logins.searchLoginsAsync({
         guid: autoFilledLoginGuid,
-        origin: formOrigin, // Ignored outside of GV.
+        origin: formOrigin,
       });
       if (
         matchedLogin &&
@@ -1045,7 +1045,7 @@ class LoginManagerParent extends JSWindowActorParent {
       if (generatedPW.storageGUID) {
         [autoSavedLogin] = await Services.logins.searchLoginsAsync({
           guid: generatedPW.storageGUID,
-          origin: formOrigin, // Ignored outside of GV.
+          origin: formOrigin,
         });
 
         if (autoSavedLogin) {

@@ -40,7 +40,7 @@ add_task(async function test_open_import() {
 
   function getImportItem() {
     let menuButton = window.document.querySelector("menu-button");
-    return menuButton.shadowRoot.querySelector(".menuitem-import-browser");
+    return menuButton.shadowRoot.querySelector(".menuitem-import");
   }
   await BrowserTestUtils.synthesizeMouseAtCenter(getImportItem, {}, browser);
 
