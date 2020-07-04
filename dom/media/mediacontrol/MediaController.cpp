@@ -381,8 +381,8 @@ void MediaController::HandlePositionStateChanged(const PositionState& aState) {
   init.mDuration = aState.mDuration;
   init.mPlaybackRate = aState.mPlaybackRate;
   init.mPosition = aState.mLastReportedPlaybackPosition;
-  RefPtr<PositionStateEvent> event = PositionStateEvent::Constructor(
-      this, u"positionstatechange"_ns, init);
+  RefPtr<PositionStateEvent> event =
+      PositionStateEvent::Constructor(this, u"positionstatechange"_ns, init);
   DispatchAsyncEvent(event);
 }
 

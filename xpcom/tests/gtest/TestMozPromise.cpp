@@ -511,29 +511,27 @@ TEST(MozPromise, DirectTaskDispatch)
   // For direct task dispatch to be working, we must be within a
   // nested event loop. So the test itself must be dispatched within
   // a task.
-  GetCurrentSerialEventTarget()->Dispatch(
-      NS_NewRunnableFunction("test", [&]() {
-        GetCurrentSerialEventTarget()->Dispatch(
-            NS_NewRunnableFunction("test", [&]() {
-              EXPECT_EQ(value1, true);
-              value2 = true;
-            }));
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction("test", [&]() {
+    GetCurrentSerialEventTarget()->Dispatch(
+        NS_NewRunnableFunction("test", [&]() {
+          EXPECT_EQ(value1, true);
+          value2 = true;
+        }));
 
-        RefPtr<TestPromise::Private> promise =
-            new TestPromise::Private(__func__);
-        promise->UseDirectTaskDispatch(__func__);
-        promise->Resolve(42, __func__);
-        EXPECT_EQ(value1, false);
-        promise->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [&](int aResolveValue) -> void {
-              EXPECT_EQ(aResolveValue, 42);
-              EXPECT_EQ(value2, false);
-              value1 = true;
-            },
-            DO_FAIL);
-        EXPECT_EQ(value1, false);
-      }));
+    RefPtr<TestPromise::Private> promise = new TestPromise::Private(__func__);
+    promise->UseDirectTaskDispatch(__func__);
+    promise->Resolve(42, __func__);
+    EXPECT_EQ(value1, false);
+    promise->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [&](int aResolveValue) -> void {
+          EXPECT_EQ(aResolveValue, 42);
+          EXPECT_EQ(value2, false);
+          value1 = true;
+        },
+        DO_FAIL);
+    EXPECT_EQ(value1, false);
+  }));
 
   // Spin the event loop.
   NS_ProcessPendingEvents(nullptr);
@@ -547,42 +545,40 @@ TEST(MozPromise, ChainedDirectTaskDispatch)
   // For direct task dispatch to be working, we must be within a
   // nested event loop. So the test itself must be dispatched within
   // a task.
-  GetCurrentSerialEventTarget()->Dispatch(
-      NS_NewRunnableFunction("test", [&]() {
-        GetCurrentSerialEventTarget()->Dispatch(
-            NS_NewRunnableFunction("test", [&]() {
-              EXPECT_EQ(value1, true);
-              value2 = true;
-            }));
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction("test", [&]() {
+    GetCurrentSerialEventTarget()->Dispatch(
+        NS_NewRunnableFunction("test", [&]() {
+          EXPECT_EQ(value1, true);
+          value2 = true;
+        }));
 
-        RefPtr<TestPromise::Private> promise1 =
-            new TestPromise::Private(__func__);
-        promise1->UseDirectTaskDispatch(__func__);
-        promise1->Resolve(42, __func__);
-        EXPECT_EQ(value1, false);
-        promise1
-            ->Then(
-                GetCurrentSerialEventTarget(), __func__,
-                [&](int aResolveValue) -> RefPtr<TestPromise> {
-                  EXPECT_EQ(aResolveValue, 42);
-                  EXPECT_EQ(value2, false);
-                  RefPtr<TestPromise::Private> promise2 =
-                      new TestPromise::Private(__func__);
-                  promise2->UseDirectTaskDispatch(__func__);
-                  promise2->Resolve(43, __func__);
-                  return promise2;
-                },
-                DO_FAIL)
-            ->Then(
-                GetCurrentSerialEventTarget(), __func__,
-                [&](int aResolveValue) -> void {
-                  EXPECT_EQ(aResolveValue, 43);
-                  EXPECT_EQ(value2, false);
-                  value1 = true;
-                },
-                DO_FAIL);
-        EXPECT_EQ(value1, false);
-      }));
+    RefPtr<TestPromise::Private> promise1 = new TestPromise::Private(__func__);
+    promise1->UseDirectTaskDispatch(__func__);
+    promise1->Resolve(42, __func__);
+    EXPECT_EQ(value1, false);
+    promise1
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&](int aResolveValue) -> RefPtr<TestPromise> {
+              EXPECT_EQ(aResolveValue, 42);
+              EXPECT_EQ(value2, false);
+              RefPtr<TestPromise::Private> promise2 =
+                  new TestPromise::Private(__func__);
+              promise2->UseDirectTaskDispatch(__func__);
+              promise2->Resolve(43, __func__);
+              return promise2;
+            },
+            DO_FAIL)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&](int aResolveValue) -> void {
+              EXPECT_EQ(aResolveValue, 43);
+              EXPECT_EQ(value2, false);
+              value1 = true;
+            },
+            DO_FAIL);
+    EXPECT_EQ(value1, false);
+  }));
 
   // Spin the event loop.
   NS_ProcessPendingEvents(nullptr);
@@ -596,33 +592,30 @@ TEST(MozPromise, ChainToDirectTaskDispatch)
   // For direct task dispatch to be working, we must be within a
   // nested event loop. So the test itself must be dispatched within
   // a task.
-  GetCurrentSerialEventTarget()->Dispatch(
-      NS_NewRunnableFunction("test", [&]() {
-        GetCurrentSerialEventTarget()->Dispatch(
-            NS_NewRunnableFunction("test", [&]() {
-              EXPECT_EQ(value1, true);
-              value2 = true;
-            }));
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction("test", [&]() {
+    GetCurrentSerialEventTarget()->Dispatch(
+        NS_NewRunnableFunction("test", [&]() {
+          EXPECT_EQ(value1, true);
+          value2 = true;
+        }));
 
-        RefPtr<TestPromise::Private> promise1 =
-            new TestPromise::Private(__func__);
-        promise1->UseDirectTaskDispatch(__func__);
+    RefPtr<TestPromise::Private> promise1 = new TestPromise::Private(__func__);
+    promise1->UseDirectTaskDispatch(__func__);
 
-        RefPtr<TestPromise::Private> promise2 =
-            new TestPromise::Private(__func__);
-        promise2->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [&](int aResolveValue) -> void {
-              EXPECT_EQ(aResolveValue, 42);
-              EXPECT_EQ(value2, false);
-              value1 = true;
-            },
-            DO_FAIL);
+    RefPtr<TestPromise::Private> promise2 = new TestPromise::Private(__func__);
+    promise2->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [&](int aResolveValue) -> void {
+          EXPECT_EQ(aResolveValue, 42);
+          EXPECT_EQ(value2, false);
+          value1 = true;
+        },
+        DO_FAIL);
 
-        promise1->ChainTo(promise2.forget(), __func__);
-        EXPECT_EQ(value1, false);
-        promise1->Resolve(42, __func__);
-      }));
+    promise1->ChainTo(promise2.forget(), __func__);
+    EXPECT_EQ(value1, false);
+    promise1->Resolve(42, __func__);
+  }));
 
   // Spin the event loop.
   NS_ProcessPendingEvents(nullptr);

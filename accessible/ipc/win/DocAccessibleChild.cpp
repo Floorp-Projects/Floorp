@@ -18,8 +18,7 @@ namespace a11y {
 static StaticAutoPtr<PlatformChild> sPlatformChild;
 
 DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
-    : DocAccessibleChildBase(aDoc),
-      mEmulatedWindowHandle(nullptr) {
+    : DocAccessibleChildBase(aDoc), mEmulatedWindowHandle(nullptr) {
   MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
   if (!sPlatformChild) {
     sPlatformChild = new PlatformChild();

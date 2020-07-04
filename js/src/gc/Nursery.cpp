@@ -247,7 +247,6 @@ js::Nursery::Nursery(GCRuntime* gc)
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
-
   char* env = getenv("JS_GC_PROFILE_NURSERY");
   if (env) {
     if (0 == strcmp(env, "help")) {

@@ -43,9 +43,9 @@
 #ifdef MOZ_GECKO_PROFILER
 
 MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#  if defined(_MSC_VER) || defined(__MINGW32__)
   Sleep(aMilliseconds);
-#else
+#  else
   struct timespec ts = {/* .tv_sec */ static_cast<time_t>(aMilliseconds / 1000),
                         /* ts.tv_nsec */ long(aMilliseconds % 1000) * 1000000};
   struct timespec tr = {0, 0};
@@ -57,7 +57,7 @@ MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
       exit(1);
     }
   }
-#endif
+#  endif
 }
 
 using namespace mozilla;

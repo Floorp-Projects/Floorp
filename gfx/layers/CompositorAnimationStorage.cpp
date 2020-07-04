@@ -7,12 +7,12 @@
 #include "CompositorAnimationStorage.h"
 
 #include "AnimationHelper.h"
-#include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
+#include "mozilla/layers/CompositorThread.h"       // for CompositorThreadHolder
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/webrender/WebRenderTypes.h"  // for ToWrTransformProperty, etc
-#include "nsDeviceContext.h"  // for AppUnitsPerCSSPixel
-#include "nsDisplayList.h"    // for nsDisplayTransform, etc
+#include "nsDeviceContext.h"                   // for AppUnitsPerCSSPixel
+#include "nsDisplayList.h"                     // for nsDisplayTransform, etc
 #include "TreeTraversal.h"  // for ForEachNode, BreadthFirstSearch
 
 namespace mozilla {

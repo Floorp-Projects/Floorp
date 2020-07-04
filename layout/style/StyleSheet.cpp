@@ -415,7 +415,8 @@ void StyleSheetInfo::AddSheet(StyleSheet* aSheet) {
 
 void StyleSheetInfo::RemoveSheet(StyleSheet* aSheet) {
   // Fix up the parent pointer in children lists.
-  StyleSheet* newParent = aSheet == mSheets[0] ? mSheets.SafeElementAt(1) : mSheets[0];
+  StyleSheet* newParent =
+      aSheet == mSheets[0] ? mSheets.SafeElementAt(1) : mSheets[0];
   for (StyleSheet* child : mChildren) {
     MOZ_ASSERT(child->mParentSheet);
     MOZ_ASSERT(child->mParentSheet->mInner == this);

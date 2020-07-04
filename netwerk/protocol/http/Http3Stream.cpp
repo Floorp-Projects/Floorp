@@ -154,7 +154,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
       }
       mSendState = WAITING_TO_ACTIVATE;
     }
-    [[fallthrough]];
+      [[fallthrough]];
     case WAITING_TO_ACTIVATE:
       rv = TryActivating();
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
@@ -309,7 +309,8 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
     // is already done.
     LOG3(
         ("Http3Stream %p ReadSegments request stream aborted due to"
-         " response side closure\n", this));
+         " response side closure\n",
+         this));
     return NS_ERROR_ABORT;
   }
 
@@ -320,8 +321,7 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
       // A transaction that had already generated its headers before it was
       // queued at the session level (due to concurrency concerns) may not call
       // onReadSegment off the ReadSegments() stack above.
-      LOG3(
-          ("Http3Stream %p ReadSegments forcing OnReadSegment call\n", this));
+      LOG3(("Http3Stream %p ReadSegments forcing OnReadSegment call\n", this));
       uint32_t wasted = 0;
       nsresult rv2 = OnReadSegment("", 0, &wasted);
       LOG3(("  OnReadSegment returned 0x%08" PRIx32,
@@ -330,8 +330,8 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
         break;
       }
     }
-    // If we are in state SENDING_BODY we can continue sending data.
-    [[fallthrough]];
+      // If we are in state SENDING_BODY we can continue sending data.
+      [[fallthrough]];
     case PREPARING_HEADERS:
     case SENDING_BODY: {
       rv = mTransaction->ReadSegments(this, count, countRead);
