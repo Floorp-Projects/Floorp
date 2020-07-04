@@ -92,8 +92,7 @@ class SweepGroupZonesIter {
       : current(gc->getCurrentSweepGroup()) {
     MOZ_ASSERT(CurrentThreadIsPerformingGC());
   }
-  explicit SweepGroupZonesIter(JSRuntime* rt)
-      : SweepGroupZonesIter(&rt->gc) {}
+  explicit SweepGroupZonesIter(JSRuntime* rt) : SweepGroupZonesIter(&rt->gc) {}
 
   bool done() const { return !current; }
 

@@ -43,8 +43,7 @@ nsUrlClassifierPrefixSet::Init(const nsACString& aName) {
   return NS_OK;
 }
 
-nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {
-}
+nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {}
 
 void nsUrlClassifierPrefixSet::Clear() {
   LOG(("[%s] Clearing PrefixSet", mName.get()));

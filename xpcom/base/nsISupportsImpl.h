@@ -98,7 +98,7 @@ class nsAutoOwningEventTarget {
     _mOwningThread.AssertOwnership(#_class " not thread-safe")
 #else  // !MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
-#  define NS_DECL_OWNINGTHREAD /* nothing */
+#  define NS_DECL_OWNINGTHREAD      /* nothing */
 #  define NS_DECL_OWNINGEVENTTARGET /* nothing */
 #  define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
 
@@ -619,8 +619,7 @@ class ThreadSafeAutoRefCnt {
                                                                                \
  protected:                                                                    \
   nsAutoRefCnt mRefCnt;                                                        \
-  _owning                                                                      \
- public:
+  _owning public:
 
 /**
  * Use this macro to declare and implement the AddRef & Release methods for a

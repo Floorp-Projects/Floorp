@@ -144,11 +144,12 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
   const auto& gl = mWebGL->gl;
   for (const auto& itr : mRebindRequests) {
     gl->fActiveTexture(LOCAL_GL_TEXTURE0 + itr.texUnit);
-    GLuint incompleteTex = 0; // Tex 0 is always incomplete.
+    GLuint incompleteTex = 0;  // Tex 0 is always incomplete.
     const auto& overrideTex = webgl->mIncompleteTexOverride;
     if (overrideTex) {
-      // In all but the simplest cases, this will be incomplete anyway, since e.g. int-samplers need int-textures.
-      // This is useful for e.g. dom-to-texture failures, though.
+      // In all but the simplest cases, this will be incomplete anyway, since
+      // e.g. int-samplers need int-textures. This is useful for e.g.
+      // dom-to-texture failures, though.
       incompleteTex = overrideTex->name;
     }
     gl->fBindTexture(itr.tex->Target().get(), incompleteTex);

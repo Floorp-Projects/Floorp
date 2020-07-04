@@ -14,7 +14,7 @@
 #include "gfxFontFeatures.h"
 #include "gfxFontVariations.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"  // for RefPtr
 #include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/StyleColorInlines.h"  // for StyleRGBA
 #include "nsCoord.h"                    // for nscoord

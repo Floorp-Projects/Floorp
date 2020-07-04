@@ -39,12 +39,10 @@ class GeckoTextMarker final {
 
 class GeckoTextMarkerRange final {
  public:
-  GeckoTextMarkerRange(const GeckoTextMarker& aStart,
-                       const GeckoTextMarker& aEnd)
+  GeckoTextMarkerRange(const GeckoTextMarker& aStart, const GeckoTextMarker& aEnd)
       : mStart(aStart), mEnd(aEnd) {}
 
-  GeckoTextMarkerRange(AccessibleOrProxy aDoc,
-                       AXTextMarkerRangeRef aTextMarkerRange);
+  GeckoTextMarkerRange(AccessibleOrProxy aDoc, AXTextMarkerRangeRef aTextMarkerRange);
 
   id CreateAXTextMarkerRange();
 
@@ -77,8 +75,7 @@ class GeckoTextMarkerRange final {
    * @param  aStartIntlOffset [in] start offset if current node is a text node
    * @return                   true if calculation is not finished yet
    */
-  bool TextInternal(nsAString& aText, AccessibleOrProxy aCurrent,
-                    int32_t aStartIntlOffset) const;
+  bool TextInternal(nsAString& aText, AccessibleOrProxy aCurrent, int32_t aStartIntlOffset) const;
 };
 
 }  // namespace a11y

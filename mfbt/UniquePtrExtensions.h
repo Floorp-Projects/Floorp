@@ -177,7 +177,7 @@ auto getter_Transfers(UniquePtr<T, D>& up) {
     explicit UniquePtrGetterTransfers(Ptr& p) : mPtr(p) {}
     ~UniquePtrGetterTransfers() { mPtr.reset(mRawPtr); }
 
-    operator typename Ptr::ElementType**() { return &mRawPtr; }
+    operator typename Ptr::ElementType **() { return &mRawPtr; }
     operator void**() { return reinterpret_cast<void**>(&mRawPtr); }
     typename Ptr::ElementType*& operator*() { return mRawPtr; }
 

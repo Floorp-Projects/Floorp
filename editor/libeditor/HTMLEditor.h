@@ -4394,9 +4394,10 @@ class HTMLEditor final : public TextEditor,
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
       nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
       int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput);
-  static nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
-                         Document* aTargetDoc,
-                         dom::DocumentFragment** aFragment, bool aTrustedInput);
+  static nsresult ParseFragment(const nsAString& aStr,
+                                nsAtom* aContextLocalName, Document* aTargetDoc,
+                                dom::DocumentFragment** aFragment,
+                                bool aTrustedInput);
 
   /**
    * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.

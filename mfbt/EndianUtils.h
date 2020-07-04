@@ -85,8 +85,8 @@
  * Our supported compilers provide architecture-independent macros for this.
  * Yes, there are more than two values for __BYTE_ORDER__.
  */
-#if defined(__BYTE_ORDER__) && \
-    defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
+#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && \
+    defined(__ORDER_BIG_ENDIAN__)
 #  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #    define MOZ_LITTLE_ENDIAN() 1
 #    define MOZ_BIG_ENDIAN() 0

@@ -485,7 +485,8 @@ bool WebGLContext::CreateAndInitGL(
     mIncompleteTexOverride.reset(new gl::Texture(*gl));
     const gl::ScopedBindTexture autoBind(gl, mIncompleteTexOverride->name);
     const auto heapVal = std::make_unique<uint32_t>(val);
-    gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, heapVal.get());
+    gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1, 0,
+                    LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, heapVal.get());
   }
 
   return true;

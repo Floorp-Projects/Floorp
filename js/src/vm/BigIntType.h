@@ -74,7 +74,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
   js::gc::AllocKind getAllocKind() const { return js::gc::AllocKind::BIGINT; }
 
-
   // Offset for direct access from JIT code.
   static constexpr size_t offsetOfDigitLength() {
     return offsetOfHeaderLength();

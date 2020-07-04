@@ -3072,8 +3072,7 @@ class ChildCounter {
   size_t objCountsIndex;
 
  public:
-  explicit ChildCounter(JSContext* cx)
-   : cx(cx), counts(cx), objsLength(0) {}
+  explicit ChildCounter(JSContext* cx) : cx(cx), counts(cx), objsLength(0) {}
 
   void noteObjIsOnTopOfStack() { objCountsIndex = counts.length() - 1; }
 

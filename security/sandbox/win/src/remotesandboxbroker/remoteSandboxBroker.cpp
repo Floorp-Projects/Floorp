@@ -80,8 +80,8 @@ bool RemoteSandboxBroker::LaunchApp(
   // We need to wait on the current thread for the process to launch which will
   // block the running IPC Launch taskqueue. We cannot use
   // GetCurrentSerialEventTarget() (as this returns the currently running
-  // TaskQueue) to resolve our promise as it will be blocked until we return from
-  // this function.
+  // TaskQueue) to resolve our promise as it will be blocked until we return
+  // from this function.
   nsCOMPtr<nsISerialEventTarget> target = NS_GetCurrentThread();
   mParent.Launch(mParameters.shareHandles(), target)
       ->Then(target, __func__, std::move(resolve), std::move(reject));
