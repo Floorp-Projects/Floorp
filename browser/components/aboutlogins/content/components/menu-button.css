@@ -66,8 +66,12 @@
   background-image: url("chrome://global/skin/icons/help.svg");
 }
 
-.menuitem-import {
+.menuitem-import-browser {
   background-image: url("chrome://browser/skin/import.svg");
+}
+
+.menuitem-import-file {
+  background-image: url("chrome://browser/skin/open.svg");
 }
 
 .menuitem-export {

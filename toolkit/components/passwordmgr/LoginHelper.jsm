@@ -14,8 +14,6 @@
 
 const EXPORTED_SYMBOLS = ["LoginHelper"];
 
-// Globals
-
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -177,9 +175,10 @@ this.LoginHelper = {
   },
 
   /**
-   * Due to the way the signons2.txt file is formatted, we need to make
+   * Due to the way the signons2.txt file was formatted, we needed to make
    * sure certain field values or characters do not cause the file to
-   * be parsed incorrectly.  Reject logins that we can't store correctly.
+   * be parsed incorrectly. These characters can cause problems in other
+   * formats/languages too so reject logins that may not be stored correctly.
    *
    * @throws String with English message in case validation failed.
    */
@@ -198,6 +197,10 @@ this.LoginHelper = {
     // Mostly not a formatting problem, although ".\0" can be quirky.
     if (badCharacterPresent(aLogin, "\0")) {
       throw new Error("login values can't contain nulls");
+    }
+
+    if (!aLogin.password || typeof aLogin.password != "string") {
+      throw new Error("passwords must be non-empty strings");
     }
 
     // In theory these nulls should just be rolled up into the encrypted
@@ -285,7 +288,7 @@ this.LoginHelper = {
    * Get the parts of the URL we want for identification.
    * Strip out things like the userPass portion and handle javascript:.
    */
-  getLoginOrigin(uriString, allowJS) {
+  getLoginOrigin(uriString, allowJS = false) {
     let realm = "";
     try {
       let uri = Services.io.newURI(uriString);
@@ -447,14 +450,14 @@ this.LoginHelper = {
    * Creates a new login object that results by modifying the given object with
    * the provided data.
    *
-   * @param aOldStoredLogin
-   *        Existing nsILoginInfo object to modify.
-   * @param aNewLoginData
-   *        The new login values, either as nsILoginInfo or nsIProperyBag.
+   * @param {nsILoginInfo} aOldStoredLogin
+   *        Existing login object to modify.
+   * @param {nsILoginInfo|nsIProperyBag} aNewLoginData
+   *        The new login values, either as an nsILoginInfo or nsIProperyBag.
    *
-   * @return The newly created nsILoginInfo object.
+   * @return {nsILoginInfo} The newly created nsILoginInfo object.
    *
-   * @throws String with English message in case validation failed.
+   * @throws {Error} With English message in case validation failed.
    */
   buildModifiedLogin(aOldStoredLogin, aNewLoginData) {
     function bagHasProperty(aPropName) {
@@ -963,16 +966,55 @@ this.LoginHelper = {
   async maybeImportLogins(loginDatas) {
     let loginsToAdd = [];
     let loginMap = new Map();
-    for (let loginData of loginDatas) {
+    for (let rawLoginData of loginDatas) {
+      // Do some sanitization on a clone of the loginData.
+      let loginData = ChromeUtils.shallowClone(rawLoginData);
+      loginData.origin = this.getLoginOrigin(loginData.origin);
+      if (!loginData.origin) {
+        continue;
+      }
+
+      loginData.formActionOrigin =
+        this.getLoginOrigin(loginData.formActionOrigin, true) ||
+        (typeof loginData.httpRealm == "string" ? null : "");
+
+      loginData.httpRealm =
+        typeof loginData.httpRealm == "string" ? loginData.httpRealm : null;
+
+      if (loginData.guid) {
+        // First check for `guid` matches if it's set.
+        // `guid` matches will allow every kind of update, including reverting
+        // to older passwords which can be useful if the user wants to recover
+        // an old password.
+        let existingLogins = await Services.logins.searchLoginsAsync({
+          guid: loginData.guid,
+          origin: loginData.origin, // Ignored outside of GV.
+        });
+
+        if (existingLogins.length) {
+          log.debug("maybeImportLogins: Found existing login with GUID");
+          // There should only be one `guid` match.
+          let existingLogin = existingLogins[0].QueryInterface(
+            Ci.nsILoginMetaInfo
+          );
+
+          // Use a property bag rather than an nsILoginInfo so we don't clobber
+          // properties that the import source doesn't provide.
+          let propBag = this.newPropertyBag(loginData);
+          Services.logins.modifyLogin(existingLogin, propBag);
+          // Updated a login so we're done.
+          continue;
+        }
+      }
+
       // create a new login
       let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
         Ci.nsILoginInfo
       );
       login.init(
         loginData.origin,
-        loginData.formActionOrigin ||
-          (typeof loginData.httpRealm == "string" ? null : ""),
-        typeof loginData.httpRealm == "string" ? loginData.httpRealm : null,
+        loginData.formActionOrigin,
+        loginData.httpRealm,
         loginData.username,
         loginData.password,
         loginData.usernameElement || "",
@@ -985,6 +1027,7 @@ this.LoginHelper = {
       login.timePasswordChanged =
         loginData.timePasswordChanged || loginData.timeCreated;
       login.timesUsed = loginData.timesUsed || 1;
+      login.guid = loginData.guid || null;
 
       try {
         // Ensure we only send checked logins through, since the validation is optimized
@@ -1082,9 +1125,9 @@ this.LoginHelper = {
 
   /**
    * Convert an array of nsILoginInfo to vanilla JS objects suitable for
-   * sending over IPC.
+   * sending over IPC. Avoid using this in other cases.
    *
-   * NB: All members of nsILoginInfo and nsILoginMetaInfo are strings.
+   * NB: All members of nsILoginInfo (not nsILoginMetaInfo) are strings.
    */
   loginsToVanillaObjects(logins) {
     return logins.map(this.loginToVanillaObject);

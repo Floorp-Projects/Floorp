@@ -768,6 +768,7 @@ pwmgr:
     objects: [
       "import_from_browser",
       "import_from_csv",
+      "import_csv_complete",
       "export",
       "export_complete",
       "preferences",
