@@ -17,7 +17,7 @@ add_task(function test_displayOrigin() {
     Assert.greater(displayOrigin.length, 0, "Check length");
     if (
       loginInfo.origin.startsWith("chrome://") ||
-      loginInfo.origin.startsWith("file:///")
+      loginInfo.origin.startsWith("file://")
     ) {
       Assert.ok(displayOrigin.startsWith(loginInfo.origin), "Contains origin");
     } else {

@@ -10,6 +10,9 @@ with Files('aom/**'):
 with Files('dav1d/**'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
+with Files('js/d3/**'):
+    BUG_COMPONENT = ('Toolkit', 'General')
+
 with Files('rust/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 

@@ -35,8 +35,12 @@ export default class LoginIntro extends HTMLElement {
       event.currentTarget.classList.contains("intro-import-text") &&
       event.target.localName == "a"
     ) {
+      let eventName =
+        event.target.dataset.l10nName == "import-file-link"
+          ? "AboutLoginsImportFromFile"
+          : "AboutLoginsImportFromBrowser";
       document.dispatchEvent(
-        new CustomEvent("AboutLoginsImport", {
+        new CustomEvent(eventName, {
           bubbles: true,
         })
       );
@@ -47,7 +51,7 @@ export default class LoginIntro extends HTMLElement {
   updateState(syncState) {
     let l10nId = syncState.loggedIn
       ? "about-logins-login-intro-heading-logged-in"
-      : "login-intro-heading";
+      : "about-logins-login-intro-heading-logged-out";
     document.l10n.setAttributes(
       this.shadowRoot.querySelector(".heading"),
       l10nId

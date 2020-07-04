@@ -22,7 +22,8 @@ interface nsILoginInfo : nsISupports {
    * The origin the login applies to.
    *
    * For example,
-   * "https://site.com", "http://site.com:1234", "ftp://ftp.site.com".
+   * "https://site.com", "http://site.com:1234", "ftp://ftp.site.com",
+   * "moz-proxy://127.0.0.1:8888, "chrome://FirefoxAccounts", "file://".
    */
   attribute AString origin;
 

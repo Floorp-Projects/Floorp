@@ -30,7 +30,6 @@ interface nsILoginManagerStorage : nsISupports {
    */
   Promise initialize();
 
-
   /**
    * Ensures that all data has been written to disk and all files are closed.
    *
@@ -42,7 +41,6 @@ interface nsILoginManagerStorage : nsISupports {
    * @rejects JavaScript exception.
    */
   Promise terminate();
-
 
   /**
    * Store a new login in the storage module.
@@ -63,7 +61,6 @@ interface nsILoginManagerStorage : nsISupports {
    */
   nsILoginInfo addLogin(in nsILoginInfo aLogin, [optional] in boolean aPreEncrypted, [optional] in jsval aPlaintextUsername, [optional] in jsval aPlaintextPassword);
 
-
   /**
    * Remove a login from the storage module.
    *
@@ -74,7 +71,6 @@ interface nsILoginManagerStorage : nsISupports {
    * values of any nsILoginMetaInfo properties are ignored.
    */
   void removeLogin(in nsILoginInfo aLogin);
-
 
   /**
    * Modify an existing login in the storage module.
@@ -97,7 +93,6 @@ interface nsILoginManagerStorage : nsISupports {
    */
   void modifyLogin(in nsILoginInfo oldLogin, in nsISupports newLoginData);
 
-
   /**
    * Record that the password of a saved login was used (e.g. submitted or copied).
    *
@@ -110,7 +105,6 @@ interface nsILoginManagerStorage : nsISupports {
    */
   void recordPasswordUse(in nsILoginInfo aLogin);
 
-
   /**
    * Remove all stored logins.
    *
@@ -120,10 +114,11 @@ interface nsILoginManagerStorage : nsISupports {
    */
   void removeAllLogins();
 
-
   /**
    * Fetch all logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
+   *
+   * @deprecated Use `getAllLoginsAsync` instead.
    *
    * @return An array of nsILoginInfo objects.
    */
@@ -152,6 +147,7 @@ interface nsILoginManagerStorage : nsISupports {
   /**
    * Search for logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
+   *
    * @deprecated New code should use `searchLoginsAsync`.
    *             Only autocomplete, prompt, and test code still use this.
    *
@@ -167,6 +163,8 @@ interface nsILoginManagerStorage : nsISupports {
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
+   * @deprecated Use `searchLoginsAsync` instead.
+   *
    * @param aOrigin
    *        The origin to restrict searches to. For example: "http://www.site.com".
    * @param aActionURL
@@ -181,7 +179,6 @@ interface nsILoginManagerStorage : nsISupports {
    */
   Array<nsILoginInfo> findLogins(in AString aOrigin, in AString aActionOrigin,
 				 in AString aHttpRealm);
-
 
   /**
    * Search for logins matching the specified criteria, as with

@@ -56,7 +56,7 @@ add_task(async function test_no_logins_class() {
         content.document.l10n.getAttributes(
           loginIntro.shadowRoot.querySelector(".heading")
         ).id,
-        "login-intro-heading",
+        "about-logins-login-intro-heading-logged-out",
         "The default message should be the non-logged-in message"
       );
 
