@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **support-images**
   * ⚠️ **This is a breaking change**: Removed `ImageLoader.loadIntoView(view: ImageView, id: String)` extension function.
+
 * **service-glean**
   * Glean was updated to v31.5.0
     * Implement ping tagging (i.e. the `X-Source-Tags` header) ([#1074](https://github.com/mozilla/glean/pull/1074)). Note that this is not yet implemented for iOS.
@@ -39,6 +40,9 @@ permalink: /changelog/
   * Added support for the new `MenuController` interface for menu2.
     When a menu controller is added to a toolbar, it will be used in place of the `BrowserMenuBuilder`.
     The builder will supply items to the `MenuController` in `invalidateMenu` if it is kept.
+
+* **feature-containers**
+  * Adds a `ContainerMiddleware` that connects container browser actions with the `ContainerStorage`.
 
 # 51.0.0
 
