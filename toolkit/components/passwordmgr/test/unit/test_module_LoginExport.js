@@ -197,7 +197,7 @@ add_task(async function test_export_multiple_rows() {
     '"ftp://example.net","the username","the password","ftp://example.net",,,,,',
     '"chrome://example_extension","the username","the password one","Example Login One",,,,,',
     '"chrome://example_extension","the username","the password two","Example Login Two",,,,,',
-    '"file:///","file: username","file: password",,"file:///",,,,',
+    '"file://","file: username","file: password",,"file://",,,,',
     '"https://js.example.com","javascript: username","javascript: password",,"javascript:",,,,',
   ];
 
