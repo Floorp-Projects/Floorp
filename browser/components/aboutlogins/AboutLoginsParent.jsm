@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginExport: "resource://gre/modules/LoginExport.jsm",
+  LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -516,7 +517,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
           Ci.nsIFilePicker
         );
-        let fpCallback = function fpCallback_done(aResult) {
+        function fpCallback(aResult) {
           if (aResult != Ci.nsIFilePicker.returnCancel) {
             LoginExport.exportAsCSV(fp.file.path);
             Services.telemetry.recordEvent(
@@ -525,7 +526,7 @@ class AboutLoginsParent extends JSWindowActorParent {
               "export_complete"
             );
           }
-        };
+        }
         let [
           title,
           defaultFilename,
@@ -551,6 +552,43 @@ class AboutLoginsParent extends JSWindowActorParent {
         fp.appendFilters(Ci.nsIFilePicker.filterAll);
         fp.defaultString = defaultFilename;
         fp.defaultExtension = "csv";
+        fp.okButtonLabel = okButtonLabel;
+        fp.open(fpCallback);
+        break;
+      }
+      case "AboutLogins:ImportPasswords": {
+        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
+          Ci.nsIFilePicker
+        );
+        async function fpCallback(aResult) {
+          if (aResult != Ci.nsIFilePicker.returnCancel) {
+            await LoginCSVImport.importFromCSV(fp.file.path);
+            Services.telemetry.recordEvent(
+              "pwmgr",
+              "mgmt_menu_item_used",
+              "import_csv_complete"
+            );
+          }
+        }
+        let [
+          title,
+          okButtonLabel,
+          csvFilterTitle,
+        ] = await AboutLoginsL10n.formatValues([
+          {
+            id: "about-logins-import-file-picker-title",
+          },
+          {
+            id: "about-logins-import-file-picker-import-button",
+          },
+          {
+            id: "about-logins-import-file-picker-csv-filter-title",
+          },
+        ]);
+
+        fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeOpen);
+        fp.appendFilter(csvFilterTitle, "*.csv");
+        fp.appendFilters(Ci.nsIFilePicker.filterAll);
         fp.okButtonLabel = okButtonLabel;
         fp.open(fpCallback);
         break;

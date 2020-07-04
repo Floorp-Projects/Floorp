@@ -73,6 +73,7 @@ add_task(async function test_menu_open_close() {
   await SimpleTest.promiseWaitForCondition(() => firstVisibleItem.matches(":focus"),
     "waiting for firstVisibleItem to get focus again");
   ok(firstVisibleItem.matches(":focus"), "firstVisibleItem should be focused after tabbing to it again");
+  sendKey("TAB"); // Import from file
   sendKey("TAB"); // Export
 
   if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
@@ -123,6 +124,7 @@ add_task(async function test_menu_keyboard_cycling() {
   }
 
   let allItems = [
+    "menuitem-import-file",
     "menuitem-export",
     "menuitem-preferences",
     "menuitem-help",
@@ -130,7 +132,7 @@ add_task(async function test_menu_keyboard_cycling() {
     "menuitem-mobile-ios",
   ];
   if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
-    allItems = ["menuitem-import", ...allItems];
+    allItems = ["menuitem-import-browser", ...allItems];
   }
 
   let menu = gMenuButton.shadowRoot.querySelector(".menu");
