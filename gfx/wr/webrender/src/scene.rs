@@ -72,6 +72,7 @@ impl SceneProperties {
             if *pending_properties != self.current_properties {
                 self.transform_properties.clear();
                 self.float_properties.clear();
+                self.color_properties.clear();
 
                 for property in &pending_properties.transforms {
                     self.transform_properties
