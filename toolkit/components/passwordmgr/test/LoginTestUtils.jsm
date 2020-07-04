@@ -20,6 +20,12 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+const { FileTestUtils } = ChromeUtils.import(
+  "resource://testing-common/FileTestUtils.jsm"
+);
+
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   "nsILoginInfo",
@@ -83,22 +89,39 @@ this.LoginTestUtils = {
 
   /**
    * Checks that the currently stored list of nsILoginInfo matches the provided
-   * array.  The comparison uses the "equals" method of nsILoginInfo, that does
-   * not include nsILoginMetaInfo properties in the test.
+   * array.  If no `checkFn` is provided, the comparison uses the "equals"
+   * method of nsILoginInfo, that does not include nsILoginMetaInfo properties in the test.
    */
-  checkLogins(expectedLogins) {
-    this.assertLoginListsEqual(Services.logins.getAllLogins(), expectedLogins);
+  checkLogins(expectedLogins, msg = "checkLogins", checkFn = undefined) {
+    this.assertLoginListsEqual(
+      Services.logins.getAllLogins(),
+      expectedLogins,
+      msg,
+      checkFn
+    );
   },
 
   /**
    * Checks that the two provided arrays of nsILoginInfo have the same length,
-   * and every login in "expected" is also found in "actual".  The comparison
-   * uses the "equals" method of nsILoginInfo, that does not include
-   * nsILoginMetaInfo properties in the test.
+   * and every login in "expected" is also found in "actual".  If no `checkFn`
+   * is provided, the comparison uses the "equals" method of nsILoginInfo, that
+   * does not include nsILoginMetaInfo properties in the test.
    */
-  assertLoginListsEqual(actual, expected) {
-    Assert.equal(expected.length, actual.length);
-    Assert.ok(expected.every(e => actual.some(a => a.equals(e))));
+  assertLoginListsEqual(
+    actual,
+    expected,
+    msg = "assertLoginListsEqual",
+    checkFn = undefined
+  ) {
+    Assert.equal(expected.length, actual.length, msg);
+    Assert.ok(
+      expected.every(e =>
+        actual.some(a => {
+          return checkFn ? checkFn(a, e) : a.equals(e);
+        })
+      ),
+      msg
+    );
   },
 
   /**
@@ -432,11 +455,11 @@ LoginTestUtils.testData = {
         "the password two"
       ),
 
-      // -- file:/// URIs throw accessing nsIURI.host
+      // -- file:// URIs throw accessing nsIURI.host
 
       new LoginInfo(
-        "file:///",
-        "file:///",
+        "file://",
+        "file://",
         null,
         "file: username",
         "file: password"
@@ -540,7 +563,12 @@ LoginTestUtils.generation = {
 };
 
 LoginTestUtils.telemetry = {
-  async waitForEventCount(count, process = "content", category = "pwmgr") {
+  async waitForEventCount(
+    count,
+    process = "content",
+    category = "pwmgr",
+    method = undefined
+  ) {
     let events = await TestUtils.waitForCondition(() => {
       let events = Services.telemetry.snapshotEvents(
         Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
@@ -551,11 +579,31 @@ LoginTestUtils.telemetry = {
         return null;
       }
 
-      events = events.filter(e => e[1] == category);
+      events = events.filter(
+        e => e[1] == category && (!method || e[2] == method)
+      );
       dump(`Waiting for ${count} events, got ${events.length}\n`);
       return events.length == count ? events : null;
     }, "waiting for telemetry event count of: " + count);
     Assert.equal(events.length, count, "waiting for telemetry event count");
     return events;
+  },
+};
+
+LoginTestUtils.file = {
+  /**
+   * Given an array of strings it creates a temporary CSV file that has them as content.
+   *
+   * @param {string[]} csvLines
+   *        The lines that make up the CSV file.
+   * @returns {window.File} The File to the CSV file that was created.
+   */
+  async setupCsvFileWithLines(csvLines) {
+    let tmpFile = FileTestUtils.getTempFile("firefox_logins.csv");
+    await OS.File.writeAtomic(
+      tmpFile.path,
+      new TextEncoder().encode(csvLines.join("\r\n"))
+    );
+    return tmpFile;
   },
 };
