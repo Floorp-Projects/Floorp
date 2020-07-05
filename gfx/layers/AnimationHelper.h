@@ -115,7 +115,7 @@ class AnimationHelper {
    * IPC boundary into something we can readily use for sampling.
    */
   static AnimationStorageData ExtractAnimations(
-      const AnimationArray& aAnimations);
+      const LayersId& aLayersId, const AnimationArray& aAnimations);
 
   /**
    * Get a unique id to represent the compositor animation between child
