@@ -2187,6 +2187,11 @@ class nsLayoutUtils {
   static bool MayBeReallyFixedPos(const nsIFrame* aFrame);
 
   /**
+   * Returns true if |aFrame| is inside position:fixed subtree.
+   */
+  static bool IsInPositionFixedSubtree(const nsIFrame* aFrame);
+
+  /**
    * Obtain a SourceSurface from the given DOM element, if possible.
    * This obtains the most natural surface from the element; that
    * is, the one that can be obtained with the fewest conversions.

@@ -2615,13 +2615,9 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     // Note that we only do this if the frame belongs to `presShell` (that is,
     // we still zoom in fixed elements in subdocuments, as they're not fixed to
     // the root content document).
-    if (frame->PresShell() == presShell) {
-      for (; frame; frame = frame->GetParent()) {
-        if (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-            nsLayoutUtils::IsReallyFixedPos(frame)) {
-          return true;
-        }
-      }
+    if (frame->PresShell() == presShell &&
+        nsLayoutUtils::IsInPositionFixedSubtree(frame)) {
+      return true;
     }
     return false;
   }();
