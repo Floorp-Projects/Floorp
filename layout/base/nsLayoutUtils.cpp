@@ -7653,6 +7653,17 @@ bool nsLayoutUtils::MayBeReallyFixedPos(const nsIFrame* aFrame) {
          parentType == LayoutFrameType::PageContent;
 }
 
+/* static */
+bool nsLayoutUtils::IsInPositionFixedSubtree(const nsIFrame* aFrame) {
+  for (const nsIFrame* f = aFrame; f; f = f->GetParent()) {
+    if (f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+        nsLayoutUtils::IsReallyFixedPos(f)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
                                           uint32_t aSurfaceFlags,
