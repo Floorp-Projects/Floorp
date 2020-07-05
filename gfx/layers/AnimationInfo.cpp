@@ -647,6 +647,85 @@ bool AnimationInfo::AddAnimationsForProperty(
   return addedAny;
 }
 
+// Returns which pre-rendered area's sides are overflowed from the pre-rendered
+// rect.
+//
+// We don't need to make jank animations when we are going to composite the
+// area where there is no overflowed area even if it's outside of the
+// pre-rendered area.
+static SideBits GetOverflowedSides(const nsRect& aOverflow,
+                                   const nsRect& aPartialPrerenderArea) {
+  SideBits sides = SideBits::eNone;
+  if (aOverflow.X() < aPartialPrerenderArea.X()) {
+    sides |= SideBits::eLeft;
+  }
+  if (aOverflow.Y() < aPartialPrerenderArea.Y()) {
+    sides |= SideBits::eTop;
+  }
+  if (aOverflow.XMost() > aPartialPrerenderArea.XMost()) {
+    sides |= SideBits::eRight;
+  }
+  if (aOverflow.YMost() > aPartialPrerenderArea.YMost()) {
+    sides |= SideBits::eBottom;
+  }
+  return sides;
+}
+
+static ParentLayerRect GetClipRectForPartialPrerender(
+    const nsIFrame* aFrame, int32_t aDevPixelsToAppUnits) {
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
+      aFrame->GetParent(), nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!scrollFrame) {
+    // If there is no suitable scrollable frame in the same document, use the
+    // root one.
+    scrollFrame = aFrame->PresShell()->GetRootScrollFrameAsScrollable();
+  }
+  MOZ_ASSERT(scrollFrame);
+
+  // We don't necessarily use nsLayoutUtils::CalculateCompositionSizeForFrame
+  // since this is a case where we don't use APZ at all.
+  return LayoutDeviceRect::FromAppUnits(scrollFrame->GetScrollPortRect(),
+                                        aDevPixelsToAppUnits) *
+         LayoutDeviceToLayerScale2D() * LayerToParentLayerScale();
+}
+
+static PartialPrerenderData GetPartialPrerenderData(
+    const nsIFrame* aFrame, const nsDisplayItem* aItem) {
+  const nsRect& partialPrerenderedRect = aItem->GetUntransformedPaintRect();
+  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+
+  ScrollableLayerGuid::ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
+
+  if (nsLayoutUtils::AsyncPanZoomEnabled(const_cast<nsIFrame*>(aFrame))) {
+    const bool isInPositionFixed =
+        nsLayoutUtils::IsInPositionFixedSubtree(aFrame);
+    const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
+    const nsIFrame* asrScrollableFrame =
+        asr ? do_QueryFrame(asr->mScrollableFrame) : nullptr;
+    if (!isInPositionFixed && asr &&
+        aFrame->PresContext() == asrScrollableFrame->PresContext()) {
+      scrollId = asr->GetViewId();
+    } else {
+      // Use the root scroll id in the same document if the target frame is in
+      // position:fixed subtree or there is no ASR or the ASR is in a different
+      // ancestor document.
+      scrollId =
+          nsLayoutUtils::ScrollIdForRootScrollFrame(aFrame->PresContext());
+    }
+  }
+
+  int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
+
+  ParentLayerRect clipRect =
+      GetClipRectForPartialPrerender(aFrame, devPixelsToAppUnits);
+
+  return PartialPrerenderData{
+      LayoutDeviceIntRect::FromAppUnitsToInside(partialPrerenderedRect,
+                                                devPixelsToAppUnits),
+      GetOverflowedSides(overflow, partialPrerenderedRect), scrollId, clipRect};
+}
+
 enum class AnimationDataType {
   WithMotionPath,
   WithoutMotionPath,
@@ -707,9 +786,14 @@ static Maybe<TransformData> CreateAnimationData(
         motionPathOrigin, anchorAdjustment, RayReferenceData(aFrame)));
   }
 
-  return Some(TransformData(origin, offsetToTransformOrigin, bounds,
-                            devPixelsToAppUnits, scaleX, scaleY,
-                            hasPerspectiveParent, motionPathData));
+  Maybe<PartialPrerenderData> partialPrerenderData;
+  if (aItem && static_cast<nsDisplayTransform*>(aItem)->IsPartialPrerender()) {
+    partialPrerenderData = Some(GetPartialPrerenderData(aFrame, aItem));
+  }
+
+  return Some(TransformData(
+      origin, offsetToTransformOrigin, bounds, devPixelsToAppUnits, scaleX,
+      scaleY, hasPerspectiveParent, motionPathData, partialPrerenderData));
 }
 
 void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
