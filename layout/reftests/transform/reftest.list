@@ -173,3 +173,5 @@ test-pref(layout.animation.prerender.partial.jank,true) test-pref(layout.animati
 # This reftest heavily depends on layout.animation.prerender.viewport-ratio-limit
 # and reftest viewport size (800, 1000).
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||Android) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") == partial-prerender-expansion-rotate.html partial-prerender-expansion-ref.html
+test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,true) == partial-prerender-expansion-with-resolution-1.html partial-prerender-expansion-with-resolution-ref.html
+skip-if(webrender) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,true) == partial-prerender-expansion-with-resolution-2.html partial-prerender-expansion-with-resolution-ref.html # bug 1650039 for WebRender
