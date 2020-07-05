@@ -20,6 +20,7 @@ using struct mozilla::gfx::Point from "mozilla/gfx/Point.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+using class mozilla::SideBits from "mozilla/gfx/Types.h";
 using nscolor from "nsColor.h";
 using nscoord from "nsCoord.h";
 using struct nsRect from "nsRect.h";
@@ -38,8 +39,10 @@ using mozilla::LayerCoord from "Units.h";
 using mozilla::LayerSize from "Units.h";
 using mozilla::LayerRect from "Units.h";
 using mozilla::LayerIntSize from "Units.h";
+using mozilla::LayerIntRect from "Units.h";
 using mozilla::LayerIntRegion from "Units.h";
 using mozilla::ParentLayerIntRect from "Units.h";
+using mozilla::ParentLayerRect from "Units.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
 using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
@@ -153,6 +156,17 @@ struct MotionPathData {
   RayReferenceData rayReferenceData;
 };
 
+struct PartialPrerenderData {
+  LayoutDeviceIntRect rect;
+  SideBits overflowedSides;
+  // the scroll id of the nearest scrollable frame of this partial prerender
+  // data.
+  ViewID scrollId;
+  // The clip rectangle of the nearest scrollable frame.
+  // NOTE: This should be used only for fallback cases where APZ is not enabled.
+  ParentLayerRect clipRect;
+};
+
 // Transforms need extra information to correctly convert the list of transform
 // functions to a Matrix4x4 that can be applied directly to the layer.
 struct TransformData {
@@ -168,6 +182,7 @@ struct TransformData {
   // True if the parent has perspective transform
   bool hasPerspectiveParent;
   MotionPathData? motionPathData;
+  PartialPrerenderData? partialPrerenderData;
 };
 
 struct Animation {

@@ -7055,6 +7055,10 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
     return mFrame->Extend3DContext() || Combines3DTransformWithAncestors();
   }
 
+  bool IsPartialPrerender() const {
+    return mPrerenderDecision == PrerenderDecision::Partial;
+  }
+
   void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
  private:
