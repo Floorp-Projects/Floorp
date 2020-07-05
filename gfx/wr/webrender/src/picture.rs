@@ -6099,9 +6099,7 @@ impl PicturePrimitive {
             );
 
             // Mark the cluster visible, since it passed the invertible and
-            // backface checks. In future, this will include spatial clustering
-            // which will allow the frame building code to skip most of the
-            // current per-primitive culling code.
+            // backface checks.
             cluster.flags.insert(ClusterFlags::IS_VISIBLE);
             if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect) {
                 surface.rect = surface.rect.union(&cluster_rect);
