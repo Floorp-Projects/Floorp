@@ -1,5 +1,6 @@
 <!doctype html>
 <head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
 <meta charset=utf-8>
 <title>Tests restyles caused by animations</title>
 <script>
@@ -1950,6 +1951,28 @@ waitForAllPaints(() => {
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
     ok(!SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
        'No further flush layout needed');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function partial_prerendered_transform_animations() {
+    await SpecialPowers.pushPrefEnv({
+      set: [['layout.animation.prerender.partial', true]] });
+    const div = addDiv(null, { style: 'width: 10000px; height: 10000px;' });
+
+    const animation = div.animate(
+      // Use the same value both for `from` and `to` to avoid jank on the
+      // compositor.
+      { transform: ['rotate(0deg)', 'rotate(0deg)'] },
+      100 * MS_PER_SEC
+    );
+
+    await waitForAnimationReadyToRestyle(animation);
+
+    const markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Transform animation with partial pre-rendered should never cause ' +
+       'restyles');
 
     await ensureElementRemoval(div);
   });
