@@ -315,8 +315,9 @@ static bool HasTransformLikeAnimations(const AnimationArray& aAnimations) {
 #endif
 
 AnimationStorageData AnimationHelper::ExtractAnimations(
-    const AnimationArray& aAnimations) {
+    const LayersId& aLayersId, const AnimationArray& aAnimations) {
   AnimationStorageData storageData;
+  storageData.mLayersId = aLayersId;
 
   nsCSSPropertyID prevID = eCSSProperty_UNKNOWN;
   PropertyAnimationGroup* currData = nullptr;

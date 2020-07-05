@@ -122,7 +122,8 @@ class CompositorAnimationStorage final {
   /**
    * Set the animations based on the unique id
    */
-  void SetAnimations(uint64_t aId, const AnimationArray& aAnimations);
+  void SetAnimations(uint64_t aId, const LayersId& aLayersId,
+                     const AnimationArray& aAnimations);
 
   /**
    * Sample animation based the given timestamps and store them in this

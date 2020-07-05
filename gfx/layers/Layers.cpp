@@ -187,12 +187,13 @@ Layer::Layer(LayerManager* aManager, void* aImplData)
 Layer::~Layer() = default;
 
 void Layer::SetCompositorAnimations(
+    const LayersId& aLayersId,
     const CompositorAnimations& aCompositorAnimations) {
   MOZ_LAYERS_LOG_IF_SHADOWABLE(
       this, ("Layer::Mutated(%p) SetCompositorAnimations with id=%" PRIu64,
              this, mAnimationInfo.GetCompositorAnimationsId()));
 
-  mAnimationInfo.SetCompositorAnimations(aCompositorAnimations);
+  mAnimationInfo.SetCompositorAnimations(aLayersId, aCompositorAnimations);
 
   Mutated();
 }

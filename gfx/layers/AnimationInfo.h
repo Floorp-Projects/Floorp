@@ -77,6 +77,7 @@ class AnimationInfo final {
   void ClearAnimations();
   void ClearAnimationsForNextTransaction();
   void SetCompositorAnimations(
+      const LayersId& aLayersId,
       const CompositorAnimations& aCompositorAnimations);
   bool StartPendingAnimations(const TimeStamp& aReadyTime);
   void TransferMutatedFlagToLayer(Layer* aLayer);
@@ -91,6 +92,7 @@ class AnimationInfo final {
   const Maybe<TransformData>& GetTransformData() const {
     return mStorageData.mTransformData;
   }
+  const LayersId& GetLayersId() const { return mStorageData.mLayersId; }
   bool ApplyPendingUpdatesForThisTransaction();
   bool HasTransformAnimation() const;
 
