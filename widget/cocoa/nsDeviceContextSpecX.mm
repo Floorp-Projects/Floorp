@@ -22,9 +22,9 @@
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
+#include "nsPrinter.h"
 #include "nsPrintSettingsX.h"
 #include "nsQueryObject.h"
-#include "nsStringEnumerator.h"
 #include "prenv.h"
 
 // This must be the last include:
@@ -40,66 +40,57 @@ using mozilla::gfx::PrintTargetSkPDF;
 using mozilla::gfx::SurfaceFormat;
 
 static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
-// Macro to make lines shorter
-#define DO_PR_DEBUG_LOG(x) MOZ_LOG(sDeviceContextSpecXLog, mozilla::LogLevel::Debug, x)
 
 //----------------------------------------------------------------------
-// nsPrinterErnumeratorX
+// nsPrinterListX
 
-NS_IMPL_ISUPPORTS(nsPrinterEnumeratorX, nsIPrinterEnumerator);
+NS_IMPL_ISUPPORTS(nsPrinterListX, nsIPrinterList);
 
-NS_IMETHODIMP nsPrinterEnumeratorX::GetPrinterNameList(nsIStringEnumerator** aPrinterNameList) {
+NS_IMETHODIMP
+nsPrinterListX::GetSystemDefaultPrinter(nsIPrinter** aDefaultPrinter) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ENSURE_ARG_POINTER(aPrinterNameList);
-  *aPrinterNameList = nullptr;
+  NS_ENSURE_ARG_POINTER(aDefaultPrinter);
+  *aDefaultPrinter = nullptr;
 
   NSArray<NSString*>* printerNames = [NSPrinter printerNames];
-  size_t nameCount = [printerNames count];
-  nsTArray<nsString>* printerNameList = new nsTArray<nsString>(nameCount);
-
-  for (size_t i = 0; i < nameCount; ++i) {
-    NSString* name = [printerNames objectAtIndex:i];
-    nsAutoString nsName;
-    nsCocoaUtils::GetStringForNSString(name, nsName);
-    printerNameList->AppendElement(nsName);
+  if ([printerNames count] > 0) {
+    NSString* name = [printerNames objectAtIndex:0];
+    nsAutoString printerName;
+    nsCocoaUtils::GetStringForNSString(name, printerName);
+    *aDefaultPrinter = new nsPrinter(printerName);
+    NS_ADDREF(*aDefaultPrinter);
+    return NS_OK;
   }
 
-  // If there are no printers available after all checks, return an error
-  if (printerNameList->IsEmpty()) {
-    delete printerNameList;
-    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
-  }
-
-  return NS_NewAdoptingStringEnumerator(aPrinterNameList, printerNameList);
+  return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorX::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
+NS_IMETHODIMP
+nsPrinterListX::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  DO_PR_DEBUG_LOG(("nsPrinterEnumeratorX::GetDefaultPrinterName()\n"));
-
-  aDefaultPrinterName.Truncate();
+  aPrinters.Clear();
   NSArray<NSString*>* printerNames = [NSPrinter printerNames];
-  if ([printerNames count] > 0) {
-    NSString* name = [printerNames objectAtIndex:0];
-    nsCocoaUtils::GetStringForNSString(name, aDefaultPrinterName);
+  size_t printerCount = [printerNames count];
+  for (size_t i = 0; i < printerCount; ++i) {
+    NSString* name = [printerNames objectAtIndex:i];
+    nsAutoString printerName;
+    nsCocoaUtils::GetStringForNSString(name, printerName);
+    RefPtr<nsIPrinter> printer = new nsPrinter(printerName);
+    aPrinters.AppendElement(std::move(printer));
   }
 
-  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n",
-                   NS_ConvertUTF16toUTF8(aDefaultPrinterName).get()));
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
-nsPrinterEnumeratorX::InitPrintSettingsFromPrinter(const nsAString& aPrinterName,
-                                                   nsIPrintSettings* aPrintSettings) {
-  DO_PR_DEBUG_LOG(("nsPrinterEnumeratorX::InitPrintSettingsFromPrinter()"));
-
+nsPrinterListX::InitPrintSettingsFromPrinter(const nsAString& aPrinterName,
+                                             nsIPrintSettings* aPrintSettings) {
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   // Set a default file name.
@@ -118,7 +109,6 @@ nsPrinterEnumeratorX::InitPrintSettingsFromPrinter(const nsAString& aPrinterName
       filename.AssignLiteral("mozilla.pdf");
     }
 
-    DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", NS_ConvertUTF16toUTF8(filename).get()));
     aPrintSettings->SetToFileName(filename);
   }
 
