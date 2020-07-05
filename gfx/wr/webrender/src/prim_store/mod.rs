@@ -5,7 +5,6 @@
 use api::{BorderRadius, ClipMode, ColorF, ColorU};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
-use api::{LineStyle, LineOrientation};
 use api::{PrimitiveKeyKind, EdgeAaSegmentMask};
 use api::units::*;
 use euclid::{SideOffsets2D, Transform3D, Rect, Size2D, Point2D, Vector2D};
@@ -40,7 +39,7 @@ use std::{fmt, hash, ops, u32, usize};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
 use crate::util::{MatrixHelpers, Recycler, ScaleOffset, RectHelpers, PointHelpers};
-use crate::util::{project_rect, raster_rect_to_device_pixels};
+use crate::util::project_rect;
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityIndex};
 
@@ -1615,74 +1614,6 @@ impl PrimitiveStore {
         }
         prim_count
     }
-}
-
-/// Choose the decoration mask tile size for a given line.
-///
-/// Given a line with overall size `rect_size` and the given `orientation`,
-/// return the dimensions of a single mask tile for the decoration pattern
-/// described by `style` and `wavy_line_thickness`.
-///
-/// If `style` is `Solid`, no mask tile is necessary; return `None`. The other
-/// styles each have their own characteristic periods of repetition, so for each
-/// one, this function returns a `LayoutSize` with the right aspect ratio and
-/// whose specific size is convenient for the `cs_line_decoration.glsl` fragment
-/// shader to work with. The shader uses a local coordinate space in which the
-/// tile fills a rectangle with one corner at the origin, and with the size this
-/// function returns.
-///
-/// The returned size is not necessarily in pixels; device scaling and other
-/// concerns can still affect the actual task size.
-///
-/// Regardless of whether `orientation` is `Vertical` or `Horizontal`, the
-/// `width` and `height` of the returned size are always horizontal and
-/// vertical, respectively.
-pub fn get_line_decoration_size(
-    rect_size: &LayoutSize,
-    orientation: LineOrientation,
-    style: LineStyle,
-    wavy_line_thickness: f32,
-) -> Option<LayoutSize> {
-    let h = match orientation {
-        LineOrientation::Horizontal => rect_size.height,
-        LineOrientation::Vertical => rect_size.width,
-    };
-
-    // TODO(gw): The formulae below are based on the existing gecko and line
-    //           shader code. They give reasonable results for most inputs,
-    //           but could definitely do with a detailed pass to get better
-    //           quality on a wider range of inputs!
-    //           See nsCSSRendering::PaintDecorationLine in Gecko.
-
-    let (parallel, perpendicular) = match style {
-        LineStyle::Solid => {
-            return None;
-        }
-        LineStyle::Dashed => {
-            let dash_length = (3.0 * h).min(64.0).max(1.0);
-
-            (2.0 * dash_length, 4.0)
-        }
-        LineStyle::Dotted => {
-            let diameter = h.min(64.0).max(1.0);
-            let period = 2.0 * diameter;
-
-            (period, diameter)
-        }
-        LineStyle::Wavy => {
-            let line_thickness = wavy_line_thickness.max(1.0);
-            let slope_length = h - line_thickness;
-            let flat_length = ((line_thickness - 1.0) * 2.0).max(1.0);
-            let approx_period = 2.0 * (slope_length + flat_length);
-
-            (approx_period, h)
-        }
-    };
-
-    Some(match orientation {
-        LineOrientation::Horizontal => LayoutSize::new(parallel, perpendicular),
-        LineOrientation::Vertical => LayoutSize::new(perpendicular, parallel),
-    })
 }
 
 /// Trait for primitives that are directly internable.
