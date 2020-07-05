@@ -183,6 +183,11 @@ void Animation::SetEffectNoUpdate(AnimationEffect* aEffect) {
     // Break links with the old effect and then drop it.
     RefPtr<AnimationEffect> oldEffect = mEffect;
     mEffect = nullptr;
+    if (IsPartialPrerendered()) {
+      if (KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect()) {
+        oldKeyframeEffect->ResetPartialPrerendered();
+      }
+    }
     oldEffect->SetAnimation(nullptr);
 
     // The following will not do any notification because mEffect is null.

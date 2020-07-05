@@ -1375,6 +1375,33 @@ CompositorAnimationStorage* CompositorBridgeParent::GetAnimationStorage() {
   return mAnimationStorage;
 }
 
+void CompositorBridgeParent::NotifyJankedAnimations(
+    const JankedAnimations& aJankedAnimations) {
+  MOZ_ASSERT(!aJankedAnimations.empty());
+
+  if (StaticPrefs::layout_animation_prerender_partial_jank()) {
+    return;
+  }
+
+  for (const auto& entry : aJankedAnimations) {
+    const LayersId& layersId = entry.first;
+    const nsTArray<uint64_t>& animations = entry.second;
+    if (layersId == mRootLayerTreeID) {
+      if (mLayerManager) {
+        Unused << SendNotifyJankedAnimations(LayersId{0}, animations);
+      }
+      // It unlikely happens multiple processes have janked animations at same
+      // time, so it should be fine with enumerating sIndirectLayerTrees every
+      // time.
+    } else if (const LayerTreeState* state = GetIndirectShadowTree(layersId)) {
+      if (ContentCompositorBridgeParent* cpcp =
+              state->mContentCompositorBridgeParent) {
+        Unused << cpcp->SendNotifyJankedAnimations(layersId, animations);
+      }
+    }
+  }
+}
+
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvGetFrameUniformity(
     FrameUniformityData* aOutData) {
   mCompositionManager->GetFrameUniformity(aOutData);
