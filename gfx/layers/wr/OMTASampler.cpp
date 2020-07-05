@@ -154,12 +154,11 @@ void OMTASampler::SampleForTesting(const Maybe<TimeStamp>& aTestingSampleTime) {
 }
 
 void OMTASampler::SetAnimations(
-    uint64_t aId, const LayersId& aLayersId,
-    const nsTArray<layers::Animation>& aAnimations) {
+    uint64_t aId, const nsTArray<layers::Animation>& aAnimations) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MutexAutoLock lock(mStorageLock);
 
-  mAnimStorage->SetAnimations(aId, aLayersId, aAnimations);
+  mAnimStorage->SetAnimations(aId, aAnimations);
 }
 
 bool OMTASampler::HasAnimations() const {

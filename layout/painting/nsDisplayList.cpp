@@ -229,7 +229,7 @@ static uint64_t AddAnimationsForWebRender(
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
   animationInfo.AddAnimationsForDisplayItem(aItem->Frame(), aDisplayListBuilder,
                                             aItem, aItem->GetType(),
-                                            aManager->LayerManager());
+                                            layers::LayersBackend::LAYERS_WR);
   animationInfo.StartPendingAnimations(
       aManager->LayerManager()->GetAnimationReadyTime());
 
@@ -321,8 +321,8 @@ void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
   }
 
   AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
-  animationInfo.AddAnimationsForDisplayItem(aFrame, aBuilder, aItem, aType,
-                                            aLayer->Manager());
+  animationInfo.AddAnimationsForDisplayItem(
+      aFrame, aBuilder, aItem, aType, layers::LayersBackend::LAYERS_CLIENT);
   animationInfo.TransferMutatedFlagToLayer(aLayer);
 }
 
@@ -7287,8 +7287,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
       mChildrenBuildingRect(aChildrenBuildingRect),
-      mPrerenderDecision(PrerenderDecision::No),
-      mIsTransformSeparator(true) {
+      mIsTransformSeparator(true),
+      mAllowAsyncAnimation(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   Init(aBuilder, aList);
@@ -7297,14 +7297,14 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame* aFrame, nsDisplayList* aList,
                                        const nsRect& aChildrenBuildingRect,
-                                       PrerenderDecision aPrerenderDecision)
+                                       bool aAllowAsyncAnimation)
     : nsDisplayHitTestInfoBase(aBuilder, aFrame),
       mTransformGetter(nullptr),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
       mChildrenBuildingRect(aChildrenBuildingRect),
-      mPrerenderDecision(aPrerenderDecision),
-      mIsTransformSeparator(false) {
+      mIsTransformSeparator(false),
+      mAllowAsyncAnimation(aAllowAsyncAnimation) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
@@ -7320,8 +7320,8 @@ nsDisplayTransform::nsDisplayTransform(
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
       mChildrenBuildingRect(aChildrenBuildingRect),
-      mPrerenderDecision(PrerenderDecision::No),
-      mIsTransformSeparator(false) {
+      mIsTransformSeparator(false),
+      mAllowAsyncAnimation(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   Init(aBuilder, aList);
@@ -7640,28 +7640,12 @@ bool nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
 }
 
 bool nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
-  return mPrerenderDecision != PrerenderDecision::No;
+  return mAllowAsyncAnimation;
 }
 
 bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
     nsDisplayListBuilder* aBuilder) {
   return StaticPrefs::gfx_omta_background_color();
-}
-
-static bool IsInStickyPositionedSubtree(const nsIFrame* aFrame) {
-  for (const nsIFrame* frame = aFrame; frame;
-       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
-    if (frame->IsStickyPositioned()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool ShouldUsePartialPrerender(const nsIFrame* aFrame) {
-  return StaticPrefs::layout_animation_prerender_partial() &&
-         // Bug 1642547: Support partial prerender for position:sticky elements.
-         !IsInStickyPositionedSubtree(aFrame);
 }
 
 /* static */
@@ -7785,7 +7769,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return result;
   }
 
-  if (ShouldUsePartialPrerender(aFrame)) {
+  if (StaticPrefs::layout_animation_prerender_partial()) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(
         aFrame, untransformedDirtyRect, overflow, maxSize);
     result.mDecision = PrerenderDecision::Partial;
@@ -8069,7 +8053,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(
                                ~Layer::CONTENT_EXTEND_3D_CONTEXT);
   }
 
-  if (CanUseAsyncAnimations(aBuilder)) {
+  if (mAllowAsyncAnimation) {
     mFrame->SetProperty(nsIFrame::RefusedAsyncAnimationProperty(), false);
   }
 
@@ -8079,7 +8063,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(
         container, aBuilder, this, mFrame, GetType());
   }
 
-  if (CanUseAsyncAnimations(aBuilder) && MayBeAnimated(aBuilder)) {
+  if (mAllowAsyncAnimation && MayBeAnimated(aBuilder)) {
     // Only allow async updates to the transform if we're an animated layer,
     // since that's what triggers us to set the correct AGR in the constructor
     // and makes sure FrameLayerBuilder won't compute occlusions for this layer.
@@ -8556,19 +8540,7 @@ void nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream) {
     aStream << " combines-3d-with-ancestors";
   }
 
-  aStream << " prerender(";
-  switch (mPrerenderDecision) {
-    case PrerenderDecision::No:
-      aStream << "no";
-      break;
-    case PrerenderDecision::Partial:
-      aStream << "partial";
-      break;
-    case PrerenderDecision::Full:
-      aStream << "full";
-      break;
-  }
-  aStream << ")";
+  aStream << " allowAsync(" << (mAllowAsyncAnimation ? "true" : "false") << ")";
   aStream << " childrenBuildingRect" << mChildrenBuildingRect;
 }
 

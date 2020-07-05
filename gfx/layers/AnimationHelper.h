@@ -14,7 +14,6 @@
 #include "mozilla/webrender/WebRenderTypes.h"  // for RenderRoot
 #include "mozilla/TimeStamp.h"                 // for TimeStamp
 #include "mozilla/TimingParams.h"
-#include "mozilla/Types.h"  // for SideBits
 #include "mozilla/Variant.h"
 #include "X11UndefineNone.h"
 #include <unordered_map>
@@ -116,7 +115,7 @@ class AnimationHelper {
    * IPC boundary into something we can readily use for sampling.
    */
   static AnimationStorageData ExtractAnimations(
-      const LayersId& aLayersId, const AnimationArray& aAnimations);
+      const AnimationArray& aAnimations);
 
   /**
    * Get a unique id to represent the compositor animation between child
@@ -135,16 +134,6 @@ class AnimationHelper {
   static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
       const nsTArray<RefPtr<RawServoAnimationValue>>& aValue,
       const TransformData& aTransformData, gfx::Path* aCachedMotionPath);
-
-  /**
-   * Returns true if |aPrerenderedRect| transformed by |aTransform| were
-   * composited in |aClipRect| there appears area which wasn't pre-rendered
-   * on the main-thread. I.e. checkerboarding.
-   */
-  static bool ShouldBeJank(const LayoutDeviceIntRect& aPrerenderedRect,
-                           SideBits aOverflowedSides,
-                           const gfx::Matrix4x4& aTransform,
-                           const ParentLayerRect& aClipRect);
 };
 
 }  // namespace layers
