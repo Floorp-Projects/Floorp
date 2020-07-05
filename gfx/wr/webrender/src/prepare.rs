@@ -1769,7 +1769,7 @@ fn get_unclipped_device_rect(
 
 /// Given an unclipped device rect, try to find a minimal device space
 /// rect to allocate a clip mask for, by clipping to the screen. This
-/// function is very similar to get_raster_rects below. It is far from
+/// function is very similar to picture::get_raster_rects. It is far from
 /// ideal, and should be refactored as part of the support for setting
 /// scale per-raster-root.
 fn get_clipped_device_rect(
