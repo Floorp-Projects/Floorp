@@ -1387,7 +1387,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         }
         if (data.animations().Length()) {
           if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
-            sampler->SetAnimations(data.id(), data.animations());
+            sampler->SetAnimations(data.id(), GetLayersId(), data.animations());
             const auto activeAnim = mActiveAnimations.find(data.id());
             if (activeAnim == mActiveAnimations.end()) {
               mActiveAnimations.emplace(data.id(), mWrEpoch);
