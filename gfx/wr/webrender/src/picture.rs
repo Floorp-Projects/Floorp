@@ -5887,7 +5887,6 @@ impl PicturePrimitive {
 
         // See if this picture actually needs a surface for compositing.
         let actual_composite_mode = match self.requested_composite_mode {
-            Some(PictureCompositeMode::Filter(ref filter)) if filter.is_noop() => None,
             Some(PictureCompositeMode::TileCache { slice_id }) => {
                 // Only allow picture caching composite mode if global picture caching setting
                 // is enabled this frame.

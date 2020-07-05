@@ -122,7 +122,7 @@ impl Filter {
             Filter::Grayscale(amount) => amount == 0.0,
             Filter::HueRotate(amount) => amount == 0.0,
             Filter::Invert(amount) => amount == 0.0,
-            Filter::Opacity(_, amount) => amount >= 1.0,
+            Filter::Opacity(api::PropertyBinding::Value(amount), _) => amount >= 1.0,
             Filter::Saturate(amount) => amount == 1.0,
             Filter::Sepia(amount) => amount == 0.0,
             Filter::DropShadows(ref shadows) => {
@@ -143,6 +143,7 @@ impl Filter {
                     0.0, 0.0, 0.0, 0.0
                 ]
             }
+            Filter::Opacity(api::PropertyBinding::Binding(..), _) |
             Filter::SrgbToLinear |
             Filter::LinearToSrgb |
             Filter::ComponentTransfer |
