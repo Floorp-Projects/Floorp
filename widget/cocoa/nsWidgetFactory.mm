@@ -67,7 +67,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterListX)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
@@ -118,7 +118,7 @@ NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
-NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
+NS_DEFINE_NAMED_CID(NS_PRINTER_LIST_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTDIALOGSERVICE_CID);
@@ -150,7 +150,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_SCREENMANAGER_CID, false, NULL, ScreenManagerConstructor,
      mozilla::Module::MAIN_PROCESS_ONLY},
     {&kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecXConstructor},
-    {&kNS_PRINTER_ENUMERATOR_CID, false, NULL, nsPrinterEnumeratorXConstructor},
+    {&kNS_PRINTER_LIST_CID, false, NULL, nsPrinterListXConstructor},
     {&kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor},
     {&kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintSettingsServiceXConstructor},
     {&kNS_PRINTDIALOGSERVICE_CID, false, NULL, nsPrintDialogServiceXConstructor},
@@ -181,7 +181,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     {"@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
      mozilla::Module::MAIN_PROCESS_ONLY},
     {"@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID},
-    {"@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID},
+    {"@mozilla.org/gfx/printerlist;1", &kNS_PRINTER_LIST_CID},
     {"@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID},
     {"@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID},
     {NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID},

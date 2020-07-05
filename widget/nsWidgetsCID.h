@@ -303,7 +303,7 @@
     }                                                \
   }
 
-#define NS_PRINTER_ENUMERATOR_CID                    \
+#define NS_PRINTER_LIST_CID                          \
   {                                                  \
     0xa6cf9129, 0x15b3, 0x11d2, {                    \
       0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 \

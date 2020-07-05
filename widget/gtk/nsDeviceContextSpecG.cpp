@@ -17,9 +17,9 @@
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
-#include "nsStringEnumerator.h"
 #include "nsThreadUtils.h"
 
+#include "nsPrinter.h"
 #include "nsPSPrinters.h"
 
 #include "nsPrintSettingsGTK.h"
@@ -46,13 +46,10 @@ using mozilla::gfx::PrintTargetPDF;
 using mozilla::gfx::PrintTargetPS;
 
 static LazyLogModule sDeviceContextSpecGTKLog("DeviceContextSpecGTK");
-/* Macro to make lines shorter */
-#define DO_PR_DEBUG_LOG(x) \
-  MOZ_LOG(sDeviceContextSpecGTKLog, mozilla::LogLevel::Debug, x)
 
 //----------------------------------------------------------------------------------
-// The printer data is shared between the PrinterEnumerator and the
-// nsDeviceContextSpecGTK The PrinterEnumerator creates the printer info but the
+// The printer data is shared between the PrinterList and the
+// nsDeviceContextSpecGTK The PrinterList creates the printer info but the
 // nsDeviceContextSpecGTK cleans it up If it gets created (via the Page Setup
 // Dialog) but the user never prints anything then it will never be delete, so
 // this class takes care of that.
@@ -71,7 +68,7 @@ class GlobalPrinters {
   nsString* GetStringAt(int32_t aInx) {
     return &mGlobalPrinterList->ElementAt(aInx);
   }
-  void GetDefaultPrinterName(nsAString& aDefaultPrinterName);
+  void GetSystemDefaultPrinterName(nsAString& aName);
 
  protected:
   GlobalPrinters() = default;
@@ -87,13 +84,9 @@ nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nullptr;
 //---------------
 
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
-    : mGtkPrintSettings(nullptr), mGtkPageSetup(nullptr) {
-  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
-}
+    : mGtkPrintSettings(nullptr), mGtkPageSetup(nullptr) {}
 
 nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK() {
-  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()\n"));
-
   if (mGtkPageSetup) {
     g_object_unref(mGtkPageSetup);
   }
@@ -113,8 +106,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
   width /= TWIPS_PER_POINT_FLOAT;
   height /= TWIPS_PER_POINT_FLOAT;
 
-  DO_PR_DEBUG_LOG(
-      ("Making PrintTarget: width = %f, height = %f\n", width, height));
   nsresult rv;
 
   // We shouldn't be attempting to get a surface if we've already got a spool
@@ -176,8 +167,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
 NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
                                            nsIPrintSettings* aPS,
                                            bool aIsPrintPreview) {
-  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p)\n", aPS));
-
   if (gtk_major_version < 2 ||
       (gtk_major_version == 2 && gtk_minor_version < 10))
     return NS_ERROR_NOT_AVAILABLE;  // I'm so sorry bz
@@ -361,54 +350,41 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
   return NS_OK;
 }
 
-//  Printer Enumerator
-nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK() = default;
+//  Printer List
+NS_IMPL_ISUPPORTS(nsPrinterListGTK, nsIPrinterList)
 
-NS_IMPL_ISUPPORTS(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
-
-NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(
-    nsIStringEnumerator** aPrinterNameList) {
-  NS_ENSURE_ARG_POINTER(aPrinterNameList);
-  *aPrinterNameList = nullptr;
-
+NS_IMETHODIMP
+nsPrinterListGTK::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   uint32_t numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsTArray<nsString>* printers = new nsTArray<nsString>(numPrinters);
-  if (!printers) {
-    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  uint32_t count = 0;
-  while (count < numPrinters) {
-    printers->AppendElement(
-        *GlobalPrinters::GetInstance()->GetStringAt(count++));
+  for (uint32_t i = 0; i < numPrinters; ++i) {
+    nsString* name = GlobalPrinters::GetInstance()->GetStringAt(i);
+    RefPtr<nsIPrinter> printer = new nsPrinter(*name);
+    aPrinters.AppendElement(std::move(printer));
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
-}
-
-NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(
-    nsAString& aDefaultPrinterName) {
-  DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::GetDefaultPrinterName()\n"));
-
-  GlobalPrinters::GetInstance()->GetDefaultPrinterName(aDefaultPrinterName);
-
-  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n",
-                   NS_ConvertUTF16toUTF8(aDefaultPrinterName).get()));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(
-    const nsAString& aPrinterName, nsIPrintSettings* aPrintSettings) {
-  DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter()"));
+nsPrinterListGTK::GetSystemDefaultPrinter(nsIPrinter** aDefaultPrinter) {
+  nsAutoString printerName;
+  GlobalPrinters::GetInstance()->GetSystemDefaultPrinterName(printerName);
 
+  *aDefaultPrinter = new nsPrinter(printerName);
+  NS_ADDREF(*aDefaultPrinter);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrinterListGTK::InitPrintSettingsFromPrinter(
+    const nsAString& aPrinterName, nsIPrintSettings* aPrintSettings) {
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   // Set a default file name.
@@ -427,8 +403,6 @@ nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(
       filename.AssignLiteral("mozilla.pdf");
     }
 
-    DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n",
-                     NS_ConvertUTF16toUTF8(filename).get()));
     aPrintSettings->SetToFileName(filename);
   }
 
@@ -477,8 +451,8 @@ void GlobalPrinters::FreeGlobalPrinters() {
   }
 }
 
-void GlobalPrinters::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
-  aDefaultPrinterName.Truncate();
+void GlobalPrinters::GetSystemDefaultPrinterName(nsAString& aName) {
+  aName.Truncate();
 
   bool allocate = !GlobalPrinters::GetInstance()->PrintersAreAllocated();
 
@@ -493,7 +467,7 @@ void GlobalPrinters::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
 
   if (GlobalPrinters::GetInstance()->GetNumPrinters() == 0) return;
 
-  aDefaultPrinterName = *GlobalPrinters::GetInstance()->GetStringAt(0);
+  aName = *GlobalPrinters::GetInstance()->GetStringAt(0);
 
   if (allocate) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();

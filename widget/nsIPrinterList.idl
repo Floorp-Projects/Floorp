@@ -4,21 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIPrinter.idl"
 #include "nsIPrintSettings.idl"
 
 interface nsIStringEnumerator;
 
 [scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
-interface nsIPrinterEnumerator : nsISupports
+interface nsIPrinterList : nsISupports
 {
-  /**
-   * The name of the system default printer. This name should also be
-   * present in printerNameList below. This is not necessarily gecko's
-   * default printer; see nsIPrintSettingsService.defaultPrinterName
-   * for that.
-   */
-  readonly attribute AString defaultPrinterName;
-
   /**
    * Initializes certain settings from the native printer into the PrintSettings
    * These settings include, but are not limited to:
@@ -30,7 +23,15 @@ interface nsIPrinterEnumerator : nsISupports
                                     in nsIPrintSettings aPrintSettings);
 
   /**
-   * The list of printer names
+   * The system default printer. This should also be
+   * present in printers below. This is not necessarily gecko's
+   * default printer; see nsIPrintSettingsService.lastUsedPrinterName
+   * for that.
    */
-  readonly attribute nsIStringEnumerator printerNameList;
+  readonly attribute nsIPrinter systemDefaultPrinter;
+
+  /**
+   * The list of printers.
+   */
+  readonly attribute Array<nsIPrinter> printers;
 };

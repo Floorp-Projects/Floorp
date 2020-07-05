@@ -14,8 +14,7 @@
 #include "nsWindowsHelpers.h"
 #include "ipc/IPCMessageUtils.h"
 
-const char kPrinterEnumeratorContractID[] =
-    "@mozilla.org/gfx/printerenumerator;1";
+const char kPrinterListContractID[] = "@mozilla.org/gfx/printerlist;1";
 
 using namespace mozilla::embedding;
 
