@@ -24,7 +24,6 @@ import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.search.SearchFeature
-import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
@@ -207,11 +206,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     override fun navToTrackingProtectionPanel(session: Session) {
         val navController = findNavController()
 
-        val useCase = TrackingProtectionUseCases(
-            sessionManager = requireComponents.core.sessionManager,
-            engine = requireComponents.core.engine
-        )
-        useCase.containsException(session) { contains ->
+        requireComponents.useCases.trackingProtectionUseCases.containsException(session.id) { contains ->
             val isEnabled = session.trackerBlockingEnabled && !contains
             val directions =
                 BrowserFragmentDirections.actionBrowserFragmentToTrackingProtectionPanelDialogFragment(

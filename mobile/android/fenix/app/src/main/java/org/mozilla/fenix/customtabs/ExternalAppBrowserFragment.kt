@@ -11,7 +11,6 @@ import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.*
-import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -22,7 +21,6 @@ import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
-import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -171,11 +169,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
     }
 
     override fun navToTrackingProtectionPanel(session: Session) {
-        val useCase = TrackingProtectionUseCases(
-            sessionManager = requireComponents.core.sessionManager,
-            engine = requireComponents.core.engine
-        )
-        useCase.containsException(session) { contains ->
+        requireComponents.useCases.trackingProtectionUseCases.containsException(session.id) { contains ->
             val isEnabled = session.trackerBlockingEnabled && !contains
             val directions =
                 ExternalAppBrowserFragmentDirections

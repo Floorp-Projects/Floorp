@@ -18,6 +18,7 @@ import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.utils.Mockable
 
@@ -42,7 +43,7 @@ class UseCases(
     /**
      * Use cases that provide tab management.
      */
-    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
+    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
 
     /**
      * Use cases that provide search engine integration.
@@ -65,4 +66,6 @@ class UseCases(
     val contextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
 
     val engineSessionUseCases by lazy { EngineSessionUseCases(sessionManager) }
+
+    val trackingProtectionUseCases by lazy { TrackingProtectionUseCases(store, engine) }
 }

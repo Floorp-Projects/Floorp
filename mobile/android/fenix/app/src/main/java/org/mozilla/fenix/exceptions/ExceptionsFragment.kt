@@ -44,10 +44,7 @@ class ExceptionsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
-        trackingProtectionUseCases = TrackingProtectionUseCases(
-            sessionManager = view.context.components.core.sessionManager,
-            engine = view.context.components.core.engine
-        )
+        trackingProtectionUseCases = view.context.components.useCases.trackingProtectionUseCases
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
                 ExceptionsFragmentState(

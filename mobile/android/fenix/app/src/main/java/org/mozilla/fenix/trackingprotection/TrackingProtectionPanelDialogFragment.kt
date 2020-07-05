@@ -61,11 +61,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val components = requireComponents
-        trackingProtectionUseCases = TrackingProtectionUseCases(
-            sessionManager = components.core.sessionManager,
-            engine = components.core.engine
-        )
+        trackingProtectionUseCases = requireComponents.useCases.trackingProtectionUseCases
     }
 
     override fun onCreateView(
@@ -115,7 +111,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
 
     private fun updateTrackers(session: Session) {
         trackingProtectionUseCases.fetchTrackingLogs(
-            session,
+            session.id,
             onSuccess = {
                 trackingProtectionStore.dispatch(TrackingProtectionAction.TrackerLogChange(it))
             },
@@ -150,10 +146,10 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             val session = context.components.core.sessionManager.findSessionById(args.sessionId)
             session?.let {
                 if (isEnabled) {
-                    trackingProtectionUseCases.removeException(it)
+                    trackingProtectionUseCases.removeException(it.id)
                 } else {
                     context.metrics.track(Event.TrackingProtectionException)
-                    trackingProtectionUseCases.addException(it)
+                    trackingProtectionUseCases.addException(it.id)
                 }
 
                 with(context.components) {
