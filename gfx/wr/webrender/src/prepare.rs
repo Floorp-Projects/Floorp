@@ -22,7 +22,7 @@ use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureCont
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
-use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger};
+use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger, ClusterFlags};
 use crate::picture::{PrimitiveList, SurfaceIndex, TileCacheInstance};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use crate::prim_store::gradient::LinearGradientPrimitive;
@@ -57,6 +57,9 @@ pub fn prepare_primitives(
 ) {
     profile_scope!("prepare_primitives");
     for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
+        if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
+            continue;
+        }
         profile_scope!("cluster");
         pic_state.map_local_to_pic.set_target_spatial_node(
             cluster.spatial_node_index,
