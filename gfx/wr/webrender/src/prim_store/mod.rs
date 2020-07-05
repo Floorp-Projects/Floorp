@@ -15,7 +15,7 @@ use crate::debug_render::DebugItem;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::GlyphKey;
-use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
+use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;
 use crate::picture::{PicturePrimitive, RecordedDirtyRegion};
@@ -30,7 +30,6 @@ use crate::prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 use crate::render_backend::{FrameId};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::RenderTaskCacheEntryHandle;
-use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::ImageProperties;
 use crate::scene::SceneProperties;
 use std::{hash, ops, u32, usize};
@@ -127,21 +126,6 @@ impl ClipTaskIndex {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureIndex(pub usize);
-
-impl GpuCacheHandle {
-    pub fn as_int(self, gpu_cache: &GpuCache) -> i32 {
-        gpu_cache.get_address(&self).as_int()
-    }
-}
-
-impl GpuCacheAddress {
-    pub fn as_int(self) -> i32 {
-        // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
-        //           In the future, we can change the PrimitiveInstanceData struct
-        //           to use 2x u16 for the vertex attribute instead of an i32.
-        self.v as i32 * MAX_VERTEX_TEXTURE_WIDTH as i32 + self.u as i32
-    }
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
