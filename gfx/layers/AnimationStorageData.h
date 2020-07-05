@@ -53,6 +53,13 @@ struct PropertyAnimation {
   float mPlaybackRate;
   dom::IterationCompositeOperation mIterationComposite;
   bool mIsNotPlaying;
+
+  void ResetLastCompositionValues() {
+    mCurrentIterationOnLastCompose = 0;
+    mSegmentIndexOnLastCompose = 0;
+    mProgressOnLastCompose.SetNull();
+    mPortionInSegmentOnLastCompose.SetNull();
+  }
 };
 
 struct PropertyAnimationGroup {
@@ -65,6 +72,11 @@ struct PropertyAnimationGroup {
   void Clear() {
     mAnimations.Clear();
     mBaseStyle = nullptr;
+  }
+  void ResetLastCompositionValues() {
+    for (PropertyAnimation& animation : mAnimations) {
+      animation.ResetLastCompositionValues();
+    }
   }
 };
 
