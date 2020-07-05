@@ -118,8 +118,7 @@ use crate::gpu_types::{UvRectKind, ZBufferId};
 use plane_split::{Clipper, Polygon, Splitter};
 use crate::prim_store::{SpaceMapper, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
-use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer};
-use crate::prim_store::{ColorBindingStorage, ColorBindingIndex};
+use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveScratchBuffer};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task_graph::RenderTaskId;
@@ -133,7 +132,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
 use std::ops::Range;
 use crate::texture_cache::TextureCacheHandle;
-use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers, Recycler};
+use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers, Recycler, raster_rect_to_device_pixels};
 use crate::filterdata::{FilterDataHandle};
 use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibilityFlags, FrameVisibilityContext, FrameVisibilityState};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -7119,4 +7118,39 @@ impl CompositeState {
             }
         }
     }
+}
+
+pub fn get_raster_rects(
+    pic_rect: PictureRect,
+    map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
+    map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
+    prim_bounding_rect: WorldRect,
+    device_pixel_scale: DevicePixelScale,
+) -> Option<(DeviceRect, DeviceRect)> {
+    let unclipped_raster_rect = map_to_raster.map(&pic_rect)?;
+
+    let unclipped = raster_rect_to_device_pixels(
+        unclipped_raster_rect,
+        device_pixel_scale,
+    );
+
+    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
+
+    let clipped_world_rect = unclipped_world_rect.intersection(&prim_bounding_rect)?;
+
+    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
+
+    let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
+
+    let clipped = raster_rect_to_device_pixels(
+        clipped_raster_rect,
+        device_pixel_scale,
+    );
+
+    // Ensure that we won't try to allocate a zero-sized clip render task.
+    if clipped.is_empty() {
+        return None;
+    }
+
+    Some((clipped, unclipped))
 }

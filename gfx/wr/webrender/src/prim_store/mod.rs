@@ -1617,41 +1617,6 @@ impl PrimitiveStore {
     }
 }
 
-pub fn get_raster_rects(
-    pic_rect: PictureRect,
-    map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
-    map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
-    prim_bounding_rect: WorldRect,
-    device_pixel_scale: DevicePixelScale,
-) -> Option<(DeviceRect, DeviceRect)> {
-    let unclipped_raster_rect = map_to_raster.map(&pic_rect)?;
-
-    let unclipped = raster_rect_to_device_pixels(
-        unclipped_raster_rect,
-        device_pixel_scale,
-    );
-
-    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
-
-    let clipped_world_rect = unclipped_world_rect.intersection(&prim_bounding_rect)?;
-
-    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
-
-    let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
-
-    let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect,
-        device_pixel_scale,
-    );
-
-    // Ensure that we won't try to allocate a zero-sized clip render task.
-    if clipped.is_empty() {
-        return None;
-    }
-
-    Some((clipped, unclipped))
-}
-
 /// Choose the decoration mask tile size for a given line.
 ///
 /// Given a line with overall size `rect_size` and the given `orientation`,
