@@ -66,7 +66,7 @@ class OMTASampler final {
    */
   void SetSampleTime(const TimeStamp& aSampleTime);
   void ResetPreviousSampleTime();
-  void SetAnimations(uint64_t aId,
+  void SetAnimations(uint64_t aId, const LayersId& aLayersId,
                      const nsTArray<layers::Animation>& aAnimations);
   bool HasAnimations() const;
 

@@ -1254,6 +1254,7 @@ class Layer {
   // This is only called when the layer tree is updated. Do not call this from
   // layout code.  To add an animation to this layer, use AddAnimation.
   void SetCompositorAnimations(
+      const LayersId& aLayersId,
       const CompositorAnimations& aCompositorAnimations);
   // Go through all animations in this layer and its children and, for
   // any animations with a null start time, update their start time such
@@ -1467,6 +1468,9 @@ class Layer {
   }
   const Maybe<TransformData>& GetTransformData() const {
     return mAnimationInfo.GetTransformData();
+  }
+  const LayersId& GetAnimationLayersId() const {
+    return mAnimationInfo.GetLayersId();
   }
 
   Maybe<uint64_t> GetAnimationGeneration() const {
