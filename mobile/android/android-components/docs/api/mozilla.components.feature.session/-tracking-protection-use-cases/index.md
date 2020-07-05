@@ -8,7 +8,7 @@ Contains use cases related to the tracking protection.
 
 ### Parameters
 
-`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).
+`store` - the application's [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md).
 
 `engine` - the application's [Engine](../../mozilla.components.concept.engine/-engine/index.md).
 
@@ -16,18 +16,18 @@ Contains use cases related to the tracking protection.
 
 | Name | Summary |
 |---|---|
-| [AddExceptionUseCase](-add-exception-use-case/index.md) | `class AddExceptionUseCase`<br>Use case for adding a new [Session](../../mozilla.components.browser.session/-session/index.md) to the exception list. |
-| [ContainsExceptionUseCase](-contains-exception-use-case/index.md) | `class ContainsExceptionUseCase`<br>Use case for verifying if a [Session](../../mozilla.components.browser.session/-session/index.md) is in the exception list. |
+| [AddExceptionUseCase](-add-exception-use-case/index.md) | `class AddExceptionUseCase`<br>Use case for adding a new tab to the exception list. |
+| [ContainsExceptionUseCase](-contains-exception-use-case/index.md) | `class ContainsExceptionUseCase`<br>Use case for verifying if a tab is in the exception list. |
 | [FetchExceptionsUseCase](-fetch-exceptions-use-case/index.md) | `class FetchExceptionsUseCase`<br>Use case for fetching all exceptions in the exception list. |
 | [FetchTrackingLogUserCase](-fetch-tracking-log-user-case/index.md) | `class FetchTrackingLogUserCase`<br>Use case for fetching all the tracking protection logged information. |
-| [RemoveAllExceptionsUseCase](-remove-all-exceptions-use-case/index.md) | `class RemoveAllExceptionsUseCase`<br>Use case for removing all [Session](../../mozilla.components.browser.session/-session/index.md)s from the exception list. |
-| [RemoveExceptionUseCase](-remove-exception-use-case/index.md) | `class RemoveExceptionUseCase`<br>Use case for removing a [Session](../../mozilla.components.browser.session/-session/index.md) or a [TrackingProtectionException](../../mozilla.components.concept.engine.content.blocking/-tracking-protection-exception/index.md) from the exception list. |
+| [RemoveAllExceptionsUseCase](-remove-all-exceptions-use-case/index.md) | `class RemoveAllExceptionsUseCase`<br>Use case for removing all tabs from the exception list. |
+| [RemoveExceptionUseCase](-remove-exception-use-case/index.md) | `class RemoveExceptionUseCase`<br>Use case for removing a tab or a [TrackingProtectionException](../../mozilla.components.concept.engine.content.blocking/-tracking-protection-exception/index.md) from the exception list. |
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TrackingProtectionUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`)`<br>Contains use cases related to the tracking protection. |
+| [&lt;init&gt;](-init-.md) | `TrackingProtectionUseCases(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`)`<br>Contains use cases related to the tracking protection. |
 
 ### Properties
 
@@ -40,7 +40,7 @@ Contains use cases related to the tracking protection.
 | [fetchTrackingLogs](fetch-tracking-logs.md) | `val fetchTrackingLogs: `[`FetchTrackingLogUserCase`](-fetch-tracking-log-user-case/index.md) |
 | [removeAllExceptions](remove-all-exceptions.md) | `val removeAllExceptions: `[`RemoveAllExceptionsUseCase`](-remove-all-exceptions-use-case/index.md) |
 | [removeException](remove-exception.md) | `val removeException: `[`RemoveExceptionUseCase`](-remove-exception-use-case/index.md) |
-| [sessionManager](session-manager.md) | `val sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)<br>the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md). |
+| [store](store.md) | `val store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)<br>the application's [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md). |
 
 ### Extension Functions
 

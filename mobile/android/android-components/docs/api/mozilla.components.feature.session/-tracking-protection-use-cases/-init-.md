@@ -2,12 +2,12 @@
 
 # &lt;init&gt;
 
-`TrackingProtectionUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`)`
+`TrackingProtectionUseCases(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`)`
 
 Contains use cases related to the tracking protection.
 
 ### Parameters
 
-`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).
+`store` - the application's [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md).
 
 `engine` - the application's [Engine](../../mozilla.components.concept.engine/-engine/index.md).

@@ -4,7 +4,7 @@
 
 `class RemoveAllExceptionsUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L80)
 
-Use case for removing all [Session](../../../mozilla.components.browser.session/-session/index.md)s from the exception list.
+Use case for removing all tabs from the exception list.
 
 ### Functions
 
