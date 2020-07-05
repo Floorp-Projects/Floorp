@@ -16,6 +16,7 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -147,8 +148,10 @@ class PromptDelegateTest : BaseSessionTest() {
                 equalTo(false))
     }
 
+    // disable test on opt for frequently failing Bug 1640418
     @Test
     fun onBeforeUnloadTest() {
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
         ))
