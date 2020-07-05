@@ -524,7 +524,7 @@ bool LayerTransactionParent::SetLayerAttributes(
   } else {
     layer->SetMaskLayer(nullptr);
   }
-  layer->SetCompositorAnimations(common.compositorAnimations());
+  layer->SetCompositorAnimations(mId, common.compositorAnimations());
   // Clean up the Animations by id in the CompositorAnimationStorage
   // if there are no active animations on the layer
   if (mAnimStorage && layer->GetCompositorAnimationsId() &&
