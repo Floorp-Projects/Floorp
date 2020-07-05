@@ -509,6 +509,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   void ReinitRendering();
   void ReinitRenderingForDeviceReset();
 
+  void NotifyJankedAnimations(const nsTArray<uint64_t>& aJankedAnimations);
+
   static inline BrowserChild* GetFrom(nsIDOMWindow* aWindow) {
     nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);

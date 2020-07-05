@@ -847,6 +847,21 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvCompositorOptionsChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult CompositorBridgeChild::RecvNotifyJankedAnimations(
+    const LayersId& aLayersId, nsTArray<uint64_t>&& aJankedAnimations) {
+  if (mLayerManager) {
+    MOZ_ASSERT(!aLayersId.IsValid());
+    mLayerManager->UpdatePartialPrerenderedAnimations(aJankedAnimations);
+  } else if (aLayersId.IsValid()) {
+    RefPtr<dom::BrowserChild> child = dom::BrowserChild::GetFrom(aLayersId);
+    if (child) {
+      child->NotifyJankedAnimations(aJankedAnimations);
+    }
+  }
+
+  return IPC_OK();
+}
+
 void CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     TextureClient* aClient) {
   if (!aClient) {

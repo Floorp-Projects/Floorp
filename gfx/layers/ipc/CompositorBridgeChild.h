@@ -111,6 +111,9 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   mozilla::ipc::IPCResult RecvHideAllPlugins(const uintptr_t& aParentWidget);
 
+  mozilla::ipc::IPCResult RecvNotifyJankedAnimations(
+      const LayersId& aLayersId, nsTArray<uint64_t>&& aJankedAnimations);
+
   PTextureChild* AllocPTextureChild(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
