@@ -7648,6 +7648,22 @@ bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
   return StaticPrefs::gfx_omta_background_color();
 }
 
+static bool IsInStickyPositionedSubtree(const nsIFrame* aFrame) {
+  for (const nsIFrame* frame = aFrame; frame;
+       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+    if (frame->IsStickyPositioned()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool ShouldUsePartialPrerender(const nsIFrame* aFrame) {
+  return StaticPrefs::layout_animation_prerender_partial() &&
+         // Bug 1642547: Support partial prerender for position:sticky elements.
+         !IsInStickyPositionedSubtree(aFrame);
+}
+
 /* static */
 auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsRect* aDirtyRect)
@@ -7760,7 +7776,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return result;
   }
 
-  if (StaticPrefs::layout_animation_prerender_partial()) {
+  if (ShouldUsePartialPrerender(aFrame)) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(
         aFrame, untransformedDirtyRect, overflow, maxSize);
     result.mDecision = PrerenderDecision::Partial;
