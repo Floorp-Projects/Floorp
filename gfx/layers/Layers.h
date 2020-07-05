@@ -28,7 +28,6 @@
 #include "mozilla/RefPtr.h"                // for already_AddRefed
 #include "mozilla/TimeStamp.h"             // for TimeStamp, TimeDuration
 #include "mozilla/UniquePtr.h"             // for UniquePtr
-#include "mozilla/dom/Animation.h"         // for dom::Animation
 #include "mozilla/gfx/BaseMargin.h"        // for BaseMargin
 #include "mozilla/gfx/BasePoint.h"         // for BasePoint
 #include "mozilla/gfx/Point.h"             // for IntSize
@@ -47,7 +46,6 @@
 #include "nsDebug.h"                 // for NS_ASSERTION
 #include "nsISupportsImpl.h"         // for Layer::Release, etc
 #include "nsRect.h"                  // for mozilla::gfx::IntRect
-#include "nsRefPtrHashtable.h"       // for nsRefPtrHashtable
 #include "nsRegion.h"                // for nsIntRegion
 #include "nsString.h"                // for nsCString
 #include "nsTArray.h"                // for nsTArray
@@ -258,7 +256,6 @@ class LayerManager : public FrameRecorder {
     mDestroyed = true;
     mUserData.Destroy();
     mRoot = nullptr;
-    mPartialPrerenderedAnimations.Clear();
   }
   bool IsDestroyed() { return mDestroyed; }
 
@@ -756,13 +753,6 @@ class LayerManager : public FrameRecorder {
 
   void SetContainsSVG(bool aContainsSVG) { mContainsSVG = aContainsSVG; }
 
-  void AddPartialPrerenderedAnimation(uint64_t aCompositorAnimationId,
-                                      dom::Animation* aAnimation);
-  void RemovePartialPrerenderedAnimation(uint64_t aCompositorAnimationId,
-                                         dom::Animation* aAnimation);
-  void UpdatePartialPrerenderedAnimations(
-      const nsTArray<uint64_t>& aJankedAnimations);
-
  protected:
   RefPtr<Layer> mRoot;
   gfx::UserData mUserData;
@@ -800,12 +790,6 @@ class LayerManager : public FrameRecorder {
   // IMPORTANT: Clients should take care to clear this or risk it slowly
   // growing out of control.
   nsTArray<CompositionPayload> mPayload;
-  // Transform animations which are not fully pre-rendered because it's on a
-  // large frame.  We need to update the pre-rendered area once after we tried
-  // to composite area which is outside of the pre-rendered area on the
-  // compositor.
-  nsRefPtrHashtable<nsUint64HashKey, dom::Animation>
-      mPartialPrerenderedAnimations;
 
  public:
   /*
@@ -832,7 +816,7 @@ class LayerManager : public FrameRecorder {
 class Layer {
   NS_INLINE_DECL_REFCOUNTING(Layer)
 
-  using AnimationArray = nsTArray<layers::Animation>;
+  typedef nsTArray<Animation> AnimationArray;
 
  public:
   // Keep these in alphabetical order
@@ -1270,7 +1254,6 @@ class Layer {
   // This is only called when the layer tree is updated. Do not call this from
   // layout code.  To add an animation to this layer, use AddAnimation.
   void SetCompositorAnimations(
-      const LayersId& aLayersId,
       const CompositorAnimations& aCompositorAnimations);
   // Go through all animations in this layer and its children and, for
   // any animations with a null start time, update their start time such
@@ -1369,7 +1352,7 @@ class Layer {
   bool HasScrollableFrameMetrics() const;
   bool IsScrollableWithoutContent() const;
   const EventRegions& GetEventRegions() const { return mEventRegions; }
-  ContainerLayer* GetParent() const { return mParent; }
+  ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() {
     if (mNextSibling) {
       mNextSibling->CheckCanary();
@@ -1484,9 +1467,6 @@ class Layer {
   }
   const Maybe<TransformData>& GetTransformData() const {
     return mAnimationInfo.GetTransformData();
-  }
-  const LayersId& GetAnimationLayersId() const {
-    return mAnimationInfo.GetLayersId();
   }
 
   Maybe<uint64_t> GetAnimationGeneration() const {

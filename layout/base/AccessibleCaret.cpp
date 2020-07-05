@@ -174,8 +174,14 @@ void AccessibleCaret::EnsureApzAware() {
 }
 
 bool AccessibleCaret::IsInPositionFixedSubtree() const {
-  return nsLayoutUtils::IsInPositionFixedSubtree(
-      mImaginaryCaretReferenceFrame.GetFrame());
+  for (nsIFrame* f = mImaginaryCaretReferenceFrame.GetFrame(); f;
+       f = f->GetParent()) {
+    if (f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+        nsLayoutUtils::IsReallyFixedPos(f)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void AccessibleCaret::InjectCaretElement(Document* aDocument) {

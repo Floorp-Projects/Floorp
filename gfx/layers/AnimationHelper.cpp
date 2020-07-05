@@ -5,13 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnimationHelper.h"
-#include "gfx2DGlue.h"                       // for ThebesRect
-#include "gfxLineSegment.h"                  // for gfxLineSegment
-#include "gfxPoint.h"                        // for gfxPoint
-#include "gfxQuad.h"                         // for gfxQuad
-#include "gfxRect.h"                         // for gfxRect
-#include "gfxUtils.h"                        // for gfxUtils::TransformToQuad
-#include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
+#include "mozilla/ComputedTimingFunction.h"      // for ComputedTimingFunction
 #include "mozilla/dom/AnimationEffectBinding.h"  // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h"   // for dom::IterationComposite
 #include "mozilla/dom/KeyframeEffect.h"       // for dom::KeyFrameEffectReadOnly
@@ -321,9 +315,8 @@ static bool HasTransformLikeAnimations(const AnimationArray& aAnimations) {
 #endif
 
 AnimationStorageData AnimationHelper::ExtractAnimations(
-    const LayersId& aLayersId, const AnimationArray& aAnimations) {
+    const AnimationArray& aAnimations) {
   AnimationStorageData storageData;
-  storageData.mLayersId = aLayersId;
 
   nsCSSPropertyID prevID = eCSSProperty_UNKNOWN;
   PropertyAnimationGroup* currData = nullptr;
@@ -551,137 +544,6 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
 
   return nsDisplayTransform::GetResultingTransformMatrix(
       props, refBox, aTransformData.appUnitsPerDevPixel());
-}
-
-static uint8_t CollectOverflowedSideLines(const gfxQuad& aPrerenderedQuad,
-                                          SideBits aOverflowSides,
-                                          gfxLineSegment sideLines[4]) {
-  uint8_t count = 0;
-
-  if (aOverflowSides & SideBits::eTop) {
-    sideLines[count] = gfxLineSegment(aPrerenderedQuad.mPoints[0],
-                                      aPrerenderedQuad.mPoints[1]);
-    count++;
-  }
-  if (aOverflowSides & SideBits::eRight) {
-    sideLines[count] = gfxLineSegment(aPrerenderedQuad.mPoints[1],
-                                      aPrerenderedQuad.mPoints[2]);
-    count++;
-  }
-  if (aOverflowSides & SideBits::eBottom) {
-    sideLines[count] = gfxLineSegment(aPrerenderedQuad.mPoints[2],
-                                      aPrerenderedQuad.mPoints[3]);
-    count++;
-  }
-  if (aOverflowSides & SideBits::eLeft) {
-    sideLines[count] = gfxLineSegment(aPrerenderedQuad.mPoints[3],
-                                      aPrerenderedQuad.mPoints[0]);
-    count++;
-  }
-
-  return count;
-}
-
-enum RegionBits : uint8_t {
-  Inside = 0,
-  Left = (1 << 0),
-  Right = (1 << 1),
-  Bottom = (1 << 2),
-  Top = (1 << 3),
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RegionBits);
-
-static RegionBits GetRegionBitsForPoint(double aX, double aY,
-                                        const gfxRect& aClip) {
-  RegionBits result = RegionBits::Inside;
-  if (aX < aClip.X()) {
-    result |= RegionBits::Left;
-  } else if (aX > aClip.XMost()) {
-    result |= RegionBits::Right;
-  }
-
-  if (aY < aClip.Y()) {
-    result |= RegionBits::Bottom;
-  } else if (aY > aClip.YMost()) {
-    result |= RegionBits::Top;
-  }
-  return result;
-};
-
-// https://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
-static bool LineSegmentIntersectsClip(double aX0, double aY0, double aX1,
-                                      double aY1, const gfxRect& aClip) {
-  RegionBits b0 = GetRegionBitsForPoint(aX0, aY0, aClip);
-  RegionBits b1 = GetRegionBitsForPoint(aX1, aY1, aClip);
-
-  while (true) {
-    if (!(b0 | b1)) {
-      // Completely inside.
-      return true;
-    }
-
-    if (b0 & b1) {
-      // Completely outside.
-      return false;
-    }
-
-    double x, y;
-    // Choose an outside point.
-    RegionBits outsidePointBits = b1 > b0 ? b1 : b0;
-    if (outsidePointBits & RegionBits::Top) {
-      x = aX0 + (aX1 - aX0) * (aClip.YMost() - aY0) / (aY1 - aY0);
-      y = aClip.YMost();
-    } else if (outsidePointBits & RegionBits::Bottom) {
-      x = aX0 + (aX1 - aX0) * (aClip.Y() - aY0) / (aY1 - aY0);
-      y = aClip.Y();
-    } else if (outsidePointBits & RegionBits::Right) {
-      y = aY0 + (aY1 - aY0) * (aClip.XMost() - aX0) / (aX1 - aX0);
-      x = aClip.XMost();
-    } else if (outsidePointBits & RegionBits::Left) {
-      y = aY0 + (aY1 - aY0) * (aClip.X() - aX0) / (aX1 - aX0);
-      x = aClip.X();
-    }
-
-    if (outsidePointBits == b0) {
-      aX0 = x;
-      aY0 = y;
-      b0 = GetRegionBitsForPoint(aX0, aY0, aClip);
-    } else {
-      aX1 = x;
-      aY1 = y;
-      b1 = GetRegionBitsForPoint(aX1, aY1, aClip);
-    }
-  }
-  MOZ_ASSERT_UNREACHABLE();
-  return false;
-}
-
-// static
-bool AnimationHelper::ShouldBeJank(const LayoutDeviceIntRect& aPrerenderedRect,
-                                   SideBits aOverflowSides,
-                                   const gfx::Matrix4x4& aTransform,
-                                   const ParentLayerRect& aClipRect) {
-  if (aClipRect.IsEmpty()) {
-    return false;
-  }
-
-  gfxQuad prerenderedQuad = gfxUtils::TransformToQuad(
-      ThebesRect(aPrerenderedRect.ToUnknownRect()), aTransform);
-
-  gfxLineSegment sideLines[4];
-  uint8_t overflowSideCount =
-      CollectOverflowedSideLines(prerenderedQuad, aOverflowSides, sideLines);
-
-  gfxRect clipRect = ThebesRect(aClipRect.ToUnknownRect());
-  for (uint8_t j = 0; j < overflowSideCount; j++) {
-    if (LineSegmentIntersectsClip(sideLines[j].mStart.x, sideLines[j].mStart.y,
-                                  sideLines[j].mEnd.x, sideLines[j].mEnd.y,
-                                  clipRect)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 }  // namespace layers

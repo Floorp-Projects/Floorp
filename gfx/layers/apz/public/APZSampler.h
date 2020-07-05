@@ -98,14 +98,6 @@ class APZSampler {
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
 
-  /**
-   * Returns the composition bounds of the APZC correspoinding to the pair of
-   * |aLayersId| and |aScrollId|.
-   */
-  ParentLayerRect GetCompositionBounds(
-      const LayersId& aLayersId,
-      const ScrollableLayerGuid::ViewID& aScrollId) const;
-
   ScrollableLayerGuid GetGuid(const LayerMetricsWrapper& aLayer);
 
   ScreenMargin GetGeckoFixedLayerMargins() const;

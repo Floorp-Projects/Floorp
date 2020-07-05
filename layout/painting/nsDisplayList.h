@@ -6727,7 +6727,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   using TransformReferenceBox = nsStyleTransformMatrix::TransformReferenceBox;
 
  public:
-  enum class PrerenderDecision : uint8_t { No, Full, Partial };
+  enum class PrerenderDecision { No, Full, Partial };
 
   /**
    * Returns a matrix (in pixels) for the current frame. The matrix should be
@@ -6747,7 +6747,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     PrerenderDecision aPrerenderDecision);
+                     bool aAllowAsyncAnimation);
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
@@ -7006,9 +7006,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
       float aAppUnitsPerPixel);
 
   struct PrerenderInfo {
-    bool CanUseAsyncAnimations() const {
-      return mDecision != PrerenderDecision::No && mHasAnimations;
-    }
     PrerenderDecision mDecision = PrerenderDecision::No;
     bool mHasAnimations = true;
   };
@@ -7055,10 +7052,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
     return mFrame->Extend3DContext() || Combines3DTransformWithAncestors();
   }
 
-  bool IsPartialPrerender() const {
-    return mPrerenderDecision == PrerenderDecision::Partial;
-  }
-
   void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
  private:
@@ -7089,7 +7082,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   nsRect mChildBounds;
   // The transformed bounds of this display item.
   nsRect mBounds;
-  PrerenderDecision mPrerenderDecision : 2;
   // This item is a separator between 3D rendering contexts, and
   // mTransform have been presetted by the constructor.
   // This also forces us not to extend the 3D context.  Since we don't create a
@@ -7097,9 +7089,11 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   // context, the transform items of a child preserves3d context may extend the
   // parent context unintendedly if the root of the child preserves3d context
   // doesn't create a transform item.
-  bool mIsTransformSeparator : 1;
+  bool mIsTransformSeparator;
+  // True if async animation of the transform is allowed.
+  bool mAllowAsyncAnimation;
   // True if this nsDisplayTransform should get flattened
-  bool mShouldFlatten : 1;
+  bool mShouldFlatten;
 };
 
 /* A display item that applies a perspective transformation to a single

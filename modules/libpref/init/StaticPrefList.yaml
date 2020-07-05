@@ -5601,14 +5601,6 @@
   value: 4096
   mirror: always
 
-# Test-only pref, if this is true, partial pre-rendered transform animations
-# get stuck when it reaches to the pre-rendered boundaries and the pre-render
-# region is never updated.
-- name: layout.animation.prerender.partial.jank
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether Constructable Stylesheets are enabled in script.
 - name: layout.css.constructable-stylesheets.enabled
   type: bool

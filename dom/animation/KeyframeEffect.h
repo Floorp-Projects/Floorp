@@ -274,8 +274,6 @@ class KeyframeEffect : public AnimationEffect {
                                 bool aIsRunning);
   void ResetIsRunningOnCompositor();
 
-  void ResetPartialPrerendered();
-
   // Returns true if this effect, applied to |aFrame|, contains properties
   // that mean we shouldn't run transform compositor animations on this element.
   //
