@@ -3260,17 +3260,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
   aBuilder->SetContainsBackdropFilter(false);
 
   nsRect visibleRectOutsideTransform = visibleRect;
-  bool allowAsyncAnimation = false;
+  nsDisplayTransform::PrerenderInfo prerenderInfo;
   bool inTransform = aBuilder->IsInTransform();
   if (isTransformed) {
-    nsDisplayTransform::PrerenderInfo decision =
-        nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this,
-                                                              &dirtyRect);
+    prerenderInfo = nsDisplayTransform::ShouldPrerenderTransformedContent(
+        aBuilder, this, &dirtyRect);
 
-    switch (decision.mDecision) {
+    switch (prerenderInfo.mDecision) {
       case nsDisplayTransform::PrerenderDecision::Full:
       case nsDisplayTransform::PrerenderDecision::Partial:
-        allowAsyncAnimation = true;
         visibleRect = dirtyRect;
         break;
       case nsDisplayTransform::PrerenderDecision::No: {
@@ -3278,7 +3276,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         // then we want disable async animations for the rest of the preserve-3d
         // (especially ancestors).
         if ((extend3DContext || combines3DTransformWithAncestors) &&
-            decision.mHasAnimations) {
+            prerenderInfo.mHasAnimations) {
           aBuilder->SavePreserves3DAllowAsyncAnimation(false);
         }
 
@@ -3768,14 +3766,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // Alternatively we could not block animations for later siblings, and only
     // block them for ancestors of a blocked one.
     if ((extend3DContext || combines3DTransformWithAncestors) &&
-        allowAsyncAnimation) {
+        prerenderInfo.CanUseAsyncAnimations() &&
+        !aBuilder->GetPreserves3DAllowAsyncAnimation()) {
       // aBuilder->GetPreserves3DAllowAsyncAnimation() means the inner or
       // previous silbing frames are allowed/disallowed for async animations.
-      allowAsyncAnimation = aBuilder->GetPreserves3DAllowAsyncAnimation();
+      prerenderInfo.mDecision = nsDisplayTransform::PrerenderDecision::No;
     }
 
     nsDisplayTransform* transformItem = MakeDisplayItem<nsDisplayTransform>(
-        aBuilder, this, &resultList, visibleRect, allowAsyncAnimation);
+        aBuilder, this, &resultList, visibleRect, prerenderInfo.mDecision);
     if (transformItem) {
       resultList.AppendToTop(transformItem);
       ct.TrackContainer(transformItem);
