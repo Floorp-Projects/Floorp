@@ -42,7 +42,6 @@ class Layer;
 class LayerManager;
 struct CompositorAnimationData;
 struct PropertyAnimationGroup;
-enum class LayersBackend : int8_t;
 
 class AnimationInfo final {
   typedef nsTArray<Animation> AnimationArray;
@@ -120,7 +119,7 @@ class AnimationInfo final {
   void AddAnimationsForDisplayItem(nsIFrame* aFrame,
                                    nsDisplayListBuilder* aBuilder,
                                    nsDisplayItem* aItem, DisplayItemType aType,
-                                   LayersBackend aLayersBackend);
+                                   LayerManager* aLayerManager);
 
  private:
   enum class Send {
@@ -137,7 +136,7 @@ class AnimationInfo final {
       nsIFrame* aFrame, const EffectSet* aEffects,
       const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
       const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
-      Send aSendFlag);
+      Send aSendFlag, LayerManager* aLayerManager);
 
   void AddNonAnimatingTransformLikePropertiesStyles(
       const nsCSSPropertyIDSet& aNonAnimatingProperties, nsIFrame* aFrame,

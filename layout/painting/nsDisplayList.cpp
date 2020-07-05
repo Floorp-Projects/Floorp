@@ -229,7 +229,7 @@ static uint64_t AddAnimationsForWebRender(
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
   animationInfo.AddAnimationsForDisplayItem(aItem->Frame(), aDisplayListBuilder,
                                             aItem, aItem->GetType(),
-                                            layers::LayersBackend::LAYERS_WR);
+                                            aManager->LayerManager());
   animationInfo.StartPendingAnimations(
       aManager->LayerManager()->GetAnimationReadyTime());
 
@@ -321,8 +321,8 @@ void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
   }
 
   AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
-  animationInfo.AddAnimationsForDisplayItem(
-      aFrame, aBuilder, aItem, aType, layers::LayersBackend::LAYERS_CLIENT);
+  animationInfo.AddAnimationsForDisplayItem(aFrame, aBuilder, aItem, aType,
+                                            aLayer->Manager());
   animationInfo.TransferMutatedFlagToLayer(aLayer);
 }
 

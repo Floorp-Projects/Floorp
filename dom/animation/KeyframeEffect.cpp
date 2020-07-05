@@ -684,6 +684,8 @@ void KeyframeEffect::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
       // on the compositor we don't need a message.
       if (aIsRunning) {
         property.mPerformanceWarning.reset();
+      } else if (mAnimation && mAnimation->IsPartialPrerendered()) {
+        ResetPartialPrerendered();
       }
       return;
     }
@@ -707,11 +709,38 @@ void KeyframeEffect::SetIsRunningOnCompositor(
       }
     }
   }
+
+  if (!aIsRunning && mAnimation && mAnimation->IsPartialPrerendered()) {
+    ResetPartialPrerendered();
+  }
 }
 
 void KeyframeEffect::ResetIsRunningOnCompositor() {
   for (AnimationProperty& property : mProperties) {
     property.mIsRunningOnCompositor = false;
+  }
+
+  if (mAnimation && mAnimation->IsPartialPrerendered()) {
+    ResetPartialPrerendered();
+  }
+}
+
+void KeyframeEffect::ResetPartialPrerendered() {
+  MOZ_ASSERT(mAnimation && mAnimation->IsPartialPrerendered());
+
+  nsIFrame* frame = GetPrimaryFrame();
+  if (!frame) {
+    return;
+  }
+
+  nsIWidget* widget = frame->GetNearestWidget();
+  if (!widget) {
+    return;
+  }
+
+  if (layers::LayerManager* layerManager = widget->GetLayerManager()) {
+    layerManager->RemovePartialPrerenderedAnimation(
+        mAnimation->IdOnCompositor(), mAnimation);
   }
 }
 
