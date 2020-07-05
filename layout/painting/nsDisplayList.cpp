@@ -7732,15 +7732,6 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   uint32_t absoluteLimitY =
       StaticPrefs::layout_animation_prerender_absolute_limit_y();
   nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
-
-  float resolution = aFrame->PresShell()->GetCumulativeResolution();
-  if (resolution < 1.0f) {
-    refSize.SizeTo(
-        NSCoordSaturatingNonnegativeMultiply(refSize.width, 1.0f / resolution),
-        NSCoordSaturatingNonnegativeMultiply(refSize.height,
-                                             1.0f / resolution));
-  }
-
   // Only prerender if the transformed frame's size is <= a multiple of the
   // reference frame size (~viewport), and less than an absolute limit.
   // Both the ratio and the absolute limit are configurable.
