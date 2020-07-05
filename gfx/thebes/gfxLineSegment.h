@@ -10,6 +10,7 @@
 #include "gfxPoint.h"
 
 struct gfxLineSegment {
+  gfxLineSegment() : mStart(gfxPoint()), mEnd(gfxPoint()) {}
   gfxLineSegment(const gfxPoint& aStart, const gfxPoint& aEnd)
       : mStart(aStart), mEnd(aEnd) {}
 
