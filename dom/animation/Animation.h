@@ -421,6 +421,30 @@ class Animation : public DOMEventTargetHelper,
 
   int32_t& CachedChildIndexRef() { return mCachedChildIndex; }
 
+  void SetPartialPrerendered(uint64_t aIdOnCompositor) {
+    mIdOnCompositor = aIdOnCompositor;
+    mIsPartialPrerendered = true;
+  }
+  bool IsPartialPrerendered() const { return mIsPartialPrerendered; }
+  uint64_t IdOnCompositor() const { return mIdOnCompositor; }
+  /**
+   * Needs to be called when the pre-rendered animation is going to no longer
+   * run on the compositor.
+   */
+  void ResetPartialPrerendered() {
+    MOZ_ASSERT(mIsPartialPrerendered);
+    mIsPartialPrerendered = false;
+    mIdOnCompositor = 0;
+  }
+  /**
+   * Called via NotifyJankedAnimations IPC call from the compositor to update
+   * pre-rendered area on the main-thread.
+   */
+  void UpdatePartialPrerendered() {
+    ResetPartialPrerendered();
+    PostUpdate();
+  }
+
  protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void CancelNoUpdate();
@@ -618,6 +642,11 @@ class Animation : public DOMEventTargetHelper,
   RefPtr<MicroTaskRunnable> mFinishNotificationTask;
 
   nsString mId;
+
+ private:
+  // The id for this animaiton on the compositor.
+  uint64_t mIdOnCompositor = 0;
+  bool mIsPartialPrerendered = false;
 };
 
 }  // namespace dom

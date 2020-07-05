@@ -467,6 +467,8 @@ bool CompositorAnimationStorage::SampleAnimations(
     }
   });
 
+  std::unordered_map<LayersId, nsTArray<uint64_t>, LayersId::HashFn> janked;
+
   ForEachNode<ForwardIterator>(aRoot, [&](Layer* layer) {
     auto& propertyAnimationGroups = layer->GetPropertyAnimationGroups();
     if (propertyAnimationGroups.IsEmpty()) {
@@ -519,8 +521,8 @@ bool CompositorAnimationStorage::SampleAnimations(
           for (PropertyAnimationGroup& group : propertyAnimationGroups) {
             group.ResetLastCompositionValues();
           }
-          // TODO: Report this jank to the main thread and update the animations
-          // on the main thread.
+          janked[layer->GetAnimationLayersId()].AppendElement(
+              layer->GetCompositorAnimationsId());
         }
         break;
       case AnimationHelper::SampleResult::Skipped:
@@ -602,6 +604,10 @@ bool CompositorAnimationStorage::SampleAnimations(
         break;
     }
   });
+
+  if (!janked.empty()) {
+    aCompositorBridge->NotifyJankedAnimations(janked);
+  }
 
   return isAnimating;
 }
