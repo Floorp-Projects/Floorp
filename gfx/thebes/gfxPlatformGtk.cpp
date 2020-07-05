@@ -105,7 +105,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
 #endif
 
   gPlatformFTLibrary = Factory::NewFTLibrary();
-  MOZ_ASSERT(gPlatformFTLibrary);
+  MOZ_RELEASE_ASSERT(gPlatformFTLibrary);
   Factory::SetFTLibrary(gPlatformFTLibrary);
 }
 
