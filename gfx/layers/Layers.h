@@ -1353,7 +1353,7 @@ class Layer {
   bool HasScrollableFrameMetrics() const;
   bool IsScrollableWithoutContent() const;
   const EventRegions& GetEventRegions() const { return mEventRegions; }
-  ContainerLayer* GetParent() { return mParent; }
+  ContainerLayer* GetParent() const { return mParent; }
   Layer* GetNextSibling() {
     if (mNextSibling) {
       mNextSibling->CheckCanary();

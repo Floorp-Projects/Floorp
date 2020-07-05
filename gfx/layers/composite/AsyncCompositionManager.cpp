@@ -560,8 +560,8 @@ bool AsyncCompositionManager::SampleAnimations(Layer* aLayer,
       mCompositorBridge->GetAnimationStorage();
   MOZ_ASSERT(storage);
 
-  return storage->SampleAnimations(aLayer, mPreviousFrameTimeStamp,
-                                   aCurrentFrameTime);
+  return storage->SampleAnimations(aLayer, mCompositorBridge,
+                                   mPreviousFrameTimeStamp, aCurrentFrameTime);
 }
 
 void AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer) {
