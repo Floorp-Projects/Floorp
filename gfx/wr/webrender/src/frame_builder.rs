@@ -17,7 +17,7 @@ use crate::picture::{DirtyRegion, RecordedDirtyRegion, PictureUpdateState, Slice
 use crate::picture::{SurfaceRenderTasks, SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX};
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
-use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId};
+use crate::prim_store::{PictureIndex, PrimitiveDebugId};
 use crate::prim_store::{DeferredResolve};
 use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp, FrameId, ScratchBuffer};
@@ -28,6 +28,7 @@ use crate::render_task_graph::{RenderPassKind, RenderPass};
 use crate::render_task::{RenderTask, RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{BuiltScene, SceneProperties};
+use crate::space::SpaceMapper;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use crate::util::{MaxRect, VecHelper, Recycler, Preallocator};

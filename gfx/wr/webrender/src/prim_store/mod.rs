@@ -7,10 +7,9 @@ use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
 use api::{PrimitiveKeyKind, EdgeAaSegmentMask};
 use api::units::*;
-use euclid::{SideOffsets2D, Transform3D, Rect, Size2D, Point2D, Vector2D};
+use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
 use crate::border::BorderSegmentCacheKey;
-use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
 use crate::clip::ClipChainId;
 use crate::debug_render::DebugItem;
 use crate::scene_building::{CreateShadow, IsVisible};
@@ -34,12 +33,11 @@ use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::ImageProperties;
 use crate::scene::SceneProperties;
-use std::{fmt, hash, ops, u32, usize};
+use std::{hash, ops, u32, usize};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
-use crate::util::{MatrixHelpers, Recycler, ScaleOffset, RectHelpers, PointHelpers};
-use crate::util::project_rect;
+use crate::util::Recycler;
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityIndex};
 
@@ -95,234 +93,6 @@ impl PrimitiveOpacity {
     pub fn combine(self, other: PrimitiveOpacity) -> PrimitiveOpacity {
         PrimitiveOpacity{
             is_opaque: self.is_opaque && other.is_opaque
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SpaceSnapper {
-    pub ref_spatial_node_index: SpatialNodeIndex,
-    current_target_spatial_node_index: SpatialNodeIndex,
-    snapping_transform: Option<ScaleOffset>,
-    pub device_pixel_scale: DevicePixelScale,
-}
-
-impl SpaceSnapper {
-    pub fn new(
-        ref_spatial_node_index: SpatialNodeIndex,
-        device_pixel_scale: DevicePixelScale,
-    ) -> Self {
-        SpaceSnapper {
-            ref_spatial_node_index,
-            current_target_spatial_node_index: SpatialNodeIndex::INVALID,
-            snapping_transform: None,
-            device_pixel_scale,
-        }
-    }
-
-    pub fn new_with_target(
-        ref_spatial_node_index: SpatialNodeIndex,
-        target_node_index: SpatialNodeIndex,
-        device_pixel_scale: DevicePixelScale,
-        spatial_tree: &SpatialTree,
-    ) -> Self {
-        let mut snapper = SpaceSnapper {
-            ref_spatial_node_index,
-            current_target_spatial_node_index: SpatialNodeIndex::INVALID,
-            snapping_transform: None,
-            device_pixel_scale,
-        };
-
-        snapper.set_target_spatial_node(target_node_index, spatial_tree);
-        snapper
-    }
-
-    pub fn set_target_spatial_node(
-        &mut self,
-        target_node_index: SpatialNodeIndex,
-        spatial_tree: &SpatialTree,
-    ) {
-        if target_node_index == self.current_target_spatial_node_index {
-            return
-        }
-
-        let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
-
-        self.current_target_spatial_node_index = target_node_index;
-        self.snapping_transform = match (ref_spatial_node.snapping_transform, target_spatial_node.snapping_transform) {
-            (Some(ref ref_scale_offset), Some(ref target_scale_offset)) => {
-                Some(ref_scale_offset
-                    .inverse()
-                    .accumulate(target_scale_offset)
-                    .scale(self.device_pixel_scale.0))
-            }
-            _ => None,
-        };
-    }
-
-    pub fn snap_rect<F>(&self, rect: &Rect<f32, F>) -> Rect<f32, F> where F: fmt::Debug {
-        debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
-        match self.snapping_transform {
-            Some(ref scale_offset) => {
-                let snapped_device_rect : DeviceRect = scale_offset.map_rect(rect).snap();
-                scale_offset.unmap_rect(&snapped_device_rect)
-            }
-            None => *rect,
-        }
-    }
-
-    pub fn snap_point<F>(&self, point: &Point2D<f32, F>) -> Point2D<f32, F> where F: fmt::Debug {
-        debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
-        match self.snapping_transform {
-            Some(ref scale_offset) => {
-                let snapped_device_vector : DevicePoint = scale_offset.map_point(point).snap();
-                scale_offset.unmap_point(&snapped_device_vector)
-            }
-            None => *point,
-        }
-    }
-
-    pub fn snap_size<F>(&self, size: &Size2D<f32, F>) -> Size2D<f32, F> where F: fmt::Debug {
-        debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
-        match self.snapping_transform {
-            Some(ref scale_offset) => {
-                let rect = Rect::<f32, F>::new(Point2D::<f32, F>::zero(), *size);
-                let snapped_device_rect : DeviceRect = scale_offset.map_rect(&rect).snap();
-                scale_offset.unmap_rect(&snapped_device_rect).size
-            }
-            None => *size,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SpaceMapper<F, T> {
-    kind: CoordinateSpaceMapping<F, T>,
-    pub ref_spatial_node_index: SpatialNodeIndex,
-    pub current_target_spatial_node_index: SpatialNodeIndex,
-    pub bounds: Rect<f32, T>,
-    visible_face: VisibleFace,
-}
-
-impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
-    pub fn new(
-        ref_spatial_node_index: SpatialNodeIndex,
-        bounds: Rect<f32, T>,
-    ) -> Self {
-        SpaceMapper {
-            kind: CoordinateSpaceMapping::Local,
-            ref_spatial_node_index,
-            current_target_spatial_node_index: ref_spatial_node_index,
-            bounds,
-            visible_face: VisibleFace::Front,
-        }
-    }
-
-    pub fn new_with_target(
-        ref_spatial_node_index: SpatialNodeIndex,
-        target_node_index: SpatialNodeIndex,
-        bounds: Rect<f32, T>,
-        spatial_tree: &SpatialTree,
-    ) -> Self {
-        let mut mapper = Self::new(ref_spatial_node_index, bounds);
-        mapper.set_target_spatial_node(target_node_index, spatial_tree);
-        mapper
-    }
-
-    pub fn set_target_spatial_node(
-        &mut self,
-        target_node_index: SpatialNodeIndex,
-        spatial_tree: &SpatialTree,
-    ) {
-        if target_node_index == self.current_target_spatial_node_index {
-            return
-        }
-
-        let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
-
-        self.kind = if self.ref_spatial_node_index == target_node_index {
-            CoordinateSpaceMapping::Local
-        } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-            let scale_offset = ref_spatial_node.content_transform
-                .inverse()
-                .accumulate(&target_spatial_node.content_transform);
-            CoordinateSpaceMapping::ScaleOffset(scale_offset)
-        } else {
-            let transform = spatial_tree
-                .get_relative_transform(target_node_index, self.ref_spatial_node_index)
-                .into_transform()
-                .with_source::<F>()
-                .with_destination::<T>();
-            CoordinateSpaceMapping::Transform(transform)
-        };
-
-        self.visible_face = self.kind.visible_face();
-        self.current_target_spatial_node_index = target_node_index;
-    }
-
-    pub fn get_transform(&self) -> Transform3D<f32, F, T> {
-        match self.kind {
-            CoordinateSpaceMapping::Local => {
-                Transform3D::identity()
-            }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                scale_offset.to_transform()
-            }
-            CoordinateSpaceMapping::Transform(transform) => {
-                transform
-            }
-        }
-    }
-
-    pub fn unmap(&self, rect: &Rect<f32, T>) -> Option<Rect<f32, F>> {
-        match self.kind {
-            CoordinateSpaceMapping::Local => {
-                Some(rect.cast_unit())
-            }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                Some(scale_offset.unmap_rect(rect))
-            }
-            CoordinateSpaceMapping::Transform(ref transform) => {
-                transform.inverse_rect_footprint(rect)
-            }
-        }
-    }
-
-    pub fn map(&self, rect: &Rect<f32, F>) -> Option<Rect<f32, T>> {
-        match self.kind {
-            CoordinateSpaceMapping::Local => {
-                Some(rect.cast_unit())
-            }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                Some(scale_offset.map_rect(rect))
-            }
-            CoordinateSpaceMapping::Transform(ref transform) => {
-                match project_rect(transform, rect, &self.bounds) {
-                    Some(bounds) => {
-                        Some(bounds)
-                    }
-                    None => {
-                        warn!("parent relative transform can't transform the primitive rect for {:?}", rect);
-                        None
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn map_vector(&self, v: Vector2D<f32, F>) -> Vector2D<f32, T> {
-        match self.kind {
-            CoordinateSpaceMapping::Local => {
-                v.cast_unit()
-            }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                scale_offset.map_vector(&v)
-            }
-            CoordinateSpaceMapping::Transform(ref transform) => {
-                transform.transform_vector2d(v)
-            }
         }
     }
 }

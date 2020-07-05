@@ -22,13 +22,14 @@ use crate::gpu_cache::GpuCache;
 use crate::internal_types::FastHashMap;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
 use crate::picture::{PrimitiveList, SurfaceIndex, RasterConfig, SliceId};
-use crate::prim_store::{ClipTaskIndex, PictureIndex, SpaceMapper, PrimitiveInstanceKind};
-use crate::prim_store::{SpaceSnapper, PrimitiveStore, PrimitiveInstance};
+use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
+use crate::prim_store::{PrimitiveStore, PrimitiveInstance};
 use crate::prim_store::image::VisibleImageTile;
 use crate::render_backend::{DataStores, ScratchBuffer};
 use crate::render_task_graph::RenderTaskGraph;
 use crate::resource_cache::{ResourceCache, ImageProperties, ImageRequest};
 use crate::scene::SceneProperties;
+use crate::space::{SpaceMapper, SpaceSnapper};
 use crate::internal_types::Filter;
 use crate::util::{MaxRect};
 
