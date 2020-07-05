@@ -2503,8 +2503,12 @@ impl<'a> SceneBuilder<'a> {
                         // detect this and mark the picture to be drawn directly into the
                         // parent picture, which avoids an intermediate surface and blur.
                         let blur_filter = Filter::Blur(std_deviation);
-                        let composite_mode = PictureCompositeMode::Filter(blur_filter);
-                        let composite_mode_key = Some(composite_mode.clone()).into();
+                        let composite_mode = if blur_filter.is_noop() {
+                            None
+                        } else {
+                            Some(PictureCompositeMode::Filter(blur_filter))
+                        };
+                        let composite_mode_key = composite_mode.clone().into();
 
                         // Pass through configuration information about whether WR should
                         // do the bounding rect inflation for text shadows.
@@ -2516,7 +2520,7 @@ impl<'a> SceneBuilder<'a> {
                         let shadow_pic_index = PictureIndex(self.prim_store.pictures
                             .alloc()
                             .init(PicturePrimitive::new_image(
-                                Some(composite_mode),
+                                composite_mode,
                                 Picture3DContext::Out,
                                 None,
                                 is_passthrough,
@@ -3405,7 +3409,7 @@ impl<'a> SceneBuilder<'a> {
         // For each filter, create a new image with that composite mode.
         let mut current_filter_data_index = 0;
         for filter in &mut filter_ops {
-            let composite_mode = Some(match *filter {
+            let composite_mode = match filter {
                 Filter::ComponentTransfer => {
                     let filter_data =
                         &filter_datas[current_filter_data_index];
@@ -3431,11 +3435,17 @@ impl<'a> SceneBuilder<'a> {
                         let handle = self.interners
                             .filter_data
                             .intern(&filter_data_key, || ());
-                        PictureCompositeMode::ComponentTransferFilter(handle)
+                        Some(PictureCompositeMode::ComponentTransferFilter(handle))
                     }
                 }
-                _ => PictureCompositeMode::Filter(filter.clone()),
-            });
+                _ => {
+                    if filter.is_noop() {
+                        None
+                    } else {
+                        Some(PictureCompositeMode::Filter(filter.clone()))
+                    }
+                }
+            };
 
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
