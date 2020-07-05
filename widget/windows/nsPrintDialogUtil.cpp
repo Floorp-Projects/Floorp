@@ -32,7 +32,7 @@ WIN_LIBS=                                       \
 #include "nsReadableUtils.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsWin.h"
-#include "nsIPrinterEnumerator.h"
+#include "nsIPrinterList.h"
 
 #include "nsRect.h"
 
@@ -135,11 +135,15 @@ static nsReturnRef<nsHGLOBAL> CreateGlobalDevModeAndInit(
 
 //------------------------------------------------------------------
 // helper
-static void GetDefaultPrinterNameFromGlobalPrinters(nsAString& printerName) {
-  nsCOMPtr<nsIPrinterEnumerator> prtEnum =
-      do_GetService("@mozilla.org/gfx/printerenumerator;1");
-  if (prtEnum) {
-    prtEnum->GetDefaultPrinterName(printerName);
+static void GetDefaultPrinterNameFromGlobalPrinters(nsAString& aPrinterName) {
+  nsCOMPtr<nsIPrinterList> printerList =
+      do_GetService("@mozilla.org/gfx/printerlist;1");
+  if (printerList) {
+    nsIPrinter* printer = nullptr;
+    printerList->GetSystemDefaultPrinter(&printer);
+    if (printer) {
+      printer->GetName(aPrinterName);
+    }
   }
 }
 

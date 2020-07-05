@@ -7,8 +7,8 @@
 #define nsDeviceContextSpecGTK_h___
 
 #include "nsIDeviceContextSpec.h"
+#include "nsIPrinterList.h"
 #include "nsIPrintSettings.h"
-#include "nsIPrinterEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
@@ -60,13 +60,14 @@ class nsDeviceContextSpecGTK : public nsIDeviceContextSpec {
 //-------------------------------------------------------------------------
 // Printer Enumerator
 //-------------------------------------------------------------------------
-class nsPrinterEnumeratorGTK final : public nsIPrinterEnumerator {
-  ~nsPrinterEnumeratorGTK() = default;
-
+class nsPrinterListGTK final : public nsIPrinterList {
  public:
-  nsPrinterEnumeratorGTK();
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTERENUMERATOR
+  NS_DECL_NSIPRINTERLIST
+  nsPrinterListGTK() = default;
+
+ private:
+  ~nsPrinterListGTK() = default;
 };
 
 #endif /* !nsDeviceContextSpecGTK_h___ */

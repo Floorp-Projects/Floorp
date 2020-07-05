@@ -7,7 +7,8 @@
 #define nsDeviceContextSpecX_h_
 
 #include "nsIDeviceContextSpec.h"
-#include "nsIPrinterEnumerator.h"
+#include "nsIPrinter.h"
+#include "nsIPrinterList.h"
 
 #include "nsCOMPtr.h"
 
@@ -49,14 +50,14 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
 //----------------------------------------------------------------------
 // nsPrinterErnumeratorX
 
-class nsPrinterEnumeratorX final : public nsIPrinterEnumerator {
+class nsPrinterListX final : public nsIPrinterList {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTERENUMERATOR
-  nsPrinterEnumeratorX() = default;
+  NS_DECL_NSIPRINTERLIST
+  nsPrinterListX() = default;
 
  private:
-  ~nsPrinterEnumeratorX() = default;
+  ~nsPrinterListX() = default;
 };
 
 #endif  // nsDeviceContextSpecX_h_
