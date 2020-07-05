@@ -408,6 +408,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
                             TransformsToSkip aSkip) override;
   CompositorAnimationStorage* GetAnimationStorage();
+  using JankedAnimations =
+      std::unordered_map<LayersId, nsTArray<uint64_t>, LayersId::HashFn>;
+  void NotifyJankedAnimations(const JankedAnimations& aJankedAnimations);
   void SetTestAsyncScrollOffset(const LayersId& aLayersId,
                                 const ScrollableLayerGuid::ViewID& aScrollId,
                                 const CSSPoint& aPoint) override;

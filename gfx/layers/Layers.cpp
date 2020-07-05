@@ -24,6 +24,7 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/Telemetry.h"  // for Accumulate
 #include "mozilla/ToString.h"
+#include "mozilla/dom/Animation.h"              // for dom::Animation
 #include "mozilla/gfx/2D.h"                     // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"               // for BaseSize
 #include "mozilla/gfx/Matrix.h"                 // for Matrix4x4
@@ -165,6 +166,37 @@ UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
 
 void LayerManager::PayloadPresented() {
   RecordCompositionPayloadsPresented(mPayload);
+}
+
+void LayerManager::AddPartialPrerenderedAnimation(
+    uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
+  mPartialPrerenderedAnimations.Put(aCompositorAnimationId, RefPtr{aAnimation});
+  aAnimation->SetPartialPrerendered(aCompositorAnimationId);
+}
+
+void LayerManager::RemovePartialPrerenderedAnimation(
+    uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
+  MOZ_ASSERT(aAnimation);
+#ifdef DEBUG
+  RefPtr<dom::Animation> animation;
+  if (mPartialPrerenderedAnimations.Remove(aCompositorAnimationId,
+                                           getter_AddRefs(animation))) {
+    MOZ_ASSERT(aAnimation == animation.get());
+  }
+#else
+  mPartialPrerenderedAnimations.Remove(aCompositorAnimationId);
+#endif
+  aAnimation->ResetPartialPrerendered();
+}
+
+void LayerManager::UpdatePartialPrerenderedAnimations(
+    const nsTArray<uint64_t>& aJankedAnimations) {
+  for (uint64_t id : aJankedAnimations) {
+    RefPtr<dom::Animation> animation;
+    if (mPartialPrerenderedAnimations.Remove(id, getter_AddRefs(animation))) {
+      animation->UpdatePartialPrerendered();
+    }
+  }
 }
 
 //--------------------------------------------------

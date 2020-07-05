@@ -597,7 +597,7 @@ bool AnimationInfo::AddAnimationsForProperty(
     nsIFrame* aFrame, const EffectSet* aEffects,
     const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
     const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
-    Send aSendFlag) {
+    Send aSendFlag, LayerManager* aLayerManager) {
   bool addedAny = false;
   // Add from first to last (since last overrides)
   for (dom::Animation* anim : aCompositorAnimations) {
@@ -643,6 +643,11 @@ bool AnimationInfo::AddAnimationsForProperty(
     AddAnimationForProperty(aFrame, *property, anim, aTransformData, aSendFlag);
     keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
     addedAny = true;
+    if (aTransformData && aTransformData->partialPrerenderData() &&
+        aLayerManager) {
+      aLayerManager->AddPartialPrerenderedAnimation(GetCompositorAnimationsId(),
+                                                    anim);
+    }
   }
   return addedAny;
 }
@@ -871,9 +876,11 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
   }
 }
 
-void AnimationInfo::AddAnimationsForDisplayItem(
-    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-    DisplayItemType aType, layers::LayersBackend aLayersBackend) {
+void AnimationInfo::AddAnimationsForDisplayItem(nsIFrame* aFrame,
+                                                nsDisplayListBuilder* aBuilder,
+                                                nsDisplayItem* aItem,
+                                                DisplayItemType aType,
+                                                LayerManager* aLayerManager) {
   Send sendFlag = !aBuilder ? Send::NextTransaction : Send::Immediate;
   if (sendFlag == Send::NextTransaction) {
     ClearAnimationsForNextTransaction();
@@ -918,7 +925,7 @@ void AnimationInfo::AddAnimationsForDisplayItem(
       compositorAnimations =
           GroupAnimationsByProperty(matchedAnimations, propertySet);
   Maybe<TransformData> transformData =
-      CreateAnimationData(aFrame, aItem, aType, aLayersBackend,
+      CreateAnimationData(aFrame, aItem, aType, aLayerManager->GetBackendType(),
                           compositorAnimations.has(eCSSProperty_offset_path) ||
                                   !aFrame->StyleDisplay()->mOffsetPath.IsNone()
                               ? AnimationDataType::WithMotionPath
@@ -938,9 +945,9 @@ void AnimationInfo::AddAnimationsForDisplayItem(
     // structure, 2) AddAnimationsForProperty() marks these animations as
     // running on the composiror, so CanThrottle() returns true for them, and
     // we avoid running these animations on the main thread.
-    bool added =
-        AddAnimationsForProperty(aFrame, effects, iter.get().value(),
-                                 transformData, iter.get().key(), sendFlag);
+    bool added = AddAnimationsForProperty(aFrame, effects, iter.get().value(),
+                                          transformData, iter.get().key(),
+                                          sendFlag, aLayerManager);
     if (added && transformData) {
       // Only copy TransformLikeMetaData in the first animation property.
       transformData.reset();
