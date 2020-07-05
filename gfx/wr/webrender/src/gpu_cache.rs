@@ -158,6 +158,10 @@ impl GpuCacheHandle {
     pub fn new() -> Self {
         GpuCacheHandle { location: None }
     }
+
+    pub fn as_int(self, gpu_cache: &GpuCache) -> i32 {
+        gpu_cache.get_address(&self).as_int()
+    }
 }
 
 // A unique address in the GPU cache. These are uploaded
@@ -183,6 +187,13 @@ impl GpuCacheAddress {
         u: u16::MAX,
         v: u16::MAX,
     };
+
+    pub fn as_int(self) -> i32 {
+        // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
+        //           In the future, we can change the PrimitiveInstanceData struct
+        //           to use 2x u16 for the vertex attribute instead of an i32.
+        self.v as i32 * MAX_VERTEX_TEXTURE_WIDTH as i32 + self.u as i32
+    }
 }
 
 impl Add<usize> for GpuCacheAddress {
