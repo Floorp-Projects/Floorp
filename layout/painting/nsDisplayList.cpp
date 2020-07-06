@@ -801,6 +801,7 @@ void nsDisplayListBuilder::SetIsRelativeToLayoutViewport() {
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
   mBuildAsyncZoomContainer = !mIsRelativeToLayoutViewport &&
+                             !document->Fullscreen() &&
                              nsLayoutUtils::AllowZoomingForDocument(document);
 }
 
