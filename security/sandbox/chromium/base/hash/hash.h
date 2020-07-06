@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_HASH_H_
-#define BASE_HASH_H_
+#ifndef BASE_HASH_HASH_H_
+#define BASE_HASH_HASH_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -13,19 +13,34 @@
 #include <utility>
 
 #include "base/base_export.h"
+#include "base/containers/span.h"
 #include "base/logging.h"
 #include "base/strings/string16.h"
+#include "base/strings/string_piece.h"
 
 namespace base {
 
-// Computes a hash of a memory buffer. This hash function is subject to change
-// in the future, so use only for temporary in-memory structures. If you need
-// to persist a change on disk or between computers, use PersistentHash().
-//
-// WARNING: This hash function should not be used for any cryptographic purpose.
+// WARNING: This hash functions should not be used for any cryptographic
+// purpose.
+
+// Deprecated: Computes a hash of a memory buffer, use FastHash() instead.
+// If you need to persist a change on disk or between computers, use
+// PersistentHash().
+// TODO(https://crbug.com/1025358): Migrate client code to new hash function.
 BASE_EXPORT uint32_t Hash(const void* data, size_t length);
 BASE_EXPORT uint32_t Hash(const std::string& str);
 BASE_EXPORT uint32_t Hash(const string16& str);
+
+// Really *fast* and high quality hash.
+// Recommended hash function for general use, we pick the best performant
+// hash for each build target.
+// It is prone to be updated whenever a newer/faster hash function is
+// publicly available.
+// May changed without warning, do not expect stability of outputs.
+BASE_EXPORT size_t FastHash(base::span<const uint8_t> data);
+inline size_t FastHash(StringPiece str) {
+  return FastHash(as_bytes(make_span(str)));
+}
 
 // Computes a hash of a memory buffer. This hash function must not change so
 // that code can use the hashed values for persistent storage purposes or
@@ -33,6 +48,7 @@ BASE_EXPORT uint32_t Hash(const string16& str);
 // new version will have to be added in addition.
 //
 // WARNING: This hash function should not be used for any cryptographic purpose.
+BASE_EXPORT uint32_t PersistentHash(base::span<const uint8_t> data);
 BASE_EXPORT uint32_t PersistentHash(const void* data, size_t length);
 BASE_EXPORT uint32_t PersistentHash(const std::string& str);
 
@@ -67,4 +83,4 @@ struct IntPairHash<std::pair<Type1, Type2>> {
 
 }  // namespace base
 
-#endif  // BASE_HASH_H_
+#endif  // BASE_HASH_HASH_H_

@@ -45,7 +45,7 @@ bool HandlePolicy::GenerateRules(const wchar_t* type_name,
                                      CASE_INSENSITIVE)) {
     return false;
   }
-  if (!policy->AddRule(IPC_DUPLICATEHANDLEPROXY_TAG, &duplicate_rule)) {
+  if (!policy->AddRule(IpcTag::DUPLICATEHANDLEPROXY, &duplicate_rule)) {
     return false;
   }
   return true;
@@ -65,7 +65,8 @@ DWORD HandlePolicy::DuplicateHandleProxyAction(EvalResult eval_result,
   base::win::ScopedHandle remote_target_process;
   if (target_process_id != ::GetCurrentProcessId()) {
     // Sandboxed children are dynamic, so we check that manually.
-    if (!BrokerServicesBase::GetInstance()->IsActiveTarget(target_process_id)) {
+    if (!BrokerServicesBase::GetInstance()->IsSafeDuplicationTarget(
+            target_process_id)) {
       return ERROR_ACCESS_DENIED;
     }
 
