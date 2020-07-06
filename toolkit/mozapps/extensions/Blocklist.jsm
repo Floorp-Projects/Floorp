@@ -1637,6 +1637,27 @@ this.ExtensionBlocklistMLBF = {
     }
     // Add-on blocked, or unknown add-on inadvertently labeled as blocked.
 
+    let { signedState } = addon;
+    if (
+      signedState !== AddonManager.SIGNEDSTATE_PRELIMINARY &&
+      signedState !== AddonManager.SIGNEDSTATE_SIGNED
+    ) {
+      // The block decision can only be relied upon for known add-ons, i.e.
+      // signed via AMO. Anything else is unknown and ignored:
+      //
+      // - SIGNEDSTATE_SYSTEM and SIGNEDSTATE_PRIVILEGED are signed
+      //   independently of AMO.
+      //
+      // - SIGNEDSTATE_NOT_REQUIRED already has an early return above due to
+      //   signedDate being unset for these kinds of add-ons.
+      //
+      // - SIGNEDSTATE_BROKEN, SIGNEDSTATE_UNKNOWN and SIGNEDSTATE_MISSING
+      //   means that the signature cannot be relied upon. It is equivalent to
+      //   removing the signature from the XPI file, which already causes them
+      //   to be disabled on release builds (where MOZ_REQUIRE_SIGNING=true).
+      return null;
+    }
+
     if (signedDate.getTime() > generationTime) {
       // The bloom filter only reports 100% accurate results for known add-ons.
       // Since the add-on was unknown when the bloom filter was generated, the
