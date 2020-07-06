@@ -625,7 +625,7 @@ const JSClass AsyncIteratorObject::class_ = {
 };
 
 const JSClass AsyncIteratorObject::protoClass_ = {
-    js_AsyncIterator_str,
+    "AsyncIterator.prototype",
     JSCLASS_HAS_CACHED_PROTO(JSProto_AsyncIterator),
     JS_NULL_CLASS_OPS,
     &AsyncIteratorObjectClassSpec,
