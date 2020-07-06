@@ -300,7 +300,6 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             cmake_args += [
                 "-DCMAKE_SYSTEM_NAME=Darwin",
                 "-DCMAKE_SYSTEM_VERSION=10.10",
-                "-DLLVM_ENABLE_THREADS=OFF",
                 # Xray requires a OSX 10.12 SDK (https://bugs.llvm.org/show_bug.cgi?id=38959)
                 "-DCOMPILER_RT_BUILD_XRAY=OFF",
                 "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % libcxx_include_dir,
