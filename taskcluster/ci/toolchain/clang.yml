@@ -72,7 +72,7 @@ linux64-clang-9:
             - wasi-sysroot
 
 linux64-clang-9-mingw-x86:
-    description: "MinGW-Clang Trunk x86 toolchain build"
+    description: "MinGW-Clang 9 x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
     run:
@@ -96,7 +96,7 @@ linux64-clang-9-mingw-x86:
             - linux64-binutils
 
 linux64-clang-9-mingw-x64:
-    description: "MinGW-Clang Trunk x64 toolchain build"
+    description: "MinGW-Clang 9 x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
@@ -189,7 +189,7 @@ linux64-clang-9-macosx-cross:
             - clang-9
         toolchain:
             - linux64-binutils
-            - linux64-cctools-port
+            - linux64-cctools-port-clang-9
             - linux64-clang-9
             - linux64-gcc-7
 
@@ -205,11 +205,11 @@ linux64-clang-9-win-cross:
         toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        win64-clang-cl-2stage: toolchain-win64-clang-cl-2stage
+        win64-clang-cl-9-2stage: toolchain-win64-clang-cl-9-2stage
     fetches:
         toolchain:
             - linux64-clang-9
-        win64-clang-cl-2stage:
+        win64-clang-cl-9-2stage:
             # Put this into a new directory so it doesn't conflict with the linux toolchain
             - artifact: clang.tar.zst
               dest: clang-cl
@@ -236,12 +236,12 @@ linux64-clang-10:
             - linux64-gcc-7
             - wasi-sysroot
 
-macosx64-clang:
-    description: "Clang toolchain build"
+macosx64-clang-9:
+    description: "Clang 9 toolchain build"
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TM(clang)
+        symbol: TM(clang-9)
     worker-type: b-linux-large
     worker:
         max-run-time: 3600
@@ -257,23 +257,24 @@ macosx64-clang:
         resources:
             - 'build/build-clang/clang-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: macosx64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-9
         toolchain:
             - linux64-binutils
-            - linux64-cctools-port
+            - linux64-cctools-port-clang-9
             - linux64-clang-9
             - linux64-gcc-7
             - linux64-node
 
-win64-clang-cl:
-    description: "Clang-cl toolchain build"
+win64-clang-cl-9:
+    description: "Clang-cl 9 toolchain build"
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TW64(clang-cl)
+        symbol: TW64(clang-cl-9)
     worker-type: b-win2012
     worker:
         env:
@@ -287,6 +288,7 @@ win64-clang-cl:
         resources:
             - 'build/build-clang/clang-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: win64-clang-cl
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -295,10 +297,10 @@ win64-clang-cl:
             - cmake
             - ninja
 
-win64-clang-cl-2stage:
-    description: "Clang-cl toolchain 2-stage quick build"
+win64-clang-cl-9-2stage:
+    description: "Clang-cl 9 toolchain 2-stage quick build"
     treeherder:
-        symbol: TW64(clang-cl-2stage)
+        symbol: TW64(clang-cl-9-2stage)
     worker-type: b-win2012
     worker:
         env:
@@ -310,6 +312,7 @@ win64-clang-cl-2stage:
         resources:
             - 'build/build-clang/clang-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: win64-clang-cl-2stage
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:

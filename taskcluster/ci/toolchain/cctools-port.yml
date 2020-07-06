@@ -12,11 +12,12 @@ job-defaults:
             - cctools-port
             - libtapi
 
-linux64-cctools-port:
+linux64-cctools-port-clang-9:
     treeherder:
         symbol: TL(cctools)
     run:
         script: build-cctools-port.sh
+        toolchain-alias: linux64-cctools-port
         toolchain-artifact: public/build/cctools.tar.xz
         tooltool-downloads: internal
     fetches:
