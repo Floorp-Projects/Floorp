@@ -76,7 +76,7 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
                                           ipc::StructuredCloneData&& aData,
                                           ipc::StructuredCloneData&& aStack,
                                           ErrorResult& aRv) {
-  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->GetCanSend())) {
+  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError(
         nsPrintfCString("Actor '%s' cannot send message '%s' during shutdown.",
                         PromiseFlatCString(aMeta.actorName()).get(),
@@ -122,10 +122,7 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
   }
 }
 
-void JSProcessActorParent::AfterDestroy() {
-  JSActor::AfterDestroy();
-  mManager = nullptr;
-}
+void JSProcessActorParent::ClearManager() { mManager = nullptr; }
 
 }  // namespace dom
 }  // namespace mozilla

@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.dom += [
     'JSActor.h',
+    'JSActorManager.h',
     'JSActorService.h',
     'JSProcessActorChild.h',
     'JSProcessActorParent.h',
@@ -17,6 +18,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'JSActor.cpp',
+    'JSActorManager.cpp',
     'JSActorService.cpp',
     'JSProcessActorChild.cpp',
     'JSProcessActorParent.cpp',
@@ -27,6 +29,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    '/js/xpconnect/loader',
     '/js/xpconnect/src',
 ]
 

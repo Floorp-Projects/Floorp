@@ -320,16 +320,7 @@ void WindowGlobalChild::Destroy() {
       "WindowGlobalChild::Destroy", [self = RefPtr<WindowGlobalChild>(this)]() {
         // Make a copy so that we can avoid potential iterator invalidation when
         // calling the user-provided Destroy() methods.
-        nsTArray<RefPtr<JSWindowActorChild>> windowActors(
-            self->mWindowActors.Count());
-        for (auto iter = self->mWindowActors.Iter(); !iter.Done();
-             iter.Next()) {
-          windowActors.AppendElement(iter.UserData());
-        }
-
-        for (auto& windowActor : windowActors) {
-          windowActor->StartDestroy();
-        }
+        self->JSActorWillDestroy();
 
         // Perform async IPC shutdown unless we're not in-process, and our
         // BrowserChild is in the process of being destroyed, which will destroy
@@ -602,33 +593,24 @@ const nsAString& WindowGlobalChild::GetRemoteType() {
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
     const nsACString& aName, ErrorResult& aRv) {
-  if (!CanSend()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
+  return JSActorManager::GetActor(aName, aRv).downcast<JSWindowActorChild>();
+}
 
-  // Check if this actor has already been created, and return it if it has.
-  if (mWindowActors.Contains(aName)) {
-    return do_AddRef(mWindowActors.GetWeak(aName));
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ConstructActor(aName, &obj, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Unwrap our actor to a JSWindowActorChild object.
+already_AddRefed<JSActor> WindowGlobalChild::InitJSActor(
+    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
   RefPtr<JSWindowActorChild> actor;
-  if (NS_FAILED(UNWRAP_OBJECT(JSWindowActorChild, &obj, actor))) {
-    return nullptr;
+  if (aMaybeActor.get()) {
+    aRv = UNWRAP_OBJECT(JSWindowActorChild, aMaybeActor.get(), actor);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  } else {
+    actor = new JSWindowActorChild();
   }
 
   MOZ_RELEASE_ASSERT(!actor->GetManager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
-  mWindowActors.Put(aName, RefPtr{actor});
   return actor.forget();
 }
 
@@ -643,19 +625,12 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
   // Destroy our JSActors, and reject any pending queries.
-  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorChild> windowActors;
-  mWindowActors.SwapElements(windowActors);
-  for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->RejectPendingQueries();
-    iter.Data()->AfterDestroy();
-  }
-  windowActors.Clear();
+  JSActorDidDestroy();
 }
 
 WindowGlobalChild::~WindowGlobalChild() {
   MOZ_ASSERT(!gWindowGlobalChildById ||
              !gWindowGlobalChildById->Contains(InnerWindowId()));
-  MOZ_ASSERT(!mWindowActors.Count());
 }
 
 JSObject* WindowGlobalChild::WrapObject(JSContext* aCx,
@@ -667,8 +642,7 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
-                                      mWindowActors)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
