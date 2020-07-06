@@ -190,7 +190,7 @@ nsresult nsLayoutStatics::Initialize() {
   nsMathMLOperators::AddRefTable();
 
 #ifdef DEBUG
-  nsFrame::DisplayReflowStartup();
+  nsIFrame::DisplayReflowStartup();
 #endif
   Attr::Initialize();
 
@@ -326,7 +326,7 @@ void nsLayoutStatics::Shutdown() {
   nsCSSRendering::Shutdown();
   StaticPresData::Shutdown();
 #ifdef DEBUG
-  nsFrame::DisplayReflowShutdown();
+  nsIFrame::DisplayReflowShutdown();
 #endif
   nsCellMap::Shutdown();
   ActiveLayerTracker::Shutdown();

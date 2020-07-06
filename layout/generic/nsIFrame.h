@@ -536,11 +536,11 @@ static void ReleaseValue(T* aPropertyValue) {
   (int(((mozilla::LogModule*)(_lm))->Level()) & (_bit))
 
 #ifdef DEBUG
-#  define NS_FRAME_LOG(_bit, _args)                          \
-    PR_BEGIN_MACRO                                           \
-    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
-      printf_stderr _args;                                   \
-    }                                                        \
+#  define NS_FRAME_LOG(_bit, _args)                           \
+    PR_BEGIN_MACRO                                            \
+    if (NS_FRAME_LOG_TEST(nsIFrame::sFrameLogModule, _bit)) { \
+      printf_stderr _args;                                    \
+    }                                                         \
     PR_END_MACRO
 #else
 #  define NS_FRAME_LOG(_bit, _args)
@@ -552,11 +552,11 @@ static void ReleaseValue(T* aPropertyValue) {
 
 #  define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
 
-#  define NS_FRAME_TRACE(_bit, _args)                        \
-    PR_BEGIN_MACRO                                           \
-    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
-      TraceMsg _args;                                        \
-    }                                                        \
+#  define NS_FRAME_TRACE(_bit, _args)                         \
+    PR_BEGIN_MACRO                                            \
+    if (NS_FRAME_LOG_TEST(nsIFrame::sFrameLogModule, _bit)) { \
+      TraceMsg _args;                                         \
+    }                                                         \
     PR_END_MACRO
 
 #  define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, true)
@@ -1020,7 +1020,7 @@ class nsIFrame : public nsQueryFrame {
    *     (@see nsCSSFrameConstructor::ConstructDocElementFrame)
    *   * the internal anonymous frames of the root element copy their value
    *     from the parent.
-   *     (@see nsFrame::Init)
+   *     (@see nsIFrame::Init)
    *   * a scrolled frame propagates its value to its ancestor scroll frame
    *     (@see nsHTMLScrollFrame::ReloadChildFrames)
    */
@@ -2761,7 +2761,7 @@ class nsIFrame : public nsQueryFrame {
 
  protected:
   /**
-   * A helper, used by |nsFrame::ComputeSize| (for frames that need to
+   * A helper, used by |nsIFrame::ComputeSize| (for frames that need to
    * override only this part of ComputeSize), that computes the size
    * that should be returned when 'width', 'height', and
    * min/max-width/height are all 'auto' or equivalent.
@@ -3269,7 +3269,7 @@ class nsIFrame : public nsQueryFrame {
     // other).
     eSupportsContainLayoutAndPaint = 1 << 13,
 
-    // These are to allow nsFrame::Init to assert that IsFrameOfType
+    // These are to allow nsIFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
     // meaningful in DEBUG builds.
     eDEBUGAllFrames = 1 << 30,

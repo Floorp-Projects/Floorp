@@ -23,7 +23,7 @@ void nsSplittableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     SetPrevInFlow(aPrevInFlow);
     aPrevInFlow->SetNextInFlow(this);
   }
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 void nsSplittableFrame::DestroyFrom(nsIFrame* aDestructRoot,
@@ -34,7 +34,7 @@ void nsSplittableFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   // Let the base class destroy the frame
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsIFrame* nsSplittableFrame::GetPrevContinuation() const {

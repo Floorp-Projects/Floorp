@@ -129,13 +129,13 @@ void SVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsIFrame::mContent);
 
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
   }
 
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 /* virtual */

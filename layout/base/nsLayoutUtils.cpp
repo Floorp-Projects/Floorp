@@ -3348,7 +3348,7 @@ nsresult nsLayoutUtils::GetFramesForArea(
     fprintf_stderr(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
 
     std::stringstream ss;
-    nsFrame::PrintDisplayList(&builder, list, ss);
+    nsIFrame::PrintDisplayList(&builder, list, ss);
     print_stderr(ss);
   }
 #endif
@@ -3782,8 +3782,8 @@ static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
                   aVisibleRect.x, aVisibleRect.y, aVisibleRect.width,
                   aVisibleRect.height)
                   .get();
-  nsFrame::PrintDisplayList(aBuilder, *aList, *aStream,
-                            gfxEnv::DumpPaintToFile());
+  nsIFrame::PrintDisplayList(aBuilder, *aList, *aStream,
+                             gfxEnv::DumpPaintToFile());
 
   if (gfxEnv::DumpPaint() || gfxEnv::DumpPaintItems()) {
     // Flush stream now to avoid reordering dump output relative to
@@ -3798,8 +3798,8 @@ static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
                                       nsDisplayList* aList,
                                       LayerManager* aManager) {
   *aStream << "Painting --- after optimization:\n";
-  nsFrame::PrintDisplayList(aBuilder, *aList, *aStream,
-                            gfxEnv::DumpPaintToFile());
+  nsIFrame::PrintDisplayList(aBuilder, *aList, *aStream,
+                             gfxEnv::DumpPaintToFile());
 
   *aStream << "Painting --- layer tree:\n";
   if (aManager) {
@@ -3819,7 +3819,7 @@ static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
 #endif
 
   std::stringstream lsStream;
-  nsFrame::PrintDisplayList(aBuilder, *aList, lsStream);
+  nsIFrame::PrintDisplayList(aBuilder, *aList, lsStream);
   if (aManager->GetRoot()) {
     aManager->GetRoot()->SetDisplayListLog(lsStream.str().c_str());
   }
@@ -5539,8 +5539,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
 
   const bool horizontalAxis = MOZ_LIKELY(aAxis == eAxisHorizontal);
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stderr, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  nsIFrame::IndentBy(stderr, gNoiseIndent);
+  aFrame->ListTag(stderr);
   printf_stderr(" %s %s intrinsic size for container:\n",
                 aType == MIN_ISIZE ? "min" : "pref",
                 horizontalAxis ? "horizontal" : "vertical");
@@ -5668,8 +5668,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
     }
 #ifdef DEBUG_INTRINSIC_WIDTH
     --gNoiseIndent;
-    nsFrame::IndentBy(stderr, gNoiseIndent);
-    static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+    nsIFrame::IndentBy(stderr, gNoiseIndent);
+    aFrame->ListTag(stderr);
     printf_stderr(" %s %s intrinsic size from frame is %d.\n",
                   aType == MIN_ISIZE ? "min" : "pref",
                   horizontalAxis ? "horizontal" : "vertical", result);
@@ -5796,8 +5796,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   }
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stderr, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  nsIFrame::IndentBy(stderr, gNoiseIndent);
+  aFrame->ListTag(stderr);
   printf_stderr(" %s %s intrinsic size for container is %d twips.\n",
                 aType == MIN_ISIZE ? "min" : "pref",
                 horizontalAxis ? "horizontal" : "vertical", result);
@@ -5829,8 +5829,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
              "only grid/flex items have this behavior currently");
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stderr, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  nsIFrame::IndentBy(stderr, gNoiseIndent);
+  aFrame->ListTag(stderr);
   printf_stderr(" %s min-isize for %s WM:\n",
                 aType == MIN_ISIZE ? "min" : "pref",
                 aWM.IsVertical() ? "vertical" : "horizontal");
@@ -5895,8 +5895,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   if (!fixedMinSize) {
     // Let the caller deal with the "content size" cases.
 #ifdef DEBUG_INTRINSIC_WIDTH
-    nsFrame::IndentBy(stderr, gNoiseIndent);
-    static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+    nsIFrame::IndentBy(stderr, gNoiseIndent);
+    aFrame->ListTag(stderr);
     printf_stderr(" %s min-isize is indefinite.\n",
                   aType == MIN_ISIZE ? "min" : "pref");
 #endif
@@ -5923,8 +5923,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
       fixedMinSize, size, nullptr, maxSize, aFlags, aAxis);
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stderr, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  nsIFrame::IndentBy(stderr, gNoiseIndent);
+  aFrame->ListTag(stderr);
   printf_stderr(" %s min-isize is %d twips.\n",
                 aType == MIN_ISIZE ? "min" : "pref", result);
 #endif
@@ -6575,7 +6575,7 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
                    kid->GetLogicalNormalPosition(aWM, containerSize).B(aWM);
         return true;
       } else if (kid->IsScrollFrame()) {
-        // Defer to nsFrame::GetLogicalBaseline (which synthesizes a baseline
+        // Defer to nsIFrame::GetLogicalBaseline (which synthesizes a baseline
         // from the margin-box).
         kidBaseline = kid->GetLogicalBaseline(aWM);
         *aResult = kidBaseline +

@@ -71,7 +71,7 @@ nsresult nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 
   // mouse clicks are handled by content
   // we don't want our children to get any events. So just pass it to frame.
-  return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 bool nsHTMLButtonControlFrame::ShouldClipPaintingToBorderBox() {

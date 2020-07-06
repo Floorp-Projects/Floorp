@@ -5059,7 +5059,7 @@ void SVGTextFrame::MaybeReflowAnonymousBlockChild() {
     // The RecordCorrespondence and DoReflow calls can result in new text frames
     // being created (due to bidi resolution or reflow).  We set this bit to
     // guard against unnecessarily calling back in to
-    // ScheduleReflowSVGNonDisplayText from nsFrame::DidSetComputedStyle on
+    // ScheduleReflowSVGNonDisplayText from nsIFrame::DidSetComputedStyle on
     // those new text frames.
     AddStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);
 

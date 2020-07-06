@@ -3877,7 +3877,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       // If an ancestor of ours is going to reflow for clearance, we
       // need to avoid calling PlaceBlock, because it unsets dirty bits
       // on the child block (both itself, and through its call to
-      // nsFrame::DidReflow), and those dirty bits imply dirtiness for
+      // nsIFrame::DidReflow), and those dirty bits imply dirtiness for
       // all of the child block, including the lines it didn't reflow.
       NS_ASSERTION(originalPosition == frame->GetPosition(),
                    "we need to call PositionChildViews");
@@ -4664,7 +4664,7 @@ void nsBlockFrame::SplitLine(BlockReflowInput& aState,
 
 #ifdef DEBUG
   if (gNoisyReflow) {
-    nsFrame::IndentBy(stdout, gNoiseIndent);
+    nsIFrame::IndentBy(stdout, gNoiseIndent);
     printf("split line: from line=%p pushCount=%d aFrame=",
            static_cast<void*>(aLine.get()), pushCount);
     if (aFrame) {
@@ -4860,7 +4860,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
     if (CRAZY_SIZE(aLine->BStart())) {
       lastHeight = aLine->BStart();
       if (abs(aLine->BStart() - lastHeight) > CRAZY_COORD / 10) {
-        nsFrame::ListTag(stdout);
+        nsIFrame::ListTag(stdout);
         printf(": line=%p y=%d line.bounds.height=%d\n",
                static_cast<void*>(aLine.get()), aLine->BStart(),
                aLine->BSize());
@@ -6809,7 +6809,7 @@ static void ComputeVisualOverflowArea(nsLineList& aLines, nscoord aWidth,
 #ifdef DEBUG
 static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {
   if (nsBlockFrame::gNoisyDamageRepair) {
-    nsFrame::IndentBy(stdout, aDepth + 1);
+    nsIFrame::IndentBy(stdout, aDepth + 1);
     nsRect lineArea = aLine->GetVisualOverflowArea();
     printf("%s line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
            aDrawn ? "draw" : "skip", static_cast<void*>(aLine), aLine->IStart(),
@@ -6875,7 +6875,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     depth = GetDepth();
     nsRect ca;
     ::ComputeVisualOverflowArea(mLines, mRect.width, mRect.height, ca);
-    nsFrame::IndentBy(stdout, depth);
+    nsIFrame::IndentBy(stdout, depth);
     ListTag(stdout);
     printf(": bounds=%d,%d,%d,%d dirty(absolute)=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
            mRect.x, mRect.y, mRect.width, mRect.height, dirty.x, dirty.y,
@@ -7491,7 +7491,7 @@ void nsBlockFrame::CheckFloats(BlockReflowInput& aState) {
         "nsBlockFrame::CheckFloats: Explicit float list is out of sync with "
         "float cache");
 #  if defined(DEBUG_roc)
-    nsFrame::RootFrameList(PresContext(), stdout, 0);
+    nsIFrame::RootFrameList(PresContext(), stdout, 0);
     for (i = 0; i < lineFloats.Length(); ++i) {
       printf("Line float: %p\n", lineFloats.ElementAt(i));
     }

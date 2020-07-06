@@ -40,7 +40,7 @@ nsStackFrame::nsStackFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
 
 // REVIEW: The old code put everything in the background layer. To be more
 // consistent with the way other frames work, I'm putting everything in the
-// Content() (i.e., foreground) layer (see nsFrame::BuildDisplayListForChild,
+// Content() (i.e., foreground) layer (see nsIFrame::BuildDisplayListForChild,
 // the case for stacking context but non-positioned, non-floating frames).
 // This could easily be changed back by hacking
 // nsBoxFrame::BuildDisplayListInternal a bit more.

@@ -795,7 +795,7 @@ void nsMathMLContainerFrame::ReflowChild(nsIFrame* aChildFrame,
     if (!nsLayoutUtils::GetLastLineBaseline(wm, aChildFrame, &ascent)) {
       // We don't expect any other block children so just place the frame on
       // the baseline instead of going through DidReflow() and
-      // GetBaseline().  This is what nsFrame::GetBaseline() will do anyway.
+      // GetBaseline().  This is what nsIFrame::GetBaseline() will do anyway.
       aDesiredSize.SetBlockStartAscent(aDesiredSize.BSize(wm));
     } else {
       aDesiredSize.SetBlockStartAscent(ascent);

@@ -136,7 +136,7 @@ FRAME_STATE_BIT(Generic, 11, NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
 // If this bit is set but the NS_FRAME_IS_DIRTY is not set, then Reflow still
 // needs to be called on the frame, but Reflow will likely not do as much work
 // as it would if NS_FRAME_IS_DIRTY were set. See the comment documenting
-// nsFrame::Reflow for more.
+// nsIFrame::Reflow for more.
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
 // Do not set this bit yourself if you plan to pass the frame to

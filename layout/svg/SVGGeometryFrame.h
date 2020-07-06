@@ -42,7 +42,7 @@ nsIFrame* NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
+class SVGGeometryFrame : public nsIFrame, public nsSVGDisplayableFrame {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   friend nsIFrame* ::NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
@@ -53,7 +53,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
  protected:
   SVGGeometryFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                    nsIFrame::ClassID aID = kClassID)
-      : nsFrame(aStyle, aPresContext, aID) {
+      : nsIFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
@@ -70,7 +70,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
       return false;
     }
 
-    return nsFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
+    return nsIFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
   }
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,

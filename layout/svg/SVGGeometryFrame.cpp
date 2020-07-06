@@ -51,7 +51,7 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGGeometryFrame)
 NS_QUERYFRAME_HEAD(SVGGeometryFrame)
   NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
   NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
 
 void DisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder,
                                  const nsRect& aRect, HitTestState* aState,
@@ -113,7 +113,7 @@ namespace mozilla {
 void SVGGeometryFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
   AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 nsresult SVGGeometryFrame::AttributeChanged(int32_t aNameSpaceID,
@@ -136,7 +136,7 @@ nsresult SVGGeometryFrame::AttributeChanged(int32_t aNameSpaceID,
 
 /* virtual */
 void SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
-  nsFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsIFrame::DidSetComputedStyle(aOldComputedStyle);
 
   if (aOldComputedStyle) {
     SVGGeometryElement* element =
