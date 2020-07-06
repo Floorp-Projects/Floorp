@@ -20,14 +20,14 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/secur
  #if SANDBOX_EXPORTS
    HMODULE module = ::LoadLibrary(exe_name_.get());
    if (!module)
-     return SBOX_ERROR_GENERIC;
+     return SBOX_ERROR_CANNOT_LOADLIBRARY_EXECUTABLE;
  
 -  child_var = ::GetProcAddress(module, name);
 +  child_var = reinterpret_cast<void*>(::GetProcAddress(module, name));
    ::FreeLibrary(module);
  
    if (!child_var)
-     return SBOX_ERROR_GENERIC;
+     return SBOX_ERROR_CANNOT_FIND_VARIABLE_ADDRESS;
  
    size_t offset =
        reinterpret_cast<char*>(child_var) - reinterpret_cast<char*>(module);
