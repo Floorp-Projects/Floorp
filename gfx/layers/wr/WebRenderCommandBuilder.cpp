@@ -1749,8 +1749,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
       if (dumpEnabled) {
         std::stringstream ss;
-        nsFrame::PrintDisplayItem(aDisplayListBuilder, item, ss,
-                                  static_cast<uint32_t>(mDumpIndent));
+        nsIFrame::PrintDisplayItem(aDisplayListBuilder, item, ss,
+                                   static_cast<uint32_t>(mDumpIndent));
         printf_stderr("%s", ss.str().c_str());
       }
 

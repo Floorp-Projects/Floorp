@@ -14,7 +14,7 @@
 #include "mozilla/Unused.h"
 #include "nsDisplayList.h"
 #include "nsITheme.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "Layers.h"

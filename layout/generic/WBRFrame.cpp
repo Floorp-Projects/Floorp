@@ -6,7 +6,7 @@
 
 /* rendering object for HTML <wbr> elements */
 
-#include "nsFrame.h"
+#include "nsIFrame.h"
 
 using namespace mozilla;
 

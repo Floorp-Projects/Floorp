@@ -10,7 +10,7 @@
 #define nsBulletFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"

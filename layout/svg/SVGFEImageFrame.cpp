@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGFEImageElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "nsContainerFrame.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "nsLiteralString.h"
 #include "SVGObserverUtils.h"

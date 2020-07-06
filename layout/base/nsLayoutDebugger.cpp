@@ -7,7 +7,7 @@
 /* some layout debugging functions that ought to live in nsFrame.cpp */
 
 #include "nsAttrValue.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
 #include "nsPrintfCString.h"
