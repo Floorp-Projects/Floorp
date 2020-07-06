@@ -27,6 +27,10 @@ permalink: /changelog/
 * **lib-push-firebase**
   * Removed non-essential dependency on `com.google.firebase:firebase-core`.
 
+* **feature-toolbar**
+  * Added `ContainerToolbarFeature` to update the toolbar with the container page action whenever
+    the selected tab changes.
+
 # 56.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v55.0.0...v56.0.0)
