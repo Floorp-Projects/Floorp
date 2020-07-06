@@ -1,0 +1,85 @@
+%% md
+<div id="table-wrapper">
+    <table id="compareTable" border="1"></table>
+</div>
+
+%% py
+from js import document, data_object
+import json
+import numpy as np
+
+split_data = {}
+dir_names = set()
+subtests = set()
+newest_run_name = ""
+for element in data_object:
+    name = element["name"]
+    if "- newest run" in name:
+        newest_run_name = name
+    subtest = element["subtest"]
+    dir_names.add(name)
+    subtests.add(subtest)
+
+    data = [p["value"] for p in element["data"]]
+    split_data.setdefault(name, {}).update({
+        subtest:{
+            "data":data,
+            "stats":{
+                "Mean": np.round(np.mean(data),2),
+                "Median": np.median(data),
+                "Std. Dev.": np.round(np.std(data),2)
+            }
+        }
+    })
+
+table = document.getElementById("compareTable")
+table.innerHTML=''
+
+# build table head
+thead = table.createTHead()
+throw = thead.insertRow()
+for name in ["Metrics", "Statistics"] + list(dir_names):
+    th = document.createElement("th")
+    th.appendChild(document.createTextNode(name))
+    throw.appendChild(th)
+
+def fillRow(row, subtest, stat):
+    row.insertCell().appendChild(document.createTextNode(stat))
+    newest_run_val = split_data[newest_run_name][subtest]["stats"][stat]
+    for name in dir_names:
+        cell_val = split_data[name][subtest]["stats"][stat]
+        diff = np.round((cell_val - newest_run_val * 1.0)/newest_run_val * 100, 2)
+        color = "red" if diff>0 else "green"
+        row.insertCell().innerHTML = f"{cell_val}\n(<span style=\"color:{color}\">{diff}</span>%)"
+
+# build table body
+tbody = document.createElement("tbody")
+for subtest in subtests:
+    row1 = tbody.insertRow()
+    cell0 = row1.insertCell()
+    cell0.appendChild(document.createTextNode(subtest))
+    cell0.rowSpan = 3;
+    a = split_data
+    fillRow(row1, subtest, "Mean")
+
+    row2 = tbody.insertRow()
+    fillRow(row2, subtest, "Median")
+
+    row3 = tbody.insertRow()
+    fillRow(row3, subtest, "Std. Dev.")
+
+table.appendChild(tbody)
+
+%% css
+#table-wrapper {
+    height: 600px;
+    overflow: auto;
+}
+
+#table {
+    display: table;
+}
+
+td { 
+    white-space:pre-line;
+}
