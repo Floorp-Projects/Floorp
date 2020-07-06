@@ -108,6 +108,15 @@ add_task(async function test_panel_live_reload() {
 
   await extension.awaitMessage("extension-origin");
 
+  // When the webextension target is attached, we need to wait until the storage
+  // is populated with the proper data again.
+  // XXX: This seems to be a race which has a much higher frequency when the
+  // target is attached, but the relationship between the two is unclear.
+  await asyncWaitUntil(async () => {
+    const { data } = await extensionStorage.getStoreObjects(host);
+    return data?.length > 0;
+  });
+
   const { data } = await extensionStorage.getStoreObjects(host);
   Assert.deepEqual(
     data,
@@ -124,3 +133,18 @@ add_task(async function test_panel_live_reload() {
 
   await shutdown(extension, target);
 });
+
+/**
+ * Duplicated from shared-head.js
+ */
+async function asyncWaitUntil(predicate, interval = 100) {
+  let success = await predicate();
+  const { setTimeout } = require("resource://gre/modules/Timer.jsm");
+  while (!success) {
+    // Wait for X milliseconds.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, interval));
+    // Test the predicate again.
+    success = await predicate();
+  }
+}
