@@ -548,16 +548,6 @@ IPCResult WindowGlobalChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
-void WindowGlobalChild::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                                          StructuredCloneData&& aData,
-                                          StructuredCloneData&& aStack) {
-  RefPtr<JSWindowActorChild> actor =
-      GetActor(aMeta.actorName(), IgnoreErrors());
-  if (actor) {
-    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
-  }
-}
-
 void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
 #ifdef MOZ_GECKO_PROFILER
   // Registers a DOM Window with the profiler. It re-registers the same Inner

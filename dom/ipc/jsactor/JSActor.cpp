@@ -13,6 +13,7 @@
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
+#include "mozilla/dom/JSActorManager.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
@@ -49,24 +50,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSActor)
 
-// RAII class to ensure that, if we crash while handling a message, the
-// crash will be annotated with the name of the actor and the message.
-struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
-  AutoAnnotateMessageInCaseOfCrash(const nsCString& aActorName,
-                                   const nsCString& aMessageName) {
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::JSActorName,
-                                       aActorName);
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::JSActorMessage, aMessageName);
-  }
-  ~AutoAnnotateMessageInCaseOfCrash() {
-    CrashReporter::RemoveCrashReportAnnotation(
-        CrashReporter::Annotation::JSActorMessage);
-    CrashReporter::RemoveCrashReportAnnotation(
-        CrashReporter::Annotation::JSActorName);
-  }
-};
-
 JSActor::JSActor(nsISupports* aGlobal) {
   mGlobal = do_QueryInterface(aGlobal);
   if (!mGlobal) {
@@ -75,15 +58,11 @@ JSActor::JSActor(nsISupports* aGlobal) {
 }
 
 void JSActor::StartDestroy() {
-  AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
-                                         "<WillDestroy>"_ns);
   InvokeCallback(CallbackFunction::WillDestroy);
   mCanSend = false;
 }
 
 void JSActor::AfterDestroy() {
-  AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
-                                         "<DidDestroy>"_ns);
   mCanSend = false;
 
   // Take our queries out, in case somehow rejecting promises can trigger
@@ -259,69 +238,6 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
   return promise.forget();
 }
 
-#define CHILD_DIAGNOSTIC_ASSERT(test, msg) \
-  do {                                     \
-    if (XRE_IsParentProcess()) {           \
-      MOZ_ASSERT(test, msg);               \
-    } else {                               \
-      MOZ_DIAGNOSTIC_ASSERT(test, msg);    \
-    }                                      \
-  } while (0)
-
-void JSActor::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
-                                ipc::StructuredCloneData&& aData,
-                                ipc::StructuredCloneData&& aStack) {
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-  AutoAnnotateMessageInCaseOfCrash guard(
-      /* aActorName = */ mName,
-      NS_LossyConvertUTF16toASCII(aMetadata.messageName()));
-
-  AutoEntryScript aes(GetParentObject(), "JSActor message handler");
-  JSContext* cx = aes.cx();
-
-  // Read the message into a JS object from IPC.
-  ErrorResult error;
-  JS::Rooted<JS::Value> data(cx);
-  aData.Read(cx, &data, error);
-  if (NS_WARN_IF(error.Failed())) {
-    CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
-    MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(cx));
-    return;
-  }
-
-  JS::Rooted<JSObject*> stack(cx);
-  Maybe<JS::AutoSetAsyncStackForNewCalls> stackSetter;
-  {
-    JS::Rooted<JS::Value> stackVal(cx);
-    aStack.Read(cx, &stackVal, IgnoreErrors());
-    if (stackVal.isObject()) {
-      stack = &stackVal.toObject();
-      if (!js::IsSavedFrame(stack)) {
-        CHILD_DIAGNOSTIC_ASSERT(false, "Stack must be a SavedFrame object");
-        return;
-      }
-      stackSetter.emplace(cx, stack, "JSActor query");
-    }
-  }
-
-  switch (aMetadata.kind()) {
-    case JSActorMessageKind::QueryResolve:
-    case JSActorMessageKind::QueryReject:
-      ReceiveQueryReply(cx, aMetadata, data, error);
-      break;
-
-    case JSActorMessageKind::Message:
-    case JSActorMessageKind::Query:
-      ReceiveMessageOrQuery(cx, aMetadata, data, error);
-      break;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-  }
-
-  Unused << error.MaybeSetPendingException(cx);
-}
-
 void JSActor::ReceiveMessageOrQuery(JSContext* aCx,
                                     const JSActorMessageMeta& aMetadata,
                                     JS::Handle<JS::Value> aData,
@@ -402,6 +318,22 @@ void JSActor::ReceiveQueryReply(JSContext* aCx,
   } else {
     promise->MaybeReject(data);
   }
+}
+
+void JSActor::SendRawMessageInProcess(const JSActorMessageMeta& aMeta,
+                                      ipc::StructuredCloneData&& aData,
+                                      ipc::StructuredCloneData&& aStack,
+                                      OtherSideCallback&& aGetOtherSide) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "JSActor Async Message",
+      [aMeta, data{std::move(aData)}, stack{std::move(aStack)},
+       getOtherSide{std::move(aGetOtherSide)}]() mutable {
+        if (RefPtr<JSActorManager> otherSide = getOtherSide()) {
+          otherSide->ReceiveRawMessage(aMeta, std::move(data),
+                                       std::move(stack));
+        }
+      }));
 }
 
 // Native handler for our generated promise which is used to handle Queries and
