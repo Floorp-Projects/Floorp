@@ -660,6 +660,8 @@ class nsIFrame : public nsQueryFrame {
       DisplayItemDataArray;
   typedef nsQueryFrame::ClassID ClassID;
 
+  // nsQueryFrame
+  NS_DECL_QUERYFRAME
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
   explicit nsIFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
@@ -699,6 +701,8 @@ class nsIFrame : public nsQueryFrame {
     mozilla::PodZero(&mOverflow);
     MOZ_COUNT_CTOR(nsIFrame);
   }
+  explicit nsIFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsIFrame(aStyle, aPresContext, ClassID::nsIFrame_id) {}
 
   nsPresContext* PresContext() const { return mPresContext; }
 
@@ -724,6 +728,8 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow);
+
+  void* operator new(size_t, mozilla::PresShell*) MOZ_MUST_OVERRIDE;
 
   using PostDestroyData = mozilla::layout::PostFrameDestroyData;
   struct MOZ_RAII AutoPostDestroyData {

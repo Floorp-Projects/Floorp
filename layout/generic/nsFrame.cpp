@@ -466,7 +466,7 @@ void WeakFrame::Init(nsIFrame* aFrame) {
 }
 
 nsIFrame* NS_NewEmptyFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsFrame(aStyle, aPresShell->GetPresContext());
+  return new (aPresShell) nsIFrame(aStyle, aPresShell->GetPresContext());
 }
 
 nsFrame::nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
@@ -481,6 +481,7 @@ nsIFrame::~nsIFrame() {
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsIFrame)
 
 // Dummy operator delete.  Will never be called, but must be defined
 // to satisfy some C++ ABIs.
@@ -489,6 +490,10 @@ void nsFrame::operator delete(void*, size_t) {
 }
 
 NS_QUERYFRAME_HEAD(nsFrame)
+  NS_QUERYFRAME_ENTRY(nsIFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
+
+NS_QUERYFRAME_HEAD(nsIFrame)
   NS_QUERYFRAME_ENTRY(nsIFrame)
 NS_QUERYFRAME_TAIL_INHERITANCE_ROOT
 
