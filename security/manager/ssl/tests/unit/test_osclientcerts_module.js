@@ -6,6 +6,7 @@
 // Tests that the platform can load the osclientcerts module.
 
 // Ensure that the appropriate initialization has happened.
+Services.prefs.setBoolPref("security.osclientcerts.autoload", false);
 do_get_profile();
 
 const { TestUtils } = ChromeUtils.import(

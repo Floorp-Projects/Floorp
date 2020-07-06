@@ -41,7 +41,11 @@ async function checkCertChain() {
       return certificateTabs.length;
     }, "Found certificate tabs.");
 
-    Assert.greater(certificateTabs.length, 1, "Certificate chain tabs shown");
+    Assert.greaterOrEqual(
+      certificateTabs.length,
+      1,
+      "Certificate chain tabs shown"
+    );
   });
 }
 
