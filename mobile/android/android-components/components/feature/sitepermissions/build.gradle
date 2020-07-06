@@ -20,6 +20,12 @@ android {
                 arg("room.schemaLocation", "$projectDir/schemas".toString())
             }
         }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.incremental": "true"]
+            }
+        }
     }
 
     buildTypes {
