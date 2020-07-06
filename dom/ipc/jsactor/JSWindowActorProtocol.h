@@ -8,6 +8,7 @@
 #define mozilla_dom_JSWindowActorProtocol_h
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/JSActorService.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
@@ -31,7 +32,8 @@ class EventTarget;
  * This object also can act as a carrier for methods and other state related to
  * a single protocol managed by the JSActorService.
  */
-class JSWindowActorProtocol final : public nsIObserver,
+class JSWindowActorProtocol final : public JSActorProtocol,
+                                    public nsIObserver,
                                     public nsIDOMEventListener {
  public:
   NS_DECL_NSIOBSERVER
@@ -47,10 +49,6 @@ class JSWindowActorProtocol final : public nsIObserver,
       const nsACString& aName, const WindowActorOptions& aOptions,
       ErrorResult& aRv);
 
-  struct Sided {
-    Maybe<nsCString> mModuleURI;
-  };
-
   struct ParentSide : public Sided {};
 
   struct EventDecl {
@@ -64,8 +62,8 @@ class JSWindowActorProtocol final : public nsIObserver,
     nsTArray<nsCString> mObservers;
   };
 
-  const ParentSide& Parent() const { return mParent; }
-  const ChildSide& Child() const { return mChild; }
+  const ParentSide& Parent() const override { return mParent; }
+  const ChildSide& Child() const override { return mChild; }
 
   void RegisterListenersFor(EventTarget* aTarget);
   void UnregisterListenersFor(EventTarget* aTarget);

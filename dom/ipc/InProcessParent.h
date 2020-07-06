@@ -48,7 +48,12 @@ class InProcessParent final : public nsIDOMProcessParent,
   static IProtocol* ChildActorFor(IProtocol* aActor);
 
   const nsAString& GetRemoteType() const override { return VoidString(); };
-  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
+
+ protected:
+  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
+                                        const nsACString& aName,
+                                        ErrorResult& aRv) override;
+  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
 
  private:
   // Lifecycle management is implemented in InProcessImpl.cpp

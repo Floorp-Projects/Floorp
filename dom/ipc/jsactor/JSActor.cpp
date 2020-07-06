@@ -35,19 +35,19 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(JSActor)
 NS_IMPL_CYCLE_COLLECTION_CLASS(JSActor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSActor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWrappedJS)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingQueries)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSActor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWrappedJS)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingQueries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSActor)
-
-JSActor::JSActor() : mNextQueryId(0) {}
 
 // RAII class to ensure that, if we crash while handling a message, the
 // crash will be annotated with the name of the actor and the message.
@@ -67,18 +67,35 @@ struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
   }
 };
 
+JSActor::JSActor(nsISupports* aGlobal) {
+  mGlobal = do_QueryInterface(aGlobal);
+  if (!mGlobal) {
+    mGlobal = xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  }
+}
+
 void JSActor::StartDestroy() {
   AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
                                          "<WillDestroy>"_ns);
   InvokeCallback(CallbackFunction::WillDestroy);
+  mCanSend = false;
 }
 
 void JSActor::AfterDestroy() {
   AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
                                          "<DidDestroy>"_ns);
+  mCanSend = false;
+
+  // Take our queries out, in case somehow rejecting promises can trigger
+  // additions or removals.
+  nsRefPtrHashtable<nsUint64HashKey, Promise> pendingQueries;
+  mPendingQueries.SwapElements(pendingQueries);
+  for (auto& entry : pendingQueries) {
+    entry.GetData()->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+  }
+
   InvokeCallback(CallbackFunction::DidDestroy);
-  // Clear out & reject mPendingQueries
-  RejectPendingQueries();
+  ClearManager();
 }
 
 void JSActor::InvokeCallback(CallbackFunction callback) {
@@ -129,18 +146,6 @@ nsresult JSActor::QueryInterfaceActor(const nsIID& aIID, void** aPtr) {
   }
 
   return mWrappedJS->QueryInterface(aIID, aPtr);
-}
-
-void JSActor::RejectPendingQueries() {
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-
-  // Take our queries out, in case somehow rejecting promises can trigger
-  // additions or removals.
-  nsRefPtrHashtable<nsUint64HashKey, Promise> pendingQueries;
-  mPendingQueries.SwapElements(pendingQueries);
-  for (auto iter = pendingQueries.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  }
 }
 
 /* static */

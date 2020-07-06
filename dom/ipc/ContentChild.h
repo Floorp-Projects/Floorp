@@ -795,7 +795,10 @@ class ContentChild final : public PContentChild,
                                          const ClonedMessageData& aData,
                                          const ClonedMessageData& aStack);
 
-  JSActor::Type GetSide() override { return JSActor::Type::Child; }
+  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
+                                        const nsACString& aName,
+                                        ErrorResult& aRv) override;
+  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
 
   mozilla::ipc::IPCResult RecvHistoryCommitLength(
       const MaybeDiscarded<BrowsingContext>& aContext, uint32_t aLength);
@@ -895,11 +898,6 @@ class ContentChild final : public PContentChild,
 
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t mBrowsingContextFieldEpoch = 0;
-
-  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorChild> mProcessActors;
-  ContentChild(const ContentChild&) = delete;
-
-  const ContentChild& operator=(const ContentChild&) = delete;
 };
 
 inline nsISupports* ToSupports(mozilla::dom::ContentChild* aContentChild) {
