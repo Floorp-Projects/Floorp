@@ -20,6 +20,7 @@ const blockedAddon = {
   // The following date is the date of the first checked in MLBF. Any MLBF
   // generated in the future should be generated after this date, to be useful.
   signedDate: new Date(1588098908496), // 2020-04-28 (dummy date)
+  signedState: AddonManager.SIGNEDSTATE_SIGNED,
 };
 
 // A known add-on that is not blocked, as of writing. It is likely not going
@@ -28,6 +29,7 @@ const nonBlockedAddon = {
   id: "disable-ctrl-q-and-cmd-q@robwu.nl",
   version: "1",
   signedDate: new Date(1482430349000), // 2016-12-22 (actual signing time).
+  signedState: AddonManager.SIGNEDSTATE_SIGNED,
 };
 
 async function sha256(arrayBuffer) {

@@ -165,3 +165,23 @@ add_task(async function signed_temporary() {
     "Blocklisted add-on cannot be installed"
   );
 });
+
+// A privileged add-on cannot be blocked by the MLBF.
+// It can still be blocked by a stash, which is tested in
+// privileged_addon_blocked_by_stash in test_blocklist_mlbf_stashes.js.
+add_task(async function privileged_xpi_not_blocked() {
+  mockMLBF({
+    blocked: ["test@tests.mozilla.org:2.0"],
+    notblocked: [],
+    generationTime: 1546297200000, // 1 jan 2019 = after the cert's notBefore
+  });
+  await ExtensionBlocklistMLBF._onUpdate();
+
+  await promiseInstallFile(
+    do_get_file("../data/signing_checks/privileged.xpi")
+  );
+  let addon = await promiseAddonByID("test@tests.mozilla.org");
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRIVILEGED);
+  Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  await addon.uninstall();
+});
