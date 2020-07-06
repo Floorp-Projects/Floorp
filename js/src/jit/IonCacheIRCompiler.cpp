@@ -2397,6 +2397,13 @@ bool IonCacheIRCompiler::emitCallClassHook(ObjOperandId calleeId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
+                                                 Int32OperandId argcId,
+                                                 uint32_t icScriptOffset,
+                                                 CallFlags flags) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
                                                    uint8_t slotIndex) {
   MOZ_CRASH("Call ICs not used in ion");
