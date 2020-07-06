@@ -35,14 +35,11 @@
 #include "mozilla/gfx/UnscaledFontDWrite.h"
 
 /**
- * gfxDWriteFontFamily is a class that describes one of the fonts on the
- * users system.  It holds each gfxDWriteFontEntry (maps more directly to
- * a font face) which holds font type, charset info and character map info.
- */
-class gfxDWriteFontEntry;
-
-/**
  * \brief Class representing directwrite font family.
+ *
+ * gfxDWriteFontFamily is a class that describes one of the font families on
+ * the user's system.  It holds each gfxDWriteFontEntry (maps more directly to
+ * a font face) which holds font type, charset info and character map info.
  */
 class gfxDWriteFontFamily final : public gfxFontFamily {
  public:
@@ -217,6 +214,7 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
  protected:
   friend class gfxDWriteFont;
   friend class gfxDWriteFontList;
+  friend class gfxDWriteFontFamily;
 
   virtual nsresult CopyFontTable(uint32_t aTableTag,
                                  nsTArray<uint8_t>& aBuffer) override;
@@ -253,6 +251,10 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
   bool mForceGDIClassic;
   bool mHasVariations;
   bool mHasVariationsInitialized;
+
+  // Set to true only if the font belongs to a "simple" family where the
+  // faces can be reliably identified via a GDI LOGFONT structure.
+  bool mMayUseGDIAccess = false;
 
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontDWrite> mUnscaledFont;
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontDWrite>
