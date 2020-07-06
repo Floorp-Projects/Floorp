@@ -775,9 +775,9 @@
 #    define MOZ_IS_REFPTR MOZ_IS_SMARTPTR_TO_REFCOUNTED
 #    define MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT \
       __attribute__((annotate("moz_no_arith_expr_in_arg")))
-#    define MOZ_OWNING_REF
-#    define MOZ_NON_OWNING_REF
-#    define MOZ_UNSAFE_REF(reason)
+#    define MOZ_OWNING_REF __attribute__((annotate("moz_owning_ref")))
+#    define MOZ_NON_OWNING_REF __attribute__((annotate("moz_non_owning_ref")))
+#    define MOZ_UNSAFE_REF(reason) __attribute__((annotate("moz_unsafe_ref")))
 #    define MOZ_NO_ADDREF_RELEASE_ON_RETURN \
       __attribute__((annotate("moz_no_addref_release_on_return")))
 #    define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
