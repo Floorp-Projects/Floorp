@@ -668,29 +668,11 @@ bool BaselineInspector::hasSeenDoubleResult(jsbytecode* pc) {
   return stub->toBinaryArith_Fallback()->sawDoubleResult();
 }
 
-static const CacheIRStubInfo* GetCacheIRStubInfo(ICStub* stub) {
-  const CacheIRStubInfo* stubInfo = nullptr;
-  switch (stub->kind()) {
-    case ICStub::Kind::CacheIR_Monitored:
-      stubInfo = stub->toCacheIR_Monitored()->stubInfo();
-      break;
-    case ICStub::Kind::CacheIR_Regular:
-      stubInfo = stub->toCacheIR_Regular()->stubInfo();
-      break;
-    case ICStub::Kind::CacheIR_Updated:
-      stubInfo = stub->toCacheIR_Updated()->stubInfo();
-      break;
-    default:
-      MOZ_CRASH("Only cache IR stubs supported");
-  }
-  return stubInfo;
-}
-
 static bool MaybeArgumentReader(ICStub* stub, CacheOp targetOp,
                                 mozilla::Maybe<CacheIRReader>& argReader) {
   MOZ_ASSERT(ICStub::IsCacheIRKind(stub->kind()));
 
-  CacheIRReader stubReader(GetCacheIRStubInfo(stub));
+  CacheIRReader stubReader(stub->cacheIRStubInfo());
   while (stubReader.more()) {
     CacheOp op = stubReader.readOp();
     uint32_t argLength = CacheIROpArgLengths[size_t(op)];
@@ -711,7 +693,7 @@ static bool MaybeArgumentReader(ICStub* stub, CacheOp targetOp,
 template <typename Filter>
 JSObject* MaybeTemplateObject(ICStub* stub, MetaTwoByteKind kind,
                               Filter filter) {
-  const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
+  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
   mozilla::Maybe<CacheIRReader> argReader;
   if (!MaybeArgumentReader(stub, CacheOp::MetaTwoByte, argReader) ||
       argReader->metaKind<MetaTwoByteKind>() != kind ||
@@ -781,7 +763,7 @@ JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
   }
 
   if (ICStub::IsCacheIRKind(stub->kind())) {
-    const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
+    const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
     mozilla::Maybe<CacheIRReader> argReader;
     if (!MaybeArgumentReader(stub, CacheOp::MetaTwoByte, argReader) ||
         argReader->metaKind<MetaTwoByteKind>() !=
