@@ -61,7 +61,7 @@ class PresShell;
 }  // namespace mozilla
 
 /** PeekOffsetStruct is used to group various arguments (both input and output)
- *  that are passed to nsFrame::PeekOffset(). See below for the description of
+ *  that are passed to nsIFrame::PeekOffset(). See below for the description of
  *  individual arguments.
  */
 struct MOZ_STACK_CLASS nsPeekOffsetStruct {

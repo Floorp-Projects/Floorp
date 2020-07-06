@@ -1406,7 +1406,7 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
 // Indicates whether the cross-size property is set to something definite,
 // for the purpose of intrinsic ratio calculations.
 // The logic here should be similar to the logic for isAutoISize/isAutoBSize
-// in nsFrame::ComputeSizeWithIntrinsicDimensions().
+// in nsIFrame::ComputeSizeWithIntrinsicDimensions().
 static bool IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
                                 const FlexboxAxisTracker& aAxisTracker) {
   const nsStylePosition* pos = aItemReflowInput.mStylePosition;
@@ -1711,7 +1711,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
  * won't change unless one of the pieces of the "key" change, or the flex
  * item's intrinsic size is marked as dirty (due to a style or DOM change).
  * (The latter will cause the cached value to be discarded, in
- * nsFrame::MarkIntrinsicISizesDirty.)
+ * nsIFrame::MarkIntrinsicISizesDirty.)
  *
  * Note that the components of "Key" (mComputed{MinB,MaxB,}Size and
  * mAvailableBSize) are sufficient to catch any changes to the flex container's
@@ -4459,7 +4459,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
 // Class to let us temporarily provide an override value for the the main-size
 // CSS property ('width' or 'height') on a flex item, for use in
-// nsFrame::ComputeSizeWithIntrinsicDimensions.
+// nsIFrame::ComputeSizeWithIntrinsicDimensions.
 // (We could use this overridden size more broadly, too, but it's probably
 // better to avoid property-table accesses.  So, where possible, we communicate
 // the resolved main-size to the child via modifying its reflow input directly,

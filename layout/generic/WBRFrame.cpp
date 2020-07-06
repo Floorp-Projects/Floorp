@@ -12,7 +12,7 @@ using namespace mozilla;
 
 namespace mozilla {
 
-class WBRFrame final : public nsFrame {
+class WBRFrame final : public nsIFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(WBRFrame)
 
@@ -31,7 +31,7 @@ class WBRFrame final : public nsFrame {
 
  protected:
   explicit WBRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsFrame(aStyle, aPresContext, kClassID) {}
+      : nsIFrame(aStyle, aPresContext, kClassID) {}
 };
 
 }  // namespace mozilla

@@ -25,13 +25,13 @@ namespace mozilla {
  * identifier. The SVGViewFrame class passes on any attribute changes
  * the view receives to the overridden <svg> element (if there is one).
  **/
-class SVGViewFrame final : public nsFrame {
+class SVGViewFrame final : public nsIFrame {
   friend nsIFrame* ::NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
  protected:
   explicit SVGViewFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsFrame(aStyle, aPresContext, kClassID) {
+      : nsIFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -48,7 +48,7 @@ class SVGViewFrame final : public nsFrame {
       return false;
     }
 
-    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+    return nsIFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -84,7 +84,7 @@ void SVGViewFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::view),
                "Content is not an SVG view");
 
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -112,7 +112,7 @@ nsresult SVGViewFrame::AttributeChanged(int32_t aNameSpaceID,
     }
   }
 
-  return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return nsIFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 }  // namespace mozilla

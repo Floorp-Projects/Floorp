@@ -64,7 +64,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
 #ifdef DEBUG
 NS_QUERYFRAME_HEAD(nsBulletFrame)
   NS_QUERYFRAME_ENTRY(nsBulletFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
 #endif
 
 nsBulletFrame::~nsBulletFrame() = default;
@@ -84,7 +84,7 @@ void nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   // Let base class do the rest
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -101,7 +101,7 @@ bool nsBulletFrame::IsSelfEmpty() {
 
 /* virtual */
 void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
-  nsFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsIFrame::DidSetComputedStyle(aOldComputedStyle);
 
   imgRequestProxy* newRequest = StyleList()->GetListStyleImage();
 

@@ -315,7 +315,7 @@ class nsTableFrame : public nsContainerFrame {
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
   /**
-   * A copy of nsFrame::ShrinkWidthToFit that calls a different
+   * A copy of nsIFrame::ShrinkWidthToFit that calls a different
    * GetPrefISize, since tables have two different ones.
    */
   nscoord TableShrinkISizeToFit(gfxContext* aRenderingContext,

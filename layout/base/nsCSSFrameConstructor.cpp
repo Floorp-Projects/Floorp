@@ -1329,7 +1329,7 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState() {
 /**
  * Moves aFrameList from aOldParent to aNewParent.  This updates the parent
  * pointer of the frames in the list, and reparents their views as needed.
- * nsFrame::SetParent sets the NS_FRAME_HAS_VIEW bit on aNewParent and its
+ * nsIFrame::SetParent sets the NS_FRAME_HAS_VIEW bit on aNewParent and its
  * ancestors as needed. Then it sets the list as the initial child list
  * on aNewParent, unless aNewParent either already has kids or has been
  * reflowed; in that case it appends the new frames.  Note that this
@@ -2213,7 +2213,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     // We need to copy <body>'s WritingMode to mDocElementContainingBlock before
     // construct mRootElementFrame so that anonymous internal frames such as
     // <html> with table style can copy their parent frame's mWritingMode in
-    // nsFrame::Init().
+    // nsIFrame::Init().
     MOZ_ASSERT(!mRootElementFrame,
                "We need to copy <body>'s principal writing-mode before "
                "constructing mRootElementFrame.");
@@ -4562,7 +4562,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
   // We want a block formatting context root in paginated contexts for
   // every block that would be scrollable in a non-paginated context.
   // We mark our blocks with a bit here if this condition is true, so
-  // we can check it later in nsFrame::ApplyPaginatedOverflowClipping.
+  // we can check it later in nsIFrame::ApplyPaginatedOverflowClipping.
   bool clipPaginatedOverflow =
       (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
   nsFrameState flags = nsFrameState(0);
@@ -4643,7 +4643,7 @@ void nsCSSFrameConstructor::FlushAccumulatedBlock(
   auto anonPseudo = PseudoStyleType::mozMathMLAnonymousBlock;
 
   ComputedStyle* parentContext =
-      nsFrame::CorrectStyleParentFrame(aParentFrame, anonPseudo)->Style();
+      nsIFrame::CorrectStyleParentFrame(aParentFrame, anonPseudo)->Style();
   ServoStyleSet* styleSet = mPresShell->StyleSet();
   RefPtr<ComputedStyle> blockContext;
   blockContext =
@@ -8037,7 +8037,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   }
 
   // If a continuing frame needs to carry frame state bits from its previous
-  // continuation or parent, set them in nsFrame::Init(), or in any derived
+  // continuation or parent, set them in nsIFrame::Init(), or in any derived
   // frame class's Init() if the bits are belong to specific group.
 
   if (nextInFlow) {
@@ -9515,7 +9515,7 @@ void nsCSSFrameConstructor::ProcessChildren(
 
     if (aCanHaveGeneratedContent) {
       auto* styleParentFrame =
-          nsFrame::CorrectStyleParentFrame(aFrame, PseudoStyleType::NotPseudo);
+          nsIFrame::CorrectStyleParentFrame(aFrame, PseudoStyleType::NotPseudo);
       computedStyle = styleParentFrame->Style();
       if (computedStyle->StyleDisplay()->IsListItem() &&
           (listItem = do_QueryFrame(aFrame)) &&
@@ -9672,7 +9672,7 @@ void nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
 
   if (!aLineFrame) {
     // Create line frame
-    ComputedStyle* parentStyle = nsFrame::CorrectStyleParentFrame(
+    ComputedStyle* parentStyle = nsIFrame::CorrectStyleParentFrame(
                                      aBlockFrame, PseudoStyleType::firstLine)
                                      ->Style();
     RefPtr<ComputedStyle> firstLineStyle =
@@ -9899,7 +9899,7 @@ void nsCSSFrameConstructor::CreateLetterFrame(
   // Get a ComputedStyle for the first-letter-frame.
   //
   // Keep this in sync with nsBlockFrame::UpdatePseudoElementStyles.
-  nsIFrame* parentFrame = nsFrame::CorrectStyleParentFrame(
+  nsIFrame* parentFrame = nsIFrame::CorrectStyleParentFrame(
       aParentFrame, PseudoStyleType::firstLetter);
 
   ComputedStyle* parentComputedStyle = parentFrame->Style();
@@ -9914,7 +9914,7 @@ void nsCSSFrameConstructor::CreateLetterFrame(
 
   if (sc) {
     if (parentFrame->IsLineFrame()) {
-      nsIFrame* parentIgnoringFirstLine = nsFrame::CorrectStyleParentFrame(
+      nsIFrame* parentIgnoringFirstLine = nsIFrame::CorrectStyleParentFrame(
           aBlockFrame, PseudoStyleType::firstLetter);
 
       sc = mPresShell->StyleSet()->ReparentComputedStyle(
@@ -10938,7 +10938,7 @@ void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
         // blockFrame later, we manually add the bit earlier here to make all
         // the continuations of blockFrame created in
         // CreateColumnSpanSiblings(), i.e. non-column-span wrappers, have the
-        // bit via nsFrame::Init().
+        // bit via nsIFrame::Init().
         blockFrame->AddStateBits(NS_FRAME_PART_OF_IBSPLIT);
 
         nsFrameList columnSpanSiblings =

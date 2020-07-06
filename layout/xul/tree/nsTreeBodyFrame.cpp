@@ -2473,7 +2473,7 @@ nsresult nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
 
 class nsDisplayTreeBody final : public nsPaintedDisplayItem {
  public:
-  nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame)
+  nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTreeBody);
   }

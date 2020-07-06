@@ -17,14 +17,14 @@ nsIFrame* NS_NewSVGFEUnstyledLeafFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGFEUnstyledLeafFrame final : public nsFrame {
+class SVGFEUnstyledLeafFrame final : public nsIFrame {
   friend nsIFrame* ::NS_NewSVGFEUnstyledLeafFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
  protected:
   explicit SVGFEUnstyledLeafFrame(ComputedStyle* aStyle,
                                   nsPresContext* aPresContext)
-      : nsFrame(aStyle, aPresContext, kClassID) {
+      : nsIFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -39,7 +39,7 @@ class SVGFEUnstyledLeafFrame final : public nsFrame {
       return false;
     }
 
-    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+    return nsIFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -82,7 +82,7 @@ nsresult SVGFEUnstyledLeafFrame::AttributeChanged(int32_t aNameSpaceID,
         GetParent()->GetParent());
   }
 
-  return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return nsIFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 }  // namespace mozilla

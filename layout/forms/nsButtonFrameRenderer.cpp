@@ -38,7 +38,7 @@ nsButtonFrameRenderer::~nsButtonFrameRenderer() {
   MOZ_COUNT_DTOR(nsButtonFrameRenderer);
 }
 
-void nsButtonFrameRenderer::SetFrame(nsFrame* aFrame,
+void nsButtonFrameRenderer::SetFrame(nsIFrame* aFrame,
                                      nsPresContext* aPresContext) {
   mFrame = aFrame;
   ReResolveStyles(aPresContext);

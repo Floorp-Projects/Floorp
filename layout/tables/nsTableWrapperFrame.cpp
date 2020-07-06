@@ -88,7 +88,7 @@ void nsTableWrapperFrame::SetInitialChildList(ChildListID aListID,
                                               nsFrameList& aChildList) {
   if (kCaptionList == aListID) {
 #ifdef DEBUG
-    nsFrame::VerifyDirtyBitSet(aChildList);
+    nsIFrame::VerifyDirtyBitSet(aChildList);
     for (nsIFrame* f : aChildList) {
       MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
     }

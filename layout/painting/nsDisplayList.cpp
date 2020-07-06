@@ -1273,7 +1273,7 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
 /**
  * Mark all preserve-3d children with
  * NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO to make sure
- * nsFrame::BuildDisplayListForChild() would visit them.  Also compute
+ * nsIFrame::BuildDisplayListForChild() would visit them.  Also compute
  * dirty rect for preserve-3d children.
  *
  * @param aDirtyFrame is the frame to mark children extending context.

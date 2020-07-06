@@ -132,7 +132,7 @@ class PluginBackgroundSink : public ReadbackSink {
 };
 
 nsPluginFrame::nsPluginFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-    : nsFrame(aStyle, aPresContext, kClassID),
+    : nsIFrame(aStyle, aPresContext, kClassID),
       mInstanceOwner(nullptr),
       mOuterView(nullptr),
       mInnerView(nullptr),
@@ -150,7 +150,7 @@ nsPluginFrame::~nsPluginFrame() {
 NS_QUERYFRAME_HEAD(nsPluginFrame)
   NS_QUERYFRAME_ENTRY(nsPluginFrame)
   NS_QUERYFRAME_ENTRY(nsIObjectFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
 
 #ifdef ACCESSIBILITY
 a11y::AccType nsPluginFrame::AccessibleType() { return a11y::ePluginType; }
@@ -168,7 +168,7 @@ void nsPluginFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   MOZ_LOG(sPluginFrameLog, LogLevel::Debug,
           ("Initializing nsPluginFrame %p for content %p\n", this, aContent));
 
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
   CreateView();
 }
 
@@ -197,7 +197,7 @@ void nsPluginFrame::DestroyFrom(nsIFrame* aDestructRoot,
     mBackgroundSink->Destroy();
   }
 
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 /* virtual */
@@ -212,7 +212,7 @@ void nsPluginFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
   }
 
-  nsFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsIFrame::DidSetComputedStyle(aOldComputedStyle);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -705,7 +705,7 @@ void nsPluginFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner) {
 
 bool nsPluginFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
   if (aTabIndex) *aTabIndex = -1;
-  return nsFrame::IsFocusable(aTabIndex, aWithMouse);
+  return nsIFrame::IsFocusable(aTabIndex, aWithMouse);
 }
 
 bool nsPluginFrame::IsHidden(bool aCheckVisibilityStyle) const {
@@ -790,7 +790,7 @@ void nsPluginFrame::DidReflow(nsPresContext* aPresContext,
     objContent->HasNewFrame(this);
   }
 
-  nsFrame::DidReflow(aPresContext, aReflowInput);
+  nsIFrame::DidReflow(aPresContext, aReflowInput);
 
   if (HasView()) {
     nsView* view = GetView();
@@ -1498,7 +1498,7 @@ nsresult nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
 #ifdef XP_WIN
-  rv = nsFrame::HandleEvent(aPresContext, anEvent, anEventStatus);
+  rv = nsIFrame::HandleEvent(aPresContext, anEvent, anEventStatus);
   return rv;
 #endif
 
@@ -1523,10 +1523,10 @@ nsresult nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
   }
 #endif
 
-  rv = nsFrame::HandleEvent(aPresContext, anEvent, anEventStatus);
+  rv = nsIFrame::HandleEvent(aPresContext, anEvent, anEventStatus);
 
   // We need to be careful from this point because the call to
-  // nsFrame::HandleEvent() might have killed us.
+  // nsIFrame::HandleEvent() might have killed us.
 
 #ifdef XP_MACOSX
   if (anEvent->mMessage == eMouseUp) {
@@ -1602,7 +1602,7 @@ Maybe<nsIFrame::Cursor> nsPluginFrame::GetCursor(const nsPoint& aPoint) {
     return Nothing();
   }
 
-  return nsFrame::GetCursor(aPoint);
+  return nsIFrame::GetCursor(aPoint);
 }
 
 void nsPluginFrame::SetIsDocumentActive(bool aIsActive) {

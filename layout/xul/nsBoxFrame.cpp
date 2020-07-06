@@ -367,7 +367,7 @@ void nsBoxFrame::DidReflow(nsPresContext* aPresContext,
                            const ReflowInput* aReflowInput) {
   nsFrameState preserveBits =
       mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
-  nsFrame::DidReflow(aPresContext, aReflowInput);
+  nsIFrame::DidReflow(aPresContext, aReflowInput);
   AddStateBits(preserveBits);
   if (preserveBits & NS_FRAME_IS_DIRTY) {
     this->MarkSubtreeDirty();

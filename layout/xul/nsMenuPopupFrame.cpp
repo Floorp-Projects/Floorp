@@ -2411,7 +2411,7 @@ int8_t nsMenuPopupFrame::GetAlignmentPosition() const {
 }
 
 /**
- * KEEP THIS IN SYNC WITH nsFrame::CreateView
+ * KEEP THIS IN SYNC WITH nsIFrame::CreateView
  * as much as possible. Until we get rid of views finally...
  */
 void nsMenuPopupFrame::CreatePopupView() {

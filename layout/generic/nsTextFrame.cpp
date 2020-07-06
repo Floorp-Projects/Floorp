@@ -2973,7 +2973,7 @@ void BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun,
 
 NS_QUERYFRAME_HEAD(nsTextFrame)
   NS_QUERYFRAME_ENTRY(nsTextFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
 
 gfxSkipCharsIterator nsTextFrame::EnsureTextRun(
     TextRunType aWhichTextRun, DrawTarget* aRefDrawTarget,
@@ -4328,7 +4328,7 @@ void nsTextFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   // We're not a continuing frame.
   // mContentOffset = 0; not necessary since we get zeroed out at init
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 void nsTextFrame::ClearFrameOffsetCache() {
@@ -4359,7 +4359,7 @@ void nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot,
     mNextContinuation->SetPrevInFlow(nullptr);
   }
   // Let the base class destroy the frame
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 class nsContinuingTextFrame final : public nsTextFrame {
@@ -4426,7 +4426,7 @@ void nsContinuingTextFrame::Init(nsIContent* aContent,
   aPrevInFlow->SetNextInFlow(this);
 
   // NOTE: bypassing nsTextFrame::Init!!!
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 
   mContentOffset = prev->GetContentOffset() + prev->GetContentLengthHint();
   NS_ASSERTION(mContentOffset < int32_t(aContent->GetText()->GetLength()),
@@ -4499,7 +4499,7 @@ void nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
   nsSplittableFrame::RemoveFromFlow(this);
   // Let the base class destroy the frame
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsIFrame* nsContinuingTextFrame::FirstInFlow() const {
@@ -4633,7 +4633,7 @@ void nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey,
     svgTextFrame->InvalidateFrame();
     return;
   }
-  nsFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
+  nsIFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
 }
 
 void nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect,
@@ -4645,8 +4645,8 @@ void nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect,
     svgTextFrame->InvalidateFrame();
     return;
   }
-  nsFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey,
-                                   aRebuildDisplayItems);
+  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey,
+                                    aRebuildDisplayItems);
 }
 
 gfxTextRun* nsTextFrame::GetUninflatedTextRun() const {
@@ -6498,7 +6498,7 @@ void nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
 nscolor nsTextFrame::GetCaretColorAt(int32_t aOffset) {
   MOZ_ASSERT(aOffset >= 0, "aOffset must be positive");
 
-  nscolor result = nsFrame::GetCaretColorAt(aOffset);
+  nscolor result = nsIFrame::GetCaretColorAt(aOffset);
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   PropertyProvider provider(this, iter, nsTextFrame::eInflated, mFontMetrics);
   int32_t contentOffset = provider.GetStart().GetOriginalOffset();
@@ -8269,7 +8269,7 @@ void nsTextFrame::SetFontSizeInflation(float aInflation) {
 /* virtual */
 void nsTextFrame::MarkIntrinsicISizesDirty() {
   ClearTextRuns();
-  nsFrame::MarkIntrinsicISizesDirty();
+  nsIFrame::MarkIntrinsicISizesDirty();
 }
 
 // XXX this doesn't handle characters shaped by line endings. We need to
@@ -10119,13 +10119,13 @@ bool nsTextFrame::ComputeCustomOverflowInternal(nsOverflowAreas& aOverflowAreas,
       f = f->GetParent();
       if (!f) {
         NS_ERROR("Couldn't find any block ancestor (for text decorations)");
-        return nsFrame::ComputeCustomOverflow(aOverflowAreas);
+        return nsIFrame::ComputeCustomOverflow(aOverflowAreas);
       }
     }
   }
 
   aOverflowAreas = RecomputeOverflow(decorationsBlock, aIncludeShadows);
-  return nsFrame::ComputeCustomOverflow(aOverflowAreas);
+  return nsIFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(JustificationAssignmentProperty, int32_t)

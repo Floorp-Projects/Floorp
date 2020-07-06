@@ -88,7 +88,7 @@ nsresult nsFirstLetterFrame::GetChildFrameContainingOffset(
     return kid->GetChildFrameContainingOffset(
         inContentOffset, inHint, outFrameContentOffset, outChildFrame);
   } else {
-    return nsFrame::GetChildFrameContainingOffset(
+    return nsIFrame::GetChildFrameContainingOffset(
         inContentOffset, inHint, outFrameContentOffset, outChildFrame);
   }
 }

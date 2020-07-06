@@ -37,7 +37,7 @@ class SVGContextPaint;
 class SVGTextFrame;
 }  // namespace mozilla
 
-class nsTextFrame : public nsFrame {
+class nsTextFrame : public nsIFrame {
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::SelectionTypeMask SelectionTypeMask;
   typedef mozilla::SelectionType SelectionType;
@@ -214,7 +214,7 @@ class nsTextFrame : public nsFrame {
 
   explicit nsTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                        ClassID aID = kClassID)
-      : nsFrame(aStyle, aPresContext, aID),
+      : nsIFrame(aStyle, aPresContext, aID),
         mNextContinuation(nullptr),
         mContentOffset(0),
         mContentLengthHint(0),
@@ -291,7 +291,7 @@ class nsTextFrame : public nsFrame {
   bool IsFrameOfType(uint32_t aFlags) const final {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
-    return nsFrame::IsFrameOfType(
+    return nsIFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eLineParticipant));
   }
 

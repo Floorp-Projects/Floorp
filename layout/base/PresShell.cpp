@@ -486,7 +486,7 @@ class MOZ_STACK_CLASS nsPresShellEventCB : public EventDispatchingCallback {
     if (aVisitor.mPresContext && aVisitor.mEvent->mClass != eBasicEventClass) {
       if (aVisitor.mEvent->mMessage == eMouseDown ||
           aVisitor.mEvent->mMessage == eMouseUp) {
-        // Mouse-up and mouse-down events call nsFrame::HandlePress/Release
+        // Mouse-up and mouse-down events call nsIFrame::HandlePress/Release
         // which call GetContentOffsetsFromPoint which requires up-to-date
         // layout. Bring layout up-to-date now so that GetCurrentEventFrame()
         // below will return a real frame and we don't have to worry about
@@ -4845,7 +4845,7 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
 #ifdef DEBUG
   if (gDumpRangePaintList) {
     fprintf(stderr, "CreateRangePaintInfo --- before ClipListToRange:\n");
-    nsFrame::PrintDisplayList(&(info->mBuilder), info->mList);
+    nsIFrame::PrintDisplayList(&(info->mBuilder), info->mList);
   }
 #endif
 
@@ -4856,7 +4856,7 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
 #ifdef DEBUG
   if (gDumpRangePaintList) {
     fprintf(stderr, "CreateRangePaintInfo --- after ClipListToRange:\n");
-    nsFrame::PrintDisplayList(&(info->mBuilder), info->mList);
+    nsIFrame::PrintDisplayList(&(info->mBuilder), info->mList);
   }
 #endif
 
@@ -7999,7 +7999,7 @@ Document* PresShell::GetPrimaryContentDocument() {
 
 #ifdef DEBUG
 void PresShell::ShowEventTargetDebug() {
-  if (nsFrame::GetShowEventTargetFrameBorder() && GetCurrentEventFrame()) {
+  if (nsIFrame::GetShowEventTargetFrameBorder() && GetCurrentEventFrame()) {
     if (mDrawEventTargetFrame) {
       mDrawEventTargetFrame->InvalidateFrame();
     }

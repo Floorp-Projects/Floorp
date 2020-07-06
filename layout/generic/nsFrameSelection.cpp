@@ -2469,7 +2469,7 @@ nsresult nsFrameSelection::TableSelection::HandleMouseUpOrDown(
 #endif
 
       // Start drag-selecting mode so multiple rows/cols can be selected
-      // Note: Currently, nsFrame::GetDataForTableSelection
+      // Note: Currently, nsIFrame::GetDataForTableSelection
       //       will never call us for row or column selection on mouse down
       mDragSelectingCells = true;
 

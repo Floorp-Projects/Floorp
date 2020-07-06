@@ -250,7 +250,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                                      const StyleSize& aMainSize);
 
   /**
-   * Callback for nsFrame::MarkIntrinsicISizesDirty() on a flex item.
+   * Callback for nsIFrame::MarkIntrinsicISizesDirty() on a flex item.
    */
   static void MarkCachedFlexMeasurementsDirty(nsIFrame* aItemFrame);
 

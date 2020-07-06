@@ -22,13 +22,13 @@ nsIFrame* NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGFEImageFrame final : public nsFrame {
+class SVGFEImageFrame final : public nsIFrame {
   friend nsIFrame* ::NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
  protected:
   explicit SVGFEImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsFrame(aStyle, aPresContext, kClassID) {
+      : nsIFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
     // This frame isn't actually displayed, but it contains an image and we want
@@ -51,7 +51,7 @@ class SVGFEImageFrame final : public nsFrame {
       return false;
     }
 
-    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+    return nsIFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -91,12 +91,12 @@ void SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
   DecApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsIFrame::mContent);
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
   }
 
-  nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void SVGFEImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -105,7 +105,7 @@ void SVGFEImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                "Trying to construct an SVGFEImageFrame for a "
                "content element that doesn't support the right interfaces");
 
-  nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We assume that feImage's are always visible.
   // This call must happen before the FrameCreated. This is because the
@@ -117,7 +117,7 @@ void SVGFEImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   IncApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsIFrame::mContent);
   if (imageLoader) {
     imageLoader->FrameCreated(this);
   }
@@ -152,22 +152,22 @@ nsresult SVGFEImageFrame::AttributeChanged(int32_t aNameSpaceID,
     }
   }
 
-  return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return nsIFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 void SVGFEImageFrame::OnVisibilityChange(
     Visibility aNewVisibility, const Maybe<OnNonvisible>& aNonvisibleAction) {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(nsFrame::mContent);
+      do_QueryInterface(nsIFrame::mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
-    nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsIFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
   imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
-  nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsIFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 }  // namespace mozilla

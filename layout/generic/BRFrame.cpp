@@ -27,7 +27,7 @@ using namespace mozilla;
 
 namespace mozilla {
 
-class BRFrame final : public nsFrame {
+class BRFrame final : public nsIFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(BRFrame)
 
@@ -60,7 +60,7 @@ class BRFrame final : public nsFrame {
       mozilla::WritingMode aWritingMode) const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsFrame::IsFrameOfType(
+    return nsIFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eLineParticipant));
   }
 
@@ -70,7 +70,7 @@ class BRFrame final : public nsFrame {
 
  protected:
   explicit BRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsFrame(aStyle, aPresContext, kClassID),
+      : nsIFrame(aStyle, aPresContext, kClassID),
         mAscent(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
   virtual ~BRFrame();

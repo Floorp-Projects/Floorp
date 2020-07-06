@@ -370,7 +370,7 @@ void StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
   for (nsTArray<nsIFrame*>::size_type i = 0; i < mFrames.Length(); i++) {
     nsIFrame* f = mFrames[i];
     if (!nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(f)) {
-      // This frame was added in nsFrame::Init before we knew it wasn't
+      // This frame was added in nsIFrame::Init before we knew it wasn't
       // the first ib-split-sibling.
       mFrames.RemoveElementAt(i);
       --i;

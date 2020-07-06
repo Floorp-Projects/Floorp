@@ -1101,7 +1101,7 @@ nsresult nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
 
   // If we have style that affects how we are selected, feed event down to
-  // nsFrame::HandleEvent so that selection takes place when appropriate.
+  // nsIFrame::HandleEvent so that selection takes place when appropriate.
   if (IsContentDisabled()) {
     return nsBlockFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }

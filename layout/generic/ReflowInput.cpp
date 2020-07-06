@@ -291,7 +291,7 @@ void ReflowInput::SetComputedWidth(nscoord aComputedWidth) {
   //    input when reflowing fixed-pos kids.  In that case we actually don't
   //    want to mess with the resize flags, because comparing the frame's rect
   //    to the munged computed width is pointless.
-  // 2) nsFrame::BoxReflow creates a reflow input for its parent.  This reflow
+  // 2) nsIFrame::BoxReflow creates a reflow input for its parent.  This reflow
   //    input is not used to reflow the parent, but just as a parent for the
   //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
@@ -313,7 +313,7 @@ void ReflowInput::SetComputedHeight(nscoord aComputedHeight) {
   // It'd be nice to assert that |frame| is not in reflow, but this fails
   // because:
   //
-  //    nsFrame::BoxReflow creates a reflow input for its parent.  This reflow
+  //    nsIFrame::BoxReflow creates a reflow input for its parent.  This reflow
   //    input is not used to reflow the parent, but just as a parent for the
   //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
@@ -635,7 +635,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // We don't clear the HasBSizeChange state here, since sometimes we
     // construct reflow states (e.g., in
     // nsBlockReflowContext::ComputeCollapsedBStartMargin) without
-    // reflowing the frame.  Instead, we clear it in nsFrame::DidReflow.
+    // reflowing the frame.  Instead, we clear it in nsIFrame::DidReflow.
   } else if (mCBReflowInput &&
              mCBReflowInput->IsBResizeForPercentagesForWM(wm) &&
              (mStylePosition->BSize(wm).HasPercent() ||

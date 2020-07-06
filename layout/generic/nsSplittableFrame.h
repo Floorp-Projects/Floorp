@@ -16,7 +16,7 @@
 #include "nsFrame.h"
 
 // Derived class that allows splitting
-class nsSplittableFrame : public nsFrame {
+class nsSplittableFrame : public nsIFrame {
  public:
   NS_DECL_ABSTRACT_FRAME(nsSplittableFrame)
 
@@ -79,7 +79,7 @@ class nsSplittableFrame : public nsFrame {
  protected:
   nsSplittableFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                     ClassID aID)
-      : nsFrame(aStyle, aPresContext, aID),
+      : nsIFrame(aStyle, aPresContext, aID),
         mPrevContinuation(nullptr),
         mNextContinuation(nullptr) {}
 
