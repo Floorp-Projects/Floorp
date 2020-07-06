@@ -1064,6 +1064,80 @@ const TESTCASES = [
     profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
     expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
   },
+  {
+    description: "Test maxlength=2 on numeric fields.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp-month" maxlength="2">
+                 <input autocomplete="cc-exp-year" maxlength="2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp-year": 25,
+      }),
+    ],
+  },
+  {
+    description: "Test maxlength=4 on numeric fields.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp-month" maxlength="4">
+                 <input autocomplete="cc-exp-year" maxlength="4">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+  },
+  {
+    description: "Test maxlength=1 on numeric fields.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp-month" maxlength="1">
+                 <input autocomplete="cc-exp-year" maxlength="1">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp-year": 5,
+      }),
+    ],
+  },
+  {
+    description: "Test maxlength=0 on numeric fields.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp-month" maxlength="0">
+                 <input autocomplete="cc-exp-year" maxlength="0">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      {
+        guid: DEFAULT_CREDITCARD_RECORD.guid,
+        "cc-exp": DEFAULT_CREDITCARD_RECORD["cc-exp"],
+      },
+    ],
+  },
+  {
+    // It appears that negative values do not get propagated.
+    description: "Test maxlength=-2 on numeric fields.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp-month" maxlength="-2">
+                 <input autocomplete="cc-exp-year" maxlength="-2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+  },
+  {
+    description: "Test maxlength=10 on numeric fields.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp-month" maxlength="10">
+                 <input autocomplete="cc-exp-year" maxlength="10">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+  },
 ];
 
 for (let testcase of TESTCASES) {

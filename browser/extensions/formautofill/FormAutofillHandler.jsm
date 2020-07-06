@@ -262,13 +262,34 @@ class FormAutofillSection {
       if (
         maxLength === undefined ||
         maxLength < 0 ||
-        profile[key].length <= maxLength
+        profile[key].toString().length <= maxLength
       ) {
         continue;
       }
 
       if (maxLength) {
-        profile[key] = profile[key].substr(0, maxLength);
+        switch (typeof profile[key]) {
+          case "string":
+            profile[key] = profile[key].substr(0, maxLength);
+            break;
+          case "number":
+            // There's no way to truncate a number smaller than a
+            // single digit.
+            if (maxLength < 1) {
+              maxLength = 1;
+            }
+            // The only numbers we store are expiration month/year,
+            // and if they truncate, we want the final digits, not
+            // the initial ones.
+            profile[key] = profile[key] % Math.pow(10, maxLength);
+            break;
+          default:
+            log.warn(
+              "adaptFieldMaxLength: Don't know how to truncate",
+              typeof profile[key],
+              profile[key]
+            );
+        }
       } else {
         delete profile[key];
       }
