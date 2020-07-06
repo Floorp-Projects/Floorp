@@ -11,7 +11,7 @@
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsDisplayList.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"

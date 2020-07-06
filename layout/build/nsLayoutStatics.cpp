@@ -25,7 +25,7 @@
 #include "nsGenericHTMLFrameElement.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/PopupBlocker.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsFrameState.h"
 #include "nsGlobalWindow.h"
 #include "nsGkAtoms.h"

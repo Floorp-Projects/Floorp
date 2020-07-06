@@ -293,7 +293,7 @@
 #include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/ExtensionPolicyService.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsDOMCaretPosition.h"
 #include "nsViewportInfo.h"
 #include "mozilla/StaticPtr.h"
@@ -12412,7 +12412,7 @@ already_AddRefed<nsDOMCaretPosition> Document::CaretPositionFromPoint(
   nsPoint adjustedPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       widget, refPoint, RelativeTo{ptFrame});
 
-  nsFrame::ContentOffsets offsets =
+  nsIFrame::ContentOffsets offsets =
       ptFrame->GetContentOffsetsFromPoint(adjustedPoint);
 
   nsCOMPtr<nsIContent> node = offsets.content;

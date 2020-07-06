@@ -25,7 +25,7 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsFocusManager.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIHapticFeedback.h"

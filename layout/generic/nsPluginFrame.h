@@ -13,7 +13,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIObjectFrame.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsRegion.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"

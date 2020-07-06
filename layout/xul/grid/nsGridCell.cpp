@@ -12,7 +12,7 @@
 //
 
 #include "nsGridCell.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsGridLayout2.h"
 
 nsGridCell::nsGridCell() : mBoxInColumn(nullptr), mBoxInRow(nullptr) {

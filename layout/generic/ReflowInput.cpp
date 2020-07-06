@@ -11,7 +11,7 @@
 #include "LayoutLogging.h"
 #include "nsStyleConsts.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"

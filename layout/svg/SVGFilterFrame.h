@@ -8,7 +8,7 @@
 #define __NS_SVGFILTERFRAME_H__
 
 #include "mozilla/Attributes.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsQueryFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"

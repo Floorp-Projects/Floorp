@@ -18,7 +18,7 @@
 #include "nsIContent.h"
 
 #include "nsViewManager.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 
 #include "nsLayoutCID.h"
 

@@ -50,7 +50,7 @@
 #include "nsCSSColorUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsIMathMLFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"

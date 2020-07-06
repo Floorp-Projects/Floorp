@@ -63,6 +63,7 @@
 #include "nsFrameList.h"
 #include "nsFrameState.h"
 #include "mozilla/ReflowInput.h"
+#include "nsHTMLParts.h"
 #include "nsITheme.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
@@ -813,13 +814,27 @@ class nsIFrame : public nsQueryFrame {
   friend class nsLineBox;    // needed to pass aDestructRoot through to children
   friend class nsContainerFrame;  // needed to pass aDestructRoot through to
                                   // children
-  friend class nsFrame;           // need to assign mParent
   template <class Source>
   friend class do_QueryFrameHelper;  // to read mClass
 
   virtual ~nsIFrame();
 
+  // Overridden to prevent the global delete from being called, since
+  // the memory came out of an arena instead of the heap.
+  //
+  // Ideally this would be private and undefined, like the normal
+  // operator new.  Unfortunately, the C++ standard requires an
+  // overridden operator delete to be accessible to any subclass that
+  // defines a virtual destructor, so we can only make it protected;
+  // worse, some C++ compilers will synthesize calls to this function
+  // from the "deleting destructors" that they emit in case of
+  // delete-expressions, so it can't even be undefined.
+  void operator delete(void* aPtr, size_t sz);
+
  private:
+  // Left undefined; nsFrame objects are never allocated from the heap.
+  void* operator new(size_t sz) noexcept(true);
+
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();
 

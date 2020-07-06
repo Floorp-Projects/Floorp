@@ -27,7 +27,7 @@
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/PCompositorBridgeTypes.h"
 #include "mozilla/layers/ShadowLayers.h"
@@ -3318,9 +3318,8 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
   nsPoint relPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       widget, pt, RelativeTo{targetFrame});
 
-  nsresult rv = static_cast<nsFrame*>(targetFrame)
-                    ->SelectByTypeAtPoint(GetPresContext(), relPoint, amount,
-                                          amount, nsFrame::SELECT_ACCUMULATE);
+  nsresult rv = targetFrame->SelectByTypeAtPoint(
+      GetPresContext(), relPoint, amount, amount, nsIFrame::SELECT_ACCUMULATE);
   *_retval = !NS_FAILED(rv);
   return NS_OK;
 }

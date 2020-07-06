@@ -6,7 +6,7 @@
 
 /* base class of all rendering objects */
 
-#include "nsFrame.h"
+#include "nsIFrame.h"
 
 #include <stdarg.h>
 #include <algorithm>
@@ -469,10 +469,6 @@ nsIFrame* NS_NewEmptyFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsIFrame(aStyle, aPresShell->GetPresContext());
 }
 
-nsFrame::nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                 ClassID aID)
-    : nsIFrame(aStyle, aPresContext, aID) {}
-
 nsIFrame::~nsIFrame() {
   MOZ_COUNT_DTOR(nsIFrame);
 
@@ -480,18 +476,13 @@ nsIFrame::~nsIFrame() {
              "Visible nsFrame is being destroyed");
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsFrame)
 NS_IMPL_FRAMEARENA_HELPERS(nsIFrame)
 
 // Dummy operator delete.  Will never be called, but must be defined
 // to satisfy some C++ ABIs.
-void nsFrame::operator delete(void*, size_t) {
+void nsIFrame::operator delete(void*, size_t) {
   MOZ_CRASH("nsIFrame::operator delete should never be called");
 }
-
-NS_QUERYFRAME_HEAD(nsFrame)
-  NS_QUERYFRAME_ENTRY(nsIFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
 
 NS_QUERYFRAME_HEAD(nsIFrame)
   NS_QUERYFRAME_ENTRY(nsIFrame)
