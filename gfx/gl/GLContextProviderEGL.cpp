@@ -230,6 +230,9 @@ static EGLSurface CreateSurfaceFromNativeWindow(
   JNIEnv* const env = jni::GetEnvForThread();
   ANativeWindow* const nativeWindow =
       ANativeWindow_fromSurface(env, reinterpret_cast<jobject>(window));
+  if (!nativeWindow) {
+    return EGL_NO_SURFACE;
+  }
   newSurface = egl->fCreateWindowSurface(egl->fGetDisplay(EGL_DEFAULT_DISPLAY),
                                          config, nativeWindow, 0);
   ANativeWindow_release(nativeWindow);
