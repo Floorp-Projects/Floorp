@@ -836,9 +836,15 @@ class BaseBootstrapper(object):
         Gradle.
         """
 
+        java = None
         if 'JAVA_HOME' in os.environ:
-            extra_search_dirs += (os.path.join(os.environ['JAVA_HOME'], 'bin'),)
-        java = self.which('java', *extra_search_dirs)
+            # Search JAVA_HOME if it is set as it's finer grained than looking at PATH.
+            possible_java_path = os.path.join(os.environ['JAVA_HOME'], 'bin', 'java')
+            if os.path.isfile(possible_java_path) and os.access(possible_java_path, os.X_OK):
+                java = possible_java_path
+        else:
+            # Search the path if JAVA_HOME is not set.
+            java = self.which('java', *extra_search_dirs)
 
         if not java:
             raise Exception('You need to have Java Development Kit version 1.8 installed. '
