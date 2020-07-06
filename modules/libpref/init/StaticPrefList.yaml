@@ -2614,6 +2614,14 @@
   value: false
   mirror: always
 
+# If true, all content requests in Private Browsing Mode will get
+# upgraded to HTTPS://. (If dom.security.https_only_mode is set
+# to true then this pref has no effect)
+- name: dom.security.https_only_mode_pbm
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # If true and HTTPS-only mode is enabled, requests
 # to local IP addresses are also upgraded
 - name: dom.security.https_only_mode.upgrade_local
@@ -2632,6 +2640,14 @@
 # for telemetry purposes and allows to reason about retention of
 # the pref dom.security.https_only_mode from above.
 - name: dom.security.https_only_mode_ever_enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# WARNING: Don't ever update that pref manually! It is only used
+# for telemetry purposes and allows to reason about retention of
+# the pref dom.security.https_only_mode_pbm from above.
+- name: dom.security.https_only_mode_ever_enabled_pbm
   type: RelaxedAtomicBool
   value: false
   mirror: always

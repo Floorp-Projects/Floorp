@@ -9057,7 +9057,8 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   // If the HTTPS-Only mode is enabled, every insecure request gets upgraded to
   // HTTPS by default. This behavior can be disabled through the loadinfo flag
   // HTTPS_ONLY_EXEMPT.
-  if (mozilla::StaticPrefs::dom_security_https_only_mode()) {
+  bool isPrivateWin = attrs.mPrivateBrowsingId > 0;
+  if (nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
     // Let's create a new content principal based on the URI for the
     // PermissionManager
     nsCOMPtr<nsIPrincipal> permissionPrincipal =

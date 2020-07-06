@@ -12,6 +12,13 @@
 class nsHTTPSOnlyUtils {
  public:
   /**
+   * Returns if HTTPSOnly-Mode preference is enabled
+   * @param aFromPrivateWindow true if executing in private browsing mode
+   * @return true if HTTPS-Only Mode is enabled
+   */
+  static bool IsHttpsOnlyModeEnabled(bool aFromPrivateWindow);
+
+  /**
    * Determines if a request should get upgraded because of the HTTPS-Only mode.
    * If true, the httpsOnlyStatus flag in LoadInfo gets updated and a message is
    * logged in the console.
