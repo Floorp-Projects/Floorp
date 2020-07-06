@@ -36,10 +36,7 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("cache", [
-    "siteDataGroup",
-    "pane-experimental-featureGates",
-  ]);
+  await evaluateSearchResults("cache", ["siteDataGroup"]);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
