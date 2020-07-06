@@ -63,6 +63,8 @@ const ExperimentFakes = {
         { slug: "control", value: null },
         { slug: "treatment", value: { title: "hello" } },
       ],
+      userFacingName: "Messaging System recipe",
+      userFacingDescription: "Messaging System MSTestUtils recipe",
       ...props,
     };
   },
