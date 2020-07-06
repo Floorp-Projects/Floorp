@@ -116,7 +116,7 @@ async def retry_download(*args, semaphore=None, **kwargs):  # noqa: E999
     """Retry download() calls."""
     async with AsyncExitStack() as stack:
         if semaphore:
-            stack.enter_async_context(semaphore)
+            await stack.enter_async_context(semaphore)
         await retry_async(
             download,
             retry_exceptions=(aiohttp.ClientError, asyncio.TimeoutError),
@@ -145,6 +145,7 @@ async def download(url, dest, mode=None):  # noqa: E999
             log.debug("Fetching from url %s", resp.url)
             for history in resp.history:
                 log.debug("Redirection history: %s", history.url)
+            log.debug("Headers for %s: %s", resp.url, resp.headers)
             if "Content-Length" in resp.headers:
                 log.debug(
                     "Content-Length expected for %s: %s",
