@@ -80,9 +80,13 @@ var testCases = [
     behavior: BEHAVIOR_REJECT_FOREIGN, // 1
     hasStorageAccess: [
       false /* 3rd-party non-tracker */,
-      true /* 3rd-party non-tracker with permission */,
+      SpecialPowers.Services.prefs.getBoolPref(
+        "network.cookie.rejectForeignWithExceptions.enabled"
+      ) /* 3rd-party tracker with permission */,
       false /* 3rd-party tracker */,
-      true /* 3rd-party tracker with permission */,
+      SpecialPowers.Services.prefs.getBoolPref(
+        "network.cookie.rejectForeignWithExceptions.enabled"
+      ) /* 3rd-party non-tracker with permission */,
       true /* same-site tracker */,
       true /* same-origin tracker */,
     ],
@@ -142,10 +146,6 @@ var testCases = [
     }
 
     testCases.forEach(test => {
-      //if (test.behavior != 3) {
-      //return;
-      //}
-
       let callback = test.hasStorageAccess[settings.indexOf(setting)]
         ? async _ => {
             /* import-globals-from storageAccessAPIHelpers.js */
