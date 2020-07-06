@@ -22,6 +22,9 @@ permalink: /changelog/
 * **concept-engine**
   * Added `EngineSession.goToHistoryIndex` to jump to a specific index in a session's history.
   
+* **service-location**
+  * `LocationService.hasRegionCached()` is introduced to query if the region is already cached and a long running operation to fetch the region is not needed.
+  
 # 49.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v48.0.0...v49.0.0)
