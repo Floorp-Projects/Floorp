@@ -34,10 +34,10 @@ TEST(RemoteWorkerManager, TestMatchRemoteType)
       {FISSION_WEB_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, true},
 
       // Test empty remoteType default to "web" remoteType.
-      {DEFAULT_REMOTE_TYPE, VoidCString(), true},
-      {WITH_COOP_COEP_REMOTE_TYPE_PREFIX, VoidCString(), false},
-      {PRIVILEGEDMOZILLA_REMOTE_TYPE, VoidCString(), false},
-      {EXTENSION_REMOTE_TYPE, VoidCString(), false},
+      {DEFAULT_REMOTE_TYPE, NOT_REMOTE_TYPE, true},
+      {WITH_COOP_COEP_REMOTE_TYPE_PREFIX, NOT_REMOTE_TYPE, false},
+      {PRIVILEGEDMOZILLA_REMOTE_TYPE, NOT_REMOTE_TYPE, false},
+      {EXTENSION_REMOTE_TYPE, NOT_REMOTE_TYPE, false},
   };
 
   for (const auto& test : tests) {

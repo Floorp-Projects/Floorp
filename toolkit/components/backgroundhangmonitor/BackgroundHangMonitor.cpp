@@ -505,7 +505,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
 
   HangDetails hangDetails(aHangTime,
                           nsDependentCString(XRE_GetProcessTypeString()),
-                          VoidCString(), mThreadName, mRunnableName,
+                          NOT_REMOTE_TYPE, mThreadName, mRunnableName,
                           std::move(mHangStack), std::move(mAnnotations));
 
   PersistedToDisk persistedToDisk = aPersistedToDisk;

@@ -100,7 +100,7 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  nsCString remoteType = VoidCString();
+  nsCString remoteType = NOT_REMOTE_TYPE;
 
   // If Gecko is running in single process mode, there is no child process
   // to select, return without assigning any remoteType.

@@ -856,7 +856,7 @@ class ContentChild final : public PContentChild,
   AppInfo mAppInfo;
 
   bool mIsForBrowser;
-  nsCString mRemoteType = VoidCString();
+  nsCString mRemoteType = NOT_REMOTE_TYPE;
   bool mIsAlive;
   nsString mProcessName;
 
