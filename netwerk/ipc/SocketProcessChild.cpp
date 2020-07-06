@@ -35,6 +35,7 @@
 #include "nsIDNSService.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsNSSComponent.h"
+#include "nsSocketTransportService2.h"
 #include "nsThreadManager.h"
 #include "ProcessUtils.h"
 #include "SocketProcessBridgeParent.h"
@@ -470,6 +471,69 @@ SocketProcessChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
   RefPtr<RemoteLazyInputStreamChild> actor =
       new RemoteLazyInputStreamChild(aID, aSize);
   return actor.forget();
+}
+
+namespace {
+
+class DataResolverBase {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataResolverBase)
+
+  DataResolverBase() = default;
+
+ protected:
+  virtual ~DataResolverBase() = default;
+};
+
+template <typename DataType, typename ResolverType>
+class DataResolver final : public DataResolverBase {
+ public:
+  explicit DataResolver(ResolverType&& aResolve)
+      : mResolve(std::move(aResolve)) {}
+
+  void OnResolve(DataType&& aData) {
+    MOZ_ASSERT(OnSocketThread());
+
+    RefPtr<DataResolver<DataType, ResolverType>> self = this;
+    mData = std::move(aData);
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "net::DataResolver::OnResolve",
+        [self{std::move(self)}]() { self->mResolve(std::move(self->mData)); }));
+  }
+
+ private:
+  virtual ~DataResolver() = default;
+
+  ResolverType mResolve;
+  DataType mData;
+};
+
+}  // anonymous namespace
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvGetSocketData(
+    GetSocketDataResolver&& aResolve) {
+  if (!gSocketTransportService) {
+    aResolve(SocketDataArgs());
+    return IPC_OK();
+  }
+
+  RefPtr<
+      DataResolver<SocketDataArgs, SocketProcessChild::GetSocketDataResolver>>
+      resolver = new DataResolver<SocketDataArgs,
+                                  SocketProcessChild::GetSocketDataResolver>(
+          std::move(aResolve));
+  gSocketTransportService->Dispatch(
+      NS_NewRunnableFunction(
+          "net::SocketProcessChild::RecvGetSocketData",
+          [resolver{std::move(resolver)}]() {
+            SocketDataArgs args;
+            gSocketTransportService->GetSocketConnections(&args.info());
+            args.totalSent() = gSocketTransportService->GetSentBytes();
+            args.totalRecv() = gSocketTransportService->GetReceivedBytes();
+            resolver->OnResolve(std::move(args));
+          }),
+      NS_DISPATCH_NORMAL);
+  return IPC_OK();
 }
 
 }  // namespace net
