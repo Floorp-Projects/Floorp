@@ -168,7 +168,7 @@ static bool ShouldFindAnonymousContent(const nsIContent& aContent) {
     return aContent.IsEditable();
   }
 
-  return StaticPrefs::browser_find_anonymous_content_enabled();
+  return true;
 }
 
 static bool SkipNode(const nsIContent* aContent) {
@@ -192,12 +192,11 @@ static bool SkipNode(const nsIContent* aContent) {
       }
     }
 
-    if (content->IsInNativeAnonymousSubtree()) {
-      if (!ShouldFindAnonymousContent(*content)) {
-        DEBUG_FIND_PRINTF("Skipping node: ");
-        DumpNode(content);
-        return true;
-      }
+    if (content->IsInNativeAnonymousSubtree() &&
+        !ShouldFindAnonymousContent(*content)) {
+      DEBUG_FIND_PRINTF("Skipping node: ");
+      DumpNode(content);
+      return true;
     }
 
     // Only climb to the nearest block node
