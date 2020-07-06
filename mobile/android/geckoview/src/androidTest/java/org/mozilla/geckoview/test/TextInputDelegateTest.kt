@@ -849,4 +849,27 @@ class TextInputDelegateTest : BaseSessionTest() {
         finishComposingText(ic)
         assertText("commit abc", ic, "bar")
     }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_bug1633621() {
+        // no way on designmode.
+        assumeThat("Not in designmode", id, not(equalTo("#designmode")))
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        mainSession.evaluateJS("""
+            document.querySelector('$id').addEventListener('input', () => {
+                document.querySelector('$id').blur();
+                document.querySelector('$id').focus();
+            })
+         """)
+
+        setComposingText(ic, "b", 1)
+        setComposingText(ic, "a", 1)
+        pressKey(ic, KeyEvent.KEYCODE_R)
+
+        assertText("Can set composition string after calling blur and focus",
+                   ic, "bar")
+    }
 }
