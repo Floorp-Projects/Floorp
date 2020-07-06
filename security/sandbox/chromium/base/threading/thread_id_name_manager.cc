@@ -10,7 +10,6 @@
 #include "base/logging.h"
 #include "base/memory/singleton.h"
 #include "base/no_destructor.h"
-#include "base/stl_util.h"
 #include "base/strings/string_util.h"
 #include "base/threading/thread_local.h"
 #include "base/trace_event/heap_profiler_allocation_context_tracker.h"
@@ -26,8 +25,6 @@ ThreadLocalStorage::Slot& GetThreadNameTLS() {
   return *thread_name_tls;
 }
 }
-
-ThreadIdNameManager::Observer::~Observer() = default;
 
 ThreadIdNameManager::ThreadIdNameManager()
     : main_process_name_(nullptr), main_process_id_(kInvalidThreadId) {
@@ -56,16 +53,9 @@ void ThreadIdNameManager::RegisterThread(PlatformThreadHandle::Handle handle,
       name_to_interned_name_[kDefaultName];
 }
 
-void ThreadIdNameManager::AddObserver(Observer* obs) {
+void ThreadIdNameManager::InstallSetNameCallback(SetNameCallback callback) {
   AutoLock locked(lock_);
-  DCHECK(!base::Contains(observers_, obs));
-  observers_.push_back(obs);
-}
-
-void ThreadIdNameManager::RemoveObserver(Observer* obs) {
-  AutoLock locked(lock_);
-  DCHECK(base::Contains(observers_, obs));
-  base::Erase(observers_, obs);
+  set_name_callback_ = std::move(callback);
 }
 
 void ThreadIdNameManager::SetName(const std::string& name) {
@@ -84,8 +74,9 @@ void ThreadIdNameManager::SetName(const std::string& name) {
     auto id_to_handle_iter = thread_id_to_handle_.find(id);
 
     GetThreadNameTLS().Set(const_cast<char*>(leaked_str->c_str()));
-    for (Observer* obs : observers_)
-      obs->OnThreadNameChanged(leaked_str->c_str());
+    if (set_name_callback_) {
+      set_name_callback_.Run(leaked_str->c_str());
+    }
 
     // The main thread of a process will not be created as a Thread object which
     // means there is no PlatformThreadHandler registered.

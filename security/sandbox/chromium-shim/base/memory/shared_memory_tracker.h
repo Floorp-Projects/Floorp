@@ -24,9 +24,9 @@ class BASE_EXPORT SharedMemoryTracker {
     return instance;
   }
 
-  void IncrementMemoryUsage(const SharedMemoryMapping& mapping) {};
+  void IncrementMemoryUsage(const SharedMemory& shared_memory) {};
 
-  void DecrementMemoryUsage(const SharedMemoryMapping& mapping) {};
+  void DecrementMemoryUsage(const SharedMemory& shared_memory) {};
 
  private:
   SharedMemoryTracker() {};
