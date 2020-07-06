@@ -75,7 +75,7 @@ class MessageManagerGlobal {
     return mMessageManager->GetProcessMessageManager(aError);
   }
 
-  void GetRemoteType(nsAString& aRemoteType, mozilla::ErrorResult& aError) {
+  void GetRemoteType(nsACString& aRemoteType, mozilla::ErrorResult& aError) {
     if (!mMessageManager) {
       aError.Throw(NS_ERROR_NOT_INITIALIZED);
       return;

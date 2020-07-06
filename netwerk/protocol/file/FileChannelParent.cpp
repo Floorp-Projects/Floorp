@@ -66,7 +66,7 @@ FileChannelParent::Delete() {
 }
 
 NS_IMETHODIMP
-FileChannelParent::GetRemoteType(nsAString& aRemoteType) {
+FileChannelParent::GetRemoteType(nsACString& aRemoteType) {
   if (!CanSend()) {
     return NS_ERROR_UNEXPECTED;
   }

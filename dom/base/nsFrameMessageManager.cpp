@@ -152,7 +152,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameMessageManager)
 
-void MessageManagerCallback::DoGetRemoteType(nsAString& aRemoteType,
+void MessageManagerCallback::DoGetRemoteType(nsACString& aRemoteType,
                                              ErrorResult& aError) const {
   aRemoteType.Truncate();
   mozilla::dom::ProcessMessageManager* parent = GetProcessMessageManager();
@@ -917,7 +917,7 @@ nsFrameMessageManager::GetProcessMessageManager(ErrorResult& aError) {
   return pmm.forget();
 }
 
-void nsFrameMessageManager::GetRemoteType(nsAString& aRemoteType,
+void nsFrameMessageManager::GetRemoteType(nsACString& aRemoteType,
                                           ErrorResult& aError) const {
   aRemoteType.Truncate();
   if (mCallback) {

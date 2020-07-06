@@ -156,7 +156,7 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   // startup cache.
   if (XRE_IsContentProcess() && path.EqualsLiteral("home")) {
     auto& remoteType = dom::ContentChild::GetSingleton()->GetRemoteType();
-    if (remoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+    if (remoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
       nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
           do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
