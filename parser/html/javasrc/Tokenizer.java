@@ -1287,7 +1287,7 @@ public class Tokenizer implements Locator {
         // [NOCPP[
         if (metaBoundaryPassed && AttributeName.CHARSET == attributeName
                 && ElementName.META == tagName) {
-            err("A \u201Ccharset\u201D attribute on a \u201Cmeta\u201D element found after the first 512 bytes.");
+            err("A \u201Ccharset\u201D attribute on a \u201Cmeta\u201D element found after the first 1024 bytes.");
         }
         // ]NOCPP]
         if (attributeName != null) {
@@ -1335,7 +1335,7 @@ public class Tokenizer implements Locator {
         // [NOCPP[
         if (metaBoundaryPassed && ElementName.META == tagName
                 && AttributeName.CHARSET == attributeName) {
-            err("A \u201Ccharset\u201D attribute on a \u201Cmeta\u201D element found after the first 512 bytes.");
+            err("A \u201Ccharset\u201D attribute on a \u201Cmeta\u201D element found after the first 1024 bytes.");
         }
         // ]NOCPP]
         if (attributeName != null) {
