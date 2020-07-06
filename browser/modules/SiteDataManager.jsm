@@ -485,7 +485,7 @@ var SiteDataManager = {
           if (perm.principal.schemeIs("file")) {
             Services.perms.removePermission(perm);
           }
-        } else if (Services.eTLD.hasRootDomain(perm.principal.URI.host, host)) {
+        } else if (Services.eTLD.hasRootDomain(perm.principal.host, host)) {
           Services.perms.removePermission(perm);
         }
       }
