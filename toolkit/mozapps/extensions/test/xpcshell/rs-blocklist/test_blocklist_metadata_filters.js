@@ -5,6 +5,9 @@
 // Tests blocking of extensions by ID, name, creator, homepageURL, updateURL
 // and RegExps for each. See bug 897735.
 
+// useMLBF=true only supports blocking by version+ID, not by other fields.
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+
 const BLOCKLIST_DATA = {
   extensions: [
     {

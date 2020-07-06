@@ -23,6 +23,10 @@
 // set to true and stay userDisabled. This add-on is not used in tests that
 // start with add-ons blocked as it would be identical to softblock3
 
+// useMLBF=true doesn't support soft blocks, regexps or version ranges.
+// TODO bug 1649896: Add new test to provide coverage for addon updates.
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+
 const URI_EXTENSION_BLOCKLIST_DIALOG =
   "chrome://mozapps/content/extensions/blocklist.xhtml";
 
