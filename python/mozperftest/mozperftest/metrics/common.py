@@ -179,7 +179,7 @@ class MetricsStorage(object):
         for data_type, data_info in results.items():
             newresults = []
             for res in data_info:
-                if any([met in res["subtest"] for met in metrics]) and not any(
+                if any([met["name"] in res["subtest"] for met in metrics]) and not any(
                     [met in res["subtest"] for met in exclude]
                 ):
                     newresults.append(res)
@@ -217,6 +217,9 @@ def filtered_metrics(
         group_name=group_name, transformer=transformer, metrics=metrics, exclude=exclude
     )
 
+    # XXX returning two different types is a problem
+    # in case settings is false, we should return None for it
+    # and always return a 2-tuple
     if settings:
         return results, storage.settings
     return results
