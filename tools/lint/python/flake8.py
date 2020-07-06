@@ -15,38 +15,42 @@ from mozlint.pathutils import expand_exclusions
 from mozlint.util import pip
 
 here = os.path.abspath(os.path.dirname(__file__))
-FLAKE8_REQUIREMENTS_PATH = os.path.join(here, 'flake8_requirements.txt')
+FLAKE8_REQUIREMENTS_PATH = os.path.join(here, "flake8_requirements.txt")
 
 FLAKE8_NOT_FOUND = """
 Could not find flake8! Install flake8 and try again.
 
     $ pip install -U --require-hashes -r {}
-""".strip().format(FLAKE8_REQUIREMENTS_PATH)
+""".strip().format(
+    FLAKE8_REQUIREMENTS_PATH
+)
 
 
 FLAKE8_INSTALL_ERROR = """
 Unable to install correct version of flake8
 Try to install it manually with:
     $ pip install -U --require-hashes -r {}
-""".strip().format(FLAKE8_REQUIREMENTS_PATH)
+""".strip().format(
+    FLAKE8_REQUIREMENTS_PATH
+)
 
 LINE_OFFSETS = {
     # continuation line under-indented for hanging indent
-    'E121': (-1, 2),
+    "E121": (-1, 2),
     # continuation line missing indentation or outdented
-    'E122': (-1, 2),
+    "E122": (-1, 2),
     # continuation line over-indented for hanging indent
-    'E126': (-1, 2),
+    "E126": (-1, 2),
     # continuation line over-indented for visual indent
-    'E127': (-1, 2),
+    "E127": (-1, 2),
     # continuation line under-indented for visual indent
-    'E128': (-1, 2),
+    "E128": (-1, 2),
     # continuation line unaligned for hanging indend
-    'E131': (-1, 2),
+    "E131": (-1, 2),
     # expected 1 blank line, found 0
-    'E301': (-1, 2),
+    "E301": (-1, 2),
     # expected 2 blank lines, found 1
-    'E302': (-2, 3),
+    "E302": (-2, 3),
 }
 """Maps a flake8 error to a lineoffset tuple.
 
@@ -56,10 +60,10 @@ to the lineoffset property of an `Issue`.
 
 # We use sys.prefix to find executables as that gets modified with
 # virtualenv's activate_this.py, whereas sys.executable doesn't.
-if platform.system() == 'Windows':
-    bindir = os.path.join(sys.prefix, 'Scripts')
+if platform.system() == "Windows":
+    bindir = os.path.join(sys.prefix, "Scripts")
 else:
-    bindir = os.path.join(sys.prefix, 'bin')
+    bindir = os.path.join(sys.prefix, "bin")
 
 
 class NothingToLint(Exception):
@@ -77,19 +81,21 @@ def setup(root, **lintargs):
 def lint(paths, config, **lintargs):
     from flake8.main.application import Application
 
-    log = lintargs['log']
-    root = lintargs['root']
-    config_path = os.path.join(root, '.flake8')
+    log = lintargs["log"]
+    root = lintargs["root"]
+    config_path = os.path.join(root, ".flake8")
 
-    if lintargs.get('fix'):
+    if lintargs.get("fix"):
         fix_cmd = [
-            os.path.join(bindir, 'autopep8'),
-            '--global-config', config_path,
-            '--in-place', '--recursive',
+            os.path.join(bindir, "autopep8"),
+            "--global-config",
+            config_path,
+            "--in-place",
+            "--recursive",
         ]
 
-        if config.get('exclude'):
-            fix_cmd.extend(['--exclude', ','.join(config['exclude'])])
+        if config.get("exclude"):
+            fix_cmd.extend(["--exclude", ",".join(config["exclude"])])
 
         subprocess.call(fix_cmd + paths)
 
@@ -97,15 +103,19 @@ def lint(paths, config, **lintargs):
     app = Application()
     log.debug("flake8 version={}".format(app.version))
 
-    output_file = mozfile.NamedTemporaryFile(mode='r')
+    output_file = mozfile.NamedTemporaryFile(mode="r")
     flake8_cmd = [
-        '--config', config_path,
-        '--output-file', output_file.name,
-        '--format', '{"path":"%(path)s","lineno":%(row)s,'
-                    '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
-        '--filename', ','.join(['*.{}'.format(e) for e in config['extensions']]),
+        "--config",
+        config_path,
+        "--output-file",
+        output_file.name,
+        "--format",
+        '{"path":"%(path)s","lineno":%(row)s,'
+        '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
+        "--filename",
+        ",".join(["*.{}".format(e) for e in config["extensions"]]),
     ]
-    log.debug("Command: {}".format(' '.join(flake8_cmd)))
+    log.debug("Command: {}".format(" ".join(flake8_cmd)))
 
     orig_make_file_checker_manager = app.make_file_checker_manager
 
@@ -119,16 +129,18 @@ def lint(paths, config, **lintargs):
         tools/lint/mach_commands.py.
         """
         # Ignore exclude rules if `--no-filter` was passed in.
-        config.setdefault('exclude', [])
-        if lintargs.get('use_filters', True):
-            config['exclude'].extend(self.options.exclude)
+        config.setdefault("exclude", [])
+        if lintargs.get("use_filters", True):
+            config["exclude"].extend(self.options.exclude)
 
         # Since we use the root .flake8 file to store exclusions, we haven't
         # properly filtered the paths through mozlint's `filterpaths` function
         # yet. This mimics that though there could be other edge cases that are
         # different. Maybe we should call `filterpaths` directly, though for
         # now that doesn't appear to be necessary.
-        filtered = [p for p in paths if not any(p.startswith(e) for e in config['exclude'])]
+        filtered = [
+            p for p in paths if not any(p.startswith(e) for e in config["exclude"])
+        ]
 
         self.args = self.args + list(expand_exclusions(filtered, config, root))
 
@@ -136,7 +148,9 @@ def lint(paths, config, **lintargs):
             raise NothingToLint
         return orig_make_file_checker_manager()
 
-    app.make_file_checker_manager = wrap_make_file_checker_manager.__get__(app, Application)
+    app.make_file_checker_manager = wrap_make_file_checker_manager.__get__(
+        app, Application
+    )
 
     # Make sure to run from repository root so exclusions are joined to the
     # repository root and not the current working directory.
@@ -153,15 +167,15 @@ def lint(paths, config, **lintargs):
 
     def process_line(line):
         # Escape slashes otherwise JSON conversion will not work
-        line = line.replace('\\', '\\\\')
+        line = line.replace("\\", "\\\\")
         try:
             res = json.loads(line)
         except ValueError:
-            print('Non JSON output from linter, will not be processed: {}'.format(line))
+            print("Non JSON output from linter, will not be processed: {}".format(line))
             return
 
-        if res.get('code') in LINE_OFFSETS:
-            res['lineoffset'] = LINE_OFFSETS[res['code']]
+        if res.get("code") in LINE_OFFSETS:
+            res["lineoffset"] = LINE_OFFSETS[res["code"]]
 
         results.append(result.from_config(config, **res))
 
