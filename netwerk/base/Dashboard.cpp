@@ -408,6 +408,27 @@ Dashboard::RequestHttpConnections(nsINetDashboardCallback* aCallback) {
       "nsINetDashboardCallback", aCallback, true);
   httpData->mEventTarget = GetCurrentEventTarget();
 
+  if (nsIOService::UseSocketProcess()) {
+    if (!gIOService->SocketProcessReady()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    RefPtr<Dashboard> self(this);
+    SocketProcessParent::GetSingleton()->SendGetHttpConnectionData()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self{std::move(self)}, httpData](nsTArray<HttpRetParams>&& params) {
+          httpData->mData.Assign(std::move(params));
+          self->GetHttpConnections(httpData);
+          httpData->mEventTarget->Dispatch(
+              NewRunnableMethod<RefPtr<HttpData>>(
+                  "net::Dashboard::GetHttpConnections", self,
+                  &Dashboard::GetHttpConnections, httpData),
+              NS_DISPATCH_NORMAL);
+        },
+        [self](const mozilla::ipc::ResponseRejectReason) {});
+    return NS_OK;
+  }
+
   gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<HttpData>>(
                                         "net::Dashboard::GetHttpDispatch", this,
                                         &Dashboard::GetHttpDispatch, httpData),

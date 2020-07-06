@@ -8,6 +8,7 @@
 
 #include "base/task.h"
 #include "InputChannelThrottleQueueChild.h"
+#include "HttpInfo.h"
 #include "HttpTransactionChild.h"
 #include "HttpConnectionMgrChild.h"
 #include "mozilla/Assertions.h"
@@ -559,6 +560,31 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvGetDNSCacheEntries(
             nsTArray<DNSCacheEntries> entries;
             dns->GetDNSCacheEntries(&entries);
             resolver->OnResolve(std::move(entries));
+          }),
+      NS_DISPATCH_NORMAL);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvGetHttpConnectionData(
+    GetHttpConnectionDataResolver&& aResolve) {
+  if (!gSocketTransportService) {
+    aResolve(nsTArray<HttpRetParams>());
+    return IPC_OK();
+  }
+
+  RefPtr<DataResolver<nsTArray<HttpRetParams>,
+                      SocketProcessChild::GetHttpConnectionDataResolver>>
+      resolver =
+          new DataResolver<nsTArray<HttpRetParams>,
+                           SocketProcessChild::GetHttpConnectionDataResolver>(
+              std::move(aResolve));
+  gSocketTransportService->Dispatch(
+      NS_NewRunnableFunction(
+          "net::SocketProcessChild::RecvGetHttpConnectionData",
+          [resolver{std::move(resolver)}]() {
+            nsTArray<HttpRetParams> data;
+            HttpInfo::GetHttpConnectionData(&data);
+            resolver->OnResolve(std::move(data));
           }),
       NS_DISPATCH_NORMAL);
   return IPC_OK();
