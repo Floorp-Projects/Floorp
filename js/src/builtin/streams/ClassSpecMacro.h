@@ -33,7 +33,7 @@
                                    classFlags,                               \
                                classOps, &cls::classSpec_};                  \
                                                                              \
-  const JSClass cls::protoClass_ = {"object",                                \
+  const JSClass cls::protoClass_ = {#cls ".prototype",                       \
                                     JSCLASS_HAS_CACHED_PROTO(JSProto_##cls), \
                                     JS_NULL_CLASS_OPS, &cls::classSpec_};
 
