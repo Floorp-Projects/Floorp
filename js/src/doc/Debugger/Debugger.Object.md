@@ -154,6 +154,9 @@ If the referent is a function that is debuggee code, a
 environment enclosing the function when it was created. If the referent
 is a function proxy or not debuggee code, this is `undefined`.
 
+### `isError`
+`true` if the referent is any potentially wrapped Error; `false` otherwise.
+
 ### `errorMessageName`
 If the referent is an error created with an engine internal message template
 this is a string which is the name of the template; `undefined` otherwise.
