@@ -57,13 +57,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
     waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug1151663);
   </script>
 </head>
-<body style="height: 500px; overflow: scroll">
+<body>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151663">Mozilla Bug 1151663</a>
   <div style="height: 50px; width: 50px; overflow: scroll">
     <!-- Put enough content into the subframe to make it have a nonzero scroll range -->
     <div style="height: 100px; width: 50px"></div>
   </div>
   <!-- Put enough content into the page to make it have a nonzero scroll range -->
-  <div style="height: 1000px"></div>
+  <div style="height: 5000px"></div>
 </body>
 </html>
