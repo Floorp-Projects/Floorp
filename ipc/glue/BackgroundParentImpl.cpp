@@ -579,7 +579,7 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
   if (!parent) {
     isFileRemoteType = true;
   } else {
-    isFileRemoteType = parent->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
+    isFileRemoteType = parent->GetRemoteType() == FILE_REMOTE_TYPE;
     NS_ReleaseOnMainThread("ContentParent release", parent.forget());
   }
 
