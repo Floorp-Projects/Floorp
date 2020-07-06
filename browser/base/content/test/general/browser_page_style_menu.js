@@ -18,21 +18,23 @@ const RED = "rgb(255, 0, 0)";
 const LIME = "rgb(0, 255, 0)";
 const BLUE = "rgb(0, 0, 255)";
 
+const WEB_ROOT = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.com"
+);
+
 /*
  * Test that the right stylesheets do (and others don't) show up
  * in the page style menu.
  */
 add_task(async function test_menu() {
-  const PAGE =
-    "http://example.com/browser/browser/base/content/test/general/page_style_sample.html";
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank",
     false
   );
   let browser = tab.linkedBrowser;
-  await BrowserTestUtils.loadURI(browser, PAGE);
+  await BrowserTestUtils.loadURI(browser, WEB_ROOT + "page_style_sample.html");
   await promiseStylesheetsLoaded(tab, 17);
 
   let menuitems = fillPopupAndGetItems();
@@ -123,8 +125,7 @@ add_task(async function test_menu() {
 });
 
 add_task(async function test_default_style_with_no_sheets() {
-  const PAGE =
-    "http://example.com/browser/browser/base/content/test/general/page_style_only_alternates.html";
+  const PAGE = WEB_ROOT + "page_style_only_alternates.html";
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -155,4 +156,15 @@ add_task(async function test_default_style_with_no_sheets() {
       );
     }
   );
+});
+
+add_task(async function test_page_style_file() {
+  const FILE_PAGE = Services.io.newFileURI(
+    new FileUtils.File(getTestFilePath("page_style_sample.html"))
+  ).spec;
+  await BrowserTestUtils.withNewTab(FILE_PAGE, async function(browser) {
+    await promiseStylesheetsLoaded(browser, 17);
+    let menuitems = fillPopupAndGetItems();
+    is(menuitems.length, 17, "Should have 17 items even for file: URI.");
+  });
 });
