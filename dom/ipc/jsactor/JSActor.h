@@ -53,10 +53,6 @@ class JSActor : public nsISupports, public nsWrapperCache {
                                       JS::Handle<JS::Value> aObj,
                                       ErrorResult& aRv);
 
-  void ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
-                         ipc::StructuredCloneData&& aData,
-                         ipc::StructuredCloneData&& aStack);
-
   nsIGlobalObject* GetParentObject() const { return mGlobal; };
 
  protected:
@@ -72,6 +68,13 @@ class JSActor : public nsISupports, public nsWrapperCache {
   // send it. If it is too large, record telemetry about the message.
   static bool AllowMessage(const JSActorMessageMeta& aMetadata,
                            size_t aDataLength);
+
+  // Helper method to send an in-process raw message.
+  using OtherSideCallback = std::function<already_AddRefed<JSActorManager>()>;
+  static void SendRawMessageInProcess(const JSActorMessageMeta& aMeta,
+                                      ipc::StructuredCloneData&& aData,
+                                      ipc::StructuredCloneData&& aStack,
+                                      OtherSideCallback&& aGetOtherSide);
 
   virtual ~JSActor() = default;
 
@@ -94,10 +97,11 @@ class JSActor : public nsISupports, public nsWrapperCache {
 
   nsresult QueryInterfaceActor(const nsIID& aIID, void** aPtr);
 
+  // Called by JSActorManager when they receive raw message data destined for
+  // this actor.
   void ReceiveMessageOrQuery(JSContext* aCx,
                              const JSActorMessageMeta& aMetadata,
                              JS::Handle<JS::Value> aData, ErrorResult& aRv);
-
   void ReceiveQueryReply(JSContext* aCx, const JSActorMessageMeta& aMetadata,
                          JS::Handle<JS::Value> aData, ErrorResult& aRv);
 

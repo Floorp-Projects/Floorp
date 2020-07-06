@@ -32,6 +32,13 @@ class JSActorManager : public nsISupports {
    */
   already_AddRefed<JSActor> GetActor(const nsACString& aName, ErrorResult& aRv);
 
+  /**
+   * Handle receiving a raw message from the other side.
+   */
+  void ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
+                         ipc::StructuredCloneData&& aData,
+                         ipc::StructuredCloneData&& aStack);
+
  protected:
   /**
    * Lifecycle methods which will fire the `willDestroy` and `didDestroy`
