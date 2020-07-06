@@ -168,6 +168,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "Navigation":
         return (
           <Navigation
+            dispatch={this.props.dispatch}
             links={component.properties.links}
             alignment={component.properties.alignment}
             display_variant={component.properties.display_variant}
