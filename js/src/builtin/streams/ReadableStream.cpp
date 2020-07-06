@@ -550,5 +550,6 @@ const JSClass ReadableStream::class_ = {
     JS_NULL_CLASS_OPS, &ReadableStream::classSpec_};
 
 const JSClass ReadableStream::protoClass_ = {
-    "object", JSCLASS_HAS_CACHED_PROTO(JSProto_ReadableStream),
-    JS_NULL_CLASS_OPS, &ReadableStream::classSpec_};
+    "ReadableStream.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ReadableStream), JS_NULL_CLASS_OPS,
+    &ReadableStream::classSpec_};

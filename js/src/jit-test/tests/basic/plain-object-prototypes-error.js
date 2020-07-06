@@ -21,6 +21,7 @@ assertThrowsObjectError(() => RegExp.prototype.compile(), "RegExp.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(BigInt.prototype), "BigInt.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(DataView.prototype), "DataView.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(Date.prototype), "Date.prototype");
+assertThrowsObjectError(() => Map.prototype.has.call(ReadableStream.prototype), "ReadableStream.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(RegExp.prototype), "RegExp.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(Set.prototype), "Set.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(TypeError.prototype), "TypeError.prototype");
