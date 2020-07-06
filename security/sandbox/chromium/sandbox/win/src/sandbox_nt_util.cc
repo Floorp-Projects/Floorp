@@ -9,7 +9,6 @@
 
 #include <string>
 
-#include "base/compiler_specific.h"
 #include "base/win/pe_image.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/src/target_services.h"
@@ -59,8 +58,7 @@ void* AllocateNearTo(void* source, size_t size) {
   const char* top_address = base + kMaxSize;
 
   while (base < top_address) {
-    // Avoid memset inserted by -ftrivial-auto-var-init=pattern.
-    STACK_UNINITIALIZED MEMORY_BASIC_INFORMATION mem_info;
+    MEMORY_BASIC_INFORMATION mem_info;
     NTSTATUS status =
         g_nt.QueryVirtualMemory(NtCurrentProcess, base, MemoryBasicInformation,
                                 &mem_info, sizeof(mem_info), nullptr);
@@ -645,40 +643,6 @@ bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info,
       file_info->FileName[3] != kPathPrefix[3])
     return false;
 
-  return true;
-}
-
-bool NtGetPathFromHandle(HANDLE handle,
-                         std::unique_ptr<wchar_t, NtAllocDeleter>* path) {
-  OBJECT_NAME_INFORMATION initial_buffer;
-  OBJECT_NAME_INFORMATION* name;
-  ULONG size = 0;
-  // Query the name information a first time to get the size of the name.
-  NTSTATUS status = g_nt.QueryObject(handle, ObjectNameInformation,
-                                     &initial_buffer, size, &size);
-
-  if (!NT_SUCCESS(status) && status != STATUS_INFO_LENGTH_MISMATCH)
-    return false;
-
-  std::unique_ptr<BYTE[], NtAllocDeleter> name_ptr;
-  if (!size)
-    return false;
-  name_ptr.reset(new (NT_ALLOC) BYTE[size]);
-  name = reinterpret_cast<OBJECT_NAME_INFORMATION*>(name_ptr.get());
-
-  // Query the name information a second time to get the name of the
-  // object referenced by the handle.
-  status = g_nt.QueryObject(handle, ObjectNameInformation, name, size, &size);
-
-  if (STATUS_SUCCESS != status)
-    return false;
-  size_t num_path_wchars = (name->ObjectName.Length / sizeof(wchar_t)) + 1;
-  path->reset(new (NT_ALLOC) wchar_t[num_path_wchars]);
-  status =
-      CopyData(path->get(), name->ObjectName.Buffer, name->ObjectName.Length);
-  path->get()[num_path_wchars - 1] = L'\0';
-  if (STATUS_SUCCESS != status)
-    return false;
   return true;
 }
 

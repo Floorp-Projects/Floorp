@@ -17,18 +17,14 @@ bool HandleTraits::CloseHandle(HANDLE handle) {
 }
 
 // Static.
-void VerifierTraits::StartTracking(HANDLE handle,
-                                   const void* owner,
-                                   const void* pc1,
-                                   const void* pc2) {
+void VerifierTraits::StartTracking(HANDLE handle, const void* owner,
+                                   const void* pc1, const void* pc2) {
   return ScopedHandleVerifier::Get()->StartTracking(handle, owner, pc1, pc2);
 }
 
 // Static.
-void VerifierTraits::StopTracking(HANDLE handle,
-                                  const void* owner,
-                                  const void* pc1,
-                                  const void* pc2) {
+void VerifierTraits::StopTracking(HANDLE handle, const void* owner,
+                                  const void* pc1, const void* pc2) {
   return ScopedHandleVerifier::Get()->StopTracking(handle, owner, pc1, pc2);
 }
 

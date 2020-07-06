@@ -16,7 +16,7 @@
 #include "build/build_config.h"
 
 // This defines a set of simple functions and utilities that people want when
-// using {Once,Repeating}Callback<> and Bind{Once,Repeating}().
+// using Callback<> and Bind().
 
 namespace base {
 

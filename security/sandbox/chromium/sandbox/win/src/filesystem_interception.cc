@@ -85,7 +85,7 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     // The following call must match in the parameters with
     // FilesystemDispatcher::ProcessNtCreateFile.
     ResultCode code =
-        CrossCall(ipc, IpcTag::NTCREATEFILE, name.get(), attributes,
+        CrossCall(ipc, IPC_NTCREATEFILE_TAG, name.get(), attributes,
                   desired_access_uint32, file_attributes, sharing, disposition,
                   options_uint32, &answer);
     if (SBOX_ALL_OK != code)
@@ -165,7 +165,7 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile,
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code =
-        CrossCall(ipc, IpcTag::NTOPENFILE, name.get(), attributes,
+        CrossCall(ipc, IPC_NTOPENFILE_TAG, name.get(), attributes,
                   desired_access_uint32, sharing, options_uint32, &answer);
     if (SBOX_ALL_OK != code)
       break;
@@ -234,7 +234,7 @@ TargetNtQueryAttributesFile(NtQueryAttributesFileFunction orig_QueryAttributes,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTQUERYATTRIBUTESFILE, name.get(),
+    ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name.get(),
                                 attributes, file_info, &answer);
 
     if (SBOX_ALL_OK != code)
@@ -296,7 +296,7 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTQUERYFULLATTRIBUTESFILE,
+    ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG,
                                 name.get(), attributes, file_info, &answer);
 
     if (SBOX_ALL_OK != code)
@@ -381,7 +381,7 @@ TargetNtSetInformationFile(NtSetInformationFileFunction orig_SetInformationFile,
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code =
-        CrossCall(ipc, IpcTag::NTSETINFO_RENAME, file, io_status_buffer,
+        CrossCall(ipc, IPC_NTSETINFO_RENAME_TAG, file, io_status_buffer,
                   file_info_buffer, length, file_info_class, &answer);
 
     if (SBOX_ALL_OK != code)

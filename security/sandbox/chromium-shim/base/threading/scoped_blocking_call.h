@@ -35,8 +35,7 @@ namespace internal {
 
 class BASE_EXPORT ScopedBlockingCallWithBaseSyncPrimitives {
  public:
-  ScopedBlockingCallWithBaseSyncPrimitives(const Location& from_here,
-                                           BlockingType blocking_type) {}
+  ScopedBlockingCallWithBaseSyncPrimitives(BlockingType blocking_type) {};
   ~ScopedBlockingCallWithBaseSyncPrimitives() {};
 };
 
