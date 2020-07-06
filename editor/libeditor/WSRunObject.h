@@ -701,10 +701,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   };
 
   void EnsureWSFragments();
-  void InitializeWithSingleFragment(
-      WSFragment::Visible aIsVisible,
-      WSFragment::StartOfHardLine aIsStartOfHardLine,
-      WSFragment::EndOfHardLine aIsEndOfHardLine);
   template <typename EditorDOMPointType>
   void InitializeRangeStart(
       const EditorDOMPointType& aPoint,
