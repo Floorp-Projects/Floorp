@@ -45,6 +45,30 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   return self;
 }
 
+- (void)dealloc {
+  [self invalidateSelection];
+  [super dealloc];
+}
+
+- (void)setSelectionFrom:(AccessibleOrProxy)startContainer
+                      at:(int32_t)startOffset
+                      to:(AccessibleOrProxy)endContainer
+                      at:(int32_t)endOffset {
+  GeckoTextMarkerRange selection(GeckoTextMarker(startContainer, startOffset),
+                                 GeckoTextMarker(endContainer, endOffset));
+
+  // We store it as an AXTextMarkerRange because it is a safe
+  // way to keep a weak reference - when we need to use the
+  // range we can convert it back to a GeckoTextMarkerRange
+  // and check that it's valid.
+  mSelection = [selection.CreateAXTextMarkerRange() retain];
+}
+
+- (void)invalidateSelection {
+  [mSelection release];
+  mSelection = nil;
+}
+
 - (id)moxStartTextMarker {
   GeckoTextMarker geckoTextPoint(mGeckoDocAccessible, 0);
   return geckoTextPoint.CreateAXTextMarker();
@@ -57,6 +81,11 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
           : mGeckoDocAccessible.AsAccessible()->Document()->AsHyperText()->CharacterCount();
   GeckoTextMarker geckoTextPoint(mGeckoDocAccessible, characterCount);
   return geckoTextPoint.CreateAXTextMarker();
+}
+
+- (id)moxSelectedTextMarkerRange {
+  return mSelection && GeckoTextMarkerRange(mGeckoDocAccessible, mSelection).IsValid() ? mSelection
+                                                                                       : nil;
 }
 
 - (NSString*)moxStringForTextMarkerRange:(id)textMarkerRange {

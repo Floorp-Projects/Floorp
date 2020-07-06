@@ -31,4 +31,19 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
     [startMarker, endMarker]
   );
   is(stringForRange(range), "Hello World");
+
+  let evt = waitForMacEvent("AXSelectedTextChanged");
+  await SpecialPowers.spawn(browser, [], () => {
+    let p = content.document.getElementById("p");
+    let r = new content.Range();
+    r.setStart(p.firstChild, 1);
+    r.setEnd(p.firstChild, 8);
+
+    let s = content.getSelection();
+    s.addRange(r);
+  });
+  await evt;
+
+  range = macDoc.getAttributeValue("AXSelectedTextMarkerRange");
+  is(stringForRange(range), "ello Wo");
 });

@@ -502,10 +502,23 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
     const uint64_t& aID, nsTArray<TextRangeData>&& aSelection) {
-  // XXX: nsIAccessibleTextRange is not e10s friendly, so don't bother
-  // supporting nsIAccessibleTextSelectionChangeEvent for now.
-  // This is a placeholder for potential platform support.
+#  ifdef MOZ_WIDGET_COCOA
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
+  ProxyAccessible* target = GetAccessible(aID);
+  if (!target) {
+    NS_ERROR("no proxy for event!");
+    return IPC_OK();
+  }
+
+  ProxyTextSelectionChangeEvent(target, aSelection);
+
+  return IPC_OK();
+#  else
   return RecvEvent(aID, nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED);
+#  endif
 }
 
 #endif

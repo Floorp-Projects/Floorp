@@ -815,6 +815,10 @@ struct RoleDescrComparator {
     case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
       [self moxPostNotification:NSAccessibilitySelectedChildrenChangedNotification];
       break;
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification];
+      break;
   }
 }
 

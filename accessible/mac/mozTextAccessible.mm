@@ -360,10 +360,6 @@ inline NSString* ToNSString(id aValue) {
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
       [self moxPostNotification:NSAccessibilityValueChangedNotification];
       break;
-    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
-    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
-      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification];
-      break;
     default:
       [super handleAccessibleEvent:eventType];
       break;
