@@ -64,7 +64,7 @@ macosx64-clang-tidy:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-cctools-clang-10-port
+            - linux64-cctools-port-clang-10
             - linux64-clang-10
             - linux64-gcc-7
             - linux64-node
