@@ -633,6 +633,27 @@ Dashboard::RequestDNSInfo(nsINetDashboardCallback* aCallback) {
     }
   }
 
+  if (nsIOService::UseSocketProcess()) {
+    if (!gIOService->SocketProcessReady()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    RefPtr<Dashboard> self(this);
+    SocketProcessParent::GetSingleton()->SendGetDNSCacheEntries()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self{std::move(self)},
+         dnsData{std::move(dnsData)}](nsTArray<DNSCacheEntries>&& entries) {
+          dnsData->mData.Assign(std::move(entries));
+          dnsData->mEventTarget->Dispatch(
+              NewRunnableMethod<RefPtr<DnsData>>(
+                  "net::Dashboard::GetDNSCacheEntries", self,
+                  &Dashboard::GetDNSCacheEntries, dnsData),
+              NS_DISPATCH_NORMAL);
+        },
+        [self](const mozilla::ipc::ResponseRejectReason) {});
+    return NS_OK;
+  }
+
   gSocketTransportService->Dispatch(
       NewRunnableMethod<RefPtr<DnsData>>("net::Dashboard::GetDnsInfoDispatch",
                                          this, &Dashboard::GetDnsInfoDispatch,
