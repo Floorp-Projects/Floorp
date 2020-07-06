@@ -238,6 +238,7 @@ Required. This field is a list of products this histogram can be recorded on. Cu
 
 - ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
 - ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
+- ``geckoview_streaming`` - See :doc:`this guide <../start/report-gecko-telemetry-in-glean>` for how to stream data through geckoview to the Glean SDK.
 
 ``record_into_store``
 ---------------------
