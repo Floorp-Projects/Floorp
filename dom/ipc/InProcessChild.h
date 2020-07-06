@@ -45,7 +45,7 @@ class InProcessChild final : public nsIDOMProcessChild,
   // |nullptr|.
   static IProtocol* ParentActorFor(IProtocol* aActor);
 
-  const nsACString& GetRemoteType() const override { return VoidCString(); }
+  const nsACString& GetRemoteType() const override { return NOT_REMOTE_TYPE; }
 
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,

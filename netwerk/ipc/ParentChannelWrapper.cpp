@@ -88,7 +88,7 @@ ParentChannelWrapper::Delete() { return NS_OK; }
 
 NS_IMETHODIMP
 ParentChannelWrapper::GetRemoteType(nsACString& aRemoteType) {
-  aRemoteType = VoidCString();
+  aRemoteType = NOT_REMOTE_TYPE;
   return NS_OK;
 }
 
