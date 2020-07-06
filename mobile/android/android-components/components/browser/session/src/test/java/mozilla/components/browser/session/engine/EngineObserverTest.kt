@@ -305,6 +305,34 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverClearsContentPermissionRequestIfNewPageStartsLoading() {
+        val session = Session("https://www.mozilla.org")
+        val permissionRequest: PermissionRequest = mock()
+        val observer = EngineObserver(session)
+
+        observer.onContentPermissionRequest(permissionRequest)
+
+        observer.onLocationChange("https://getpocket.com")
+
+        assertTrue(session.contentPermissionRequest.isConsumed())
+        verify(permissionRequest).reject()
+    }
+
+    @Test
+    fun engineObserverDoesNotClearContentPermissionRequestIfSamePageStartsLoading() {
+        val session = Session("https://www.mozilla.org")
+        val permissionRequest: PermissionRequest = mock()
+        val observer = EngineObserver(session)
+
+        observer.onContentPermissionRequest(permissionRequest)
+
+        observer.onLocationChange("https://www.mozilla.org/hello.html")
+
+        assertFalse(session.contentPermissionRequest.isConsumed())
+        verify(permissionRequest, never()).reject()
+    }
+
+    @Test
     fun engineObserverDoesNotClearWebAppManifestIfNewPageInStartUrlScope() {
         val session = Session("https://www.mozilla.org")
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://www.mozilla.org")
