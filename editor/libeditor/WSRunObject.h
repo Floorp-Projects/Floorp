@@ -700,6 +700,42 @@ class MOZ_STACK_CLASS WSRunScanner {
     EditorDOMPointInText mLast;
   };
 
+  /**
+   * TextFragmentData stores the information of text nodes which are in a
+   * hard line.
+   */
+  class MOZ_STACK_CLASS TextFragmentData final {
+   public:
+    TextFragmentData() = delete;
+    TextFragmentData(const BoundaryData& aStartBoundaryData,
+                     const BoundaryData& aEndBoundaryData,
+                     const NoBreakingSpaceData& aNBSPData, bool aIsPreformatted)
+        : mStart(aStartBoundaryData),
+          mEnd(aEndBoundaryData),
+          mNBSPData(aNBSPData),
+          mIsPreformatted(aIsPreformatted) {}
+
+    void InitializeWSFragmentArray(WSFragmentArray& aFragments) const;
+
+    bool StartsFromNormalText() const { return mStart.IsNormalText(); }
+    bool StartsFromSpecialContent() const { return mStart.IsSpecialContent(); }
+    bool StartsFromHardLineBreak() const { return mStart.IsHardLineBreak(); }
+    bool EndsByNormalText() const { return mEnd.IsNormalText(); }
+    bool EndsBySpecialContent() const { return mEnd.IsSpecialContent(); }
+    bool EndsByBRElement() const { return mEnd.IsBRElement(); }
+    bool EndsByBlockBoundary() const { return mEnd.IsBlockBoundary(); }
+
+   private:
+    BoundaryData mStart;
+    BoundaryData mEnd;
+    NoBreakingSpaceData mNBSPData;
+    // XXX Currently we set mIsPreformatted to `WSRunScanner::mPRE` value
+    //     even if some text nodes between mStart and mEnd are different styled
+    //     nodes.  This caused some bugs actually, but we now keep traditional
+    //     behavior for now.
+    bool mIsPreformatted;
+  };
+
   void EnsureWSFragments();
   template <typename EditorDOMPointType>
   void InitializeRangeStart(
