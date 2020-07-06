@@ -25,12 +25,20 @@ class ShieldFrameParent extends JSWindowActorParent {
         return aboutStudies.getAddonStudyList();
       case "Shield:GetPreferenceStudyList":
         return aboutStudies.getPreferenceStudyList();
+      case "Shield:GetMessagingSystemList":
+        return aboutStudies.getMessagingSystemList();
       case "Shield:RemoveAddonStudy":
         aboutStudies.removeAddonStudy(msg.data.recipeId, msg.data.reason);
         break;
       case "Shield:RemovePreferenceStudy":
         aboutStudies.removePreferenceStudy(
           msg.data.experimentName,
+          msg.data.reason
+        );
+        break;
+      case "Shield:RemoveMessagingSystemExperiment":
+        aboutStudies.removeMessagingSystemExperiment(
+          msg.data.slug,
           msg.data.reason
         );
         break;

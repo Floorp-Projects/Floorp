@@ -152,7 +152,13 @@ class _ExperimentManager {
    * @memberof _ExperimentManager
    */
   async enroll(
-    { slug, branches, experimentType = DEFAULT_EXPERIMENT_TYPE },
+    {
+      slug,
+      branches,
+      experimentType = DEFAULT_EXPERIMENT_TYPE,
+      userFacingName,
+      userFacingDescription,
+    },
     source
   ) {
     if (this.store.has(slug)) {
@@ -179,6 +185,9 @@ class _ExperimentManager {
       enrollmentId,
       experimentType,
       source,
+      userFacingName,
+      userFacingDescription,
+      lastSeen: new Date().toJSON(),
     };
 
     this.store.addExperiment(experiment);
@@ -246,7 +255,7 @@ class _ExperimentManager {
         experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
 
-    log.debug(`Experiment unenrolled: ${slug}}`);
+    log.debug(`Experiment unenrolled: ${slug}`);
   }
 
   /**

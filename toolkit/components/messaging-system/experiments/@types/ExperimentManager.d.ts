@@ -28,4 +28,8 @@ export interface Enrollment {
   active: boolean;
   experimentType: string;
   source: string;
+  // Shown in about:studies
+  userFacingName: string;
+  userFacingDescription: string;
+  lastSeen: string;
 }

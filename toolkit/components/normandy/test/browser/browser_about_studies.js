@@ -4,6 +4,12 @@ ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://normandy-content/AboutPages.jsm", this);
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/MSTestUtils.jsm"
+);
+const { ExperimentManager } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentManager.jsm"
+);
 
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
@@ -620,3 +626,49 @@ decorate_task(
     );
   }
 );
+
+add_task(async function test_messaging_system_about_studies() {
+  const recipe = ExperimentFakes.recipe("about-studies-foo");
+  await ExperimentManager.enroll(recipe);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:studies" },
+    async browser => {
+      const name = await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () =>
+            content.document.querySelector(".messaging-system .remove-button"),
+          "waiting for page/experiment to load"
+        );
+        return content.document.querySelector(".study-name").innerText;
+      });
+      // Make sure strings are properly shown
+      Assert.equal(
+        name,
+        recipe.userFacingName,
+        "Correct active experiment name"
+      );
+    }
+  );
+  ExperimentManager.unenroll(recipe.slug);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:studies" },
+    async browser => {
+      const name = await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".messaging-system.disabled"),
+          "waiting for experiment to become disabled"
+        );
+        return content.document.querySelector(".study-name").innerText;
+      });
+      // Make sure strings are properly shown
+      Assert.equal(
+        name,
+        recipe.userFacingName,
+        "Correct disabled experiment name"
+      );
+    }
+  );
+  // Cleanup for multiple test runs
+  ExperimentManager.store._deleteForTests(recipe.slug);
+  Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
+});
