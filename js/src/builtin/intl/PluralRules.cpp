@@ -53,7 +53,7 @@ const JSClassOps PluralRulesObject::classOps_ = {
 };
 
 const JSClass PluralRulesObject::class_ = {
-    js_Object_str,
+    "Intl.PluralRules",
     JSCLASS_HAS_RESERVED_SLOTS(PluralRulesObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_PluralRules) |
         JSCLASS_FOREGROUND_FINALIZE,
