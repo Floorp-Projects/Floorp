@@ -13,7 +13,7 @@
  * Return the mozAccessibles that are selectable.
  */
 - (NSArray*)selectableChildren {
-  return [[self moxChildren]
+  return [[self moxUnignoredChildren]
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
                                                                         NSDictionary* bindings) {
         return [child isKindOfClass:[mozSelectableChildAccessible class]];
@@ -31,7 +31,7 @@
  * Return the mozAccessibles that are actually selected.
  */
 - (NSArray*)moxSelectedChildren {
-  return [[self moxChildren]
+  return [[self moxUnignoredChildren]
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
                                                                         NSDictionary* bindings) {
         // Return mozSelectableChildAccessibles that have are selected (truthy value).
@@ -77,7 +77,7 @@
 }
 
 - (NSArray*)moxContents {
-  return [self moxChildren];
+  return [self moxUnignoredChildren];
 }
 
 - (id)moxValue {
@@ -103,12 +103,12 @@
 
 @implementation mozListboxAccessible
 
-- (BOOL)ignoreChild:(mozAccessible*)child {
+- (BOOL)moxIgnoreChild:(mozAccessible*)child {
   if (!child || child->mRole == roles::GROUPING) {
     return YES;
   }
 
-  return [super ignoreChild:child];
+  return [super moxIgnoreChild:child];
 }
 
 - (BOOL)disableChild:(mozAccessible*)child {
@@ -201,7 +201,7 @@
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_FOCUS:
       // Our focused state is equivelent to native selected states for menus.
-      mozAccessible* parent = (mozAccessible*)[self moxParent];
+      mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
       [parent moxPostNotification:NSAccessibilitySelectedChildrenChangedNotification];
       break;
   }
