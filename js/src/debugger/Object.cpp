@@ -171,6 +171,7 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool boundThisGetter();
   bool boundArgumentsGetter();
   bool allocationSiteGetter();
+  bool isErrorGetter();
   bool errorMessageNameGetter();
   bool errorNotesGetter();
   bool errorLineNumberGetter();
@@ -514,6 +515,11 @@ bool DebuggerObject::CallData::errorMessageNameGetter() {
   } else {
     args.rval().setUndefined();
   }
+  return true;
+}
+
+bool DebuggerObject::CallData::isErrorGetter() {
+  args.rval().setBoolean(object->isError());
   return true;
 }
 
@@ -1538,6 +1544,7 @@ const JSPropertySpec DebuggerObject::properties_[] = {
     JS_DEBUG_PSG("boundThis", boundThisGetter),
     JS_DEBUG_PSG("boundArguments", boundArgumentsGetter),
     JS_DEBUG_PSG("allocationSite", allocationSiteGetter),
+    JS_DEBUG_PSG("isError", isErrorGetter),
     JS_DEBUG_PSG("errorMessageName", errorMessageNameGetter),
     JS_DEBUG_PSG("errorNotes", errorNotesGetter),
     JS_DEBUG_PSG("errorLineNumber", errorLineNumberGetter),
@@ -1682,7 +1689,7 @@ bool DebuggerObject::isPromise() const {
   JSObject* referent = this->referent();
 
   if (IsCrossCompartmentWrapper(referent)) {
-    /* We only care about promises, so CheckedUnwrapStatic is OK. */
+    // We only care about promises, so CheckedUnwrapStatic is OK.
     referent = CheckedUnwrapStatic(referent);
     if (!referent) {
       return false;
@@ -1690,6 +1697,20 @@ bool DebuggerObject::isPromise() const {
   }
 
   return referent->is<PromiseObject>();
+}
+
+bool DebuggerObject::isError() const {
+  JSObject* referent = this->referent();
+
+  if (IsCrossCompartmentWrapper(referent)) {
+    // We only check for error classes, so CheckedUnwrapStatic is OK.
+    referent = CheckedUnwrapStatic(referent);
+    if (!referent) {
+      return false;
+    }
+  }
+
+  return referent->is<ErrorObject>();
 }
 
 /* static */
