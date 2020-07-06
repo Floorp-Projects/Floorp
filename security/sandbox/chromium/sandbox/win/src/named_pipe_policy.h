@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/policy_low_level.h"
 #include "sandbox/win/src/sandbox_policy.h"
@@ -28,7 +29,7 @@ class NamedPipePolicy {
   // Processes a 'CreateNamedPipeW()' request from the target.
   static DWORD CreateNamedPipeAction(EvalResult eval_result,
                                      const ClientInfo& client_info,
-                                     const std::wstring& name,
+                                     const base::string16& name,
                                      DWORD open_mode,
                                      DWORD pipe_mode,
                                      DWORD max_instances,

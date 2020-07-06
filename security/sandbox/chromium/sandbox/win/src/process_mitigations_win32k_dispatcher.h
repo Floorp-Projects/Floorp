@@ -6,13 +6,11 @@
 #define SANDBOX_SRC_PROCESS_MITIGATIONS_WIN32K_DISPATCHER_H_
 
 #include <map>
-#include <string>
 
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
+#include "base/strings/string16.h"
 #include "base/synchronization/lock.h"
-#include "sandbox/win/src/crosscall_server.h"
-#include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
 
 namespace sandbox {
@@ -41,20 +39,20 @@ class ProcessMitigationsWin32KDispatcher : public Dispatcher {
   ~ProcessMitigationsWin32KDispatcher() override;
 
   // Dispatcher interface.
-  bool SetupService(InterceptionManager* manager, IpcTag service) override;
+  bool SetupService(InterceptionManager* manager, int service) override;
 
   bool EnumDisplayMonitors(IPCInfo* ipc, CountedBuffer* buffer);
   bool GetMonitorInfo(IPCInfo* ipc, void* monitor, CountedBuffer* buffer);
   bool GetSuggestedOPMProtectedOutputArraySize(IPCInfo* ipc,
-                                               std::wstring* device_name);
+                                               base::string16* device_name);
   bool CreateOPMProtectedOutputs(IPCInfo* ipc,
-                                 std::wstring* device_name,
+                                 base::string16* device_name,
                                  CountedBuffer* protected_outputs);
   bool GetCertificateSize(IPCInfo* ipc,
-                          std::wstring* device_name,
+                          base::string16* device_name,
                           void* protected_output);
   bool GetCertificate(IPCInfo* ipc,
-                      std::wstring* device_name,
+                      base::string16* device_name,
                       void* protected_output,
                       void* shared_buffer_handle,
                       uint32_t shared_buffer_size);

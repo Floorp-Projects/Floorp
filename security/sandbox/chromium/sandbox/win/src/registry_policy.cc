@@ -122,15 +122,15 @@ namespace sandbox {
 bool RegistryPolicy::GenerateRules(const wchar_t* name,
                                    TargetPolicy::Semantics semantics,
                                    LowLevelPolicy* policy) {
-  std::wstring resolved_name(name);
-  if (resolved_name.empty()) {
+  base::string16 resovled_name(name);
+  if (resovled_name.empty()) {
     return false;
   }
 
-  if (!ResolveRegistryName(resolved_name, &resolved_name))
+  if (!ResolveRegistryName(resovled_name, &resovled_name))
     return false;
 
-  name = resolved_name.c_str();
+  name = resovled_name.c_str();
 
   EvalResult result = ASK_BROKER;
 
@@ -157,12 +157,12 @@ bool RegistryPolicy::GenerateRules(const wchar_t* name,
   }
 
   if (!create.AddStringMatch(IF, OpenKey::NAME, name, CASE_INSENSITIVE) ||
-      !policy->AddRule(IpcTag::NTCREATEKEY, &create)) {
+      !policy->AddRule(IPC_NTCREATEKEY_TAG, &create)) {
     return false;
   }
 
   if (!open.AddStringMatch(IF, OpenKey::NAME, name, CASE_INSENSITIVE) ||
-      !policy->AddRule(IpcTag::NTOPENKEY, &open)) {
+      !policy->AddRule(IPC_NTOPENKEY_TAG, &open)) {
     return false;
   }
 
@@ -171,7 +171,7 @@ bool RegistryPolicy::GenerateRules(const wchar_t* name,
 
 bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
                                      const ClientInfo& client_info,
-                                     const std::wstring& key,
+                                     const base::string16& key,
                                      uint32_t attributes,
                                      HANDLE root_directory,
                                      uint32_t desired_access,
@@ -205,7 +205,7 @@ bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
 
 bool RegistryPolicy::OpenKeyAction(EvalResult eval_result,
                                    const ClientInfo& client_info,
-                                   const std::wstring& key,
+                                   const base::string16& key,
                                    uint32_t attributes,
                                    HANDLE root_directory,
                                    uint32_t desired_access,
