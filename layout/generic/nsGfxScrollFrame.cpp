@@ -509,7 +509,6 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   // minimum-scale is changed to the original one, and so forth.
   if (mHelper.UsesOverlayScrollbars() && mHelper.mIsUsingMinimumScaleSize &&
       mHelper.mMinimumScaleSize.height > overflowRect.YMost()) {
-    MOZ_ASSERT(StaticPrefs::layout_viewport_contains_no_contents_area());
     overflowRect.height +=
         mHelper.mMinimumScaleSize.height - overflowRect.YMost();
   }
@@ -6006,14 +6005,6 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   // The minimum-scale size is the size of the visual viewport when zoomed
   // to be the minimum scale.
   mMinimumScaleSize = CSSSize::ToAppUnits(ScreenSize(displaySize) / minScale);
-
-  // Clamp the min-scale size so it's not taller than the content height.
-  // TODO: Bug 1571599: Drop this check.
-  if (!StaticPrefs::layout_viewport_contains_no_contents_area()) {
-    mMinimumScaleSize =
-        Min(mMinimumScaleSize,
-            nsSize(aScrollableOverflow.XMost(), aScrollableOverflow.YMost()));
-  }
 
   // Ensure the minimum-scale size is never smaller than the ICB size.
   // That could happen if a page has a meta viewport tag with large explicitly
