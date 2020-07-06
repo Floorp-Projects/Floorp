@@ -98,6 +98,18 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 // override
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;
 
+// override
+- (NSArray*)moxUnignoredChildren;
+
+// override
+- (NSArray*)moxChildren;
+
+// override
+- (id<mozAccessible>)moxUnignoredParent;
+
+// override
+- (id<mozAccessible>)moxParent;
+
 #pragma mark -
 
 - (BOOL)isExpired;
