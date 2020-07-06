@@ -47,7 +47,10 @@ this.pkcs11 = class extends ExtensionAPI {
         if (AppConstants.platform !== "linux") {
           manifestLib = manifestLib.toLowerCase(manifestLib);
         }
-        if (manifestLib !== ctypes.libraryName("nssckbi")) {
+        if (
+          manifestLib !== ctypes.libraryName("nssckbi") &&
+          manifestLib !== ctypes.libraryName("osclientcerts")
+        ) {
           return hostInfo.manifest;
         }
       }
