@@ -1682,12 +1682,6 @@ void nsHtml5TreeBuilder::errHtmlStartTagInForeignContext(nsAtom* aName) {
   }
 }
 
-void nsHtml5TreeBuilder::errTableClosedWhileCaptionOpen() {
-  if (MOZ_UNLIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentRun("errTableClosedWhileCaptionOpen");
-  }
-}
-
 void nsHtml5TreeBuilder::errNoTableRowToClose() {
   if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errNoTableRowToClose");
