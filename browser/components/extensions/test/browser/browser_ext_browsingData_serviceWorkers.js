@@ -104,7 +104,7 @@ add_task(async function testServiceWorkers() {
   let host = serviceWorkers.queryElementAt(
     0,
     Ci.nsIServiceWorkerRegistrationInfo
-  ).principal.URI.host;
+  ).principal.host;
   is(host, "mochi.test", "ServiceWorkers for example.com have been removed.");
 
   extension.sendMessage({});
