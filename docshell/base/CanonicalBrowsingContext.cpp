@@ -162,10 +162,15 @@ void CanonicalBrowsingContext::
 }
 
 void CanonicalBrowsingContext::SetInFlightProcessId(uint64_t aProcessId) {
-  // We can't handle more than one in-flight process change at a time.
-  MOZ_ASSERT_IF(aProcessId, mInFlightProcessId == 0);
-
+  MOZ_ASSERT(aProcessId);
   mInFlightProcessId = aProcessId;
+}
+
+void CanonicalBrowsingContext::ClearInFlightProcessId(uint64_t aProcessId) {
+  MOZ_ASSERT(aProcessId);
+  if (mInFlightProcessId == aProcessId) {
+    mInFlightProcessId = 0;
+  }
 }
 
 void CanonicalBrowsingContext::GetWindowGlobals(
@@ -705,11 +710,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
   target->SetOwnerProcessId(mContentParent->ChildID());
 
   auto resetInFlightId = [target, inFlightProcessId] {
-    if (target->GetInFlightProcessId() == inFlightProcessId) {
-      target->SetInFlightProcessId(0);
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected InFlightProcessId");
-    }
+    target->ClearInFlightProcessId(inFlightProcessId);
   };
 
   // If we were in a remote frame, trigger unloading of the remote window. When
@@ -858,10 +859,12 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsAString& aRemoteType,
       RefPtr<BrowserParent> oldBrowser =
           GetCurrentWindowGlobal()->GetBrowserParent();
 
-      SetInFlightProcessId(OwnerProcessId());
-      oldBrowser->SendWillChangeProcess(
-          [target = RefPtr{this}](auto) { target->SetInFlightProcessId(0); },
-          [target = RefPtr{this}](auto) { target->SetInFlightProcessId(0); });
+      uint64_t targetProcessId = OwnerProcessId();
+      SetInFlightProcessId(targetProcessId);
+      auto callback = [target = RefPtr{this}, targetProcessId](auto) {
+        target->ClearInFlightProcessId(targetProcessId);
+      };
+      oldBrowser->SendWillChangeProcess(callback, callback);
       oldBrowser->Destroy();
     }
 
