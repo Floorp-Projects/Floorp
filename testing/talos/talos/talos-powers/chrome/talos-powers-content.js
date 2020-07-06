@@ -166,7 +166,8 @@ addEventListener(
     let uniqueMessageId =
       "TalosPowers:ParentExec:" +
       content.document.documentURI +
-      content.window.performance.now() +
+      // eslint-disable-next-line mozilla/avoid-Date-timing
+      Date.now() +
       Math.random();
 
     // Listener for the reply from the parent process

@@ -41,7 +41,6 @@ this.startup_about_home_paint = class extends ExtensionAPI {
   async checkForTelemetry() {
     let snapshot = Services.telemetry.getSnapshotForScalars("main");
     let measurement = snapshot.parent[SCALAR_KEY];
-    let win = BrowserWindowTracker.getTopWindow();
     if (!measurement) {
       if (gAttempts == MAX_ATTEMPTS) {
         dump(`Failed to get ${SCALAR_KEY} scalar probe in time.\n`);
@@ -57,7 +56,8 @@ this.startup_about_home_paint = class extends ExtensionAPI {
     } else {
       // Got our measurement.
       dump("__start_report" + measurement + "__end_report\n\n");
-      dump("__startTimestamp" + win.performance.now() + "__endTimestamp\n");
+      // eslint-disable-next-line mozilla/avoid-Date-timing
+      dump("__startTimestamp" + Date.now() + "__endTimestamp\n");
 
       let env = Cc["@mozilla.org/process/environment;1"].getService(
         Ci.nsIEnvironment
