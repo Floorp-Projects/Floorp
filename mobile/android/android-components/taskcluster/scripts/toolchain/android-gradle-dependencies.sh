@@ -19,15 +19,15 @@ pushd $PROJECT_DIR
 . taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh
 
 COMPONENT_REGEX='^  ([-a-z]+):$'
-# XXX We don't build samples-browsers at all. They don't have any extra dependencies so we can
-# filter them out. Other components are built in second pass
-COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS='(samples-browser|tooling-detekt|tooling-lint)'
+# Components to ignore on first pass. They don't have any extra dependencies so we can
+# filter them out. Other components are built in second pass.
+COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS='(tooling-detekt|tooling-lint)'
 FIRST_PASS_COMPONENTS=$(grep -E "$COMPONENT_REGEX" "$PROJECT_DIR/.buildconfig.yml" | sed -E "s/$COMPONENT_REGEX/:\1/g" | grep -E -v "$COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS")
 
 ASSEMBLE_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:assemble/g")
 ASSEMBLE_TEST_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:assembleAndroidTest/g")
 TEST_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:test/g")
-LINT_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:lintRelease/g")
+LINT_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:lint/g")
 
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
 GRADLE_ARGS="--parallel -PgoogleRepo=$NEXUS_PREFIX/google/ -PjcenterRepo=$NEXUS_PREFIX/jcenter/ -PcentralRepo=$NEXUS_PREFIX/central/"
