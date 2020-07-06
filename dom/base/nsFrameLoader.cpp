@@ -169,7 +169,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
       mChildID(0),
-      mRemoteType(VoidString()),
+      mRemoteType(VoidCString()),
       mDepthTooGreat(false),
       mIsTopLevelContent(false),
       mDestroyCalled(false),
@@ -351,17 +351,20 @@ static bool InitialLoadIsRemote(Element* aOwner) {
 }
 
 static void GetInitialRemoteTypeAndProcess(Element* aOwner,
-                                           nsAString& aRemoteType,
+                                           nsACString& aRemoteType,
                                            uint64_t* aChildID) {
   MOZ_ASSERT(XRE_IsParentProcess());
   *aChildID = 0;
 
   // Check if there is an explicit `remoteType` attribute which we should use.
+  nsAutoString remoteType;
   bool hasRemoteType =
-      aOwner->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, aRemoteType);
-  if (!hasRemoteType || aRemoteType.IsEmpty()) {
+      aOwner->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, remoteType);
+  if (!hasRemoteType || remoteType.IsEmpty()) {
     hasRemoteType = false;
-    aRemoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+    aRemoteType = DEFAULT_REMOTE_TYPE;
+  } else {
+    aRemoteType = NS_ConvertUTF16toUTF8(remoteType);
   }
 
   // Check if `sameProcessAsFrameLoader` was used to override the process.
@@ -528,7 +531,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
   }
 }
 
-void nsFrameLoader::ConfigRemoteProcess(const nsAString& aRemoteType,
+void nsFrameLoader::ConfigRemoteProcess(const nsACString& aRemoteType,
                                         ContentParent* aContentParent) {
   MOZ_DIAGNOSTIC_ASSERT(IsRemoteFrame(), "Must be a remote frame");
   MOZ_DIAGNOSTIC_ASSERT(!mRemoteBrowser, "Must not have a browser yet");

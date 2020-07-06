@@ -947,8 +947,8 @@ TestShellParent* GetOrCreateTestShellParent() {
     // this and you're sure you wouldn't be better off writing a "browser"
     // chrome mochitest where you can have multiple types of content
     // processes.
-    RefPtr<ContentParent> parent = ContentParent::GetNewOrUsedBrowserProcess(
-        nullptr, NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE));
+    RefPtr<ContentParent> parent =
+        ContentParent::GetNewOrUsedBrowserProcess(nullptr, DEFAULT_REMOTE_TYPE);
     parent.forget(&gContentParent);
   } else if (!gContentParent->IsAlive()) {
     return nullptr;

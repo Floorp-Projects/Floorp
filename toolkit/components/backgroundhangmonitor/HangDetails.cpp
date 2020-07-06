@@ -55,7 +55,7 @@ nsHangDetails::GetProcess(nsACString& aName) {
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetRemoteType(nsAString& aName) {
+nsHangDetails::GetRemoteType(nsACString& aName) {
   aName.Assign(mDetails.remoteType());
   return NS_OK;
 }
@@ -574,7 +574,7 @@ Result<HangDetails, nsresult> ReadHangDetailsFromFile(nsIFile* aFile) {
   MOZ_TRY_VAR(result.threadName(), ReadTString<char>(fd));
   MOZ_TRY_VAR(result.runnableName(), ReadTString<char>(fd));
   MOZ_TRY_VAR(result.process(), ReadTString<char>(fd));
-  MOZ_TRY_VAR(result.remoteType(), ReadTString<char16_t>(fd));
+  MOZ_TRY_VAR(result.remoteType(), ReadTString<char>(fd));
 
   uint32_t numAnnotations;
   MOZ_TRY_VAR(numAnnotations, ReadUint(fd));

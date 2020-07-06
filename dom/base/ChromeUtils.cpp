@@ -795,7 +795,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
       global->EventTargetFor(TaskCategory::Performance);
 
   // Getting the parent proc info
-  mozilla::GetProcInfo(parentPid, 0, mozilla::ProcType::Browser, u""_ns)
+  mozilla::GetProcInfo(parentPid, 0, mozilla::ProcType::Browser, ""_ns)
       ->Then(
           target, __func__,
           [target, domPromise, parentPid](ProcInfo aParentInfo) {
@@ -809,7 +809,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                   if (!aGeckoProcess->GetChildProcessHandle()) {
                     return;
                   }
-                  nsAutoString origin;
+                  nsAutoCString origin;
                   base::ProcessId childPid =
                       base::GetProcId(aGeckoProcess->GetChildProcessHandle());
                   int32_t childId = 0;
@@ -832,50 +832,42 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                       // Converting the remoteType into a ProcType.
                       // Ideally, the remoteType should be strongly typed
                       // upstream, this would make the conversion less brittle.
-                      nsAutoString remoteType(contentParent->GetRemoteType());
+                      nsAutoCString remoteType(contentParent->GetRemoteType());
                       if (StringBeginsWith(remoteType,
-                                           NS_LITERAL_STRING_FROM_CSTRING(
-                                               FISSION_WEB_REMOTE_TYPE))) {
+                                           FISSION_WEB_REMOTE_TYPE)) {
                         // WARNING: Do not change the order, as
                         // `DEFAULT_REMOTE_TYPE` is a prefix of
                         // `FISSION_WEB_REMOTE_TYPE`.
                         type = mozilla::ProcType::WebIsolated;
-                      } else if (StringBeginsWith(
-                                     remoteType, NS_LITERAL_STRING_FROM_CSTRING(
-                                                     DEFAULT_REMOTE_TYPE))) {
+                      } else if (StringBeginsWith(remoteType,
+                                                  DEFAULT_REMOTE_TYPE)) {
                         type = mozilla::ProcType::Web;
-                      } else if (remoteType.EqualsLiteral(FILE_REMOTE_TYPE)) {
+                      } else if (remoteType == FILE_REMOTE_TYPE) {
                         type = mozilla::ProcType::File;
-                      } else if (remoteType.EqualsLiteral(
-                                     EXTENSION_REMOTE_TYPE)) {
+                      } else if (remoteType == EXTENSION_REMOTE_TYPE) {
                         type = mozilla::ProcType::Extension;
-                      } else if (remoteType.EqualsLiteral(
-                                     PRIVILEGEDABOUT_REMOTE_TYPE)) {
+                      } else if (remoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
                         type = mozilla::ProcType::PrivilegedAbout;
-                      } else if (remoteType.EqualsLiteral(
-                                     PRIVILEGEDMOZILLA_REMOTE_TYPE)) {
+                      } else if (remoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE) {
                         type = mozilla::ProcType::PrivilegedMozilla;
                       } else if (StringBeginsWith(
                                      remoteType,
-                                     NS_LITERAL_STRING_FROM_CSTRING(
-                                         WITH_COOP_COEP_REMOTE_TYPE_PREFIX))) {
+                                     WITH_COOP_COEP_REMOTE_TYPE_PREFIX)) {
                         type = mozilla::ProcType::WebCOOPCOEP;
-                      } else if (remoteType.EqualsLiteral(
-                                     LARGE_ALLOCATION_REMOTE_TYPE)) {
+                      } else if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
                         type = mozilla::ProcType::WebLargeAllocation;
-                      } else if (remoteType.EqualsLiteral(
-                                     PREALLOC_REMOTE_TYPE)) {
+                      } else if (remoteType == PREALLOC_REMOTE_TYPE) {
                         type = mozilla::ProcType::Preallocated;
                       } else {
                         MOZ_CRASH("Unknown remoteType");
                       }
 
                       // By convention, everything after '=' is the origin.
-                      nsAString::const_iterator cursor;
-                      nsAString::const_iterator end;
+                      nsACString::const_iterator cursor;
+                      nsACString::const_iterator end;
                       remoteType.BeginReading(cursor);
                       remoteType.EndReading(end);
-                      if (FindCharInReadable(u'=', cursor, end)) {
+                      if (FindCharInReadable('=', cursor, end)) {
                         origin = Substring(++cursor, end);
                       }
                       childId = contentParent->ChildID();

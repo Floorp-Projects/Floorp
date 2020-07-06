@@ -899,8 +899,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
   // ScriptSecurityManager, but if somehow the process has been tricked into
   // sending this message, we send IPC_FAIL in order to crash that
   // likely-compromised content process.
-  if (!static_cast<ContentParent*>(Manager())->GetRemoteType().EqualsLiteral(
-          PRIVILEGEDABOUT_REMOTE_TYPE)) {
+  if (static_cast<ContentParent*>(Manager())->GetRemoteType() !=
+      PRIVILEGEDABOUT_REMOTE_TYPE) {
     return IPC_FAIL(this, "Wrong process type");
   }
 

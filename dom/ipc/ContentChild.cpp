@@ -1652,7 +1652,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
   // Use the prefix to avoid URIs from Fission isolated processes.
   auto remoteTypePrefix = RemoteTypePrefix(GetRemoteType());
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
-                                     NS_ConvertUTF16toUTF8(remoteTypePrefix));
+                                     remoteTypePrefix);
 #endif /* MOZ_SANDBOX */
 
   return IPC_OK();
@@ -2550,38 +2550,36 @@ mozilla::ipc::IPCResult ContentChild::RecvAppInfo(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
-    const nsString& aRemoteType) {
-  if (!DOMStringIsNull(mRemoteType)) {
+    const nsCString& aRemoteType) {
+  if (!mRemoteType.IsVoid()) {
     // Preallocated processes are type PREALLOC_REMOTE_TYPE; they can become
     // anything except a File: process.
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Changing remoteType of process %d from %s to %s", getpid(),
-             NS_ConvertUTF16toUTF8(mRemoteType).get(),
-             NS_ConvertUTF16toUTF8(aRemoteType).get()));
+             mRemoteType.get(), aRemoteType.get()));
     // prealloc->anything (but file) or web->web allowed
-    MOZ_RELEASE_ASSERT(!aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
-                       (mRemoteType.EqualsLiteral(PREALLOC_REMOTE_TYPE) ||
-                        (mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
-                         aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE))));
+    MOZ_RELEASE_ASSERT(aRemoteType != FILE_REMOTE_TYPE &&
+                       (mRemoteType == PREALLOC_REMOTE_TYPE ||
+                        (mRemoteType == DEFAULT_REMOTE_TYPE &&
+                         aRemoteType == DEFAULT_REMOTE_TYPE)));
   } else {
     // Initial setting of remote type.  Either to 'prealloc' or the actual
     // final type (if we didn't use a preallocated process)
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Setting remoteType of process %d to %s", getpid(),
-             NS_ConvertUTF16toUTF8(aRemoteType).get()));
+             aRemoteType.get()));
   }
 
   // Update the process name so about:memory's process names are more obvious.
-  if (aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)) {
+  if (aRemoteType == FILE_REMOTE_TYPE) {
     SetProcessName(u"file:// Content"_ns);
-  } else if (aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
+  } else if (aRemoteType == EXTENSION_REMOTE_TYPE) {
     SetProcessName(u"WebExtensions"_ns);
-  } else if (aRemoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+  } else if (aRemoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
     SetProcessName(u"Privileged Content"_ns);
-  } else if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
+  } else if (aRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
     SetProcessName(u"Large Allocation Web Content"_ns);
-  } else if (RemoteTypePrefix(aRemoteType)
-                 .EqualsLiteral(FISSION_WEB_REMOTE_TYPE)) {
+  } else if (RemoteTypePrefix(aRemoteType) == FISSION_WEB_REMOTE_TYPE) {
     SetProcessName(u"Isolated Web Content"_ns);
   }
   // else "prealloc", "web" or "webCOOP+COEP" type -> "Web Content" already set
@@ -2593,7 +2591,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
 
 // Call RemoteTypePrefix() on the result to remove URIs if you want to use this
 // for telemetry.
-const nsAString& ContentChild::GetRemoteType() const { return mRemoteType; }
+const nsACString& ContentChild::GetRemoteType() const { return mRemoteType; }
 
 mozilla::ipc::IPCResult ContentChild::RecvInitServiceWorkers(
     const ServiceWorkerConfiguration& aConfig) {

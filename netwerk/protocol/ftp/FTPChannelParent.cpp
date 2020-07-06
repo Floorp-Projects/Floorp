@@ -533,7 +533,7 @@ FTPChannelParent::Delete() {
 }
 
 NS_IMETHODIMP
-FTPChannelParent::GetRemoteType(nsAString& aRemoteType) {
+FTPChannelParent::GetRemoteType(nsACString& aRemoteType) {
   if (!CanSend()) {
     return NS_ERROR_UNEXPECTED;
   }
