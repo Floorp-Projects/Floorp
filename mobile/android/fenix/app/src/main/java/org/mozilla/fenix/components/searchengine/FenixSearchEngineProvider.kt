@@ -43,6 +43,13 @@ open class FenixSearchEngineProvider(
         )
     }
 
+    // We have two search engine types: one based on MLS reported region, one based only on Locale.
+    // There are multiple steps involved in returning the default search engine for example.
+    // Simplest and most effective way to make sure the MLS engines do not mix with Locale based engines
+    // is to use the same type of engines for the entire duration of the app's run.
+    // See fenix/issues/11875
+    private val isRegionCachedByLocationService = locationService.hasRegionCached()
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open val localizationProvider: SearchLocalizationProvider =
         RegionSearchLocalizationProvider(locationService)
@@ -91,7 +98,7 @@ open class FenixSearchEngineProvider(
     // the main one hasn't completed yet
     private val searchEngines: Deferred<SearchEngineList>
         get() =
-            if (loadedSearchEngines.isCompleted) {
+            if (isRegionCachedByLocationService) {
                 loadedSearchEngines
             } else {
                 fallbackEngines
@@ -200,7 +207,7 @@ open class FenixSearchEngineProvider(
 
         if (!prefs.contains(installedEnginesKey)) {
             val searchEngines =
-                if (baseSearchEngines.isCompleted) baseSearchEngines
+                if (isRegionCachedByLocationService) baseSearchEngines
                 else fallbackEngines
 
             val defaultSet = searchEngines.await()
@@ -219,7 +226,7 @@ open class FenixSearchEngineProvider(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     suspend fun localeAwareInstalledEnginesKey(): String {
-        val tag = if (loadedRegion.isCompleted) {
+        val tag = if (isRegionCachedByLocationService) {
             val localization = loadedRegion.await()
             val region = localization.region?.let {
                 if (it.isEmpty()) "" else "-$it"
