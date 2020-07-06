@@ -38,10 +38,10 @@ interface nsIDOMProcessParent: nsISupports {
   /**
    * Lookup a JSProcessActorParent managed by this interface by name.
    */
-  JSProcessActorParent getActor(in ACString name);
+  [implicit_jscontext] JSProcessActorParent getActor(in ACString name);
 
   /** Can the actor still send messages? */
   [infallible] readonly attribute boolean canSend;
 
-  [notxpcom, nostdcall] ContentParentPtr asContentParent();
+  [notxpcom, nostdcall] ContentParentPtr AsContentParent();
 };
