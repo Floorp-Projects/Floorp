@@ -56,10 +56,10 @@ function runTest() {
     var canvas2 = createCanvas();
     var ctx2 = canvas2.getContext("2d");
     var beforeDrawImageDataURL = canvas2.toDataURL();
-    ctx2.drawImage(bmp, 0, 0);
-    var afterDrawImageDataURL = canvas2.toDataURL();
-    ok(beforeDrawImageDataURL == afterDrawImageDataURL,
-       "Drawing operations with a closed ImageBitmap should do nothing.");
+    var _thrown = undefined; try {
+      ctx2.drawImage(bmp, 0, 0);
+    } catch (e) { _thrown = e };
+    ok(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
     runTestOnWorker();
   });
 }
