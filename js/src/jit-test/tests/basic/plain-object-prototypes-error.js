@@ -25,3 +25,7 @@ assertThrowsObjectError(() => Map.prototype.has.call(RegExp.prototype), "RegExp.
 assertThrowsObjectError(() => Map.prototype.has.call(Set.prototype), "Set.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(TypeError.prototype), "TypeError.prototype");
 assertThrowsObjectError(() => Map.prototype.has.call(WeakMap.prototype), "WeakMap.prototype");
+
+// Call methods with different objects.
+assertThrowsObjectError(() => Map.prototype.has.call(new Error), "Error");
+assertThrowsObjectError(() => Map.prototype.has.call(new TypeError), "Error");
