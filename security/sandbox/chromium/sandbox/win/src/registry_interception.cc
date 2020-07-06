@@ -14,7 +14,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -32,12 +31,6 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
                      class_name, create_options, disposition);
   if (NT_SUCCESS(status))
     return status;
-
-  if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::sandboxing::LogBlocked("NtCreateKey",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-  }
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -91,7 +84,7 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
         params[OpenKey::NAME] = ParamPickerMake(name_ptr);
       }
 
-      query_broker = QueryBroker(IPC_NTCREATEKEY_TAG, params.GetBase());
+      query_broker = QueryBroker(IpcTag::NTCREATEKEY, params.GetBase());
     }
 
     if (!query_broker)
@@ -100,7 +93,7 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
 
-    ResultCode code = CrossCall(ipc, IPC_NTCREATEKEY_TAG, name.get(),
+    ResultCode code = CrossCall(ipc, IpcTag::NTCREATEKEY, name.get(),
                                 attributes, root_directory, desired_access,
                                 title_index, create_options, &answer);
 
@@ -126,9 +119,6 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
     } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtCreateKey",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -179,7 +169,7 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status,
         params[OpenKey::NAME] = ParamPickerMake(name_ptr);
       }
 
-      query_broker = QueryBroker(IPC_NTOPENKEY_TAG, params.GetBase());
+      query_broker = QueryBroker(IpcTag::NTOPENKEY, params.GetBase());
     }
 
     if (!query_broker)
@@ -187,7 +177,7 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IPC_NTOPENKEY_TAG, name.get(), attributes,
+    ResultCode code = CrossCall(ipc, IpcTag::NTOPENKEY, name.get(), attributes,
                                 root_directory, desired_access, &answer);
 
     if (SBOX_ALL_OK != code)
@@ -208,9 +198,6 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status,
     } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtOpenKey[Ex]",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -224,12 +211,6 @@ NTSTATUS WINAPI TargetNtOpenKey(NtOpenKeyFunction orig_OpenKey,
   NTSTATUS status = orig_OpenKey(key, desired_access, object_attributes);
   if (NT_SUCCESS(status))
     return status;
-
-  if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::sandboxing::LogBlocked("NtOpenKey",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-  }
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }
@@ -248,12 +229,6 @@ NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpenKeyExFunction orig_OpenKeyEx,
   // REG_OPTION_BACKUP_RESTORE to open the key with special privileges.
   if (NT_SUCCESS(status) || open_options != 0)
     return status;
-
-  if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::sandboxing::LogBlocked("NtOpenKeyEx",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-  }
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }

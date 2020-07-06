@@ -18,7 +18,7 @@ namespace base {
 struct TaskRunnerTraits;
 
 // A TaskRunner is an object that runs posted tasks (in the form of
-// Closure objects).  The TaskRunner interface provides a way of
+// OnceClosure objects).  The TaskRunner interface provides a way of
 // decoupling task posting from the mechanics of how each task will be
 // run.  TaskRunner provides very weak guarantees as to how posted
 // tasks are run (or if they're run at all).  In particular, it only
@@ -70,31 +70,13 @@ class BASE_EXPORT TaskRunner
                                OnceClosure task,
                                base::TimeDelta delay) = 0;
 
-  // Returns true iff tasks posted to this TaskRunner are sequenced
-  // with this call.
-  //
-  // In particular:
-  // - Returns true if this is a SequencedTaskRunner to which the
-  //   current task was posted.
-  // - Returns true if this is a SequencedTaskRunner bound to the
-  //   same sequence as the SequencedTaskRunner to which the current
-  //   task was posted.
-  // - Returns true if this is a SingleThreadTaskRunner bound to
-  //   the current thread.
-  // TODO(http://crbug.com/665062):
-  //   This API doesn't make sense for parallel TaskRunners.
-  //   Introduce alternate static APIs for documentation purposes of "this runs
-  //   in pool X", have RunsTasksInCurrentSequence() return false for parallel
-  //   TaskRunners, and ultimately move this method down to SequencedTaskRunner.
-  virtual bool RunsTasksInCurrentSequence() const = 0;
-
   // Posts |task| on the current TaskRunner.  On completion, |reply|
   // is posted to the thread that called PostTaskAndReply().  Both
   // |task| and |reply| are guaranteed to be deleted on the thread
   // from which PostTaskAndReply() is invoked.  This allows objects
   // that must be deleted on the originating thread to be bound into
-  // the |task| and |reply| Closures.  In particular, it can be useful
-  // to use WeakPtr<> in the |reply| Closure so that the reply
+  // the |task| and |reply| OnceClosures.  In particular, it can be useful
+  // to use WeakPtr<> in the |reply| OnceClosure so that the reply
   // operation can be canceled. See the following pseudo-code:
   //
   // class DataBuffer : public RefCountedThreadSafe<DataBuffer> {
@@ -111,8 +93,8 @@ class BASE_EXPORT TaskRunner
   //      scoped_refptr<DataBuffer> buffer = new DataBuffer();
   //      target_thread_.task_runner()->PostTaskAndReply(
   //          FROM_HERE,
-  //          base::Bind(&DataBuffer::AddData, buffer),
-  //          base::Bind(&DataLoader::OnDataReceived, AsWeakPtr(), buffer));
+  //          base::BindOnce(&DataBuffer::AddData, buffer),
+  //          base::BindOnce(&DataLoader::OnDataReceived, AsWeakPtr(), buffer));
   //    }
   //
   //  private:

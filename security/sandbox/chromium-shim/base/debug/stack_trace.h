@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This is a dummy version of Chromium source file base/debug/stack_trace.h.
-// To provide a dummy class StackTrace required in base/win/scoped_handle.cc.
+// This is a dummy version of Chromium source file base/debug/stack_trace.h
+// to provide a dummy class StackTrace.
 
 #ifndef BASE_DEBUG_STACK_TRACE_H_
 #define BASE_DEBUG_STACK_TRACE_H_
+
+#include <iosfwd>
 
 namespace base {
 namespace debug {
@@ -16,6 +18,10 @@ namespace debug {
 class BASE_EXPORT StackTrace {
  public:
   StackTrace() {};
+
+#if !defined(__UCLIBC__) & !defined(_AIX)
+  void OutputToStream(std::ostream*) const {}
+#endif
 };
 
 }  // namespace debug
