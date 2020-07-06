@@ -371,11 +371,10 @@ class XPCShellTestThread(Thread):
 
             prefs = self.test_object['prefs'].strip().split()
             name = self.test_object['id']
-            if self.verbose:
-                self.log.info(
-                    "%s: Per-test extra prefs will be set:\n  {}".format(
-                        '\n  '.join(prefs)) % name
-                )
+            self.log.info(
+                "%s: Per-test extra prefs will be set:\n  {}".format(
+                    '\n  '.join(prefs)) % name
+            )
 
             profile.set_preferences(parse_preferences(prefs), filename=filename)
             # Make sure that the extra prefs form the command line are overriding
