@@ -3449,7 +3449,7 @@ const JSClass DateObject::class_ = {js_Date_str,
                                     JS_NULL_CLASS_OPS, &DateObjectClassSpec};
 
 const JSClass DateObject::protoClass_ = {
-    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Date), JS_NULL_CLASS_OPS,
+    "Date.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_Date), JS_NULL_CLASS_OPS,
     &DateObjectClassSpec};
 
 JSObject* js::NewDateObjectMsec(JSContext* cx, ClippedTime t,

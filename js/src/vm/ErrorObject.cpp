@@ -62,11 +62,11 @@
 
 using namespace js;
 
-#define IMPLEMENT_ERROR_PROTO_CLASS(name)                        \
-  {                                                              \
-    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_##name),     \
-        JS_NULL_CLASS_OPS,                                       \
-        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error] \
+#define IMPLEMENT_ERROR_PROTO_CLASS(name)                         \
+  {                                                               \
+#    name ".prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_##name), \
+        JS_NULL_CLASS_OPS,                                        \
+        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error]  \
   }
 
 const JSClass ErrorObject::protoClasses[JSEXN_ERROR_LIMIT] = {
