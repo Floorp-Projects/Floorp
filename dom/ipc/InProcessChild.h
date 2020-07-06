@@ -10,6 +10,7 @@
 #include "mozilla/dom/PInProcessChild.h"
 #include "mozilla/dom/JSProcessActorChild.h"
 #include "mozilla/dom/ProcessActor.h"
+#include "mozilla/dom/RemoteType.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDOMProcessChild.h"
 

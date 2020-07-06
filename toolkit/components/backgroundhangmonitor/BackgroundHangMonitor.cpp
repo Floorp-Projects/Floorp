@@ -22,6 +22,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/RemoteType.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
