@@ -99,3 +99,26 @@ def validate_intermediate_results(results):
                 "Found unknown single-measure-level keys for "
                 f"{entry['name']}: {list(unknown_keys)}"
             )
+
+
+def metric_fields(value):
+    # old form: just the name
+    if "," not in value:
+        return {"name": value}
+
+    def _check(field):
+        sfield = field.strip().split(":")
+        if len(sfield) != 2:
+            raise ValueError(f"Unexpected metrics definition {field}")
+        if sfield[0] not in KNOWN_PERFHERDER_PROPS:
+            raise ValueError(
+                f"Unknown field '{sfield[0]}', should be in "
+                f"{KNOWN_PERFHERDER_PROPS}"
+            )
+        return sfield
+
+    fields = [field.strip() for field in value.split(",")]
+    res = dict([_check(field) for field in fields])
+    if "name" not in res:
+        raise ValueError(f"{value} misses the 'name' field")
+    return res

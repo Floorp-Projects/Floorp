@@ -37,5 +37,64 @@ def test_test_date_today():
     assert res.test_date == date.today().strftime("%Y.%m.%d")
 
 
+def test_perfherder_metrics():
+
+    parser = PerftestArgumentParser()
+    args = [
+        "test_one.js",
+        "--perfherder-metrics",
+        "name:foo,unit:ms,alertThreshold:2",
+        "name:baz,unit:count,alertThreshold:2,lowerIsBetter:false",
+    ]
+
+    res = parser.parse_args(args)
+    assert res.perfherder_metrics[0]["name"] == "foo"
+    assert res.perfherder_metrics[1]["alertThreshold"] == "2"
+
+    args = [
+        "test_one.js",
+        "--perfherder-metrics",
+        "name:foo,unit:ms,alertThreshold:2",
+        "name:baz,UNKNOWN:count,alertThreshold:2,lowerIsBetter:false",
+    ]
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(args)
+
+    args = [
+        "test_one.js",
+        "--perfherder-metrics",
+        "name:foo,unit:ms,alertThreshold:2",
+        "namemalformedbaz,alertThreshold:2,lowerIsBetter:false",
+    ]
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(args)
+
+    # missing the name!
+    args = [
+        "test_one.js",
+        "--perfherder-metrics",
+        "name:foo,unit:ms,alertThreshold:2",
+        "alertThreshold:2,lowerIsBetter:false",
+    ]
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(args)
+
+    # still supporting just plain names
+    args = [
+        "test_one.js",
+        "--perfherder-metrics",
+        "name:foo,unit:euros,alertThreshold:2",
+        "baz",
+    ]
+
+    res = parser.parse_args(args)
+    assert res.perfherder_metrics[1]["name"] == "baz"
+    assert res.perfherder_metrics[0]["name"] == "foo"
+    assert res.perfherder_metrics[0]["unit"] == "euros"
+
+
 if __name__ == "__main__":
     mozunit.main()

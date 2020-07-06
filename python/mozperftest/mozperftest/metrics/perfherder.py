@@ -7,10 +7,11 @@ import os
 import pathlib
 import statistics
 
+from mozperftest.utils import strtobool
 from mozperftest.layers import Layer
 from mozperftest.metrics.exceptions import PerfherderValidDataError
 from mozperftest.metrics.common import filtered_metrics
-from mozperftest.metrics.utils import write_json, is_number
+from mozperftest.metrics.utils import write_json, is_number, metric_fields
 
 
 PERFHERDER_SCHEMA = pathlib.Path(
@@ -50,6 +51,7 @@ class Perfherder(Layer):
             ),
         },
         "metrics": {
+            "type": metric_fields,
             "nargs": "*",
             "default": [],
             "help": "The metrics that should be retrieved from the data.",
@@ -86,11 +88,12 @@ class Perfherder(Layer):
             exclusions = ["statistics."]
 
         # Get filtered metrics
+        metrics = self.get_arg("metrics")
         results, fullsettings = filtered_metrics(
             metadata,
             output,
             prefix,
-            metrics=self.get_arg("metrics"),
+            metrics=metrics,
             settings=True,
             exclude=exclusions,
         )
@@ -102,9 +105,19 @@ class Perfherder(Layer):
         # XXX Add version info into this data
         app_info = {"name": self.get_arg("app", default="firefox")}
 
+        # converting the metrics list into a mapping where
+        # keys are the metrics nane
+        if metrics is not None:
+            metrics = dict([(m["name"], m) for m in metrics])
+        else:
+            metrics = {}
+
         all_perfherder_data = None
         for name, res in results.items():
-            settings = fullsettings[name]
+            settings = dict(fullsettings[name])
+            # updating the settings with values provided in metrics, if any
+            if name in metrics:
+                settings.update(metrics[name])
 
             # XXX Instead of just passing replicates here, we should build
             # up a partial perfherder data blob (with options) and subtest
@@ -119,10 +132,10 @@ class Perfherder(Layer):
                 subtests,
                 name=name,
                 extra_options=settings.get("extraOptions"),
-                should_alert=settings.get("shouldAlert", False),
+                should_alert=strtobool(settings.get("shouldAlert", False)),
                 application=app_info,
-                alert_threshold=settings.get("alertThreshold", 2.0),
-                lower_is_better=settings.get("lowerIsBetter", True),
+                alert_threshold=float(settings.get("alertThreshold", 2.0)),
+                lower_is_better=strtobool(settings.get("lowerIsBetter", True)),
                 unit=settings.get("unit", "ms"),
                 summary=settings.get("value"),
             )
