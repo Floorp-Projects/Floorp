@@ -45,6 +45,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -892,8 +893,10 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // from the netwerk, hence we shouldn't require CORS in that specific case.
   if (CheckInsecureUpgradePreventsCORS(mRequestingPrincipal, aChannel)) {
     // Check if HTTPS-Only Mode is enabled
+    nsCOMPtr<nsILoadInfo> loadinfo = aChannel->LoadInfo();
+    bool isPrivateWin = loadinfo->GetOriginAttributes().mPrivateBrowsingId > 0;
     if (!(loadInfo->GetHttpsOnlyStatus() & nsILoadInfo::HTTPS_ONLY_EXEMPT) &&
-        StaticPrefs::dom_security_https_only_mode()) {
+        nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
       return NS_OK;
     }
     // Check if 'upgrade-insecure-requests' is used
