@@ -19,6 +19,7 @@
 #endif
 #include <utility>
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
@@ -1839,6 +1840,10 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
     nsCOMPtr<nsIRunnable> importCertsRunnable(NS_NewRunnableFunction(
         "IdleSaveIntermediateCerts",
         [intermediates = std::move(intermediates)]() -> void {
+          if (AppShutdown::IsShuttingDown()) {
+            return;
+          }
+
           UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
           if (!slot) {
             return;
@@ -1851,6 +1856,10 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
           for (CERTCertListNode* node = CERT_LIST_HEAD(intermediates);
                !CERT_LIST_END(node, intermediates);
                node = CERT_LIST_NEXT(node)) {
+            if (AppShutdown::IsShuttingDown()) {
+              return;
+            }
+
 #ifdef MOZ_NEW_CERT_STORAGE
             if (CertIsInCertStorage(node->cert, certStorage)) {
               continue;
