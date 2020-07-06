@@ -150,6 +150,8 @@ class WebExtensionPolicy final : public nsISupports,
     return mBackgroundWorkerScript.Equals(aWorkerScriptURL);
   }
 
+  uint64_t GetBrowsingContextGroupId() const;
+
   static void GetActiveExtensions(
       dom::GlobalObject& aGlobal,
       nsTArray<RefPtr<WebExtensionPolicy>>& aResults);
@@ -195,6 +197,8 @@ class WebExtensionPolicy final : public nsISupports,
   nsString mName;
   nsString mExtensionPageCSP;
   nsString mContentScriptCSP;
+
+  uint64_t mBrowsingContextGroupId = 0;
 
   bool mActive = false;
   bool mAllowPrivateBrowsingByDefault = true;
