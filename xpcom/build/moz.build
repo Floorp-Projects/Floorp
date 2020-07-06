@@ -22,6 +22,7 @@ EXPORTS.mozilla += [
     'LateWriteChecks.h',
     'Omnijar.h',
     'PoisonIOInterposer.h',
+    'SmallArrayLRUCache.h',
     'XPCOM.h',
     'XREAppData.h',
 ]
