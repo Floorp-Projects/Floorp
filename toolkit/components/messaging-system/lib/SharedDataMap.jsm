@@ -95,6 +95,21 @@ class SharedDataMap extends EventEmitter {
     this._notifyUpdate();
   }
 
+  // Only used in tests
+  _deleteForTests(key) {
+    if (!this.isParent) {
+      throw new Error(
+        "Setting values from within a content process is not allowed"
+      );
+    }
+    if (this.has(key)) {
+      delete this._store.data[key];
+      this._store.saveSoon();
+      this._syncToChildren();
+      this._notifyUpdate();
+    }
+  }
+
   has(key) {
     return Boolean(this._data[key]);
   }
