@@ -1103,11 +1103,11 @@ class ContentParent final
                                            RefPtr<nsIInputStream>* aPostData,
                                            RefPtr<nsIURI>* aURI);
 
-  mozilla::ipc::IPCResult RecvGetFixupURIInfo(const nsCString& aURIString,
+  mozilla::ipc::IPCResult RecvGetFixupURIInfo(const nsString& aURIString,
                                               const uint32_t& aFixupFlags,
+                                              bool aAllowThirdPartyFixup,
                                               nsString* aProviderName,
                                               RefPtr<nsIInputStream>* aPostData,
-                                              RefPtr<nsIURI>* aFixedURI,
                                               RefPtr<nsIURI>* aPreferredURI);
 
   mozilla::ipc::IPCResult RecvNotifyKeywordSearchLoading(
