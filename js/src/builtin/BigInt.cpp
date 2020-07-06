@@ -214,8 +214,8 @@ const JSClass BigIntObject::class_ = {
     JS_NULL_CLASS_OPS, &BigIntObject::classSpec_};
 
 const JSClass BigIntObject::protoClass_ = {
-    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_BigInt), JS_NULL_CLASS_OPS,
-    &BigIntObject::classSpec_};
+    "BigInt.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_BigInt),
+    JS_NULL_CLASS_OPS, &BigIntObject::classSpec_};
 
 const JSPropertySpec BigIntObject::properties[] = {
     // BigInt proposal section 5.3.5

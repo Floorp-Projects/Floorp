@@ -376,7 +376,7 @@ const ClassSpec SavedFrame::classSpec_ = {
     &SavedFrameClassOps, &SavedFrame::classSpec_};
 
 const JSClass SavedFrame::protoClass_ = {
-    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_SavedFrame),
+    "SavedFrame.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_SavedFrame),
     JS_NULL_CLASS_OPS, &SavedFrame::classSpec_};
 
 /* static */ const JSFunctionSpec SavedFrame::staticFunctions[] = {JS_FS_END};

@@ -197,8 +197,8 @@ const JSClass RegExpObject::class_ = {
     &RegExpObjectClassOps, &RegExpObjectClassSpec};
 
 const JSClass RegExpObject::protoClass_ = {
-    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp), JS_NULL_CLASS_OPS,
-    &RegExpObjectClassSpec};
+    "RegExp.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
+    JS_NULL_CLASS_OPS, &RegExpObjectClassSpec};
 
 template <typename CharT>
 RegExpObject* RegExpObject::create(JSContext* cx, const CharT* chars,
