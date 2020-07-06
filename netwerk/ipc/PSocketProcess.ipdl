@@ -41,6 +41,7 @@ using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using struct nsID from "nsID.h";
 using mozilla::net::SocketInfo from "mozilla/net/DashboardTypes.h";
 using mozilla::net::DNSCacheEntries from "mozilla/net/DashboardTypes.h";
+using mozilla::net::HttpRetParams from "mozilla/net/DashboardTypes.h";
 
 namespace mozilla {
 namespace net {
@@ -159,6 +160,8 @@ child:
     returns (SocketDataArgs data);
   async GetDNSCacheEntries()
     returns (DNSCacheEntries[] entries);
+   async GetHttpConnectionData()
+    returns (HttpRetParams[] params);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
