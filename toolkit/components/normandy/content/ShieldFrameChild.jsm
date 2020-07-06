@@ -71,12 +71,25 @@ class ShieldFrameChild extends JSWindowActorChild {
           prefStudies
         );
         break;
+      case "GetRemoteValue:MessagingSystemList":
+        let experiments = await this.sendQuery("Shield:GetMessagingSystemList");
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:MessagingSystemList",
+          experiments
+        );
+        break;
       case "RemoveAddonStudy":
         this.sendAsyncMessage("Shield:RemoveAddonStudy", event.detail.data);
         break;
       case "RemovePreferenceStudy":
         this.sendAsyncMessage(
           "Shield:RemovePreferenceStudy",
+          event.detail.data
+        );
+        break;
+      case "RemoveMessagingSystemExperiment":
+        this.sendAsyncMessage(
+          "Shield:RemoveMessagingSystemExperiment",
           event.detail.data
         );
         break;
@@ -124,6 +137,12 @@ class ShieldFrameChild extends JSWindowActorChild {
       case "Shield:UpdatePreferenceStudyList":
         this.triggerPageCallback(
           "ReceiveRemoteValue:PreferenceStudyList",
+          msg.data
+        );
+        break;
+      case "Shield:UpdateMessagingSystemExperimentList":
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:MessagingSystemList",
           msg.data
         );
         break;

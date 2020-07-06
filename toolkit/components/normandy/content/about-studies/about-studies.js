@@ -33,6 +33,7 @@ class AboutStudies extends React.Component {
     this.remoteValueNameMap = {
       AddonStudyList: "addonStudies",
       PreferenceStudyList: "prefStudies",
+      MessagingSystemList: "experiments",
       ShieldLearnMoreHref: "learnMoreHref",
       StudiesEnabled: "studiesEnabled",
       ShieldTranslations: "translations",
@@ -73,6 +74,7 @@ class AboutStudies extends React.Component {
       studiesEnabled,
       addonStudies,
       prefStudies,
+      experiments,
     } = this.state;
 
     // Wait for all values to be loaded before rendering. Some of the values may
@@ -85,7 +87,7 @@ class AboutStudies extends React.Component {
       "div",
       { className: "about-studies-container main-content" },
       r(WhatsThisBox, { translations, learnMoreHref, studiesEnabled }),
-      r(StudyList, { translations, addonStudies, prefStudies })
+      r(StudyList, { translations, addonStudies, prefStudies, experiments })
     );
   }
 }
@@ -142,9 +144,9 @@ class WhatsThisBox extends React.Component {
  */
 class StudyList extends React.Component {
   render() {
-    const { addonStudies, prefStudies, translations } = this.props;
+    const { addonStudies, prefStudies, translations, experiments } = this.props;
 
-    if (!addonStudies.length && !prefStudies.length) {
+    if (!addonStudies.length && !prefStudies.length && !experiments.length) {
       return r("p", { className: "study-list-info" }, translations.noStudies);
     }
 
@@ -176,6 +178,18 @@ class StudyList extends React.Component {
       }
     }
 
+    for (const study of experiments) {
+      const clonedStudy = Object.assign({}, study, {
+        type: study.experimentType,
+        sortDate: new Date(study.lastSeen),
+      });
+      if (!study.active) {
+        inactiveStudies.push(clonedStudy);
+      } else {
+        activeStudies.push(clonedStudy);
+      }
+    }
+
     activeStudies.sort((a, b) => b.sortDate - a.sortDate);
     inactiveStudies.sort((a, b) => b.sortDate - a.sortDate);
 
@@ -186,29 +200,53 @@ class StudyList extends React.Component {
       r(
         "ul",
         { className: "study-list active-study-list" },
-        activeStudies.map(study =>
-          study.type === "addon"
-            ? r(AddonStudyListItem, { key: study.slug, study, translations })
-            : r(PreferenceStudyListItem, {
-                key: study.slug,
-                study,
-                translations,
-              })
-        )
+        activeStudies.map(study => {
+          if (study.type === "addon") {
+            return r(AddonStudyListItem, {
+              key: study.slug,
+              study,
+              translations,
+            });
+          }
+          if (study.type === "messaging_experiment") {
+            return r(MessagingSystemListItem, {
+              key: study.slug,
+              study,
+              translations,
+            });
+          }
+          return r(PreferenceStudyListItem, {
+            key: study.slug,
+            study,
+            translations,
+          });
+        })
       ),
       r("h2", {}, translations.completedStudiesList),
       r(
         "ul",
         { className: "study-list inactive-study-list" },
-        inactiveStudies.map(study =>
-          study.type === "addon"
-            ? r(AddonStudyListItem, { key: study.slug, study, translations })
-            : r(PreferenceStudyListItem, {
-                key: study.slug,
-                study,
-                translations,
-              })
-        )
+        inactiveStudies.map(study => {
+          if (study.type === "addon") {
+            return r(AddonStudyListItem, {
+              key: study.slug,
+              study,
+              translations,
+            });
+          }
+          if (study.experimentType === "messaging_experiment") {
+            return r(MessagingSystemListItem, {
+              key: study.slug,
+              study,
+              translations,
+            });
+          }
+          return r(PreferenceStudyListItem, {
+            key: study.slug,
+            study,
+            translations,
+          });
+        })
       )
     );
   }
@@ -217,6 +255,66 @@ StudyList.propTypes = {
   addonStudies: PropTypes.array.isRequired,
   translations: PropTypes.object.isRequired,
 };
+
+class MessagingSystemListItem extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleClickRemove = this.handleClickRemove.bind(this);
+  }
+
+  handleClickRemove() {
+    sendPageEvent("RemoveMessagingSystemExperiment", {
+      slug: this.props.study.slug,
+      reason: "individual-opt-out",
+    });
+  }
+
+  render() {
+    const { study, translations } = this.props;
+    return r(
+      "li",
+      {
+        className: classnames("study messaging-system", {
+          disabled: !study.active,
+        }),
+        "data-study-slug": study.slug, // used to identify this row in tests
+      },
+      r("div", { className: "study-icon" }, study.userFacingName.slice(0, 1)),
+      r(
+        "div",
+        { className: "study-details" },
+        r(
+          "div",
+          { className: "study-header" },
+          r("span", { className: "study-name" }, study.userFacingName),
+          r("span", {}, "\u2022"), // &bullet;
+          r(
+            "span",
+            { className: "study-status" },
+            study.active
+              ? translations.activeStatus
+              : translations.completeStatus
+          )
+        ),
+        r(
+          "div",
+          { className: "study-description" },
+          study.userFacingDescription
+        )
+      ),
+      r(
+        "div",
+        { className: "study-actions" },
+        study.active &&
+          r(
+            "button",
+            { className: "remove-button", onClick: this.handleClickRemove },
+            r("div", { className: "button-box" }, translations.removeButton)
+          )
+      )
+    );
+  }
+}
 
 /**
  * Details about an individual add-on study, with an option to end it if it is active.
