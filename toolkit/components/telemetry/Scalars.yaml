@@ -1213,7 +1213,6 @@ security:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'geckoview_streaming'
     record_in_processes:
       - 'main'
 
