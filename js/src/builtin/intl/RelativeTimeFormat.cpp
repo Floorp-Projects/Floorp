@@ -52,7 +52,7 @@ const JSClassOps RelativeTimeFormatObject::classOps_ = {
 };
 
 const JSClass RelativeTimeFormatObject::class_ = {
-    js_Object_str,
+    "Intl.RelativeTimeFormat",
     JSCLASS_HAS_RESERVED_SLOTS(RelativeTimeFormatObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_RelativeTimeFormat) |
         JSCLASS_FOREGROUND_FINALIZE,
