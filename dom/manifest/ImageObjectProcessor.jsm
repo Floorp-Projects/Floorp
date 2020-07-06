@@ -34,7 +34,7 @@ function ImageObjectProcessor(aErrors, aExtractor, aBundle) {
   this.domBundle = aBundle;
 }
 
-const iconPurposes = Object.freeze(["any", "maskable"]);
+const iconPurposes = Object.freeze(["any", "maskable", "monochrome"]);
 
 // Static getters
 Object.defineProperties(ImageObjectProcessor, {

@@ -53,13 +53,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
       is(result.icons.length, 0, expected);
     });
 
-    const mixedValidAndInvalidPurposes = [
+    const mixedMaskableAndInvalidPurposes = [
       "not-known-test-purpose maskable",
       "maskable invalid-purpose invalid-purpose",
       "no-purpose invalid-purpose maskable some-other-non-valid-purpose",
     ];
 
-    mixedValidAndInvalidPurposes.forEach(mixedPurpose => {
+    mixedMaskableAndInvalidPurposes.forEach(mixedPurpose => {
       const expected = `Expect on 'maskable' to remain.`;
       testManifest.icons[0].purpose = mixedPurpose;
       data.jsonText = JSON.stringify(testManifest);
@@ -68,11 +68,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
       is(result.icons[0].purpose.join(), "maskable", expected);
     });
 
+    const mixedMonochromeAndInvalidPurposes = [
+      "not-known-test-purpose monochrome",
+      "monochrome invalid-purpose invalid-purpose",
+      "no-purpose invalid-purpose monochrome some-other-non-valid-purpose",
+    ];
+
+    mixedMonochromeAndInvalidPurposes.forEach(mixedPurpose => {
+      const expected = `Expect on 'monochrome' to remain.`;
+      testManifest.icons[0].purpose = mixedPurpose;
+      data.jsonText = JSON.stringify(testManifest);
+      const result = processor.process(data);
+      is(result.icons.length, 1, expected);
+      is(result.icons[0].purpose.join(), "monochrome", expected);
+    });
+
     const validPurposes = [
       "maskable",
+      "monochrome",
       "any",
       "any maskable",
       "maskable any",
+      "any monochrome",
+      "monochrome any",
+      "maskable monochrome any",
+      "monochrome maskable"
     ];
 
     validPurposes.forEach(purpose => {
