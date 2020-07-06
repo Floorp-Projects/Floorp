@@ -776,6 +776,10 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
 }
 
 void GeckoEditableSupport::FlushIMEText(FlushChangesFlag aFlags) {
+  NS_WARNING_ASSERTION(
+      !mIMEDelaySynchronizeReply || !mIMEActiveCompositionCount,
+      "Cannot synchronize Java text with Gecko text");
+
   // Notify Java of the newly focused content
   mIMETextChanges.Clear();
   mIMESelectionChanged = true;
@@ -1265,6 +1269,9 @@ nsresult GeckoEditableSupport::NotifyIME(
         }
         mDispatcher = dispatcher;
         mIMEKeyEvents.Clear();
+
+        mIMEDelaySynchronizeReply = false;
+        mIMEActiveCompositionCount = 0;
         FlushIMEText();
 
         // IME will call requestCursorUpdates after getting context.
