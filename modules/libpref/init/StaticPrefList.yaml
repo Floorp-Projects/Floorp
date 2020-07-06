@@ -1129,11 +1129,6 @@
   value: "#551A8B"
   mirror: never
 
-- name: browser.find.anonymous_content.enabled
-  type: bool
-  value: true
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
