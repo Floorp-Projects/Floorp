@@ -31,7 +31,7 @@
   return mParent;
 }
 
-- (NSArray*)moxChildren {
+- (NSArray*)moxUnignoredChildren {
   if (mChildren) return mChildren;
 
   mChildren = [[NSMutableArray alloc] init];
@@ -206,8 +206,8 @@
   return mColContainers;
 }
 
-- (NSArray*)moxChildren {
-  return [[super moxChildren] arrayByAddingObjectsFromArray:[self moxColumns]];
+- (NSArray*)moxUnignoredChildren {
+  return [[super moxUnignoredChildren] arrayByAddingObjectsFromArray:[self moxColumns]];
 }
 
 - (void)invalidateColumns {

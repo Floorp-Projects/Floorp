@@ -33,7 +33,7 @@
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled;
 
 // override
-- (BOOL)ignoreWithParent:(mozAccessible*)parent;
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent;
 
 @end
 
