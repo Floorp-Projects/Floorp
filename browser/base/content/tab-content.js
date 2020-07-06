@@ -20,6 +20,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
+var { ActorManagerChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorManagerChild.jsm"
+);
+
+ActorManagerChild.attach(this, "browsers");
+
 // BrowserChildGlobal
 var global = this;
 

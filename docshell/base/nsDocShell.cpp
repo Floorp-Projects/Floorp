@@ -9576,10 +9576,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                                                      loadFlags, this, cacheKey,
                                                      uriModified, isXFOError);
     MOZ_ASSERT(channel);
-
-    // Disable keyword fixup when using DocumentChannel, since
-    // DocumentLoadListener will handle this for us (in the parent process).
-    mAllowKeywordFixup = false;
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  mBrowsingContext, aLoadState, loadInfo, this, this,
                  GetOriginAttributes(), loadFlags, cacheKey, rv,
