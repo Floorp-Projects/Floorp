@@ -369,20 +369,6 @@ gfxFontEntry* MacOSFontEntry::Clone() const {
   return fe;
 }
 
-gfxFontEntry* gfxMacPlatformFontList::CreateFontEntry(fontlist::Face* aFace,
-                                                      const fontlist::Family* aFamily) {
-  MacOSFontEntry* fe =
-      new MacOSFontEntry(aFace->mDescriptor.AsString(SharedFontList()), aFace->mWeight, false,
-                         0.0);  // XXX standardFace, sizeHint
-  fe->mStyleRange = aFace->mStyle;
-  fe->mStretchRange = aFace->mStretch;
-  fe->mFixedPitch = aFace->mFixedPitch;
-  fe->mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
-  fe->mShmemFace = aFace;
-  fe->mFamilyName = aFamily->DisplayName().AsString(SharedFontList());
-  return fe;
-}
-
 CGFontRef MacOSFontEntry::GetFontRef() {
   if (!mFontRefInitialized) {
     // Cache the CGFontRef, to be released by our destructor.
@@ -1627,6 +1613,15 @@ already_AddRefed<FontInfoData> gfxMacPlatformFontList::CreateFontInfoData() {
 gfxFontFamily* gfxMacPlatformFontList::CreateFontFamily(const nsACString& aName,
                                                         FontVisibility aVisibility) const {
   return new gfxMacFontFamily(aName, aVisibility, 0.0);
+}
+
+gfxFontEntry* gfxMacPlatformFontList::CreateFontEntry(fontlist::Face* aFace,
+                                                      const fontlist::Family* aFamily) {
+  MacOSFontEntry* fe =
+      new MacOSFontEntry(aFace->mDescriptor.AsString(SharedFontList()), aFace->mWeight, false,
+                         0.0);  // XXX standardFace, sizeHint
+  fe->InitializeFrom(aFace, aFamily);
+  return fe;
 }
 
 void gfxMacPlatformFontList::ActivateFontsFromDir(nsIFile* aDir) {
