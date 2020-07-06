@@ -315,6 +315,9 @@
 // AXEndTextMarker
 - (id _Nullable)moxEndTextMarker;
 
+// AXSelectedTextMarkerRange
+- (id _Nullable)moxSelectedTextMarkerRange;
+
 #pragma mark - ParameterizedTextAttributeGetters
 
 // AXLengthForTextMarkerRange
