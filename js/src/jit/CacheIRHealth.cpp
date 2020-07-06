@@ -14,27 +14,8 @@
 using namespace js;
 using namespace js::jit;
 
-static const CacheIRStubInfo* getStubInfo(ICStub* stub) {
-  const CacheIRStubInfo* stubInfo = nullptr;
-  switch (stub->kind()) {
-    case ICStub::Kind::CacheIR_Monitored:
-      stubInfo = stub->toCacheIR_Monitored()->stubInfo();
-      break;
-    case ICStub::Kind::CacheIR_Regular:
-      stubInfo = stub->toCacheIR_Regular()->stubInfo();
-      break;
-    case ICStub::Kind::CacheIR_Updated:
-      stubInfo = stub->toCacheIR_Updated()->stubInfo();
-      break;
-    default:
-      MOZ_CRASH("Only cache IR stubs supported");
-  }
-
-  return stubInfo;
-}
-
 bool CacheIRHealth::spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub) {
-  const CacheIRStubInfo* stubInfo = getStubInfo(stub);
+  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
   CacheIRReader stubReader(stubInfo);
   uint32_t totalStubHealth = 0;
   while (stubReader.more()) {
