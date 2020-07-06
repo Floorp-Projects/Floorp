@@ -48,6 +48,8 @@
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/net/DocumentChannel.h"
 
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -635,7 +637,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
 
   // If https-only mode is enabled we'll upgrade this later anyway
-  if (StaticPrefs::dom_security_https_only_mode()) {
+  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }

@@ -45,6 +45,7 @@
 #include "nsURILoader.h"
 #include "nsWebNavigationInfo.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -2029,7 +2030,10 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // needs to be removed or set, by asking the PermissionManager.
   RefPtr<CanonicalBrowsingContext> bc =
       mParentChannelListener->GetBrowsingContext();
-  if (mozilla::StaticPrefs::dom_security_https_only_mode() && bc &&
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->LoadInfo();
+  bool isPrivateWin =
+      channelLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin) && bc &&
       bc->IsTop()) {
     bool isHttpsOnlyExempt = false;
     if (httpChannel) {
@@ -2043,7 +2047,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
       }
     }
 
-    nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->LoadInfo();
     uint32_t httpsOnlyStatus = channelLoadInfo->GetHttpsOnlyStatus();
     if (isHttpsOnlyExempt) {
       httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;

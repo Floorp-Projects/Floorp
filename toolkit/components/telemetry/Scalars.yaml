@@ -1196,6 +1196,26 @@ security:
       - 'firefox'
     record_in_processes:
       - 'main'
+  https_only_mode_enabled_pbm:
+    bug_numbers:
+      - 1647719
+    description: >
+      Measures user retention of the HTTPS-Only Mode in Private Browsing.
+      0 = https-only never enabled in PBM,
+      1 = https-only enabled in PBM,
+      2 = https-only disabled in PBM (but was enabled)
+    expires: never
+    kind: uint
+    notification_emails:
+      - julianwels@mozilla.com
+      - ckerschb@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
 
 pwmgr:
   potentially_breached_passwords:
