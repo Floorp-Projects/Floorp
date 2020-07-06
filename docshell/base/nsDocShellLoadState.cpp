@@ -174,6 +174,22 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
   return NS_OK;
 }
 
+static uint32_t WebNavigationFlagsToFixupFlags(nsIURI* aURI,
+                                               const nsACString& aURIString,
+                                               uint32_t aNavigationFlags) {
+  if (aURI) {
+    aNavigationFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+  }
+  uint32_t fixupFlags = nsIURIFixup::FIXUP_FLAG_NONE;
+  if (aNavigationFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+    fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+  }
+  if (aNavigationFlags & nsIWebNavigation::LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+    fixupFlags |= nsIURIFixup::FIXUP_FLAG_FIX_SCHEME_TYPOS;
+  }
+  return fixupFlags;
+};
+
 nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     BrowsingContext* aBrowsingContext, const nsAString& aURI,
     const LoadURIOptions& aLoadURIOptions, nsDocShellLoadState** aResult) {
@@ -202,7 +218,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     // Avoid third party fixup as a performance optimization.
     loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     fixup = false;
-  } else if (!sURIFixup) {
+  } else if (!sURIFixup && !XRE_IsContentProcess()) {
     nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
     if (uriFixup) {
       sURIFixup = uriFixup;
@@ -215,11 +231,8 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   nsAutoString searchProvider, keyword;
   bool didFixup = false;
   if (fixup) {
-    uint32_t fixupFlags;
-    if (NS_FAILED(sURIFixup->WebNavigationFlagsToFixupFlags(
-            uriString, loadFlags, &fixupFlags))) {
-      return NS_ERROR_FAILURE;
-    }
+    uint32_t fixupFlags =
+        WebNavigationFlagsToFixupFlags(uri, uriString, loadFlags);
 
     // If we don't allow keyword lookups for this URL string, make sure to
     // update loadFlags to indicate this as well.
