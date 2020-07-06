@@ -2,7 +2,7 @@
 
 # DefaultRemoveTabUseCase
 
-`class DefaultRemoveTabUseCase : `[`RemoveTabUseCase`](../-remove-tab-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L83)
+`class DefaultRemoveTabUseCase : `[`RemoveTabUseCase`](../-remove-tab-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L86)
 
 Default implementation of [RemoveTabUseCase](../-remove-tab-use-case/index.md), interacting
 with [SessionManager](../../../mozilla.components.browser.session/-session-manager/index.md).

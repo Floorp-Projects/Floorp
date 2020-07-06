@@ -2,7 +2,7 @@
 
 # FetchExceptionsUseCase
 
-`class FetchExceptionsUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L125)
+`class FetchExceptionsUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L123)
 
 Use case for fetching all exceptions in the exception list.
 

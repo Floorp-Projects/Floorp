@@ -2,4 +2,4 @@
 
 # getOrCreateEngineSession
 
-`val getOrCreateEngineSession: `[`GetOrCreateUseCase`](-get-or-create-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/usecases/EngineSessionUseCases.kt#L64)
+`val getOrCreateEngineSession: `[`GetOrCreateUseCase`](-get-or-create-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/usecases/EngineSessionUseCases.kt#L48)

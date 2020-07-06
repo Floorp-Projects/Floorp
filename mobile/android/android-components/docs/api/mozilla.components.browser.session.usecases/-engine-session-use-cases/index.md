@@ -14,7 +14,6 @@ using SessionManager for getting and creating [EngineSession](../../mozilla.comp
 | Name | Summary |
 |---|---|
 | [GetOrCreateUseCase](-get-or-create-use-case/index.md) | `class GetOrCreateUseCase`<br>Use case for getting or creating an [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for a tab. |
-| [GetUseCase](-get-use-case/index.md) | `class GetUseCase`<br>Use case for getting an [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for a tab. |
 
 ### Constructors
 
@@ -26,7 +25,6 @@ using SessionManager for getting and creating [EngineSession](../../mozilla.comp
 
 | Name | Summary |
 |---|---|
-| [getEngineSession](get-engine-session.md) | `val getEngineSession: `[`GetUseCase`](-get-use-case/index.md) |
 | [getOrCreateEngineSession](get-or-create-engine-session.md) | `val getOrCreateEngineSession: `[`GetOrCreateUseCase`](-get-or-create-use-case/index.md) |
 
 ### Extension Functions

@@ -2,13 +2,13 @@
 
 # invoke
 
-`operator fun invoke(session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md)`, onResult: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L113)
+`operator fun invoke(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, onResult: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L109)
 
-Indicates if a given [session](invoke.md#mozilla.components.feature.session.TrackingProtectionUseCases.ContainsExceptionUseCase$invoke(mozilla.components.browser.session.Session, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/session) is in the exception list.
+Indicates if a given tab is in the exception list.
 
 ### Parameters
 
-`session` - The [session](invoke.md#mozilla.components.feature.session.TrackingProtectionUseCases.ContainsExceptionUseCase$invoke(mozilla.components.browser.session.Session, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/session) to verify.
+`tabId` - The id of the tab to verify.
 
-`onResult` - A callback to inform if the given [session](invoke.md#mozilla.components.feature.session.TrackingProtectionUseCases.ContainsExceptionUseCase$invoke(mozilla.components.browser.session.Session, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/session) is on
+`onResult` - A callback to inform if the given tab is on
 the exception list, true if it is in otherwise false.

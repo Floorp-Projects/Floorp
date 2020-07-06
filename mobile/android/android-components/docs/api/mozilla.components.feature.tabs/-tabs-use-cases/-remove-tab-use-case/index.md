@@ -2,7 +2,7 @@
 
 # RemoveTabUseCase
 
-`interface RemoveTabUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L62)
+`interface RemoveTabUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L65)
 
 Contract for use cases that remove a tab.
 

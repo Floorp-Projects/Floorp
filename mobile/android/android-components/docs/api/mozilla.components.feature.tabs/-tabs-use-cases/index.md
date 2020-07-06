@@ -2,7 +2,7 @@
 
 # TabsUseCases
 
-`class TabsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L17)
+`class TabsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L19)
 
 Contains use cases related to the tabs feature.
 
@@ -23,7 +23,7 @@ Contains use cases related to the tabs feature.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TabsUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to the tabs feature. |
+| [&lt;init&gt;](-init-.md) | `TabsUseCases(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to the tabs feature. |
 
 ### Properties
 
