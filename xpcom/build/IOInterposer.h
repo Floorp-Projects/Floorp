@@ -93,6 +93,8 @@ class IOInterposeObserver {
      */
     const char* Reference() const { return mReference; }
 
+    virtual const char* FileType() const { return "File"; }
+
     /** Request filename associated with the I/O operation, empty if unknown */
     virtual void Filename(nsAString& aString) { aString.Truncate(); }
 
