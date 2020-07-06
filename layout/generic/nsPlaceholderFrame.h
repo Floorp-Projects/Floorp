@@ -36,7 +36,7 @@
 #define nsPlaceholderFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsGkAtoms.h"
 
 namespace mozilla {

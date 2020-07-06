@@ -60,7 +60,7 @@
 #include "nsAnimationManager.h"
 #include "nsNameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsFlexContainerFrame.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "FrameLayerBuilder.h"
 #include "nsViewManager.h"
 #include "nsView.h"

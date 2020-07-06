@@ -8,7 +8,7 @@
 #include "ComputedStyle.h"
 #include "mozilla/PresShell.h"
 #include "nsContainerFrame.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "SVGObserverUtils.h"
 #include "SVGFilters.h"

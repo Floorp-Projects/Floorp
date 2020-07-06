@@ -13,7 +13,7 @@
 #define nsSplittableFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 
 // Derived class that allows splitting
 class nsSplittableFrame : public nsIFrame {

@@ -10,7 +10,7 @@
 #define nsLeafFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsDisplayList.h"
 
 /**

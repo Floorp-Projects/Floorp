@@ -12,7 +12,6 @@
 
 class gfxContext;
 class nsIFrame;
-class nsFrame;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsPresContext;

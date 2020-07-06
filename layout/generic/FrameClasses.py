@@ -31,7 +31,6 @@ FRAME_CLASSES = [
     Frame("nsFirstLetterFrame", "Letter", NOT_LEAF),
     Frame("nsFirstLineFrame", "Line", NOT_LEAF),
     Frame("nsFlexContainerFrame", "FlexContainer", NOT_LEAF),
-    Frame("nsFrame", "None", NOT_LEAF),
     Frame("nsIFrame", "None", NOT_LEAF),
     Frame("nsGfxButtonControlFrame", "GfxButtonControl", LEAF),
     Frame("nsGridContainerFrame", "GridContainer", NOT_LEAF),

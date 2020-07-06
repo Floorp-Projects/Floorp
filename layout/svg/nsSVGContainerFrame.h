@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsIFrame.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsQueryFrame.h"

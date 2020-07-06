@@ -9,7 +9,7 @@
 #ifndef nsBackdropFrame_h___
 #define nsBackdropFrame_h___
 
-#include "nsFrame.h"
+#include "nsIFrame.h"
 
 class nsBackdropFrame final : public nsIFrame {
  public:

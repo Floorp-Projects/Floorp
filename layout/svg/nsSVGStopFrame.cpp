@@ -6,7 +6,7 @@
 
 // Keep in (case-insensitive) order:
 #include "nsContainerFrame.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"

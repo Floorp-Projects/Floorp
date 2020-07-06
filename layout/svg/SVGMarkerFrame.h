@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
 #include "nsSVGContainerFrame.h"
