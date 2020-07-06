@@ -26,6 +26,7 @@ pub enum AndroidError {
     Device(mozdevice::DeviceError),
     IO(io::Error),
     NotConnected,
+    PackageNotFound(String),
     Serde(serde_yaml::Error),
 }
 
@@ -33,11 +34,14 @@ impl fmt::Display for AndroidError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             AndroidError::ActivityNotFound(ref package) => {
-                write!(f, "Activity not found for package '{}'", package)
+                write!(f, "Activity for package '{}' not found", package)
             }
             AndroidError::Device(ref message) => message.fmt(f),
             AndroidError::IO(ref message) => message.fmt(f),
             AndroidError::NotConnected => write!(f, "Not connected to any Android device"),
+            AndroidError::PackageNotFound(ref package) => {
+                write!(f, "Package '{}' not found", package)
+            }
             AndroidError::Serde(ref message) => message.fmt(f),
         }
     }
@@ -173,21 +177,36 @@ impl AndroidHandler {
             &self.host_port, &self.target_port
         );
 
+        // Check if the specified package is installed
+        let response = device
+            .execute_host_shell_command(&format!("pm list packages {}", &self.options.package))?;
+        let packages = response
+            .split_terminator('\n')
+            .filter(|line| line.starts_with("package:"))
+            .map(|line| line.rsplit(':').next().expect("Package name found"))
+            .collect::<Vec<&str>>();
+        if !packages.contains(&self.options.package.as_str()) {
+            return Err(AndroidError::PackageNotFound(self.options.package.clone()));
+        }
+
         // If activity hasn't been specified default to the main activity of the package
         let activity = match self.options.activity {
             Some(ref activity) => activity.clone(),
             None => {
                 let response = device.execute_host_shell_command(&format!(
-                    "cmd package resolve-activity --brief {} | tail -n 1",
+                    "cmd package resolve-activity --brief {}",
                     &self.options.package
                 ))?;
-                let parts = response.trim_end().split('/').collect::<Vec<&str>>();
-
-                if parts.len() == 1 {
+                let activities = response
+                    .split_terminator('\n')
+                    .filter(|line| line.starts_with(&self.options.package))
+                    .map(|line| line.rsplit('/').next().unwrap())
+                    .collect::<Vec<&str>>();
+                if activities.is_empty() {
                     return Err(AndroidError::ActivityNotFound(self.options.package.clone()));
                 }
 
-                parts[1].to_owned()
+                activities[0].to_owned()
             }
         };
 
