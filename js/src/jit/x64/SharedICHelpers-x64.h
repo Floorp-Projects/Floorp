@@ -27,8 +27,12 @@ inline void EmitRepushTailCallReg(MacroAssembler& masm) {
   masm.Push(ICTailCallReg);
 }
 
-inline void EmitCallIC(MacroAssembler& masm, CodeOffset* callOffset) {
-  // The stub pointer must already be in ICStubReg.
+inline void EmitCallIC(MacroAssembler& masm, const ICEntry* entry,
+                       CodeOffset* callOffset) {
+  // Load stub pointer into ICStubReg.
+  masm.loadPtr(AbsoluteAddress(entry).offset(ICEntry::offsetOfFirstStub()),
+               ICStubReg);
+
   // Call the stubcode.
   masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
   *callOffset = CodeOffset(masm.currentOffset());

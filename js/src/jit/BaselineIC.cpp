@@ -166,7 +166,7 @@ class MOZ_RAII FallbackStubAllocator {
 
 // Helper method called by lambda expressions `addIC` and `addPrologueIC` in
 // `JitScript::initICEntriesAndBytecodeTypeMap`.
-static bool AddICImpl(JSContext* cx, ICScript* icScript, uint32_t offset,
+static bool AddICImpl(JSContext* cx, JitScript* jitScript, uint32_t offset,
                       ICStub* stub, uint32_t& icEntryIndex) {
   if (!stub) {
     MOZ_ASSERT(cx->isExceptionPending());
@@ -175,7 +175,7 @@ static bool AddICImpl(JSContext* cx, ICScript* icScript, uint32_t offset,
   }
 
   // Initialize the ICEntry.
-  ICEntry& entryRef = icScript->icEntry(icEntryIndex);
+  ICEntry& entryRef = jitScript->icEntry(icEntryIndex);
   icEntryIndex++;
   new (&entryRef) ICEntry(stub, offset);
 
@@ -189,13 +189,14 @@ static bool AddICImpl(JSContext* cx, ICScript* icScript, uint32_t offset,
   return true;
 }
 
-bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
+bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
+                                                JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineInterpreterEnabled());
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());
 
-  FallbackStubAllocator alloc(cx, *fallbackStubSpace());
+  FallbackStubAllocator alloc(cx, fallbackStubSpace_);
 
   // Index of the next ICEntry to initialize.
   uint32_t icEntryIndex = 0;
@@ -234,9 +235,22 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
     }
   }
 
+  // Index of the next bytecode type map entry to initialize.
+  uint32_t typeMapIndex = 0;
+  uint32_t* const typeMap =
+      IsTypeInferenceEnabled() ? bytecodeTypeMap() : nullptr;
+
   // For JOF_IC ops: initialize ICEntries and fallback stubs.
+  // For JOF_TYPESET ops: initialize bytecode type map entries.
   for (BytecodeLocation loc : js::AllBytecodesIterable(script)) {
     JSOp op = loc.getOp();
+    // Note: if the script is very large there will be more JOF_TYPESET ops
+    // than bytecode type sets. See JSScript::MaxBytecodeTypeSets.
+    if (BytecodeOpHasTypeSet(op) && typeMap &&
+        typeMapIndex < JSScript::MaxBytecodeTypeSets) {
+      typeMap[typeMapIndex] = loc.bytecodeToOffset(script);
+      typeMapIndex++;
+    }
 
     // Assert the frontend stored the correct IC index in jump target ops.
     MOZ_ASSERT_IF(BytecodeIsJumpTarget(op), loc.icIndex() == icEntryIndex);
@@ -518,8 +532,11 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
     }
   }
 
-  // Assert all ICEntries have been initialized.
+  // Assert all ICEntries and type map entries have been initialized.
   MOZ_ASSERT(icEntryIndex == numICEntries());
+  MOZ_ASSERT_IF(IsTypeInferenceEnabled(),
+                typeMapIndex == script->numBytecodeTypeSets());
+
   return true;
 }
 
@@ -777,7 +794,6 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
 
   if (stub->state().canAttachStub()) {
     RootedScript script(cx, frame->script());
-    ICScript* icScript = frame->icScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
 
     bool attached = false;
@@ -787,7 +803,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
       case AttachDecision::Attach: {
         ICStub* newStub =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                      kind, script, icScript, stub, &attached);
+                                      kind, script, stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
         }
@@ -971,11 +987,9 @@ bool ICCacheIR_Updated::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
 
 /* static */
 ICStubSpace* ICStubCompiler::StubSpaceForStub(bool makesGCCalls,
-                                              JSScript* script,
-                                              ICScript* icScript) {
+                                              JSScript* script) {
   if (makesGCCalls) {
-    return icScript ? icScript->fallbackStubSpace()
-                    : script->jitScript()->fallbackStubSpace();
+    return script->jitScript()->fallbackStubSpace();
   }
   return script->zone()->jitZone()->optimizedStubSpace();
 }
@@ -1853,17 +1867,15 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
 
   if (stub->state().canAttachStub()) {
     RootedScript script(cx, frame->script());
-    ICScript* icScript = frame->icScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
 
     GetPropIRGenerator gen(cx, script, pc, stub->state().mode(), kind, val,
                            idVal, receiver, GetPropertyResultFlags::All);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
-        ICStub* newStub =
-            AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                      BaselineCacheIRStubKind::Monitored,
-                                      script, icScript, stub, &attached);
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(),
+            BaselineCacheIRStubKind::Monitored, script, stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
           if (gen.shouldNotePreliminaryObjectStub()) {
@@ -2134,15 +2146,13 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   if (stub->state().canAttachStub()) {
-    ICScript* icScript = frame->icScript();
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem,
                            stub->state().mode(), objv, index, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
-            &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
@@ -2226,11 +2236,9 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
     switch (decision) {
       case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
-            &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
@@ -2731,11 +2739,9 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
                            stub->state().mode(), lhs, idVal, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
-            &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
 
@@ -2816,11 +2822,9 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
     switch (decision) {
       case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
-            &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
@@ -2943,10 +2947,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
       case AttachDecision::NoAction:
         break;
       case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-            icScript, stub, &handled);
+            stub, &handled);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
 
@@ -3009,10 +3012,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
                         callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachDeferredStub(res)) {
       case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-            icScript, stub, &handled);
+            stub, &handled);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
 
@@ -3078,10 +3080,9 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
       case AttachDecision::NoAction:
         break;
       case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-            icScript, stub, &handled);
+            stub, &handled);
 
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
@@ -3955,32 +3956,6 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
 
   fallbackCode.initCode(code);
   return true;
-}
-
-const CacheIRStubInfo* ICStub::cacheIRStubInfo() const {
-  switch (kind()) {
-    case ICStub::CacheIR_Regular:
-      return toCacheIR_Regular()->stubInfo();
-    case ICStub::CacheIR_Monitored:
-      return toCacheIR_Monitored()->stubInfo();
-    case ICStub::CacheIR_Updated:
-      return toCacheIR_Updated()->stubInfo();
-    default:
-      MOZ_CRASH("Not a CacheIR stub");
-  }
-}
-
-const uint8_t* ICStub::cacheIRStubData() {
-  switch (kind()) {
-    case ICStub::CacheIR_Regular:
-      return toCacheIR_Regular()->stubDataStart();
-    case ICStub::CacheIR_Monitored:
-      return toCacheIR_Monitored()->stubDataStart();
-    case ICStub::CacheIR_Updated:
-      return toCacheIR_Updated()->stubDataStart();
-    default:
-      MOZ_CRASH("Not a CacheIR stub");
-  }
 }
 
 }  // namespace jit
