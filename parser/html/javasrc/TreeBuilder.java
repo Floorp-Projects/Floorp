@@ -768,7 +768,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 systemIdentifier))
 
                 ) {
-                    warn("Obsolete doctype. Expected \u201C<!DOCTYPE html>\u201D.");
+                    err("Obsolete doctype. Expected \u201C<!DOCTYPE html>\u201D.");
                 } else if (!((systemIdentifier == null || Portability.literalEqualsString(
                         "about:legacy-compat", systemIdentifier)) && publicIdentifier == null)) {
                     err("Legacy doctype. Expected \u201C<!DOCTYPE html>\u201D.");
