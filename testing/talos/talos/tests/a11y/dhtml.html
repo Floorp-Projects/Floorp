@@ -18,7 +18,7 @@
     TalosContentProfiler.resume("dhtml test start", true).then(() => {
       var container = document.getElementById("container");
       var lastchild = document.getElementById("lastchild");
-      var start = window.performance.now();
+      var start = new Date(); // eslint-disable-line mozilla/avoid-Date-timing
       var i, div;
       for (i = 0; i < 2000; i++) {
         div = document.createElement("div");
@@ -44,8 +44,8 @@
   }
 
   function postProcessingRecord(s) {
-    // alert(window.performance.now() - s);
-    let delta = window.performance.now() - s;
+    // alert(new Date() - s);
+    let delta = new Date() - s; // eslint-disable-line mozilla/avoid-Date-timing
     TalosContentProfiler.pause("dhtml test finish", true).then(() => {
       tpRecordTime(delta, s);
     });
