@@ -5878,5 +5878,5 @@ const JSClass PromiseObject::class_ = {
     JS_NULL_CLASS_OPS, &PromiseObjectClassSpec};
 
 const JSClass PromiseObject::protoClass_ = {
-    "PromiseProto", JSCLASS_HAS_CACHED_PROTO(JSProto_Promise),
+    "Promise.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_Promise),
     JS_NULL_CLASS_OPS, &PromiseObjectClassSpec};
