@@ -31,10 +31,6 @@
  *
  * Messages sent:
  *
- *   Printing:Print
- *     Kick off a print job for a nsIDOMWindow, passing the outer window ID as
- *     windowID.
- *
  *   Printing:Preview:Enter
  *     This message is sent to put content into print preview mode. We pass
  *     the content window of the browser we're showing the preview of, and
@@ -130,11 +126,20 @@ var PrintUtils = {
       this._logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PAGE");
     }
 
-    topBrowser.messageManager.sendAsyncMessage("Printing:Print", {
-      windowID,
-      simplifiedMode: this._shouldSimplify,
-      lastUsedPrinterName: this._getLastUsedPrinterName(),
-    });
+    let printSettings = this.getPrintSettings();
+
+    // Set the title so that the print dialog can pick it up and
+    // use it to generate the filename for save-to-PDF.
+    printSettings.title = this._originalTitle;
+
+    if (this._shouldSimplify) {
+      // The generated document for simplified print preview has "about:blank"
+      // as its URL. We need to set docURL here so that the print header/footer
+      // can be given the original document's URL.
+      printSettings.docURL = this._originalURL;
+    }
+
+    topBrowser.print(windowID, printSettings);
 
     if (printPreviewIsOpen) {
       if (this._shouldSimplify) {
@@ -329,6 +334,12 @@ var PrintUtils = {
     );
 
     Services.prompt.alert(window, title, msg);
+
+    Services.telemetry.keyedScalarAdd(
+      "printing.error",
+      this._getErrorCodeForNSResult(nsresult),
+      1
+    );
   },
 
   receiveMessage(aMessage) {
@@ -336,11 +347,6 @@ var PrintUtils = {
       this._displayPrintingError(
         aMessage.data.nsresult,
         aMessage.data.isPrinting
-      );
-      Services.telemetry.keyedScalarAdd(
-        "printing.error",
-        this._getErrorCodeForNSResult(aMessage.data.nsresult),
-        1
       );
       return undefined;
     }
