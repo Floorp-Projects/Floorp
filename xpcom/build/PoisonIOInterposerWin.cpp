@@ -130,6 +130,7 @@ class WinIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
             aOp, sReference,
             !mozilla::IsDebugFile(reinterpret_cast<intptr_t>(aFileHandle))),
         mFileHandle(aFileHandle),
+        mFileHandleType(GetFileType(aFileHandle)),
         mHasQueriedFilename(false) {
     if (mShouldReport) {
       mOffset.QuadPart = aOffset ? aOffset->QuadPart : 0;
@@ -140,6 +141,7 @@ class WinIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
                        nsAString& aFilename)
       : mozilla::IOInterposeObserver::Observation(aOp, sReference),
         mFileHandle(nullptr),
+        mFileHandleType(FILE_TYPE_UNKNOWN),
         mHasQueriedFilename(false) {
     if (mShouldReport) {
       nsAutoString dosPath;
@@ -156,21 +158,27 @@ class WinIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
 
   void SetHandle(HANDLE aFileHandle) {
     mFileHandle = aFileHandle;
-    if (aFileHandle && mHasQueriedFilename) {
-      // `mHasQueriedFilename` indicates we already have a filename, add it to
-      // the cache with the now-known handle.
-      sHandleToFilenameCache->Add(aFileHandle, mFilename);
+    if (aFileHandle) {
+      // Note: `GetFileType()` is fast enough that we don't need to cache it.
+      mFileHandleType = GetFileType(aFileHandle);
+
+      if (mHasQueriedFilename) {
+        // `mHasQueriedFilename` indicates we already have a filename, add it to
+        // the cache with the now-known handle.
+        sHandleToFilenameCache->Add(aFileHandle, mFilename);
+      }
     }
   }
 
-  // Custom implementation of
-  // mozilla::IOInterposeObserver::Observation::Filename
+  const char* FileType() const override;
+
   void Filename(nsAString& aFilename) override;
 
   ~WinIOAutoObservation() { Report(); }
 
  private:
   HANDLE mFileHandle;
+  DWORD mFileHandleType;
   LARGE_INTEGER mOffset;
   bool mHasQueriedFilename;
   nsString mFilename;
@@ -202,6 +210,26 @@ void WinIOAutoObservation::Filename(nsAString& aFilename) {
   mHasQueriedFilename = true;
 
   aFilename = mFilename;
+}
+
+const char* WinIOAutoObservation::FileType() const {
+  if (mFileHandle) {
+    switch (mFileHandleType) {
+      case FILE_TYPE_CHAR:
+        return "Char";
+      case FILE_TYPE_DISK:
+        return "File";
+      case FILE_TYPE_PIPE:
+        return "Pipe";
+      case FILE_TYPE_REMOTE:
+        return "Remote";
+      case FILE_TYPE_UNKNOWN:
+      default:
+        break;
+    }
+  }
+  // Fallback to base class default implementation.
+  return mozilla::IOInterposeObserver::Observation::FileType();
 }
 
 /*************************** IO Interposing Methods ***************************/
