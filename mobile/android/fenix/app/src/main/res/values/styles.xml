@@ -244,7 +244,8 @@
         <item name="android:textAlignment">center</item>
         <item name="android:background">@drawable/rounded_button_background</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="backgroundTint">@color/grey_button_color</item>
