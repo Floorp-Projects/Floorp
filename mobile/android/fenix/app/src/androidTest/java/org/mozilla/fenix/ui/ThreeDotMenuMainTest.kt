@@ -43,7 +43,7 @@ class ThreeDotMenuMainTest {
         @JvmStatic
         fun setDevicePreference() {
             val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-            mDevice.executeShellCommand("settings put secure long_press_timeout 1500")
+            mDevice.executeShellCommand("settings put secure long_press_timeout 3000")
         }
     }
 
