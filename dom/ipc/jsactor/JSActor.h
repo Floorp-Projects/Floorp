@@ -23,6 +23,10 @@ class nsQueryActorParent;
 namespace mozilla {
 namespace dom {
 
+class JSActorManager;
+class JSActorMessageMeta;
+class QueryPromiseHandler;
+
 enum class JSActorMessageKind {
   Message,
   Query,
@@ -31,19 +35,13 @@ enum class JSActorMessageKind {
   EndGuard_,
 };
 
-class JSActorMessageMeta;
-class QueryPromiseHandler;
-
 // Common base class for JSWindowActor{Parent,Child}.
 class JSActor : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSActor)
 
-  JSActor();
-
-  enum class Type { Parent, Child };
-  enum class CallbackFunction { WillDestroy, DidDestroy, ActorCreated };
+  explicit JSActor(nsISupports* aGlobal = nullptr);
 
   const nsCString& Name() const { return mName; }
 
@@ -59,9 +57,7 @@ class JSActor : public nsISupports, public nsWrapperCache {
                          ipc::StructuredCloneData&& aData,
                          ipc::StructuredCloneData&& aStack);
 
-  virtual nsIGlobalObject* GetParentObject() const = 0;
-
-  void RejectPendingQueries();
+  nsIGlobalObject* GetParentObject() const { return mGlobal; };
 
  protected:
   // Send the message described by the structured clone data |aData|, and the
@@ -81,13 +77,18 @@ class JSActor : public nsISupports, public nsWrapperCache {
 
   void SetName(const nsACString& aName);
 
-  void StartDestroy();
+  bool CanSend() const { return mCanSend; }
 
+  void StartDestroy();
   void AfterDestroy();
 
+  enum class CallbackFunction { WillDestroy, DidDestroy, ActorCreated };
   void InvokeCallback(CallbackFunction willDestroy);
 
+  virtual void ClearManager() = 0;
+
  private:
+  friend class JSActorManager;
   friend class ::nsQueryActorChild;   // for QueryInterfaceActor
   friend class ::nsQueryActorParent;  // for QueryInterfaceActor
 
@@ -128,10 +129,12 @@ class JSActor : public nsISupports, public nsWrapperCache {
     uint64_t mQueryId;
   };
 
+  nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsISupports> mWrappedJS;
   nsCString mName;
   nsRefPtrHashtable<nsUint64HashKey, Promise> mPendingQueries;
-  uint64_t mNextQueryId;
+  uint64_t mNextQueryId = 0;
+  bool mCanSend = true;
 };
 
 }  // namespace dom

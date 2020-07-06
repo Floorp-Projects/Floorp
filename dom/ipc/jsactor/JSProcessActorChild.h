@@ -20,22 +20,21 @@ class JSProcessActorChild final : public JSActor {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSProcessActorChild,
                                                          JSActor)
 
-  nsIGlobalObject* GetParentObject() const override {
-    return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
-  }
+  explicit JSProcessActorChild(nsISupports* aGlobal = nullptr)
+      : JSActor(aGlobal) {}
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<JSProcessActorChild> Constructor(
       GlobalObject& aGlobal) {
-    return MakeAndAddRef<JSProcessActorChild>();
+    return MakeAndAddRef<JSProcessActorChild>(aGlobal.GetAsSupports());
   }
 
   nsIDOMProcessChild* Manager() const { return mManager; }
 
   void Init(const nsACString& aName, nsIDOMProcessChild* aManager);
-  void AfterDestroy();
+  void ClearManager() override;
 
  protected:
   // Send the message described by the structured clone data |aData|, and the
@@ -49,7 +48,6 @@ class JSProcessActorChild final : public JSActor {
  private:
   ~JSProcessActorChild() { MOZ_ASSERT(!mManager); }
 
-  bool mCanSend = true;
   nsCOMPtr<nsIDOMProcessChild> mManager;
 };
 

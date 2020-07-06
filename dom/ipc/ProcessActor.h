@@ -14,22 +14,21 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "mozilla/dom/JSActor.h"
+#include "mozilla/dom/JSActorManager.h"
 
 namespace mozilla {
 namespace dom {
 
-// Common base class for Content{Parent, Child}.
-class ProcessActor : public nsISupports {
+// Common base class for Content{Parent, Child} and InProcess{Parent, Child}.
+class ProcessActor : public JSActorManager {
  protected:
   virtual ~ProcessActor() = default;
 
-  // Load the module for the named Content Actor and contruct it.
-  // This method will not initialize the actor or set its manager,
-  // which is handled by callers.
-  void ConstructActor(const nsACString& aName, JS::MutableHandleObject aActor,
-                      ErrorResult& aRv);
+  already_AddRefed<JSActorProtocol> MatchingJSActorProtocol(
+      JSActorService* aActorSvc, const nsACString& aName,
+      ErrorResult& aRv) final;
+
   virtual const nsAString& GetRemoteType() const = 0;
-  virtual JSActor::Type GetSide() = 0;
 };
 
 }  // namespace dom
