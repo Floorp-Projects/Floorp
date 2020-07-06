@@ -535,7 +535,7 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
       RootedDictionary<AesGcmParams> params(aCx);
       nsresult rv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(rv)) {
-        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
         return;
       }
 
@@ -552,7 +552,7 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
         if ((mTagLength > 128) ||
             !(mTagLength == 32 || mTagLength == 64 ||
               (mTagLength >= 96 && mTagLength % 8 == 0))) {
-          mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+          mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
           return;
         }
       }
