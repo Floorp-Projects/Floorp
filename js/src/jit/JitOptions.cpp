@@ -138,6 +138,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Whether Ion uses WarpBuilder as MIR builder.
   SET_DEFAULT(warpBuilder, false);
 
+  // Whether trial inlining is enabled for WarpBuilder.
+  SET_DEFAULT(warpTrialInlining, false);
+
   // Whether the IonMonkey and Baseline JITs are enabled for Trusted Principals.
   // (Ignored if ion or baselineJit is set to true.)
   SET_DEFAULT(jitForTrustedPrincipals, false);
@@ -165,6 +168,10 @@ DefaultJitOptions::DefaultJitOptions() {
   // are compiled with the baseline compiler.
   // Duplicated in all.js - ensure both match.
   SET_DEFAULT(baselineJitWarmUpThreshold, 100);
+
+  // How many invocations or loop iterations are needed before functions
+  // are considered for trial inlining.
+  SET_DEFAULT(trialInliningWarmUpThreshold, 500);
 
   // How many invocations or loop iterations are needed before functions
   // are compiled with the Ion compiler at OptimizationLevel::Normal.
