@@ -425,16 +425,6 @@ IPCResult WindowGlobalParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
-void WindowGlobalParent::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                                           StructuredCloneData&& aData,
-                                           StructuredCloneData&& aStack) {
-  RefPtr<JSWindowActorParent> actor =
-      GetActor(aMeta.actorName(), IgnoreErrors());
-  if (actor) {
-    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
-  }
-}
-
 const nsAString& WindowGlobalParent::GetRemoteType() {
   if (RefPtr<BrowserParent> browserParent = GetBrowserParent()) {
     return browserParent->Manager()->GetRemoteType();
