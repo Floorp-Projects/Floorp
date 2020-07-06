@@ -60,6 +60,9 @@
 #define PRIVILEGEDABOUT_REMOTE_TYPE "privilegedabout"_ns
 #define PRIVILEGEDMOZILLA_REMOTE_TYPE "privilegedmozilla"_ns
 
+// Remote type value used to represent being non-remote.
+#define NOT_REMOTE_TYPE VoidCString()
+
 // These must start with the DEFAULT_REMOTE_TYPE above.
 #define FISSION_WEB_REMOTE_TYPE "webIsolated"_ns
 #define WITH_COOP_COEP_REMOTE_TYPE_PREFIX "webCOOP+COEP="_ns

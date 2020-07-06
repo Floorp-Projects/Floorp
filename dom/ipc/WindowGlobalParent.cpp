@@ -430,7 +430,7 @@ const nsACString& WindowGlobalParent::GetRemoteType() {
     return browserParent->Manager()->GetRemoteType();
   }
 
-  return VoidCString();
+  return NOT_REMOTE_TYPE;
 }
 
 void WindowGlobalParent::NotifyContentBlockingEvent(

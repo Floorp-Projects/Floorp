@@ -1313,7 +1313,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     return false;
   }
 
-  nsAutoCString currentRemoteType(VoidCString());
+  nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
   if (RefPtr<ContentParent> contentParent =
           browsingContext->GetContentParent()) {
     currentRemoteType = contentParent->GetRemoteType();
@@ -1402,7 +1402,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       if (ExtensionPolicyService::GetSingleton().UseRemoteExtensions()) {
         preferredRemoteType = EXTENSION_REMOTE_TYPE;
       } else {
-        preferredRemoteType = VoidCString();
+        preferredRemoteType = NOT_REMOTE_TYPE;
       }
 
       if (browsingContext->Group()->Id() !=
@@ -2038,7 +2038,7 @@ DocumentLoadListener::GetRemoteType(nsACString& aRemoteType) {
   ErrorResult error;
   browsingContext->GetCurrentRemoteType(aRemoteType, error);
   if (error.Failed()) {
-    aRemoteType = VoidCString();
+    aRemoteType = NOT_REMOTE_TYPE;
   }
   return NS_OK;
 }
