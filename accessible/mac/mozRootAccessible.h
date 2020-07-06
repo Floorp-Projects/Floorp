@@ -40,7 +40,7 @@
 - (NSNumber*)moxMinimized;
 
 // override
-- (id)moxUnignoredParent;
+- (id)moxParent;
 
 #pragma mark - mozAccessible/widget
 
