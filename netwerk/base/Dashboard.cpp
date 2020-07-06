@@ -7,6 +7,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/net/Dashboard.h"
 #include "mozilla/net/HttpInfo.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "nsHttp.h"
 #include "nsICancelable.h"
 #include "nsIDNSService.h"
@@ -316,6 +317,30 @@ Dashboard::RequestSockets(nsINetDashboardCallback* aCallback) {
   socketData->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
       "nsINetDashboardCallback", aCallback, true);
   socketData->mEventTarget = GetCurrentEventTarget();
+
+  if (nsIOService::UseSocketProcess()) {
+    if (!gIOService->SocketProcessReady()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    RefPtr<Dashboard> self(this);
+    SocketProcessParent::GetSingleton()->SendGetSocketData()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self{std::move(self)},
+         socketData{std::move(socketData)}](SocketDataArgs&& args) {
+          socketData->mData.Assign(args.info());
+          socketData->mTotalSent = args.totalSent();
+          socketData->mTotalRecv = args.totalRecv();
+          socketData->mEventTarget->Dispatch(
+              NewRunnableMethod<RefPtr<SocketData>>(
+                  "net::Dashboard::GetSockets", self, &Dashboard::GetSockets,
+                  socketData),
+              NS_DISPATCH_NORMAL);
+        },
+        [self](const mozilla::ipc::ResponseRejectReason) {});
+    return NS_OK;
+  }
+
   gSocketTransportService->Dispatch(
       NewRunnableMethod<RefPtr<SocketData>>(
           "net::Dashboard::GetSocketsDispatch", this,
