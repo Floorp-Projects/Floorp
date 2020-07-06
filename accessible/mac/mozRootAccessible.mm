@@ -46,7 +46,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 }
 
 // return the AXParent that our parallell NSView tells us about.
-- (id)moxUnignoredParent {
+- (id)moxParent {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (!mParallelView) mParallelView = (id<mozView, mozAccessible>)[self representedView];
@@ -55,7 +55,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
     return [mParallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
 
   MOZ_ASSERT(mParallelView, "we're a root accessible w/o native view?");
-  return [super moxUnignoredParent];
+  return [super moxParent];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
