@@ -141,6 +141,7 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
   void OnShutdown();
 
   bool IsWriteOnly() const { return mWriteOnly; }
+  bool IsClosed() const { return !mData; };
 
  protected:
   /*
