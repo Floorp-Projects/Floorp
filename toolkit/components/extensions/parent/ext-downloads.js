@@ -860,7 +860,11 @@ this.downloads = class extends ExtensionAPI {
               // Extensions will use listeners to be informed about errors.
               // Just ignore any errors from |start()| to avoid spamming the
               // error console.
-              download.start().catch(() => {});
+              download.start().catch(e => {
+                if (e.name !== "DownloadError") {
+                  Cu.reportError(e);
+                }
+              });
 
               return item.id;
             });
