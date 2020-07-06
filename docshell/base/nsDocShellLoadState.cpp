@@ -34,6 +34,46 @@ using namespace mozilla::dom;
 // Global reference to the URI fixup service.
 static mozilla::StaticRefPtr<nsIURIFixup> sURIFixup;
 
+namespace {
+already_AddRefed<nsIURIFixupInfo> GetFixupURIInfo(const nsACString& aStringURI,
+                                                  uint32_t aFixupFlags,
+                                                  nsIInputStream** aPostData) {
+  nsCOMPtr<nsIURIFixupInfo> info;
+  if (XRE_IsContentProcess()) {
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+    if (!contentChild) {
+      return nullptr;
+    }
+
+    RefPtr<nsIInputStream> postData;
+    RefPtr<nsIURI> fixedURI, preferredURI;
+    nsAutoString providerName;
+    nsAutoCString stringURI(aStringURI);
+    // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
+    if (contentChild->SendGetFixupURIInfo(stringURI, aFixupFlags, &providerName,
+                                          &postData, &fixedURI,
+                                          &preferredURI)) {
+      if (preferredURI) {
+        info = do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
+        if (NS_WARN_IF(!info)) {
+          return nullptr;
+        }
+        info->SetKeywordProviderName(providerName);
+        if (aPostData) {
+          postData.forget(aPostData);
+        }
+        info->SetFixedURI(fixedURI);
+        info->SetPreferredURI(preferredURI);
+      }
+    }
+  } else {
+    sURIFixup->GetFixupURIInfo(aStringURI, aFixupFlags, aPostData,
+                               getter_AddRefs(info));
+  }
+  return info.forget();
+}
+}  // anonymous namespace
+
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : nsDocShellLoadState(aURI, nsContentUtils::GenerateLoadIdentifier()) {}
 
@@ -174,22 +214,6 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
   return NS_OK;
 }
 
-static uint32_t WebNavigationFlagsToFixupFlags(nsIURI* aURI,
-                                               const nsACString& aURIString,
-                                               uint32_t aNavigationFlags) {
-  if (aURI) {
-    aNavigationFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-  }
-  uint32_t fixupFlags = nsIURIFixup::FIXUP_FLAG_NONE;
-  if (aNavigationFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-    fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-  }
-  if (aNavigationFlags & nsIWebNavigation::LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
-    fixupFlags |= nsIURIFixup::FIXUP_FLAG_FIX_SCHEME_TYPOS;
-  }
-  return fixupFlags;
-};
-
 nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     BrowsingContext* aBrowsingContext, const nsAString& aURI,
     const LoadURIOptions& aLoadURIOptions, nsDocShellLoadState** aResult) {
@@ -218,7 +242,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     // Avoid third party fixup as a performance optimization.
     loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     fixup = false;
-  } else if (!sURIFixup && !XRE_IsContentProcess()) {
+  } else if (!sURIFixup) {
     nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
     if (uriFixup) {
       sURIFixup = uriFixup;
@@ -228,11 +252,13 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     }
   }
 
-  nsAutoString searchProvider, keyword;
-  bool didFixup = false;
+  nsCOMPtr<nsIURIFixupInfo> fixupInfo;
   if (fixup) {
-    uint32_t fixupFlags =
-        WebNavigationFlagsToFixupFlags(uri, uriString, loadFlags);
+    uint32_t fixupFlags;
+    if (NS_FAILED(sURIFixup->WebNavigationFlagsToFixupFlags(
+            uriString, loadFlags, &fixupFlags))) {
+      return NS_ERROR_FAILURE;
+    }
 
     // If we don't allow keyword lookups for this URL string, make sure to
     // update loadFlags to indicate this as well.
@@ -244,47 +270,14 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
       fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
     }
 
-    RefPtr<nsIInputStream> fixupStream;
-    if (XRE_IsContentProcess()) {
-      dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-      if (contentChild) {
-        RefPtr<nsIURI> preferredURI;
-        // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
-        if (contentChild->SendGetFixupURIInfo(
-                PromiseFlatString(aURI), fixupFlags,
-                loadFlags &
-                    nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-                &searchProvider, &fixupStream, &preferredURI)) {
-          if (preferredURI) {
-            didFixup = true;
-            rv = NS_OK;
-            uri = preferredURI;
-          }
-        }
-      }
-    } else {
-      nsCOMPtr<nsIURIFixupInfo> fixupInfo;
-      sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
-                                 getter_AddRefs(fixupStream),
-                                 getter_AddRefs(fixupInfo));
-      if (fixupInfo) {
-        // We could fix the uri, clear NS_ERROR_MALFORMED_URI.
-        rv = NS_OK;
-        fixupInfo->GetPreferredURI(getter_AddRefs(uri));
-        fixupInfo->SetConsumer(aBrowsingContext);
-        fixupInfo->GetKeywordProviderName(searchProvider);
-        fixupInfo->GetKeywordAsSent(keyword);
-        didFixup = true;
-
-        if (fixupInfo &&
-            loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-          nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-          if (serv) {
-            serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
-                                  PromiseFlatString(aURI).get());
-          }
-        }
-      }
+    nsCOMPtr<nsIInputStream> fixupStream;
+    fixupInfo =
+        GetFixupURIInfo(uriString, fixupFlags, getter_AddRefs(fixupStream));
+    if (fixupInfo) {
+      // We could fix the uri, clear NS_ERROR_MALFORMED_URI.
+      rv = NS_OK;
+      fixupInfo->GetPreferredURI(getter_AddRefs(uri));
+      fixupInfo->SetConsumer(aBrowsingContext);
     }
 
     if (fixupStream) {
@@ -292,6 +285,15 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
       // and changed the URI, in which case we should override the
       // passed-in post data.
       postData = fixupStream;
+    }
+
+    if (fixupInfo &&
+        loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+      nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+      if (serv) {
+        serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
+                              PromiseFlatString(aURI).get());
+      }
     }
   }
 
@@ -359,7 +361,10 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     loadState->SetCancelContentJSEpoch(aLoadURIOptions.mCancelContentJSEpoch);
   }
 
-  if (didFixup) {
+  if (fixupInfo) {
+    nsAutoString searchProvider, keyword;
+    fixupInfo->GetKeywordProviderName(searchProvider);
+    fixupInfo->GetKeywordAsSent(keyword);
     nsDocShell::MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
   }
 
