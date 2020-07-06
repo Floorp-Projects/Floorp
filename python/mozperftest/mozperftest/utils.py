@@ -217,3 +217,17 @@ def get_multi_tasks_url(route, day="yesterday"):
     """
     day = convert_day(day)
     return f"""{MULTI_TASK_ROOT}{route}.{day}.revision"""
+
+
+def strtobool(val):
+    if isinstance(val, (bool, int)):
+        return bool(val)
+    if not isinstance(bool, str):
+        raise ValueError(val)
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    elif val in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    else:
+        raise ValueError("invalid truth value %r" % (val,))
