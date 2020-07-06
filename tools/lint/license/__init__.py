@@ -13,19 +13,17 @@ results = []
 
 # Official source: https://www.mozilla.org/en-US/MPL/headers/
 TEMPLATES = {
-    "mpl2_license":
-    """
+    "mpl2_license": """
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at http://mozilla.org/MPL/2.0/.
     """.strip().splitlines(),
-    "public_domain_license":
-    """
+    "public_domain_license": """
     Any copyright is dedicated to the public domain.
     http://creativecommons.org/publicdomain/zero/1.0/
     """.strip().splitlines(),
 }
-license_list = os.path.join(here, 'valid-licenses.txt')
+license_list = os.path.join(here, "valid-licenses.txt")
 
 
 def load_valid_license():
@@ -35,7 +33,7 @@ def load_valid_license():
     with open(license_list) as f:
         l = f.readlines()
         # Remove the empty lines
-        return list(filter(bool, [x.replace('\n', '') for x in l]))
+        return list(filter(bool, [x.replace("\n", "") for x in l]))
 
 
 def is_valid_license(licenses, filename):
@@ -43,7 +41,7 @@ def is_valid_license(licenses, filename):
     From a given file, check if we can find the license patterns
     in the X first lines of the file
     """
-    with open(filename, 'r', errors='replace') as myfile:
+    with open(filename, "r", errors="replace") as myfile:
         contents = myfile.read()
         # Empty files don't need a license.
         if not contents:
@@ -60,7 +58,7 @@ def add_header(filename, header):
     Add the header to the top of the file
     """
     header.append("\n")
-    with open(filename, 'r+') as f:
+    with open(filename, "r+") as f:
         # lines in list format
         lines = f.readlines()
 
@@ -85,9 +83,17 @@ def is_test(f):
     if "lint/test/" in f:
         # For the unit tests
         return False
-    return ("/test" in f or "/gtest" in f or "/crashtest" in f or "/mochitest" in f
-            or "/reftest" in f or "/imptest" in f or "/androidTest" in f
-            or "/jit-test/" in f or "jsapi-tests/" in f)
+    return (
+        "/test" in f
+        or "/gtest" in f
+        or "/crashtest" in f
+        or "/mochitest" in f
+        or "/reftest" in f
+        or "/imptest" in f
+        or "/androidTest" in f
+        or "/jit-test/" in f
+        or "jsapi-tests/" in f
+    )
 
 
 def fix_me(filename):
@@ -97,14 +103,26 @@ def fix_me(filename):
     _, ext = os.path.splitext(filename)
     license = []
 
-    license_template = TEMPLATES['mpl2_license']
+    license_template = TEMPLATES["mpl2_license"]
     test = False
 
     if is_test(filename):
-        license_template = TEMPLATES['public_domain_license']
+        license_template = TEMPLATES["public_domain_license"]
         test = True
 
-    if ext in ['.cpp', '.c', '.cc', '.h', '.m', '.mm', '.rs', '.js', '.jsm', '.jsx', '.css']:
+    if ext in [
+        ".cpp",
+        ".c",
+        ".cc",
+        ".h",
+        ".m",
+        ".mm",
+        ".rs",
+        ".js",
+        ".jsm",
+        ".jsx",
+        ".css",
+    ]:
         for i, l in enumerate(license_template):
             start = " "
             end = ""
@@ -119,13 +137,13 @@ def fix_me(filename):
         add_header(filename, license)
         return
 
-    if ext in ['.py', '.ftl', '.properties'] or filename.endswith(".inc.xul"):
+    if ext in [".py", ".ftl", ".properties"] or filename.endswith(".inc.xul"):
         for l in license_template:
             license.append("# " + l.strip() + "\n")
         add_header(filename, license)
         return
 
-    if ext in ['.xml', '.xul', '.html', '.xhtml', '.dtd', '.svg']:
+    if ext in [".xml", ".xul", ".html", ".xhtml", ".dtd", ".svg"]:
         for i, l in enumerate(license_template):
             start = "   - "
             end = ""
@@ -136,7 +154,7 @@ def fix_me(filename):
                 # Last line, we end by -->
                 end = " -->"
             license.append(start + l.strip() + end)
-            if ext != '.svg' or end == "":
+            if ext != ".svg" or end == "":
                 # When dealing with an svg, we should not have a space between
                 # the license and the content
                 license.append("\n")
@@ -145,7 +163,7 @@ def fix_me(filename):
 
 
 def lint(paths, config, fix=None, **lintargs):
-    files = list(expand_exclusions(paths, config, lintargs['root']))
+    files = list(expand_exclusions(paths, config, lintargs["root"]))
 
     licenses = load_valid_license()
 
@@ -154,10 +172,11 @@ def lint(paths, config, fix=None, **lintargs):
             # For now, do not do anything with test (too many)
             continue
         if not is_valid_license(licenses, f):
-            res = {'path': f,
-                   'message': "No matching license strings found in tools/lint/license/valid-licenses.txt",  # noqa
-                   'level': 'error'
-                   }
+            res = {
+                "path": f,
+                "message": "No matching license strings found in tools/lint/license/valid-licenses.txt",  # noqa
+                "level": "error",
+            }
             results.append(result.from_config(config, **res))
             if fix:
                 fix_me(f)
