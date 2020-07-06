@@ -69,7 +69,10 @@ add_task(async function() {
       // might still be getting set up at this point. We poll to wait
       // until its created and available.
       await BrowserTestUtils.waitForCondition(() => {
-        return iframeBC.currentWindowGlobal;
+        return (
+          iframeBC.currentWindowGlobal &&
+          iframeBC.currentWindowGlobal.documentURI != "about:blank"
+        );
       });
 
       let newIframeURI = await SpecialPowers.spawn(iframeBC, [], async () => {
