@@ -1,11 +1,14 @@
 GeckoView Streaming API
 =======================
 
-As an alternative to :doc:`GeckoView <../internals/geckoview>` mode,
+As an alternative to the normal mode where Firefox Desktop records and sends data,
 Telemetry can instead route Histogram samples and Scalar values out of Gecko to a Telemetry Delegate.
 
 To do this, ``toolkit.telemetry.geckoview.streaming`` must be set to true,
 and Gecko must have been built with ``MOZ_WIDGET_ANDROID`` defined.
+
+See :doc:`this guide <../start/report-gecko-telemetry-in-glean>`
+for how to collect data in this mode.
 
 Details
 =======
