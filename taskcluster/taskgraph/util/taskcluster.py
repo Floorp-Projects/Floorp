@@ -262,7 +262,7 @@ def rerun_task(task_id):
 
 
 def trigger_hook(hook_group_id, hook_id, hook_payload):
-    hooks = Hooks({'rootUrl': get_root_url(use_proxy=True)})
+    hooks = Hooks({'rootUrl': get_root_url(True)})
     response = hooks.triggerHook(hook_group_id, hook_id, hook_payload)
 
     logger.info('Task seen here: {}/tasks/{}'.format(
