@@ -30,6 +30,7 @@
 #include "CompositorWidget.h"
 #include "mozilla/widget/WindowSurface.h"
 #include "mozilla/widget/WindowSurfaceProvider.h"
+#include "mozilla/Maybe.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/Accessible.h"
@@ -445,6 +446,8 @@ class nsWindow final : public nsBaseWidget {
   void DispatchResized();
   void MaybeDispatchResized();
 
+  nsIntPoint GetWindowOrigin();
+
   virtual void RegisterTouchWindow() override;
   virtual bool CompositorInitiallyPaused() override {
 #ifdef MOZ_WAYLAND
@@ -541,6 +544,8 @@ class nsWindow final : public nsBaseWidget {
   float mAspectRatio;
   float mAspectRatioSaved;
   nsIntPoint mClientOffset;
+  // Cached result of gdk_window_get_origin which can be expensive.
+  mozilla::Maybe<nsIntPoint> mWindowOrigin;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
   // This field omits duplicate scroll events caused by GNOME bug 726878.
