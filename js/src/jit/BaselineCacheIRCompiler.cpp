@@ -3034,3 +3034,105 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
 
   return true;
 }
+
+bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
+                                                      Int32OperandId argcId,
+                                                      uint32_t icScriptOffset,
+                                                      CallFlags flags) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoScratchRegisterMaybeOutputType codeReg(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  Register calleeReg = allocator.useRegister(masm, calleeId);
+  Register argcReg = allocator.useRegister(masm, argcId);
+
+  bool isConstructing = flags.isConstructing();
+  bool isSameRealm = flags.isSameRealm();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Load JitScript
+  masm.loadPtr(Address(calleeReg, JSFunction::offsetOfScript()), codeReg);
+  masm.branchIfScriptHasNoJitScript(codeReg, failure->label());
+
+  masm.loadJitScript(codeReg, codeReg);
+
+  // Load BaselineScript
+  masm.loadPtr(Address(codeReg, JitScript::offsetOfBaselineScript()), codeReg);
+  static_assert(BaselineDisabledScript == 0x1);
+  masm.branchPtr(Assembler::BelowOrEqual, codeReg,
+                 ImmWord(BaselineDisabledScript), failure->label());
+
+  // Load Baseline jitcode
+  masm.loadPtr(Address(codeReg, BaselineScript::offsetOfMethod()), codeReg);
+  masm.loadPtr(Address(codeReg, JitCode::offsetOfCode()), codeReg);
+
+  if (!updateArgc(flags, argcReg, scratch)) {
+    return false;
+  }
+
+  allocator.discardStack(masm);
+
+  // Push a stub frame so that we can perform a non-tail call.
+  // Note that this leaves the return address in TailCallReg.
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  if (!isSameRealm) {
+    masm.switchToObjectRealm(calleeReg, scratch);
+  }
+
+  if (isConstructing) {
+    createThis(argcReg, calleeReg, scratch, flags);
+  }
+
+  pushArguments(argcReg, calleeReg, scratch, scratch2, flags,
+                /*isJitCall =*/true);
+
+  // Store icScript in the context.
+  Address icScriptAddr(stubAddress(icScriptOffset));
+  masm.loadPtr(icScriptAddr, scratch);
+  masm.loadJSContext(scratch2);
+  masm.storePtr(scratch,
+                Address(scratch2, JSContext::offsetOfInlinedICScript()));
+
+  EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
+
+  // Note that we use Push, not push, so that callJit will align the stack
+  // properly on ARM.
+  masm.Push(argcReg);
+  masm.PushCalleeToken(calleeReg, isConstructing);
+  masm.Push(scratch);
+
+  // Handle arguments underflow.
+  // TODO: This is a tricky problem for spread calls, where we don't
+  // know the number of arguments statically. We may need a second
+  // copy of the arguments rectifier.
+  Label noUnderflow;
+  masm.load16ZeroExtend(Address(calleeReg, JSFunction::offsetOfNargs()),
+                        calleeReg);
+  masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
+  masm.assumeUnreachable("Arguments rectifier not yet supported.");
+
+  masm.bind(&noUnderflow);
+  masm.callJit(codeReg);
+
+  // If this is a constructing call, and the callee returns a non-object,
+  // replace it with the |this| object passed in.
+  if (isConstructing) {
+    updateReturnValue();
+  }
+
+  stubFrame.leave(masm, true);
+
+  if (!isSameRealm) {
+    masm.switchToBaselineFrameRealm(scratch2);
+  }
+
+  return true;
+}
