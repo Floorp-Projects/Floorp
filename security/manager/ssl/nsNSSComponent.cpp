@@ -15,6 +15,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/net/SocketProcessParent.h"
@@ -2174,6 +2175,13 @@ bool CertHasDefaultTrust(CERTCertificate* cert) {
 void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("IntermediatePreloadingHealerCallback"));
+
+  if (AppShutdown::IsShuttingDown()) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("Exiting healer due to app shutdown"));
+    return;
+  }
+
   // Get the slot corresponding to the NSS certdb.
   UniquePK11SlotInfo softokenSlot(PK11_GetInternalKeySlot());
   if (!softokenSlot) {
@@ -2197,6 +2205,12 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   // is a preloaded intermediate.
   for (CERTCertListNode* n = CERT_LIST_HEAD(softokenCertificates);
        !CERT_LIST_END(n, softokenCertificates); n = CERT_LIST_NEXT(n)) {
+    if (AppShutdown::IsShuttingDown()) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("Exiting healer due to app shutdown"));
+      return;
+    }
+
     nsTArray<uint8_t> subject;
     subject.AppendElements(n->cert->derSubject.data, n->cert->derSubject.len);
     nsTArray<nsTArray<uint8_t>> certs;
@@ -2243,6 +2257,11 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
     }
   }
   for (const auto& certToDelete : certsToDelete) {
+    if (AppShutdown::IsShuttingDown()) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("Exiting healer due to app shutdown"));
+      return;
+    }
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("attempting to delete preloaded intermediate '%s'",
              certToDelete->subjectName));
