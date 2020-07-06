@@ -559,7 +559,6 @@ let LEGACY_ACTORS = {
         "Printing:Preview:Exit",
         "Printing:Preview:Navigate",
         "Printing:Preview:ParseDocument",
-        "Printing:Print",
       ],
     },
   },
