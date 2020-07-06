@@ -970,9 +970,18 @@ void WSRunScanner::EnsureWSFragments() {
   if (mPRE ||
       ((StartsFromNormalText() || StartsFromSpecialContent()) &&
        (EndsByNormalText() || EndsBySpecialContent() || EndsByBRElement()))) {
-    InitializeWithSingleFragment(WSFragment::Visible::Yes,
-                                 WSFragment::StartOfHardLine::No,
-                                 WSFragment::EndOfHardLine::No);
+    WSFragment* startRun = mFragments.AppendElement();
+    startRun->MarkAsVisible();
+    if (mStart.PointRef().IsSet()) {
+      startRun->mStartNode = mStart.PointRef().GetContainer();
+      startRun->mStartOffset = mStart.PointRef().Offset();
+    }
+    startRun->SetStartFrom(mStart.RawReason());
+    if (mEnd.PointRef().IsSet()) {
+      startRun->mEndNode = mEnd.PointRef().GetContainer();
+      startRun->mEndOffset = mEnd.PointRef().Offset();
+    }
+    startRun->SetEndBy(mEnd.RawReason());
     return;
   }
 
@@ -980,12 +989,23 @@ void WSRunScanner::EnsureWSFragments() {
   // nbsp's, then it's all non-rendering ws.
   if (!mNBSPData.FoundNBSP() &&
       (StartsFromHardLineBreak() || EndsByBlockBoundary())) {
-    InitializeWithSingleFragment(
-        WSFragment::Visible::No,
-        StartsFromHardLineBreak() ? WSFragment::StartOfHardLine::Yes
-                                  : WSFragment::StartOfHardLine::No,
-        EndsByBlockBoundary() ? WSFragment::EndOfHardLine::Yes
-                              : WSFragment::EndOfHardLine::No);
+    WSFragment* startRun = mFragments.AppendElement();
+    if (StartsFromHardLineBreak()) {
+      startRun->MarkAsStartOfHardLine();
+    }
+    if (EndsByBlockBoundary()) {
+      startRun->MarkAsEndOfHardLine();
+    }
+    if (mStart.PointRef().IsSet()) {
+      startRun->mStartNode = mStart.PointRef().GetContainer();
+      startRun->mStartOffset = mStart.PointRef().Offset();
+    }
+    startRun->SetStartFrom(mStart.RawReason());
+    if (mEnd.PointRef().IsSet()) {
+      startRun->mEndNode = mEnd.PointRef().GetContainer();
+      startRun->mEndOffset = mEnd.PointRef().Offset();
+    }
+    startRun->SetEndBy(mEnd.RawReason());
     return;
   }
 
@@ -1096,35 +1116,6 @@ void WSRunScanner::EnsureWSFragments() {
   }
   lastRun->SetStartFromNormalWhiteSpaces();
   lastRun->SetEndBy(mEnd.RawReason());
-}
-
-void WSRunScanner::InitializeWithSingleFragment(
-    WSFragment::Visible aIsVisible,
-    WSFragment::StartOfHardLine aIsStartOfHardLine,
-    WSFragment::EndOfHardLine aIsEndOfHardLine) {
-  MOZ_ASSERT(mFragments.IsEmpty());
-
-  WSFragment* startRun = mFragments.AppendElement();
-
-  if (mStart.PointRef().IsSet()) {
-    startRun->mStartNode = mStart.PointRef().GetContainer();
-    startRun->mStartOffset = mStart.PointRef().Offset();
-  }
-  if (aIsVisible == WSFragment::Visible::Yes) {
-    startRun->MarkAsVisible();
-  }
-  if (aIsStartOfHardLine == WSFragment::StartOfHardLine::Yes) {
-    startRun->MarkAsStartOfHardLine();
-  }
-  if (aIsEndOfHardLine == WSFragment::EndOfHardLine::Yes) {
-    startRun->MarkAsEndOfHardLine();
-  }
-  if (mEnd.PointRef().IsSet()) {
-    startRun->mEndNode = mEnd.PointRef().GetContainer();
-    startRun->mEndOffset = mEnd.PointRef().Offset();
-  }
-  startRun->SetStartFrom(mStart.RawReason());
-  startRun->SetEndBy(mEnd.RawReason());
 }
 
 nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
