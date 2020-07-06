@@ -14,6 +14,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/IonIC.h"
 #include "jit/JitRealm.h"
+#include "jit/TrialInlining.h"
 #include "jit/VMFunctions.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -117,6 +118,7 @@ namespace jit {
   _(DoConcatStringObject, js::jit::DoConcatStringObject)                       \
   _(DoSpreadCallFallback, js::jit::DoSpreadCallFallback)                       \
   _(DoStringToInt64, js::jit::DoStringToInt64)                                 \
+  _(DoTrialInlining, js::jit::DoTrialInlining)                                 \
   _(DoTypeUpdateFallback, js::jit::DoTypeUpdateFallback)                       \
   _(EnterWith, js::jit::EnterWith)                                             \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
