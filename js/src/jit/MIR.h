@@ -5206,7 +5206,8 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
   // get more precise types during MIR building than in type analysis.
   bool powerIsInt32_ : 1;
 
-  // If true, the result is guaranteed to never be negative zero.
+  // If true, the result is guaranteed to never be negative zero, as long as the
+  // power is a positive number.
   bool canBeNegativeZero_ : 1;
 
   MPow(MDefinition* input, MDefinition* power, MIRType specialization)
@@ -5224,6 +5225,8 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
   // Helpers for `foldsTo`
   MDefinition* foldsConstant(TempAllocator& alloc);
   MDefinition* foldsConstantPower(TempAllocator& alloc);
+
+  bool canBeNegativeZero() const { return canBeNegativeZero_; }
 
  public:
   INSTRUCTION_HEADER(Pow)
@@ -5244,7 +5247,6 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
-  bool canBeNegativeZero() const { return canBeNegativeZero_; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
