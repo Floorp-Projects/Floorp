@@ -1755,18 +1755,11 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
 
 gfxFontEntry* gfxFcPlatformFontList::CreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
-  fontlist::FontList* list = SharedFontList();
-  nsAutoCString desc(aFace->mDescriptor.AsString(list));
+  nsAutoCString desc(aFace->mDescriptor.AsString(SharedFontList()));
   FcPattern* pattern = FcNameParse((const FcChar8*)desc.get());
-  gfxFontEntry* fe = new gfxFontconfigFontEntry(desc, pattern, true);
+  auto* fe = new gfxFontconfigFontEntry(desc, pattern, true);
   FcPatternDestroy(pattern);
-  fe->mStyleRange = aFace->mStyle;
-  fe->mWeightRange = aFace->mWeight;
-  fe->mStretchRange = aFace->mStretch;
-  fe->mFixedPitch = aFace->mFixedPitch;
-  fe->mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
-  fe->mShmemFace = aFace;
-  fe->mFamilyName = aFamily->DisplayName().AsString(SharedFontList());
+  fe->InitializeFrom(aFace, aFamily);
   return fe;
 }
 
