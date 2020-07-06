@@ -6,6 +6,7 @@ const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
 
 const TEST_MULTISTAGE_CONTENT = {
   id: "multi-stage-welcome",
+  template: "multistage",
   screens: [
     {
       id: "AW_STEP1",

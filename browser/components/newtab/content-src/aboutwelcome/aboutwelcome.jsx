@@ -5,9 +5,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { MultiStageAboutWelcome } from "./components/MultiStageAboutWelcome";
-import { HeroText } from "./components/HeroText";
-import { FxCards } from "./components/FxCards";
-import { Localized } from "./components/MSLocalized";
+import { SimpleAboutWelcome } from "./components/SimpleAboutWelcome";
 
 import {
   AboutWelcomeUtils,
@@ -72,11 +70,7 @@ class AboutWelcome extends React.PureComponent {
 
   render() {
     const { props } = this;
-    // TBD: Refactor to redirect based off template value
-    // inside props.template
-    // Create SimpleAboutWelcome that renders default about welcome
-    // See Bug 1638087
-    if (props.screens) {
+    if (props.template === "multistage") {
       return (
         <MultiStageAboutWelcome
           screens={props.screens}
@@ -88,25 +82,16 @@ class AboutWelcome extends React.PureComponent {
     }
 
     return (
-      <div className="outer-wrapper welcomeContainer">
-        <div className="welcomeContainerInner">
-          <main>
-            <HeroText title={props.title} subtitle={props.subtitle} />
-            <FxCards
-              cards={props.cards}
-              metricsFlowUri={this.state.metricsFlowUri}
-              sendTelemetry={window.AWSendEventTelemetry}
-              utm_term={props.UTMTerm}
-            />
-            <Localized text={props.startButton.label}>
-              <button
-                className="start-button"
-                onClick={this.handleStartBtnClick}
-              />
-            </Localized>
-          </main>
-        </div>
-      </div>
+      <SimpleAboutWelcome
+        metricsFlowUri={this.state.metricsFlowUri}
+        message_id={props.messageId}
+        utm_term={props.UTMTerm}
+        title={props.title}
+        subtitle={props.subtitle}
+        cards={props.cards}
+        startButton={props.startButton}
+        handleStartBtnClick={this.handleStartBtnClick}
+      />
     );
   }
 }
