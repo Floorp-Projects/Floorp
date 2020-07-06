@@ -64,6 +64,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void SetOwnerProcessId(uint64_t aProcessId);
 
   void SetInFlightProcessId(uint64_t aProcessId);
+  void ClearInFlightProcessId(uint64_t aProcessId);
   uint64_t GetInFlightProcessId() const { return mInFlightProcessId; }
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
