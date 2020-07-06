@@ -255,6 +255,10 @@ void JitScript::trace(JSTracer* trc) {
   if (hasCachedIonData()) {
     cachedIonData().trace(trc);
   }
+
+  if (hasInliningRoot()) {
+    inliningRoot()->trace(trc);
+  }
 }
 
 void ICScript::trace(JSTracer* trc) {
@@ -469,6 +473,13 @@ void JitScript::purgeOptimizedStubs(JSScript* script) {
 
   JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
+  icScript()->purgeOptimizedStubs(zone);
+  if (hasInliningRoot()) {
+    inliningRoot()->purgeOptimizedStubs(zone);
+  }
+}
+
+void ICScript::purgeOptimizedStubs(Zone* zone) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& entry = icEntry(i);
     ICStub* lastStub = entry.firstStub();
@@ -811,6 +822,16 @@ void JitScript::initBytecodeTypeMap(JSScript* script) {
   MOZ_ASSERT(typeMapIndex == script->numBytecodeTypeSets());
 }
 
+InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx) {
+  if (!inliningRoot_) {
+    inliningRoot_ = js::MakeUnique<InliningRoot>(cx);
+  }
+  return inliningRoot_.get();
+}
+
 FallbackICStubSpace* ICScript::fallbackStubSpace() {
+  if (inliningRoot_) {
+    return inliningRoot_->fallbackStubSpace();
+  }
   return jitScript_->fallbackStubSpace();
 }

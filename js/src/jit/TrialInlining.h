@@ -35,6 +35,56 @@
 namespace js {
 namespace jit {
 
+/*
+ * An InliningRoot is owned by a JitScript. In turn, it owns the set
+ * of ICScripts that are candidates for being inlined in that JitScript.
+ */
+class InliningRoot {
+ public:
+  explicit InliningRoot(JSContext* cx) : inlinedScripts_(cx) {}
+
+  FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
+
+  void trace(JSTracer* trc);
+
+  bool addInlinedScript(js::UniquePtr<ICScript> icScript);
+
+  uint32_t numInlinedScripts() const { return inlinedScripts_.length(); }
+
+  void purgeOptimizedStubs(Zone* zone);
+
+ private:
+  FallbackICStubSpace fallbackStubSpace_ = {};
+  js::Vector<js::UniquePtr<ICScript>> inlinedScripts_;
+};
+
+class MOZ_RAII TrialInliner {
+ public:
+  TrialInliner(JSContext* cx, HandleScript script, ICScript* icScript,
+               InliningRoot* root)
+      : cx_(cx), script_(script), icScript_(icScript), root_(root) {}
+
+  JSContext* cx() { return cx_; }
+
+  MOZ_MUST_USE bool tryInlining();
+  MOZ_MUST_USE bool maybeInlineCall(const ICEntry& entry, BytecodeLocation loc);
+
+ private:
+  ICStub* maybeSingleStub(const ICEntry& entry);
+  void cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
+                         CacheIRWriter& writer);
+  ICScript* createInlinedICScript(JSFunction* target);
+  void replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
+                     CacheKind kind);
+
+  bool shouldInline(JSFunction* target);
+
+  JSContext* cx_;
+  HandleScript script_;
+  ICScript* icScript_;
+  InliningRoot* root_;
+};
+
 bool DoTrialInlining(JSContext* cx, BaselineFrame* frame);
 
 }  // namespace jit
