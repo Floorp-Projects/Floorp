@@ -62,6 +62,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -390,15 +391,9 @@ class HomeFragment : Fragment() {
         }
 
         consumeFrom(requireComponents.core.store) {
-            val tabCount = if (browsingModeManager.mode.isPrivate) {
-                it.privateTabs.size
-            } else {
-                it.normalTabs.size
-            }
-
-            view.tab_button?.setCountWithAnimation(tabCount)
-            view.add_tabs_to_collections_button?.isVisible = tabCount > 0
+            updateTabCounter(it)
         }
+        updateTabCounter(requireComponents.core.store.state)
     }
 
     override fun onDestroyView() {
@@ -925,6 +920,17 @@ class HomeFragment : Fragment() {
 
     private fun openTabTray() {
         TabTrayDialogFragment.show(parentFragmentManager)
+    }
+
+    private fun updateTabCounter(browserState: BrowserState) {
+        val tabCount = if (browsingModeManager.mode.isPrivate) {
+            browserState.privateTabs.size
+        } else {
+            browserState.normalTabs.size
+        }
+
+        view?.tab_button?.setCountWithAnimation(tabCount)
+        view?.add_tabs_to_collections_button?.isVisible = tabCount > 0
     }
 
     companion object {
