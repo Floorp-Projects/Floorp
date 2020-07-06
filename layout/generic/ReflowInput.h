@@ -11,9 +11,11 @@
 
 #include "nsMargin.h"
 #include "nsStyleConsts.h"
-#include "nsIFrame.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/WritingModes.h"
+#include "LayoutConstants.h"
+#include "ReflowOutput.h"
 #include <algorithm>
 
 class gfxContext;
@@ -23,6 +25,11 @@ class nsIPercentBSizeObserver;
 class nsLineLayout;
 class nsPlaceholderFrame;
 class nsPresContext;
+class nsReflowStatus;
+
+namespace mozilla {
+enum class LayoutFrameType : uint8_t;
+}
 
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
@@ -175,10 +182,7 @@ struct SizeComputationInput {
 
  public:
   // Callers using this constructor must call InitOffsets on their own.
-  SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext)
-      : mFrame(aFrame),
-        mRenderingContext(aRenderingContext),
-        mWritingMode(aFrame->GetWritingMode()) {}
+  SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext);
 
   SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext,
                        mozilla::WritingMode aContainingBlockWritingMode,
@@ -937,17 +941,7 @@ struct ReflowInput : public SizeComputationInput {
     return aBSize - aConsumed;
   }
 
-  bool ShouldReflowAllKids() const {
-    // Note that we could make a stronger optimization for IsBResize if
-    // we use it in a ShouldReflowChild test that replaces the current
-    // checks of NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN, if it
-    // were tested there along with NS_FRAME_CONTAINS_RELATIVE_BSIZE.
-    // This would need to be combined with a slight change in which
-    // frames NS_FRAME_CONTAINS_RELATIVE_BSIZE is marked on.
-    return mFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY) || IsIResize() ||
-           (IsBResize() &&
-            mFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE));
-  }
+  bool ShouldReflowAllKids() const;
 
   // This method doesn't apply min/max computed widths to the value passed in.
   void SetComputedWidth(nscoord aComputedWidth);
@@ -1003,20 +997,7 @@ struct ReflowInput : public SizeComputationInput {
   static void ApplyRelativePositioning(
       nsIFrame* aFrame, mozilla::WritingMode aWritingMode,
       const mozilla::LogicalMargin& aComputedOffsets,
-      mozilla::LogicalPoint* aPosition, const nsSize& aContainerSize) {
-    // Subtract the size of the frame from the container size that we
-    // use for converting between the logical and physical origins of
-    // the frame. This accounts for the fact that logical origins in RTL
-    // coordinate systems are at the top right of the frame instead of
-    // the top left.
-    nsSize frameSize = aFrame->GetSize();
-    nsPoint pos =
-        aPosition->GetPhysicalPoint(aWritingMode, aContainerSize - frameSize);
-    ApplyRelativePositioning(
-        aFrame, aComputedOffsets.GetPhysicalMargin(aWritingMode), &pos);
-    *aPosition =
-        mozilla::LogicalPoint(aWritingMode, pos, aContainerSize - frameSize);
-  }
+      mozilla::LogicalPoint* aPosition, const nsSize& aContainerSize);
 
   void ApplyRelativePositioning(mozilla::LogicalPoint* aPosition,
                                 const nsSize& aContainerSize) const {
