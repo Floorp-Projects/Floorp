@@ -990,39 +990,6 @@ class MOZ_RAII AutoScratchRegisterMaybeOutput {
   operator Register() const { return scratchReg_; }
 };
 
-// Like AutoScratchRegisterMaybeOutput, but tries to use the ValueOperand's
-// type register for the scratch register on 32-bit.
-//
-// Word of warning: Passing an instance of this class and AutoOutputRegister to
-// functions may not work correctly, because no guarantee is given that the type
-// register is used last when modifying the output's ValueOperand.
-class MOZ_RAII AutoScratchRegisterMaybeOutputType {
-  mozilla::Maybe<AutoScratchRegister> scratch_;
-  Register scratchReg_;
-
- public:
-  AutoScratchRegisterMaybeOutputType(CacheRegisterAllocator& alloc,
-                                     MacroAssembler& masm,
-                                     const AutoOutputRegister& output) {
-#if defined(JS_NUNBOX32)
-    scratchReg_ = output.hasValue() ? output.valueReg().typeReg() : InvalidReg;
-#else
-    scratchReg_ = InvalidReg;
-#endif
-    if (scratchReg_ == InvalidReg) {
-      scratch_.emplace(alloc, masm);
-      scratchReg_ = scratch_.ref();
-    }
-  }
-
-  AutoScratchRegisterMaybeOutputType(
-      const AutoScratchRegisterMaybeOutputType&) = delete;
-
-  void operator=(const AutoScratchRegisterMaybeOutputType&) = delete;
-
-  operator Register() const { return scratchReg_; }
-};
-
 // AutoCallVM is a wrapper class that unifies methods shared by
 // IonCacheIRCompiler and BaselineCacheIRCompiler that perform a callVM, but
 // require stub specific functionality before performing the VM call.
@@ -1205,9 +1172,6 @@ class CacheIRStubInfo {
 
   uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const;
   uintptr_t getStubRawWord(ICStub* stub, uint32_t offset) const;
-
-  int64_t getStubRawInt64(const uint8_t* stubData, uint32_t offset) const;
-  int64_t getStubRawInt64(ICStub* stub, uint32_t offset) const;
 };
 
 template <typename T>

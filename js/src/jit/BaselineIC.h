@@ -258,7 +258,7 @@ class ICEntry {
     return script->offsetToPC(pcOffset());
   }
 
-  static constexpr size_t offsetOfFirstStub() {
+  static inline size_t offsetOfFirstStub() {
     return offsetof(ICEntry, firstStub_);
   }
 
@@ -644,9 +644,6 @@ class ICStub {
     MOZ_ASSERT(next());
     return makesGCCalls();
   }
-
-  const CacheIRStubInfo* cacheIRStubInfo() const;
-  const uint8_t* cacheIRStubData();
 };
 
 class ICFallbackStub : public ICStub {
@@ -985,13 +982,11 @@ class ICStubCompiler : public ICStubCompilerBase {
  public:
   virtual ICStub* getStub(ICStubSpace* space) = 0;
 
-  static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
-                                       ICScript* icScript);
+  static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script);
 
   ICStubSpace* getStubSpace(JSScript* outerScript) {
-    MOZ_ASSERT(IsTypeInferenceEnabled());
     return StubSpaceForStub(ICStub::NonCacheIRStubMakesGCCalls(kind),
-                            outerScript, /*icScript = */ nullptr);
+                            outerScript);
   }
 };
 

@@ -315,57 +315,6 @@ def gen_spewer_method(name, args):
     return code
 
 
-def gen_clone_method(name, args):
-    """Generates code for cloning a single opcode."""
-
-    method_name = 'clone' + name
-
-    # Generate code like this:
-    #
-    #  void cloneGuardShape(CacheIRReader& reader, CacheIRWriter& writer) {
-    #    writer.writeOp(CacheOp::GuardShape);
-    #    ObjOperandId objId = reader.objOperandId();
-    #    writer.writeOperandId(objId);
-    #    uint32_t shapeOffset = reader.stubOffset();
-    #    Shape* shape = getShapeField(shapeOffset);
-    #    writer.writeShapeField(shape);
-    #    writer.assertLengthMatches();
-    #  }
-
-    args_code = ''
-    if args:
-        for arg_name, arg_type in six.iteritems(args):
-            if arg_type == 'RawId':
-                arg_type = 'ValId'
-
-            read_type, suffix, readexpr = arg_reader_info[arg_type]
-            read_name = arg_name + suffix
-            value_name = read_name
-            args_code += '  {} {} = {};\\\n'.format(read_type, read_name, readexpr)
-
-            write_type, write_method = arg_writer_info[arg_type]
-            if arg_name == 'result':
-                args_code += '  writer.newOperandId();\\\n'
-            if suffix == 'Offset':
-                # If the write function takes T&, the intermediate variable
-                # should be of type T.
-                if write_type.endswith('&'):
-                    write_type = write_type[:-1]
-                value_name = arg_name
-                args_code += '  {} {} = get{}({});\\\n'.format(write_type, value_name,
-                                                               arg_type, read_name)
-            args_code += '  writer.{}({});\\\n'.format(write_method, value_name)
-
-    code = 'void {}'.format(method_name)
-    code += '(CacheIRReader& reader, CacheIRWriter& writer) {{\\\n'
-    code += '  writer.writeOp(CacheOp::{});\\\n'.format(name)
-    code += args_code
-    code += '  writer.assertLengthMatches();\\\n'
-    code += '}}\\\n'
-
-    return code
-
-
 # Length in bytes for each argument type, either an integer or a C++ expression.
 # This is used to generate the CacheIROpArgLengths array. CacheIRWriter asserts
 # the number of bytes written matches the value in that array.
@@ -441,9 +390,6 @@ def generate_cacheirops_header(c_out, yaml_path):
     # Generated methods for spewers.
     spewer_methods = []
 
-    # Generated methods for cloning IC stubs
-    clone_methods = []
-
     for op in data:
         name = op['name']
 
@@ -483,8 +429,6 @@ def generate_cacheirops_header(c_out, yaml_path):
 
         spewer_methods.append(gen_spewer_method(name, args))
 
-        clone_methods.append(gen_clone_method(name, args))
-
     contents = '#define CACHE_IR_OPS(_)\\\n'
     contents += '\\\n'.join(ops_items)
     contents += '\n\n'
@@ -511,10 +455,6 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     contents += '#define CACHE_IR_SPEWER_GENERATED \\\n'
     contents += '\\\n'.join(spewer_methods)
-    contents += '\n\n'
-
-    contents += '#define CACHE_IR_CLONE_GENERATED \\\n'
-    contents += '\\\n'.join(clone_methods)
     contents += '\n\n'
 
     generate_header(c_out, 'jit_CacheIROpsGenerated_h', contents)

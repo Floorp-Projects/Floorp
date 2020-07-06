@@ -27,8 +27,12 @@ inline void EmitRepushTailCallReg(MacroAssembler& masm) {
   // No-op on ARM because link register is always holding the return address.
 }
 
-inline void EmitCallIC(MacroAssembler& masm, CodeOffset* callOffset) {
-  // The stub pointer must already be in ICStubReg.
+inline void EmitCallIC(MacroAssembler& masm, const ICEntry* entry,
+                       CodeOffset* callOffset) {
+  // Load stub pointer into ICStubReg.
+  masm.loadPtr(AbsoluteAddress(entry).offset(ICEntry::offsetOfFirstStub()),
+               ICStubReg);
+
   // Load stubcode pointer from the ICStub.
   // R2 won't be active when we call ICs, so we can use r0.
   static_assert(R2 == ValueOperand(r0));

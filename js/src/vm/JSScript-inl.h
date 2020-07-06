@@ -234,14 +234,14 @@ inline uint32_t JSScript::getWarmUpCount() const {
   if (warmUpData_.isWarmUpCount()) {
     return warmUpData_.toWarmUpCount();
   }
-  return warmUpData_.toJitScript()->warmUpCount();
+  return warmUpData_.toJitScript()->warmUpCount_;
 }
 
 inline void JSScript::incWarmUpCounter(uint32_t amount) {
   if (warmUpData_.isWarmUpCount()) {
     warmUpData_.incWarmUpCount(amount);
   } else {
-    warmUpData_.toJitScript()->incWarmUpCount(amount);
+    warmUpData_.toJitScript()->warmUpCount_ += amount;
   }
 }
 
@@ -250,7 +250,7 @@ inline void JSScript::resetWarmUpCounterForGC() {
   if (warmUpData_.isWarmUpCount()) {
     warmUpData_.resetWarmUpCount(0);
   } else {
-    warmUpData_.toJitScript()->resetWarmUpCount(0);
+    warmUpData_.toJitScript()->warmUpCount_ = 0;
   }
 }
 

@@ -989,17 +989,6 @@ uintptr_t CacheIRStubInfo::getStubRawWord(ICStub* stub, uint32_t offset) const {
   return getStubRawWord(stubData, offset);
 }
 
-int64_t CacheIRStubInfo::getStubRawInt64(const uint8_t* stubData,
-                                         uint32_t offset) const {
-  MOZ_ASSERT(uintptr_t(stubData) % sizeof(int64_t) == 0);
-  return *reinterpret_cast<const int64_t*>(stubData + offset);
-}
-
-int64_t CacheIRStubInfo::getStubRawInt64(ICStub* stub, uint32_t offset) const {
-  uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
-  return getStubRawInt64(stubData, offset);
-}
-
 template <class Stub, class T>
 GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
   uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
@@ -2610,6 +2599,39 @@ bool CacheIRCompiler::emitInt32ModResult(Int32OperandId lhsId,
 
   return true;
 }
+
+// Like AutoScratchRegisterMaybeOutput, but tries to use the ValueOperand's
+// type register for the scratch register on 32-bit.
+//
+// Word of warning: Passing an instance of this class and AutoOutputRegister to
+// functions may not work correctly, because no guarantee is given that the type
+// register is used last when modifying the output's ValueOperand.
+class MOZ_RAII AutoScratchRegisterMaybeOutputType {
+  mozilla::Maybe<AutoScratchRegister> scratch_;
+  Register scratchReg_;
+
+ public:
+  AutoScratchRegisterMaybeOutputType(CacheRegisterAllocator& alloc,
+                                     MacroAssembler& masm,
+                                     const AutoOutputRegister& output) {
+#if defined(JS_NUNBOX32)
+    scratchReg_ = output.hasValue() ? output.valueReg().typeReg() : InvalidReg;
+#else
+    scratchReg_ = InvalidReg;
+#endif
+    if (scratchReg_ == InvalidReg) {
+      scratch_.emplace(alloc, masm);
+      scratchReg_ = scratch_.ref();
+    }
+  }
+
+  AutoScratchRegisterMaybeOutputType(
+      const AutoScratchRegisterMaybeOutputType&) = delete;
+
+  void operator=(const AutoScratchRegisterMaybeOutputType&) = delete;
+
+  operator Register() const { return scratchReg_; }
+};
 
 bool CacheIRCompiler::emitInt32PowResult(Int32OperandId lhsId,
                                          Int32OperandId rhsId) {

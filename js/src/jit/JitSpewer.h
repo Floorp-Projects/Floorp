@@ -105,9 +105,7 @@ namespace jit {
   /* Generated WarpSnapshots */            \
   _(WarpSnapshots)                         \
   /* CacheIR transpiler logging */         \
-  _(WarpTranspiler)                        \
-  /* Trial inlining for Warp */            \
-  _(WarpTrialInlining)
+  _(WarpTranspiler)
 
 enum JitSpewChannel {
 #define JITSPEW_CHANNEL(name) JitSpew_##name,

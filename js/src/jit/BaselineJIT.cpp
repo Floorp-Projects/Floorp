@@ -617,7 +617,8 @@ const RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
 
 const RetAddrEntry& BaselineScript::prologueRetAddrEntry(
     RetAddrEntry::Kind kind) {
-  MOZ_ASSERT(kind == RetAddrEntry::Kind::StackCheck);
+  MOZ_ASSERT(kind == RetAddrEntry::Kind::StackCheck ||
+             kind == RetAddrEntry::Kind::WarmupCounter);
 
   // The prologue entries will always be at a very low offset, so just do a
   // linear search from the beginning.
