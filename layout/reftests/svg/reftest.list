@@ -328,8 +328,8 @@ fuzzy-if(gtkWidget,0-1,0-99) fuzzy-if(!contentSameGfxBackendAsCanvas,0-9,0-99) f
 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
-random-if(gtkWidget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
-random-if(gtkWidget) == objectBoundingBox-and-fePointLight-02.svg objectBoundingBox-and-fePointLight-02-ref.svg
+== objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
+== objectBoundingBox-and-fePointLight-02.svg objectBoundingBox-and-fePointLight-02-ref.svg
 == objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-mask-02.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
