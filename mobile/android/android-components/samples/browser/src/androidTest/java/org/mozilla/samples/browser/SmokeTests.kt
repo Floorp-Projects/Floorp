@@ -19,7 +19,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
-import mozilla.components.support.android.test.leaks.LeakDetectionRule
 import mozilla.components.support.android.test.rules.WebserverRule
 import org.junit.Rule
 import org.junit.Test
@@ -42,9 +41,6 @@ class SmokeTests {
 
     @get:Rule
     val webserverRule: WebserverRule = WebserverRule()
-
-    @get:Rule
-    val leakDetectionRule: LeakDetectionRule = LeakDetectionRule()
 
     /**
      * This test loads a website from a local webserver by typing into the URL bar. After that it verifies that the

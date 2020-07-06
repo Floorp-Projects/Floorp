@@ -25,7 +25,7 @@ object Versions {
     const val zxing = "3.3.0"
     const val jna = "5.2.0"
     const val disklrucache = "2.0.2"
-    const val leakcanary = "1.6.3"
+    const val leakcanary = "2.4"
 
     const val mozilla_appservices = "61.0.7"
 
@@ -115,6 +115,8 @@ object Dependencies {
 
     const val google_material = "com.google.android.material:material:${Versions.material}"
     const val google_nearby = "com.google.android.gms:play-services-nearby:${Versions.nearby}"
+
+    const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
 
     const val tools_dokka = "org.jetbrains.dokka:dokka-android-gradle-plugin:${Versions.dokka}"
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"

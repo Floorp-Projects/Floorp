@@ -18,7 +18,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArgument "clearPackageData", "true"
-        testInstrumentationRunnerArgument "listener", "com.squareup.leakcanary.FailTestOnLeakRunListener"
+        testInstrumentationRunnerArgument "listener", "leakcanary.FailTestOnLeakRunListener"
     }
 
     buildTypes {
@@ -141,6 +141,8 @@ dependencies {
     implementation Dependencies.androidx_swiperefreshlayout
     implementation Dependencies.androidx_localbroadcastmanager
 
+    debugImplementation Dependencies.leakcanary
+
     androidTestImplementation project(':support-android-test')
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner
@@ -148,6 +150,7 @@ dependencies {
     androidTestImplementation Dependencies.androidx_test_junit
     androidTestImplementation Dependencies.androidx_test_uiautomator
     androidTestImplementation Dependencies.androidx_espresso_core
+    androidTestImplementation Dependencies.testing_leakcanary
     androidTestImplementation Dependencies.testing_mockwebserver
 }
 
