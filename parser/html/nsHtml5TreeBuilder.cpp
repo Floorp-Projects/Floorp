@@ -1023,9 +1023,10 @@ starttagloop:
           case TBODY_OR_THEAD_OR_TFOOT:
           case TR:
           case TD_OR_TH: {
-            errStrayStartTag(name);
             eltPos = findLastInTableScope(nsGkAtoms::caption);
             if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
+              MOZ_ASSERT(fragment || isTemplateContents());
+              errStrayStartTag(name);
               NS_HTML5_BREAK(starttagloop);
             }
             generateImpliedEndTags();
@@ -2532,9 +2533,10 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             NS_HTML5_BREAK(endtagloop);
           }
           case TABLE: {
-            errTableClosedWhileCaptionOpen();
             eltPos = findLastInTableScope(nsGkAtoms::caption);
             if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
+              MOZ_ASSERT(fragment || isTemplateContents());
+              errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             }
             generateImpliedEndTags();

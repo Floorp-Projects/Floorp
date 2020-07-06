@@ -215,8 +215,6 @@ void errNoElementToCloseButEndTagSeen(nsAtom* aName);
 
 void errHtmlStartTagInForeignContext(nsAtom* aName);
 
-void errTableClosedWhileCaptionOpen();
-
 void errNoTableRowToClose();
 
 void errNonSpaceInTable();
