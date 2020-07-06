@@ -108,7 +108,8 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
 }
 
 class SessionControlAdapter(
-    private val interactor: SessionControlInteractor
+    private val interactor: SessionControlInteractor,
+    private val hasNormalTabsOpened: Boolean
 ) : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffCallback()) {
 
     // This method triggers the ComplexMethod lint error when in fact it's quite simple.
@@ -119,7 +120,8 @@ class SessionControlAdapter(
             ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
             TopSiteViewHolder.LAYOUT_ID -> TopSiteViewHolder(view, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, interactor)
-            NoCollectionsMessageViewHolder.LAYOUT_ID -> NoCollectionsMessageViewHolder(view, interactor)
+            NoCollectionsMessageViewHolder.LAYOUT_ID ->
+                NoCollectionsMessageViewHolder(view, interactor, hasNormalTabsOpened)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor, differentLastItem = true)

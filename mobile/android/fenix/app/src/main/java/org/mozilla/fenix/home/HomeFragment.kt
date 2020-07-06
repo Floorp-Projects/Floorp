@@ -218,7 +218,8 @@ class HomeFragment : Fragment() {
         sessionControlView = SessionControlView(
             view.sessionControlRecyclerView,
             sessionControlInteractor,
-            homeViewModel
+            homeViewModel,
+            requireComponents.core.store.state.normalTabs.isNotEmpty()
         )
 
         updateSessionControlView(view)

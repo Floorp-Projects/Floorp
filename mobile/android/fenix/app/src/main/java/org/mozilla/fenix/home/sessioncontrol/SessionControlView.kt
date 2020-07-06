@@ -114,12 +114,13 @@ private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapI
 class SessionControlView(
     override val containerView: View?,
     interactor: SessionControlInteractor,
-    private var homeScreenViewModel: HomeScreenViewModel
+    private var homeScreenViewModel: HomeScreenViewModel,
+    private val hasNormalTabsOpened: Boolean
 ) : LayoutContainer {
 
     val view: RecyclerView = containerView as RecyclerView
 
-    private val sessionControlAdapter = SessionControlAdapter(interactor)
+    private val sessionControlAdapter = SessionControlAdapter(interactor, hasNormalTabsOpened)
 
     init {
         view.apply {
