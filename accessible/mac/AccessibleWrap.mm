@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format off */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,9 +11,11 @@
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "Role.h"
+#include "TextRange.h"
 #include "gfxPlatform.h"
 
 #import "MOXMathAccessibles.h"
+#import "MOXTextMarkerDelegate.h"
 #import "MOXWebAreaAccessible.h"
 #import "mozAccessible.h"
 #import "mozActionElements.h"
@@ -113,8 +117,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     case nsIAccessibleEvent::EVENT_FOCUS:
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
-    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
-    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
     case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
@@ -149,6 +151,44 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
           return NS_OK;
         } else {
           return NS_ERROR_FAILURE;
+        }
+      }
+      break;
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+      if (Accessible* accessible = aEvent->GetAccessible()) {
+        accessible->GetNativeInterface((void**)&nativeAcc);
+        if (!nativeAcc) {
+          return NS_ERROR_FAILURE;
+        }
+
+        MOXTextMarkerDelegate* delegate =
+            [MOXTextMarkerDelegate getOrCreateForDoc:aEvent->Document()];
+        AccTextSelChangeEvent* event = downcast_accEvent(aEvent);
+        AutoTArray<TextRange, 1> ranges;
+        event->SelectionRanges(&ranges);
+
+        if (ranges.Length()) {
+          // Cache selection in delegate.
+          [delegate setSelectionFrom:ranges[0].StartContainer()
+                                  at:ranges[0].StartOffset()
+                                  to:ranges[0].EndContainer()
+                                  at:ranges[0].EndOffset()];
+        }
+      }
+      break;
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+      if (Accessible* accessible = aEvent->GetAccessible()) {
+        accessible->GetNativeInterface((void**)&nativeAcc);
+        if (!nativeAcc) {
+          return NS_ERROR_FAILURE;
+        }
+
+        AccCaretMoveEvent* event = downcast_accEvent(aEvent);
+        if (event->IsSelectionCollapsed()) {
+          // If the selection is collapsed, invalidate our text selection cache.
+          MOXTextMarkerDelegate* delegate =
+              [MOXTextMarkerDelegate getOrCreateForDoc:aEvent->Document()];
+          [delegate invalidateSelection];
         }
       }
       break;

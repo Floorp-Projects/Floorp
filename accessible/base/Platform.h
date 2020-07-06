@@ -138,6 +138,12 @@ bool LocalizeString(
     const nsTArray<nsString>& aFormatString = nsTArray<nsString>());
 #endif
 
+#ifdef MOZ_WIDGET_COCOA
+class TextRangeData;
+void ProxyTextSelectionChangeEvent(ProxyAccessible* aTarget,
+                                   const nsTArray<TextRangeData>& aSelection);
+#endif
+
 }  // namespace a11y
 }  // namespace mozilla
 

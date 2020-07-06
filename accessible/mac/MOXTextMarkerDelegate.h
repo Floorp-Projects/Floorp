@@ -11,6 +11,7 @@
 
 @interface MOXTextMarkerDelegate : NSObject <MOXTextMarkerSupport> {
   mozilla::a11y::AccessibleOrProxy mGeckoDocAccessible;
+  id mSelection;
 }
 
 + (id)getOrCreateForDoc:(mozilla::a11y::AccessibleOrProxy)aDoc;
@@ -19,11 +20,23 @@
 
 - (id)initWithDoc:(mozilla::a11y::AccessibleOrProxy)aDoc;
 
+- (void)dealloc;
+
+- (void)setSelectionFrom:(mozilla::a11y::AccessibleOrProxy)startContainer
+                      at:(int32_t)startOffset
+                      to:(mozilla::a11y::AccessibleOrProxy)endContainer
+                      at:(int32_t)endOffset;
+
+- (void)invalidateSelection;
+
 // override
 - (id)moxStartTextMarker;
 
 // override
 - (id)moxEndTextMarker;
+
+// override
+- (id)moxSelectedTextMarkerRange;
 
 // override
 - (NSNumber*)moxLengthForTextMarkerRange:(id)textMarkerRange;
