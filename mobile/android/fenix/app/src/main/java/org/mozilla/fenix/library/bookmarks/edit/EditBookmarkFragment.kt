@@ -31,7 +31,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -111,15 +111,13 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
     }
 
     private fun initToolbar() {
-        val activity = activity as? AppCompatActivity
-        val actionBar = (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary()
+        val activity = activity as AppCompatActivity
+        val actionBar = (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary()
         val toolbar = activity.findViewById<Toolbar>(R.id.navigationToolbar)
-        context?.let {
-            toolbar?.setToolbarColors(
-                foreground = it.getColorFromAttr(R.attr.primaryText),
-                background = it.getColorFromAttr(R.attr.foundation)
-            )
-        }
+        toolbar?.setToolbarColors(
+            foreground = activity.getColorFromAttr(R.attr.primaryText),
+            background = activity.getColorFromAttr(R.attr.foundation)
+        )
         actionBar.show()
     }
 

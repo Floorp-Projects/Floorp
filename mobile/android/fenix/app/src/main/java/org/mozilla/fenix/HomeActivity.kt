@@ -63,8 +63,8 @@ import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.resetPoliciesAfter
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
@@ -100,7 +100,7 @@ import org.mozilla.fenix.utils.RunWhenReadyQueue
  * - browser screen
  */
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-open class HomeActivity : LocaleAwareAppCompatActivity() {
+open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private var webExtScope: CoroutineScope? = null
     lateinit var themeManager: ThemeManager
@@ -392,7 +392,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
      * Returns the [supportActionBar], inflating it if necessary.
      * Everyone should call this instead of supportActionBar.
      */
-    fun getSupportActionBarAndInflateIfNecessary(): ActionBar {
+    override fun getSupportActionBarAndInflateIfNecessary(): ActionBar {
         if (!isToolbarInflated) {
             navigationToolbar = navigationToolbarStub.inflate() as Toolbar
 

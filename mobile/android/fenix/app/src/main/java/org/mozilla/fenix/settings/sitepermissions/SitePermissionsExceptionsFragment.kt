@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
-import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -44,7 +44,7 @@ class SitePermissionsExceptionsFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().show()
+        (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
     }
 
     override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {

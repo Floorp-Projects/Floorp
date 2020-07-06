@@ -37,7 +37,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
-import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
@@ -147,7 +147,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     override fun onResume() {
         super.onResume()
 
-        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().show()
+        (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
 
         // Reload bookmarks when returning to this fragment in case they have been edited
         val args by navArgs<BookmarkFragmentArgs>()

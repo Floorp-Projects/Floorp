@@ -5,10 +5,11 @@
 package org.mozilla.fenix.addons
 
 import android.content.Intent
-import android.net.Uri
+import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.StringRes
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,7 +27,7 @@ private const val LEARN_MORE_URL =
 /**
  * A fragment to show the permissions of an add-on.
  */
-class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permissions), View.OnClickListener {
+class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permissions) {
 
     private val args by navArgs<AddonPermissionsDetailsFragmentArgs>()
 
@@ -55,12 +56,9 @@ class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permis
     }
 
     private fun bindLearnMore(view: View) {
-        view.learn_more_label.setOnClickListener(this)
-    }
-
-    override fun onClick(v: View?) {
-        val intent =
-            Intent(Intent.ACTION_VIEW).setData(Uri.parse(LEARN_MORE_URL))
-        startActivity(intent)
+        view.learn_more_label.setOnClickListener {
+            val intent = Intent(ACTION_VIEW, LEARN_MORE_URL.toUri())
+            startActivity(intent)
+        }
     }
 }
