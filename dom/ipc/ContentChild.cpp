@@ -4261,13 +4261,13 @@ NS_IMETHODIMP ContentChild::GetChildID(uint64_t* aOut) {
   return NS_OK;
 }
 
-NS_IMETHODIMP ContentChild::GetActor(const nsACString& aName,
+NS_IMETHODIMP ContentChild::GetActor(const nsACString& aName, JSContext* aCx,
                                      JSProcessActorChild** retval) {
   ErrorResult error;
   RefPtr<JSProcessActorChild> actor =
       JSActorManager::GetActor(aName, error).downcast<JSProcessActorChild>();
-  if (error.Failed()) {
-    return error.StealNSResult();
+  if (error.MaybeSetPendingException(aCx)) {
+    return NS_ERROR_FAILURE;
   }
   actor.forget(retval);
   return NS_OK;

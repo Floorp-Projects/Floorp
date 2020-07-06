@@ -139,13 +139,13 @@ InProcessParent::GetOsPid(int32_t* aOsPid) {
 }
 
 NS_IMETHODIMP
-InProcessParent::GetActor(const nsACString& aName,
+InProcessParent::GetActor(const nsACString& aName, JSContext* aCx,
                           JSProcessActorParent** aActor) {
   ErrorResult error;
   RefPtr<JSProcessActorParent> actor =
       JSActorManager::GetActor(aName, error).downcast<JSProcessActorParent>();
-  if (error.Failed()) {
-    return error.StealNSResult();
+  if (error.MaybeSetPendingException(aCx)) {
+    return NS_ERROR_FAILURE;
   }
   actor.forget(aActor);
   return NS_OK;
@@ -188,13 +188,13 @@ InProcessChild::GetChildID(uint64_t* aChildID) {
 }
 
 NS_IMETHODIMP
-InProcessChild::GetActor(const nsACString& aName,
+InProcessChild::GetActor(const nsACString& aName, JSContext* aCx,
                          JSProcessActorChild** aActor) {
   ErrorResult error;
   RefPtr<JSProcessActorChild> actor =
       JSActorManager::GetActor(aName, error).downcast<JSProcessActorChild>();
-  if (error.Failed()) {
-    return error.StealNSResult();
+  if (error.MaybeSetPendingException(aCx)) {
+    return NS_ERROR_FAILURE;
   }
   actor.forget(aActor);
   return NS_OK;

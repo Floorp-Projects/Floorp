@@ -6853,13 +6853,13 @@ IPCResult ContentParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
-NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
+NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName, JSContext* aCx,
                                       JSProcessActorParent** retval) {
   ErrorResult error;
   RefPtr<JSProcessActorParent> actor =
       JSActorManager::GetActor(aName, error).downcast<JSProcessActorParent>();
-  if (error.Failed()) {
-    return error.StealNSResult();
+  if (error.MaybeSetPendingException(aCx)) {
+    return NS_ERROR_FAILURE;
   }
   actor.forget(retval);
   return NS_OK;
