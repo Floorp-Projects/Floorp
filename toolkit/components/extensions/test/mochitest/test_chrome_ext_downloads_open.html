@@ -93,10 +93,12 @@ add_task(async function downloads_open_invalid_id() {
   await extension.startup();
 
   let url = await extension.awaitMessage("ready");
-  let win = window.open(url);
+  let win = window.open();
+  let browserFrame = win.browsingContext.embedderElement;
+  win.location.href = url;
   await extension.awaitMessage("page-ready");
 
-  synthesizeKey("a", {}, win);
+  synthesizeKey("a", {}, browserFrame.contentWindow);
   let result = await extension.awaitMessage("download-open.result");
 
   is(result.success, false, "Opening download fails.");

@@ -101,7 +101,9 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
     }
 
     let url = await extension.awaitMessage("ready");
-    let win = window.open(url);
+    let win = window.open();
+    let browserFrame = win.browsingContext.embedderElement;
+    win.location.href = url;
     await extension.awaitMessage("page-ready");
 
     // Using the cookies API from an extension page should fail
@@ -121,7 +123,7 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
       is(result, false, "fetch() failed from content script due to lack of host permission");
     }
 
-    synthesizeKey("a", {}, win);
+    synthesizeKey("a", {}, browserFrame.contentWindow);
     result = await extension.awaitMessage("request.result");
     is(result, true, "permissions.request() succeeded");
 
