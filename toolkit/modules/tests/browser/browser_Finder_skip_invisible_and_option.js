@@ -78,6 +78,7 @@ add_task(async function test_find_anon_content() {
     <div> </div>
     <img alt="Some fallback text">
     <input type="submit" value="Some button text">
+    <input type="password" value="password">
   `;
   await BrowserTestUtils.withNewTab(
     {
@@ -99,14 +100,16 @@ add_task(async function test_find_anon_content() {
         });
       }
 
-      async function assertFindable(text) {
+      async function assertFindable(text, findable = true) {
         let promiseFind = waitForFind();
         finder.fastFind(text, false, false);
         let findResult = await promiseFind;
         is(
           findResult.result,
-          Ci.nsITypeAheadFind.FIND_FOUND,
-          `${text} should be findable`
+          findable
+            ? Ci.nsITypeAheadFind.FIND_FOUND
+            : Ci.nsITypeAheadFind.FIND_NOTFOUND,
+          `${text} should ${findable ? "" : "not "}be findable`
         );
       }
 
@@ -114,6 +117,7 @@ add_task(async function test_find_anon_content() {
       await assertFindable("after content");
       await assertFindable("fallback text");
       await assertFindable("button text");
+      await assertFindable("password", false);
 
       finder.removeResultListener(listener);
     }
