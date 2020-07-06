@@ -336,9 +336,7 @@ impl FontContext {
         } else {
             // TODO(gw): Provide detailed error values.
             Err(ResourceCacheError::new(
-                // Once this panic has been here for a while with no issues we should get rid of
-                // ResourceCacheError as this was the only place that could fail previously.
-                panic!("Failed to initialize FreeType - {}", result)
+                format!("Failed to initialize FreeType - {}", result)
             ))
         }
     }
