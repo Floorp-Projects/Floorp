@@ -67,12 +67,47 @@ add_task(async function basic_stash() {
       id: "@onlyblockedbymlbf",
       version: "1",
       signedDate: new Date(0), // = the MLBF's generationTime.
+      signedState: AddonManager.SIGNEDSTATE_SIGNED,
     }),
     Ci.nsIBlocklistService.STATE_BLOCKED,
     "falls through to MLBF if entry is not found in stash"
   );
 
   Assert.deepEqual(MLBF_LOAD_ATTEMPTS, [null], "MLBF attachment not found");
+});
+
+// To complement the privileged_xpi_not_blocked in test_blocklist_mlbf.js,
+// verify that privileged add-ons can still be blocked through stashes.
+add_task(async function privileged_addon_blocked_by_stash() {
+  const system_addon = {
+    id: "@blocked",
+    version: "1",
+    signedDate: new Date(0), // = the MLBF's generationTime.
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
+  };
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(system_addon),
+    Ci.nsIBlocklistService.STATE_BLOCKED,
+    "Privileged add-ons can still be blocked by a stash"
+  );
+
+  system_addon.signedState = AddonManager.SIGNEDSTATE_SYSTEM;
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(system_addon),
+    Ci.nsIBlocklistService.STATE_BLOCKED,
+    "Privileged system add-ons can still be blocked by a stash"
+  );
+
+  // For comparison, when an add-on is only blocked by a MLBF, the block
+  // decision is ignored.
+  system_addon.id = "@onlyblockedbymlbf";
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(system_addon),
+    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+    "Privileged add-ons cannot be blocked via a MLBF"
+  );
+  // (note that we haven't checked that SIGNEDSTATE_PRIVILEGED is not blocked
+  // via the MLBF, but that is already covered by test_blocklist_mlbf.js ).
 });
 
 // Tests that invalid stash entries are ignored.
