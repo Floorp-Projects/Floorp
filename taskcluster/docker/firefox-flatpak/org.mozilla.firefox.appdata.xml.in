@@ -3,66 +3,22 @@
   <id type="desktop">org.mozilla.firefox</id>
   <launchable type="desktop-id">org.mozilla.firefox.desktop</launchable>
   <name>Firefox</name>
-  <summary>Firefox Web Browser</summary>
+  <summary>Mozilla Firefox Web Browser</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MPL-2.0</project_license>
   <description>
-    <p>The new Firefox></p>
-    <p>Meet Firefox Quantum. Fast for good.</p>
+    <p>The Firefox standalone app for Linux is here</p>
+    <p>Get uncompromised access to the web by blending integrated privacy features and extensions with incredible performance.</p>
     <p>Features:</p>
     <ul>
-    <li>A powerful, new engine that’s built for rapidfire performance.</li>
-    <li>Better, faster page loading that uses less computer memory.</li>
-    <li>Gorgeous design and smart features for intelligent browsing.</li>
+    <li>A powerful engine that’s built for rapidfire performance no matter how many tabs you’re switching between</li>
+    <li>Automatic privacy protection to safeguard your personal data against 2000+ online trackers</li>
+    <li>Faster page loading by blocking disruptive ads and scripts that hijack your browsing experience</li>
     </ul>
-    <p>Now 2x faster></p>
-    <p>Crazy powerful browser engine? Check. Less time waiting around for
-    pages to load? Also, check. Firefox Quantum is twice as fast as Firefox
-    was before.</p>
-    <p>Smooth browsing</p>
-    <p>Whether you’ve opened 10 or 1000, switching between tabs is faster than ever with Firefox’s new, responsive engine.</p>
-    <p>Seriously Private Browsing</p>
-    <p>The most powerful private browsing mode with added tracking protection.</p>
-    <ul>
-    <li>Private Browsing
-    <ul>
-    <li>Firefox blocks online trackers while you browse and won’t remember your history after you’re done.</li>
-    </ul>
-    </li>
-    <li>Tracking Protection
-    <ul>
-    <li>Some ads have hidden trackers that follow you online. Rude. We know. That’s why our powerful tool stops them cold.</li>
-    </ul>
-    </li>
-    <li>Faster Page Loading
-    <ul>
-    <li>By blocking some ads and scripts that bog down browsing, pages load up to 44% faster. Now that’s a win-win.</li>
-    </ul>
-    </li>
-    </ul>
-    <p>Customization Features</p>
-    <ul>
-    <li>Extensions
-    </li>
-    <li>Customize Firefox with thousands of extensions like LastPass, uBlock Origin, Evernote and more.
-    </li>
-    <li>Themes
-    <ul>
-    <li>Make over Firefox to suit your mood! Choose a new look from our theme categories or create your own.</li>
-    </ul>
-    </li>
-    </ul>
-    <p>Sync your devices</p>
-    <ul>
-    <li>Seamlessly access passwords, bookmarks and more. Plus, use our Send
-    Tabs feature to instantly share open tabs between desktop, mobile and
-    tablet.</li>
-    </ul>
+    <p>One account to sync them all</p>
+    <p>Seamlessly access passwords, bookmarks and more from all your devices. Plus, use the Send Tabs feature to instantly share open tabs between desktop, mobile and tablet.</p>
     <p>Browse for good</p>
-    <p>Firefox is made by Mozilla, the non-profit champions of a healthy
-    internet. Mozilla also tackles issues like privacy, misinformation and
-    trolling by investing in fellowships, campaigns and new technologies
-    designed to make the internet healthier.</p>
+    <p>We never track, collect or store your personal data. The Firefox Browser is made by Mozilla, the non-profit champions of a healthy internet. Mozilla also tackles issues like privacy, misinformation and trolling by investing in fellowships, campaigns and new technologies designed to make the internet a healthier place that’s open to everyone.</p>
   </description>
   <releases>
 	<release version="$VERSION" date="$DATE"/>
@@ -80,8 +36,8 @@
   <url type="translate">https://wiki.mozilla.org/L10n:Starting_a_localization</url>
 
   <screenshots>
-    <screenshot type="default">https://raw.githubusercontent.com/hughsie/fedora-appstream/master/screenshots-extra/firefox/a.png</screenshot>
-    <screenshot>https://raw.githubusercontent.com/hughsie/fedora-appstream/master/screenshots-extra/firefox/b.png</screenshot>
-    <screenshot>https://raw.githubusercontent.com/hughsie/fedora-appstream/master/screenshots-extra/firefox/c.png</screenshot>
+	<screenshot type="default">https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image1.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image2.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image3.png</screenshot>
   </screenshots>
 </application>
