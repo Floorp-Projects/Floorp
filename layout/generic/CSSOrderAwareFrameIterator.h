@@ -9,7 +9,7 @@
 #ifndef mozilla_CSSOrderAwareFrameIterator_h
 #define mozilla_CSSOrderAwareFrameIterator_h
 
-#include <algorithm>
+#include <limits>
 #include "nsFrameList.h"
 #include "nsIFrame.h"
 #include "mozilla/Maybe.h"
@@ -111,9 +111,7 @@ class CSSOrderAwareFrameIteratorT {
       auto comparator = (aOrderProp == eUseBoxOrdinalGroup)
                             ? CSSBoxOrdinalGroupComparator
                             : CSSOrderComparator;
-
-      // XXX replace this with nsTArray::StableSort when bug 1147091 is fixed.
-      std::stable_sort(mArray->begin(), mArray->end(), comparator);
+      mArray->StableSort(comparator);
     }
 
     if (mSkipPlaceholders) {
@@ -234,13 +232,13 @@ class CSSOrderAwareFrameIteratorT {
 
   bool ItemsAreAlreadyInOrder() const { return mIter.isSome(); }
 
-  static bool CSSOrderComparator(nsIFrame* const& a, nsIFrame* const& b);
-  static bool CSSBoxOrdinalGroupComparator(nsIFrame* const& a,
-                                           nsIFrame* const& b);
-
  private:
   Iterator begin(const nsFrameList& aList);
   Iterator end(const nsFrameList& aList);
+
+  static int CSSOrderComparator(nsIFrame* const& a, nsIFrame* const& b);
+  static int CSSBoxOrdinalGroupComparator(nsIFrame* const& a,
+                                          nsIFrame* const& b);
 
   nsFrameList mChildren;
   // Used if child list is already in ascending 'order'.
