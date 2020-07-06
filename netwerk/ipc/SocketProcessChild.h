@@ -127,6 +127,8 @@ class SocketProcessChild final
   AllocPRemoteLazyInputStreamChild(const nsID& aID, const uint64_t& aSize);
 
   mozilla::ipc::IPCResult RecvGetSocketData(GetSocketDataResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvGetDNSCacheEntries(
+      GetDNSCacheEntriesResolver&& aResolve);
 
  protected:
   friend class SocketProcessImpl;

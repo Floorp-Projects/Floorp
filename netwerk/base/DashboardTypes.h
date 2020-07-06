@@ -89,6 +89,30 @@ struct ParamTraits<mozilla::net::SocketInfo> {
   }
 };
 
+template <>
+struct ParamTraits<mozilla::net::DNSCacheEntries> {
+  typedef mozilla::net::DNSCacheEntries paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.hostname);
+    WriteParam(aMsg, aParam.hostaddr);
+    WriteParam(aMsg, aParam.family);
+    WriteParam(aMsg, aParam.expiration);
+    WriteParam(aMsg, aParam.netInterface);
+    WriteParam(aMsg, aParam.TRR);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->hostname) &&
+           ReadParam(aMsg, aIter, &aResult->hostaddr) &&
+           ReadParam(aMsg, aIter, &aResult->family) &&
+           ReadParam(aMsg, aIter, &aResult->expiration) &&
+           ReadParam(aMsg, aIter, &aResult->netInterface) &&
+           ReadParam(aMsg, aIter, &aResult->TRR);
+  }
+};
+
 }  // namespace IPC
 
 #endif  // mozilla_net_DashboardTypes_h_
