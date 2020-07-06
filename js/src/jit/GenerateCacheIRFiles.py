@@ -314,6 +314,7 @@ def gen_spewer_method(name, args):
 
     return code
 
+
 def gen_clone_method(name, args):
     """Generates code for cloning a single opcode."""
 
@@ -363,6 +364,7 @@ def gen_clone_method(name, args):
     code += '}}\\\n'
 
     return code
+
 
 # Length in bytes for each argument type, either an integer or a C++ expression.
 # This is used to generate the CacheIROpArgLengths array. CacheIRWriter asserts

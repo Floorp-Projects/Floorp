@@ -467,6 +467,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
 #endif
 
+  static size_t offsetOfInlinedICScript() {
+    return offsetof(JSContext, inlinedICScript_);
+  }
+
  public:
   js::InterpreterStack& interpreterStack() {
     return runtime()->interpreterStack();

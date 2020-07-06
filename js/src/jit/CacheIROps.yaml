@@ -1110,6 +1110,17 @@
     flags: CallFlagsImm
     target: RawPointerField
 
+- name: CallInlinedFunction
+  shared: false
+  transpile: true
+  cost_estimate: 4
+  args:
+    callee: ObjId
+    argc: Int32Id
+    icScript: RawPointerField
+    flags: CallFlagsImm
+
+
 # Meta ops generate no code, but contain data for BaselineInspector.
 - name: MetaTwoByte
   shared: true
