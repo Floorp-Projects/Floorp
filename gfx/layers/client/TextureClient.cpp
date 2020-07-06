@@ -265,6 +265,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
                                   gfx::IntSize aSize,
                                   LayersBackend aLayersBackend,
                                   gfx::BackendType aBackendType,
+                                  BackendSelector aSelector,
                                   int32_t aMaxTextureSize,
                                   TextureAllocationFlags aAllocFlags) {
 #ifdef XP_WIN
@@ -316,7 +317,8 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (gfx::gfxVars::UseAHardwareBufferContent()) {
+  if (gfxVars::UseAHardwareBufferContent() &&
+      aSelector == BackendSelector::Content) {
     return TextureType::AndroidHardwareBuffer;
   }
   if (StaticPrefs::gfx_use_surfacetexture_textures_AtStartup()) {
@@ -333,7 +335,8 @@ TextureType PreferredCanvasTextureType(
   const auto moz2DBackend =
       BackendTypeForBackendSelector(layersBackend, BackendSelector::Canvas);
   return GetTextureType(gfx::SurfaceFormat::R8G8B8A8, {1, 1}, layersBackend,
-                        moz2DBackend, 2, TextureAllocationFlags::ALLOC_DEFAULT);
+                        moz2DBackend, BackendSelector::Canvas, 2,
+                        TextureAllocationFlags::ALLOC_DEFAULT);
 }
 
 static bool ShouldRemoteTextureType(TextureType aTextureType,
@@ -366,7 +369,7 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
       BackendTypeForBackendSelector(aLayersBackend, aSelector);
 
   TextureType textureType =
-      GetTextureType(aFormat, aSize, aLayersBackend, moz2DBackend,
+      GetTextureType(aFormat, aSize, aLayersBackend, moz2DBackend, aSelector,
                      aMaxTextureSize, aAllocFlags);
 
   if (ShouldRemoteTextureType(textureType, aSelector)) {
@@ -419,9 +422,10 @@ bool TextureData::IsRemote(LayersBackend aLayersBackend,
   gfx::BackendType moz2DBackend =
       BackendTypeForBackendSelector(aLayersBackend, aSelector);
 
-  TextureType textureType = GetTextureType(
-      gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1, 1), aLayersBackend,
-      moz2DBackend, INT32_MAX, TextureAllocationFlags::ALLOC_DEFAULT);
+  TextureType textureType =
+      GetTextureType(gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1, 1),
+                     aLayersBackend, moz2DBackend, aSelector, INT32_MAX,
+                     TextureAllocationFlags::ALLOC_DEFAULT);
 
   return ShouldRemoteTextureType(textureType, aSelector);
 }
