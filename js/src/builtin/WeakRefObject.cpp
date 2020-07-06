@@ -158,7 +158,7 @@ const JSClass WeakRefObject::class_ = {
 const JSClass WeakRefObject::protoClass_ = {
     // https://tc39.es/proposal-weakrefs/#sec-weak-ref.prototype
     // https://tc39.es/proposal-weakrefs/#sec-properties-of-the-weak-ref-prototype-object
-    "WeakRefPrototype", JSCLASS_HAS_CACHED_PROTO(JSProto_WeakRef),
+    "WeakRef.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_WeakRef),
     JS_NULL_CLASS_OPS, &classSpec_};
 
 const JSPropertySpec WeakRefObject::properties[] = {

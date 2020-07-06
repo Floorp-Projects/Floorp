@@ -408,7 +408,7 @@ const JSClass SharedArrayBufferObject::class_ = {
     JS_NULL_CLASS_EXT};
 
 const JSClass SharedArrayBufferObject::protoClass_ = {
-    "SharedArrayBufferPrototype",
+    "SharedArrayBuffer.prototype",
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer), JS_NULL_CLASS_OPS,
     &SharedArrayBufferObjectClassSpec};
 
