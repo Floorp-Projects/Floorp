@@ -34,46 +34,6 @@ using namespace mozilla::dom;
 // Global reference to the URI fixup service.
 static mozilla::StaticRefPtr<nsIURIFixup> sURIFixup;
 
-namespace {
-already_AddRefed<nsIURIFixupInfo> GetFixupURIInfo(const nsACString& aStringURI,
-                                                  uint32_t aFixupFlags,
-                                                  nsIInputStream** aPostData) {
-  nsCOMPtr<nsIURIFixupInfo> info;
-  if (XRE_IsContentProcess()) {
-    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-    if (!contentChild) {
-      return nullptr;
-    }
-
-    RefPtr<nsIInputStream> postData;
-    RefPtr<nsIURI> fixedURI, preferredURI;
-    nsAutoString providerName;
-    nsAutoCString stringURI(aStringURI);
-    // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
-    if (contentChild->SendGetFixupURIInfo(stringURI, aFixupFlags, &providerName,
-                                          &postData, &fixedURI,
-                                          &preferredURI)) {
-      if (preferredURI) {
-        info = do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
-        if (NS_WARN_IF(!info)) {
-          return nullptr;
-        }
-        info->SetKeywordProviderName(providerName);
-        if (aPostData) {
-          postData.forget(aPostData);
-        }
-        info->SetFixedURI(fixedURI);
-        info->SetPreferredURI(preferredURI);
-      }
-    }
-  } else {
-    sURIFixup->GetFixupURIInfo(aStringURI, aFixupFlags, aPostData,
-                               getter_AddRefs(info));
-  }
-  return info.forget();
-}
-}  // anonymous namespace
-
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : nsDocShellLoadState(aURI, nsContentUtils::GenerateLoadIdentifier()) {}
 
@@ -271,8 +231,35 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     }
 
     nsCOMPtr<nsIInputStream> fixupStream;
-    fixupInfo =
-        GetFixupURIInfo(uriString, fixupFlags, getter_AddRefs(fixupStream));
+    if (XRE_IsContentProcess()) {
+      dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+      if (contentChild) {
+        RefPtr<nsIInputStream> postData;
+        RefPtr<nsIURI> fixedURI, preferredURI;
+        nsAutoString providerName;
+        nsAutoCString stringURI(uriString);
+        // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
+        if (contentChild->SendGetFixupURIInfo(stringURI, fixupFlags,
+                                              &providerName, &postData,
+                                              &fixedURI, &preferredURI)) {
+          if (preferredURI) {
+            fixupInfo =
+                do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
+            if (fixupInfo) {
+              fixupInfo->SetKeywordProviderName(providerName);
+              fixupStream = postData;
+              fixupInfo->SetFixedURI(fixedURI);
+              fixupInfo->SetPreferredURI(preferredURI);
+            }
+          }
+        }
+      }
+    } else {
+      sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
+                                 getter_AddRefs(fixupStream),
+                                 getter_AddRefs(fixupInfo));
+    }
+
     if (fixupInfo) {
       // We could fix the uri, clear NS_ERROR_MALFORMED_URI.
       rv = NS_OK;
