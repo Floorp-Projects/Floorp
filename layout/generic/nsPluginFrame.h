@@ -51,7 +51,7 @@ class LayerManager;
 
 class PluginFrameDidCompositeObserver;
 
-class nsPluginFrame final : public nsFrame,
+class nsPluginFrame final : public nsIFrame,
                             public nsIObjectFrame,
                             public nsIReflowCallback {
  public:
@@ -90,7 +90,7 @@ class nsPluginFrame final : public nsFrame,
                                nsEventStatus* aEventStatus) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsFrame::IsFrameOfType(
+    return nsIFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 

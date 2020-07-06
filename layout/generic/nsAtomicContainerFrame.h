@@ -26,13 +26,13 @@ class nsAtomicContainerFrame : public nsContainerFrame {
   // methods so we behave like a leaf frame.
   FrameSearchResult PeekOffsetNoAmount(bool aForward,
                                        int32_t* aOffset) override {
-    return nsFrame::PeekOffsetNoAmount(aForward, aOffset);
+    return nsIFrame::PeekOffsetNoAmount(aForward, aOffset);
   }
   FrameSearchResult PeekOffsetCharacter(
       bool aForward, int32_t* aOffset,
       PeekOffsetCharacterOptions aOptions =
           PeekOffsetCharacterOptions()) override {
-    return nsFrame::PeekOffsetCharacter(aForward, aOffset, aOptions);
+    return nsIFrame::PeekOffsetCharacter(aForward, aOffset, aOptions);
   }
 
  protected:

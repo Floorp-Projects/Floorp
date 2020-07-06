@@ -257,7 +257,7 @@ class DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
 };
 
 /**
- * Do not use this outside of nsFrame::BuildDisplayListForChild, use
+ * Do not use this outside of nsIFrame::BuildDisplayListForChild, use
  * multiple AutoSaveRestores instead. We provide this class just to ensure
  * BuildDisplayListForChild is as efficient as possible.
  */

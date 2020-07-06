@@ -48,7 +48,7 @@ void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
                                                     nsFrameList& aChildList) {
   MOZ_ASSERT(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
-  nsFrame::VerifyDirtyBitSet(aChildList);
+  nsIFrame::VerifyDirtyBitSet(aChildList);
   for (nsIFrame* f : aChildList) {
     MOZ_ASSERT(f->GetParent() == aDelegatingFrame, "Unexpected parent");
   }
@@ -63,7 +63,7 @@ void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
 
   // Append the frames to our list of absolutely positioned frames
 #ifdef DEBUG
-  nsFrame::VerifyDirtyBitSet(aFrameList);
+  nsIFrame::VerifyDirtyBitSet(aFrameList);
 #endif
   mAbsoluteFrames.AppendFrames(nullptr, aFrameList);
 
@@ -82,7 +82,7 @@ void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
                "inserting after sibling frame with different parent");
 
 #ifdef DEBUG
-  nsFrame::VerifyDirtyBitSet(aFrameList);
+  nsIFrame::VerifyDirtyBitSet(aFrameList);
 #endif
   mAbsoluteFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
 
@@ -663,7 +663,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
-    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+    nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("abs pos ");
     nsAutoString name;
     aKidFrame->GetFrameName(name);
@@ -799,7 +799,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
-    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent - 1);
+    nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent - 1);
     printf("abs pos ");
     nsAutoString name;
     aKidFrame->GetFrameName(name);

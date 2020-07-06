@@ -186,7 +186,7 @@ nsresult nsTableRowGroupFrame::InitRepeatedFrame(
 }
 
 // Handle the child-traversal part of DisplayGenericTablePart
-static void DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
+static void DisplayRows(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                         const nsDisplayListSet& aLists) {
   nscoord overflowAbove;
   nsTableRowGroupFrame* f = static_cast<nsTableRowGroupFrame*>(aFrame);
@@ -1434,7 +1434,7 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aDesiredSize);
 
   // Any absolutely-positioned children will get reflowed in
-  // nsFrame::FixupPositionedTableParts in another pass, so propagate our
+  // nsIFrame::FixupPositionedTableParts in another pass, so propagate our
   // dirtiness to them before our parent clears our dirty bits.
   PushDirtyBitToAbsoluteFrames();
 

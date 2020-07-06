@@ -168,12 +168,12 @@ nsContainerFrame* nsGfxButtonControlFrame::GetContentInsertionFrame() {
 nsresult nsGfxButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
                                               WidgetGUIEvent* aEvent,
                                               nsEventStatus* aEventStatus) {
-  // Override the HandleEvent to prevent the nsFrame::HandleEvent
-  // from being called. The nsFrame::HandleEvent causes the button label
+  // Override the HandleEvent to prevent the nsIFrame::HandleEvent
+  // from being called. The nsIFrame::HandleEvent causes the button label
   // to be selected (Drawn with an XOR rectangle over the label)
 
   if (IsContentDisabled()) {
-    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
   return NS_OK;
 }

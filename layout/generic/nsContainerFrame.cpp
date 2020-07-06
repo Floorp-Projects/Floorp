@@ -65,7 +65,7 @@ void nsContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 void nsContainerFrame::SetInitialChildList(ChildListID aListID,
                                            nsFrameList& aChildList) {
 #ifdef DEBUG
-  nsFrame::VerifyDirtyBitSet(aChildList);
+  nsIFrame::VerifyDirtyBitSet(aChildList);
   for (nsIFrame* f : aChildList) {
     MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
   }
@@ -234,7 +234,7 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
     }
 
 #ifdef DEBUG
-    // This is just so we can assert it's not set in nsFrame::DestroyFrom.
+    // This is just so we can assert it's not set in nsIFrame::DestroyFrom.
     RemoveStateBits(NS_FRAME_PART_OF_IBSPLIT);
 #endif
   }
@@ -372,7 +372,7 @@ class nsDisplaySelectionOverlay : public nsPaintedDisplayItem {
   /**
    * @param aSelectionValue nsISelectionController::getDisplaySelection.
    */
-  nsDisplaySelectionOverlay(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
+  nsDisplaySelectionOverlay(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             int16_t aSelectionValue)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mSelectionValue(aSelectionValue) {
@@ -2461,7 +2461,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
       // "flex-basis:auto", in which case they use their main-size property
       // after all.
       // NOTE: The logic here should match the similar chunk for updating
-      // mainAxisCoord in nsFrame::ComputeSize() (aside from using a different
+      // mainAxisCoord in nsIFrame::ComputeSize() (aside from using a different
       // dummy value in the IsUsedFlexBasisContent() case).
       const auto* flexBasis = &stylePos->mFlexBasis;
       auto& mainAxisCoord =

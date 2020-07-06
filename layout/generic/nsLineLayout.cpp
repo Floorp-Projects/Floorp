@@ -393,7 +393,7 @@ void nsLineLayout::BeginSpan(nsIFrame* aFrame,
   NS_ASSERTION(aIEnd != NS_UNCONSTRAINEDSIZE,
                "should no longer be using unconstrained sizes");
 #ifdef NOISY_REFLOW
-  nsFrame::IndentBy(stdout, mSpanDepth + 1);
+  nsIFrame::IndentBy(stdout, mSpanDepth + 1);
   aFrame->ListTag(stdout);
   printf(": BeginSpan leftEdge=%d rightEdge=%d\n", aIStart, aIEnd);
 #endif
@@ -426,7 +426,7 @@ void nsLineLayout::BeginSpan(nsIFrame* aFrame,
 nscoord nsLineLayout::EndSpan(nsIFrame* aFrame) {
   NS_ASSERTION(mSpanDepth > 0, "end-span without begin-span");
 #ifdef NOISY_REFLOW
-  nsFrame::IndentBy(stdout, mSpanDepth);
+  nsIFrame::IndentBy(stdout, mSpanDepth);
   aFrame->ListTag(stdout);
   printf(": EndSpan width=%d\n", mCurrentSpan->mICoord - mCurrentSpan->mIStart);
 #endif
@@ -513,7 +513,7 @@ void nsLineLayout::PushFrame(nsIFrame* aFrame) {
   NS_ASSERTION(psd->mLastFrame->mFrame == aFrame, "pushing non-last frame");
 
 #ifdef REALLY_NOISY_PUSHING
-  nsFrame::IndentBy(stdout, mSpanDepth);
+  nsIFrame::IndentBy(stdout, mSpanDepth);
   printf("PushFrame %p, before:\n", psd);
   DumpPerSpanData(psd, 1);
 #endif
@@ -534,7 +534,7 @@ void nsLineLayout::PushFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(!pfd->mNext);
   UnlinkFrame(pfd);
 #ifdef NOISY_PUSHING
-  nsFrame::IndentBy(stdout, mSpanDepth);
+  nsIFrame::IndentBy(stdout, mSpanDepth);
   printf("PushFrame: %p after:\n", psd);
   DumpPerSpanData(psd, 1);
 #endif
@@ -751,7 +751,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
   psd->AppendFrame(pfd);
 
 #ifdef REALLY_NOISY_REFLOW
-  nsFrame::IndentBy(stdout, mSpanDepth);
+  nsIFrame::IndentBy(stdout, mSpanDepth);
   printf("%p: Begin ReflowFrame pfd=%p ", psd, pfd);
   aFrame->ListTag(stdout);
   printf("\n");
@@ -1094,7 +1094,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
   }
 
 #ifdef REALLY_NOISY_REFLOW
-  nsFrame::IndentBy(stdout, mSpanDepth);
+  nsIFrame::IndentBy(stdout, mSpanDepth);
   printf("End ReflowFrame ");
   aFrame->ListTag(stdout);
   printf(" status=%x\n", aReflowStatus);
@@ -1433,12 +1433,12 @@ void nsLineLayout::RemoveMarkerFrame(nsIFrame* aFrame) {
 
 #ifdef DEBUG
 void nsLineLayout::DumpPerSpanData(PerSpanData* psd, int32_t aIndent) {
-  nsFrame::IndentBy(stdout, aIndent);
+  nsIFrame::IndentBy(stdout, aIndent);
   printf("%p: left=%d x=%d right=%d\n", static_cast<void*>(psd), psd->mIStart,
          psd->mICoord, psd->mIEnd);
   PerFrameData* pfd = psd->mFirstFrame;
   while (nullptr != pfd) {
-    nsFrame::IndentBy(stdout, aIndent + 1);
+    nsIFrame::IndentBy(stdout, aIndent + 1);
     pfd->mFrame->ListTag(stdout);
     nsRect rect =
         pfd->mBounds.GetPhysicalRect(psd->mWritingMode, ContainerSize());

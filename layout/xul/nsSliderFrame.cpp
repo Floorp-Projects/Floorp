@@ -559,7 +559,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
           StopDrag();
           // we MUST call nsFrame HandleEvent for mouse ups to maintain the
           // selection state and capture state.
-          return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+          return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
         }
         break;
 
@@ -567,7 +567,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         break;
     }
 
-    // return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    // return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
   }
 
@@ -614,7 +614,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   else if (ShouldScrollForEvent(aEvent) && aEvent->mClass == eMouseEventClass &&
            aEvent->AsMouseEvent()->mButton == MouseButton::eSecondary) {
     // HandlePress and HandleRelease are usually called via
-    // nsFrame::HandleEvent, but only for the left mouse button.
+    // nsIFrame::HandleEvent, but only for the left mouse button.
     if (aEvent->mMessage == eMouseDown) {
       HandlePress(aPresContext, aEvent, aEventStatus);
     } else if (aEvent->mMessage == eMouseUp) {
@@ -635,7 +635,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   if (aEvent->mMessage == eMouseOut && mChange)
     HandleRelease(aPresContext, aEvent, aEventStatus);
 
-  return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 // Helper function to collect the "scroll to click" metric. Beware of

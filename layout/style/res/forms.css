@@ -839,7 +839,7 @@ input[type=range] {
   cursor: default;
   padding: unset;
   border: unset;
-  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  /* Prevent nsIFrame::HandlePress setting mouse capture to this element. */
   user-select: none !important;
 }
 
@@ -860,7 +860,7 @@ input[type=range]::-moz-range-track {
   writing-mode: unset !important;
   direction: unset !important;
   block-size: 0.2em; /* same as inline-size below */
-  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  /* Prevent nsIFrame::HandlePress setting mouse capture to this element. */
   user-select: none !important;
 }
 
@@ -889,7 +889,7 @@ input[type=range]::-moz-range-progress {
    */
   width: 0.2em;
   height: 0.2em;
-  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  /* Prevent nsIFrame::HandlePress setting mouse capture to this element. */
   user-select: none !important;
 }
 
@@ -917,7 +917,7 @@ input[type=range]::-moz-range-thumb {
   border: 0.1em solid #999;
   border-radius: 0.5em;
   background-color: #F0F0F0;
-  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  /* Prevent nsIFrame::HandlePress setting mouse capture to this element. */
   user-select: none !important;
 }
 

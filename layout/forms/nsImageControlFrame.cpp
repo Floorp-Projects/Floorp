@@ -127,7 +127,7 @@ nsresult nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   if (IsContentDisabled()) {
-    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
   *aEventStatus = nsEventStatus_eIgnore;

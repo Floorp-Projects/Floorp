@@ -876,7 +876,7 @@ nsresult nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
   // disabled state affects how we're selected, but we don't want to go through
   // nsHTMLScrollFrame if we're disabled.
   if (IsContentDisabled()) {
-    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
   return nsHTMLScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

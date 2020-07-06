@@ -3492,8 +3492,8 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
     // correct it for our pseudo as needed (e.g. stepping out of anon boxes).
     // Use the resulting style for the "parent style ignoring ::first-line".
     nsIFrame* blockFrame = providerFrame->GetParent();
-    nsIFrame* correctedFrame =
-        nsFrame::CorrectStyleParentFrame(blockFrame, oldStyle->GetPseudoType());
+    nsIFrame* correctedFrame = nsIFrame::CorrectStyleParentFrame(
+        blockFrame, oldStyle->GetPseudoType());
     newParentIgnoringFirstLine = correctedFrame->Style();
   } else {
     newParentIgnoringFirstLine = newParent;
@@ -3509,7 +3509,7 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
           ->GetPlaceholderFrame()
           ->GetLayoutParentStyleForOutOfFlow(&providerFrame);
     } else {
-      providerFrame = nsFrame::CorrectStyleParentFrame(
+      providerFrame = nsIFrame::CorrectStyleParentFrame(
           aFrame->GetParent(), oldStyle->GetPseudoType());
     }
   }
