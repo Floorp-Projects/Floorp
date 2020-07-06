@@ -322,7 +322,9 @@ static bool osfile_readRelativeToScript(JSContext* cx, unsigned argc,
   return ReadFile(cx, argc, vp, true);
 }
 
-static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
+static bool ListDir(JSContext* cx, unsigned argc, Value* vp,
+                    PathResolutionMode resolveMode)
+{
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() != 1) {
@@ -337,7 +339,7 @@ static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedString givenPath(cx, args[0].toString());
-  RootedString str(cx, ResolvePath(cx, givenPath, ScriptRelative));
+  RootedString str(cx, ResolvePath(cx, givenPath, resolveMode));
   if (!str) {
     return false;
   }
@@ -414,6 +416,15 @@ static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setObject(*array);
   return true;
 }
+
+  static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
+    return ListDir(cx, argc, vp, RootRelative);
+  }
+
+  static bool osfile_listDirRelativeToScript(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+    return ListDir(cx, argc, vp, ScriptRelative);
+  }
 
 static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
                                          Value* vp) {
@@ -705,15 +716,20 @@ static const JSFunctionSpecWithHelp osfile_functions[] = {
 "  as the second argument, in which case it returns a Uint8Array. Filename is\n"
 "  relative to the current working directory."),
 
-    JS_FN_HELP("listDir", osfile_listDir, 1, 0,
-"listDir(filename)",
-"  Read entire contents of a directory. The \"filename\" parameter is relate to the\n"
-"  current working directory.Returns a list of filenames within the given directory.\n"
-"  Note that \".\" and \"..\" are also listed."),
-
     JS_FN_HELP("readRelativeToScript", osfile_readRelativeToScript, 1, 0,
 "readRelativeToScript(filename, [\"binary\"])",
 "  Read filename into returned string. Filename is relative to the directory\n"
+"  containing the current script."),
+
+    JS_FN_HELP("listDir", osfile_listDir, 1, 0,
+"listDir(dirname)",
+"  Read entire contents of a directory. The \"dirname\" parameter is relate to the\n"
+"  current working directory. Returns a list of filenames within the given directory.\n"
+"  Note that \".\" and \"..\" are also listed."),
+
+    JS_FN_HELP("listDirRelativeToScript", osfile_listDirRelativeToScript, 1, 0,
+"listDirRelativeToScript(dirname)",
+"  Same as \"listDir\" except that the \"dirname\" is relative to the directory\n"
 "  containing the current script."),
 
     JS_FS_HELP_END
