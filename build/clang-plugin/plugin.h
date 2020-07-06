@@ -43,7 +43,11 @@ typedef ASTConsumer *ASTConsumerPtr;
 // source compatible base check class called BaseCheck, and we use the
 // preprocessor to decide which base class to pick.
 #ifdef CLANG_TIDY
+#if CLANG_VERSION_FULL >= 900
+#include "../ClangTidyCheck.h"
+#else
 #include "../ClangTidy.h"
+#endif
 typedef clang::tidy::ClangTidyCheck BaseCheck;
 typedef clang::tidy::ClangTidyContext ContextType;
 #else
