@@ -321,7 +321,7 @@ const JSClass ArrayBufferObject::class_ = {
     &ArrayBufferObjectClassExtension};
 
 const JSClass ArrayBufferObject::protoClass_ = {
-    "ArrayBufferPrototype", JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    "ArrayBuffer.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     JS_NULL_CLASS_OPS, &ArrayBufferObjectClassSpec};
 
 bool js::IsArrayBuffer(HandleValue v) {

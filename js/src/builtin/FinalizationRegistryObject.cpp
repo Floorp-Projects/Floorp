@@ -251,7 +251,7 @@ const JSClass FinalizationRegistryObject::class_ = {
     &classOps_, &classSpec_};
 
 const JSClass FinalizationRegistryObject::protoClass_ = {
-    "FinalizationRegistryPrototype",
+    "FinalizationRegistry.prototype",
     JSCLASS_HAS_CACHED_PROTO(JSProto_FinalizationRegistry), JS_NULL_CLASS_OPS,
     &classSpec_};
 
