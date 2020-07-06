@@ -79,6 +79,8 @@ customElements.define(
         return;
       }
 
+      // Set min. time delta to avoid division by zero in the upcoming speed calculation
+      delta = Math.max(delta, 400);
       delta /= 1000;
 
       // This algorithm is the same used by the downloads code.
