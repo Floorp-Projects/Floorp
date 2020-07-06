@@ -39,7 +39,7 @@ macosx64-gn:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-cctools-port
+            - linux64-cctools-port-clang-9
             - linux64-clang-9
 
 win32-gn:
