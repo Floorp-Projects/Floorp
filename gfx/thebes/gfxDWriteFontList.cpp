@@ -233,6 +233,15 @@ void gfxDWriteFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
   if (mIsBadUnderlineFamily) {
     SetBadUnderlineFonts();
   }
+
+  CheckForSimpleFamily();
+  if (mIsSimpleFamily) {
+    for (auto& f : mAvailableFonts) {
+      if (f) {
+        static_cast<gfxDWriteFontEntry*>(f.get())->mMayUseGDIAccess = true;
+      }
+    }
+  }
 }
 
 void gfxDWriteFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
@@ -382,7 +391,7 @@ nsresult gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
   // italic fonts in Arabic-script system locales because of
   // potential cmap discrepancies, see bug 629386.
   // Ditto for Hebrew, bug 837498.
-  if (mFont && pFontList->UseGDIFontTableAccess() &&
+  if (mFont && mMayUseGDIAccess && pFontList->UseGDIFontTableAccess() &&
       !(!IsUpright() && UsingArabicOrHebrewScriptSystemLocale()) &&
       !mFont->IsSymbolFont()) {
     LOGFONTW logfont = {0};
@@ -993,6 +1002,7 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
   fe->mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
   fe->mFamilyName = familyName;
   fe->mForceGDIClassic = aFamily->IsForceClassic();
+  fe->mMayUseGDIAccess = aFamily->IsSimple();
   return fe;
 }
 

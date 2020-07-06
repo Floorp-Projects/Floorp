@@ -272,6 +272,7 @@ struct Family {
 
   bool IsBadUnderlineFamily() const { return mIsBadUnderlineFamily; }
   bool IsForceClassic() const { return mIsForceClassic; }
+  bool IsSimple() const { return mIsSimple; }
 
   bool IsInitialized() const { return !mFaces.IsNull(); }
 
