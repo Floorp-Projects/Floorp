@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from report.js */
+/* eslint mozilla/avoid-Date-timing: "off" */
 
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -408,7 +409,7 @@ function startAndLoadURI(pageName) {
     TalosParentProfiler.resume("Starting to load URI " + pageName);
   }
 
-  start_time = window.performance.now();
+  start_time = Date.now();
   if (loadNoCache) {
     content.loadURI(pageName, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -531,9 +532,9 @@ var plNextPage = async function() {
 
   if (doNextPage) {
     if (forceCC) {
-      var tccstart = window.performance.now();
+      var tccstart = new Date();
       window.windowUtils.garbageCollect();
-      var tccend = window.performance.now();
+      var tccend = new Date();
       report.recordCCTime(tccend - tccstart);
 
       // Now asynchronously trigger GC / CC in the content process
@@ -732,7 +733,7 @@ function _loadHandlerCapturing() {
 
   if (useMozAfterPaint) {
     if (gStartTime != null && gStartTime >= 0) {
-      gTime = window.performance.now() - gStartTime;
+      gTime = new Date() - gStartTime;
       gStartTime = -1;
     }
   }
@@ -785,18 +786,9 @@ function _loadHandler(paint_time = 0) {
   if (paint_time !== 0) {
     // window.performance.timing.timeToNonBlankPaint is a timestamp
     // this may have a value for hero element (also a timestamp)
-
-    let minDate = new Date("2001");
-
-    if (paint_time < minDate) {
-      //paint_time is a performance.now() value
-      end_time = paint_time;
-    } else {
-      //paint_time is a UNIX timestamp
-      end_time = paint_time - window.performance.timing.navigationStart;
-    }
+    end_time = paint_time;
   } else {
-    end_time = window.performance.now();
+    end_time = Date.now();
   }
 
   var duration;
@@ -851,7 +843,7 @@ function plLoadHandlerMessage(message) {
     }
     if (gTime !== -1) {
       if (useMozAfterPaint && gStartTime >= 0) {
-        time = window.performance.now() - gStartTime;
+        time = Date.now() - gStartTime;
         gStartTime = -1;
       } else if (!useMozAfterPaint) {
         time = gTime;

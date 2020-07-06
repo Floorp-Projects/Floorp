@@ -30,10 +30,8 @@
       }
 
       var uniqueMessageId =
-        TART_PREFIX +
-        content.document.documentURI +
-        content.window.performance.now() +
-        Math.random();
+        // eslint-disable-next-line mozilla/avoid-Date-timing
+        TART_PREFIX + content.document.documentURI + Date.now() + Math.random();
 
       addMessageListener(TART_PREFIX + "chrome-exec-reply", function done(
         reply

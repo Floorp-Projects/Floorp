@@ -118,7 +118,7 @@ function mutateTable() {
   ensureAccessibleTreeForId("start");
 
   TalosContentProfiler.resume("tablemutation start", true).then(() => {
-    var start = window.performance.now();
+    var start = new Date(); // eslint-disable-line mozilla/avoid-Date-timing
 
     // Cause all kinds of crazy events
     Range.deleteContents();
@@ -131,8 +131,8 @@ function mutateTable() {
 }
 
 function postProcessingRecord(s) {
-  // alert(window.performance.now() - s);
-  let delta = window.performance.now() - s;
+  // alert(new Date() - s);
+  let delta = new Date() - s; // eslint-disable-line mozilla/avoid-Date-timing
   TalosContentProfiler.pause("tablemutation finish", true).then(() => {
     tpRecordTime(delta, s);
   });
