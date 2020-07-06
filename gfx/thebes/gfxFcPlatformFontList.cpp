@@ -1038,6 +1038,8 @@ void gfxFontconfigFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
   mFaceNamesInitialized = true;
   mFontPatterns.Clear();
   SetHasStyles(true);
+
+  CheckForSimpleFamily();
 }
 
 void gfxFontconfigFontFamily::AddFontPattern(FcPattern* aFontPattern) {

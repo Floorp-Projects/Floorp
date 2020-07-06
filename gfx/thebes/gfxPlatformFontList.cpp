@@ -1056,7 +1056,6 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
 gfxFontFamily* gfxPlatformFontList::CheckFamily(gfxFontFamily* aFamily) {
   if (aFamily && !aFamily->HasStyles()) {
     aFamily->FindStyleVariations();
-    aFamily->CheckForSimpleFamily();
   }
 
   if (aFamily && aFamily->GetFontList().Length() == 0) {

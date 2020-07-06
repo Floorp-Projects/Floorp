@@ -640,7 +640,9 @@ static inline int GetWeightOverride(const nsAString& aPSName) {
 }
 
 void gfxMacFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
-  if (mHasStyles) return;
+  if (mHasStyles) {
+    return;
+  }
 
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxMacFontFamily::FindStyleVariations", LAYOUT, mName);
 
@@ -742,6 +744,8 @@ void gfxMacFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
   if (mIsBadUnderlineFamily) {
     SetBadUnderlineFonts();
   }
+
+  CheckForSimpleFamily();
 }
 
 /* gfxSingleFaceMacFontFamily */
