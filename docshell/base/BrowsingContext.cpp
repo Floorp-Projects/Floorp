@@ -1580,12 +1580,7 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
             win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
       wgc->SendLoadURI(this, aLoadState, aSetNavigating);
     }
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-    if (!XRE_IsParentProcess()) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
+  } else if (XRE_IsParentProcess()) {
     if (Canonical()->LoadInParent(aLoadState, aSetNavigating)) {
       return NS_OK;
     }
@@ -1618,6 +1613,13 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
                    }
                  });
     }
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(sourceBC);
+    if (!sourceBC) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    // If we're in a content process and the source BC is no longer in-process,
+    // just fail silently.
   }
   return NS_OK;
 }
