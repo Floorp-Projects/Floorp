@@ -2441,6 +2441,33 @@ nsresult RemoveCrashReportAnnotation(Annotation key) {
   return AnnotateCrashReport(key, EmptyCString());
 }
 
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, bool data)
+    : AutoAnnotateCrashReport(key, data ? "1"_ns : "0"_ns) {}
+
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, int data)
+    : AutoAnnotateCrashReport(key, nsPrintfCString("%d", data)) {}
+
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, unsigned data)
+    : AutoAnnotateCrashReport(key, nsPrintfCString("%u", data)) {}
+
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key,
+                                                 const nsACString& data)
+    : mKey(key) {
+  if (GetEnabled()) {
+    MutexAutoLock lock(*crashReporterAPILock);
+    auto& entry = crashReporterAPIData_Table[mKey];
+    mPrevious = std::move(entry);
+    entry = data;
+  }
+}
+
+AutoAnnotateCrashReport::~AutoAnnotateCrashReport() {
+  if (GetEnabled()) {
+    MutexAutoLock lock(*crashReporterAPILock);
+    crashReporterAPIData_Table[mKey] = std::move(mPrevious);
+  }
+}
+
 void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc) {
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
     const nsCString& value = aSrc[key];
