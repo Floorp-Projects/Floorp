@@ -10287,6 +10287,11 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.baselineJitWarmUpThreshold = warmUpThreshold;
   }
 
+  warmUpThreshold = op.getIntOption("trial-inlining-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.trialInliningWarmUpThreshold = warmUpThreshold;
+  }
+
   warmUpThreshold = op.getIntOption("regexp-warmup-threshold");
   if (warmUpThreshold >= 0) {
     jit::JitOptions.regexpWarmUpThreshold = warmUpThreshold;
@@ -10351,6 +10356,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.warpBuilder = true;
   }
 #endif
+  if (op.getBoolOption("warp-trial-inlining")) {
+    jit::JitOptions.warpTrialInlining = true;
+  }
 
   if (const char* str = op.getStringOption("ion-regalloc")) {
     jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
@@ -10870,6 +10878,9 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "warp", "No-op on non-Nightly") ||
 #endif
       !op.addBoolOption('\0', "no-warp", "Disable WarpBuilder (default)") ||
+      !op.addBoolOption('\0', "warp-trial-inlining",
+                        "Enable trial inlining "
+                        "for Warp") ||
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
       !op.addStringOption(
           '\0', "wasm-compiler", "[option]",
@@ -11039,6 +11050,11 @@ int main(int argc, char** argv, char** envp) {
           '\0', "blinterp-warmup-threshold", "COUNT",
           "Wait for COUNT calls or iterations before Baseline-interpreting "
           "(default: 10)",
+          -1) ||
+      !op.addIntOption(
+          '\0', "trial-inlining-warmup-threshold", "COUNT",
+          "Wait for COUNT calls or iterations before trial-inlining "
+          "(default: 500)",
           -1) ||
       !op.addBoolOption(
           '\0', "non-writable-jitcode",

@@ -19,6 +19,7 @@
 #  include "jit/PerfSpewer.h"
 #endif
 #include "jit/SharedICHelpers.h"
+#include "jit/TrialInlining.h"
 #include "jit/VMFunctions.h"
 #include "js/UniquePtr.h"
 #include "vm/AsyncFunction.h"
@@ -1306,6 +1307,26 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.load32(warmUpCounterAddr, countReg);
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
+
+  if (JitOptions.warpBuilder && JitOptions.warpTrialInlining) {
+    // Consider trial inlining.
+    // Note: unlike other warmup thresholds, where we try to enter a
+    // higher tier whenever we are higher than a given warmup count,
+    // trial inlining triggers once when reaching the threshold.
+    Label noTrialInlining;
+    masm.branch32(Assembler::NotEqual, countReg,
+                  Imm32(JitOptions.trialInliningWarmUpThreshold),
+                  &noTrialInlining);
+    prepareVMCall();
+
+    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    if (!callVMNonOp<Fn, DoTrialInlining>()) {
+      return false;
+    }
+    masm.bind(&noTrialInlining);
+  }
 
   if (JSOp(*pc) == JSOp::LoopHead) {
     // If this is a loop where we can't OSR (for example because it's inside a
