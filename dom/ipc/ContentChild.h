@@ -17,6 +17,7 @@
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/RemoteBrowser.h"
+#include "mozilla/dom/RemoteType.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/Shmem.h"
