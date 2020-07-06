@@ -43,7 +43,7 @@ macosx64-cbindgen:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-cctools-port
+            - linux64-cctools-port-clang-9
             - linux64-clang-9
             - linux64-llvm-dsymutil
             - linux64-rust-macos-1.41
