@@ -2611,39 +2611,6 @@ bool CacheIRCompiler::emitInt32ModResult(Int32OperandId lhsId,
   return true;
 }
 
-// Like AutoScratchRegisterMaybeOutput, but tries to use the ValueOperand's
-// type register for the scratch register on 32-bit.
-//
-// Word of warning: Passing an instance of this class and AutoOutputRegister to
-// functions may not work correctly, because no guarantee is given that the type
-// register is used last when modifying the output's ValueOperand.
-class MOZ_RAII AutoScratchRegisterMaybeOutputType {
-  mozilla::Maybe<AutoScratchRegister> scratch_;
-  Register scratchReg_;
-
- public:
-  AutoScratchRegisterMaybeOutputType(CacheRegisterAllocator& alloc,
-                                     MacroAssembler& masm,
-                                     const AutoOutputRegister& output) {
-#if defined(JS_NUNBOX32)
-    scratchReg_ = output.hasValue() ? output.valueReg().typeReg() : InvalidReg;
-#else
-    scratchReg_ = InvalidReg;
-#endif
-    if (scratchReg_ == InvalidReg) {
-      scratch_.emplace(alloc, masm);
-      scratchReg_ = scratch_.ref();
-    }
-  }
-
-  AutoScratchRegisterMaybeOutputType(
-      const AutoScratchRegisterMaybeOutputType&) = delete;
-
-  void operator=(const AutoScratchRegisterMaybeOutputType&) = delete;
-
-  operator Register() const { return scratchReg_; }
-};
-
 bool CacheIRCompiler::emitInt32PowResult(Int32OperandId lhsId,
                                          Int32OperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
