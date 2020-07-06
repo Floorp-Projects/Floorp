@@ -48,7 +48,7 @@ using intl::LanguageTag;
 using intl::LanguageTagParser;
 
 const JSClass LocaleObject::class_ = {
-    js_Object_str,
+    "Intl.Locale",
     JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Locale),
     JS_NULL_CLASS_OPS, &LocaleObject::classSpec_};

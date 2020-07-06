@@ -838,6 +838,5 @@ static const ClassSpec IntlClassSpec = {
     CreateIntlObject, nullptr, intl_static_methods, nullptr,
     nullptr,          nullptr, IntlClassFinish};
 
-const JSClass js::IntlClass = {js_Object_str,
-                               JSCLASS_HAS_CACHED_PROTO(JSProto_Intl),
+const JSClass js::IntlClass = {"Intl", JSCLASS_HAS_CACHED_PROTO(JSProto_Intl),
                                JS_NULL_CLASS_OPS, &IntlClassSpec};

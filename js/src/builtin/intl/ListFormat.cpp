@@ -56,7 +56,7 @@ const JSClassOps ListFormatObject::classOps_ = {
     nullptr,                     // trace
 };
 const JSClass ListFormatObject::class_ = {
-    js_Object_str,
+    "Intl.ListFormat",
     JSCLASS_HAS_RESERVED_SLOTS(ListFormatObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_ListFormat) |
         JSCLASS_FOREGROUND_FINALIZE,

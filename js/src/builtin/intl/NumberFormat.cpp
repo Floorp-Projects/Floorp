@@ -81,7 +81,7 @@ const JSClassOps NumberFormatObject::classOps_ = {
 };
 
 const JSClass NumberFormatObject::class_ = {
-    js_Object_str,
+    "Intl.NumberFormat",
     JSCLASS_HAS_RESERVED_SLOTS(NumberFormatObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_NumberFormat) |
         JSCLASS_FOREGROUND_FINALIZE,

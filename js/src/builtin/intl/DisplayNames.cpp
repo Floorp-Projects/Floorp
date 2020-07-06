@@ -74,7 +74,7 @@ const JSClassOps DisplayNamesObject::classOps_ = {nullptr, /* addProperty */
                                                   DisplayNamesObject::finalize};
 
 const JSClass DisplayNamesObject::class_ = {
-    js_Object_str,
+    "Intl.DisplayNames",
     JSCLASS_HAS_RESERVED_SLOTS(DisplayNamesObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_DisplayNames) |
         JSCLASS_FOREGROUND_FINALIZE,

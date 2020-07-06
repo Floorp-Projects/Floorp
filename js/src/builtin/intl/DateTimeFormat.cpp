@@ -71,7 +71,7 @@ const JSClassOps DateTimeFormatObject::classOps_ = {
 };
 
 const JSClass DateTimeFormatObject::class_ = {
-    js_Object_str,
+    "Intl.DateTimeFormat",
     JSCLASS_HAS_RESERVED_SLOTS(DateTimeFormatObject::SLOT_COUNT) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_DateTimeFormat) |
         JSCLASS_FOREGROUND_FINALIZE,
