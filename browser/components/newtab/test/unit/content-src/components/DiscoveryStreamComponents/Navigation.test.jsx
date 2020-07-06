@@ -7,6 +7,12 @@ import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/Saf
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
 import { shallow, mount } from "enzyme";
 
+const DEFAULT_PROPS = {
+  App: {
+    isForStartupCache: false,
+  },
+};
+
 describe("<Navigation>", () => {
   let wrapper;
 
@@ -51,13 +57,43 @@ describe("<Navigation>", () => {
 
 describe("<Topic>", () => {
   let wrapper;
+  let sandbox;
 
   beforeEach(() => {
     wrapper = shallow(<Topic url="https://foo.com" name="foo" />);
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it("should pass onLinkClick prop", () => {
+    assert.propertyVal(
+      wrapper.at(0).props(),
+      "onLinkClick",
+      wrapper.instance().onLinkClick
+    );
   });
 
   it("should render", () => {
     assert.ok(wrapper.exists());
     assert.equal(wrapper.type(), SafeAnchor);
+  });
+
+  describe("onLinkClick", () => {
+    let dispatch;
+
+    beforeEach(() => {
+      dispatch = sandbox.stub();
+      wrapper = shallow(<Topic dispatch={dispatch} {...DEFAULT_PROPS} />);
+      wrapper.setState({ isSeen: true });
+    });
+
+    it("should call dispatch", () => {
+      wrapper.instance().onLinkClick({ target: { text: `Must Reads` } });
+
+      assert.calledOnce(dispatch);
+    });
   });
 });
