@@ -485,6 +485,7 @@ nsWindow::nsWindow() {
   mWindowScaleFactor = 1;
 
   mIsAccelerated = false;
+  mWindowOrigin = Nothing();
 }
 
 nsWindow::~nsWindow() {
@@ -545,6 +546,22 @@ void nsWindow::MaybeDispatchResized() {
   if (mNeedsDispatchResized && !mIsDestroyed) {
     DispatchResized();
   }
+}
+
+nsIntPoint nsWindow::GetWindowOrigin() {
+  if (!mGdkWindow) {
+    return nsIntPoint(0, 0);
+  }
+
+  if (mWindowOrigin.isNothing()) {
+    int x = 0;
+    int y = 0;
+    gdk_window_get_origin(mGdkWindow, &x, &y);
+
+    mWindowOrigin = Some(nsIntPoint(x, y));
+  }
+
+  return mWindowOrigin.value();
 }
 
 nsIWidgetListener* nsWindow::GetListener() {
@@ -2473,13 +2490,9 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
 }
 
 LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
-  gint x = 0, y = 0;
+  nsIntPoint origin = GetWindowOrigin();
 
-  if (mGdkWindow) {
-    gdk_window_get_origin(mGdkWindow, &x, &y);
-  }
-
-  return GdkPointToDevicePixels({x, y});
+  return GdkPointToDevicePixels({origin.x, origin.y});
 }
 
 void nsWindow::CaptureMouse(bool aCapture) {
@@ -2978,6 +2991,8 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   //
   //   Override-redirect windows are children of the root window so parent
   //   coordinates are root coordinates.
+
+  mWindowOrigin = Nothing();
 
   LOG(("configure event [%p] %d %d %d %d\n", (void*)this, aEvent->x, aEvent->y,
        aEvent->width, aEvent->height));
