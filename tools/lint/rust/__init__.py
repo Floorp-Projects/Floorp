@@ -117,20 +117,18 @@ def get_rustfmt_version(binary):
     """
     try:
         output = subprocess.check_output(
-            [binary, "--version"],
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
+            [binary, "--version"], stderr=subprocess.STDOUT, universal_newlines=True,
         )
     except subprocess.CalledProcessError as e:
         output = e.output
 
-    version = re.findall(r'\d.\d+.\d+', output)[0]
+    version = re.findall(r"\d.\d+.\d+", output)[0]
     return StrictVersion(version)
 
 
 def lint(paths, config, fix=None, **lintargs):
-    log = lintargs['log']
-    paths = list(expand_exclusions(paths, config, lintargs['root']))
+    log = lintargs["log"]
+    paths = list(expand_exclusions(paths, config, lintargs["root"]))
 
     # An empty path array can occur when the user passes in `-n`. If we don't
     # return early in this case, rustfmt will attempt to read stdin and hang.
@@ -145,7 +143,7 @@ def lint(paths, config, fix=None, **lintargs):
             return 1
         return []
 
-    min_version_str = config.get('min_rustfmt_version')
+    min_version_str = config.get("min_rustfmt_version")
     min_version = StrictVersion(min_version_str)
     actual_version = get_rustfmt_version(binary)
     log.debug(
@@ -162,7 +160,7 @@ def lint(paths, config, fix=None, **lintargs):
     if not fix:
         cmd_args.append("--check")
     base_command = cmd_args + paths
-    log.debug("Command: {}".format(' '.join(cmd_args)))
+    log.debug("Command: {}".format(" ".join(cmd_args)))
     output = run_process(config, base_command)
 
     if fix:

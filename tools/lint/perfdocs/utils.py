@@ -12,50 +12,48 @@ logger = PerfDocLogger()
 
 
 def save_file(file_content, path, extension="rst"):
-    '''
+    """
     Saves data into a file.
 
     :param str path: Location and name of the file being saved
         (without an extension).
     :param str data: Content to write into the file.
     :param str extension: Extension to save the file as.
-    '''
-    with open("{}.{}".format(path, extension), 'w') as f:
+    """
+    with open("{}.{}".format(path, extension), "w") as f:
         f.write(file_content)
 
 
 def read_file(path, stringify=False):
-    '''
+    """
     Opens a file and returns its contents.
 
     :param str path: Path to the file.
     :return list: List containing the lines in the file.
-    '''
-    with open(path, 'r') as f:
+    """
+    with open(path, "r") as f:
         return f.read() if stringify else f.readlines()
 
 
 def read_yaml(yaml_path):
-    '''
+    """
     Opens a YAML file and returns the contents.
 
     :param str yaml_path: Path to the YAML to open.
     :return dict: Dictionary containing the YAML content.
-    '''
+    """
     contents = {}
     try:
-        with open(yaml_path, 'r') as f:
+        with open(yaml_path, "r") as f:
             contents = yaml.safe_load(f)
     except Exception as e:
-        logger.warning(
-            "Error opening file {}: {}".format(yaml_path, str(e)), yaml_path
-        )
+        logger.warning("Error opening file {}: {}".format(yaml_path, str(e)), yaml_path)
 
     return contents
 
 
 def are_dirs_equal(dir_1, dir_2):
-    '''
+    """
     Compare two directories to see if they are equal. Files in each
     directory are assumed to be equal if their names and contents
     are equal.
@@ -63,7 +61,7 @@ def are_dirs_equal(dir_1, dir_2):
     :param dir_1: First directory path
     :param dir_2: Second directory path
     :return: True if the directory trees are the same and False otherwise.
-    '''
+    """
 
     dirs_cmp = filecmp.dircmp(dir_1, dir_2)
     if dirs_cmp.left_only or dirs_cmp.right_only or dirs_cmp.funny_files:

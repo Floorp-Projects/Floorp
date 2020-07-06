@@ -44,13 +44,16 @@ def parse_issues(log, config, issues, path, onlyIn):
         try:
             detail = json.loads(six.ensure_text(issue))
             if "message" in detail:
-                p = detail['target']['src_path']
+                p = detail["target"]["src_path"]
                 detail = detail["message"]
                 if "level" in detail:
-                    if ((detail["level"] == "error" or detail["level"] == "failure-note")
-                        and not detail["code"]):
-                        log.debug("Error outside of clippy."
-                                  "This means that the build failed. Therefore, skipping this")
+                    if (
+                        detail["level"] == "error" or detail["level"] == "failure-note"
+                    ) and not detail["code"]:
+                        log.debug(
+                            "Error outside of clippy."
+                            "This means that the build failed. Therefore, skipping this"
+                        )
                         log.debug("File = {} / Detail = {}".format(p, detail))
                         continue
                     # We are in a clippy warning
@@ -61,13 +64,17 @@ def parse_issues(log, config, issues, path, onlyIn):
                         # [], 'code': None, 'level': 'warning', 'message':
                         # '5 warnings emitted', 'spans': []}
                         # if this is the case, skip it
-                        log.debug("Skipping the summary line {} for file {}".format(detail, p))
+                        log.debug(
+                            "Skipping the summary line {} for file {}".format(detail, p)
+                        )
                         continue
 
                     l = detail["spans"][0]
                     if onlyIn and onlyIn not in p:
                         # Case when we have a .rs in the include list in the yaml file
-                        log.debug("{} is not part of the list of files '{}'".format(p, onlyIn))
+                        log.debug(
+                            "{} is not part of the list of files '{}'".format(p, onlyIn)
+                        )
                         continue
                     res = {
                         "path": p,
@@ -119,13 +126,9 @@ def get_clippy_version(log, binary):
         # --version failed, clippy isn't installed.
         return False
 
-    log.debug(
-        "Found version: {}".format(
-            output
-        )
-    )
+    log.debug("Found version: {}".format(output))
 
-    version = re.findall(r'(\d+-\d+-\d+)', output)[0].replace("-", ".")
+    version = re.findall(r"(\d+-\d+-\d+)", output)[0].replace("-", ".")
     version = StrictVersion(version)
     return version
 
@@ -160,11 +163,11 @@ def lint(paths, config, fix=None, **lintargs):
 
     if not cargo:
         print(CARGO_NOT_FOUND)
-        if 'MOZ_AUTOMATION' in os.environ:
+        if "MOZ_AUTOMATION" in os.environ:
             return 1
         return []
 
-    min_version_str = config.get('min_clippy_version')
+    min_version_str = config.get("min_clippy_version")
     min_version = StrictVersion(min_version_str)
     actual_version = get_clippy_version(log, cargo)
     log.debug(
@@ -183,13 +186,13 @@ def lint(paths, config, fix=None, **lintargs):
     cmd_args_common = ["--manifest-path"]
     cmd_args_clippy = [
         cargo,
-        'clippy',
-        '--message-format=json',
+        "clippy",
+        "--message-format=json",
     ]
 
     lock_files_to_delete = []
     for p in paths:
-        lock_file = os.path.join(p, 'Cargo.lock')
+        lock_file = os.path.join(p, "Cargo.lock")
         if not os.path.exists(lock_file):
             lock_files_to_delete.append(lock_file)
 
@@ -218,7 +221,7 @@ def lint(paths, config, fix=None, **lintargs):
             # Make sure that we don't display that either
             onlyIn = p
 
-        cargo_files = get_ancestors_by_name('Cargo.toml', p, lintargs['root'])
+        cargo_files = get_ancestors_by_name("Cargo.toml", p, lintargs["root"])
         p = cargo_files[0]
 
         log.debug("Path translated to = {}".format(p))
