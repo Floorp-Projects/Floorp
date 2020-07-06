@@ -584,6 +584,16 @@ let JSWINDOWACTORS = {
   },
 };
 
+let LEGACY_ACTORS = {
+  URIFixup: {
+    child: {
+      module: "resource:///actors/URIFixupChild.jsm",
+      group: "browsers",
+      observers: ["keyword-uri-fixup"],
+    },
+  },
+};
+
 (function earlyBlankFirstPaint() {
   if (
     AppConstants.platform == "macosx" ||
@@ -1175,6 +1185,7 @@ BrowserGlue.prototype = {
 
     ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
     ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
+    ActorManagerParent.addLegacyActors(LEGACY_ACTORS);
     ActorManagerParent.flush();
 
     this._flashHangCount = 0;

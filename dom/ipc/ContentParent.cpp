@@ -4470,41 +4470,28 @@ mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetFixupURIInfo(
-    const nsString& aURIString, const uint32_t& aFixupFlags,
-    bool aAllowThirdPartyFixup, nsString* aProviderName,
-    RefPtr<nsIInputStream>* aPostData, RefPtr<nsIURI>* aPreferredURI) {
+    const nsCString& aURIString, const uint32_t& aFixupFlags,
+    nsString* aProviderName, RefPtr<nsIInputStream>* aPostData,
+    RefPtr<nsIURI>* aFixedURI, RefPtr<nsIURI>* aPreferredURI) {
   *aPostData = nullptr;
+  *aFixedURI = nullptr;
   *aPreferredURI = nullptr;
   nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
   if (!fixup) {
     return IPC_OK();
   }
-
-  NS_ConvertUTF16toUTF8 uriString(aURIString);
-  // Cleanup the empty spaces that might be on each end.
-  uriString.Trim(" ");
-  // Eliminate embedded newlines, which single-line text fields now allow:
-  uriString.StripCRLF();
-
   nsCOMPtr<nsIURIFixupInfo> info;
-  if (NS_FAILED(fixup->GetFixupURIInfo(uriString, aFixupFlags,
+  if (NS_FAILED(fixup->GetFixupURIInfo(aURIString, aFixupFlags,
                                        getter_AddRefs(*aPostData),
                                        getter_AddRefs(info)))) {
     return IPC_OK();
   }
   info->GetKeywordProviderName(*aProviderName);
   nsCOMPtr<nsIURI> uri;
+  info->GetFixedURI(getter_AddRefs(uri));
+  *aFixedURI = uri;
   info->GetPreferredURI(getter_AddRefs(uri));
   *aPreferredURI = uri;
-
-  if (aAllowThirdPartyFixup) {
-    nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-    if (serv) {
-      serv->NotifyObservers(info, "keyword-uri-fixup",
-                            PromiseFlatString(aURIString).get());
-    }
-  }
-
   return IPC_OK();
 }
 
