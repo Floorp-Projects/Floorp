@@ -136,7 +136,6 @@ const startupPhases = {
     {
       // bug 1541491 to stop using this file, bug 1541494 to write correctly.
       path: "ProfLD:compatibility.ini",
-      condition: !WIN, // Visible on Windows with an open marker
       write: 18,
       close: 1,
     },
@@ -224,7 +223,8 @@ const startupPhases = {
       // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: WIN,
-      write: 1,
+      read: 1,
+      write: 3,
       fsync: 1,
     },
   ],
@@ -248,7 +248,7 @@ const startupPhases = {
       path: "ProfD:cookies.sqlite",
       condition: !LINUX,
       stat: 2,
-      read: 2,
+      read: 3,
       write: 1,
     },
     {
@@ -289,7 +289,7 @@ const startupPhases = {
       // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: WIN,
-      read: 1,
+      read: 2,
     },
   ],
 
@@ -381,7 +381,7 @@ const startupPhases = {
       // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:cert9.db",
       condition: WIN,
-      read: 2,
+      read: 5,
       stat: 2,
     },
     {
@@ -416,7 +416,7 @@ const startupPhases = {
       // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:key4.db",
       condition: WIN,
-      read: 2,
+      read: 8,
       stat: 2,
     },
     {
@@ -471,6 +471,7 @@ const startupPhases = {
       ignoreIfUnused: true,
       fsync: 1,
       stat: 4,
+      read: 1,
       write: 2,
     },
     {
@@ -479,6 +480,7 @@ const startupPhases = {
       ignoreIfUnused: true,
       stat: 4,
       fsync: 3,
+      read: 36,
       write: 148,
     },
     {
@@ -493,7 +495,7 @@ const startupPhases = {
       path: "ProfD:places.sqlite",
       ignoreIfUnused: true,
       fsync: 2,
-      read: 1,
+      read: 4,
       stat: 3,
       write: 1310,
     },
@@ -503,6 +505,7 @@ const startupPhases = {
       ignoreIfUnused: true,
       fsync: 2,
       stat: 7,
+      read: 2,
       write: 7,
     },
     {
@@ -511,6 +514,7 @@ const startupPhases = {
       ignoreIfUnused: true,
       fsync: 2,
       stat: 7,
+      read: 7,
       write: 15,
     },
     {
@@ -525,7 +529,7 @@ const startupPhases = {
       path: "ProfD:favicons.sqlite",
       ignoreIfUnused: true,
       fsync: 3,
-      read: 4,
+      read: 8,
       stat: 4,
       write: 1300,
     },
@@ -791,6 +795,12 @@ add_task(async function() {
       // /dev/shm is always tmpfs (a memory filesystem); this isn't
       // really I/O any more than mmap/munmap are.
       if (LINUX && filename.startsWith("/dev/shm/")) {
+        continue;
+      }
+
+      // Ignore pipe I/Os (probably from IPC) on Windows.
+      // FIXME: This should be removed when bug 1640325 lands.
+      if (WIN && filename.startsWith("\\??\\pipe\\")) {
         continue;
       }
 

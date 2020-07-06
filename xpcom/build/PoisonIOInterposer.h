@@ -68,6 +68,7 @@ void OnlyReportDirtyWrites();
 /**
  * Clear IO poisoning, this is only safe to do on the main-thread when no other
  * threads are running.
+ * Never called! See bug 1647107.
  */
 void ClearPoisonIOInterposer();
 
