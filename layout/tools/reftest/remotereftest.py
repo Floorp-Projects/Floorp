@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 
 import os
 import posixpath
-import psutil
 import signal
 import subprocess
 import sys
@@ -276,6 +275,13 @@ class RemoteReftest(RefTest):
 
     def killNamedProc(self, pname, orphans=True):
         """ Kill processes matching the given command name """
+        try:
+            import psutil
+        except ImportError as e:
+            self.log.warning("Unable to import psutil: %s" % str(e))
+            self.log.warning("Unable to verify that %s is not already running." % pname)
+            return
+
         self.log.info("Checking for %s processes..." % pname)
 
         for proc in psutil.process_iter():
