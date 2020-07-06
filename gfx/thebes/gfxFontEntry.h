@@ -570,6 +570,11 @@ class gfxFontEntry {
   // hasn't handled our SetCharacterMap message yet).
   bool TrySetShmemCharacterMap();
 
+  // Helper for gfxPlatformFontList::CreateFontEntry methods: set properties
+  // of the gfxFontEntry based on shared Face and Family records.
+  void InitializeFrom(mozilla::fontlist::Face* aFace,
+                      const mozilla::fontlist::Family* aFamily);
+
   // Shaper-specific face objects, shared by all instantiations of the same
   // physical font, regardless of size.
   // Usually, only one of these will actually be created for any given font

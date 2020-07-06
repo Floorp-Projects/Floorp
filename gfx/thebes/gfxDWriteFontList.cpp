@@ -995,12 +995,7 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
     return nullptr;
   }
   auto fe = new gfxDWriteFontEntry(faceName, font, !aFamily->IsBundled());
-  fe->mStyleRange = aFace->mStyle;
-  fe->mStretchRange = aFace->mStretch;
-  fe->mWeightRange = aFace->mWeight;
-  fe->mShmemFace = aFace;
-  fe->mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
-  fe->mFamilyName = familyName;
+  fe->InitializeFrom(aFace, aFamily);
   fe->mForceGDIClassic = aFamily->IsForceClassic();
   fe->mMayUseGDIAccess = aFamily->IsSimple();
   return fe;

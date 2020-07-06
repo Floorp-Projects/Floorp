@@ -1665,19 +1665,10 @@ gfxFontEntry* gfxFT2FontList::CreateFontEntry(fontlist::Face* aFace,
                                               const fontlist::Family* aFamily) {
   fontlist::FontList* list = SharedFontList();
   nsAutoCString desc(aFace->mDescriptor.AsString(list));
-  FontListEntry fle(aFamily->DisplayName().AsString(list), desc, desc,
-                    aFace->mWeight.AsScalar(), aFace->mStretch.AsScalar(),
-                    aFace->mStyle.AsScalar(), aFace->mIndex,
-                    aFamily->Visibility());
-  FT2FontEntry* fe = FT2FontEntry::CreateFontEntry(fle);
-
-  fe->mFixedPitch = aFace->mFixedPitch;
-  fe->mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
-  fe->mShmemFace = aFace;
-  fe->mFamilyName = aFamily->DisplayName().AsString(list);
-
+  FT2FontEntry* fe =
+      FT2FontEntry::CreateFontEntry(desc, desc.get(), aFace->mIndex, nullptr);
+  fe->InitializeFrom(aFace, aFamily);
   fe->CheckForBrokenFont(aFamily->Key().AsString(list));
-
   return fe;
 }
 

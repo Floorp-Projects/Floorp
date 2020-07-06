@@ -152,6 +152,19 @@ gfxFontEntry::~gfxFontEntry() {
   MOZ_ASSERT(!mGrFaceInitialized);
 }
 
+void gfxFontEntry::InitializeFrom(fontlist::Face* aFace,
+                                  const fontlist::Family* aFamily) {
+  mStyleRange = aFace->mStyle;
+  mWeightRange = aFace->mWeight;
+  mStretchRange = aFace->mStretch;
+  mFixedPitch = aFace->mFixedPitch;
+  mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
+  mShmemFace = aFace;
+  auto* list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  mFamilyName = aFamily->DisplayName().AsString(list);
+  mHasCmapTable = TrySetShmemCharacterMap();
+}
+
 bool gfxFontEntry::TrySetShmemCharacterMap() {
   MOZ_ASSERT(mShmemFace);
   auto list = gfxPlatformFontList::PlatformFontList()->SharedFontList();

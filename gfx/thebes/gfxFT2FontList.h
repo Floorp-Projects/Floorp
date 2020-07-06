@@ -23,6 +23,8 @@ class WillShutdownObserver;
 class FTUserFontData;
 
 class FT2FontEntry final : public gfxFT2FontEntryBase {
+  friend class gfxFT2FontList;
+
   using FontListEntry = mozilla::dom::SystemFontListEntry;
 
  public:
