@@ -69,6 +69,13 @@ impl NeqoHttp3Conn {
             max_blocked_streams,
         };
 
+        let quic_version = match alpn_conv {
+            "h3-29" => QuicVersion::Draft29,
+            "h3-28" => QuicVersion::Draft28,
+            "h3-27" => QuicVersion::Draft27,
+            _ => return Err(NS_ERROR_INVALID_ARG)
+        };
+
         let conn = match Http3Client::new(
             origin_conv,
             &[alpn_conv],
@@ -76,7 +83,7 @@ impl NeqoHttp3Conn {
             local,
             remote,
             qpack_settings,
-            QuicVersion::Draft27,
+            quic_version,
         ) {
             Ok(c) => c,
             Err(_) => return Err(NS_ERROR_INVALID_ARG),
