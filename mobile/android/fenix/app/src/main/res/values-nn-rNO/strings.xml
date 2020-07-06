@@ -894,8 +894,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Sletter nettlesardata automatisk når du vel «Avslutt» frå hovudmenyen</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Slettar nettlesardata automatisk når du vel «Avslutt» frå hovudmenyen</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Nettlesarhistorikk</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Avslutt</string>
 
@@ -980,17 +978,17 @@
     <string name="onboarding_tracking_protection_header_2">Automatisk personvern</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Innstillingar for personvern og sikkerheit blokkerer sporfølgjarar, skadeleg kode og selskap som følgjer deg.</string>
+    <string name="onboarding_tracking_protection_description_2">Innstillingar for personvern og sikkerheit blokkerer sporarar, skadeleg kode og selskap som følgjer deg.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (standard)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokkerer færre sporfølgjarar. Sider vert lasta normalt.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Blokkerer færre sporarar. Sider vert lasta normalt.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Streng (tilrådd)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Streng</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokkerer fleire sporfølgjarar, reklamer og sprettoppvindauge. Sider vert lasta raskere, men nokre funksjonar fungerer kanskje ikkje.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Blokkerer fleire sporarar, reklamer og sprettoppvindauge. Sider vert lasta raskere, men nokre funksjonar fungerer kanskje ikkje.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1079,19 +1077,19 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (standard)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokkerer færre sporfølgjarar. Sider vert lasta normalt.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokkerer færre sporarar. Sider vert lasta normalt.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Kva er blokkert av standard sporingsvern</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Streng</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokkerer fleire sporfølgjarar, reklamer og sprettoppvindauge. Sider vert lasta raskere, men nokre funksjonar fungerer kanskje ikkje.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokkerer fleire sporarar, reklamer og sprettoppvindauge. Sider vert lasta raskere, men nokre funksjonar fungerer kanskje ikkje.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Kva er blokkert av strengt sporingsvern?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Tilpassa</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description_2">Vel kva for sporfølgjarar og skript som skal blokkerast.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Vel kva for sporarar og skript som skal blokkerast.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Kva er blokkert av tilpassa sporingsvern</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1141,7 +1139,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stoppar innlasting av eksterne annonsar, videoar og anna innhald, då dei kan innehalde sporingskode. Kan påverke visse nettstadfunksjonar.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Kvar gong skjoldet er lilla, har %s blokkert sporfølgjarar på ein nettstad. Trykk for meir info.</string>
+    <string name="etp_onboarding_cfr_message">Kvar gong skjoldet er lilla, har %s blokkert sporarar på ein nettstad. Trykk for meir info.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Vern er slått PÅ for denne nettstaden</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

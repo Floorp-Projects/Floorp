@@ -911,7 +911,7 @@
         No entanto, pode ser menos estável. Instale nosso navegador beta se quiser uma experiência de uso mais estável.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Instale o Firefox para Android Beta</string>
+    <string name="tip_firefox_preview_moved_button_2">Instale o Firefox Beta para Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">O Firefox Nightly mudou</string>

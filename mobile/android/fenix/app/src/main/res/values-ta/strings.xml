@@ -150,6 +150,8 @@
     <string name="preferences_theme">கருப்பொருள்</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">பயர்பாக்சு கணக்கு</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">ஒத்திசைவை மீள்தொடங்க மீண்டும் இணைக்கவும்</string>
     <!-- Preference for language -->
     <string name="preferences_language">மொழி</string>
     <!-- Preference for data choices -->
@@ -209,5 +211,130 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">பெறப்பட்ட கீற்றுகள்</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">பிற பயர்பாக்சு சாதனங்களிலிருந்து பெறப்பட்ட கீற்றுகளுக்கான அறிவிப்புகள்.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">கீற்று பெறப்பட்டது</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">கீற்றுகள் பெறப்பட்டன</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">தடமறியல் பாதுகாப்பு</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">தடமறியல் பாதுகாப்பு</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">விதிவிலக்குகள்</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">எல்லா தளங்களுக்கும் இயக்கு</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">மேலும் அறிய</string>
+
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">சோதனைகள்</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">செயலிழப்பு அறிக்கையாளர்</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">மொசில்லா புவியிடச்சேவை</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">ஒத்திசைவை இயக்கு</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">புகுபதிகை</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">மறுஇணைக்க புகுபதியுங்கள்</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">கணக்கை அகற்று</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">படக்கருவியைத் திற</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">இரத்து</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">மேல்</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">கீழ்</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">வெளிர்</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">கருமை</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">மின்கலச்சேமிப்பான் அமைத்தது</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">சாதனக் கருப்பொருளைப் பின்பற்று</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">அமர்வுகள்</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">திரைப்பிடிப்புகள்</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">பதிவிறக்கங்கள்</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">புத்தகக்குறிகள்</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">மேசைக்கணினி புத்தகக்குறிகள்</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">புத்தகக்குறிகள் பட்டி</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">புத்தகக்குறிகள் கருவிப்பட்டை</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">பிற புத்தகக்குறிகள்</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">வரலாறு</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">வாசிப்புப் பட்டியல்</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">தேடல்</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">அமைவுகள்</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">வரலாறு உருப்படி பட்டி</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">மூடு</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">திறந்த கீற்றுகள்</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">கமுக்க அமர்வு</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">கமுக்கக் கீற்றுகள்</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">கீற்றைச் சேர்</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">கீற்றை மூடு</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s கீற்றை மூடு</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">கீற்றுப் பட்டியைத் திற</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">எல்லாக் கீற்றுகளையும் மூடு</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">கீற்றுகளைப் பகிர்</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">கீற்றுப் பட்டி</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">தரவைப் பகிர்</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">நீக்கு</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">சேமி</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">பகிர்</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">திரட்டில் சேமி</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">திரட்டை நீக்கு</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">திரட்டை மறுபெயரிடு</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">கீற்றுகளைத் திற</string>
 
     </resources>

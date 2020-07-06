@@ -698,6 +698,8 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Зразумела</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Немагчыма падзяліцца гэтай праграмай</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Даслаць на прыладу</string>
     <!-- Text for the warning message on the Add new device screen -->
@@ -751,6 +753,9 @@
     <string name="a11y_dialog_deleted_undo">Адмяніць</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">Пацвердзіць</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Дазволіць %1$s адкрыць %2$s</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">ДАЗВОЛІЦЬ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -766,12 +771,18 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL скапіраваны</string>
 
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Гэта ўзор тэксту. Ён тут, каб паказаць, як тэкст будзе выглядаць пры павелічэнні або памяншэнні памеру з дапамогай гэтай налады.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Зрабіць тэкст на сайтах большым ці меншым</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Памер шрыфту</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Аўтаматычны памер шрыфту</string>
 
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Выдаліць дадзеныя аглядання</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Адкрытыя карткі</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -788,12 +799,18 @@
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">Старонак: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Кукі</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Вы выйдзеце з большасці сайтаў</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Кэшаваныя відарысы і файлы</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Дазволы для сайтаў</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Выдаліць звесткі аглядання</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Выдаляць звесткі аглядання пры выхадзе</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Аўтаматычна выдаляе дадзеныя аглядання, калі вы выбіраеце &quot;Выйсці&quot; ў галоўным меню</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Выйсці</string>
 
@@ -802,6 +819,15 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Выдаліць</string>
 
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Дадзеныя аглядання выдалены</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview цяпер Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly абнаўляецца кожную ноч і мае новыя эксперыментальныя магчымасці.
+        Аднак ён можа быць менш стабільным. Сцягніце нашу бэта-версію для больш стабільнай працы.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Атрымаць Firefox для Android Beta</string>
 
@@ -835,8 +861,14 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Атрымайце максімум ад %s.</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Так, увайсці</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Уваход…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Увайсці ў Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Не ўваходзіць</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Сінхранізацыя ўключана</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -940,6 +972,8 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Даведацца больш</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартная (прадвызначана)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Блакуе менш трэкераў. Старонкі загружаюцца нармальна.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Што блакуецца стандартнай аховай ад сачэння</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1149,6 +1183,13 @@
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Увядзіце назву пошукавай сістэмы</string>
 
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Увядзіце радок пошуку</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Абнаўленне %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Запусціць %s</string>
     <!-- Accessibility description text for a completed migration item -->
     <string name="migration_icon_description">Міграцыя завершана</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
@@ -1184,6 +1225,10 @@
     <string name="login_deletion_confirmation">Вы сапраўды хочаце выдаліць гэтае лагін?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Выдаліць</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Тэкставае поле для рэдагавання вэб-адраса для ўваходу ў сістэму.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Тэкставае поле для рэдагавання імені карыстальніка для ўваходу ў сістэму.</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Патрабуецца пароль</string>
     <!-- Voice search button content description  -->

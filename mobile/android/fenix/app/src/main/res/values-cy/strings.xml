@@ -914,7 +914,7 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Mae Firefox Nightly wedi symud</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Ni fydd yr ap hon yn derbyn diweddariadau diogelwch mwyach. Peidiwch a defnyddio’r ap hon a symud i’r Nightly newydd.
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ni fydd yr ap hwn yn derbyn diweddariadau diogelwch mwyach. Peidiwch â defnyddio’r ap hwn a newidiwch i’r Nightly newydd.
         \n\nEr mwyn trosglwyddo’ch nodau tudalen, eich mewngofnodion a’ch hanes i ap arall, crëwch gyfrif Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Newid i’r Nightly newydd</string>
@@ -922,7 +922,7 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Mae Firefox Nightly wedi symud</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ni fydd yr ap hon yn derbyn diweddariadau diogelwch bellach. Estynnwch y Nightly newydd a pheidio a defnyddio’r ap hon.
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ni fydd yr ap hwn yn derbyn diweddariadau diogelwch bellach. Estynnwch y Nightly newydd a pheidio â defnyddio’r ap hwn bellach.
         \n\nEr mwyn trosglwyddo’ch nodau tudalen, eich mewngofnodion a’ch hanes i ap arall, crëwch gyfrif Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Estyn y Nightly newydd</string>

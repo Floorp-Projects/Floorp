@@ -807,6 +807,9 @@
     <string name="tip_firefox_preview_moved_description">Firefox Nightly anuévase cada nueche y tien carauterístiques esperimentales.
         Por embargu, ye menos estable. Baxa la versión beta del restolador pa una esperiencia más estable.</string>
 
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Consiguir Firefox Beta p\'Android</string>
+
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly mudó</string>
     <!-- text for firefox preview moving tip description -->
@@ -818,6 +821,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_not_installed">Dexa d\'usar esta aplicación darréu que nun va recibir más anovamientos de seguranza. Consigui la versión nueva de Nightly.
         \n\nPa tresferir los marcadores, anicios de sesión y l\'historial a otra aplicación, crea una cuenta de Firefox.</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Consiguir el Nightly nuevu</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

@@ -908,8 +908,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Elimina automáticamente los datos de navegación cuando seleccionás &quot;Salir&quot; en el menú principal</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Elimina automáticamente los datos de navegación cuando seleccionás &quot;Salir&quot; en el menú principal</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historial de navegación</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Salir</string>
 
@@ -931,25 +929,22 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Nightly ahora es Firefox Preview</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualiza todas las noches y tiene nuevas funciones experimentales.
-        Sin embargo, puede ser menos estable. Descargá nuestro navegador beta para una experiencia más estable.</string>
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualiza todas las noches y tiene nuevas funciones experimentales.  Sin embargo, puede ser menos estable. Para una experiencia más estable descargá nuestro navegador beta.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Obtené Firefox para Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se movió</string>
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly cambió</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Esta aplicación ya no va arecibir actualizaciones de seguridad. Deja de usar la y cambiá al nuevo Nightly.
-        \ n \ nPara transferir tus marcadores, inicios de sesión e historial a otra aplicación, creá una cuenta de Firefox.</string>
+    <string name="tip_firefox_preview_moved_description_preview_installed">Esta aplicación ya no va a recibir actualizaciones de seguridad. Dejá de usarla y cambiá al nuevo Nightly. Para transferir tus marcadores, inicios de sesión e historial a otra aplicación, creá una cuenta de Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Cambiá al nuevo Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly se movió</string>
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly cambió</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Esta aplicación ya no va a recibir actualizaciones de seguridad. Deja de usarla y cambiá al nuevo Nightly.
-        \ n \ nPara transferir tus marcadores, inicios de sesión e historial a otra aplicación, creá una cuenta de Firefox.</string>
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Esta aplicación ya no va a recibir actualizaciones de seguridad. Deja de usarla y cambiá al nuevo Nightly. Para transferir tus marcadores, inicios de sesión e historial a otra aplicación, creá una cuenta de Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Obtené el nuevo Nightly</string>
 

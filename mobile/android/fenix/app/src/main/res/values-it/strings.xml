@@ -1107,7 +1107,7 @@
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Elementi bloccati nella protezione antitracciamento normale</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict">Restrittivo</string>
+    <string name="preference_enhanced_tracking_protection_strict">Restrittiva</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_2">Blocca più elementi traccianti, annunci pubblicitari e pop-up. Le pagine verranno caricate più velocemente, ma alcuni elementi potrebbero non funzionare correttamente.</string>
     <!--  Accessibility text for the Strict protection information icon  -->

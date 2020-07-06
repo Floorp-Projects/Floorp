@@ -886,8 +886,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">ਜਦੋਂ ਤੁਸੀਂ ਮੁੱਖ ਮੇਨੂ ਤੋਂ &quot;ਬਾਹਰ&quot; ਨੂੰ ਚੁਣਦੇ ਹੋ ਤਾਂ ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਆਪਣੇ-ਆਪ ਹਟਾਇਆ ਜਾਂਦਾ ਹੈ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">ਜਦੋਂ ਤੁਸੀਂ ਮੁੱਖ ਮੇਨੂ ਰਾਹੀਂ \&quot;ਬਾਹਰ\&quot; ਨੂੰ ਚੁਣਦੇ ਹੋ ਤਾਂ ਬਰਾਊਜ਼ ਕੀਤੇ ਡਾਟੇ ਨੂੰ ਆਪਣੇ-ਆਪ ਹਟਾਇਆ ਜਾਂਦਾ ਹੈ</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ਬਾਹਰ</string>
 
@@ -1396,6 +1394,8 @@
     <string name="synced_tabs_connect_another_device">ਹੋਰ ਡਿਵਾਈਸ ਨਾਲ ਕਨੈਕਟ ਕਰੋ।</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">ਮੁੜ-ਪ੍ਰਮਾਣਿਤ ਕਰੋ।</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">ਟੈਬ ਨੂੰ ਸਿੰਕ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ।</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
 

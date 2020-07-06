@@ -926,8 +926,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">从主菜单中选择“退出”时，自动删除浏览数据</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">从主菜单中选择“退出”时，自动删除浏览数据</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">浏览历史</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">退出</string>
 
@@ -947,7 +945,7 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview 即为现在的 Firefox Nightly</string>
+    <string name="tip_firefox_preview_moved_header">Firefox Preview 已迁移至 Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly 每日获得更新，包含实验性的新功能。
 但可能不够稳定，您可以下载我们的 Beta 版浏览器以获得更稳定的体验。</string>

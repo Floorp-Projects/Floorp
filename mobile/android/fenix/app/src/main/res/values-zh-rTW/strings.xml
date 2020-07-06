@@ -919,8 +919,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">當您點擊主選單當中的「離開」時，自動刪除瀏覽資料</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">點擊主選單中的「離開」時，自動清除上網資料</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">瀏覽紀錄</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">離開</string>
 
@@ -940,9 +938,9 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Nightly 已被 Firefox Preview 取代</string>
+    <string name="tip_firefox_preview_moved_header">Firefox Nightly 已接手原 Firefox Preview 功能</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新一次，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。若須有較穩定的使用體驗，請下載我們的 Beta 測試版。</string>
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。\n\n若想要有較穩定的使用體驗，請下載我們的 Beta 測試版。</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">下載 Firefox for Android Beta 測試版</string>
@@ -950,14 +948,14 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly 版本更新</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">此應用程式不會再收到安全性更新。請改用新版的 Nightly 並停用此應用程式。\n\n請註冊 Firefox 帳號，即可快速移轉書籤、登入資訊、瀏覽紀錄到新版本當中。</string>
+    <string name="tip_firefox_preview_moved_description_preview_installed">此應用程式不會再收到安全性更新。請改用新版的 Nightly 並停止使用此版應用程式。\n\n註冊 Firefox 帳號，即可快速移轉書籤、登入資訊、瀏覽紀錄到新版本。</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">改用新版 Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly 版本更新</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">此應用程式不會再收到安全性更新。請下載新版的 Nightly 並停用此應用程式。\n\n請註冊 Firefox 帳號，即可快速移轉書籤、登入資訊、瀏覽紀錄到新版本當中。</string>
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">此應用程式不會再收到安全性更新。請改用新版的 Nightly 並停止使用此版應用程式。\n\n註冊 Firefox 帳號，即可快速移轉書籤、登入資訊、瀏覽紀錄到新版本。</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">下載新版 Nightly</string>
 

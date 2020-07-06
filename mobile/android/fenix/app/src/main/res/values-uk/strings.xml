@@ -897,8 +897,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Автоматично видаляє дані перегляду при виборі &quot;Вихід&quot; в головному меню</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Автоматично видаляє дані перегляду при виборі \&quot;Вихід\&quot; в головному меню</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Історія перегляду</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Вихід</string>
 
@@ -1444,7 +1442,7 @@
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Під’єднати інший пристрій.</string>
     <!-- Text displayed asking user to re-authenticate -->
-    <string name="synced_tabs_reauth">Необхідно повторно авторизуватись.</string>
+    <string name="synced_tabs_reauth">Повторіть автентифікацію.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Увімкніть синхронізацію вкладок.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
