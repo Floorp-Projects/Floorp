@@ -97,6 +97,23 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data);
 nsresult RemoveCrashReportAnnotation(Annotation key);
 nsresult AppendAppNotesToCrashReport(const nsACString& data);
 
+// RAII class for setting a crash annotation during a limited scope of time.
+// Will reset the named annotation to its previous value when destroyed.
+//
+// This type is subject to the same restrictions as AnnotateCrashReport.
+class MOZ_RAII AutoAnnotateCrashReport final {
+ public:
+  AutoAnnotateCrashReport(Annotation key, bool data);
+  AutoAnnotateCrashReport(Annotation key, int data);
+  AutoAnnotateCrashReport(Annotation key, unsigned int data);
+  AutoAnnotateCrashReport(Annotation key, const nsACString& data);
+  ~AutoAnnotateCrashReport();
+
+ private:
+  Annotation mKey;
+  nsCString mPrevious;
+};
+
 void AnnotateOOMAllocationSize(size_t size);
 void AnnotateTexturesSize(size_t size);
 nsresult SetGarbageCollecting(bool collecting);
