@@ -181,6 +181,8 @@ void WindowsSMTCProvider::Close() {
   // Clear the cached image urls
   mThumbnailUrl = EmptyString();
   mProcessingUrl = EmptyString();
+
+  mNextImageIndex = 0;
 }
 
 void WindowsSMTCProvider::SetPlaybackState(
@@ -431,6 +433,7 @@ void WindowsSMTCProvider::LoadThumbnail(
 
   // TODO: Sort the images by the preferred size or format.
   mArtwork = aArtwork;
+  mNextImageIndex = 0;
 
   // Abort the loading if
   // 1) thumbnail is being updated, and one in processing is in the artwork
@@ -438,13 +441,13 @@ void WindowsSMTCProvider::LoadThumbnail(
   if (!mProcessingUrl.IsEmpty()) {
     LOG("Load thumbnail while image: %s is being processed",
         NS_ConvertUTF16toUTF8(mProcessingUrl).get());
-    if (IsImageIn(aArtwork, mProcessingUrl)) {
+    if (IsImageIn(mArtwork, mProcessingUrl)) {
       LOG("No need to load thumbnail. The one being processed is in the "
           "artwork");
       return;
     }
   } else if (!mThumbnailUrl.IsEmpty()) {
-    if (IsImageIn(aArtwork, mThumbnailUrl)) {
+    if (IsImageIn(mArtwork, mThumbnailUrl)) {
       LOG("No need to load thumbnail. The one in use is in the artwork");
       return;
     }
@@ -457,7 +460,7 @@ void WindowsSMTCProvider::LoadThumbnail(
   // Remove the current thumbnail on the interface
   ClearThumbnail();
   // Then load the new thumbnail asynchronously
-  LoadImageAtIndex(0);
+  LoadImageAtIndex(mNextImageIndex++);
 }
 
 void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
@@ -478,9 +481,9 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
   // should probably cache it since it could be used very often (Bug 1643102)
 
   if (image.mSrc.Find("file:///"_ns, false, 0, 0) == 0) {
-    LOG("Skip the local file. Try next");
+    LOG("Skip the local file. Try next image");
     mImageFetchRequest.DisconnectIfExists();
-    LoadImageAtIndex(aIndex + 1);
+    LoadImageAtIndex(mNextImageIndex++);
     return;
   }
 
@@ -492,7 +495,7 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
   mImageFetcher->FetchImage()
       ->Then(
           AbstractThread::MainThread(), __func__,
-          [this, self, aIndex](const nsCOMPtr<imgIContainer>& aImage) {
+          [this, self](const nsCOMPtr<imgIContainer>& aImage) {
             LOG("The image is fetched successfully");
             mImageFetchRequest.Complete();
 
@@ -508,17 +511,17 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
                 GetEncodedImageBuffer(aImage, nsLiteralCString(IMAGE_PNG),
                                       getter_AddRefs(inputStream), &size, &src);
             if (NS_FAILED(rv) || !inputStream || size == 0 || !src) {
-              LOG("Failed to get the image buffer info");
-              LoadImageAtIndex(aIndex + 1);
+              LOG("Failed to get the image buffer info. Try next image");
+              LoadImageAtIndex(mNextImageIndex++);
               return;
             }
 
             LoadImage(src, size);
           },
-          [this, self, aIndex](bool) {
+          [this, self](bool) {
             LOG("Failed to fetch image. Try next image");
             mImageFetchRequest.Complete();
-            LoadImageAtIndex(aIndex + 1);
+            LoadImageAtIndex(mNextImageIndex++);
           })
       ->Track(mImageFetchRequest);
 }

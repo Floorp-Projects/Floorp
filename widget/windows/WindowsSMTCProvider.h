@@ -117,6 +117,7 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
 
   // mArtwork can only be used in main thread in case of data racing
   CopyableTArray<mozilla::dom::MediaImage> mArtwork;
+  size_t mNextImageIndex;
 
   mozilla::UniquePtr<mozilla::dom::FetchImageHelper> mImageFetcher;
   mozilla::MozPromiseRequestHolder<mozilla::dom::ImagePromise>
