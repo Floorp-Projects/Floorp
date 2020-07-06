@@ -1138,6 +1138,19 @@ const TESTCASES = [
     profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
     expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
   },
+  {
+    description: "Test (special case) maxlength=5 on cc-exp field.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp" maxlength="5">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01/25",
+      }),
+    ],
+  },
 ];
 
 for (let testcase of TESTCASES) {
