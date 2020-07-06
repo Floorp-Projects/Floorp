@@ -334,6 +334,7 @@ void InitPoisonIOInterposer() {
 
 void OnlyReportDirtyWrites() { sOnlyReportDirtyWrites = true; }
 
+// Never called! See bug 1647107.
 void ClearPoisonIOInterposer() {
   // Not sure how or if we can unpoison the functions. Would be nice, but no
   // worries we won't need to do this anyway.
