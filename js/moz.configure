@@ -743,13 +743,6 @@ def icu_version(build_env):
 
 set_config('MOZ_ICU_VERSION', icu_version)
 
-@depends(icu_version, target, when='--with-intl-api')
-def icu_data_file(version, target):
-    # target.endianness is always 'big' or 'little'
-    return 'icudt%s%s.dat' % (version, target.endianness[0])
-
-set_config('ICU_DATA_FILE', icu_data_file)
-
 # Source files that use ICU should have control over which parts of the ICU
 # namespace they want to use.
 set_define('U_USING_ICU_NAMESPACE', '0', when='--with-intl-api')

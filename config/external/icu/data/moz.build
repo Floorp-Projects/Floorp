@@ -8,29 +8,14 @@
 # JSAPI consumers don't have to deal with setting ICU's data path.
 Library('icudata')
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    if CONFIG['CPU_ARCH'] == 'x86':
-        ASFLAGS += ['-DPREFIX']
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    ASFLAGS += ['-DPREFIX']
-
-data_symbol = 'icudt%s_dat' % CONFIG['MOZ_ICU_VERSION']
-asflags = [
-    '-I%s/config/external/icu/data/' % TOPSRCDIR,
-    '-DICU_DATA_FILE="%s"' % CONFIG['ICU_DATA_FILE'],
-    '-DICU_DATA_SYMBOL=%s' % data_symbol,
-]
 LOCAL_INCLUDES += ['.']
 
-if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64':
-    icudata = 'icudata.asm'
-    GeneratedFile(icudata, script='genicudata.py',
-                  inputs=[CONFIG['ICU_DATA_FILE']], flags=[data_symbol])
-    SOURCES += ['!%s' % icudata]
-elif CONFIG['HAVE_YASM']:
-    USE_YASM = True
-    SOURCES += ['icudata.s']
-    ASFLAGS += asflags
-elif CONFIG['GNU_AS']:
-    SOURCES += ['icudata_gas.S']
-    ASFLAGS += asflags
+prefix = ''
+if (CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86') or CONFIG['OS_ARCH'] == 'Darwin':
+    prefix = '_'
+
+DEFINES['ICU_DATA_FILE'] = '"%s/icudt%sl.dat"' % (SRCDIR, CONFIG['MOZ_ICU_VERSION'])
+DEFINES['ICU_DATA_SYMBOL'] = '%sicudt%s_dat' % (prefix, CONFIG['MOZ_ICU_VERSION'])
+SOURCES += [
+    'icudata.c',
+]
