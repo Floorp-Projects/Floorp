@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+// useMLBF=true only supports one type of severity (hard block). The value of
+// appDisabled in the extension blocklist is checked in test_blocklist_mlbf.js.
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+
 const URI_EXTENSION_BLOCKLIST_DIALOG =
   "chrome://mozapps/content/extensions/blocklist.xhtml";
 

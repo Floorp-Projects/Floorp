@@ -3,6 +3,9 @@
 
 "use strict";
 
+// useMLBF=true case is covered by test_blocklist_mlbf.js
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
+
 const BLOCKLIST_DATA = [
   {
     id: "foo",
