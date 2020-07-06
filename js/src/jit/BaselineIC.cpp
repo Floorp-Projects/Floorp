@@ -3941,5 +3941,31 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
   return true;
 }
 
+const CacheIRStubInfo* ICStub::cacheIRStubInfo() const {
+  switch (kind()) {
+    case ICStub::CacheIR_Regular:
+      return toCacheIR_Regular()->stubInfo();
+    case ICStub::CacheIR_Monitored:
+      return toCacheIR_Monitored()->stubInfo();
+    case ICStub::CacheIR_Updated:
+      return toCacheIR_Updated()->stubInfo();
+    default:
+      MOZ_CRASH("Not a CacheIR stub");
+  }
+}
+
+const uint8_t* ICStub::cacheIRStubData() {
+  switch (kind()) {
+    case ICStub::CacheIR_Regular:
+      return toCacheIR_Regular()->stubDataStart();
+    case ICStub::CacheIR_Monitored:
+      return toCacheIR_Monitored()->stubDataStart();
+    case ICStub::CacheIR_Updated:
+      return toCacheIR_Updated()->stubDataStart();
+    default:
+      MOZ_CRASH("Not a CacheIR stub");
+  }
+}
+
 }  // namespace jit
 }  // namespace js
