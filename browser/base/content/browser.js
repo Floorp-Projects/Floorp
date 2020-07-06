@@ -1429,16 +1429,6 @@ var gKeywordURIFixup = {
 
     this.check(browser, fixupInfo);
   },
-
-  receiveMessage({ target: browser, data: fixupInfo }) {
-    // As fixupInfo comes from a serialized message, its URI properties are
-    // strings that we need to recreate nsIURIs from.
-    this.check(browser, {
-      fixedURI: fixupInfo.fixedURI ? makeURI(fixupInfo.fixedURI) : null,
-      keywordProviderName: fixupInfo.keywordProviderName,
-      preferredURI: makeURI(fixupInfo.preferredURI),
-    });
-  },
 };
 
 function serializeInputStream(aStream) {
