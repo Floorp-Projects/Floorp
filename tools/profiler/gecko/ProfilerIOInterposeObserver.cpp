@@ -56,8 +56,10 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
       return;
     }
     AUTO_PROFILER_STATS(IO_MT);
+    nsAutoCString type{aObservation.FileType()};
+    type.AppendLiteral("IO");
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        "FileIO", OTHER, FileIOMarkerPayload,
+        type.get(), OTHER, FileIOMarkerPayload,
         (aObservation.ObservedOperationString(), aObservation.Reference(),
          GetFilename(aObservation).get(), aObservation.Start(),
          aObservation.End(),
@@ -76,13 +78,16 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
         aObservation.Start(),
         aObservation.End(),
         GetBacktraceUnless(features & ProfilerFeature::NoIOStacks)};
+    nsAutoCString type{aObservation.FileType()};
+    type.AppendLiteral("IO");
     // Store the marker in the both:
     // - The current thread.
-    profiler_add_marker("FileIO", JS::ProfilingCategoryPair::OTHER, payload);
+    profiler_add_marker(type.get(), JS::ProfilingCategoryPair::OTHER, payload);
     // - The main thread (with a distinct marker name and the thread id).
     payload.SetIOThreadId(profiler_current_thread_id());
+    type.AppendLiteral(" (non-main thread)");
     profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair::OTHER,
-                                       "FileIO (non-main thread)", payload);
+                                       type.get(), payload);
 
   } else {
     // This is a thread that is not being profiled. We still want to capture
@@ -91,11 +96,14 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
       return;
     }
     AUTO_PROFILER_STATS(IO_other);
+    nsAutoCString type{aObservation.FileType()};
+    if (profiler_is_active_and_thread_is_registered()) {
+      type.AppendLiteral("IO (non-profiled thread)");
+    } else {
+      type.AppendLiteral("IO (unregistered thread)");
+    }
     profiler_add_marker_for_mainthread(
-        JS::ProfilingCategoryPair::OTHER,
-        profiler_is_active_and_thread_is_registered()
-            ? "FileIO (non-profiled thread)"
-            : "FileIO (unregistered thread)",
+        JS::ProfilingCategoryPair::OTHER, type.get(),
         FileIOMarkerPayload(
             aObservation.ObservedOperationString(), aObservation.Reference(),
             GetFilename(aObservation).get(), aObservation.Start(),
