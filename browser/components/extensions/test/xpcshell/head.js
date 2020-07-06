@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported createHttpServer, promiseConsoleOutput, setupPKCS11Manifests */
+/* exported createHttpServer, promiseConsoleOutput  */
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { XPCOMUtils } = ChromeUtils.import(
@@ -15,9 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
-  MockRegistry: "resource://testing-common/MockRegistry.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
@@ -76,91 +74,3 @@ var promiseConsoleOutput = async function(task) {
     Services.console.unregisterListener(listener);
   }
 };
-
-/**
- * Helper function for pkcs11 tests. Given a temporary directory and a list of
- * module specifications, writes the manifests for those modules so the
- * platform can load them.
- *
- * @param {nsIFile} [tmpDir]
- *        A temporary directory to put the manifests in.
- * @param {Array} [modules]
- *        An array of module specifications (see
- *        https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_manifests#PKCS_11_manifests).
- */
-async function setupPKCS11Manifests(tmpDir, modules) {
-  let slug =
-    AppConstants.platform === "linux" ? "pkcs11-modules" : "PKCS11Modules";
-  tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  let baseDir = OS.Path.join(tmpDir.path, slug);
-  OS.File.makeDir(baseDir);
-
-  async function writeManifest(module) {
-    let manifest = {
-      name: module.name,
-      description: module.description,
-      path: module.path,
-      type: "pkcs11",
-      allowed_extensions: [module.id],
-    };
-
-    let manifestPath = OS.Path.join(baseDir, `${module.name}.json`);
-    await OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
-
-    return manifestPath;
-  }
-
-  switch (AppConstants.platform) {
-    case "macosx":
-    case "linux":
-      let dirProvider = {
-        getFile(property) {
-          if (property == "XREUserNativeManifests") {
-            return tmpDir.clone();
-          } else if (property == "XRESysNativeManifests") {
-            return tmpDir.clone();
-          }
-          return null;
-        },
-      };
-
-      Services.dirsvc.registerProvider(dirProvider);
-      registerCleanupFunction(() => {
-        Services.dirsvc.unregisterProvider(dirProvider);
-      });
-
-      for (let module of modules) {
-        await writeManifest(module);
-      }
-      break;
-
-    case "win":
-      const REGKEY = String.raw`Software\Mozilla\PKCS11Modules`;
-
-      let registry = new MockRegistry();
-      registerCleanupFunction(() => {
-        registry.shutdown();
-      });
-
-      for (let module of modules) {
-        if (!OS.Path.winIsAbsolute(module.path)) {
-          let cwd = await OS.File.getCurrentDirectory();
-          module.path = OS.Path.join(cwd, module.path);
-        }
-        let manifestPath = await writeManifest(module);
-        registry.setValue(
-          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          `${REGKEY}\\${module.name}`,
-          "",
-          manifestPath
-        );
-      }
-      break;
-
-    default:
-      ok(
-        false,
-        `Loading of PKCS#11 modules is not supported on ${AppConstants.platform}`
-      );
-  }
-}

@@ -154,7 +154,6 @@
     "url": "chrome://browser/content/parent/ext-pkcs11.js",
     "schema": "chrome://browser/content/schemas/pkcs11.json",
     "scopes": ["addon_parent"],
-    "settings": true,
     "paths": [
       ["pkcs11"]
     ]
