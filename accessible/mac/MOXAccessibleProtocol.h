@@ -34,15 +34,32 @@
 // Return text delegate if it exists.
 - (id<MOXTextMarkerSupport> _Nullable)moxTextMarkerDelegate;
 
+// Returns a list of all children, doesn't do ignore filtering.
+- (NSArray*)moxChildren;
+
+// Returns our parent, doesn't do ignore filtering.
+- (id<mozAccessible> _Nullable)moxParent;
+
+// This is called by isAccessibilityElement. If a subclass wants
+// to alter the isAccessibilityElement return value, it must
+// override this and not isAccessibilityElement directly.
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent;
+
+// Should the child be ignored. This allows subclasses to determine
+// what kinds of accessibles are valid children. This causes the child
+// to be skipped, but the unignored descendants will be added to the
+// container in the default children getter.
+- (BOOL)moxIgnoreChild:(mozAccessible*)child;
+
 @optional
 
 #pragma mark - AttributeGetters
 
 // AXChildren
-- (NSArray* _Nullable)moxChildren;
+- (NSArray* _Nullable)moxUnignoredChildren;
 
 // AXParent
-- (id _Nullable)moxParent;
+- (id _Nullable)moxUnignoredParent;
 
 // AXRole
 - (NSString* _Nullable)moxRole;
