@@ -2215,6 +2215,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
     // attach. Just return nullptr, the caller should do nothing in this
     // case.
     if (updated) {
+      stub->maybeInvalidateWarp(cx, outerScript);
       *attached = true;
     } else {
       JitSpew(JitSpew_BaselineICFallback,
@@ -2239,6 +2240,8 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   // Resetting the entered counts on the IC chain makes subsequent reasoning
   // about the chain much easier.
   ResetEnteredCounts(stub);
+
+  stub->maybeInvalidateWarp(cx, outerScript);
 
   switch (stubKind) {
     case BaselineCacheIRStubKind::Regular: {

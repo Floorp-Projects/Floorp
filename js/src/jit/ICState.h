@@ -26,7 +26,11 @@ class ICState {
   enum class Mode : uint8_t { Specialized = 0, Megamorphic, Generic };
 
  private:
-  Mode mode_;
+  uint32_t mode_ : 2;
+
+  // Whether WarpOracle created a snapshot based on stubs attached to this
+  // Baseline IC.
+  bool usedByTranspiler_ : 1;
 
   // Number of optimized stubs currently attached to this IC.
   uint8_t numOptimizedStubs_;
@@ -36,9 +40,14 @@ class ICState {
 
   static const size_t MaxOptimizedStubs = 6;
 
+  void setMode(Mode mode) {
+    mode_ = uint32_t(mode);
+    MOZ_ASSERT(Mode(mode_) == mode, "mode must fit in bitfield");
+  }
+
   void transition(Mode mode) {
-    MOZ_ASSERT(mode > mode_);
-    mode_ = mode;
+    MOZ_ASSERT(mode > this->mode());
+    setMode(mode);
     numFailures_ = 0;
   }
 
@@ -54,7 +63,7 @@ class ICState {
  public:
   ICState() { reset(); }
 
-  Mode mode() const { return mode_; }
+  Mode mode() const { return Mode(mode_); }
   size_t numOptimizedStubs() const { return numOptimizedStubs_; }
   bool hasFailures() const { return (numFailures_ != 0); }
 
@@ -62,7 +71,7 @@ class ICState {
     // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
     // because old-style baseline ICs may attach more stubs than
     // MaxOptimizedStubs allows.
-    if (mode_ == Mode::Generic || JitOptions.disableCacheIR) {
+    if (mode() == Mode::Generic || JitOptions.disableCacheIR) {
       return false;
     }
     return true;
@@ -74,23 +83,24 @@ class ICState {
     // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
     // because old-style baseline ICs may attach more stubs than
     // MaxOptimizedStubs allows.
-    if (mode_ == Mode::Generic) {
+    if (mode() == Mode::Generic) {
       return false;
     }
     if (numOptimizedStubs_ < MaxOptimizedStubs &&
         numFailures_ < maxFailures()) {
       return false;
     }
-    if (numFailures_ == maxFailures() || mode_ == Mode::Megamorphic) {
+    if (numFailures_ == maxFailures() || mode() == Mode::Megamorphic) {
       transition(Mode::Generic);
       return true;
     }
-    MOZ_ASSERT(mode_ == Mode::Specialized);
+    MOZ_ASSERT(mode() == Mode::Specialized);
     transition(Mode::Megamorphic);
     return true;
   }
   void reset() {
-    mode_ = Mode::Specialized;
+    setMode(Mode::Specialized);
+    usedByTranspiler_ = false;
     numOptimizedStubs_ = 0;
     numFailures_ = 0;
   }
@@ -118,6 +128,10 @@ class ICState {
     numOptimizedStubs_--;
   }
   void trackUnlinkedAllStubs() { numOptimizedStubs_ = 0; }
+
+  void clearUsedByTranspiler() { usedByTranspiler_ = false; }
+  void setUsedByTranspiler() { usedByTranspiler_ = true; }
+  bool usedByTranspiler() const { return usedByTranspiler_; }
 };
 
 }  // namespace jit
