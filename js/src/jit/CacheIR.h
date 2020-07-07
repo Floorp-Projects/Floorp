@@ -553,6 +553,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
   void writeObjectField(JSObject* obj) {
+    MOZ_ASSERT(obj);
     assertSameCompartment(obj);
     addStubField(uintptr_t(obj), StubField::Type::JSObject);
   }
