@@ -541,7 +541,7 @@ Tools.lightTheme = {
 
 exports.defaultThemes = [Tools.darkTheme, Tools.lightTheme];
 
-// White-list buttons that can be toggled to prevent adding prefs for
+// List buttons that can be toggled to prevent adding prefs for
 // addons that have manually inserted toolbarbuttons into DOM.
 // (By default, supported target is only local tab)
 exports.ToolboxButtons = [

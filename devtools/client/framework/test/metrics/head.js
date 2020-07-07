@@ -137,16 +137,16 @@ function getDuplicatedModules(loaders) {
  *
  * @param {Array} loaders
  *        Array of Loader instances.
- * @param {Array} whitelist
+ * @param {Array} allowedDupes
  *        Array of Strings which are paths to known duplicated modules.
- *        The test will also fail if a whitelisted module is not found in the
+ *        The test will also fail if a allowedDupesed module is not found in the
  *        duplicated modules.
  */
-function runDuplicatedModulesTest(loaders, whitelist) {
+function runDuplicatedModulesTest(loaders, allowedDupes) {
   const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
   if (AppConstants.DEBUG_JS_MODULES) {
     // DevTools load different modules when DEBUG_JS_MODULES is true, which
-    // makes the hardcoded whitelists incorrect. Fail the test early and return.
+    // makes the hardcoded allowedDupes incorrect. Fail the test early and return.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590630.
     ok(
       false,
@@ -160,15 +160,15 @@ function runDuplicatedModulesTest(loaders, whitelist) {
 
   const duplicatedModules = getDuplicatedModules(loaders);
 
-  // Remove whitelisted entries, and fail if a whitelisted entry is not found.
-  for (const whitelistedModule of whitelist) {
-    const deleted = duplicatedModules.delete(whitelistedModule);
+  // Remove allowedDupes entries, and fail if an allowed entry is not found.
+  for (const mod of allowedDupes) {
+    const deleted = duplicatedModules.delete(mod);
     if (!deleted) {
       ok(
         false,
-        "Whitelisted module not found in the duplicated modules: [" +
-          whitelistedModule +
-          "]. Whitelist of allowed duplicated modules should be updated to remove it."
+        "module not found in the duplicated modules: [" +
+          mod +
+          "]. The allowedDupes array should be updated to remove it."
       );
     }
   }

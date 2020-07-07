@@ -9,7 +9,7 @@ import type { SimplePath } from "./simple-path";
 // the function class is inferred from a call like
 // createClass or extend
 function fromCallExpression(callExpression: SimplePath) {
-  const whitelist = ["extend", "createClass"];
+  const allowlist = ["extend", "createClass"];
   const { callee } = callExpression.node;
   if (!callee) {
     return null;
@@ -19,7 +19,7 @@ function fromCallExpression(callExpression: SimplePath) {
     ? callee.property.name
     : callee.name;
 
-  if (!whitelist.includes(name)) {
+  if (!allowlist.includes(name)) {
     return null;
   }
 
