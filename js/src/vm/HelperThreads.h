@@ -45,6 +45,13 @@ class CompileError;
 struct HelperThread;
 struct ParseTask;
 struct PromiseHelperTask;
+
+struct HelperThreadTask {
+  virtual void runTaskLocked(AutoLockHelperThreadState& locked) = 0;
+  virtual ThreadType threadType() = 0;
+  virtual ~HelperThreadTask() = default;
+};
+
 namespace jit {
 class IonCompileTask;
 }  // namespace jit
@@ -59,9 +66,8 @@ namespace wasm {
 struct CompileTask;
 typedef Fifo<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrFifo;
 
-struct Tier2GeneratorTask : public RunnableTask {
+struct Tier2GeneratorTask : public HelperThreadTask {
   virtual ~Tier2GeneratorTask() = default;
-  virtual void runTaskLocked(AutoLockHelperThreadState& locked) = 0;
   virtual void cancel() = 0;
 };
 
@@ -711,7 +717,7 @@ struct MOZ_RAII AutoSetContextRuntime {
 
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
                    public JS::OffThreadToken,
-                   public RunnableTask {
+                   public HelperThreadTask {
   ParseTaskKind kind;
   JS::OwningCompileOptions options;
 
@@ -757,8 +763,8 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
-  void runTaskLocked(AutoLockHelperThreadState& locked);
-  void runTask() override;
+  void runTaskLocked(AutoLockHelperThreadState& locked) override;
+  void runTask();
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
 

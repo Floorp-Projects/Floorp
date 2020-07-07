@@ -23,7 +23,7 @@ class CodeGenerator;
 class MRootList;
 
 // IonCompileTask represents a single off-thread Ion compilation task.
-class IonCompileTask final : public RunnableTask,
+class IonCompileTask final : public HelperThreadTask,
                              public mozilla::LinkedListElement<IonCompileTask> {
   MIRGenerator& mirGen_;
 
@@ -64,10 +64,10 @@ class IonCompileTask final : public RunnableTask,
     backgroundCodegen_ = codegen;
   }
 
-  void runTaskLocked(AutoLockHelperThreadState& locked);
+  void runTaskLocked(AutoLockHelperThreadState& locked) override;
 
   ThreadType threadType() override { return THREAD_TYPE_ION; }
-  void runTask() override;
+  void runTask();
 };
 
 void AttachFinishedCompilations(JSContext* cx);
