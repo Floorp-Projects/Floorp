@@ -295,14 +295,13 @@ bool LocaleService::IsServer() { return mIsServer; }
 
 static bool GetGREFileContents(const char* aFilePath, nsCString* aOutString) {
   // Look for the requested file in omnijar.
-  RefPtr<CacheAwareZipReader> zip = Omnijar::GetReader(Omnijar::GRE);
+  RefPtr<nsZipArchive> zip = Omnijar::GetReader(Omnijar::GRE);
   if (zip) {
-    uint32_t length;
-    const uint8_t* data = zip->GetData(aFilePath, &length);
-    if (!data) {
+    nsZipItemPtr<char> item(zip, aFilePath);
+    if (!item) {
       return false;
     }
-    aOutString->Assign(reinterpret_cast<const char*>(data), length);
+    aOutString->Assign(item.Buffer(), item.Length());
     return true;
   }
 
