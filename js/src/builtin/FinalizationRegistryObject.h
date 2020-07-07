@@ -84,14 +84,12 @@
 namespace js {
 
 class FinalizationRegistryObject;
-class FinalizationIteratorObject;
 class FinalizationRecordObject;
 class ObjectWeakMap;
 
 using HandleFinalizationRegistryObject = Handle<FinalizationRegistryObject*>;
 using HandleFinalizationRecordObject = Handle<FinalizationRecordObject*>;
 using RootedFinalizationRegistryObject = Rooted<FinalizationRegistryObject*>;
-using RootedFinalizationIteratorObject = Rooted<FinalizationIteratorObject*>;
 using RootedFinalizationRecordObject = Rooted<FinalizationRecordObject*>;
 
 // A finalization record: a pair of finalization registry and held value.
@@ -228,31 +226,6 @@ class FinalizationRegistryObject : public NativeObject {
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
-};
-
-// An iterator over a finalization registry's queued held values. In the spec
-// this is called FinalizationRegistryCleanupIterator.
-class FinalizationIteratorObject : public NativeObject {
-  enum { FinalizationRegistrySlot = 0, IndexSlot, SlotCount };
-
- public:
-  static const JSClass class_;
-
-  static FinalizationIteratorObject* create(
-      JSContext* cx, HandleFinalizationRegistryObject registry);
-
-  FinalizationRegistryObject* finalizationRegistry() const;
-  size_t index() const;
-
-  void setIndex(size_t index);
-  void clearFinalizationRegistry();
-
- private:
-  friend class GlobalObject;
-  static const JSFunctionSpec methods_[];
-  static const JSPropertySpec properties_[];
-
-  static bool next(JSContext* cx, unsigned argc, Value* vp);
 };
 
 }  // namespace js
