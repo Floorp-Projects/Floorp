@@ -7113,12 +7113,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
     if (handler_.isPrivateName(propName)) {
-      if (hasHeritage == HasHeritage::Yes) {
-        // TODO: Private names in derived classes aren't yet implemented.
-        errorAt(propNameOffset, JSMSG_ILLEGAL_PRIVATE_FIELD);
-        return false;
-      }
-
       if (propAtom == cx_->names().hashConstructor) {
         errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
         return false;
@@ -7840,12 +7834,14 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
       return null();
     }
   } else if (handler_.isPrivateName(propName)) {
-    // Private fields within derived classes need to check for already present
-    // private fields (see Step 4 of the proposal specification algorithm
-    // PrivateFieldAdd)
-    MOZ_ASSERT(hasHeritage == HasHeritage::No,
-               "derived classes don't yet support private fields");
-
+    // It would be nice if we could tweak this here such that only if
+    // HasHeritage::Yes we end up emitting InitPrivateElem, but otherwise we
+    // emit InitElem -- this is an optimization to minimize HasOwn checks
+    // in InitElem for classes without heritage.
+    //
+    // Further tweaking would be to ultimately only do InitPrivateElem for the
+    // -first- field in a derived class, which would suffice to match the
+    // semantic check.
     RootedPropertyName privateName(cx_, propAtom->asPropertyName());
     if (!noteUsedName(privateName)) {
       return null();
@@ -9133,6 +9129,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
         if (!nextMember) {
           return null();
         }
+      } else if (tt == TokenKind::PrivateName) {
+        nextMember = memberPrivateAccess(lhs);
+        if (!nextMember) {
+          return null();
+        }
       } else {
         error(JSMSG_NAME_AFTER_DOT);
         return null();
@@ -9520,6 +9521,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         if (!nextMember) {
           return null();
         }
+      } else if (tt == TokenKind::PrivateName) {
+        nextMember = memberPrivateAccess(lhs);
+        if (!nextMember) {
+          return null();
+        }
       } else {
         error(JSMSG_NAME_AFTER_DOT);
         return null();
@@ -9588,6 +9594,19 @@ PerHandlerParser<ParseHandler>::newName(PropertyName* name, TokenPos pos) {
   return handler_.newName(name, pos, cx_);
 }
 
+template <class ParseHandler>
+inline typename ParseHandler::NameNodeType
+PerHandlerParser<ParseHandler>::newPrivateName(PropertyName* name) {
+  return newPrivateName(name, pos());
+}
+
+template <class ParseHandler>
+inline typename ParseHandler::NameNodeType
+PerHandlerParser<ParseHandler>::newPrivateName(PropertyName* name,
+                                               TokenPos pos) {
+  return handler_.newPrivateName(name, pos);
+}
+
 template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
@@ -9609,6 +9628,28 @@ GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
     return handler_.newOptionalPropertyAccess(lhs, name);
   }
   return handler_.newPropertyAccess(lhs, name);
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node
+GeneralParser<ParseHandler, Unit>::memberPrivateAccess(
+    Node lhs, OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
+  MOZ_ASSERT(anyChars.currentToken().type == TokenKind::PrivateName);
+  MOZ_ASSERT(optionalKind == OptionalKind::NonOptional, "optional nyi");
+
+  RootedPropertyName field(cx_, anyChars.currentName());
+  // Cannot access private fields on super.
+  if (handler_.isSuperBase(lhs)) {
+    error(JSMSG_BAD_SUPERPRIVATE);
+    return null();
+  }
+
+  NameNodeType privateName = privateNameReference(field);
+  if (!privateName) {
+    return null();
+  }
+
+  return handler_.newPropertyByValue(lhs, privateName, pos().end);
 }
 
 template <class ParseHandler, typename Unit>
@@ -9904,6 +9945,22 @@ typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::identifierReference(
     Handle<PropertyName*> name) {
   NameNodeType id = newName(name);
+  if (!id) {
+    return null();
+  }
+
+  if (!noteUsedName(name)) {
+    return null();
+  }
+
+  return id;
+}
+
+template <class ParseHandler>
+typename ParseHandler::NameNodeType
+PerHandlerParser<ParseHandler>::privateNameReference(
+    Handle<PropertyName*> name) {
+  NameNodeType id = newPrivateName(name);
   if (!id) {
     return null();
   }

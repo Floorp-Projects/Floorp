@@ -506,11 +506,15 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   inline NameNodeType newName(PropertyName* name);
   inline NameNodeType newName(PropertyName* name, TokenPos pos);
 
+  inline NameNodeType newPrivateName(PropertyName* name);
+  inline NameNodeType newPrivateName(PropertyName* name, TokenPos pos);
+
   NameNodeType newInternalDotName(HandlePropertyName name);
   NameNodeType newThisName();
   NameNodeType newDotGeneratorName();
 
   NameNodeType identifierReference(Handle<PropertyName*> name);
+  NameNodeType privateNameReference(Handle<PropertyName*> name);
 
   Node noSubstitutionTaggedTemplate();
 
@@ -757,6 +761,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::noteDestructuredPositionalFormalParameter;
   using Base::noteUsedName;
   using Base::prefixAccessorName;
+  using Base::privateNameReference;
   using Base::processExport;
   using Base::processExportFrom;
   using Base::setFunctionEndFromCurrentToken;
@@ -1359,6 +1364,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     Optional,
   };
   Node memberPropertyAccess(
+      Node lhs, OptionalKind optionalKind = OptionalKind::NonOptional);
+  Node memberPrivateAccess(
       Node lhs, OptionalKind optionalKind = OptionalKind::NonOptional);
   Node memberElemAccess(Node lhs, YieldHandling yieldHandling,
                         OptionalKind optionalKind = OptionalKind::NonOptional);

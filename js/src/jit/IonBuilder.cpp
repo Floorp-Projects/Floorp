@@ -2452,6 +2452,12 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       // operation in the optimizing compiler?
       break;
 
+    // Private Fields
+    case JSOp::InitPrivateElem:
+    case JSOp::GetPrivateElem:
+    case JSOp::SetPrivateElem:
+      break;
+
     case JSOp::ForceInterpreter:
       // Intentionally not implemented.
       break;

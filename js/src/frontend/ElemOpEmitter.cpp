@@ -14,8 +14,13 @@
 using namespace js;
 using namespace js::frontend;
 
-ElemOpEmitter::ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind)
-    : bce_(bce), kind_(kind), objKind_(objKind) {}
+ElemOpEmitter::ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind,
+                             NameVisibility visibility)
+    : bce_(bce), kind_(kind), objKind_(objKind), visibility_(visibility) {
+  // Can't access private names of super!
+  MOZ_ASSERT_IF(visibility == NameVisibility::Private,
+                objKind != ObjKind::Super);
+}
 
 bool ElemOpEmitter::prepareForObj() {
   MOZ_ASSERT(state_ == State::Start);
@@ -88,6 +93,8 @@ bool ElemOpEmitter::emitGet() {
     op = JSOp::GetElemSuper;
   } else if (isCall()) {
     op = JSOp::CallElem;
+  } else if (isPrivateGet()) {
+    op = JSOp::GetPrivateElem;
   } else {
     op = JSOp::GetElem;
   }
@@ -149,6 +156,7 @@ bool ElemOpEmitter::skipObjAndKeyAndRhs() {
 bool ElemOpEmitter::emitDelete() {
   MOZ_ASSERT(state_ == State::Key);
   MOZ_ASSERT(isDelete());
+  MOZ_ASSERT(!isPrivate());
 
   if (isSuper()) {
     if (!bce_->emit1(JSOp::ToPropertyKey)) {
@@ -193,11 +201,13 @@ bool ElemOpEmitter::emitAssignment() {
   MOZ_ASSERT_IF(isPropInit(), !isSuper());
 
   JSOp setOp = isPropInit()
-                   ? JSOp::InitElem
+                   ? (isPrivate() ? JSOp::InitPrivateElem : JSOp::InitElem)
                    : isSuper() ? bce_->sc->strict() ? JSOp::StrictSetElemSuper
                                                     : JSOp::SetElemSuper
-                               : bce_->sc->strict() ? JSOp::StrictSetElem
-                                                    : JSOp::SetElem;
+                               : isPrivate()
+                                     ? JSOp::SetPrivateElem
+                                     : bce_->sc->strict() ? JSOp::StrictSetElem
+                                                          : JSOp::SetElem;
   if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] ELEM
     return false;
@@ -244,7 +254,9 @@ bool ElemOpEmitter::emitIncDec() {
   JSOp setOp =
       isSuper()
           ? (bce_->sc->strict() ? JSOp::StrictSetElemSuper : JSOp::SetElemSuper)
-          : (bce_->sc->strict() ? JSOp::StrictSetElem : JSOp::SetElem);
+          : isPrivate()
+                ? JSOp::SetPrivateElem
+                : (bce_->sc->strict() ? JSOp::StrictSetElem : JSOp::SetElem);
   if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] N? N+1
     return false;
