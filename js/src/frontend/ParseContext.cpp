@@ -62,14 +62,20 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
          kind == DeclarationKind::FormalParameter;
 }
 
-bool UsedNameTracker::noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId,
-                              uint32_t scopeId) {
+bool UsedNameTracker::noteUse(JSContext* cx, JSAtom* name,
+                              NameVisibility visibility, uint32_t scriptId,
+                              uint32_t scopeId,
+                              mozilla::Maybe<TokenPos> tokenPosition) {
   if (UsedNameMap::AddPtr p = map_.lookupForAdd(name)) {
     if (!p->value().noteUsedInScope(scriptId, scopeId)) {
       return false;
     }
   } else {
-    UsedNameInfo info(cx);
+    // We need a token position precisely where we have private visibility.
+    MOZ_ASSERT(tokenPosition.isSome() ==
+               (visibility == NameVisibility::Private));
+    UsedNameInfo info(cx, visibility, tokenPosition);
+
     if (!info.noteUsedInScope(scriptId, scopeId)) {
       return false;
     }
@@ -78,6 +84,52 @@ bool UsedNameTracker::noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId,
     }
   }
 
+  return true;
+}
+
+bool UsedNameTracker::getUnboundPrivateNames(
+    Vector<UnboundPrivateName, 8>& unboundPrivateNames) {
+  for (auto iter = map_.iter(); !iter.done(); iter.next()) {
+    // Don't care about public;
+    if (iter.get().value().isPublic()) {
+      continue;
+    }
+
+    // empty list means all bound
+    if (iter.get().value().empty()) {
+      continue;
+    }
+
+    if (!unboundPrivateNames.emplaceBack(iter.get().key(),
+                                         *iter.get().value().pos())) {
+      return false;
+    }
+  }
+
+  // Return a sorted list in ascendng order of position.
+  auto comparePosition = [](const auto& a, const auto& b) {
+    return a.position < b.position;
+  };
+  std::sort(unboundPrivateNames.begin(), unboundPrivateNames.end(),
+            comparePosition);
+
+  return true;
+}
+
+bool UsedNameTracker::hasUnboundPrivateNames(
+    JSContext* cx, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
+  Vector<UnboundPrivateName, 8> unboundPrivateNames(cx);
+  if (!getUnboundPrivateNames(unboundPrivateNames)) {
+    return false;
+  }
+
+  if (unboundPrivateNames.empty()) {
+    maybeUnboundName = mozilla::Nothing();
+    return true;
+  }
+
+  // GetUnboundPrivateNames returns the list sorted.
+  maybeUnboundName.emplace(unboundPrivateNames[0]);
   return true;
 }
 
