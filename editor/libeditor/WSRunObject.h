@@ -842,10 +842,12 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
 
   /**
-   * Scrub() removes any non-visible white-spaces at aPoint.
+   * DeleteInvisibleASCIIWhiteSpaces() removes invisible leading white-spaces
+   * and trailing white-spaces if there are around aPoint.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult Scrub(
-      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  DeleteInvisibleASCIIWhiteSpaces(HTMLEditor& aHTMLEditor,
+                                  const EditorDOMPoint& aPoint);
 
   /**
    * PrepareToJoinBlocks() fixes up white-spaces at the end of aLeftBlockElement
@@ -992,7 +994,11 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
       const WSFragment& aRun, const EditorDOMPoint& aPoint);
 
-  MOZ_CAN_RUN_SCRIPT nsresult Scrub();
+  /**
+   * See explanation of the static method for this.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteInvisibleASCIIWhiteSpacesInternal();
 
   // Because of MOZ_CAN_RUN_SCRIPT constructors, each instanciater of this class
   // guarantees the lifetime of the HTMLEditor.
