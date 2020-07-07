@@ -173,6 +173,11 @@
           '-llog',
         ],
       }],
+      [ 'OS=="win"', {
+        'libraries': [
+          '-lkernel32',
+        ],
+      }],
       [ 'fuzz==1', {
         'variables': {
           'debug_optimization_level%': '1',

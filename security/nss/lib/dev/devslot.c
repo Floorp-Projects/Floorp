@@ -14,6 +14,10 @@
 
 #include "pk11pub.h"
 
+#if defined(_MSC_VER)
+#include "windows.h"
+#endif
+
 /* measured in seconds */
 #define NSSSLOT_TOKEN_DELAY_TIME 1
 
@@ -121,6 +125,33 @@ NSS_IMPLEMENT PRBool
 nssSlot_IsTokenPresent(
     NSSSlot *slot)
 {
+#if defined(_MSC_VER)
+    if (!slot) {
+        __debugbreak();
+        *((volatile int*)NULL) = __LINE__;
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
+    if (!slot->pk11slot) {
+        __debugbreak();
+        *((volatile int*)NULL) = __LINE__;
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
+    if (!slot->isPresentLock) {
+        __debugbreak();
+        *((volatile int*)NULL) = __LINE__;
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
+    if (!slot->isPresentCondition) {
+        __debugbreak();
+        *((volatile int*)NULL) = __LINE__;
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
+    if (!slot->token) {
+        __debugbreak();
+        *((volatile int*)NULL) = __LINE__;
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
+#endif
     CK_RV ckrv;
     PRStatus nssrv;
     /* XXX */

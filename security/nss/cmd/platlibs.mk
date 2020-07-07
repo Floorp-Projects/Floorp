@@ -157,6 +157,7 @@ EXTRA_LIBS += \
 #OS_LIBS += \
 	wsock32.lib \
 	winmm.lib \
+	kernel32.lib \
 	$(NULL)
 else
 
@@ -208,6 +209,7 @@ EXTRA_LIBS += \
 #OS_LIBS += \
 	wsock32.lib \
 	winmm.lib \
+	kernel32.lib \
 	$(NULL)
 else
 
