@@ -78,7 +78,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
     js_delete(this);
   }
 
-  void runTask() override {
+  void runTask() {
     CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_);
   }
   ThreadType threadType() override {
