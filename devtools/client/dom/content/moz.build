@@ -12,6 +12,7 @@ DIRS += [
 DevToolsModules(
     'constants.js',
     'dom-decorator.js',
+    'dom-view.css',
     'dom-view.js',
     'grip-provider.js',
     'utils.js',

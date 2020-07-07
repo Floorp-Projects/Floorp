@@ -6,5 +6,6 @@
 
 DevToolsModules(
     'TabBar.js',
+    'Tabs.css',
     'Tabs.js',
 )

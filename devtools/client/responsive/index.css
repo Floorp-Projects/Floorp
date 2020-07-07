@@ -238,7 +238,7 @@ input:-moz-focusring {
 }
 
 #rotate-button::before {
-  background-image: url("chrome://devtools/content/responsive/images/rotate-viewport.svg");
+  background-image: url("./images/rotate-viewport.svg");
 }
 
 #rotate-button.viewport-orientation-landscape::before {
@@ -246,7 +246,7 @@ input:-moz-focusring {
 }
 
 #touch-simulation-button::before {
-  background-image: url("chrome://devtools/content/responsive/images/touch-events.svg");
+  background-image: url("./images/touch-events.svg");
 }
 
 #screenshot-button::before {
@@ -365,7 +365,7 @@ input:-moz-focusring {
   height: 16px;
   bottom: 0;
   right: 0;
-  background-image: url("chrome://devtools/content/responsive/images/grippers.svg");
+  background-image: url("./images/grippers.svg");
   background-position: bottom right;
   padding: 0 1px 1px 0;
   background-repeat: no-repeat;

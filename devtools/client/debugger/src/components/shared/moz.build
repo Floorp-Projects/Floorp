@@ -22,3 +22,19 @@ CompiledModules(
     'SourceIcon.js',
     'SmartGap.js',
 )
+
+DevToolsModules(
+    'AccessibleImage.css',
+    'Accordion.css',
+    'Badge.css',
+    'BracketArrow.css',
+    'Dropdown.css',
+    'ManagedTree.css',
+    'menu.css',
+    'Modal.css',
+    'Popover.css',
+    'PreviewFunction.css',
+    'ResultList.css',
+    'SearchInput.css',
+    'SourceIcon.css',
+)
