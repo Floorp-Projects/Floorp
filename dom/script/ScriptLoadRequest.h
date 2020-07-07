@@ -307,7 +307,6 @@ class ScriptLoadRequest
   bool mScriptFromHead;    // Synchronous head script block loading of other non
                            // js/css content.
   bool mIsInline;          // Is the script inline or loaded?
-  bool mHasSourceMapURL;   // Does the HTTP header have a source map url?
   bool mInDeferList;       // True if we live in mDeferRequests.
   bool mInAsyncList;       // True if we live in mLoadingAsyncRequests or
                            // mLoadedAsyncRequests.
@@ -323,7 +322,7 @@ class ScriptLoadRequest
   RefPtr<ScriptFetchOptions> mFetchOptions;
 
   JS::OffThreadToken* mOffThreadToken;  // Off-thread parsing token.
-  nsString mSourceMapURL;  // Holds source map url for loaded scripts
+  Maybe<nsString> mSourceMapURL;  // Holds source map url for loaded scripts
 
   // Holds the top-level JSScript that corresponds to the current source, once
   // it is parsed, and planned to be saved in the bytecode cache.

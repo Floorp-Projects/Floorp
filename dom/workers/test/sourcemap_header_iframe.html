@@ -1,0 +1,19 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    self.onmessage = (msg) => {
+      const workerLoadedPort = msg.ports[0];
+      const worker = new Worker(msg.data);
+      worker.onmessage = () => {
+        workerLoadedPort.postMessage("worker loaded");
+      };
+    };
+  </script>
+</head>
+<body></body>
+</html>
