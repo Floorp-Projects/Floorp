@@ -4385,14 +4385,6 @@ class HTMLEditor final : public TextEditor,
   static nsresult StripFormattingNodes(nsIContent& aNode,
                                        bool aOnlyList = false);
 
-
-  /**
-   * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
-   */
-  [[nodiscard]] static nsresult MoveStartAndEndAccordingToHTMLInfo(
-      const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
-      nsCOMPtr<nsINode>* aOutEndNode);
-
   /**
    * CollectTopMostChildContentsCompletelyInRange() collects topmost child
    * contents which are completely in the given range.
