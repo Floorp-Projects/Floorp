@@ -13,6 +13,9 @@ class A {
   static readx(o) {
     return o.#x;
   }
+  static optionalx(o) {
+    return o?.#x;
+  }
 
   #y = () => 'hi';
   invoke() {
@@ -51,6 +54,14 @@ for (var i = 0; i < 1000; i++) {
   a.sz(i + 1);
   assertEq(A.sgz(), i + 1);
   A.ssz('static');  // reset for next iteration!
+
+  assertEq(A.optionalx(a), 11);
+  assertEq(A.optionalx(null), undefined);
+  try {
+    A.optionalx({});  // Should throw type error
+    assertEq(0, 1);
+  } catch (TypeError) {
+  }
 }
 
 function assertThrows(fun, errorType) {
