@@ -187,6 +187,14 @@ void SocketProcessChild::CleanUp() {
   NS_ShutdownXPCOM(nullptr);
 }
 
+mozilla::ipc::IPCResult SocketProcessChild::RecvInit(
+    const SocketPorcessInitAttributes& aAttributes) {
+  Unused << RecvSetOffline(aAttributes.mOffline());
+  Unused << RecvSetConnectivity(aAttributes.mConnectivity());
+  Unused << RecvInitLinuxSandbox(aAttributes.mSandboxBroker());
+  return IPC_OK();
+}
+
 IPCResult SocketProcessChild::RecvPreferenceUpdate(const Pref& aPref) {
   Preferences::SetPreference(aPref);
   return IPC_OK();
