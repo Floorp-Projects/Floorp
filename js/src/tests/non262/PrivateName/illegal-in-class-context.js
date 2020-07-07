@@ -12,6 +12,8 @@ try {
 if (!privateFields) {
   assertThrowsInstanceOf(() => eval(`class A { #x }`), SyntaxError);
   assertThrowsInstanceOf(() => eval(`class A { #x=10 }`), SyntaxError);
+} else {
+  assertThrowsInstanceOf(() => eval(`class A { #x; #x; }`), SyntaxError);
 }
 
 // No computed private fields

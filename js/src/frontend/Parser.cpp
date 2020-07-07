@@ -671,7 +671,8 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
       break;
     }
 
-    case DeclarationKind::LexicalFunction: {
+    case DeclarationKind::LexicalFunction:
+    case DeclarationKind::PrivateName: {
       ParseContext::Scope* scope = pc_->innermostScope();
       AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name);
       if (p) {
@@ -7120,6 +7121,11 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
       if (propAtom == cx_->names().hashConstructor) {
         errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
+        return false;
+      }
+
+      RootedPropertyName privateName(cx_, propAtom->asPropertyName());
+      if (!noteDeclaredName(privateName, DeclarationKind::PrivateName, pos())) {
         return false;
       }
     }
