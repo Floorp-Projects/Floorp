@@ -59,13 +59,10 @@ uint32_t nsHistory::GetLength(ErrorResult& aRv) const {
   // Get session History from docshell
   RefPtr<ChildSHistory> sHistory = GetSessionHistory();
   if (!sHistory) {
-    aRv.Throw(NS_ERROR_FAILURE);
-
-    return 0;
+    return 1;
   }
 
   int32_t len = sHistory->Count();
-  ;
   return len >= 0 ? len : 0;
 }
 
