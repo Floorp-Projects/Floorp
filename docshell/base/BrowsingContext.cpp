@@ -2420,7 +2420,7 @@ void BrowsingContext::InitSessionHistory() {
     // also create the session history implementation for the child process.
     // This can be removed once session history is stored exclusively in the
     // parent process.
-    mChildSessionHistory->SetIsInProcess(mDocShell);
+    mChildSessionHistory->SetIsInProcess(IsInProcess());
   }
 }
 
@@ -2441,12 +2441,15 @@ ChildSHistory* BrowsingContext::GetChildSessionHistory() {
 
 void BrowsingContext::CreateChildSHistory() {
   MOZ_ASSERT(IsTop());
+  MOZ_ASSERT(GetHasSessionHistory());
+  MOZ_DIAGNOSTIC_ASSERT(!mChildSessionHistory);
 
   // Because session history is global in a browsing context tree, every process
   // that has access to a browsing context tree needs access to its session
   // history. That is why we create the ChildSHistory object in every process
   // where we have access to this browsing context (which is the top one).
   mChildSessionHistory = new ChildSHistory(this);
+  mChildSessionHistory->SetIsInProcess(IsInProcess());
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_HasSessionHistory>,
@@ -2454,7 +2457,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_HasSessionHistory>,
   MOZ_ASSERT(GetHasSessionHistory() || !aOldValue,
              "We don't support turning off session history.");
 
-  CreateChildSHistory();
+  if (GetHasSessionHistory() && !aOldValue) {
+    CreateChildSHistory();
+  }
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_BrowserId>, const uint32_t& aValue,
