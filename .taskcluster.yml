@@ -257,6 +257,14 @@ tasks:
                           type: 'directory'
                           path: '/builds/worker/artifacts'
                           expires: {$eval: expires}
+                      'public/docker-contexts':
+                          type: 'directory'
+                          path: '/builds/worker/checkouts/gecko/docker-contexts'
+                          # This needs to be at least the deadline of the
+                          # decision task + the docker-image task deadlines.
+                          # It is set to a week to allow for some time for
+                          # debugging, but they are not useful long-term.
+                          expires: {$fromNow: '7 day'}
 
               extra:
                   $merge:

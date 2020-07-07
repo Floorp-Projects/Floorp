@@ -1,4 +1,3 @@
-# %ARG DOCKER_IMAGE_PARENT
 FROM $DOCKER_IMAGE_PARENT
 
 ### Add worker user and setup its workspace.
@@ -11,8 +10,8 @@ RUN mkdir /builds && \
 # Declare default working folder
 WORKDIR /builds/worker
 
-# %ARG TASKCLUSTER_ROOT_URL
-# %ARG DOCKER_IMAGE_PACKAGES
+ARG TASKCLUSTER_ROOT_URL
+ARG DOCKER_IMAGE_PACKAGES
 RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES && \
     apt-get update && \
     apt-get install \

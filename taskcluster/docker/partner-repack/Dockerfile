@@ -1,4 +1,3 @@
-# %ARG DOCKER_IMAGE_PARENT
 FROM $DOCKER_IMAGE_PARENT
 MAINTAINER Ben Hearsum <bhearsum@mozilla.com>
 

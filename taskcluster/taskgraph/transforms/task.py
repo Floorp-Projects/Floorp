@@ -555,12 +555,9 @@ def build_docker_worker_payload(config, task, task_def):
 
     if isinstance(worker.get('docker-image'), text_type):
         out_of_tree_image = worker['docker-image']
-        run_task = run_task or out_of_tree_image.startswith(
-            'taskcluster/image_builder')
     else:
         out_of_tree_image = None
         image = worker.get('docker-image', {}).get('in-tree')
-        run_task = run_task or image == 'image_builder'
 
     if 'caches' in worker:
         caches = {}
