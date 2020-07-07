@@ -105,8 +105,6 @@ module.exports = {
         "**/test/**/head.js",
         "**/test/**/shared-head.js",
         "client/debugger/test/mochitest/code_frame-script.js",
-        "client/inspector/animation-old/test/doc_frame_script.js",
-        "client/inspector/animation/test/doc_frame_script.js",
         "client/jsonview/test/doc_frame_script.js",
         "client/responsive.html/browser/content.js",
         "client/shared/browser-loader.js",
