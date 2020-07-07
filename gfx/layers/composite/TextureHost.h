@@ -605,6 +605,14 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    */
   virtual bool HasIntermediateBuffer() const { return false; }
 
+  /**
+   * Returns true if the TextureHost can be released before the rendering is
+   * completed, otherwise returns false.
+   */
+  virtual bool NeedsDeferredDeletion() const {
+    return !HasIntermediateBuffer();
+  }
+
   void AddCompositableRef() {
     ++mCompositableCount;
     if (mCompositableCount == 1) {
@@ -792,6 +800,10 @@ class BufferTextureHost : public TextureHost {
 
   bool HasIntermediateBuffer() const override { return mHasIntermediateBuffer; }
 
+  bool NeedsDeferredDeletion() const override {
+    return TextureHost::NeedsDeferredDeletion() || UseExternalTextures();
+  }
+
   BufferTextureHost* AsBufferTextureHost() override { return this; }
 
   const BufferDescriptor& GetBufferDescriptor() const { return mDescriptor; }
@@ -820,6 +832,7 @@ class BufferTextureHost : public TextureHost {
   bool CanUnlock() { return !mFirstSource || mFirstSource->Sync(false); }
 
  protected:
+  bool UseExternalTextures() const { return mUseExternalTextures; }
   bool Upload(nsIntRegion* aRegion = nullptr);
   bool UploadIfNeeded();
   bool MaybeUpload(nsIntRegion* aRegion);
@@ -838,6 +851,7 @@ class BufferTextureHost : public TextureHost {
   bool mLocked;
   bool mNeedsFullUpdate;
   bool mHasIntermediateBuffer;
+  bool mUseExternalTextures;
 
   class DataTextureSourceYCbCrBasic;
 };

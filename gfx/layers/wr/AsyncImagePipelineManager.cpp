@@ -510,14 +510,13 @@ void AsyncImagePipelineManager::HoldExternalImage(
   if (!holder) {
     return;
   }
-  if (aTexture->HasIntermediateBuffer()) {
-    // Hold WebRenderTextureHost until submitted for rendering if it has an
-    // intermediate buffer.
-    holder->mTextureHostsUntilRenderSubmitted.emplace_back(aEpoch, aTexture);
-  } else {
-    // Hold WebRenderTextureHost until rendering completed if not.
+  if (aTexture->NeedsDeferredDeletion()) {
+    // Hold WebRenderTextureHost until rendering completed.
     holder->mTextureHostsUntilRenderCompleted.emplace_back(
         MakeUnique<ForwardingTextureHost>(aEpoch, aTexture));
+  } else {
+    // Hold WebRenderTextureHost until submitted for rendering.
+    holder->mTextureHostsUntilRenderSubmitted.emplace_back(aEpoch, aTexture);
   }
 }
 
