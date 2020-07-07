@@ -66,7 +66,6 @@
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/scache/StartupCache.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
@@ -156,7 +155,6 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/widget/ScreenManager.h"
-#include "mozilla/scache/StartupCacheParent.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
 #include "nsCExternalHandlerService.h"
@@ -2302,11 +2300,6 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   }
   mPrefSerializer->AddSharedPrefCmdLineArgs(*mSubprocess, extraArgs);
 
-  auto startupCache = mozilla::scache::StartupCache::GetSingleton();
-  if (startupCache) {
-    startupCache->AddStartupCacheCmdLineArgs(*mSubprocess, extraArgs);
-  }
-
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
   // observation starts here in order to capture pref updates that
@@ -2740,7 +2733,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   Unused << SendRemoteType(mRemoteType);
 
   ScriptPreloader::InitContentChild(*this);
-  scache::StartupCache::InitContentChild(*this);
 
   // Initialize the message manager (and load delayed scripts) now that we
   // have established communications with the child.
@@ -3834,16 +3826,6 @@ PScriptCacheParent* ContentParent::AllocPScriptCacheParent(
 
 bool ContentParent::DeallocPScriptCacheParent(PScriptCacheParent* cache) {
   delete static_cast<loader::ScriptCacheParent*>(cache);
-  return true;
-}
-
-PStartupCacheParent* ContentParent::AllocPStartupCacheParent(
-    const bool& wantCacheData) {
-  return new scache::StartupCacheParent(wantCacheData);
-}
-
-bool ContentParent::DeallocPStartupCacheParent(PStartupCacheParent* cache) {
-  delete static_cast<scache::StartupCacheParent*>(cache);
   return true;
 }
 
