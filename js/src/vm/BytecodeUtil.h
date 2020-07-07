@@ -493,6 +493,11 @@ inline bool IsPropertyInitOp(JSOp op) {
   return CodeSpec(op).format & JOF_PROPINIT;
 }
 
+inline bool IsPrivateElemOp(JSOp op) {
+  return op == JSOp::SetPrivateElem || op == JSOp::InitPrivateElem ||
+         op == JSOp::GetPrivateElem;
+}
+
 inline bool IsLooseEqualityOp(JSOp op) {
   return op == JSOp::Eq || op == JSOp::Ne;
 }
