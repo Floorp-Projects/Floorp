@@ -555,7 +555,7 @@ class WebExtensionTest : BaseSessionTest() {
                 assertEquals(details.url, "https://www.mozilla.org/en-US/")
                 assertEquals(details.active, true)
                 assertEquals(details.cookieStoreId, "1")
-                assertEquals(tabsExtension!!, source)
+                assertEquals(tabsExtension!!.id, source.id)
                 tabsCreateResult.complete(null)
                 return GeckoResult.fromValue(null)
             }
