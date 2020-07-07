@@ -1416,6 +1416,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::StrictSetPropSuper:
     case JSOp::SetElem:
     case JSOp::StrictSetElem:
+    case JSOp::SetPrivateElem:
     case JSOp::SetElemSuper:
     case JSOp::StrictSetElemSuper:
     case JSOp::SetName:
@@ -1523,6 +1524,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::NewObjectWithGroup:
     case JSOp::InitElem:
     case JSOp::InitHiddenElem:
+    case JSOp::InitPrivateElem:
     case JSOp::InitElemInc:
     case JSOp::InitElemArray:
     case JSOp::InitProp:
@@ -1566,6 +1568,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::Int32:
     case JSOp::LoopHead:
     case JSOp::GetElem:
+    case JSOp::GetPrivateElem:
     case JSOp::CallElem:
     case JSOp::Length:
     case JSOp::Not:

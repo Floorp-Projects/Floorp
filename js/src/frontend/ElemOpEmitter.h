@@ -8,6 +8,7 @@
 #define frontend_ElemOpEmitter_h
 
 #include "mozilla/Attributes.h"
+#include "frontend/Token.h"
 
 namespace js {
 namespace frontend {
@@ -138,6 +139,7 @@ class MOZ_STACK_CLASS ElemOpEmitter {
 
   Kind kind_;
   ObjKind objKind_;
+  NameVisibility visibility_ = NameVisibility::Public;
 
 #ifdef DEBUG
   // The state of this emitter.
@@ -212,7 +214,8 @@ class MOZ_STACK_CLASS ElemOpEmitter {
 #endif
 
  public:
-  ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
+  ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind,
+                NameVisibility visibility);
 
  private:
   MOZ_MUST_USE bool isCall() const { return kind_ == Kind::Call; }
@@ -221,7 +224,13 @@ class MOZ_STACK_CLASS ElemOpEmitter {
     return kind_ == Kind::SimpleAssignment;
   }
 
+  bool isPrivate() { return visibility_ == NameVisibility::Private; }
+
   MOZ_MUST_USE bool isPropInit() const { return kind_ == Kind::PropInit; }
+
+  MOZ_MUST_USE bool isPrivateGet() const {
+    return visibility_ == NameVisibility::Private && kind_ == Kind::Get;
+  }
 
   MOZ_MUST_USE bool isDelete() const { return kind_ == Kind::Delete; }
 
@@ -262,6 +271,6 @@ class MOZ_STACK_CLASS ElemOpEmitter {
 };
 
 } /* namespace frontend */
-} /* namespace js */
+}  // namespace js
 
 #endif /* frontend_ElemOpEmitter_h */

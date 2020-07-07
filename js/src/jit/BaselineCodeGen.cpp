@@ -3059,6 +3059,11 @@ bool BaselineCodeGen<Handler>::emit_InitElem() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_InitPrivateElem() {
+  return emit_InitElem();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_InitHiddenElem() {
   return emit_InitElem();
 }
@@ -3128,6 +3133,11 @@ bool BaselineCodeGen<Handler>::emit_GetElem() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_GetPrivateElem() {
+  return emit_GetElem();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetElemSuper() {
   // Store obj in the scratch slot.
   frame.storeStackValue(-1, frame.addressOfScratchValue(), R2);
@@ -3175,6 +3185,11 @@ bool BaselineCodeGen<Handler>::emit_SetElem() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_StrictSetElem() {
+  return emit_SetElem();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_SetPrivateElem() {
   return emit_SetElem();
 }
 
