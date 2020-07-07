@@ -333,46 +333,98 @@ function executeInContent(name, data = {}, expectResponse = true) {
 }
 
 /**
- * Send an async message to the frame script and get back the requested
- * computed style property.
+ * Get the requested rule style property from the current browser.
  *
- * @param {String} selector
- *        The selector used to obtain the element.
- * @param {String} pseudo
- *        pseudo id to query, or null.
+ * @param {Number} styleSheetIndex
+ * @param {Number} ruleIndex
  * @param {String} name
- *        name of the property.
+ * @return {String} The value, if found, null otherwise
  */
-async function getComputedStyleProperty(selector, pseudo, propName) {
-  return executeInContent("Test:GetComputedStylePropertyValue", {
-    selector,
-    pseudo,
-    name: propName,
-  });
+
+async function getRulePropertyValue(styleSheetIndex, ruleIndex, name) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [styleSheetIndex, ruleIndex, name],
+    (styleSheetIndexChild, ruleIndexChild, nameChild) => {
+      let value = null;
+
+      info(
+        "Getting the value for property name " +
+          nameChild +
+          " in sheet " +
+          styleSheetIndexChild +
+          " and rule " +
+          ruleIndexChild
+      );
+
+      const sheet = content.document.styleSheets[styleSheetIndexChild];
+      if (sheet) {
+        const rule = sheet.cssRules[ruleIndexChild];
+        if (rule) {
+          value = rule.style.getPropertyValue(nameChild);
+        }
+      }
+
+      return value;
+    }
+  );
 }
 
 /**
- * Send an async message to the frame script and wait until the requested
- * computed style property has the expected value.
+ * Get the requested computed style property from the current browser.
  *
  * @param {String} selector
  *        The selector used to obtain the element.
  * @param {String} pseudo
  *        pseudo id to query, or null.
- * @param {String} prop
+ * @param {String} propName
+ *        name of the property.
+ */
+async function getComputedStyleProperty(selector, pseudo, propName) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, pseudo, propName],
+    (selectorChild, pseudoChild, propNameChild) => {
+      const element = content.document.querySelector(selectorChild);
+      return content.document.defaultView
+        .getComputedStyle(element, pseudoChild)
+        .getPropertyValue(propNameChild);
+    }
+  );
+}
+
+/**
+ * Wait until the requested computed style property has the
+ * expected value in the the current browser.
+ *
+ * @param {String} selector
+ *        The selector used to obtain the element.
+ * @param {String} pseudo
+ *        pseudo id to query, or null.
+ * @param {String} propName
  *        name of the property.
  * @param {String} expected
  *        expected value of property
- * @param {String} name
- *        the name used in test message
  */
-async function waitForComputedStyleProperty(selector, pseudo, name, expected) {
-  return executeInContent("Test:WaitForComputedStylePropertyValue", {
-    selector,
-    pseudo,
-    expected,
-    name,
-  });
+async function waitForComputedStyleProperty(
+  selector,
+  pseudo,
+  propName,
+  expected
+) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, pseudo, propName, expected],
+    (selectorChild, pseudoChild, propNameChild, expectedChild) => {
+      const element = content.document.querySelector(selectorChild);
+      return ContentTaskUtils.waitForCondition(() => {
+        const value = content.document.defaultView
+          .getComputedStyle(element, pseudoChild)
+          .getPropertyValue(propNameChild);
+        return value === expectedChild;
+      });
+    }
+  );
 }
 
 /**

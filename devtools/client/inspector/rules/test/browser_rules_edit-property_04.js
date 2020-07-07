@@ -25,11 +25,7 @@ add_task(async function() {
   info("Disabling a property");
   await togglePropStatus(view, prop);
 
-  const newValue = await executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: "background-color",
-  });
+  const newValue = await getRulePropertyValue(0, 0, "background-color");
   is(newValue, "", "background-color should have been unset.");
 
   await testEditDisableProperty(view, prop, "name", "VK_ESCAPE");
@@ -54,11 +50,7 @@ async function testEditDisableProperty(view, prop, fieldType, commitKey) {
     "property enable checkbox is hidden."
   );
 
-  let newValue = await executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: "background-color",
-  });
+  let newValue = await getRulePropertyValue(0, 0, "background-color");
   is(newValue, "", "background-color should remain unset.");
 
   let onChangeDone;
@@ -86,10 +78,6 @@ async function testEditDisableProperty(view, prop, fieldType, commitKey) {
     "property enable checkbox is not checked."
   );
 
-  newValue = await executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: "background-color",
-  });
+  newValue = await getRulePropertyValue(0, 0, "background-color");
   is(newValue, "", "background-color should remain unset.");
 }
