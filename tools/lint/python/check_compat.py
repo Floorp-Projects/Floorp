@@ -9,18 +9,18 @@ import sys
 
 
 def parse_file(f):
-    with open(f, 'rb') as fh:
+    with open(f, "rb") as fh:
         content = fh.read()
     try:
         return ast.parse(content)
     except SyntaxError as e:
         err = {
-            'path': f,
-            'message': e.msg,
-            'lineno': e.lineno,
-            'column': e.offset,
-            'source': e.text,
-            'rule': 'is-parseable',
+            "path": f,
+            "message": e.msg,
+            "lineno": e.lineno,
+            "column": e.offset,
+            "source": e.text,
+            "rule": "is-parseable",
         }
         print(json.dumps(err))
 
@@ -39,7 +39,7 @@ def check_compat_py2(f):
     may_have_relative_imports = False
     for node in ast.walk(root):
         if isinstance(node, ast.ImportFrom):
-            if node.module == '__future__':
+            if node.module == "__future__":
                 future_lineno = node.lineno
                 futures |= set(n.name for n in node.names)
             else:
@@ -50,19 +50,19 @@ def check_compat_py2(f):
             haveprint = True
 
     err = {
-        'path': f,
-        'lineno': future_lineno,
-        'column': 1,
+        "path": f,
+        "lineno": future_lineno,
+        "column": 1,
     }
 
-    if 'absolute_import' not in futures and may_have_relative_imports:
-        err['rule'] = 'require absolute_import'
-        err['message'] = 'Missing from __future__ import absolute_import'
+    if "absolute_import" not in futures and may_have_relative_imports:
+        err["rule"] = "require absolute_import"
+        err["message"] = "Missing from __future__ import absolute_import"
         print(json.dumps(err))
 
-    if haveprint and 'print_function' not in futures:
-        err['rule'] = 'require print_function'
-        err['message'] = 'Missing from __future__ import print_function'
+    if haveprint and "print_function" not in futures:
+        err["rule"] = "require print_function"
+        err["message"] = "Missing from __future__ import print_function"
         print(json.dumps(err))
 
 
@@ -71,14 +71,14 @@ def check_compat_py3(f):
     parse_file(f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if sys.version_info[0] == 2:
         fn = check_compat_py2
     else:
         fn = check_compat_py3
 
     manifest = sys.argv[1]
-    with open(manifest, 'r') as fh:
+    with open(manifest, "r") as fh:
         files = fh.read().splitlines()
 
     for f in files:

@@ -7,16 +7,17 @@ import re
 
 
 class PerfDocLogger(object):
-    '''
+    """
     Logger for the PerfDoc tooling. Handles the warnings by outputting
     them into through the StructuredLogger provided by lint.
-    '''
+    """
+
     PATHS = []
     LOGGER = None
     FAILED = False
 
     def __init__(self):
-        '''Initializes the PerfDocLogger.'''
+        """Initializes the PerfDocLogger."""
 
         # Set up class attributes for all logger instances
         if not PerfDocLogger.LOGGER:
@@ -24,28 +25,26 @@ class PerfDocLogger(object):
                 "Missing linting LOGGER instance for PerfDocLogger initialization"
             )
         if not PerfDocLogger.PATHS:
-            raise Exception(
-                "Missing PATHS for PerfDocLogger initialization"
-            )
+            raise Exception("Missing PATHS for PerfDocLogger initialization")
         self.logger = PerfDocLogger.LOGGER
 
     def log(self, msg):
-        '''
+        """
         Log an info message.
 
         :param str msg: Message to log.
-        '''
+        """
         self.logger.info(msg)
 
     def warning(self, msg, files):
-        '''
+        """
         Logs a validation warning message. The warning message is
         used as the error message that is output in the reviewbot.
 
         :param str msg: Message to log, it's also used as the error message
             for the issue that is output by the reviewbot.
         :param list/str files: The file(s) that this warning is about.
-        '''
+        """
         if type(files) != list:
             files = [files]
 
@@ -67,17 +66,17 @@ class PerfDocLogger(object):
                     lineno=0,
                     column=None,
                     path=fpath,
-                    linter='perfdocs',
-                    rule="Flawless performance docs."
+                    linter="perfdocs",
+                    rule="Flawless performance docs.",
                 )
 
                 PerfDocLogger.FAILED = True
                 break
 
     def critical(self, msg):
-        '''
+        """
         Log a critical message.
 
         :param str msg: Message to log.
-        '''
+        """
         self.logger.critical(msg)

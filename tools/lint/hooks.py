@@ -27,35 +27,35 @@ def run_process(cmd):
 
 def run_mozlint(hooktype, args):
     # --quiet prevents warnings on eslint, it will be ignored by other linters
-    python = find_executable('python3')
+    python = find_executable("python3")
     if not python:
         print("error: Python 3 not detected on your system! Please install it.")
         sys.exit(1)
 
-    cmd = [python, os.path.join(topsrcdir, 'mach'), 'lint', '--quiet']
+    cmd = [python, os.path.join(topsrcdir, "mach"), "lint", "--quiet"]
 
-    if 'commit' in hooktype:
+    if "commit" in hooktype:
         # don't prevent commits, just display the lint results
-        run_process(cmd + ['--workdir=staged'])
+        run_process(cmd + ["--workdir=staged"])
         return False
-    elif 'push' in hooktype:
-        return run_process(cmd + ['--outgoing'] + args)
+    elif "push" in hooktype:
+        return run_process(cmd + ["--outgoing"] + args)
 
     print("warning: '{}' is not a valid mozlint hooktype".format(hooktype))
     return False
 
 
 def hg(ui, repo, **kwargs):
-    hooktype = kwargs['hooktype']
-    return run_mozlint(hooktype, kwargs.get('pats', []))
+    hooktype = kwargs["hooktype"]
+    return run_mozlint(hooktype, kwargs.get("pats", []))
 
 
 def git():
     hooktype = os.path.basename(__file__)
-    if hooktype == 'hooks.py':
-        hooktype = 'pre-push'
+    if hooktype == "hooks.py":
+        hooktype = "pre-push"
     return run_mozlint(hooktype, [])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(git())
