@@ -541,12 +541,17 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
 
     for (Shape* shape : shapes) {
       Rooted<StackShape> child(cx, StackShape(shape));
-      child.setAttrs(child.attrs() |
-                     GetSealedOrFrozenAttributes(child.attrs(), level));
+      bool isPrivate = JSID_IS_SYMBOL(child.get().propid) &&
+                       JSID_TO_SYMBOL(child.get().propid)->isPrivateName();
+      // Private fields are not visible to SetIntegrity.
+      if (!isPrivate) {
+        child.setAttrs(child.attrs() |
+                       GetSealedOrFrozenAttributes(child.attrs(), level));
 
-      if (!JSID_IS_EMPTY(child.get().propid) &&
-          level == IntegrityLevel::Frozen) {
-        MarkTypePropertyNonWritable(cx, nobj, child.get().propid);
+        if (!JSID_IS_EMPTY(child.get().propid) &&
+            level == IntegrityLevel::Frozen) {
+          MarkTypePropertyNonWritable(cx, nobj, child.get().propid);
+        }
       }
 
       last = cx->zone()->propertyTree().getChild(cx, last, child);

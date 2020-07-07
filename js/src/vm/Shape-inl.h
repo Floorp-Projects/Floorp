@@ -419,7 +419,8 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
     JSContext* cx, HandleNativeObject obj, HandleId id, uint32_t slot,
     unsigned attrs) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
-  MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
+  MOZ_ASSERT_IF(!(JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName()),
+                obj->uninlinedNonProxyIsExtensible());
   MOZ_ASSERT(!obj->containsPure(id));
 
   AutoKeepShapeCaches keep(cx);
