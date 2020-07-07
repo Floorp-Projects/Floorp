@@ -2010,6 +2010,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::SpecificAtomGuard:
     case BailoutKind::SpecificSymbolGuard:
     case BailoutKind::NonInt32ArrayLength:
+    case BailoutKind::ProtoGuard:
       // Do nothing.
       break;
 
