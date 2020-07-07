@@ -40,6 +40,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
@@ -50,7 +51,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -225,12 +225,10 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     search_scan_button.isChecked = false
                     activity?.let {
                         AlertDialog.Builder(it).apply {
-                            val spannable = resources.getSpannable(
+                            val spannable = resources.getSpanned(
                                 R.string.qr_scanner_confirmation_dialog_message,
-                                listOf(
-                                    getString(R.string.app_name) to listOf(StyleSpan(BOLD)),
-                                    result to listOf(StyleSpan(ITALIC))
-                                )
+                                getString(R.string.app_name) to StyleSpan(BOLD),
+                                result to StyleSpan(ITALIC)
                             )
                             setMessage(spannable)
                             setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
