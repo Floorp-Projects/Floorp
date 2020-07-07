@@ -9022,6 +9022,45 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
   }
 };
 
+// Guard on an object's proto. If maybeProto_ is nullptr, guard the object has
+// no proto.
+class MGuardProto : public MUnaryInstruction, public SingleObjectPolicy::Data {
+  CompilerObject maybeProto_;
+
+  MGuardProto(MDefinition* obj, JSObject* maybeProto)
+      : MUnaryInstruction(classOpcode, obj), maybeProto_(maybeProto) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(obj->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardProto)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  JSObject* maybeProto() const { return maybeProto_; }
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardProto()) {
+      return false;
+    }
+    if (maybeProto() != ins->toGuardProto()->maybeProto()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+  bool appendRoots(MRootList& roots) const override {
+    if (!maybeProto_) {
+      return true;
+    }
+    return roots.append(maybeProto_);
+  }
+};
+
 // Guard on a specific Value.
 class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
   Value expected_;
