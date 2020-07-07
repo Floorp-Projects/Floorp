@@ -206,10 +206,9 @@ class AddrHostRecord final : public nsHostRecord {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
-  bool IsTRR() { return mTRRUsed; }
-
  private:
   friend class nsHostResolver;
+  friend class mozilla::net::TRR;
 
   explicit AddrHostRecord(const nsHostKey& key);
   ~AddrHostRecord();
@@ -240,13 +239,13 @@ class AddrHostRecord final : public nsHostRecord {
   RefPtr<mozilla::net::AddrInfo> mFirstTRR;  // partial TRR storage
   nsresult mFirstTRRresult;
 
-  uint8_t mTRRSuccess;     // number of successful TRR responses
-  uint8_t mNativeSuccess;  // number of native lookup responses
+  mozilla::Atomic<bool> mTRRUsed;  // TRR was used on this record
+  uint8_t mTRRSuccess;             // number of successful TRR responses
+  uint8_t mNativeSuccess;          // number of native lookup responses
 
-  uint16_t mNative : 1;   // true if this record is being resolved "natively",
-                          // which means that it is either on the pending queue
-                          // or owned by one of the worker threads. */
-  uint16_t mTRRUsed : 1;  // TRR was used on this record
+  uint16_t mNative : 1;  // true if this record is being resolved "natively",
+                         // which means that it is either on the pending queue
+                         // or owned by one of the worker threads. */
   uint16_t mNativeUsed : 1;
   uint16_t onQueue : 1;         // true if pending and on the queue (not yet
                                 // given to getaddrinfo())
