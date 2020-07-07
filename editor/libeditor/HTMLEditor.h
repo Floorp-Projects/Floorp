@@ -4616,6 +4616,8 @@ class HTMLEditor final : public TextEditor,
   EditorDOMPoint GetNewCaretPointAfterInsertingHTML(
       const EditorDOMPoint& lastInsertedPoint) const;
 
+  class HTMLWithContextInserter;
+
   /**
    * This function is used to insert a string of HTML input optionally with some
    * context information into the editable field.  The HTML input either comes
