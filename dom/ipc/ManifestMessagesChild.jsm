@@ -15,10 +15,6 @@
 
 var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "ManifestObtainer",
@@ -35,13 +31,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ManifestIcons.jsm"
 );
 
-class ManifestMessagesChild extends ActorChild {
+class ManifestMessagesChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "DOM:WebManifest:hasManifestLink":
-        return this.hasManifestLink(message);
+        return this.hasManifestLink();
       case "DOM:ManifestObtainer:Obtain":
-        return this.obtainManifest(message);
+        return this.obtainManifest(message.data);
       case "DOM:WebManifest:fetchIcon":
         return this.fetchIcon(message);
     }
@@ -49,49 +45,44 @@ class ManifestMessagesChild extends ActorChild {
   }
 
   /**
-   * Check if the this.mm.content document includes a link to a web manifest.
-   * @param {Object} aMsg The IPC message, which is destructured to just
-   *                      get the id.
+   * Check if the document includes a link to a web manifest.
    */
-  hasManifestLink({ data: { id } }) {
-    const response = makeMsgResponse(id);
-    response.result = ManifestFinder.contentHasManifestLink(this.mm.content);
+  hasManifestLink() {
+    const response = makeMsgResponse();
+    response.result = ManifestFinder.contentHasManifestLink(this.contentWindow);
     response.success = true;
-    this.mm.sendAsyncMessage("DOM:WebManifest:hasManifestLink", response);
+    return response;
   }
 
   /**
-   * Asynchronously obtains a web manifest from this.mm.content by using the
-   * ManifestObtainer and messages back the result.
-   * @param {Object} aMsg The IPC message, which is destructured to just
-   *                      get the id.
+   * Asynchronously obtains a web manifest from this window by using the
+   * ManifestObtainer and returns the result.
+   * @param {Object} checkConformance True if spec conformance messages should be collected.
    */
-  async obtainManifest(message) {
-    const {
-      data: { id, checkConformance },
-    } = message;
-    const response = makeMsgResponse(id);
+  async obtainManifest(options) {
+    const { checkConformance } = options;
+    const response = makeMsgResponse();
     try {
       response.result = await ManifestObtainer.contentObtainManifest(
-        this.mm.content,
+        this.contentWindow,
         { checkConformance }
       );
       response.success = true;
     } catch (err) {
       response.result = serializeError(err);
     }
-    this.mm.sendAsyncMessage("DOM:ManifestObtainer:Obtain", response);
+    return response;
   }
 
   /**
    * Given a manifest and an expected icon size, ask ManifestIcons
    * to fetch the appropriate icon and send along result
    */
-  async fetchIcon({ data: { id, manifest, iconSize } }) {
-    const response = makeMsgResponse(id);
+  async fetchIcon({ data: { manifest, iconSize } }) {
+    const response = makeMsgResponse();
     try {
       response.result = await ManifestIcons.contentFetchIcon(
-        this.mm.content,
+        this.contentWindow,
         manifest,
         iconSize
       );
@@ -99,7 +90,7 @@ class ManifestMessagesChild extends ActorChild {
     } catch (err) {
       response.result = serializeError(err);
     }
-    this.mm.sendAsyncMessage("DOM:WebManifest:fetchIcon", response);
+    return response;
   }
 }
 
@@ -122,9 +113,8 @@ function serializeError(aError) {
   return clone;
 }
 
-function makeMsgResponse(aId) {
+function makeMsgResponse() {
   return {
-    id: aId,
     success: false,
     result: undefined,
   };
