@@ -12,8 +12,8 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/StaticPrefs_svg.h"
-#include "nsSVGPaintServerFrame.h"
-#include "SVGObserverUtils.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "SVGPaintServerFrame.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::image;
@@ -87,7 +87,7 @@ static void SetupInheritablePaint(const DrawTarget* aDrawTarget,
                                   StyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                   imgDrawingParams& aImgParams) {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  nsSVGPaintServerFrame* ps =
+  SVGPaintServerFrame* ps =
       SVGObserverUtils::GetAndObservePaintServer(aFrame, aFillOrStroke);
 
   if (ps) {

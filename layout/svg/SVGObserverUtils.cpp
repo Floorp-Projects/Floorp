@@ -10,9 +10,14 @@
 // Keep others in (case-insensitive) order:
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/SVGGeometryElement.h"
+#include "mozilla/dom/SVGTextPathElement.h"
+#include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/SVGClipPathFrame.h"
 #include "mozilla/SVGMaskFrame.h"
+#include "mozilla/SVGTextFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
@@ -21,16 +26,11 @@
 #include "nsInterfaceHashtable.h"
 #include "nsIReflowCallback.h"
 #include "nsISupportsImpl.h"
-#include "nsSVGClipPathFrame.h"
-#include "nsSVGPaintServerFrame.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 #include "SVGFilterFrame.h"
-#include "SVGGeometryElement.h"
 #include "SVGMarkerFrame.h"
-#include "SVGTextFrame.h"
-#include "SVGTextPathElement.h"
-#include "SVGUseElement.h"
+#include "SVGPaintServerFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -186,7 +186,7 @@ struct SVGFrameReferenceFromProperty {
  private:
   // The frame that our property is attached to (may be null).
   nsIFrame* mFrame;
-  mozilla::PresShell* mFramePresShell;
+  PresShell* mFramePresShell;
 };
 
 void SVGRenderingObserver::StartObserving() {
@@ -412,26 +412,26 @@ void SVGIDRenderingObserver::OnRenderingChange() {
   }
 }
 
-class nsSVGRenderingObserverProperty : public SVGIDRenderingObserver {
+class SVGRenderingObserverProperty : public SVGIDRenderingObserver {
  public:
   NS_DECL_ISUPPORTS
 
-  nsSVGRenderingObserverProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-                                 bool aReferenceImage)
+  SVGRenderingObserverProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
+                               bool aReferenceImage)
       : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage),
         mFrameReference(aFrame) {}
 
  protected:
-  virtual ~nsSVGRenderingObserverProperty() = default;  // non-public
+  virtual ~SVGRenderingObserverProperty() = default;  // non-public
 
   void OnRenderingChange() override;
 
   SVGFrameReferenceFromProperty mFrameReference;
 };
 
-NS_IMPL_ISUPPORTS(nsSVGRenderingObserverProperty, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(SVGRenderingObserverProperty, nsIMutationObserver)
 
-void nsSVGRenderingObserverProperty::OnRenderingChange() {
+void SVGRenderingObserverProperty::OnRenderingChange() {
   SVGIDRenderingObserver::OnRenderingChange();
 
   if (!mTargetIsValid) {
@@ -452,18 +452,18 @@ void nsSVGRenderingObserverProperty::OnRenderingChange() {
   }
 }
 
-class SVGTextPathObserver final : public nsSVGRenderingObserverProperty {
+class SVGTextPathObserver final : public SVGRenderingObserverProperty {
  public:
   SVGTextPathObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                       bool aReferenceImage)
-      : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
+      : SVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
  protected:
   void OnRenderingChange() override;
 };
 
 void SVGTextPathObserver::OnRenderingChange() {
-  nsSVGRenderingObserverProperty::OnRenderingChange();
+  SVGRenderingObserverProperty::OnRenderingChange();
 
   if (!mTargetIsValid) {
     return;
@@ -495,18 +495,18 @@ void SVGTextPathObserver::OnRenderingChange() {
   }
 }
 
-class SVGMarkerObserver final : public nsSVGRenderingObserverProperty {
+class SVGMarkerObserver final : public SVGRenderingObserverProperty {
  public:
   SVGMarkerObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                     bool aReferenceImage)
-      : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
+      : SVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
  protected:
   void OnRenderingChange() override;
 };
 
 void SVGMarkerObserver::OnRenderingChange() {
-  nsSVGRenderingObserverProperty::OnRenderingChange();
+  SVGRenderingObserverProperty::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
   if (!frame) {
@@ -527,18 +527,18 @@ void SVGMarkerObserver::OnRenderingChange() {
       nsChangeHint_RepaintFrame);
 }
 
-class nsSVGPaintingProperty : public nsSVGRenderingObserverProperty {
+class SVGPaintingProperty : public SVGRenderingObserverProperty {
  public:
-  nsSVGPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-                        bool aReferenceImage)
-      : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
+  SVGPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
+                      bool aReferenceImage)
+      : SVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
  protected:
   void OnRenderingChange() override;
 };
 
-void nsSVGPaintingProperty::OnRenderingChange() {
-  nsSVGRenderingObserverProperty::OnRenderingChange();
+void SVGPaintingProperty::OnRenderingChange() {
+  SVGRenderingObserverProperty::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
   if (!frame) {
@@ -555,11 +555,11 @@ void nsSVGPaintingProperty::OnRenderingChange() {
   }
 }
 
-class SVGMozElementObserver final : public nsSVGPaintingProperty {
+class SVGMozElementObserver final : public SVGPaintingProperty {
  public:
   SVGMozElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                         bool aReferenceImage)
-      : nsSVGPaintingProperty(aURI, aFrame, aReferenceImage) {}
+      : SVGPaintingProperty(aURI, aFrame, aReferenceImage) {}
 
   // We only return true here because GetAndObserveBackgroundImage uses us
   // to implement observing of arbitrary elements (including HTML elements)
@@ -746,7 +746,7 @@ void SVGFilterObserver::OnRenderingChange() {
   // Repaint asynchronously in case the filter frame is being torn down
   nsChangeHint changeHint = nsChangeHint(nsChangeHint_RepaintFrame);
 
-  // Since we don't call nsSVGRenderingObserverProperty::
+  // Since we don't call SVGRenderingObserverProperty::
   // OnRenderingChange, we have to add this bit ourselves.
   if (frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // Changes should propagate out to things that might be observing
@@ -867,7 +867,7 @@ class SVGMaskObserverList final : public nsISupports {
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& GetObservers() const {
+  const nsTArray<RefPtr<SVGPaintingProperty>>& GetObservers() const {
     return mProperties;
   }
 
@@ -875,7 +875,7 @@ class SVGMaskObserverList final : public nsISupports {
 
  private:
   virtual ~SVGMaskObserverList() = default;  // non-public
-  nsTArray<RefPtr<nsSVGPaintingProperty>> mProperties;
+  nsTArray<RefPtr<SVGPaintingProperty>> mProperties;
   nsIFrame* mFrame;
 };
 
@@ -897,13 +897,13 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame) : mFrame(aFrame) {
       maskUri->GetURI()->GetHasRef(&hasRef);
     }
 
-    // Accrording to maskUri, nsSVGPaintingProperty's ctor may trigger an
+    // Accrording to maskUri, SVGPaintingProperty's ctor may trigger an
     // external SVG resource download, so we should pass maskUri in only if
     // maskUri has a chance pointing to an SVG mask resource.
     //
     // And, an URL may refer to an SVG mask resource if it consists of
     // a fragment.
-    nsSVGPaintingProperty* prop = new nsSVGPaintingProperty(
+    SVGPaintingProperty* prop = new SVGPaintingProperty(
         hasRef ? maskUri.get() : nullptr, aFrame, false);
     mProperties.AppendElement(prop);
   }
@@ -968,7 +968,7 @@ void SVGTemplateElementObserver::OnRenderingChange() {
     // elements.  So we only invalidate *direct* rendering observers here.
     // Since we don't need to walk the parent chain, we don't need to worry
     // about coalescing multiple invalidations by using a change hint as we do
-    // in nsSVGRenderingObserverProperty::OnRenderingChange.
+    // in SVGRenderingObserverProperty::OnRenderingChange.
     SVGObserverUtils::InvalidateDirectRenderingObservers(frame);
   }
 }
@@ -1120,7 +1120,7 @@ typedef nsInterfaceHashtable<URLAndReferrerInfoHashKey, nsIMutationObserver>
     URIObserverHashtable;
 
 using PaintingPropertyDescriptor =
-    const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>*;
+    const FramePropertyDescriptor<SVGPaintingProperty>*;
 
 static void DestroyFilterProperty(SVGFilterObserverListForCSSProp* aProp) {
   aProp->Release();
@@ -1132,12 +1132,12 @@ NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty,
                                     SVGFilterObserverListForCSSProp,
                                     DestroyFilterProperty)
 NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, SVGMaskObserverList)
-NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsSVGPaintingProperty)
+NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, SVGPaintingProperty)
 NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerStartProperty, SVGMarkerObserver)
 NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMidProperty, SVGMarkerObserver)
 NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, SVGMarkerObserver)
-NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, nsSVGPaintingProperty)
-NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsSVGPaintingProperty)
+NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, SVGPaintingProperty)
+NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, SVGPaintingProperty)
 NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsTextPathProperty,
                                      SVGTextPathObserver)
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
@@ -1146,9 +1146,8 @@ NS_DECLARE_FRAME_PROPERTY_RELEASABLE(BackgroundClipObserverProperty,
                                      BackgroundClipRenderingObserver)
 
 template <class T>
-static T* GetEffectProperty(
-    URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-    const mozilla::FramePropertyDescriptor<T>* aProperty) {
+static T* GetEffectProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
+                            const FramePropertyDescriptor<T>* aProperty) {
   if (!aURI) {
     return nullptr;
   }
@@ -1165,9 +1164,9 @@ static T* GetEffectProperty(
   return prop;
 }
 
-static nsSVGPaintingProperty* GetPaintingProperty(
+static SVGPaintingProperty* GetPaintingProperty(
     URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-    const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty) {
+    const FramePropertyDescriptor<SVGPaintingProperty>* aProperty) {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
@@ -1292,7 +1291,7 @@ void SVGObserverUtils::DetachFromCanvasContext(nsISupports* aAutoObserver) {
       ->DetachFromContext();
 }
 
-static nsSVGPaintingProperty* GetOrCreateClipPathObserver(
+static SVGPaintingProperty* GetOrCreateClipPathObserver(
     nsIFrame* aClippedFrame) {
   MOZ_ASSERT(!aClippedFrame->GetPrevContinuation(),
              "Require first continuation");
@@ -1308,17 +1307,17 @@ static nsSVGPaintingProperty* GetOrCreateClipPathObserver(
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveClipPath(
-    nsIFrame* aClippedFrame, nsSVGClipPathFrame** aClipPathFrame) {
+    nsIFrame* aClippedFrame, SVGClipPathFrame** aClipPathFrame) {
   if (aClipPathFrame) {
     *aClipPathFrame = nullptr;
   }
-  nsSVGPaintingProperty* observers = GetOrCreateClipPathObserver(aClippedFrame);
+  SVGPaintingProperty* observers = GetOrCreateClipPathObserver(aClippedFrame);
   if (!observers) {
     return eHasNoRefs;
   }
   bool frameTypeOK = true;
-  nsSVGClipPathFrame* frame =
-      static_cast<nsSVGClipPathFrame*>(observers->GetAndObserveReferencedFrame(
+  SVGClipPathFrame* frame =
+      static_cast<SVGClipPathFrame*>(observers->GetAndObserveReferencedFrame(
           LayoutFrameType::SVGClipPath, &frameTypeOK));
   // Note that, unlike for filters, a reference to an ID that doesn't exist
   // is not invalid for clip-path or mask.
@@ -1362,7 +1361,7 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveMasks(
     return eHasNoRefs;
   }
 
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& observers =
+  const nsTArray<RefPtr<SVGPaintingProperty>>& observers =
       observerList->GetObservers();
   if (observers.IsEmpty()) {
     return eHasNoRefs;
@@ -1521,8 +1520,8 @@ Element* SVGObserverUtils::GetAndObserveBackgroundClip(nsIFrame* aFrame) {
   return obs->GetAndObserveReferencedElement();
 }
 
-nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
-    nsIFrame* aPaintedFrame, mozilla::StyleSVGPaint nsStyleSVG::*aPaint) {
+SVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
+    nsIFrame* aPaintedFrame, StyleSVGPaint nsStyleSVG::*aPaint) {
   // If we're looking at a frame within SVG text, then we need to look up
   // to find the right frame to get the painting property off.  We should at
   // least look up past a text frame, and if the text frame's parent is the
@@ -1547,7 +1546,7 @@ nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
   MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
   PaintingPropertyDescriptor propDesc =
       (aPaint == &nsStyleSVG::mFill) ? FillProperty() : StrokeProperty();
-  nsSVGPaintingProperty* property =
+  SVGPaintingProperty* property =
       GetPaintingProperty(paintServerURL, paintedFrame, propDesc);
   if (!property) {
     return nullptr;
@@ -1564,7 +1563,7 @@ nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
     return nullptr;
   }
 
-  return static_cast<nsSVGPaintServerFrame*>(result);
+  return static_cast<SVGPaintServerFrame*>(result);
 }
 
 void SVGObserverUtils::UpdateEffects(nsIFrame* aFrame) {

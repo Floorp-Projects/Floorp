@@ -33,7 +33,7 @@ class SVGUserUnitList;
  * (Even though the latter doesn't display anything itself, if it contains
  * SVGGeometryFrame descendants it is can still be part of a displayable
  * section of a document)  This class is not used for elements that can never
- * display directly, including nsSVGGradientFrame and nsSVGPatternFrame.  (The
+ * display directly, including SVGGradientFrame and SVGPatternFrame.  (The
  * latter may contain displayable content, but it and its content are never
  * *directly* displayed in a document.  It can only end up being displayed by
  * means of a reference from other content.)

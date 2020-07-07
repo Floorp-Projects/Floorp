@@ -65,7 +65,6 @@
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsCSSClipPathInstance.h"
 #include "nsCanvasFrame.h"
 
 #include "nsFrameTraversal.h"
@@ -105,6 +104,7 @@
 #include "nsWindowSizes.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/CSSClipPathInstance.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventListenerManager.h"
@@ -3012,7 +3012,7 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
   Maybe<gfxRect> combinedClip;
   if (maskUsage.shouldApplyBasicShapeOrPath) {
     Maybe<Rect> result =
-        nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
+        CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
             aMaskedFrame, svgReset->mClipPath);
     if (result) {
       combinedClip = Some(ThebesRect(*result));

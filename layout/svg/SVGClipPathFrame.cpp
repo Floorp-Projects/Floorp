@@ -5,21 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGClipPathFrame.h"
+#include "SVGClipPathFrame.h"
 
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
 #include "ImgDrawResult.h"
 #include "gfxContext.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGGeometryFrame.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/SVGClipPathElement.h"
+#include "mozilla/dom/SVGGeometryElement.h"
 #include "nsGkAtoms.h"
-#include "SVGObserverUtils.h"
-#include "SVGGeometryElement.h"
-#include "SVGGeometryFrame.h"
 #include "nsSVGUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
@@ -27,16 +26,19 @@ using namespace mozilla::image;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGClipPathFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGClipPathFrame(mozilla::PresShell* aPresShell,
+                                 mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGClipPathFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGClipPathFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGClipPathFrame)
+namespace mozilla {
 
-void nsSVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
-                                       nsIFrame* aClippedFrame,
-                                       const gfxMatrix& aMatrix) {
+NS_IMPL_FRAMEARENA_HELPERS(SVGClipPathFrame)
+
+void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
+                                     nsIFrame* aClippedFrame,
+                                     const gfxMatrix& aMatrix) {
   MOZ_ASSERT(IsTrivial(), "Caller needs to use GetClipMask");
 
   const DrawTarget* drawTarget = aContext.GetDrawTarget();
@@ -95,11 +97,11 @@ static void ComposeExtraMask(DrawTarget* aTarget, SourceSurface* aExtraMask,
   aTarget->SetTransform(origin);
 }
 
-void nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
-                                       nsIFrame* aClippedFrame,
-                                       const gfxMatrix& aMatrix,
-                                       SourceSurface* aExtraMask,
-                                       const Matrix& aExtraMasksTransform) {
+void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
+                                     nsIFrame* aClippedFrame,
+                                     const gfxMatrix& aMatrix,
+                                     SourceSurface* aExtraMask,
+                                     const Matrix& aExtraMasksTransform) {
   static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
 
   // A clipPath can reference another clipPath, creating a chain of clipPaths
@@ -121,7 +123,7 @@ void nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   mMatrixForChildren = GetClipPathTransform(aClippedFrame) * aMatrix;
 
   // Check if this clipPath is itself clipped by another clipPath:
-  nsSVGClipPathFrame* clipPathThatClipsClipPath;
+  SVGClipPathFrame* clipPathThatClipsClipPath;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(this, &clipPathThatClipsClipPath);
   nsSVGUtils::MaskUsage maskUsage;
@@ -159,9 +161,9 @@ void nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   }
 }
 
-void nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
-                                            nsIFrame* aClippedFrame,
-                                            gfxContext& aTarget) {
+void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
+                                          nsIFrame* aClippedFrame,
+                                          gfxContext& aTarget) {
   nsSVGDisplayableFrame* frame = do_QueryFrame(aFrame);
   if (!frame) {
     return;
@@ -171,7 +173,7 @@ void nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   frame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
 
   // Children of this clipPath may themselves be clipped.
-  nsSVGClipPathFrame* clipPathThatClipsChild;
+  SVGClipPathFrame* clipPathThatClipsChild;
   // XXX check return value?
   if (SVGObserverUtils::GetAndObserveClipPath(aFrame,
                                               &clipPathThatClipsChild) ==
@@ -222,7 +224,7 @@ void nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   }
 }
 
-already_AddRefed<SourceSurface> nsSVGClipPathFrame::GetClipMask(
+already_AddRefed<SourceSurface> SVGClipPathFrame::GetClipMask(
     gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
     const gfxMatrix& aMatrix, SourceSurface* aExtraMask,
     const Matrix& aExtraMasksTransform) {
@@ -247,8 +249,8 @@ already_AddRefed<SourceSurface> nsSVGClipPathFrame::GetClipMask(
   return surface.forget();
 }
 
-bool nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
-                                               const gfxPoint& aPoint) {
+bool SVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
+                                             const gfxPoint& aPoint) {
   static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
 
   // A clipPath can reference another clipPath, creating a chain of clipPaths
@@ -271,7 +273,7 @@ bool nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
   // clipped by the original clipPath. If this clipPath is being clipped by a
   // different clip path we need to check if it prevents the original element
   // from receiving events at aPoint:
-  nsSVGClipPathFrame* clipPathFrame;
+  SVGClipPathFrame* clipPathFrame;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(this, &clipPathFrame);
   if (clipPathFrame &&
@@ -300,7 +302,7 @@ bool nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
   return false;
 }
 
-bool nsSVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame** aSingleChild) {
+bool SVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame** aSingleChild) {
   // If the clip path is clipped then it's non-trivial
   if (SVGObserverUtils::GetAndObserveClipPath(this, nullptr) ==
       SVGObserverUtils::eHasRefsAllValid) {
@@ -337,7 +339,7 @@ bool nsSVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame** aSingleChild) {
   return true;
 }
 
-bool nsSVGClipPathFrame::IsValid() {
+bool SVGClipPathFrame::IsValid() {
   static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
 
   // A clipPath can reference another clipPath, creating a chain of clipPaths
@@ -378,9 +380,9 @@ bool nsSVGClipPathFrame::IsValid() {
   return true;
 }
 
-nsresult nsSVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
-                                              nsAtom* aAttribute,
-                                              int32_t aModType) {
+nsresult SVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
+                                            nsAtom* aAttribute,
+                                            int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::transform) {
       SVGObserverUtils::InvalidateDirectRenderingObservers(this);
@@ -396,8 +398,8 @@ nsresult nsSVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
                                                aModType);
 }
 
-void nsSVGClipPathFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                              nsIFrame* aPrevInFlow) {
+void SVGClipPathFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                            nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::clipPath),
                "Content is not an SVG clipPath!");
 
@@ -405,9 +407,9 @@ void nsSVGClipPathFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
-gfxMatrix nsSVGClipPathFrame::GetCanvasTM() { return mMatrixForChildren; }
+gfxMatrix SVGClipPathFrame::GetCanvasTM() { return mMatrixForChildren; }
 
-gfxMatrix nsSVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame) {
+gfxMatrix SVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame) {
   SVGClipPathElement* content = static_cast<SVGClipPathElement*>(GetContent());
 
   gfxMatrix tm = content->PrependLocalTransformsTo({}, eChildToUserSpace) *
@@ -426,10 +428,10 @@ gfxMatrix nsSVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame) {
                                           flags);
 }
 
-SVGBBox nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
-                                                    const gfxMatrix& aMatrix,
-                                                    uint32_t aFlags) {
-  nsSVGClipPathFrame* clipPathThatClipsClipPath;
+SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
+                                                  const gfxMatrix& aMatrix,
+                                                  uint32_t aFlags) {
+  SVGClipPathFrame* clipPathThatClipsClipPath;
   if (SVGObserverUtils::GetAndObserveClipPath(this,
                                               &clipPathThatClipsClipPath) ==
       SVGObserverUtils::eHasRefsSomeInvalid) {
@@ -446,9 +448,9 @@ SVGBBox nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
       if (svg) {
         gfxMatrix matrix =
             nsSVGUtils::GetTransformMatrixInUserSpace(frame) * aMatrix;
-        tmpBBox = svg->GetBBoxContribution(mozilla::gfx::ToMatrix(matrix),
+        tmpBBox = svg->GetBBoxContribution(gfx::ToMatrix(matrix),
                                            nsSVGUtils::eBBoxIncludeFill);
-        nsSVGClipPathFrame* clipPathFrame;
+        SVGClipPathFrame* clipPathFrame;
         if (SVGObserverUtils::GetAndObserveClipPath(frame, &clipPathFrame) !=
                 SVGObserverUtils::eHasRefsSomeInvalid &&
             clipPathFrame) {
@@ -471,8 +473,8 @@ SVGBBox nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
   return unionBBox;
 }
 
-bool nsSVGClipPathFrame::IsSVGTransformed(Matrix* aOwnTransforms,
-                                          Matrix* aFromParentTransforms) const {
+bool SVGClipPathFrame::IsSVGTransformed(Matrix* aOwnTransforms,
+                                        Matrix* aFromParentTransforms) const {
   auto e = static_cast<SVGElement const*>(GetContent());
   Matrix m = ToMatrix(e->PrependLocalTransformsTo({}, eUserSpaceToParent));
 
@@ -486,3 +488,5 @@ bool nsSVGClipPathFrame::IsSVGTransformed(Matrix* aOwnTransforms,
 
   return true;
 }
+
+}  // namespace mozilla

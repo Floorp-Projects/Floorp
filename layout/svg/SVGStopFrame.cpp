@@ -10,26 +10,29 @@
 #include "nsGkAtoms.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
-#include "SVGObserverUtils.h"
-
-using namespace mozilla;
+#include "mozilla/SVGObserverUtils.h"
 
 // This is a very simple frame whose only purpose is to capture style change
 // events and propagate them to the parent.  Most of the heavy lifting is done
-// within the nsSVGGradientFrame, which is the parent for this frame
+// within the SVGGradientFrame, which is the parent for this frame
 
-class nsSVGStopFrame : public nsIFrame {
-  friend nsIFrame* NS_NewSVGStopFrame(mozilla::PresShell* aPresShell,
-                                      ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGStopFrame(mozilla::PresShell* aPresShell,
+                             mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
+class SVGStopFrame : public nsIFrame {
+  friend nsIFrame* ::NS_NewSVGStopFrame(mozilla::PresShell* aPresShell,
+                                        ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGStopFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit SVGStopFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsIFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGStopFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGStopFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
@@ -61,14 +64,14 @@ class nsSVGStopFrame : public nsIFrame {
 //----------------------------------------------------------------------
 // Implementation
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGStopFrame)
+NS_IMPL_FRAMEARENA_HELPERS(SVGStopFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
 #ifdef DEBUG
-void nsSVGStopFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                          nsIFrame* aPrevInFlow) {
+void SVGStopFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                        nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::stop),
                "Content is not a stop element");
 
@@ -76,9 +79,8 @@ void nsSVGStopFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 #endif /* DEBUG */
 
-nsresult nsSVGStopFrame::AttributeChanged(int32_t aNameSpaceID,
-                                          nsAtom* aAttribute,
-                                          int32_t aModType) {
+nsresult SVGStopFrame::AttributeChanged(int32_t aNameSpaceID,
+                                        nsAtom* aAttribute, int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::offset) {
     MOZ_ASSERT(
         GetParent()->IsSVGLinearGradientFrame() ||
@@ -90,10 +92,14 @@ nsresult nsSVGStopFrame::AttributeChanged(int32_t aNameSpaceID,
   return nsIFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
+}  // namespace mozilla
+
 // -------------------------------------------------------------------------
 // Public functions
 // -------------------------------------------------------------------------
 
-nsIFrame* NS_NewSVGStopFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGStopFrame(aStyle, aPresShell->GetPresContext());
+nsIFrame* NS_NewSVGStopFrame(mozilla::PresShell* aPresShell,
+                             mozilla::ComputedStyle* aStyle) {
+  return new (aPresShell)
+      mozilla::SVGStopFrame(aStyle, aPresShell->GetPresContext());
 }
