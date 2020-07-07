@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
         wp.DOMWindow; // Force the lazy creation of a DOM window.
         calledListenerForBrowserChromeURL = true;
       }
-      if (req.name.includes("mozilla.xhtml") && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
+      if (req.name.includes("mozilla.html") && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
         finishTest();
     },
     QueryInterface: function(iid) {
