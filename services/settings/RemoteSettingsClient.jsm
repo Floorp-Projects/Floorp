@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
   RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
+  SharedUtils: "resource://services-settings/SharedUtils.jsm",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   Utils: "resource://services-settings/Utils.jsm",
 });
@@ -333,6 +334,7 @@ class RemoteSettingsClient extends EventEmitter {
    * @param  {Object} options                  The options object.
    * @param  {Object} options.filters          Filter the results (default: `{}`).
    * @param  {String} options.order            The order to apply (eg. `"-last_modified"`).
+   * @param  {boolean} options.dumpFallback    Fallback to dump data if read of local DB fails (default: `true`).
    * @param  {boolean} options.syncIfEmpty     Synchronize from server if local data is empty (default: `true`).
    * @param  {boolean} options.verifySignature Verify the signature of the local data (default: `false`).
    * @return {Promise}
@@ -341,11 +343,44 @@ class RemoteSettingsClient extends EventEmitter {
     const {
       filters = {},
       order = "", // not sorted by default.
+      dumpFallback = true,
       syncIfEmpty = true,
     } = options;
     let { verifySignature = false } = options;
 
-    if (syncIfEmpty && !(await Utils.hasLocalData(this))) {
+    let hasLocalData;
+    try {
+      hasLocalData = await Utils.hasLocalData(this);
+    } catch (e) {
+      // If the local DB cannot be read (for unknown reasons, Bug 1649393)
+      // We fallback to the packaged data, and filter/sort in memory.
+      if (!dumpFallback) {
+        throw e;
+      }
+      Cu.reportError(e);
+      let { data } = await SharedUtils.loadJSONDump(
+        this.bucketName,
+        this.collectionName
+      );
+      if (data !== null) {
+        console.info(`${this.identifier} falling back to JSON dump`);
+      } else {
+        console.info(`${this.identifier} no dump fallback, return empty list`);
+        data = [];
+      }
+      if (!ObjectUtils.isEmpty(filters)) {
+        data = data.filter(r => Utils.filterObject(filters, r));
+      }
+      if (order) {
+        data = Utils.sortObjects(order, data);
+      }
+      // No need to verify signature on JSON dumps.
+      // If local DB cannot be read, then we don't even try to do anything,
+      // we return results early.
+      return this._filterEntries(data);
+    }
+
+    if (syncIfEmpty && !hasLocalData) {
       // .get() was called before we had the chance to synchronize the local database.
       // We'll try to avoid returning an empty list.
       if (!this._importingPromise) {

@@ -276,6 +276,32 @@ add_task(async function test_get_loads_dump_only_once_if_called_in_parallel() {
 });
 add_task(clear_state);
 
+add_task(async function test_get_falls_back_to_dump_if_db_fails() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+  const backup = clientWithDump.db.getLastModified;
+  clientWithDump.db.getLastModified = () => {
+    throw new Error("Unknown error");
+  };
+
+  const records = await clientWithDump.get();
+  ok(records.length > 0, "dump content is returned");
+
+  // If fallback is disabled, error is thrown.
+  let error;
+  try {
+    await clientWithDump.get({ dumpFallback: false });
+  } catch (e) {
+    error = e;
+  }
+  equal(error.message, "Unknown error");
+
+  clientWithDump.db.getLastModified = backup;
+});
+add_task(clear_state);
+
 add_task(async function test_get_does_not_sync_if_empty_dump_is_provided() {
   if (IS_ANDROID) {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
