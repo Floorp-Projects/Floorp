@@ -54,7 +54,7 @@ class Database {
               const cursor = event.target.result;
               if (cursor) {
                 const { value } = cursor;
-                if (filterObject(objFilters, value)) {
+                if (Utils.filterObject(objFilters, value)) {
                   results.push(value);
                 }
                 cursor.continue();
@@ -73,7 +73,7 @@ class Database {
     for (const result of results) {
       delete result._cid;
     }
-    return sort ? sortObjects(sort, results) : results;
+    return sort ? Utils.sortObjects(sort, results) : results;
   }
 
   async importChanges(metadata, timestamp, records = [], options = {}) {
@@ -389,10 +389,6 @@ async function executeIDB(storeNames, callback, options = {}) {
   return promise.finally(finishedFn);
 }
 
-function _isUndefined(value) {
-  return typeof value === "undefined";
-}
-
 function makeNestedObjectFromArr(arr, val, nestedFiltersObj) {
   const last = arr.length - 1;
   return arr.reduce((acc, cv, i) => {
@@ -412,52 +408,6 @@ function transformSubObjectFilters(filtersObj) {
     makeNestedObjectFromArr(keysArr, val, transformedFilters);
   }
   return transformedFilters;
-}
-
-/**
- * Test if a single object matches all given filters.
- *
- * @param  {Object} filters  The filters object.
- * @param  {Object} entry    The object to filter.
- * @return {Boolean}
- */
-function filterObject(filters, entry) {
-  return Object.entries(filters).every(([filter, value]) => {
-    if (Array.isArray(value)) {
-      return value.some(candidate => candidate === entry[filter]);
-    } else if (typeof value === "object") {
-      return filterObject(value, entry[filter]);
-    } else if (!Object.prototype.hasOwnProperty.call(entry, filter)) {
-      console.error(`The property ${filter} does not exist`);
-      return false;
-    }
-    return entry[filter] === value;
-  });
-}
-
-/**
- * Sorts records in a list according to a given ordering.
- *
- * @param  {String} order The ordering, eg. `-last_modified`.
- * @param  {Array}  list  The collection to order.
- * @return {Array}
- */
-function sortObjects(order, list) {
-  const hasDash = order[0] === "-";
-  const field = hasDash ? order.slice(1) : order;
-  const direction = hasDash ? -1 : 1;
-  return list.slice().sort((a, b) => {
-    if (a[field] && _isUndefined(b[field])) {
-      return direction;
-    }
-    if (b[field] && _isUndefined(a[field])) {
-      return -direction;
-    }
-    if (_isUndefined(a[field]) && _isUndefined(b[field])) {
-      return 0;
-    }
-    return a[field] > b[field] ? direction : -direction;
-  });
 }
 
 // We need to expose this wrapper function so we can test
