@@ -38,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation project(':browser-state')
     implementation project(':support-ktx')
     implementation project(':support-base')
 

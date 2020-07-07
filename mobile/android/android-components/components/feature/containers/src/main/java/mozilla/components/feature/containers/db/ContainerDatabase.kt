@@ -8,11 +8,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
+import mozilla.components.browser.state.state.ContainerState.Color
+import mozilla.components.browser.state.state.ContainerState.Icon
 
 /**
  * Internal database for storing containers (contextual identities).
  */
 @Database(entities = [ContainerEntity::class], version = 1)
+@TypeConverters(Converter::class)
 internal abstract class ContainerDatabase : RoomDatabase() {
     abstract fun containerDao(): ContainerDao
 
@@ -32,5 +37,27 @@ internal abstract class ContainerDatabase : RoomDatabase() {
                 instance = it
             }
         }
+    }
+}
+
+internal class Converter {
+    @TypeConverter
+    fun toColorString(color: Color): String {
+        return color.color
+    }
+
+    @TypeConverter
+    fun toColor(color: String): Color? {
+        return Color.values().find { it.color == color }
+    }
+
+    @TypeConverter
+    fun toIconString(icon: Icon): String {
+        return icon.icon
+    }
+
+    @TypeConverter
+    fun toIcon(icon: String): Icon? {
+        return Icon.values().find { it.icon == icon }
     }
 }

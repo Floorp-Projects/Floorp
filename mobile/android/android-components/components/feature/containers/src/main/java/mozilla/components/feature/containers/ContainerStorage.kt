@@ -9,15 +9,18 @@ import androidx.annotation.VisibleForTesting
 import androidx.paging.DataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mozilla.components.feature.containers.adapter.ContainerAdapter
+import mozilla.components.browser.state.state.Container
+import mozilla.components.browser.state.state.ContainerState.Color
+import mozilla.components.browser.state.state.ContainerState.Icon
 import mozilla.components.feature.containers.db.ContainerDatabase
 import mozilla.components.feature.containers.db.ContainerEntity
+import mozilla.components.feature.containers.db.toContainerEntity
 import java.util.UUID
 
 /**
  * A storage implementation for organizing containers (contextual identities).
  */
-class ContainerStorage(context: Context) {
+internal class ContainerStorage(context: Context) {
 
     @VisibleForTesting
     internal var database: Lazy<ContainerDatabase> =
@@ -27,10 +30,15 @@ class ContainerStorage(context: Context) {
     /**
      * Adds a new [Container].
      */
-    suspend fun addContainer(name: String, color: String, icon: String) {
-        database.value.containerDao().insertContainer(
+    suspend fun addContainer(
+        contextId: String = UUID.randomUUID().toString(),
+        name: String,
+        color: Color,
+        icon: Icon
+    ) {
+        containerDao.insertContainer(
             ContainerEntity(
-                contextId = UUID.randomUUID().toString(),
+                contextId = contextId,
                 name = name,
                 color = color,
                 icon = icon
@@ -43,7 +51,7 @@ class ContainerStorage(context: Context) {
      */
     fun getContainers(): Flow<List<Container>> {
         return containerDao.getContainers().map { list ->
-            list.map { entity -> ContainerAdapter(entity) }
+            list.map { entity -> entity.toContainer() }
         }
     }
 
@@ -53,16 +61,13 @@ class ContainerStorage(context: Context) {
     fun getContainersPaged(): DataSource.Factory<Int, Container> = containerDao
         .getContainersPaged()
         .map { entity ->
-            ContainerAdapter(
-                entity
-            )
+            entity.toContainer()
         }
 
     /**
      * Removes the given [Container].
      */
     suspend fun removeContainer(container: Container) {
-        val containerEntity = (container as ContainerAdapter).entity
-        containerDao.deleteContainer(containerEntity)
+        containerDao.deleteContainer(container.toContainerEntity())
     }
 }

@@ -6,6 +6,7 @@ package mozilla.components.browser.state.action
 
 import android.graphics.Bitmap
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.EngineState
@@ -587,4 +588,19 @@ sealed class DownloadAction : BrowserAction() {
      * Updates the provided [download] on the [BrowserState].
      */
     data class UpdateQueuedDownloadAction(val download: DownloadState) : DownloadAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating [BrowserState.containers]
+ */
+sealed class ContainerAction : BrowserAction() {
+    /**
+     * Updates [BrowserState.containers] to register the given added [container].
+     */
+    data class AddContainerAction(val container: ContainerState) : ContainerAction()
+
+    /**
+     * Removes all state of the removed container from [BrowserState.containers].
+     */
+    data class RemoveContainerAction(val contextId: String) : ContainerAction()
 }

@@ -11,6 +11,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.state.state.ContainerState.Color
+import mozilla.components.browser.state.state.ContainerState.Icon
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -51,8 +53,8 @@ class ContainerDaoTest {
             ContainerEntity(
                 contextId = UUID.randomUUID().toString(),
                 name = "Personal",
-                color = "red",
-                icon = "fingerprint"
+                color = Color.RED,
+                icon = Icon.FINGERPRINT
             )
         containerDao.insertContainer(container)
 
@@ -73,15 +75,15 @@ class ContainerDaoTest {
             ContainerEntity(
                 contextId = UUID.randomUUID().toString(),
                 name = "Personal",
-                color = "red",
-                icon = "fingerprint"
+                color = Color.RED,
+                icon = Icon.FINGERPRINT
             )
         val container2 =
             ContainerEntity(
                 contextId = UUID.randomUUID().toString(),
                 name = "Shopping",
-                color = "blue",
-                icon = "cart"
+                color = Color.BLUE,
+                icon = Icon.CART
             )
 
         containerDao.insertContainer(container1)
