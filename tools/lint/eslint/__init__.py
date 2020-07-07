@@ -47,8 +47,8 @@ def setup(root, **lintargs):
 
 def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     """Run eslint."""
-    log = lintargs['log']
-    setup_helper.set_project_root(lintargs['root'])
+    log = lintargs["log"]
+    setup_helper.set_project_root(lintargs["root"])
     module_path = setup_helper.get_project_root()
 
     # Valid binaries are:
@@ -63,35 +63,44 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
         print(ESLINT_NOT_FOUND_MESSAGE)
         return 1
 
-    extra_args = lintargs.get('extra_args') or []
+    extra_args = lintargs.get("extra_args") or []
     exclude_args = []
-    for path in config.get('exclude', []):
-        exclude_args.extend(['--ignore-pattern', os.path.relpath(path, lintargs['root'])])
+    for path in config.get("exclude", []):
+        exclude_args.extend(
+            ["--ignore-pattern", os.path.relpath(path, lintargs["root"])]
+        )
 
-    cmd_args = [binary,
-                os.path.join(module_path, "node_modules", "eslint", "bin", "eslint.js"),
-                # This keeps ext as a single argument.
-                '--ext', '[{}]'.format(','.join(config['extensions'])),
-                '--format', 'json',
-                '--no-error-on-unmatched-pattern',
-                ] + extra_args + exclude_args + paths
-    log.debug("Command: {}".format(' '.join(cmd_args)))
+    cmd_args = (
+        [
+            binary,
+            os.path.join(module_path, "node_modules", "eslint", "bin", "eslint.js"),
+            # This keeps ext as a single argument.
+            "--ext",
+            "[{}]".format(",".join(config["extensions"])),
+            "--format",
+            "json",
+            "--no-error-on-unmatched-pattern",
+        ]
+        + extra_args
+        + exclude_args
+        + paths
+    )
+    log.debug("Command: {}".format(" ".join(cmd_args)))
 
     # eslint requires that --fix be set before the --ext argument.
     if fix:
-        cmd_args.insert(2, '--fix')
+        cmd_args.insert(2, "--fix")
 
     shell = False
-    if os.environ.get('MSYSTEM') in ('MINGW32', 'MINGW64'):
+    if os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64"):
         # The eslint binary needs to be run from a shell with msys
         shell = True
-    encoding = 'utf-8'
+    encoding = "utf-8"
 
     orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    proc = subprocess.Popen(cmd_args,
-                            shell=shell,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        cmd_args, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     signal.signal(signal.SIGINT, orig)
 
     try:
@@ -118,16 +127,18 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
 
     results = []
     for obj in jsonresult:
-        errors = obj['messages']
+        errors = obj["messages"]
 
         for err in errors:
-            err.update({
-                'hint': err.get('fix'),
-                'level': 'error' if err['severity'] == 2 else 'warning',
-                'lineno': err.get('line') or 0,
-                'path': obj['filePath'],
-                'rule': err.get('ruleId'),
-            })
+            err.update(
+                {
+                    "hint": err.get("fix"),
+                    "level": "error" if err["severity"] == 2 else "warning",
+                    "lineno": err.get("line") or 0,
+                    "path": obj["filePath"],
+                    "rule": err.get("ruleId"),
+                }
+            )
             results.append(result.from_config(config, **err))
 
     return results
