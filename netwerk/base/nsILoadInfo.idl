@@ -911,16 +911,6 @@ interface nsILoadInfo : nsISupports
   Uint64ArrayRef AncestorBrowsingContextIDs();
 
   /**
-   * Like AncestorBrowsingContextIDs, but with outer window IDs rather than
-   * BrowsingContext IDs. Deprecated.
-   *
-   * Please note that this array has the same lifetime as the
-   * loadInfo object - use with caution!
-   */
-  [noscript, notxpcom, nostdcall]
-  Uint64ArrayRef AncestorOuterWindowIDs();
-
-  /**
    * Sets the list of unsafe headers according to CORS spec, as well as
    * potentially forces a preflight.
    * Note that you do not need to set the Content-Type header. That will be
