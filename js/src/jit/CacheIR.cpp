@@ -588,6 +588,12 @@ static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
     return false;
   }
 
+  // If we don't have the private field already (which we know from the
+  // if (shape) check above, we're going to throw so don't attach.
+  if (pc && JSOp(*pc) == JSOp::GetPrivateElem) {
+    return false;
+  }
+
   return CheckHasNoSuchProperty(cx, obj, id);
 }
 
@@ -1687,6 +1693,12 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
                                                   HandleId id) {
   ProxyStubType type = GetProxyStubType(cx_, obj, id);
   if (type == ProxyStubType::None) {
+    return AttachDecision::NoAction;
+  }
+
+  // Don't attach a proxy stub for private fields, as they
+  // may throw.
+  if (JSOp(*pc_) == JSOp::GetPrivateElem) {
     return AttachDecision::NoAction;
   }
 
@@ -4381,7 +4393,8 @@ AttachDecision SetPropIRGenerator::tryAttachMegamorphicSetElement(
     HandleObject obj, ObjOperandId objId, ValOperandId rhsId) {
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
-  if (mode_ != ICState::Mode::Megamorphic || cacheKind_ != CacheKind::SetElem) {
+  if (mode_ != ICState::Mode::Megamorphic || cacheKind_ != CacheKind::SetElem ||
+      IsPrivateElemOp(JSOp(*pc_))) {
     return AttachDecision::NoAction;
   }
 
@@ -4472,8 +4485,11 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     }
   }
 
-  // Object must be extensible.
-  if (!obj->nonProxyIsExtensible()) {
+  // Object must be extensible, or we must be initializing a private
+  // elem.
+  bool isInitPrivateElem = JSOp(*pc_) == JSOp::InitPrivateElem;
+  bool canAddNewProperty = obj->nonProxyIsExtensible() || isInitPrivateElem;
+  if (!canAddNewProperty) {
     return false;
   }
 
