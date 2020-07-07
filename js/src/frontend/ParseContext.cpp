@@ -44,6 +44,8 @@ const char* DeclarationKindString(DeclarationKind kind) {
     case DeclarationKind::SimpleCatchParameter:
     case DeclarationKind::CatchParameter:
       return "catch parameter";
+    case DeclarationKind::PrivateName:
+      return "private name";
   }
 
   MOZ_CRASH("Bad DeclarationKind");
