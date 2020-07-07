@@ -217,17 +217,22 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                   bool aClearStyle);
 
  private:
+  EditorDOMPoint GetNewCaretPointAfterInsertingHTML(
+      const EditorDOMPoint& aLastInsertedPoint) const;
+
   HTMLEditor& mHTMLEditor;
 };
 
-EditorDOMPoint HTMLEditor::GetNewCaretPointAfterInsertingHTML(
+EditorDOMPoint
+HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
     const EditorDOMPoint& aLastInsertedPoint) const {
   EditorDOMPoint pointToPutCaret;
 
   // but don't cross tables
   nsIContent* containerContent = nullptr;
   if (!HTMLEditUtils::IsTable(aLastInsertedPoint.GetChild())) {
-    containerContent = GetLastEditableLeaf(*aLastInsertedPoint.GetChild());
+    containerContent =
+        mHTMLEditor.GetLastEditableLeaf(*aLastInsertedPoint.GetChild());
     if (containerContent) {
       Element* mostDistantInclusiveAncestorTableElement = nullptr;
       for (Element* maybeTableElement =
@@ -269,13 +274,15 @@ EditorDOMPoint HTMLEditor::GetNewCaretPointAfterInsertingHTML(
 
   // Make sure we don't end up with selection collapsed after an invisible
   // `<br>` element.
-  WSRunScanner wsRunScannerAtCaret(this, pointToPutCaret);
+  WSRunScanner wsRunScannerAtCaret(&mHTMLEditor, pointToPutCaret);
   if (wsRunScannerAtCaret
           .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
           .ReachedBRElement() &&
-      !IsVisibleBRElement(wsRunScannerAtCaret.GetStartReasonContent())) {
+      !mHTMLEditor.IsVisibleBRElement(
+          wsRunScannerAtCaret.GetStartReasonContent())) {
     WSRunScanner wsRunScannerAtStartReason(
-        this, EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
+        &mHTMLEditor,
+        EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
     WSScanResult backwardScanFromPointToCaretResult =
         wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
             pointToPutCaret);
@@ -791,7 +798,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   }
 
   const EditorDOMPoint pointToPutCaret =
-      mHTMLEditor.GetNewCaretPointAfterInsertingHTML(lastInsertedPoint);
+      GetNewCaretPointAfterInsertingHTML(lastInsertedPoint);
   // Now collapse the selection to the end of what we just inserted.
   rv = MOZ_KnownLive(mHTMLEditor).CollapseSelectionTo(pointToPutCaret);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
