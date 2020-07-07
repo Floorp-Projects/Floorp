@@ -48,6 +48,12 @@ dictionary ProcessActorOptions {
    */
   sequence<UTF8String> remoteTypes;
 
+  /**
+   * If this is set to `true`, allow this actor to be created for the parent
+   * process.
+   */
+  boolean includeParent = false;
+
   /** This fields are used for configuring individual sides of the actor. */
   ProcessActorSidedOptions parent;
   ProcessActorChildOptions child;

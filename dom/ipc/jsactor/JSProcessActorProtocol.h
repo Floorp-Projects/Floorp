@@ -63,6 +63,7 @@ class JSProcessActorProtocol final : public JSActorProtocol,
 
   nsCString mName;
   nsTArray<nsCString> mRemoteTypes;
+  bool mIncludeParent = false;
 
   ParentSide mParent;
   ChildSide mChild;
