@@ -52,6 +52,11 @@ JSProcessActorProtocol::FromWebIDLOptions(const nsACString& aName,
 
   RefPtr<JSProcessActorProtocol> proto = new JSProcessActorProtocol(aName);
 
+  if (aOptions.mRemoteTypes.WasPassed()) {
+    MOZ_ASSERT(aOptions.mRemoteTypes.Value().Length());
+    proto->mRemoteTypes = aOptions.mRemoteTypes.Value();
+  }
+
   if (aOptions.mParent.WasPassed()) {
     proto->mParent.mModuleURI.emplace(aOptions.mParent.Value().mModuleURI);
   }
