@@ -79,6 +79,8 @@ familiar with the internationalization and localization systems, making sure tha
 the patches properly use the right APIs and the code is ready to be landed
 into `mozilla-central`.
 
+.. _exposure-in-gecko-strings:
+
 4) Exposure in `gecko-strings`
 ------------------------------
 

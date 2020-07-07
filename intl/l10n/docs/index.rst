@@ -22,4 +22,5 @@ and messages, while internationalization handles operations on raw data.
    overview
    fluent/index
    migrations/index
+   crosschannel/index
    glossary
