@@ -37,6 +37,11 @@ addEventListener("fetch", e => {
   respondWithPromise.then(() => {
     e.waitUntil(
       clients.matchAll().then(cls => {
+        dump(`matchAll returned ${cls.length} client(s) with URLs:\n`);
+        cls.forEach(cl => {
+          dump(`${cl.url}\n`);
+        });
+
         if (cls.length != 1) {
           dump("ERROR: no controlled clients.\n");
         }
