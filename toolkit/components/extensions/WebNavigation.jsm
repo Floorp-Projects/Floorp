@@ -152,7 +152,7 @@ var Manager = {
       const {
         createdTabBrowser,
         url,
-        sourceFrameOuterWindowID,
+        sourceFrameID,
         sourceTabBrowser,
       } = subject.wrappedJSObject;
 
@@ -162,7 +162,7 @@ var Manager = {
         {},
         {
           sourceTabBrowser,
-          sourceFrameId: sourceFrameOuterWindowID,
+          sourceFrameId: sourceFrameID,
           url,
         }
       );

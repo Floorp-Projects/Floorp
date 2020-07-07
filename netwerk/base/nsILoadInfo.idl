@@ -739,14 +739,14 @@ interface nsILoadInfo : nsISupports
    * The BrowsingContext performing the load for this nsILoadInfo object.
    */
   [infallible] readonly attribute unsigned long long browsingContextID;
-  readonly attribute BrowsingContext browsingContext;
+  [infallible] readonly attribute BrowsingContext browsingContext;
 
   /**
    * Like `frameOuterWindowID`, however returning the BrowsingContextID
    * instead.
    */
   [infallible] readonly attribute unsigned long long frameBrowsingContextID;
-  readonly attribute BrowsingContext frameBrowsingContext;
+  [infallible] readonly attribute BrowsingContext frameBrowsingContext;
 
   /**
    * If the element being loaded is a nsFrameLoaderOwner,
@@ -755,7 +755,7 @@ interface nsILoadInfo : nsISupports
    * Browsing Context performing the load (see `browsingContext`).
    */
   [infallible] readonly attribute unsigned long long targetBrowsingContextID;
-  readonly attribute BrowsingContext targetBrowsingContext;
+  [infallible] readonly attribute BrowsingContext targetBrowsingContext;
 
   /**
    * Resets the PrincipalToInherit to a freshly created NullPrincipal

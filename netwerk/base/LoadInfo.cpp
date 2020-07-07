@@ -927,7 +927,6 @@ void LoadInfo::ComputeAncestors(
     nsTArray<uint64_t>& aBrowsingContextIDs,
     nsTArray<uint64_t>& aOuterWindowIDs) {
   MOZ_ASSERT(aAncestorPrincipals.IsEmpty());
-  MOZ_ASSERT(aOuterWindowIDs.IsEmpty());
   CanonicalBrowsingContext* ancestorBC = aBC;
   // Iterate over ancestor WindowGlobalParents, collecting principals and outer
   // window IDs.

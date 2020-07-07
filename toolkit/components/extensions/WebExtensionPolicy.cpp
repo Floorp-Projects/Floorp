@@ -822,9 +822,11 @@ uint64_t DocInfo::FrameID() const {
       mFrameID.emplace(0);
     } else {
       struct Matcher {
-        uint64_t operator()(Window aWin) { return aWin->WindowID(); }
+        uint64_t operator()(Window aWin) {
+          return aWin->GetBrowsingContext()->Id();
+        }
         uint64_t operator()(LoadInfo aLoadInfo) {
-          return aLoadInfo->GetOuterWindowID();
+          return aLoadInfo->GetBrowsingContextID();
         }
       };
       mFrameID.emplace(mObj.match(Matcher()));

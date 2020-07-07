@@ -92,8 +92,8 @@ var CreatedNavigationTargetListener = {
 
     const isSourceTab = docShell === sourceDocShell || isSourceTabDescendant;
 
-    const sourceFrameId = WebNavigationFrames.getDocShellFrameId(
-      sourceDocShell
+    const sourceFrameId = WebNavigationFrames.getFrameId(
+      sourceDocShell.browsingContext
     );
     const createdOuterWindowId = getDocShellOuterWindowId(sourceDocShell);
 
