@@ -834,11 +834,17 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly пераехаў</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Гэта праграма больш не будзе атрымліваць абнаўленні бяспекі. Перастаньце карыстацца гэтай праграмай і перайдзіце на новы Nightly.
+        \n\nКаб перанесці закладкі, лагіны і гісторыю ў другую праграму, стварыце ўліковы запіс Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Пераключыцца на новы Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly пераехаў</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Гэта праграма больш не будзе атрымліваць абнаўленні бяспекі. Атрымайце новы Nightly і больш не карыстайцеся гэтай праграмай.
+        \n\nКаб перанесці закладкі, лагіны і гісторыю ў другую праграму, стварыце ўліковы запіс Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Атрымаць новы Nightly</string>
 
@@ -1024,6 +1030,8 @@
     <string name="etp_fingerprinters_title">Збіральнікі лічбавых адбіткаў</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Змест з элементамі сачэння</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Ахова ўключана на гэтым сайце</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Узмоцненая ахова ад сачэння выключана на гэтых сайтах</string>
 

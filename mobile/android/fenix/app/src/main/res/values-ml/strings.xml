@@ -992,6 +992,10 @@
     <string name="onboarding_private_browsing_button">ക്രമീകരണങ്ങൾ തുറക്കുക</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">താങ്കളുടെ സ്വകാര്യത</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">താങ്കൾ ഓൺലൈനിലും ഞങ്ങളുമായും പങ്കിടുന്ന കാര്യങ്ങളെ നിയന്ത്രിക്കാൻ
+        ഞങ്ങൾ %s രൂപകൽപന ചെയ്തിരിക്കുന്നു</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ഞങ്ങളുടെ സ്വകാര്യതാ അറിയിപ്പ് വായിക്കുക</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1054,6 +1058,8 @@
     <string name="preference_enhanced_tracking_protection">മെച്ചപ്പെട്ട ട്രാക്കിംഗ് പരിരക്ഷണം</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">പിന്തുടരപ്പെടാതെ ബ്രൗസുചെയ്യുക</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">താങ്കളുടെ ഡാറ്റ താങ്കളുടേത് മാത്രമായി സൂക്ഷിക്കുക. ഓൺലൈനിൽ പിന്തുടരുന്ന മിക്ക ട്രാക്കറുകളിൽ നിന്നും %s താങ്കളെ പരിരക്ഷിക്കുന്നു.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">കൂടുതല്‍ അറിയുക</string>
 
@@ -1065,14 +1071,30 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">സ്റ്റാൻഡേർഡ് ട്രാക്കിംഗ് പരിരക്ഷണം എന്തെല്ലാം തടഞ്ഞു</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">കർശനം</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">കൂടുതൽ ട്രാക്കറുകൾ, പരസ്യങ്ങൾ, പോപ്പ്അപ്പുകൾ എന്നിവ തടയുന്നു. പേജുകൾ വേഗത്തിൽ ലോഡുചെയ്യുന്നു, പക്ഷേ ചില പ്രവർത്തനങ്ങൾ ലഭ്യമായേക്കില്ല.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">കർശന ട്രാക്കിംഗ് സംരക്ഷണം എന്തെല്ലാം തടയുന്നു</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">ഇച്ഛാനുസൃതം</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">തടയേണ്ട ട്രാക്കറുകളെയും സ്ക്രിപ്റ്റുകളെയും തിരഞ്ഞെടുക്കുക.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">ഇഷ്‌ടാനുസൃത ട്രാക്കിംഗ് സരക്ഷണം എന്തെല്ലാം തടയുന്നു</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">കുക്കികള്‍</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">ക്രോസ്-സൈറ്റ്, സോഷ്യൽ മീഡിയ ട്രാക്കറുകൾ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">സന്ദർശിക്കാത്ത സൈറ്റുകളിൽ നിന്നുള്ള കുക്കികൾ</string>
 
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">എല്ലാ മൂന്നാം കക്ഷി കുക്കികളും (വെബ്‌സൈറ്റുകൾ തകരാൻ കാരണമായേക്കാം)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">എല്ലാ കുക്കികളും (വെബ്‌സൈറ്റുകൾ തകരാൻ ഇടയാക്കും)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">ട്രാക്ക് ചെയ്യുന്ന ഉള്ളടക്കം</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">എല്ലാ ടാബുകളിലും</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1080,16 +1102,34 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">ഇച്ഛാനുസൃത ടാബുകളിൽ മാത്രം</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">ക്രിപ്റ്റോമൈനേഴ്സ്</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">വിരലടയാളങ്ങൾ</string>
     <string name="enhanced_tracking_protection_blocked">തടഞ്ഞവ</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">അനുവദിച്ചത്</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">സമൂഹ മാധ്യമ ട്രാക്കറുകൾ</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">വെബിലുടനീളം താങ്കളുടെ ബ്രൗസിങ്ങ് പ്രവർത്തനം പിന്തുടരാനുള്ള സോഷ്യൽ നെറ്റ്‌വർക്കുകളുടെ കഴിവ് പരിമിതപ്പെടുത്തുന്നു.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">ക്രോസ്-സൈറ്റ് പിന്തുടരൽ കുക്കികൾ</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">താങ്കളുടെ ബ്രൗസിങ്ങ് ഡാറ്റ സമാഹരിക്കാൻ നിരവധി സൈറ്റുകളിൽ പരസ്യ ശൃംഘലകളും അനലിറ്റിക്സ് കമ്പനികളും ഉപയോഗിക്കുന്ന കൂക്കികളെ തടയുന്നു.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">ക്രിപ്റ്റോമൈനേഴ്സ്</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ഡിജിറ്റൽ പണത്തിന്റെ ഖനനത്തിനായി താങ്കളുടെ ഉപകരണത്തിലേക്ക് പ്രവേശനം നേടുന്ന ക്ഷുദ്ര സ്‌ക്രിപ്റ്റുകളെ തടയുന്നു.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">വിരലടയാളങ്ങൾ</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">പിന്തുടരുന്നതിനായി താങ്കളുടെ ഉപകരണത്തിനെ വേർതിരിച്ചറിയാൻ സാധിക്കുന്ന ഡാറ്റയെ ശേഖരിക്കപ്പെടുന്നതിൽ നിന്നും വിലക്കുന്നു.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">പിന്തുടരുന്ന ഉള്ളടക്കം</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">പിന്തുടരൽ കോഡ് അടങ്ങിയിരിക്കുന്ന പുറത്തുനിന്നുള്ള പരസ്യങ്ങൾ, വീഡിയോകൾ, മറ്റ് ഉള്ളടക്കം എന്നിവയുടെ ലഭ്യമാക്കൽ നിർത്തുന്നു. ചില വെബ്‌സൈറ്റ് പ്രവർത്തനങ്ങളെ ബാധിച്ചേക്കാം.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">പരിചയ്ക്ക് പർപ്പിൾ നിറമാകുമ്പോളെല്ലാം, %s ഒരു സൈറ്റിലെ ട്രാക്കറുകളെ തടഞ്ഞിട്ടുണ്ട്. കൂടുതൽ വിവരങ്ങൾക്കായി അമർത്തുക.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ഈ സൈറ്റിനായി പരിരക്ഷകൾ ഓണാണ്</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1121,6 +1161,9 @@
     <string name="about_licensing_information">ലൈസന്‍സ് വിവരം</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">ഞങ്ങൾ ഉപയോഗിക്കുന്ന ലൈബ്രറികൾ</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">ഡീബഗ് മെനു: പ്രവർത്തനക്ഷമമാക്കാൻ %1$d ക്ലിക്ക് അവശേഷിക്കുന്നു</string>
     <string name="about_debug_menu_toast_done">ഡീബഗ് മെനു പ്രവർത്തനക്ഷമമാക്കി</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
@@ -1148,6 +1191,9 @@
     <string name="add_to_homescreen_continue">വെബ്‌സൈറ്റിലേക്ക് തുടരുക</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">കുറുക്കുവഴിയുടെ പേര്</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">പെട്ടെന്ന് ലഭ്യമാവാനും ഒരു ആപ്പ്-പോലുള്ള അനുഭവത്തോടെ വേഗത്തിൽ ബ്രൗസ് ചെയ്യാനും ഈ വെബ്സൈറ്റിനെ താങ്കളുടെ ഫോണിന്റെ പൂമുഖത്തേക്ക് എളുപ്പത്തിൽ ചേർക്കാവുന്നതാണ്.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ലോഗിനുകളും പാസ്‌വേഡുകളും</string>
@@ -1227,6 +1273,8 @@
     <string name="logins_biometric_prompt_message">നിങ്ങളുടെ സംരക്ഷിച്ച ലോഗിനുകൾ കാണാൻ അൺലോക്കുചെയ്യുക</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">നിങ്ങളുടെ ലോഗിനുകളും രഹസ്യവാക്കുകളും സുരക്ഷിതമാക്കുക</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">മറ്റൊരാളുടെ കയ്യിൽ താങ്കളുടെ ഉപകരണം കിട്ടിയാലും താങ്കളുടെ സംരക്ഷിച്ച ലോഗിനുകളും രഹസ്യവാക്കുകളും ലഭ്യമാകുന്നതിൽ നിന്ന് സംരക്ഷിക്കുന്നതിന് ഉപകരണം പൂട്ടാനുള്ള ഒരു അടയാളം, പിൻ, അല്ലെങ്കിൽ രഹസ്യവാക്ക് സജ്ജമാക്കുക.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">പിന്നീട്</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1236,6 +1284,8 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">എല്ലാ വെബ്‌സൈറ്റുകളിലും സൂം ചെയ്യുക</string>
 
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">പിഞ്ച് ചെയ്ത് സൂം ചെയ്യുന്നത് തടയുന്ന വെബ്സൈറ്റുകളിൽ പോലും അവ അനുവദിക്കാൻ സജ്ജമാക്കുക.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">പേര് (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1262,6 +1312,8 @@
     <string name="search_add_custom_engine_name_hint">പേര്</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">തിരയാനുള്ള വാചകം</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">അന്വേഷണ വാചകത്തിന് പകരം “%s” എന്നത് ഉപയോഗിക്കുക. ഉദാഹരണം: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">കൂടുതല്‍ അറിയുക</string>
 
@@ -1276,6 +1328,8 @@
     <string name="search_add_custom_engine_error_existing_name">“%s” എന്ന പേരിലുള്ള തിരച്ചിൽ എഞ്ചിൻ ഇതിനകം നിലവിലുണ്ട്.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">തിരയുന്നതിനായി ഒരു വാചകം നൽകുക</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">തിരച്ചിൽ വാചകം ഉദാഹരണ ഘടനയുമായി പൊരുത്തപ്പെടുന്നുണ്ടോ എന്ന് പരിശോധിക്കുക</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">“%s” ലേക്ക് ബന്ധിപ്പിക്കന്നതിൽ പിശക്</string>
     <!-- Text shown when a user creates a new search engine -->
@@ -1287,10 +1341,14 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">ഏറ്റവും നവീനമായ %s ലേക്ക് സ്വാഗതം</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">ഓൺലൈനിൽ കൂടുതൽ കാര്യങ്ങൾ ചെയ്യുന്നതിന് താങ്കളെ സഹായിക്കുന്നതിനു വേണ്ടിയുള്ള സവിശേഷതകളും മികച്ച പ്രവർത്തനക്ഷമതയുമുള്ള പൂർണ്ണമായും നവീകരിക്കപ്പെട്ട ഒരു ബ്രൗസർ കാത്തിരിക്കുന്നു.\n\n താങ്കളുടെ താഴെ പറയുന്ന ഉള്ളടക്കങ്ങളോട് കൂടി ഞങ്ങൾ %s പുതുക്കുന്നത് വരെ ദയവായി കാത്തിരിക്കൂ</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s പുതുക്കുന്നു…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">%s തുടങ്ങുക</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">സ്ഥലം മാറ്റം പൂർത്തിയായി</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">രഹസ്യവാക്കുകൾ</string>
 

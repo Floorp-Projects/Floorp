@@ -1297,7 +1297,7 @@
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
-    <string name="saved_logins_sort_strategy_last_used">Usados por último</string>
+    <string name="saved_logins_sort_strategy_last_used">Data de uso</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu de ordenação de contas</string>
 
