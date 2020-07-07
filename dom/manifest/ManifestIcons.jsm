@@ -4,21 +4,18 @@
 
 "use strict";
 
-const { PromiseMessage } = ChromeUtils.import(
-  "resource://gre/modules/PromiseMessage.jsm"
-);
-
 var ManifestIcons = {
   async browserFetchIcon(aBrowser, manifest, iconSize) {
     const msgKey = "DOM:WebManifest:fetchIcon";
-    const mm = aBrowser.messageManager;
-    const {
-      data: { success, result },
-    } = await PromiseMessage.send(mm, msgKey, { manifest, iconSize });
-    if (!success) {
-      throw result;
+
+    const actor = aBrowser.browsingContext.currentWindowGlobal.getActor(
+      "ManifestMessages"
+    );
+    const reply = await actor.sendQuery(msgKey, { manifest, iconSize });
+    if (!reply.success) {
+      throw reply.result;
     }
-    return result;
+    return reply.result;
   },
 
   async contentFetchIcon(aWindow, manifest, iconSize) {

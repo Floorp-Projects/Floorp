@@ -295,6 +295,13 @@ let JSWINDOWACTORS = {
     allFrames: true,
     messageManagerGroups: ["browsers", ""],
   },
+
+  ManifestMessages: {
+    child: {
+      moduleURI: "resource://gre/modules/ManifestMessagesChild.jsm",
+    },
+  },
+
   PictureInPicture: {
     parent: {
       moduleURI: "resource://gre/modules/PictureInPicture.jsm",
@@ -536,17 +543,6 @@ let JSWINDOWACTORS = {
  * sub-frames, it must use "allFrames".
  */
 let LEGACY_ACTORS = {
-  ManifestMessages: {
-    child: {
-      module: "resource://gre/modules/ManifestMessagesChild.jsm",
-      messages: [
-        "DOM:ManifestObtainer:Obtain",
-        "DOM:WebManifest:fetchIcon",
-        "DOM:WebManifest:hasManifestLink",
-      ],
-    },
-  },
-
   Printing: {
     child: {
       module: "resource://gre/actors/PrintingChild.jsm",
