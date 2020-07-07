@@ -292,9 +292,13 @@ void XRSession::WillRefresh(mozilla::TimeStamp aTime) {
 }
 
 void XRSession::StartFrame() {
+  if (mShutdown || mEnded) {
+    return;
+  }
   ApplyPendingRenderState();
 
-  if (mActiveRenderState->GetBaseLayer() == nullptr) {
+  XRWebGLLayer* baseLayer = mActiveRenderState->GetBaseLayer();
+  if (!baseLayer) {
     return;
   }
 
@@ -311,7 +315,7 @@ void XRSession::StartFrame() {
   RefPtr<XRFrame> frame = PooledFrame();
   frame->StartAnimationFrame();
 
-  mActiveRenderState->GetBaseLayer()->StartAnimationFrame();
+  baseLayer->StartAnimationFrame();
   nsTArray<XRFrameRequest> callbacks;
   callbacks.AppendElements(mFrameRequestCallbacks);
   mFrameRequestCallbacks.Clear();
@@ -319,7 +323,7 @@ void XRSession::StartFrame() {
     callback.Call(timeStamp, *frame);
   }
 
-  mActiveRenderState->GetBaseLayer()->EndAnimationFrame();
+  baseLayer->EndAnimationFrame();
   frame->EndAnimationFrame();
   if (mDisplayPresentation) {
     mDisplayPresentation->SubmitFrame();
