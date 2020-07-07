@@ -29,11 +29,7 @@ add_task(async function() {
   info("Deleting the name of that property to remove the property");
   await removeProperty(view, prop, false);
 
-  let newValue = await executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: "background-color",
-  });
+  let newValue = await getRulePropertyValue(0, 0, "background-color");
   is(newValue, "", "background-color should have been unset.");
 
   info("Getting the new first property in the rule");
@@ -50,11 +46,7 @@ add_task(async function() {
   view.styleDocument.activeElement.blur();
   await removeProperty(view, prop, false);
 
-  newValue = await executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: "color",
-  });
+  newValue = await getRulePropertyValue(0, 0, "color");
   is(newValue, "", "color should have been unset.");
 
   editor = inplaceEditor(view.styleDocument.activeElement);
