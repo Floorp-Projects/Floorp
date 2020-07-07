@@ -547,6 +547,10 @@ void HttpChannelChild::OnStartRequest(
                                       false);
   }
 
+  if (!aArgs.cookie().IsEmpty()) {
+    SetCookie(aArgs.cookie());
+  }
+
   if (aArgs.shouldWaitForOnStartRequestSent() &&
       !mRecvOnStartRequestSentCalled) {
     LOG(("  > pending DoOnStartRequest until RecvOnStartRequestSent\n"));
