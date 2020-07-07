@@ -472,6 +472,12 @@ bool HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo(
 
   return SendSetClassifierMatchedTrackingInfo(info);
 }
+
+nsISerialEventTarget* HttpBackgroundChannelParent::GetBackgroundTarget() {
+  MOZ_ASSERT(mBackgroundThread);
+  return mBackgroundThread.get();
+}
+
 void HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelParent::ActorDestroy [this=%p]\n", this));
   AssertIsInMainProcess();
