@@ -571,13 +571,15 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
   // We construct a range over the raw pointers here because this loop is
   // time-critical.
-  // XXX It might be good to encapsulate this in a some function to make it
-  // less error-prone and more expressive.
+  // XXX It might be good to encapsulate this in some function to make it less
+  // error-prone and more expressive.
   const auto inputRange = mozilla::detail::IteratorRange(
       aInput.Elements(), aInput.Elements() + aInput.Length());
 
+  bool anyMultibyte = false;
   for (const auto val : inputRange) {
     if (val > ONE_BYTE_LIMIT) {
+      anyMultibyte = true;
       size += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
       if (!size.isValid()) {
         IDB_REPORT_INTERNAL_ERR();
@@ -606,19 +608,33 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
   *(buffer++) = aType;
 
   // Encode string
-  for (const auto val : inputRange) {
-    if (val <= ONE_BYTE_LIMIT) {
-      *(buffer++) = val + ONE_BYTE_ADJUST;
-    } else if (char16_t(val) <= TWO_BYTE_LIMIT) {
-      char16_t c = char16_t(val) + TWO_BYTE_ADJUST + 0x8000;
-      *(buffer++) = (char)(c >> 8);
-      *(buffer++) = (char)(c & 0xFF);
-    } else {
-      uint32_t c = (uint32_t(val) << THREE_BYTE_SHIFT) | 0x00C00000;
-      *(buffer++) = (char)(c >> 16);
-      *(buffer++) = (char)(c >> 8);
-      *(buffer++) = (char)c;
+  if (anyMultibyte) {
+    for (const auto val : inputRange) {
+      if (val <= ONE_BYTE_LIMIT) {
+        *(buffer++) = val + ONE_BYTE_ADJUST;
+      } else if (char16_t(val) <= TWO_BYTE_LIMIT) {
+        char16_t c = char16_t(val) + TWO_BYTE_ADJUST + 0x8000;
+        *(buffer++) = (char)(c >> 8);
+        *(buffer++) = (char)(c & 0xFF);
+      } else {
+        uint32_t c = (uint32_t(val) << THREE_BYTE_SHIFT) | 0x00C00000;
+        *(buffer++) = (char)(c >> 16);
+        *(buffer++) = (char)(c >> 8);
+        *(buffer++) = (char)c;
+      }
     }
+  } else {
+    // Optimization for the case where there are no multibyte characters.
+    // This is ca. 13 resp. 5.8 times faster than the non-optimized version in
+    // an -O2 build: https://quick-bench.com/q/v1oBpLGifs-3w_pkZG8alVSWVAw, for
+    // the T==uint8_t resp. T==char16_t cases (for the char16_t case, copying
+    // and then adjusting could even be slightly faster, but then we would need
+    // another case distinction here)
+    const auto inputLen = std::distance(inputRange.cbegin(), inputRange.cend());
+    MOZ_ASSERT(inputLen == size);
+    std::transform(inputRange.cbegin(), inputRange.cend(), buffer,
+                   [](auto value) { return value + ONE_BYTE_ADJUST; });
+    buffer += inputLen;
   }
 
   // Write end marker
