@@ -1523,6 +1523,9 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (mOverrideReferrerInfo) {
     args.overrideReferrerInfo() = ToRefPtr(std::move(mOverrideReferrerInfo));
   }
+  if (!mCookie.IsEmpty()) {
+    args.cookie() = std::move(mCookie);
+  }
 
   nsHttpRequestHead* requestHead = chan->GetRequestHead();
   // !!! We need to lock headers and please don't forget to unlock them !!!
@@ -2684,6 +2687,13 @@ auto HttpChannelParent::AttachStreamFilter(
   return InvokeAsync(mBgParent->GetBackgroundTarget(), mBgParent.get(),
                      __func__, &HttpBackgroundChannelParent::AttachStreamFilter,
                      std::move(aParentEndpoint), std::move(aChildEndpoint));
+}
+
+void HttpChannelParent::SetCookie(nsCString&& aCookie) {
+  LOG(("HttpChannelParent::SetCookie [this=%p]", this));
+  MOZ_ASSERT(!mAfterOnStartRequestBegun);
+  MOZ_ASSERT(mCookie.IsEmpty());
+  mCookie = std::move(aCookie);
 }
 
 }  // namespace net
