@@ -201,7 +201,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "c233c1bfc293"
+        "revision": "e3d4ed9e8253"
     },
     "ca-valencia": {
         "platforms": [
@@ -796,7 +796,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "b794df58714b"
+        "revision": "4534a3580b41"
     },
     "is": {
         "platforms": [
@@ -1141,7 +1141,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4b17c4fd55e3"
+        "revision": "3422e511746a"
     },
     "oc": {
         "platforms": [
@@ -1413,7 +1413,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "92a804d3c851"
+        "revision": "7cd700d22c4a"
     },
     "te": {
         "platforms": [
