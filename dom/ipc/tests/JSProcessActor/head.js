@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Provide infrastructure for JSWindowActor tests.
+ * Provide infrastructure for JSProcessActor tests.
  */
 
 const URL = "about:blank";
@@ -33,15 +33,10 @@ function promiseNotification(aNotification) {
 }
 
 function declTest(name, cfg) {
-  let {
-    url = "about:blank",
-    includeParent = false,
-    remoteTypes,
-    fission,
-    test,
-  } = cfg;
+  let { url = "about:blank", includeParent = false, remoteTypes, test } = cfg;
 
-  // Build the actor options object which will be used to register & unregister our window actor.
+  // Build the actor options object which will be used to register & unregister
+  // our process actor.
   let actorOptions = {
     parent: Object.assign({}, processActorOptions.parent),
     child: Object.assign({}, processActorOptions.child),
@@ -55,26 +50,16 @@ function declTest(name, cfg) {
   add_task(async function() {
     info("Entering test: " + name);
 
-    // Create a fresh window with the correct settings, and register our actor.
-    let win = await BrowserTestUtils.openNewBrowserWindow({
-      remote: true,
-      fission,
-    });
+    // Register our actor, and load a new tab with the provided URL
     ChromeUtils.registerProcessActor("TestProcessActor", actorOptions);
-
-    // Wait for the provided URL to load in our browser
-    let browser = win.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(browser, url);
-    await BrowserTestUtils.browserLoaded(browser, false, url);
-
-    // Run the provided test
-    info("browser ready");
     try {
-      await Promise.resolve(test(browser, win));
+      await BrowserTestUtils.withNewTab(url, async browser => {
+        info("browser ready");
+        await Promise.resolve(test(browser, window));
+      });
     } finally {
-      // Clean up after we're done.
+      // Unregister the actor after the test is complete.
       ChromeUtils.unregisterProcessActor("TestProcessActor");
-      await BrowserTestUtils.closeWindow(win);
       info("Exiting test: " + name);
     }
   });
