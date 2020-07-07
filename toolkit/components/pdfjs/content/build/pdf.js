@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(17);
 
 var _svg = __w_pdfjs_require__(18);
 
-const pdfjsVersion = '2.6.47';
-const pdfjsBuild = 'a91f24cda';
+const pdfjsVersion = '2.6.87';
+const pdfjsBuild = 'fe3df495c';
 ;
 
 /***/ }),
@@ -1848,7 +1848,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.47',
+    apiVersion: '2.6.87',
     source: {
       data: source.data,
       url: source.url,
@@ -2096,7 +2096,7 @@ class PDFPageProxy {
     this.objs = new PDFObjects();
     this.cleanupAfterRender = false;
     this.pendingCleanup = false;
-    this.intentStates = Object.create(null);
+    this._intentStates = new Map();
     this.destroyed = false;
   }
 
@@ -2166,11 +2166,13 @@ class PDFPageProxy {
     const renderingIntent = intent === "print" ? "print" : "display";
     this.pendingCleanup = false;
 
-    if (!this.intentStates[renderingIntent]) {
-      this.intentStates[renderingIntent] = Object.create(null);
-    }
+    let intentState = this._intentStates.get(renderingIntent);
 
-    const intentState = this.intentStates[renderingIntent];
+    if (!intentState) {
+      intentState = Object.create(null);
+
+      this._intentStates.set(renderingIntent, intentState);
+    }
 
     if (intentState.streamReaderCancelTimeout) {
       clearTimeout(intentState.streamReaderCancelTimeout);
@@ -2287,15 +2289,18 @@ class PDFPageProxy {
 
     const renderingIntent = "oplist";
 
-    if (!this.intentStates[renderingIntent]) {
-      this.intentStates[renderingIntent] = Object.create(null);
+    let intentState = this._intentStates.get(renderingIntent);
+
+    if (!intentState) {
+      intentState = Object.create(null);
+
+      this._intentStates.set(renderingIntent, intentState);
     }
 
-    const intentState = this.intentStates[renderingIntent];
     let opListTask;
 
     if (!intentState.opListReadCapability) {
-      opListTask = {};
+      opListTask = Object.create(null);
       opListTask.operatorListChanged = operatorListChanged;
       intentState.opListReadCapability = (0, _util.createPromiseCapability)();
       intentState.renderTasks = [];
@@ -2370,9 +2375,8 @@ class PDFPageProxy {
     this.destroyed = true;
     this._transport.pageCache[this._pageIndex] = null;
     const waitOn = [];
-    Object.keys(this.intentStates).forEach(intent => {
-      const intentState = this.intentStates[intent];
 
+    for (const [intent, intentState] of this._intentStates) {
       this._abortOperatorList({
         intentState,
         reason: new Error("Page was destroyed."),
@@ -2380,15 +2384,15 @@ class PDFPageProxy {
       });
 
       if (intent === "oplist") {
-        return;
+        continue;
       }
 
-      intentState.renderTasks.forEach(function (renderTask) {
-        const renderCompleted = renderTask.capability.promise.catch(function () {});
-        waitOn.push(renderCompleted);
-        renderTask.cancel();
-      });
-    });
+      for (const internalRenderTask of intentState.renderTasks) {
+        waitOn.push(internalRenderTask.completed);
+        internalRenderTask.cancel();
+      }
+    }
+
     this.objs.clear();
     this.annotationsPromise = null;
     this.pendingCleanup = false;
@@ -2401,16 +2405,21 @@ class PDFPageProxy {
   }
 
   _tryCleanup(resetStats = false) {
-    if (!this.pendingCleanup || Object.keys(this.intentStates).some(intent => {
-      const intentState = this.intentStates[intent];
-      return intentState.renderTasks.length !== 0 || !intentState.operatorList.lastChunk;
-    })) {
+    if (!this.pendingCleanup) {
       return false;
     }
 
-    Object.keys(this.intentStates).forEach(intent => {
-      delete this.intentStates[intent];
-    });
+    for (const {
+      renderTasks,
+      operatorList
+    } of this._intentStates.values()) {
+      if (renderTasks.length !== 0 || !operatorList.lastChunk) {
+        return false;
+      }
+    }
+
+    this._intentStates.clear();
+
     this.objs.clear();
     this.annotationsPromise = null;
 
@@ -2423,7 +2432,7 @@ class PDFPageProxy {
   }
 
   _startRenderPage(transparency, intent) {
-    const intentState = this.intentStates[intent];
+    const intentState = this._intentStates.get(intent);
 
     if (!intentState) {
       return;
@@ -2461,7 +2470,9 @@ class PDFPageProxy {
     const readableStream = this._transport.messageHandler.sendWithStream("GetOperatorList", args);
 
     const reader = readableStream.getReader();
-    const intentState = this.intentStates[args.intent];
+
+    const intentState = this._intentStates.get(args.intent);
+
     intentState.streamReader = reader;
 
     const pump = () => {
@@ -2548,14 +2559,14 @@ class PDFPageProxy {
       return;
     }
 
-    Object.keys(this.intentStates).some(intent => {
-      if (this.intentStates[intent] === intentState) {
-        delete this.intentStates[intent];
-        return true;
-      }
+    for (const [intent, curIntentState] of this._intentStates) {
+      if (curIntentState === intentState) {
+        this._intentStates.delete(intent);
 
-      return false;
-    });
+        break;
+      }
+    }
+
     this.cleanup();
   }
 
@@ -3565,6 +3576,10 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
       this._canvas = params.canvasContext.canvas;
     }
 
+    get completed() {
+      return this.capability.promise.catch(function () {});
+    }
+
     initializeGraphics(transparency = false) {
       if (this.cancelled) {
         return;
@@ -3692,9 +3707,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.47';
+const version = '2.6.87';
 exports.version = version;
-const build = 'a91f24cda';
+const build = 'fe3df495c';
 exports.build = build;
 
 /***/ }),
@@ -4958,22 +4973,22 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
             var width = args[j++];
             var height = args[j++];
 
-            if (width === 0) {
+            if (width === 0 && ctx.lineWidth < this.getSinglePixelWidth()) {
               width = this.getSinglePixelWidth();
             }
 
-            if (height === 0) {
+            if (height === 0 && ctx.lineWidth < this.getSinglePixelWidth()) {
               height = this.getSinglePixelWidth();
             }
 
             var xw = x + width;
             var yh = y + height;
-            this.ctx.moveTo(x, y);
-            this.ctx.lineTo(xw, y);
-            this.ctx.lineTo(xw, yh);
-            this.ctx.lineTo(x, yh);
-            this.ctx.lineTo(x, y);
-            this.ctx.closePath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(xw, y);
+            ctx.lineTo(xw, yh);
+            ctx.lineTo(x, yh);
+            ctx.lineTo(x, y);
+            ctx.closePath();
             break;
 
           case _util.OPS.moveTo:
@@ -5782,7 +5797,8 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       maskCtx.restore();
       this.paintInlineImageXObject(maskCanvas.canvas);
     },
-    paintImageMaskXObjectRepeat: function CanvasGraphics_paintImageMaskXObjectRepeat(imgData, scaleX, scaleY, positions) {
+
+    paintImageMaskXObjectRepeat(imgData, scaleX, skewX = 0, skewY = 0, scaleY, positions) {
       var width = imgData.width;
       var height = imgData.height;
       var fillColor = this.current.fillColor;
@@ -5799,12 +5815,13 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
 
       for (var i = 0, ii = positions.length; i < ii; i += 2) {
         ctx.save();
-        ctx.transform(scaleX, 0, 0, scaleY, positions[i], positions[i + 1]);
+        ctx.transform(scaleX, skewX, skewY, scaleY, positions[i], positions[i + 1]);
         ctx.scale(1, -1);
         ctx.drawImage(maskCanvas.canvas, 0, 0, width, height, 0, -1, 1, 1);
         ctx.restore();
       }
     },
+
     paintImageMaskXObjectGroup: function CanvasGraphics_paintImageMaskXObjectGroup(images) {
       var ctx = this.ctx;
       var fillColor = this.current.fillColor;
