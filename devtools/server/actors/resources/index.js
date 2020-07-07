@@ -42,7 +42,7 @@ for (const resource of Object.values(Resources)) {
  * @param TargetActor targetActor
  *        The related target actor, it:
  *          - defines what context to observe (browsing context, process, worker, ...)
- *          - exposes `onResourceAvailable` method to be notified about the available resources
+ *          - exposes `notifyResourceAvailable` method to be notified about the available resources
  * @param Array<String> resourceTypes
  *        List of all type of resource to listen to.
  */
@@ -60,7 +60,7 @@ function watchTargetResources(targetActor, resourceTypes) {
     }
 
     const watcher = new WatcherClass(targetActor, {
-      onAvailable: targetActor.onResourceAvailable,
+      onAvailable: targetActor.notifyResourceAvailable,
     });
     watchers.set(targetActor, watcher);
   }
