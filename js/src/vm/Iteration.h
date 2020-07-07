@@ -460,6 +460,29 @@ class WrapForValidIteratorObject : public NativeObject {
 
 WrapForValidIteratorObject* NewWrapForValidIterator(JSContext* cx);
 
+/*
+ * Generator-esque object returned by Iterator Helper methods.
+ */
+class IteratorHelperObject : public NativeObject {
+ public:
+  static const JSClass class_;
+
+  enum {
+    // The implementation (an instance of one of the generators in
+    // builtin/Iterator.js).
+    // Never null.
+    GeneratorSlot,
+
+    SlotCount,
+  };
+
+  static_assert(GeneratorSlot == ITERATOR_HELPER_GENERATOR_SLOT,
+                "GeneratorSlot must match self-hosting define for generator "
+                "object slot.");
+};
+
+IteratorHelperObject* NewIteratorHelper(JSContext* cx);
+
 } /* namespace js */
 
 #endif /* vm_Iteration_h */
