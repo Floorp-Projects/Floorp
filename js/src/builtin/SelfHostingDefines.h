@@ -143,4 +143,6 @@
 
 #define ITERATED_SLOT 0
 
+#define ITERATOR_HELPER_GENERATOR_SLOT 0
+
 #endif

@@ -1514,6 +1514,12 @@ static const JSFunctionSpec iterator_static_methods[] = {
 // These methods are only attached to Iterator.prototype when the
 // Iterator Helpers feature is enabled.
 static const JSFunctionSpec iterator_methods_with_helpers[] = {
+    JS_SELF_HOSTED_FN("map", "IteratorMap", 1, 0),
+    JS_SELF_HOSTED_FN("filter", "IteratorFilter", 1, 0),
+    JS_SELF_HOSTED_FN("take", "IteratorTake", 1, 0),
+    JS_SELF_HOSTED_FN("drop", "IteratorDrop", 1, 0),
+    JS_SELF_HOSTED_FN("asIndexedPairs", "IteratorAsIndexedPairs", 0, 0),
+    JS_SELF_HOSTED_FN("flatMap", "IteratorFlatMap", 1, 0),
     JS_SELF_HOSTED_FN("reduce", "IteratorReduce", 1, 0),
     JS_SELF_HOSTED_FN("toArray", "IteratorToArray", 0, 0),
     JS_SELF_HOSTED_FN("forEach", "IteratorForEach", 1, 0),
@@ -1699,4 +1705,36 @@ WrapForValidIteratorObject* js::NewWrapForValidIterator(JSContext* cx) {
     return nullptr;
   }
   return NewObjectWithGivenProto<WrapForValidIteratorObject>(cx, proto);
+}
+
+// Common iterator object returned by Iterator Helper methods.
+static const JSFunctionSpec iterator_helper_methods[] = {
+    JS_SELF_HOSTED_FN("next", "IteratorHelperNext", 1, 0),
+    JS_SELF_HOSTED_FN("return", "IteratorHelperReturn", 1, 0),
+    JS_SELF_HOSTED_FN("throw", "IteratorHelperThrow", 1, 0), JS_FS_END};
+
+static const JSClass IteratorHelperPrototypeClass = {"Iterator Helper", 0};
+
+const JSClass IteratorHelperObject::class_ = {
+    "Iterator Helper",
+    JSCLASS_HAS_RESERVED_SLOTS(IteratorHelperObject::SlotCount),
+};
+
+/* static */
+NativeObject* GlobalObject::getOrCreateIteratorHelperPrototype(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  return MaybeNativeObject(
+      getOrCreateObject(cx, global, ITERATOR_HELPER_PROTO, HandleAtom(nullptr),
+                        initObjectIteratorProto<ITERATOR_HELPER_PROTO,
+                                                &IteratorHelperPrototypeClass,
+                                                iterator_helper_methods>));
+}
+
+IteratorHelperObject* js::NewIteratorHelper(JSContext* cx) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateIteratorHelperPrototype(cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+  return NewObjectWithGivenProto<IteratorHelperObject>(cx, proto);
 }

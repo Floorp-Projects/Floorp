@@ -112,6 +112,7 @@ class GlobalObject : public NativeObject {
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
     WRAP_FOR_VALID_ITERATOR_PROTO,
+    ITERATOR_HELPER_PROTO,
     MODULE_PROTO,
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
@@ -731,6 +732,9 @@ class GlobalObject : public NativeObject {
   }
 
   static NativeObject* getOrCreateWrapForValidIteratorPrototype(
+      JSContext* cx, Handle<GlobalObject*> global);
+
+  static NativeObject* getOrCreateIteratorHelperPrototype(
       JSContext* cx, Handle<GlobalObject*> global);
 
   static NativeObject* getIntrinsicsHolder(JSContext* cx,
