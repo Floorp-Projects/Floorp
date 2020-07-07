@@ -725,6 +725,28 @@ class MOZ_STACK_CLASS WSRunScanner {
     bool EndsByBRElement() const { return mEnd.IsBRElement(); }
     bool EndsByBlockBoundary() const { return mEnd.IsBlockBoundary(); }
 
+    /**
+     * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
+     * of the line and first visible point or end of the hard line.  When
+     * this returns non-positioned range or positioned but collapsed range,
+     * there is no invisible leading white-spaces.
+     * Note that if there are only invisible white-spaces in a hard line,
+     * this returns all of the white-spaces.
+     */
+    template <typename EditorDOMRangeType>
+    EditorDOMRangeType GetInvisibleLeadingWhiteSpaceRange() const;
+
+    /**
+     * GetInvisibleTrailingWhiteSpaceRange() returns two DOM points,
+     * first invisible white-space and end of the hard line.  When this
+     * returns non-positioned range or positioned but collapsed range,
+     * there is no invisible trailing white-spaces.
+     * Note that if there are only invisible white-spaces in a hard line,
+     * this returns all of the white-spaces.
+     */
+    template <typename EditorDOMRangeType>
+    EditorDOMRangeType GetInvisibleTrailingWhiteSpaceRange() const;
+
    private:
     BoundaryData mStart;
     BoundaryData mEnd;
