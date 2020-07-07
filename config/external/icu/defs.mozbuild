@@ -24,6 +24,9 @@ DEFINES['U_CHARSET_IS_UTF8'] = True
 DEFINES['UNISTR_FROM_CHAR_EXPLICIT'] = "explicit"
 DEFINES['UNISTR_FROM_STRING_EXPLICIT'] = "explicit"
 
+# Disable dynamic loading of ICU data as a loadable library.
+DEFINES['U_ENABLE_DYLOAD'] = 0
+
 if not CONFIG['HAVE_LANGINFO_CODESET']:
     DEFINES['U_HAVE_NL_LANGINFO_CODESET'] = 0
 
