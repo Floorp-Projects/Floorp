@@ -142,6 +142,24 @@ static bool EnvVarAsInt(const char* name, int* valueOut) {
 }
 #endif
 
+static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject info(cx, JS_NewPlainObject(cx));
+  if (!info) {
+    return false;
+  }
+
+  bool privateFields =
+      cx->realm()->creationOptions().getPrivateClassFieldsEnabled();
+  if (!JS_SetProperty(cx, info, "privateFields",
+                      privateFields ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+
+  args.rval().setObject(*info);
+  return true;
+}
+
 static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject info(cx, JS_NewPlainObject(cx));
@@ -6008,6 +6026,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "getBuildConfiguration()",
 "  Return an object describing some of the configuration options SpiderMonkey\n"
 "  was built with."),
+
+    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 0, 0,
+"getRealmConfiguration()",
+"  Return an object describing some of the runtime options SpiderMonkey\n"
+"  is running with."),
 
     JS_FN_HELP("isLcovEnabled", ::IsLCovEnabled, 0, 0,
 "isLcovEnabled()",
