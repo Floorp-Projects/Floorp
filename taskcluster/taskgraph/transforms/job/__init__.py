@@ -67,7 +67,7 @@ job_description_schema = Schema({
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('always-target'): task_description_schema['always-target'],
     Exclusive('optimization', 'optimization'): task_description_schema['optimization'],
-    Optional('needs-sccache'): task_description_schema['needs-sccache'],
+    Optional('use-sccache'): task_description_schema['use-sccache'],
     Optional('release-artifacts'): task_description_schema['release-artifacts'],
     Optional('priority'): task_description_schema['priority'],
 
@@ -230,7 +230,7 @@ def use_fetches(config, jobs):
                     })
 
                     if kind == 'toolchain' and fetch_name.endswith('-sccache'):
-                        job['needs-sccache'] = True
+                        job['use-sccache'] = True
             else:
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
