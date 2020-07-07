@@ -665,7 +665,6 @@ nsresult LoadInfoArgsToLoadInfo(
 
   nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
   nsTArray<uint64_t> ancestorBrowsingContextIDs;
-  nsTArray<uint64_t> ancestorOuterWindowIDs;
   if (XRE_IsParentProcess() &&
       (nsContentUtils::InternalContentPolicyTypeToExternal(
            loadInfoArgs.contentPolicyType()) !=
@@ -676,8 +675,7 @@ nsresult LoadInfoArgsToLoadInfo(
         BrowsingContext::Get(loadInfoArgs.browsingContextID());
     if (parentBC) {
       LoadInfo::ComputeAncestors(parentBC->Canonical(), ancestorPrincipals,
-                                 ancestorBrowsingContextIDs,
-                                 ancestorOuterWindowIDs);
+                                 ancestorBrowsingContextIDs);
     }
   }
 
@@ -759,7 +757,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.isFormSubmission(), loadInfoArgs.sendCSPViolationEvents(),
       loadInfoArgs.originAttributes(), redirectChainIncludingInternalRedirects,
       redirectChain, std::move(ancestorPrincipals), ancestorBrowsingContextIDs,
-      ancestorOuterWindowIDs, loadInfoArgs.corsUnsafeHeaders(),
+      loadInfoArgs.corsUnsafeHeaders(),
       loadInfoArgs.forcePreflight(), loadInfoArgs.isPreflight(),
       loadInfoArgs.loadTriggeredFromExternal(),
       loadInfoArgs.serviceWorkerTaintingSynthesized(),

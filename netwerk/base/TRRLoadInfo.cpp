@@ -421,10 +421,6 @@ const nsTArray<uint64_t>& TRRLoadInfo::AncestorBrowsingContextIDs() {
   return mEmptyBrowsingContextIDs;
 }
 
-const nsTArray<uint64_t>& TRRLoadInfo::AncestorOuterWindowIDs() {
-  return mEmptyBrowsingContextIDs;
-}
-
 void TRRLoadInfo::SetCorsPreflightInfo(const nsTArray<nsCString>& aHeaders,
                                        bool aForcePreflight) {}
 
