@@ -38,14 +38,17 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(JSActor)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSActor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWrappedJS)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingQueries)
+  tmp->mPendingQueries.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSActor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWrappedJS)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingQueries)
+  for (auto& query : tmp->mPendingQueries) {
+    CycleCollectionNoteChild(cb, query.GetData().mPromise.get(),
+                             "Pending Query Promise");
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSActor)
@@ -67,11 +70,13 @@ void JSActor::AfterDestroy() {
 
   // Take our queries out, in case somehow rejecting promises can trigger
   // additions or removals.
-  nsRefPtrHashtable<nsUint64HashKey, Promise> pendingQueries;
+  nsDataHashtable<nsUint64HashKey, PendingQuery> pendingQueries;
   mPendingQueries.SwapElements(pendingQueries);
   for (auto& entry : pendingQueries) {
-    entry.GetData()->MaybeRejectWithAbortError(nsPrintfCString(
-        "Actor '%s' destroyed before query was resolved", mName.get()));
+    nsPrintfCString message(
+        "Actor '%s' destroyed before query '%s' was resolved", mName.get(),
+        NS_LossyConvertUTF16toASCII(entry.GetData().mMessageName).get());
+    entry.GetData().mPromise->MaybeRejectWithAbortError(message);
   }
 
   InvokeCallback(CallbackFunction::DidDestroy);
@@ -237,7 +242,8 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
   meta.queryId() = mNextQueryId++;
   meta.kind() = JSActorMessageKind::Query;
 
-  mPendingQueries.Put(meta.queryId(), RefPtr{promise});
+  mPendingQueries.Put(meta.queryId(),
+                      PendingQuery{promise, meta.messageName()});
 
   SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
   return promise.forget();
@@ -304,13 +310,13 @@ void JSActor::ReceiveQueryReply(JSContext* aCx,
     return;
   }
 
-  RefPtr<Promise> promise;
-  if (NS_WARN_IF(!mPendingQueries.Remove(aMetadata.queryId(),
-                                         getter_AddRefs(promise)))) {
+  Maybe<PendingQuery> query = mPendingQueries.GetAndRemove(aMetadata.queryId());
+  if (NS_WARN_IF(!query)) {
     aRv.ThrowUnknownError("Received reply for non-pending query");
     return;
   }
 
+  Promise* promise = query->mPromise;
   JSAutoRealm ar(aCx, promise->PromiseObj());
   JS::RootedValue data(aCx, aData);
   if (NS_WARN_IF(!JS_WrapValue(aCx, &data))) {
