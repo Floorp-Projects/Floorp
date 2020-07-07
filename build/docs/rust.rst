@@ -14,12 +14,18 @@ Linking Rust crates into libxul
 Rust crates that you want to link into libxul should be listed in the
 ``dependencies`` section of
 `toolkit/library/rust/shared/Cargo.toml <https://searchfox.org/mozilla-central/source/toolkit/library/rust/shared/Cargo.toml>`_.
-After adding your crate, execute ``cargo update -p gkrust-shared``
-to update the ``Cargo.lock`` file. You'll also need to add an ``extern crate``
-reference to
+You must also add an ``extern crate`` reference to
 `toolkit/library/rust/shared/lib.rs <https://searchfox.org/mozilla-central/source/toolkit/library/rust/shared/lib.rs>`_.
 This ensures that the Rust code will be linked properly into libxul as well
-as the copy of libxul used for gtests.
+as the copy of libxul used for gtests. (Even though Rust 2018 mostly doesn't
+require ``extern crate`` declarations, these ones are necessary because the
+gkrust setup is non-typical.)
+
+After adding your crate, execute ``cargo update -p gkrust-shared`` to update
+the ``Cargo.lock`` file. You will also need to do this any time you change the
+dependencies in a ``Cargo.toml`` file. If you don't, you will get a build error
+saying **"error: the lock file /home/njn/moz/mc3/Cargo.lock needs to be updated
+but --frozen was passed to prevent this"**.
 
 By default, all Cargo packages in the mozilla-central repository are part of
 the same
@@ -62,6 +68,13 @@ that defines the binary as you would with any other library in the tree.
     will have to add a ``RustLibrary`` to link to any standalone binaries that
     link the intermediate library, and also add the Rust crate to the libxul
     dependencies as in `linking Rust Crates into libxul`_.
+
+Conditional compilation
+========================
+
+Edit `tool/library/rust/gkrust-features.mozbuild
+<https://searchfox.org/mozilla-central/source/toolkit/library/rust/gkrust-features.mozbuild>`_
+to expose build flags as Cargo features.
 
 Standalone Rust programs
 ========================
@@ -123,6 +136,10 @@ into mozilla-central, keep the following in mind.
   bloat mozilla-central. Consider working with upstream to mark those test
   fixtures with ``[package] exclude = ...`` as described
   `here <https://doc.rust-lang.org/cargo/reference/manifest.html#the-exclude-and-include-fields>`_.
+- If you specify a dependency on a branch, pin it to a specific revision,
+  otherwise other people will get unexpected changes when they run ``./mach
+  vendor rust`` any time the branch gets updated. See `bug 1612619
+  <https://bugzil.la/1612619>`_ for a case where such a problem was fixed.
 - Other than that, there is no formal sign-off procedure, but one may be added
   in the future.
 
