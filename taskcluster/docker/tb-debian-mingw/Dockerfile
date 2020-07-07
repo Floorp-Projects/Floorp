@@ -1,4 +1,3 @@
-# %ARG DOCKER_IMAGE_PARENT
 FROM $DOCKER_IMAGE_PARENT
 MAINTAINER Rob Lemley <rob@thunderbird.net>
 # Used by Thunderbird to build third party libraries for OTR messaging.
