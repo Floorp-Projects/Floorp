@@ -208,43 +208,13 @@ class MachCommands(MachCommandBase):
             sys.exit(1)
 
     @SubCommand('taskgraph', 'cron',
-                description="Run the cron task")
-    @CommandArgument('--base-repository',
-                     required=False,
-                     help='(ignored)')
-    @CommandArgument('--head-repository',
-                     required=True,
-                     help='URL for "head" repository to fetch')
-    @CommandArgument('--head-ref',
-                     required=False,
-                     help='(ignored)')
-    @CommandArgument('--project',
-                     required=True,
-                     help='Project to use for creating tasks. Example: --project=mozilla-central')
-    @CommandArgument('--level',
-                     required=True,
-                     help='SCM level of this repository')
-    @CommandArgument('--force-run',
-                     required=False,
-                     help='If given, force this cronjob to run regardless of time, '
-                     'and run no others')
-    @CommandArgument('--no-create',
-                     required=False,
-                     action='store_true',
-                     help='Do not actually create tasks')
-    @CommandArgument('--root', '-r',
-                     required=False,
-                     help="root of the repository to get cron task definitions from")
+                description="Provide a pointer to the new `.cron.yml` handler.")
     def taskgraph_cron(self, **options):
-        """Run the cron task; this task creates zero or more decision tasks.  It is run
-        from the hooks service on a regular basis."""
-        import taskgraph.cron
-        try:
-            self.setup_logging()
-            return taskgraph.cron.taskgraph_cron(options)
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
+        print(
+            'Handling of ".cron.yml" files has move to '
+            "https://hg.mozilla.org/ci/ci-admin/file/tip/build-decision."
+        )
+        sys.exit(1)
 
     @SubCommand('taskgraph', 'action-callback',
                 description='Run action callback used by action tasks')
