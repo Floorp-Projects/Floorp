@@ -29,6 +29,13 @@ job-defaults:
         actions: [get-secrets, build]
         script: mozharness/scripts/fx_desktop_build.py
         secrets: true
+    use-sccache:
+        by-release-level:
+            production: false
+            staging: true
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 jobs:
     linux-shippable/opt:
