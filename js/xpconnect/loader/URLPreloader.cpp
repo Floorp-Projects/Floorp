@@ -322,7 +322,7 @@ void URLPreloader::BackgroundReadFiles() {
     mReaderThread = nullptr;
   });
 
-  Vector<nsZipCursor> cursors;
+  Vector<CacheAwareZipCursor> cursors;
   LinkedList<URLEntry> pendingURLs;
   {
     MonitorAutoLock mal(mMonitor);
@@ -352,14 +352,14 @@ void URLPreloader::BackgroundReadFiles() {
         continue;
       }
 
-      RefPtr<nsZipArchive> zip = entry->Archive();
+      RefPtr<CacheAwareZipReader> zip = entry->Archive();
       if (!zip) {
         MOZ_CRASH_UNSAFE_PRINTF(
             "Failed to get Omnijar %s archive for entry (path: \"%s\")",
             entry->TypeString(), entry->mPath.get());
       }
 
-      auto item = zip->GetItem(entry->mPath.get());
+      auto* item = zip->GetItem(entry->mPath.get());
       if (!item) {
         entry->mResultCode = NS_ERROR_FILE_NOT_FOUND;
         continue;
@@ -495,25 +495,25 @@ Result<const nsCString, nsresult> URLPreloader::ReadURIInternal(
 }
 
 /* static */ Result<const nsCString, nsresult> URLPreloader::ReadZip(
-    nsZipArchive* zip, const nsACString& path, ReadType readType) {
+    CacheAwareZipReader* archive, const nsACString& path, ReadType readType) {
   // If the zip archive belongs to an Omnijar location, map it to a cache
   // entry, and cache it as normal. Otherwise, simply read the entry
   // synchronously, since other JAR archives are currently unsupported by the
   // cache.
-  RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::GRE);
-  if (zip == reader) {
+  RefPtr<CacheAwareZipReader> reader = Omnijar::GetReader(Omnijar::GRE);
+  if (reader == archive) {
     CacheKey key(CacheKey::TypeGREJar, path);
     return Read(key, readType);
   }
 
   reader = Omnijar::GetReader(Omnijar::APP);
-  if (zip == reader) {
+  if (reader == archive) {
     CacheKey key(CacheKey::TypeAppJar, path);
     return Read(key, readType);
   }
 
   // Not an Omnijar archive, so just read it directly.
-  FileLocation location(zip, PromiseFlatCString(path).BeginReading());
+  FileLocation location(archive, PromiseFlatCString(path).BeginReading());
   return URLEntry::ReadLocation(location);
 }
 
@@ -581,7 +581,7 @@ Result<FileLocation, nsresult> URLPreloader::CacheKey::ToFileLocation() {
     return FileLocation(file);
   }
 
-  RefPtr<nsZipArchive> zip = Archive();
+  RefPtr<CacheAwareZipReader> zip = Archive();
   return FileLocation(zip, mPath.get());
 }
 
