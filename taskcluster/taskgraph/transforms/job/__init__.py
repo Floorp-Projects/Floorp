@@ -67,7 +67,7 @@ job_description_schema = Schema({
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('always-target'): task_description_schema['always-target'],
     Exclusive('optimization', 'optimization'): task_description_schema['optimization'],
-    Optional('use-sccache'): task_description_schema['use-sccache'],
+    Optional('needs-sccache'): task_description_schema['needs-sccache'],
     Optional('release-artifacts'): task_description_schema['release-artifacts'],
     Optional('priority'): task_description_schema['priority'],
 
@@ -211,7 +211,6 @@ def use_fetches(config, jobs):
         dependencies = job.setdefault('dependencies', {})
         worker = job.setdefault('worker', {})
         prefix = get_artifact_prefix(job)
-        has_sccache = False
         for kind, artifacts in fetches.items():
             if kind in ('fetch', 'toolchain'):
                 for fetch_name in artifacts:
@@ -231,7 +230,7 @@ def use_fetches(config, jobs):
                     })
 
                     if kind == 'toolchain' and fetch_name.endswith('-sccache'):
-                        has_sccache = True
+                        job['needs-sccache'] = True
             else:
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
@@ -279,9 +278,6 @@ def use_fetches(config, jobs):
                     if dest is not None:
                         fetch['dest'] = dest
                     job_fetches.append(fetch)
-
-        if job.get('use-sccache') and not has_sccache:
-            raise Exception("Must provide an sccache toolchain if using sccache.")
 
         job_artifact_prefixes = {
             mozpath.dirname(fetch["artifact"])
