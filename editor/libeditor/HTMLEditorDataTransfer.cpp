@@ -220,6 +220,17 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
   EditorDOMPoint GetNewCaretPointAfterInsertingHTML(
       const EditorDOMPoint& aLastInsertedPoint) const;
 
+  /**
+   * @param aContextStr as indicated by nsITransferable's kHTMLContext.
+   * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
+   */
+  nsresult CreateDOMFragmentFromPaste(
+      const nsAString& aInputString, const nsAString& aContextStr,
+      const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
+      nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
+      int32_t* aOutStartOffset, int32_t* aOutEndOffset,
+      bool aTrustedInput) const;
+
   HTMLEditor& mHTMLEditor;
 };
 
@@ -346,12 +357,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   nsCOMPtr<nsINode> fragmentAsNode, streamStartParent, streamEndParent;
   int32_t streamStartOffset = 0, streamEndOffset = 0;
 
-  nsresult rv = mHTMLEditor.CreateDOMFragmentFromPaste(
+  nsresult rv = CreateDOMFragmentFromPaste(
       aInputString, aContextStr, aInfoStr, address_of(fragmentAsNode),
       address_of(streamStartParent), address_of(streamEndParent),
       &streamStartOffset, &streamEndOffset, aTrustedInput);
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::CreateDOMFragmentFromPaste() failed");
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste() "
+        "failed");
     return rv;
   }
 
@@ -2968,18 +2981,19 @@ bool FindTargetNode(nsINode& aStart, nsCOMPtr<nsINode>& aResult) {
   return false;
 }
 
-nsresult HTMLEditor::CreateDOMFragmentFromPaste(
+nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
     nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-    int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput) const {
+    int32_t* aOutStartOffset, int32_t* aOutEndOffset,
+    bool aTrustedInput) const {
   if (NS_WARN_IF(!aOutFragNode) || NS_WARN_IF(!aOutStartNode) ||
       NS_WARN_IF(!aOutEndNode) || NS_WARN_IF(!aOutStartOffset) ||
       NS_WARN_IF(!aOutEndOffset)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<Document> document = GetDocument();
+  RefPtr<Document> document = mHTMLEditor.GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_FAILURE;
   }
