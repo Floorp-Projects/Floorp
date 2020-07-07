@@ -1,8 +1,22 @@
 // |reftest| skip-if(!xulRuntime.shell)
 
-// Private names can't appear in classes (yet)
+// Are private fields enabled?
+let privateFields = false;
+try {
+  Function('class C { #x; }');
+  privateFields = true;
+} catch (exc) {
+  assertEq(exc instanceof SyntaxError, true);
+}
 
-assertThrowsInstanceOf(() => eval(`class A { #x }`), SyntaxError);
-assertThrowsInstanceOf(() => eval(`class A { #x=10 }`), SyntaxError);
+if (!privateFields) {
+  assertThrowsInstanceOf(() => eval(`class A { #x }`), SyntaxError);
+  assertThrowsInstanceOf(() => eval(`class A { #x=10 }`), SyntaxError);
+}
+
+// No computed private fields
+assertThrowsInstanceOf(
+    () => eval(`var x = "foo"; class A { #[x] = 20; }`), SyntaxError);
+
 
 if (typeof reportCompare === 'function') reportCompare(0, 0);

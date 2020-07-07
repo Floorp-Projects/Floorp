@@ -151,6 +151,10 @@ class FullParseHandler {
     return new_<NameNode>(ParseNodeKind::ObjectPropertyName, atom, pos);
   }
 
+  NameNodeType newPrivateName(JSAtom* atom, const TokenPos& pos) {
+    return new_<NameNode>(ParseNodeKind::PrivateName, atom, pos);
+  }
+
   NumericLiteralType newNumber(double value, DecimalPoint decimalPoint,
                                const TokenPos& pos) {
     return new_<NumericLiteral>(value, decimalPoint, pos);
@@ -919,7 +923,8 @@ class FullParseHandler {
            node->isKind(ParseNodeKind::BigIntExpr) ||
            node->isKind(ParseNodeKind::ObjectPropertyName) ||
            node->isKind(ParseNodeKind::StringExpr) ||
-           node->isKind(ParseNodeKind::ComputedName);
+           node->isKind(ParseNodeKind::ComputedName) ||
+           node->isKind(ParseNodeKind::PrivateName);
   }
 
   AssignmentNodeType finishInitializerAssignment(NameNodeType nameNode,
@@ -1026,6 +1031,10 @@ class FullParseHandler {
     return node->isKind(ParseNodeKind::Name) &&
            node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
            node->as<NameNode>().atom() == cx->names().async;
+  }
+
+  bool isPrivateName(Node node) {
+    return node->isKind(ParseNodeKind::PrivateName);
   }
 
   PropertyName* maybeDottedProperty(Node pn) {

@@ -7111,6 +7111,19 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       return false;
     }
 
+    if (handler_.isPrivateName(propName)) {
+      if (hasHeritage == HasHeritage::Yes) {
+        // TODO: Private names in derived classes aren't yet implemented.
+        errorAt(propNameOffset, JSMSG_ILLEGAL_PRIVATE_FIELD);
+        return false;
+      }
+
+      if (propAtom == cx_->names().hashConstructor) {
+        errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
+        return false;
+      }
+    }
+
     if (!abortIfSyntaxParser()) {
       return false;
     }
@@ -7145,6 +7158,13 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       propType != PropertyType::GeneratorMethod &&
       propType != PropertyType::AsyncMethod &&
       propType != PropertyType::AsyncGeneratorMethod) {
+    errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
+    return false;
+  }
+
+  if (handler_.isPrivateName(propName)) {
+    // Private methods aren't yet implemented.
+    // TODO: Adjust error message to mention private methods.
     errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
     return false;
   }
@@ -10290,6 +10310,16 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       return computedPropertyName(yieldHandling, maybeDecl, propertyNameContext,
                                   propList);
 
+    case TokenKind::PrivateName: {
+      if (propertyNameContext != PropertyNameContext::PropertyNameInClass) {
+        error(JSMSG_ILLEGAL_PRIVATE_FIELD);
+        return null();
+      }
+
+      propAtom.set(anyChars.currentName());
+      return handler_.newPrivateName(propAtom, pos());
+    }
+
     default: {
       if (!TokenKindIsPossibleIdentifierName(ltok)) {
         error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(ltok));
@@ -10306,7 +10336,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
 static bool TokenKindCanStartPropertyName(TokenKind tt) {
   return TokenKindIsPossibleIdentifierName(tt) || tt == TokenKind::String ||
          tt == TokenKind::Number || tt == TokenKind::LeftBracket ||
-         tt == TokenKind::Mul || tt == TokenKind::BigInt;
+         tt == TokenKind::Mul || tt == TokenKind::BigInt ||
+         tt == TokenKind::PrivateName;
 }
 
 template <class ParseHandler, typename Unit>
