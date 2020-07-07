@@ -6893,7 +6893,7 @@ function handleLinkClick(event, href, linkNode) {
     } catch (e) {}
   }
 
-  let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
+  let frameID = WebNavigationFrames.getFrameId(doc.defaultView);
 
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = {
@@ -6904,7 +6904,7 @@ function handleLinkClick(event, href, linkNode) {
     originStoragePrincipal: doc.effectiveStoragePrincipal,
     triggeringPrincipal: doc.nodePrincipal,
     csp: doc.csp,
-    frameOuterWindowID,
+    frameID,
   };
 
   // The new tab/window must use the same userContextId

@@ -89,7 +89,7 @@ class Dispatcher {
   }
 
   get frameId() {
-    // 0 for top-level windows, outerWindowId otherwise
+    // 0 for top-level windows, BrowsingContext ID otherwise
     return WebNavigationFrames.getFrameId(this.window);
   }
 

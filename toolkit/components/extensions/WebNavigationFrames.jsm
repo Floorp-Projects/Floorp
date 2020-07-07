@@ -38,38 +38,27 @@ function iterateDocShellTree(docShell) {
  * top-level content window, its frame ID is 0. Otherwise, its frame ID
  * is its outer window ID.
  *
- * @param {Window} window - The window to retrieve the frame ID for.
+ * @param {Window|BrowsingContext} bc - The window to retrieve the frame ID for.
  * @returns {number}
  */
-function getFrameId(window) {
-  if (window.parent === window) {
-    return 0;
+function getFrameId(bc) {
+  if (!BrowsingContext.isInstance(bc)) {
+    bc = bc.browsingContext;
   }
-
-  let utils = window.windowUtils;
-  return utils.outerWindowID;
+  return bc.parent ? bc.id : 0;
 }
 
 /**
  * Returns the frame ID of the given window's parent.
  *
- * @param {Window} window - The window to retrieve the parent frame ID for.
+ * @param {Window|BrowsingContext} bc - The window to retrieve the parent frame ID for.
  * @returns {number}
  */
-function getParentFrameId(window) {
-  if (window.parent === window) {
-    return -1;
+function getParentFrameId(bc) {
+  if (!BrowsingContext.isInstance(bc)) {
+    bc = bc.browsingContext;
   }
-
-  return getFrameId(window.parent);
-}
-
-function getDocShellFrameId(docShell) {
-  if (!docShell) {
-    return undefined;
-  }
-
-  return getFrameId(docShell.domWindow);
+  return bc.parent ? getFrameId(bc.parent) : -1;
 }
 
 /**
@@ -79,11 +68,11 @@ function getDocShellFrameId(docShell) {
  * @returns  {FrameDetail} the FrameDetail JSON object which represents the docShell.
  */
 function convertDocShellToFrameDetail(docShell) {
-  let window = docShell.domWindow;
+  let { browsingContext, domWindow: window } = docShell;
 
   return {
-    frameId: getFrameId(window),
-    parentFrameId: getParentFrameId(window),
+    frameId: getFrameId(browsingContext),
+    parentFrameId: getParentFrameId(browsingContext),
     url: window.location.href,
   };
 }
@@ -100,7 +89,7 @@ function convertDocShellToFrameDetail(docShell) {
  */
 function findDocShell(frameId, rootDocShell) {
   for (let docShell of iterateDocShellTree(rootDocShell)) {
-    if (frameId == getFrameId(docShell.domWindow)) {
+    if (frameId == getFrameId(docShell.browsingContext)) {
       return docShell;
     }
   }
@@ -130,6 +119,4 @@ var WebNavigationFrames = {
       convertDocShellToFrameDetail
     );
   },
-
-  getDocShellFrameId,
 };

@@ -321,19 +321,19 @@ interface ChannelWrapper : EventTarget {
 
 
   /**
-   * The outer window ID of the frame that the request belongs to, or 0 if it
+   * The BrowsingContext ID of the frame that the request belongs to, or 0 if it
    * is a top-level load or does not belong to a document.
    */
   [Cached, Constant]
-  readonly attribute long long windowId;
+  readonly attribute long long frameId;
 
   /**
-   * The outer window ID of the parent frame of the window that the request
+   * The BrowsingContext ID of the parent frame of the window that the request
    * belongs to, 0 if that parent frame is the top-level frame, and -1 if the
    * request belongs to a top-level frame.
    */
   [Cached, Constant]
-  readonly attribute long long parentWindowId;
+  readonly attribute long long parentFrameId;
 
   /**
    * For cross-process requests, the <browser> or <iframe> element to which the

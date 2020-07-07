@@ -189,9 +189,9 @@ class ChannelWrapper final : public DOMEventTargetHelper,
     return nullptr;
   }
 
-  int64_t WindowId() const;
+  int64_t FrameId() const;
 
-  int64_t ParentWindowId() const;
+  int64_t ParentFrameId() const;
 
   void GetFrameAncestors(
       dom::Nullable<nsTArray<dom::MozFrameAncestorInfo>>& aFrameAncestors,
@@ -266,7 +266,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   const URLInfo& FinalURLInfo() const;
   const URLInfo* DocumentURLInfo() const;
 
-  uint64_t WindowId(nsILoadInfo* aLoadInfo) const;
+  uint64_t BrowsingContextId(nsILoadInfo* aLoadInfo) const;
 
   nsresult GetFrameAncestors(
       nsILoadInfo* aLoadInfo,

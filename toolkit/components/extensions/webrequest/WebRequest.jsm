@@ -259,7 +259,7 @@ function serializeRequestData(eventName, extension) {
     timeStamp: Date.now(),
     tabId: this.tabId,
     frameId: this.frameId,
-    parentFrameId: this.parentWindowId,
+    parentFrameId: this.parentFrameId,
     incognito: this.incognito,
     thirdParty: this.thirdParty,
   };
@@ -748,8 +748,8 @@ HttpObserverManager = {
       documentUrl: channel.documentURL || undefined,
 
       tabId: this.getBrowserData(channel).tabId,
-      frameId: channel.windowId,
-      parentWindowId: channel.parentWindowId,
+      frameId: channel.frameId,
+      parentFrameId: channel.parentFrameId,
 
       frameAncestors: channel.frameAncestors || undefined,
 
