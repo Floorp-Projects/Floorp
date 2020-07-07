@@ -34,7 +34,7 @@ const DEFAULT_CONTENT = {
       },
       action: {
         type: "INSTALL_ADDON_FROM_URL",
-        data: { url: null },
+        data: { url: "https://example.com" },
       },
     },
     secondary: {
@@ -70,7 +70,7 @@ const L10N_CONTENT = {
       label: { string_id: "btn_ok_id" },
       action: {
         type: "INSTALL_ADDON_FROM_URL",
-        data: { url: null },
+        data: { url: "https://example.com" },
       },
     },
     secondary: {

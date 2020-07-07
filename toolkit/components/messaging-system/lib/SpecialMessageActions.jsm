@@ -191,7 +191,6 @@ const SpecialMessageActions = {
           "UIDisabled"
         );
         Services.prefs.setIntPref(NETWORK_TRR_MODE_PREF, 5);
-        await this.blockMessageById("DOH_ROLLOUT_CONFIRMATION");
         break;
       case "ACCEPT_DOH":
         Services.prefs.setStringPref(DOH_DOORHANGER_DECISION_PREF, "UIOk");

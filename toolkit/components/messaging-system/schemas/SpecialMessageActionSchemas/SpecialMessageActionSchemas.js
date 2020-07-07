@@ -243,4 +243,24 @@ const SpecialMessageActionSchemas = {
     },
     type: "object",
   },
+  DISABLE_DOH: {
+    description: "Disable the DoH feature.",
+    properties: {
+      type: {
+        enum: ["DISABLE_DOH"],
+        type: "string",
+      },
+    },
+    type: "object",
+  },
+  ACCEPT_DOH: {
+    description: "Confirm to continue using the DoH feature.",
+    properties: {
+      type: {
+        enum: ["ACCEPT_DOH"],
+        type: "string",
+      },
+    },
+    type: "object",
+  },
 };
