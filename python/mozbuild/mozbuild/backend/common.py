@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
 import json
+from operator import itemgetter
 import os
 import six
 
@@ -214,8 +215,12 @@ class CommonBackend(BuildBackend):
         topobjdir = self.environment.topobjdir
         with self._write_file(mozpath.join(topobjdir, 'binaries.json')) as fh:
             d = {
-                'shared_libraries': [s.to_dict() for s in self._binaries.shared_libraries],
-                'programs': [p.to_dict() for p in self._binaries.programs],
+                'shared_libraries': sorted(
+                    (s.to_dict() for s in self._binaries.shared_libraries),
+                    key=itemgetter('basename')),
+                'programs': sorted(
+                    (p.to_dict() for p in self._binaries.programs),
+                    key=itemgetter('program')),
             }
             json.dump(d, fh, sort_keys=True, indent=4)
 
