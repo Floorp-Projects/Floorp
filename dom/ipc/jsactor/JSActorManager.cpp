@@ -212,5 +212,14 @@ void JSActorManager::JSActorDidDestroy() {
   }
 }
 
+void JSActorManager::JSActorUnregister(const nsACString& aName) {
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+
+  RefPtr<JSActor> actor;
+  if (mJSActors.Remove(aName, getter_AddRefs(actor))) {
+    actor->AfterDestroy();
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
