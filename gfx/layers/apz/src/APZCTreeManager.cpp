@@ -272,7 +272,6 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       mSampler(nullptr),
       mUpdater(nullptr),
       mTreeLock("APZCTreeLock"),
-      mUsingAsyncZoomContainer(false),
       mMapLock("APZCMapLock"),
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
@@ -405,10 +404,10 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
                                  state.mNodesToDestroy.AppendElement(aNode);
                                });
   mRootNode = nullptr;
-  mUsingAsyncZoomContainer = false;
+  mAsyncZoomContainerSubtree = Nothing();
   int asyncZoomContainerNestingDepth = 0;
-  bool haveMultipleAsyncZoomContainers = false;
-  bool haveRootContentOutsideAsyncZoomContainer = false;
+  bool haveNestedAsyncZoomContainers = false;
+  nsTArray<LayersId> subtreesWithRootContentOutsideAsyncZoomContainer;
 
   if (aRoot) {
     std::unordered_set<LayersId, LayersId::HashFn> seenLayersIds;
@@ -431,10 +430,10 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
           if (aLayerMetrics.IsAsyncZoomContainer()) {
-            if (mUsingAsyncZoomContainer) {
-              haveMultipleAsyncZoomContainers = true;
+            if (asyncZoomContainerNestingDepth > 0) {
+              haveNestedAsyncZoomContainers = true;
             }
-            mUsingAsyncZoomContainer = true;
+            mAsyncZoomContainerSubtree = Some(layersId);
             ++asyncZoomContainerNestingDepth;
           }
 
@@ -453,7 +452,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           // metadata to be on the same node as the async zoom container.
           if (aLayerMetrics.Metrics().IsRootContent() &&
               asyncZoomContainerNestingDepth == 0) {
-            haveRootContentOutsideAsyncZoomContainer = true;
+            subtreesWithRootContentOutsideAsyncZoomContainer.AppendElement(
+                layersId);
           }
 
           HitTestingTreeNode* node = PrepareNodeForLayer(
@@ -561,15 +561,17 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     mApzcTreeLog << "[end]\n";
 
     MOZ_ASSERT(
-        !mUsingAsyncZoomContainer || !haveRootContentOutsideAsyncZoomContainer,
+        !mAsyncZoomContainerSubtree ||
+            !subtreesWithRootContentOutsideAsyncZoomContainer.Contains(
+                *mAsyncZoomContainerSubtree),
         "If there is an async zoom container, all scroll nodes with root "
         "content scroll metadata should be inside it");
-    // TODO(bug 1534459): Avoid multiple async zoom containers. They
+    // TODO(bug 1534459): Avoid nested async zoom containers. They
     // can't currently occur in production code, but that will become
     // possible with either OOP iframes or desktop zooming (due to
     // RDM), and will need to be guarded against.
-    // MOZ_ASSERT(!haveMultipleAsyncZoomContainers,
-    //           "Should only have one async zoom container");
+    // MOZ_ASSERT(!haveNestedAsyncZoomContainers,
+    //           "Should not have nested async zoom container");
 
     // If we have perspective transforms deferred to children, do another
     // walk of the tree and actually apply them to the children.
@@ -977,11 +979,12 @@ bool APZCTreeManager::AdvanceAnimationsInternal(
 // is only called for layers which actually have scrollable metrics and an APZC.
 template <class ScrollNode>
 Maybe<ParentLayerIntRegion> APZCTreeManager::ComputeClipRegion(
-    const ScrollNode& aLayer) {
+    const LayersId& aLayersId, const ScrollNode& aLayer) {
   Maybe<ParentLayerIntRegion> clipRegion;
   if (aLayer.GetClipRect()) {
     clipRegion.emplace(*aLayer.GetClipRect());
-  } else if (aLayer.Metrics().IsRootContent() && mUsingAsyncZoomContainer) {
+  } else if (aLayer.Metrics().IsRootContent() &&
+             mAsyncZoomContainerSubtree == Some(aLayersId)) {
     // If we are using containerless scrolling, part of the root content
     // layers' async transform has been lifted to the async zoom container
     // layer. The composition bounds clip, which applies after the async
@@ -1305,7 +1308,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
                node->GetApzc()->Matches(guid));
 
     Maybe<ParentLayerIntRegion> clipRegion =
-        parentHasPerspective ? Nothing() : ComputeClipRegion(aLayer);
+        parentHasPerspective ? Nothing() : ComputeClipRegion(aLayersId, aLayer);
     SetHitTestData(node, aLayer, clipRegion, aState.mOverrideFlags.top());
     apzc->SetAncestorTransform(aAncestorTransform);
 
@@ -1405,7 +1408,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     }
 
     Maybe<ParentLayerIntRegion> clipRegion =
-        parentHasPerspective ? Nothing() : ComputeClipRegion(aLayer);
+        parentHasPerspective ? Nothing() : ComputeClipRegion(aLayersId, aLayer);
     SetHitTestData(node, aLayer, clipRegion, aState.mOverrideFlags.top());
   }
 
@@ -3528,10 +3531,13 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     // If the node represents scrollable content, apply the async transform
     // from its APZC.
     bool visualTransformIsInheritedFromAncestor =
-        apzc->IsRootContent() &&        /* we're the APZC whose visual transform
-                                           might be on the async zoom container */
-        mUsingAsyncZoomContainer &&     /* there is an async zoom container */
-        !aNode->IsAsyncZoomContainer(); /* it's not us */
+        /* we're the APZC whose visual transform might be on the async
+           zoom container */
+        apzc->IsRootContent() &&
+        /* there is an async zoom container on this subtree */
+        mAsyncZoomContainerSubtree == Some(aNode->GetLayersId()) &&
+        /* it's not us */
+        !aNode->IsAsyncZoomContainer();
     AsyncTransformComponents components =
         visualTransformIsInheritedFromAncestor
             ? AsyncTransformComponents{AsyncTransformComponent::eLayout}

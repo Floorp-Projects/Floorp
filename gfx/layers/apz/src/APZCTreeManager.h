@@ -712,7 +712,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
       HitTestingTreeNode* aNextSibling, TreeBuildingState& aState);
   template <class ScrollNode>
-  Maybe<ParentLayerIntRegion> ComputeClipRegion(const ScrollNode& aLayer);
+  Maybe<ParentLayerIntRegion> ComputeClipRegion(const LayersId& aLayersId,
+                                                const ScrollNode& aLayer);
 
   template <class ScrollNode>
   void PrintAPZCInfo(const ScrollNode& aLayer,
@@ -796,10 +797,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    */
   std::unordered_set<LayersId, LayersId::HashFn> mDetachedLayersIds;
 
-  /* True if the current hit-testing tree contains an async zoom container
-   * node.
+  /* If the current hit-testing tree contains an async zoom container
+   * node, this is set to the layers id of subtree that has the node.
    */
-  bool mUsingAsyncZoomContainer;
+  Maybe<LayersId> mAsyncZoomContainerSubtree;
 
   /** A lock that protects mApzcMap, mScrollThumbInfo, mRootScrollbarInfo,
    * mFixedPositionInfo, and mStickyPositionInfo.
