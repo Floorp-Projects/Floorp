@@ -411,6 +411,20 @@ IPCResult HttpBackgroundChannelChild::RecvSetClassifierMatchedTrackingInfo(
 
   return IPC_OK();
 }
+
+IPCResult HttpBackgroundChannelChild::RecvAttachStreamFilter(
+    Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
+  LOG(("HttpBackgroundChannelChild::RecvAttachStreamFilter [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  mChannelChild->ProcessAttachStreamFilter(std::move(aEndpoint));
+  return IPC_OK();
+}
+
 void HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelChild::ActorDestroy[this=%p]\n", this));
   // This function might be called during shutdown phase, so OnSocketThread()
