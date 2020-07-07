@@ -219,6 +219,9 @@ class GLTextureSource : public DataTextureSource, public TextureSourceOGL {
                   GLenum aTarget, gfx::IntSize aSize,
                   gfx::SurfaceFormat aFormat);
 
+  GLTextureSource(gl::GLContext* aGL, GLuint aTextureHandle, GLenum aTarget,
+                  gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+
   virtual ~GLTextureSource();
 
   const char* Name() const override { return "GLTextureSource"; }
@@ -276,6 +279,8 @@ class GLTextureSource : public DataTextureSource, public TextureSourceOGL {
 // the surface is not used by compositor.
 class DirectMapTextureSource : public GLTextureSource {
  public:
+  DirectMapTextureSource(gl::GLContext* aContext,
+                         gfx::DataSourceSurface* aSurface);
   DirectMapTextureSource(TextureSourceProvider* aProvider,
                          gfx::DataSourceSurface* aSurface);
   ~DirectMapTextureSource();
