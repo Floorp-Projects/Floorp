@@ -11,7 +11,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const FRAME_SCRIPT_URL = CHROME_URL_ROOT + "doc_frame_script.js";
 const TAB_NAME = "animationinspector";
 
 const ANIMATION_L10N = new LocalizationHelper(
@@ -83,12 +82,7 @@ const enableAnimationFeatures = function() {
 const _addTab = addTab;
 addTab = async function(url) {
   await enableAnimationFeatures();
-  const tab = await _addTab(url);
-  const browser = tab.linkedBrowser;
-  info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-  browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-  loadFrameScriptUtils(browser);
-  return tab;
+  return _addTab(url);
 };
 
 /**
@@ -97,8 +91,28 @@ addTab = async function(url) {
  * @param {Array} selectors
  * @return {Promise}
  */
-const removeAnimatedElementsExcept = async function(selectors) {
-  return executeInContent("Test:RemoveAnimatedElementsExcept", { selectors });
+const removeAnimatedElementsExcept = function(selectors) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selectors],
+    selectorsChild => {
+      function isRemovableElement(animation, selectorsInner) {
+        for (const selector of selectorsInner) {
+          if (animation.effect.target.matches(selector)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      for (const animation of content.document.getAnimations()) {
+        if (isRemovableElement(animation, selectorsChild)) {
+          animation.effect.target.remove();
+        }
+      }
+    }
+  );
 };
 
 /**
@@ -541,12 +555,19 @@ const sendSpaceKeyEvent = async function(animationInspector, element) {
  *        e.g. ".ball.still"
  */
 const setClassAttribute = async function(animationInspector, selector, cls) {
-  const options = {
-    attributeName: "class",
-    attributeValue: cls,
-    selector,
-  };
-  await executeInContent("devtools:test:setAttribute", options);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [cls, selector],
+    (attributeValue, selectorChild) => {
+      const node = content.document.querySelector(selectorChild);
+      if (!node) {
+        return;
+      }
+
+      node.setAttribute("class", attributeValue);
+    }
+  );
+
   await waitForSummaryAndDetail(animationInspector);
 };
 
@@ -567,12 +588,28 @@ const setEffectTimingAndPlayback = async function(
   effectTiming,
   playbackRate
 ) {
-  const options = {
-    effectTiming,
-    playbackRate,
-    selector,
-  };
-  await executeInContent("Test:SetEffectTimingAndPlayback", options);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, playbackRate, effectTiming],
+    (selectorChild, playbackRateChild, effectTimingChild) => {
+      let selectedAnimation = null;
+
+      for (const animation of content.document.getAnimations()) {
+        if (animation.effect.target.matches(selectorChild)) {
+          selectedAnimation = animation;
+          break;
+        }
+      }
+
+      if (!selectedAnimation) {
+        return;
+      }
+
+      selectedAnimation.playbackRate = playbackRateChild;
+      selectedAnimation.effect.updateTiming(effectTimingChild);
+    }
+  );
+
   await waitForSummaryAndDetail(animationInspector);
 };
 
@@ -607,12 +644,18 @@ const setStyle = async function(
   propertyName,
   propertyValue
 ) {
-  const options = {
-    propertyName,
-    propertyValue,
-    selector,
-  };
-  await executeInContent("devtools:test:setStyle", options);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, propertyName, propertyValue],
+    (selectorChild, propertyNameChild, propertyValueChild) => {
+      const node = content.document.querySelector(selectorChild);
+      if (!node) {
+        return;
+      }
+
+      node.style[propertyNameChild] = propertyValueChild;
+    }
+  );
   await waitForSummaryAndDetail(animationInspector);
 };
 
@@ -628,11 +671,22 @@ const setStyle = async function(
  *             }
  */
 const setStyles = async function(animationInspector, selector, properties) {
-  const options = {
-    properties,
-    selector,
-  };
-  await executeInContent("devtools:test:setMultipleStyles", options);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [properties, selector],
+    (propertiesChild, selectorChild) => {
+      const node = content.document.querySelector(selectorChild);
+      if (!node) {
+        return;
+      }
+
+      for (const propertyName in propertiesChild) {
+        const propertyValue = propertiesChild[propertyName];
+        node.style[propertyName] = propertyValue;
+      }
+    }
+  );
+
   await waitForSummaryAndDetail(animationInspector);
 };
 
