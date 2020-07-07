@@ -26,7 +26,12 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
     SourceSurface* aSurface, const char* aReason) {
   RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
   IntSize surfaceSize = aSurface->GetSize();
-  if (!dataSurf || !Factory::AllowedSurfaceSize(surfaceSize)) {
+  Maybe<DataSourceSurface::ScopedMap> map;
+  if (dataSurf) {
+    map.emplace(dataSurf, DataSourceSurface::READ);
+  }
+  if (!dataSurf || !map->IsMapped() ||
+      !Factory::AllowedSurfaceSize(surfaceSize)) {
     gfxWarning() << "Recording failed to record SourceSurface for " << aReason;
 
     // If surface size is not allowed, replace with reasonable size.
@@ -53,9 +58,8 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
     return;
   }
 
-  DataSourceSurface::ScopedMap map(dataSurf, DataSourceSurface::READ);
   RecordEvent(RecordedSourceSurfaceCreation(
-      aSurface, map.GetData(), map.GetStride(), dataSurf->GetSize(),
+      aSurface, map->GetData(), map->GetStride(), dataSurf->GetSize(),
       dataSurf->GetFormat()));
 }
 
