@@ -305,6 +305,7 @@
   MACRO(NaN, NaN, "NaN")                                                       \
   MACRO(NegativeInfinity, NegativeInfinity, "-Infinity")                       \
   MACRO(new, new_, "new")                                                      \
+  MACRO(NewPrivateName, NewPrivateName, "NewPrivateName")                      \
   MACRO(next, next, "next")                                                    \
   MACRO(NFC, NFC, "NFC")                                                       \
   MACRO(NFD, NFD, "NFD")                                                       \

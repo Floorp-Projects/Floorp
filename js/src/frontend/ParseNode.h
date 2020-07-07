@@ -857,7 +857,8 @@ class NameNode : public ParseNode {
   JSAtom* atom() const { return atom_; }
 
   PropertyName* name() const {
-    MOZ_ASSERT(isKind(ParseNodeKind::Name));
+    MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
+               isKind(ParseNodeKind::PrivateName));
     return atom()->asPropertyName();
   }
 
