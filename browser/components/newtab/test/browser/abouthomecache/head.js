@@ -7,6 +7,38 @@ let { AboutHomeStartupCache } = ChromeUtils.import(
   "resource:///modules/BrowserGlue.jsm"
 );
 
+// Some Activity Stream preferences are JSON encoded, and quite complex.
+// Hard-coding them here or in browser.ini makes them brittle to change.
+// Instead, we pull the default prefs structures and set the values that
+// we need and write them to preferences here dynamically. We do this in
+// its own scope to avoid polluting the global scope.
+{
+  const { PREFS_CONFIG } = ChromeUtils.import(
+    "resource://activity-stream/lib/ActivityStream.jsm"
+  );
+
+  let defaultDSConfig = JSON.parse(
+    PREFS_CONFIG.get("discoverystream.config").getValue({
+      geo: "US",
+      locale: "en-US",
+    })
+  );
+
+  let newConfig = Object.assign(defaultDSConfig, {
+    show_spocs: false,
+    hardcoded_layout: false,
+    layout_endpoint:
+      "https://example.com/browser/browser/components/newtab/test/browser/ds_layout.json",
+  });
+
+  // Configure Activity Stream to query for the layout JSON file that points
+  // at the local top stories feed.
+  Services.prefs.setCharPref(
+    "browser.newtabpage.activity-stream.discoverystream.config",
+    JSON.stringify(newConfig)
+  );
+}
+
 /**
  * Shuts down the AboutHomeStartupCache components in the parent process
  * and privileged about content process, and then restarts them, simulating
