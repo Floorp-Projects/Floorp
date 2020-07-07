@@ -49,14 +49,7 @@ template <class S, class T>
 void ReadElementConstrained(S& aStream, T& aElement, const T& aMinValue,
                             const T& aMaxValue) {
   ElementStreamFormat<S, T>::Read(aStream, aElement);
-  if (!aStream.good()) {
-    return;
-  }
-
   if (aElement < aMinValue || aElement > aMaxValue) {
-    gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-        << "Invalid constrained value read: value: " << int(aElement)
-        << ", min: " << int(aMinValue) << ", max: " << int(aMaxValue);
     aStream.SetIsBad();
   }
 }
