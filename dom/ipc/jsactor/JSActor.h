@@ -13,7 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsRefPtrHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;
@@ -133,10 +133,17 @@ class JSActor : public nsISupports, public nsWrapperCache {
     uint64_t mQueryId;
   };
 
+  // A query which hasn't been resolved yet, along with metadata about what
+  // query the promise is for.
+  struct PendingQuery {
+    RefPtr<Promise> mPromise;
+    nsString mMessageName;
+  };
+
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsISupports> mWrappedJS;
   nsCString mName;
-  nsRefPtrHashtable<nsUint64HashKey, Promise> mPendingQueries;
+  nsDataHashtable<nsUint64HashKey, PendingQuery> mPendingQueries;
   uint64_t mNextQueryId = 0;
   bool mCanSend = true;
 };
