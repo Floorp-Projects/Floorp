@@ -699,6 +699,9 @@ raptor-youtube-playback-widevine-hfr-firefox:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
+            # Bug 1649819 - Perma fails on linux64* and windows7*
+            linux64-shippable.*: []
+            windows7-32-shippable.*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -717,6 +720,9 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
+            # Bug 1649819 - Perma fails on linux64* and windows7*
+            linux64-shippable.*: []
+            windows7-32-shippable.*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -735,6 +741,9 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
+            # Bug 1649819 - Perma fails on linux64* and windows7*
+            linux64-shippable.*: []
+            windows7-32-shippable.*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
