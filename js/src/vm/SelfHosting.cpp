@@ -2085,6 +2085,19 @@ static bool intrinsic_NewWrapForValidIterator(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_NewPrivateName(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  RootedString desc(cx, args[0].toString());
+  auto* symbol = Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, desc);
+  if (!symbol) {
+    return false;
+  }
+  args.rval().setSymbol(symbol);
+  return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2547,6 +2560,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToBigInt", intrinsic_ToBigInt, 1, 0),
 
     JS_FN("NewWrapForValidIterator", intrinsic_NewWrapForValidIterator, 0, 0),
+
+    JS_FN("NewPrivateName", intrinsic_NewPrivateName, 1, 0),
 
     JS_FS_END};
 
