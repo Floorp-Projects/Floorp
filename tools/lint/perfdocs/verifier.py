@@ -13,7 +13,7 @@ from perfdocs.gatherer import Gatherer
 
 logger = PerfDocLogger()
 
-"""
+'''
 Schema for the config.yml file.
 Expecting a YAML file with a format such as this:
 
@@ -31,7 +31,7 @@ suites:
         tests:
             wasm: "All wasm tests."
 
-"""
+'''
 CONFIG_SCHEMA = {
     "type": "object",
     "properties": {
@@ -45,38 +45,46 @@ CONFIG_SCHEMA = {
                     "properties": {
                         "tests": {
                             "type": "object",
-                            "properties": {"test_name": {"type": "string"},},
+                            "properties": {
+                                "test_name": {"type": "string"},
+                            }
                         },
                         "description": {"type": "string"},
                     },
-                    "required": ["description"],
+                    "required": [
+                        "description"
+                    ]
                 }
-            },
-        },
+            }
+        }
     },
-    "required": ["name", "manifest", "suites"],
+    "required": [
+        "name",
+        "manifest",
+        "suites"
+    ]
 }
 
 
 class Verifier(object):
-    """
+    '''
     Verifier is used for validating the perfdocs folders/tree. In the future,
     the generator will make use of this class to obtain a validated set of
     descriptions that can be used to build up a document.
-    """
+    '''
 
     def __init__(self, root_dir, workspace_dir):
-        """
+        '''
         Initialize the Verifier.
 
         :param str root_dir: Path to the 'testing' directory.
         :param str workspace_dir: Path to the top-level checkout directory.
-        """
+        '''
         self.workspace_dir = workspace_dir
         self._gatherer = Gatherer(root_dir, workspace_dir)
 
     def validate_descriptions(self, framework_info):
-        """
+        '''
         Cross-validate the tests found in the manifests and the YAML
         test definitions. This function doesn't return a valid flag. Instead,
         the StructDocLogger.VALIDATION_LOG is used to determine validity.
@@ -93,12 +101,12 @@ class Verifier(object):
 
         :param dict framework_info: Contains information about the framework. See
             `Gatherer.get_test_list` for information about its structure.
-        """
-        yaml_content = framework_info["yml_content"]
+        '''
+        yaml_content = framework_info['yml_content']
 
         # Check for any bad test/suite names in the yaml config file
         global_descriptions = {}
-        for suite, ytests in yaml_content["suites"].items():
+        for suite, ytests in yaml_content['suites'].items():
             # Find the suite, then check against the tests within it
             if framework_info["test_list"].get(suite):
                 global_descriptions[suite] = []
@@ -108,7 +116,7 @@ class Verifier(object):
 
                 # Suite found - now check if any tests in YAML
                 # definitions doesn't exist
-                ytests = ytests["tests"]
+                ytests = ytests['tests']
                 for test_name in ytests:
                     foundtest = False
                     for t in framework_info["test_list"][suite]:
@@ -129,14 +137,12 @@ class Verifier(object):
                             "Could not find an existing test for {} - bad test name?".format(
                                 test_name
                             ),
-                            framework_info["yml_path"],
+                            framework_info["yml_path"]
                         )
             else:
                 logger.warning(
-                    "Could not find an existing suite for {} - bad suite name?".format(
-                        suite
-                    ),
-                    framework_info["yml_path"],
+                    "Could not find an existing suite for {} - bad suite name?".format(suite),
+                    framework_info["yml_path"]
                 )
 
         # Check for any missing tests/suites
@@ -145,14 +151,14 @@ class Verifier(object):
                 # Description doesn't exist for the suite
                 logger.warning(
                     "Missing suite description for {}".format(suite),
-                    yaml_content["manifest"],
+                    yaml_content['manifest']
                 )
                 continue
 
             # If only a description is provided for the suite, assume
             # that this is a suite-wide description and don't check for
             # it's tests
-            stests = yaml_content["suites"][suite].get("tests", None)
+            stests = yaml_content['suites'][suite].get('tests', None)
             if not stests:
                 continue
 
@@ -191,66 +197,67 @@ class Verifier(object):
                 for test_name in new_mtests:
                     logger.warning(
                         "Could not find a test description for {}".format(test_name),
-                        test_to_manifest[test_name],
+                        test_to_manifest[test_name]
                     )
 
     def validate_yaml(self, yaml_path):
-        """
+        '''
         Validate that the YAML file has all the fields that are
         required and parse the descriptions into strings in case
         some are give as relative file paths.
 
         :param str yaml_path: Path to the YAML to validate.
         :return bool: True/False => Passed/Failed Validation
-        """
-
+        '''
         def _get_description(desc):
-            """
+            '''
             Recompute the description in case it's a file.
-            """
+            '''
             desc_path = os.path.join(self.workspace_dir, desc)
             if os.path.exists(desc_path):
-                with open(desc_path, "r") as f:
+                with open(desc_path, 'r') as f:
                     desc = f.readlines()
             return desc
 
         def _parse_descriptions(content):
             for suite, sinfo in content.items():
-                desc = sinfo["description"]
-                sinfo["description"] = _get_description(desc)
+                desc = sinfo['description']
+                sinfo['description'] = _get_description(desc)
 
                 # It's possible that the suite has no tests and
                 # only a description. If they exist, then parse them.
-                if "tests" in sinfo:
-                    for test, desc in sinfo["tests"].items():
-                        sinfo["tests"][test] = _get_description(desc)
+                if 'tests' in sinfo:
+                    for test, desc in sinfo['tests'].items():
+                        sinfo['tests'][test] = _get_description(desc)
 
         valid = False
         yaml_content = read_yaml(yaml_path)
 
         try:
             jsonschema.validate(instance=yaml_content, schema=CONFIG_SCHEMA)
-            _parse_descriptions(yaml_content["suites"])
+            _parse_descriptions(yaml_content['suites'])
             valid = True
         except Exception as e:
-            logger.warning("YAML ValidationError: {}".format(str(e)), yaml_path)
+            logger.warning(
+                "YAML ValidationError: {}".format(str(e)), yaml_path
+            )
 
         return valid
 
     def validate_rst_content(self, rst_path):
-        """
+        '''
         Validate that the index file given has a {documentation} entry
         so that the documentation can be inserted there.
 
         :param str rst_path: Path to the RST file.
         :return bool: True/False => Passed/Failed Validation
-        """
+        '''
         rst_content = read_file(rst_path)
 
         # Check for a {documentation} entry in some line,
         # if we can't find one, then the validation fails.
         valid = False
-        docs_match = re.compile(".*{documentation}.*")
+        docs_match = re.compile('.*{documentation}.*')
         for line in rst_content:
             if docs_match.search(line):
                 valid = True
@@ -258,36 +265,36 @@ class Verifier(object):
         if not valid:
             logger.warning(
                 "Cannot find a '{documentation}' entry in the given index file",
-                rst_path,
+                rst_path
             )
 
         return valid
 
     def _check_framework_descriptions(self, item):
-        """
+        '''
         Helper method for validating descriptions
-        """
+        '''
         framework_info = self._gatherer.get_test_list(item)
         self.validate_descriptions(framework_info)
 
     def validate_tree(self):
-        """
+        '''
         Validate the `perfdocs` directory that was found.
         Returns True if it is good, false otherwise.
 
         :return bool: True/False => Passed/Failed Validation
-        """
+        '''
         found_good = 0
 
         # For each framework, check their files and validate descriptions
         for matched in self._gatherer.perfdocs_tree:
             # Get the paths to the YAML and RST for this framework
-            matched_yml = os.path.join(matched["path"], matched["yml"])
-            matched_rst = os.path.join(matched["path"], matched["rst"])
+            matched_yml = os.path.join(matched['path'], matched['yml'])
+            matched_rst = os.path.join(matched['path'], matched['rst'])
 
             _valid_files = {
                 "yml": self.validate_yaml(matched_yml),
-                "rst": self.validate_rst_content(matched_rst),
+                "rst": self.validate_rst_content(matched_rst)
             }
 
             # Log independently the errors found for the matched files
