@@ -46,7 +46,7 @@ toolkit.jar:
    content/global/filepicker.properties
    content/global/customElements.js
    content/global/globalOverlay.js
-   content/global/mozilla.xhtml
+   content/global/mozilla.html
    content/global/aboutMozilla.css
    content/global/preferencesBindings.js
    content/global/process-content.js

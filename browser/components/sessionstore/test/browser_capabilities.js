@@ -83,7 +83,7 @@ add_task(async function docshell_capabilities() {
 });
 
 async function createTab() {
-  let tab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:rights");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
   return tab;

@@ -39,7 +39,6 @@
   locale/@AB_CD@/global/intl.css                        (%chrome/global/intl.css)
   locale/@AB_CD@/global/intl.properties                 (%chrome/global/intl.properties)
   locale/@AB_CD@/global/keys.properties                 (%chrome/global/keys.properties)
-  locale/@AB_CD@/global/mozilla.dtd                     (%chrome/global/mozilla.dtd)
 #ifndef MOZ_FENNEC
   locale/@AB_CD@/global/narrate.properties              (%chrome/global/narrate.properties)
 #endif

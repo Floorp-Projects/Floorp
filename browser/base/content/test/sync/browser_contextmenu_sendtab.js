@@ -79,7 +79,7 @@ add_task(async function test_tab_contextmenu() {
     .withExactArgs(
       "about:mozilla",
       [fxaDevices[1]],
-      "The Book of Mozilla, 11:14"
+      "The Book of Mozilla, 6:27"
     );
 
   updateTabContextMenu(testTab);
