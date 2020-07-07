@@ -4408,21 +4408,6 @@ void CodeGenerator::visitGuardShape(LGuardShape* guard) {
   bailoutFrom(&bail, guard->snapshot());
 }
 
-void CodeGenerator::visitGuardProto(LGuardProto* guard) {
-  Register obj = ToRegister(guard->input());
-  Register temp = ToRegister(guard->temp());
-
-  masm.loadObjProto(obj, temp);
-
-  Label bail;
-  if (JSObject* proto = guard->mir()->maybeProto()) {
-    masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(proto), &bail);
-  } else {
-    masm.branchTestPtr(Assembler::NonZero, temp, temp, &bail);
-  }
-  bailoutFrom(&bail, guard->snapshot());
-}
-
 void CodeGenerator::visitGuardObjectGroup(LGuardObjectGroup* guard) {
   Register obj = ToRegister(guard->input());
   Register temp = ToTempRegisterOrInvalid(guard->temp());
