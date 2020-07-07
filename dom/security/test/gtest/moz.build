@@ -8,13 +8,10 @@ UNIFIED_SOURCES += [
      'TestCSPParser.cpp',
      'TestFilenameEvalParser.cpp',
      'TestSecureContext.cpp',
-     'TestUnexpectedPrivilegedLoads.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
 
 LOCAL_INCLUDES += [
     '/caps',
-    '/toolkit/components/telemetry/',
-    '/toolkit/components/telemetry/tests/gtest',
 ]
