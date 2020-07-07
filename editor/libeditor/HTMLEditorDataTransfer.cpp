@@ -2910,7 +2910,7 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
     nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-    int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput) {
+    int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput) const {
   if (NS_WARN_IF(!aOutFragNode) || NS_WARN_IF(!aOutStartNode) ||
       NS_WARN_IF(!aOutEndNode) || NS_WARN_IF(!aOutStartOffset) ||
       NS_WARN_IF(!aOutEndOffset)) {

@@ -4393,7 +4393,7 @@ class HTMLEditor final : public TextEditor,
       const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
       nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-      int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput);
+      int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput) const;
   static nsresult ParseFragment(const nsAString& aStr,
                                 nsAtom* aContextLocalName, Document* aTargetDoc,
                                 dom::DocumentFragment** aFragment,
