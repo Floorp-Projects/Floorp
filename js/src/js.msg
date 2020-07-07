@@ -761,4 +761,7 @@ MSG_DEF(JSMSG_BAD_FINALIZATION_REGISTRY_OBJECT,          0, JSEXN_TYPEERR, "cann
 MSG_DEF(JSMSG_NOT_A_WEAK_REF,                            1, JSEXN_TYPEERR, "{0} is not a WeakRef")
 MSG_DEF(JSMSG_BAD_WEAKREF_TARGET,                        0, JSEXN_TYPEERR, "cannot use the given object as the target of a WeakRef")
 
+// Iterator Helpers
+MSG_DEF(JSMSG_NEGATIVE_LIMIT,                            0, JSEXN_RANGEERR, "Iterator limits cannot be negative")
+
 //clang-format on

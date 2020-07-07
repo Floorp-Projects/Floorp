@@ -2098,6 +2098,20 @@ static bool intrinsic_NewPrivateName(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool intrinsic_NewIteratorHelper(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+
+  JSObject* obj = NewIteratorHelper(cx);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2250,6 +2264,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("GuardToWrapForValidIterator",
                     intrinsic_GuardToBuiltin<WrapForValidIteratorObject>, 1, 0,
                     IntrinsicGuardToWrapForValidIterator),
+    JS_INLINABLE_FN("GuardToIteratorHelper",
+                    intrinsic_GuardToBuiltin<IteratorHelperObject>, 1, 0,
+                    IntrinsicGuardToIteratorHelper),
 
     JS_FN("_CreateMapIterationResultPair",
           intrinsic_CreateMapIterationResultPair, 0, 0),
@@ -2560,6 +2577,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToBigInt", intrinsic_ToBigInt, 1, 0),
 
     JS_FN("NewWrapForValidIterator", intrinsic_NewWrapForValidIterator, 0, 0),
+    JS_FN("NewIteratorHelper", intrinsic_NewIteratorHelper, 0, 0),
 
     JS_FN("NewPrivateName", intrinsic_NewPrivateName, 1, 0),
 
