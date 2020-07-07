@@ -11,7 +11,11 @@ import sys
 here = os.path.dirname(os.path.realpath(__file__))
 topsrcdir = os.path.join(here, os.pardir, os.pardir)
 
-EXTRA_PATHS = ("python/mozversioncontrol", "python/mozbuild", "testing/mozbase/mozfile",)
+EXTRA_PATHS = (
+    "python/mozversioncontrol",
+    "python/mozbuild",
+    "testing/mozbase/mozfile",
+)
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
 
 from mozversioncontrol import get_repository_object, InvalidRepoPath

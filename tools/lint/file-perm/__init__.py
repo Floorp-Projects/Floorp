@@ -13,15 +13,15 @@ results = []
 
 def lint(paths, config, fix=None, **lintargs):
 
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         # Windows doesn't have permissions in files
         # Exit now
         return results
 
-    files = list(expand_exclusions(paths, config, lintargs['root']))
+    files = list(expand_exclusions(paths, config, lintargs["root"]))
     for f in files:
         if os.access(f, os.X_OK):
-            with open(f, 'r+') as content:
+            with open(f, "r+") as content:
                 # Some source files have +x permissions
                 line = content.readline()
                 if line.startswith("#!"):
@@ -34,9 +34,10 @@ def lint(paths, config, fix=None, **lintargs):
                 os.chmod(f, 0o644)
                 continue
 
-            res = {'path': f,
-                   'message': "Execution permissions on a source file",
-                   'level': 'error'
-                   }
+            res = {
+                "path": f,
+                "message": "Execution permissions on a source file",
+                "level": "error",
+            }
             results.append(result.from_config(config, **res))
     return results
