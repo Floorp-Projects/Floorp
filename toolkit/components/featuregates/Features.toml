@@ -48,3 +48,13 @@ type = "boolean"
 bug-numbers = [1618610]
 is-public = true
 default-value = {default = false, nightly = true}
+
+[abouthome-startup-cache]
+title = "experimental-features-abouthome-startup-cache"
+description = "experimental-features-abouthome-startup-cache-description"
+restart-required = true
+preference = "browser.startup.homepage.abouthome_cache.enabled"
+type = "boolean"
+bug-numbers = [1614351]
+is-public = true
+default-value = false
