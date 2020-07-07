@@ -224,6 +224,13 @@
     obj: ObjId
     proto: ObjectField
 
+- name: GuardNullProto
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 # Guard per GuardClassKind.
 - name: GuardClass
   shared: true
