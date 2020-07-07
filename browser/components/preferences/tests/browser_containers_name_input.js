@@ -22,6 +22,15 @@ add_task(async function() {
     return dialog.document;
   }
 
+  let { contentDocument } = gBrowser.selectedBrowser;
+  let containerNodes = Array.from(
+    contentDocument.querySelectorAll("[data-category=paneContainers]")
+  );
+  ok(
+    containerNodes.find(node => node.getBoundingClientRect().width > 0),
+    "Should actually be showing the container nodes."
+  );
+
   let doc = await openDialog();
 
   let name = doc.getElementById("name");
