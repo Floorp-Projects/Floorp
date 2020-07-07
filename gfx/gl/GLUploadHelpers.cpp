@@ -397,14 +397,25 @@ SurfaceFormat UploadImageDataToTexture(
       surfaceFormat = SurfaceFormat::R5G6B5_UINT16;
       break;
     case SurfaceFormat::A8:
-      internalFormat = format = LOCAL_GL_LUMINANCE;
+      if (gl->IsGLES()) {
+        format = LOCAL_GL_LUMINANCE;
+        internalFormat = LOCAL_GL_LUMINANCE;
+      } else {
+        format = LOCAL_GL_RED;
+        internalFormat = LOCAL_GL_R8;
+      }
       type = LOCAL_GL_UNSIGNED_BYTE;
       // We don't have a specific luminance shader
       surfaceFormat = SurfaceFormat::A8;
       break;
     case SurfaceFormat::A16:
-      format = LOCAL_GL_LUMINANCE;
-      internalFormat = LOCAL_GL_LUMINANCE16;
+      if (gl->IsGLES()) {
+        format = LOCAL_GL_LUMINANCE;
+        internalFormat = LOCAL_GL_LUMINANCE16;
+      } else {
+        format = LOCAL_GL_RED;
+        internalFormat = LOCAL_GL_R16;
+      }
       type = LOCAL_GL_UNSIGNED_SHORT;
       // We don't have a specific luminance shader
       surfaceFormat = SurfaceFormat::A8;
