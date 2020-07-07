@@ -33,13 +33,20 @@ function promiseNotification(aNotification) {
 }
 
 function declTest(name, cfg) {
-  let { url = "about:blank", remoteTypes, fission, test } = cfg;
+  let {
+    url = "about:blank",
+    includeParent = false,
+    remoteTypes,
+    fission,
+    test,
+  } = cfg;
 
   // Build the actor options object which will be used to register & unregister our window actor.
   let actorOptions = {
     parent: Object.assign({}, processActorOptions.parent),
     child: Object.assign({}, processActorOptions.child),
   };
+  actorOptions.includeParent = includeParent;
   if (remoteTypes !== undefined) {
     actorOptions.remoteTypes = remoteTypes;
   }
