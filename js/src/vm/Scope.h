@@ -63,7 +63,7 @@ static inline bool ScopeKindIsInBody(ScopeKind kind) {
   return kind == ScopeKind::Lexical || kind == ScopeKind::SimpleCatch ||
          kind == ScopeKind::Catch || kind == ScopeKind::With ||
          kind == ScopeKind::FunctionLexical ||
-         kind == ScopeKind::FunctionBodyVar;
+         kind == ScopeKind::FunctionBodyVar || kind == ScopeKind::ClassBody;
 }
 
 const char* BindingKindString(BindingKind kind);
@@ -497,7 +497,7 @@ inline bool Scope::is<LexicalScope>() const {
   return kind_ == ScopeKind::Lexical || kind_ == ScopeKind::SimpleCatch ||
          kind_ == ScopeKind::Catch || kind_ == ScopeKind::NamedLambda ||
          kind_ == ScopeKind::StrictNamedLambda ||
-         kind_ == ScopeKind::FunctionLexical;
+         kind_ == ScopeKind::FunctionLexical || kind_ == ScopeKind::ClassBody;
 }
 
 //
@@ -1110,6 +1110,7 @@ void Scope::applyScopeDataTyped(F&& f) {
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
       case ScopeKind::FunctionLexical:
+      case ScopeKind::ClassBody:
         f(&as<LexicalScope>().data());
         break;
       case ScopeKind::With:
@@ -1132,8 +1133,6 @@ void Scope::applyScopeDataTyped(F&& f) {
       case ScopeKind::WasmFunction:
         f(&as<WasmFunctionScope>().data());
         break;
-      default:
-        MOZ_CRASH("Unexpected scope type in ApplyScopeDataTyped");
     }
   }
 }
