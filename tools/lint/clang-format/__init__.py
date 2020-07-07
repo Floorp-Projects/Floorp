@@ -78,7 +78,7 @@ def get_clang_format_binary():
 
     clang_tools_path = os.path.join(get_state_dir(), "clang-tools")
     bin_path = os.path.join(clang_tools_path, "clang-tidy", "bin")
-    return os.path.join(bin_path, "clang-format" + substs.get('BIN_SUFFIX', ''))
+    return os.path.join(bin_path, "clang-format" + substs.get('HOST_BIN_SUFFIX', ''))
 
 
 def is_ignored_path(ignored_dir_re, topsrcdir, f):
