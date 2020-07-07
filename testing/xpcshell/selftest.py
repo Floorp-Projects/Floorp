@@ -619,7 +619,7 @@ prefs =
         self.assertInLog(TEST_FAIL_STRING)
         self.assertNotInLog(TEST_PASS_STRING)
 
-    def testPrefsInManifest(self):
+    def testPrefsInManifestVerbose(self):
         """
         Check prefs configuration option is supported in xpcshell manifests.
         """
@@ -629,13 +629,27 @@ prefs =
             prefs=["fake.pref.to.test=true"]
         )
 
-        self.assertTestResult(True)
+        self.assertTestResult(True, verbose=True)
         self.assertInLog(TEST_PASS_STRING)
         self.assertNotInLog(TEST_FAIL_STRING)
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(1, self.x.passCount)
         self.assertInLog("Per-test extra prefs will be set:")
         self.assertInLog("fake.pref.to.test=true")
+
+    def testPrefsInManifestNonVerbose(self):
+        """
+        Check prefs configuration are not logged in non verbose mode.
+        """
+        self.writeFile("test_prefs.js", SIMPLE_PREFCHECK_TEST)
+        self.writeManifest(
+            tests=["test_prefs.js"],
+            prefs=["fake.pref.to.test=true"]
+        )
+
+        self.assertTestResult(True, verbose=False)
+        self.assertNotInLog("Per-test extra prefs will be set:")
+        self.assertNotInLog("fake.pref.to.test=true")
 
     @unittest.skipIf(mozinfo.isWin or not mozinfo.info.get('debug'),
                      'We don\'t have a stack fixer on hand for windows.')
