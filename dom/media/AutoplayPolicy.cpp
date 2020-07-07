@@ -55,13 +55,13 @@ static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
 
 static uint32_t SiteAutoplayPerm(nsPIDOMWindowInner* aWindow) {
   if (!aWindow || !aWindow->GetBrowsingContext()) {
-    return nsIPermissionManager::DENY_ACTION;
+    return nsIPermissionManager::UNKNOWN_ACTION;
   }
 
   WindowContext* topContext =
       aWindow->GetBrowsingContext()->GetTopWindowContext();
   if (!topContext) {
-    return nsIPermissionManager::DENY_ACTION;
+    return nsIPermissionManager::UNKNOWN_ACTION;
   }
   return topContext->GetAutoplayPermission();
 }
