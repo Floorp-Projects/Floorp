@@ -35,14 +35,11 @@ function checkDetails(details) {
   is(expect.type, details.type, `${details.type} type matches`);
   is(expect.frameAncestor_length, details.frameAncestors.length, "incorrect frameAncestors length");
   if (filename == "file_contains_img.html") {
-    is(details.frameAncestors[0].frameId, details.parentFrameId);
+    is(details.frameAncestors[0].frameId, details.parentFrameId,
+    "frameAncestors[0] should match parentFrameId");
   } else if (filename == "file_image_good.png") {
-    if (SpecialPowers.useRemoteSubframes) {
-      // This will be fixed in upcoming patches
-      todo_is(details.frameAncestors[0].frameId, details.parentFrameId);
-    } else {
-      is(details.frameAncestors[0].frameId, details.parentFrameId);
-    }
+    is(details.frameAncestors[0].frameId, details.parentFrameId,
+       "frameAncestors[0] should match parentFrameId");
   }
 }
 

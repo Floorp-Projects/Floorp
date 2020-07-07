@@ -501,9 +501,9 @@ function openLinkIn(url, where, params) {
 
     const sourceWindow = w || window;
     let win;
-    if (params.frameOuterWindowID != undefined && sourceWindow) {
+    if (params.frameID != undefined && sourceWindow) {
       // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
-      // event if it contains the expected frameOuterWindowID params.
+      // event if it contains the expected frameID params.
       // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
       // opening a new window using the keyboard shortcut).
       const sourceTabBrowser = sourceWindow.gBrowser.selectedBrowser;
@@ -519,7 +519,7 @@ function openLinkIn(url, where, params) {
                 url,
                 createdTabBrowser: win.gBrowser.selectedBrowser,
                 sourceTabBrowser,
-                sourceFrameOuterWindowID: params.frameOuterWindowID,
+                sourceFrameID: params.frameID,
               },
             },
             "webNavigation-createdNavigationTarget"
@@ -676,9 +676,9 @@ function openLinkIn(url, where, params) {
         aResolveOnNewTabCreated(targetBrowser);
       }
 
-      if (params.frameOuterWindowID != undefined && w) {
+      if (params.frameID != undefined && w) {
         // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
-        // event if it contains the expected frameOuterWindowID params.
+        // event if it contains the expected frameID params.
         // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
         // opening a new tab using the keyboard shortcut).
         Services.obs.notifyObservers(
@@ -687,7 +687,7 @@ function openLinkIn(url, where, params) {
               url,
               createdTabBrowser: targetBrowser,
               sourceTabBrowser: w.gBrowser.selectedBrowser,
-              sourceFrameOuterWindowID: params.frameOuterWindowID,
+              sourceFrameID: params.frameID,
             },
           },
           "webNavigation-createdNavigationTarget"
