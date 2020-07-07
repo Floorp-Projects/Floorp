@@ -1255,6 +1255,8 @@
     <string name="saved_login_copy_username">Copy username</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copy site</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Open site in browser</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Show password</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

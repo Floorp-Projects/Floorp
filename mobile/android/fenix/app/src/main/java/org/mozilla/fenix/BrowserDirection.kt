@@ -28,5 +28,6 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromAddNewDeviceFragment(R.id.addNewDeviceFragment),
     FromAddSearchEngineFragment(R.id.addSearchEngineFragment),
     FromEditCustomSearchEngineFragment(R.id.editCustomSearchEngineFragment),
-    FromAddonDetailsFragment(R.id.addonDetailsFragment)
+    FromAddonDetailsFragment(R.id.addonDetailsFragment),
+    FromLoginDetailFragment(R.id.loginDetailFragment)
 }

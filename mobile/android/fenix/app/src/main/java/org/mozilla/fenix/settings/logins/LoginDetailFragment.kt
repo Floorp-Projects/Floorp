@@ -7,12 +7,12 @@ package org.mozilla.fenix.settings.logins
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.InputType
-import android.view.MenuItem
-import android.view.MenuInflater
+import android.view.LayoutInflater
 import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.view.LayoutInflater
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -21,23 +21,26 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_login_detail.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
 import mozilla.components.lib.state.ext.consumeFrom
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -119,6 +122,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
     private fun setUpPasswordReveal() {
         passwordText.inputType =
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        revealPasswordButton.increaseTapArea(BUTTON_INCREASE_DPS)
         revealPasswordButton.setOnClickListener {
             togglePasswordReveal()
         }
@@ -126,9 +130,13 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
 
     private fun setUpCopyButtons() {
         webAddressText.text = login?.origin
-        copyWebAddress.setOnClickListener(
-            CopyButtonListener(login?.origin, R.string.logins_site_copied)
-        )
+        openWebAddress.increaseTapArea(BUTTON_INCREASE_DPS)
+        copyUsername.increaseTapArea(BUTTON_INCREASE_DPS)
+        copyPassword.increaseTapArea(BUTTON_INCREASE_DPS)
+
+        openWebAddress.setOnClickListener {
+            navigateToBrowser(requireNotNull(login?.origin))
+        }
 
         usernameText.text = login?.username
         copyUsername.setOnClickListener(
@@ -187,6 +195,14 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
             true
         }
         else -> false
+    }
+
+    private fun navigateToBrowser(address: String) {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            address,
+            newTab = true,
+            from = BrowserDirection.FromLoginDetailFragment
+        )
     }
 
     private fun editLogin() {
@@ -280,5 +296,9 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
                 ).setText(copiedItem).show()
             }
         }
+    }
+
+    private companion object {
+        private const val BUTTON_INCREASE_DPS = 24
     }
 }

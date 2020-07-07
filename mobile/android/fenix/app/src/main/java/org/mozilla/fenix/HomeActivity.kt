@@ -53,6 +53,7 @@ import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -81,6 +82,7 @@ import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.settings.about.AboutFragmentDirections
+import org.mozilla.fenix.settings.logins.LoginDetailFragmentDirections
 import org.mozilla.fenix.settings.logins.SavedLoginsAuthFragmentDirections
 import org.mozilla.fenix.settings.search.AddSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirections
@@ -165,14 +167,24 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
 
         if (isActivityColdStarted(intent, savedInstanceState)) {
-            externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
+            externalSourceIntentProcessors.any {
+                it.process(
+                    intent,
+                    navHost.navController,
+                    this.intent
+                )
+            }
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)
 
         if (settings().isTelemetryEnabled) {
-            lifecycle.addObserver(BreadcrumbsRecorder(components.analytics.crashReporter,
-                navHost.navController, ::getBreadcrumbMessage))
+            lifecycle.addObserver(
+                BreadcrumbsRecorder(
+                    components.analytics.crashReporter,
+                    navHost.navController, ::getBreadcrumbMessage
+                )
+            )
 
             val safeIntent = intent?.toSafeIntent()
             safeIntent
@@ -209,7 +221,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 components.backgroundServices.accountManager.initAsync().await()
                 // If we're authenticated, kick-off a sync and a device state refresh.
                 components.backgroundServices.accountManager.authenticatedAccount()?.let {
-                    components.backgroundServices.accountManager.syncNowAsync(SyncReason.Startup, debounce = true)
+                    components.backgroundServices.accountManager.syncNowAsync(
+                        SyncReason.Startup,
+                        debounce = true
+                    )
                 }
             }
         }
@@ -241,8 +256,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         super.onNewIntent(intent)
         intent ?: return
 
-        val intentProcessors = listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors
-        val intentHandled = intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
+        val intentProcessors =
+            listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors
+        val intentHandled =
+            intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
         browsingModeManager.mode = getModeFromIntentOrLastKnown(intent)
 
         if (intentHandled) {
@@ -474,7 +491,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         BrowserDirection.FromEditCustomSearchEngineFragment ->
             EditCustomSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromAddonDetailsFragment ->
-            EditCustomSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
+            AddonDetailsFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromLoginDetailFragment ->
+            LoginDetailFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
 
     private fun load(
@@ -563,13 +582,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     @VisibleForTesting
-    internal fun isActivityColdStarted(startingIntent: Intent, activityIcicle: Bundle?): Boolean =
+    internal fun isActivityColdStarted(startingIntent: Intent, activityIcicle: Bundle?): Boolean {
         // First time opening this activity in the task.
         // Cold start / start from Recents after back press.
-        activityIcicle == null &&
-        // Activity was restarted from Recents after it was destroyed by Android while in background
-        // in cases of memory pressure / "Don't keep activities".
-        startingIntent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+        return activityIcicle == null &&
+                // Activity was restarted from Recents after it was destroyed by Android while in background
+                // in cases of memory pressure / "Don't keep activities".
+                startingIntent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+    }
 
     companion object {
         const val OPEN_TO_BROWSER = "open_to_browser"
