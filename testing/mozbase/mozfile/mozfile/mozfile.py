@@ -234,6 +234,15 @@ def remove(path):
     if not os.path.exists(path):
         return
 
+    """
+    On Windows, adds '\\\\?\\' to paths which match ^[A-Za-z]:\\.* to access
+    files or directories that exceed MAX_PATH(260) limitation or that ends
+    with a period.
+    """
+    if sys.platform in ('win32', 'cygwin') and len(path) >= 3 and \
+            path[1] == ':' and path[2] == '\\':
+        path = u"\\\\?\\%s" % path
+
     if os.path.isfile(path) or os.path.islink(path):
         # Verify the file or link is read/write for the current user
         _update_permissions(path)
