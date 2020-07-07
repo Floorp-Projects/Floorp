@@ -101,6 +101,8 @@ Then:
     # Git
     $ git commit
 
+.. _Commit message:
+
 The commit message should look like:
 
 .. code-block::
@@ -109,10 +111,13 @@ The commit message should look like:
 
     Optionally, a longer description of the change.
 
-To :ref:`find a reviewer or a review group <Getting reviews>`, the easiest way is to do
+**Make sure you include the bug number and at least one reviewer (or reviewer group) in this format.**
+
+To :ref:`find a reviewer or a review group <Getting reviews>`, the easiest way is to run
 ``hg log <modified-file>`` (or ``git log <modified-file>``, if
 you're using git) on the relevant files, and look who usually is
 reviewing the actual changes (ie not reformat, renaming of variables, etc).
+
 
 To visualize your patch in the repository, run:
 
@@ -181,6 +186,8 @@ To install it, run:
 
      $ ./mach install-moz-phab
 
+Once you want to submit your patches (make sure you :ref:`use the right commit message <Commit message>`), run:
+
 .. code-block:: shell
 
      $ moz-phab
@@ -244,12 +251,9 @@ To pull changes from the repository, run:
 To push a change in the code base
 ---------------------------------
 
-Once the change has been accepted, ask the reviewer if they could land
-the change. They don’t have an easy way to know if a contributor has
-permission to land it or not.
-
-If the reviewer does not land the patch after a few days, add
-the *Check-in Needed* Tags to the review (*Edit Revision*).
+Once the change has been accepted and you've fixed any remaining issues
+the reviewer identified, add the *Check-in Needed* tag to the review
+(use the *Edit Revision* option on the top right).
 
 The landing procedure will automatically close the review and the bug.
 
