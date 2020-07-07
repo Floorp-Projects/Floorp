@@ -58,6 +58,38 @@ static IonScript* const IonCompilingScriptPtr =
 class JitScript;
 class InliningRoot;
 
+/* [SMDOC] ICScript Lifetimes
+ *
+ * An ICScript owns an array of ICEntries, each of which owns a linked
+ * list of ICStubs.
+ *
+ * A JitScript contains an embedded ICScript. If it has done any trial
+ * inlining, it also owns an InliningRoot. The InliningRoot owns all
+ * of the ICScripts that have been created for inlining into the
+ * corresponding JitScript. This ties the lifetime of the inlined
+ * ICScripts to the lifetime of the JitScript itself.
+ *
+ * We store pointers to ICScripts in two other places: on the stack in
+ * BaselineFrame, and in IC stubs for CallInlinedFunction.
+ *
+ * The ICScript pointer in a BaselineFrame either points to the
+ * ICScript embedded in the JitScript for that frame, or to an inlined
+ * ICScript owned by a caller. In each case, there must be a frame on
+ * the stack corresponding to the JitScript that owns the current
+ * ICScript, which will keep the ICScript alive.
+ *
+ * Each ICStub is owned by an ICScript and, indirectly, a
+ * JitScript. An ICStub that uses CallInlinedFunction contains an
+ * ICScript for use by the callee. The ICStub and the callee ICScript
+ * are always owned by the same JitScript, so the callee ICScript will
+ * not be freed while the ICStub is alive.
+ *
+ * The lifetime of an ICScript is independent of the lifetimes of the
+ * BaselineScript and IonScript/WarpScript to which it
+ * corresponds. They can be destroyed and recreated, and the ICScript
+ * will remain valid.
+ */
+
 class alignas(uintptr_t) ICScript final : public TrailingArray {
  public:
   ICScript(JitScript* jitScript, uint32_t warmUpCount, Offset endOffset,
