@@ -16,12 +16,10 @@ import mozilla.components.feature.search.BrowserStoreSearchAdapter
 fun DefaultSelectionActionDelegate(
     store: BrowserStore,
     context: Context,
-    appName: String,
     shareTextClicked: ((String) -> Unit)? = null
 ) =
     DefaultSelectionActionDelegate(
         BrowserStoreSearchAdapter(store),
         context.resources,
-        appName,
         shareTextClicked
     )

@@ -74,8 +74,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
             EngineView::class.java.name -> components.engine.createView(context, attrs).apply {
                 selectionActionDelegate = DefaultSelectionActionDelegate(
                     components.store,
-                    context,
-                    "Sample Browser"
+                    context
                 ) {
                     share(it)
                 }

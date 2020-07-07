@@ -24,14 +24,13 @@ private val customActions = arrayOf(SEARCH, SEARCH_PRIVATELY, SHARE)
 class DefaultSelectionActionDelegate(
     private val searchAdapter: SearchAdapter,
     resources: Resources,
-    appName: String,
     private val shareTextClicked: ((String) -> Unit)? = null
 ) : SelectionActionDelegate {
 
     private val normalSearchText =
-        resources.getString(R.string.mozac_selection_context_menu_search, appName)
+        resources.getString(R.string.mozac_selection_context_menu_search_2)
     private val privateSearchText =
-        resources.getString(R.string.mozac_selection_context_menu_search_privately, appName)
+        resources.getString(R.string.mozac_selection_context_menu_search_privately_2)
     private val shareText = resources.getString(R.string.mozac_selection_context_menu_share)
 
     override fun getAllActions(): Array<String> = customActions
