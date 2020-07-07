@@ -86,7 +86,6 @@ class PreallocatedProcessManagerImpl;
 class BenchmarkStorageParent;
 
 using mozilla::loader::PScriptCacheParent;
-using mozilla::scache::PStartupCacheParent;
 
 namespace embedding {
 class PrintingParent;
@@ -926,10 +925,6 @@ class ContentParent final
                                               const bool& wantCacheData);
 
   bool DeallocPScriptCacheParent(PScriptCacheParent* shell);
-
-  PStartupCacheParent* AllocPStartupCacheParent(const bool& wantCacheData);
-
-  bool DeallocPStartupCacheParent(PStartupCacheParent* shell);
 
   bool DeallocPNeckoParent(PNeckoParent* necko);
 
