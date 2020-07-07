@@ -281,10 +281,10 @@ AddrHostRecord::AddrHostRecord(const nsHostKey& key)
       addr_info(nullptr),
       addr(nullptr),
       mFirstTRRresult(NS_OK),
+      mTRRUsed(false),
       mTRRSuccess(0),
       mNativeSuccess(0),
       mNative(false),
-      mTRRUsed(false),
       mNativeUsed(false),
       onQueue(false),
       usingAnyThread(false),
@@ -1309,7 +1309,6 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
   if (addrRec) {
     addrRec->mTRRSuccess = 0;  // bump for each successful TRR response
     addrRec->mTrrStart = TimeStamp::Now();
-    addrRec->mTRRUsed = true;  // this record gets TRR treatment
     addrRec->mTrrAUsed = AddrHostRecord::INIT;
     addrRec->mTrrAAAAUsed = AddrHostRecord::INIT;
 
@@ -1568,6 +1567,15 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     if (!rec->IsAddrRecord()) {
       return rv;
     }
+
+#ifdef DEBUG
+    // If we use this branch then the mTRRUsed flag should not be set
+    // Even if we did call TrrLookup above, the fact that it failed sync-ly
+    // means that we didn't actually succeed in opening the channel.
+    RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
+    MOZ_ASSERT(addrRec && !addrRec->mTRRUsed);
+#endif
+
     rv = NativeLookup(rec);
   }
 
