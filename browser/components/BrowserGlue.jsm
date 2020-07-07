@@ -2118,6 +2118,52 @@ BrowserGlue.prototype = {
     _checkPioneerPref();
   },
 
+  _monitorPioneerStudies() {
+    const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons";
+    const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
+      "toolkit.telemetry.pioneer-new-studies-available";
+
+    const _badgeIcon = async () => {
+      for (let win of Services.wm.getEnumerator("navigator:browser")) {
+        win.document
+          .getElementById("pioneer-button")
+          .querySelector(".toolbarbutton-badge")
+          .classList.add("feature-callout");
+      }
+    };
+
+    const windowListener = {
+      onOpenWindow(xulWindow) {
+        const win = xulWindow.docShell.domWindow;
+        win.addEventListener("load", () => {
+          const pioneerButton = win.document.getElementById("pioneer-button");
+          if (pioneerButton) {
+            const badge = pioneerButton.querySelector(".toolbarbutton-badge");
+            if (
+              Services.prefs.getBoolPref(
+                PREF_PIONEER_NEW_STUDIES_AVAILABLE,
+                false
+              )
+            ) {
+              badge.classList.add("feature-callout");
+            } else {
+              badge.classList.remove("feature-callout");
+            }
+          }
+        });
+      },
+      onCloseWindow() {},
+    };
+
+    Services.prefs.addObserver(PREF_PIONEER_NEW_STUDIES_AVAILABLE, _badgeIcon);
+
+    RemoteSettings(STUDY_ADDON_COLLECTION_KEY).on("sync", async event => {
+      Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
+    });
+
+    Services.wm.addListener(windowListener);
+  },
+
   _showNewInstallModal() {
     // Allow other observers of the same topic to run while we open the dialog.
     Services.tm.dispatchToMainThread(() => {
@@ -2209,6 +2255,7 @@ BrowserGlue.prototype = {
     this._monitorWebcompatReporterPref();
     this._monitorHTTPSOnlyPref();
     this._monitorPioneerPref();
+    this._monitorPioneerStudies();
 
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
       Ci.nsIToolkitProfileService
