@@ -1,4 +1,4 @@
-load(libdir + "asserts.js");
+load(libdir + 'asserts.js');
 
 let source = `class C {
     x =
@@ -21,15 +21,19 @@ source = `class C {
 }`;
 assertErrorMessage(() => Function(source), SyntaxError, /./);
 
-source = `class C {
+// The following stop being syntax errors if private fields are
+// enabled.
+if (!getRealmConfiguration()['privateFields']) {
+  source = `class C {
     #x;
-}`;
-assertErrorMessage(() => Function(source), SyntaxError, /./);
+  }`;
+  assertErrorMessage(() => Function(source), SyntaxError, /./);
 
-source = `class C {
+  source = `class C {
     #y = 2;
-}`;
-assertErrorMessage(() => Function(source), SyntaxError, /./);
+   }`;
+  assertErrorMessage(() => Function(source), SyntaxError, /./);
+}
 
 source = `class C {
     #["h" + "i"];
@@ -69,8 +73,8 @@ class C {
 assertErrorMessage(() => Function(source), SyntaxError, /./);
 
 // TODO
-//source = `#outside;`;
-//assertErrorMessage(() => eval(source), SyntaxError);
+// source = `#outside;`;
+// assertErrorMessage(() => eval(source), SyntaxError);
 
 source = `class C {
     x = super();
@@ -124,5 +128,4 @@ assertThrowsInstanceOf(() => Function(source), SyntaxError);
 source = `class C { x get f() {} }`;
 assertThrowsInstanceOf(() => Function(source), SyntaxError);
 
-if (typeof reportCompare === "function")
-  reportCompare(true, true);
+if (typeof reportCompare === 'function') reportCompare(true, true);

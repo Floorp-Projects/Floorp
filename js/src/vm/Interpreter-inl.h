@@ -537,6 +537,43 @@ static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
   return true;
 }
 
+static MOZ_ALWAYS_INLINE bool GetPrivateElemOperation(JSContext* cx,
+                                                      jsbytecode* pc,
+                                                      HandleValue lhsValue,
+                                                      HandleValue key,
+                                                      MutableHandleValue res) {
+  // Private names represented as PrivateSymbol properties on objects.
+  MOZ_ASSERT(key.isSymbol());
+  MOZ_ASSERT(key.toSymbol()->isPrivateName());
+
+  RootedId id(cx);
+  if (!ToPropertyKey(cx, key, &id)) {
+    return false;
+  }
+
+  // LHS must be an object.
+  if (!lhsValue.isObject()) {
+    ReportNotObject(cx, lhsValue);
+    return false;
+  }
+
+  RootedObject obj(cx, &lhsValue.toObject());
+
+  // Check obj has required property already.
+  bool hasField = false;
+  if (!HasOwnProperty(cx, obj, id, &hasField)) {
+    return false;
+  }
+
+  if (!hasField) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_UNDECLARED_PRIVATE);
+    return false;
+  }
+
+  return GetProperty(cx, obj, obj, id, res);
+}
+
 static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
     JSContext* cx, JSOp op, HandleValue lref, int lrefIndex, HandleValue rref,
     MutableHandleValue res) {
@@ -593,6 +630,59 @@ static MOZ_ALWAYS_INLINE bool InitElemOperation(JSContext* cx, jsbytecode* pc,
 
   unsigned flags = GetInitDataPropAttrs(JSOp(*pc));
   return DefineDataProperty(cx, obj, id, val, flags);
+}
+
+static MOZ_ALWAYS_INLINE bool InitPrivateElemOperation(JSContext* cx,
+                                                       jsbytecode* pc,
+                                                       HandleObject obj,
+                                                       HandleValue idval,
+                                                       HandleValue val) {
+  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
+
+  // Private names represented as PrivateSymbol properties on objects.
+  MOZ_ASSERT(idval.isSymbol());
+  MOZ_ASSERT(idval.toSymbol()->isPrivateName());
+
+  RootedId id(cx);
+  if (!ToPropertyKey(cx, idval, &id)) {
+    return false;
+  }
+
+  bool hasField = false;
+  if (!HasOwnProperty(cx, obj, id, &hasField)) {
+    return false;
+  }
+
+  // PrivateFieldAdd: Step 4: We must throw a type error if obj already has
+  // this property.
+  if (hasField) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_PRIVATE_FIELD_DOUBLE);
+    return false;
+  }
+  unsigned flags = GetInitDataPropAttrs(JSOp(*pc));
+  return DefineDataProperty(cx, obj, id, val, flags);
+}
+
+static MOZ_ALWAYS_INLINE bool SetPrivateElementOperation(JSContext* cx,
+                                                         HandleObject obj,
+                                                         HandleId id,
+                                                         HandleValue value,
+                                                         HandleValue receiver) {
+  bool hasField = false;
+  if (!HasOwnProperty(cx, obj, id, &hasField)) {
+    return false;
+  }
+
+  if (!hasField) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_UNDECLARED_PRIVATE);
+    return false;
+  }
+
+  ObjectOpResult result;
+  return SetProperty(cx, obj, id, value, receiver, result) &&
+         result.checkStrictModeError(cx, obj, id, true);
 }
 
 static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,
