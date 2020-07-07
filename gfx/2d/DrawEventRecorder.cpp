@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DrawEventRecorder.h"
+
+#include "mozilla/UniquePtrExtensions.h"
 #include "PathRecording.h"
 #include "RecordingTypes.h"
 #include "RecordedEventImpl.h"
@@ -35,7 +37,16 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
 
     // Insert a dummy source surface.
     int32_t stride = surfaceSize.width * BytesPerPixel(aSurface->GetFormat());
-    UniquePtr<uint8_t[]> sourceData(new uint8_t[stride * surfaceSize.height]());
+    UniquePtr<uint8_t[]> sourceData =
+        MakeUniqueFallible<uint8_t[]>(stride * surfaceSize.height);
+    if (!sourceData) {
+      // If the surface is too big just create a 1 x 1 dummy.
+      surfaceSize.width = 1;
+      surfaceSize.height = 1;
+      stride = surfaceSize.width * BytesPerPixel(aSurface->GetFormat());
+      sourceData = MakeUnique<uint8_t[]>(stride * surfaceSize.height);
+    }
+
     RecordEvent(RecordedSourceSurfaceCreation(aSurface, sourceData.get(),
                                               stride, surfaceSize,
                                               aSurface->GetFormat()));
