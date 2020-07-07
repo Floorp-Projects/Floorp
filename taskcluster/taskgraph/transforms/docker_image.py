@@ -4,19 +4,21 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
 import os
 import re
+import json
 
 from collections import deque
+import six
 from six import text_type
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.transforms.task import _run_task_suffix
 from .. import GECKO
 from taskgraph.util.docker import (
     generate_context_hash,
+    create_context_tar,
 )
-from taskgraph.util.taskcluster import get_root_url
 from taskgraph.util.schema import (
     Schema,
 )
@@ -26,7 +28,17 @@ from voluptuous import (
 )
 from .task import task_description_schema
 
+logger = logging.getLogger(__name__)
+
+CONTEXTS_DIR = 'docker-contexts'
+
 DIGEST_RE = re.compile('^[0-9a-f]{64}$')
+
+IMAGE_BUILDER_IMAGE = (
+    'taskcluster/image_builder:4.0.0'
+    "@sha256:"
+    "866c304445334703b68653e1390816012c9e6bdabfbd1906842b5b229e8ed044"
+ )
 
 transforms = TransformSequence()
 
@@ -101,6 +113,10 @@ def fill_template(config, tasks):
 
     context_hashes = {}
 
+    if not taskgraph.fast and config.write_artifacts:
+        if not os.path.isdir(CONTEXTS_DIR):
+            os.makedirs(CONTEXTS_DIR)
+
     for task in order_image_tasks(config, tasks):
         image_name = task.pop('name')
         job_symbol = task.pop('symbol')
@@ -114,29 +130,32 @@ def fill_template(config, tasks):
                 raise Exception('Missing package job for {}-{}: {}'.format(
                     config.kind, image_name, p))
 
-        # Generating the context hash relies on arguments being set, so we
-        # set this now, although it's not the final value (it's a
-        # task-reference value, see further below). We add the package routes
-        # containing a hash to get the overall docker image hash, so changes
-        # to packages will be reflected in the docker image hash.
-        args['DOCKER_IMAGE_PACKAGES'] = ' '.join('<{}>'.format(p)
-                                                 for p in packages)
-        if parent:
-            args['DOCKER_IMAGE_PARENT'] = '{}:{}'.format(parent, context_hashes[parent])
-
-        args['TASKCLUSTER_ROOT_URL'] = get_root_url(False)
-
         if not taskgraph.fast:
             context_path = os.path.join('taskcluster', 'docker', definition)
-            context_hash = generate_context_hash(
-                GECKO, context_path, image_name, args)
+            if config.write_artifacts:
+                context_file = os.path.join(CONTEXTS_DIR, '{}.tar.gz'.format(image_name))
+                logger.info("Writing {} for docker image {}".format(context_file, image_name))
+                context_hash = create_context_tar(
+                    GECKO, context_path,
+                    context_file,
+                    args)
+            else:
+                context_hash = generate_context_hash(
+                    GECKO, context_path,
+                    args)
         else:
+            if config.write_artifacts:
+                raise Exception("Can't write artifacts if `taskgraph.fast` is set.")
             context_hash = '0'*40
         digest_data = [context_hash]
+        digest_data += [json.dumps(args, sort_keys=True)]
         context_hashes[image_name] = context_hash
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
+
+        args['DOCKER_IMAGE_PACKAGES'] = ' '.join('<{}>'.format(p)
+                                                 for p in packages)
 
         # Adjust the zstandard compression level based on the execution level.
         # We use faster compression for level 1 because we care more about
@@ -152,10 +171,7 @@ def fill_template(config, tasks):
             'description': description,
             'attributes': {'image_name': image_name},
             'expires-after': '28 days' if config.params.is_try() else '1 year',
-            'scopes': [
-                'secrets:get:project/taskcluster/gecko/hgfingerprint',
-                'secrets:get:project/taskcluster/gecko/hgmointernal',
-            ],
+            'scopes': [],
             'treeherder': {
                 'symbol': job_symbol,
                 'platform': 'taskcluster-images/opt',
@@ -169,23 +185,24 @@ def fill_template(config, tasks):
                 'os': 'linux',
                 'artifacts': [{
                     'type': 'file',
-                    'path': '/builds/worker/workspace/artifacts/image.tar.zst',
+                    'path': '/workspace/image.tar.zst',
                     'name': 'public/image.tar.zst',
                 }],
                 'env': {
-                    'HG_STORE_PATH': '/builds/worker/checkouts/hg-store',
+                    'CONTEXT_TASK_ID': {'task-reference': "<decision>"},
+                    'CONTEXT_PATH': "public/docker-contexts/{}.tar.gz".format(image_name),
                     'HASH': context_hash,
                     'PROJECT': config.params['project'],
                     'IMAGE_NAME': image_name,
                     'DOCKER_IMAGE_ZSTD_LEVEL': zstd_level,
+                    'DOCKER_BUILD_ARGS': {'task-reference': six.ensure_text(json.dumps(args))},
                     'GECKO_BASE_REPOSITORY': config.params['base_repository'],
                     'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
                     'GECKO_HEAD_REV': config.params['head_rev'],
                 },
                 'chain-of-trust': True,
-                'docker-in-docker': True,
-                'taskcluster-proxy': True,
                 'max-run-time': 7200,
+                # FIXME: We aren't currently propagating the exit code
             },
         }
         # Retry for 'funsize-update-generator' if exit status code is -1
@@ -194,45 +211,8 @@ def fill_template(config, tasks):
 
         worker = taskdesc['worker']
 
-        # We use the in-tree image_builder image to build docker images, but
-        # that can't be used to build the image_builder image itself,
-        # obviously. So we fall back to an image on docker hub, identified
-        # by hash.  After the image-builder image is updated, it's best to push
-        # and update this hash as well, to keep image-builder builds up to date.
-        if image_name == 'image_builder':
-            hash = 'sha256:c6622fd3e5794842ad83d129850330b26e6ba671e39c58ee288a616a3a1c4c73'
-            worker['docker-image'] = 'taskcluster/image_builder@' + hash
-            # Keep in sync with the Dockerfile used to generate the
-            # docker image whose digest is referenced above.
-            worker['volumes'] = [
-                '/builds/worker/checkouts',
-                '/builds/worker/workspace',
-            ]
-            cache_name = 'imagebuilder-v1'
-        else:
-            worker['docker-image'] = {'in-tree': 'image_builder'}
-            cache_name = 'imagebuilder-sparse-{}'.format(_run_task_suffix())
-            # Force images built against the in-tree image builder to
-            # have a different digest by adding a fixed string to the
-            # hashed data.
-            # Append to this data whenever the image builder's output behavior
-            # is changed, in order to force all downstream images to be rebuilt and
-            # cached distinctly.
-            digest_data.append('image_builder')
-            # Updated for squashing images in Bug 1527394
-            digest_data.append('squashing layers')
-
-        worker['caches'] = [{
-            'type': 'persistent',
-            'name': cache_name,
-            'mount-point': '/builds/worker/checkouts',
-        }]
-
-        for k, v in args.items():
-            if k == 'DOCKER_IMAGE_PACKAGES':
-                worker['env'][k] = {'task-reference': v}
-            else:
-                worker['env'][k] = v
+        worker['docker-image'] = IMAGE_BUILDER_IMAGE
+        digest_data.append("image-builder-image:{}".format(IMAGE_BUILDER_IMAGE))
 
         if packages:
             deps = taskdesc.setdefault('dependencies', {})
@@ -242,7 +222,7 @@ def fill_template(config, tasks):
         if parent:
             deps = taskdesc.setdefault('dependencies', {})
             deps['parent'] = 'build-docker-image-{}'.format(parent)
-            worker['env']['DOCKER_IMAGE_PARENT_TASK'] = {
+            worker['env']['PARENT_TASK_ID'] = {
                 'task-reference': '<parent>',
             }
         if 'index' in task:

@@ -1,47 +1,102 @@
-FROM ubuntu:18.04
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# %include python/mozbuild/mozbuild/action/tooltool.py
-ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
+FROM golang:1.14 as skopeo
 
-# %include taskcluster/docker/recipes/common.sh
-ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
+WORKDIR /go/src/
+RUN ["git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.0", "https://github.com/containers/skopeo", "."]
+RUN ["git", "checkout", "63085f5bef1131aa9ec0907a5c8d66b67de7c4b2"]
+ENV GO111MODULE=on CGO_ENABLED=0
+RUN ["go", "build", \
+	"-mod=vendor", "-o", "out/skopeo", \
+	"-tags", "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp", \
+	# Set unixTempDirForBigFiles so skopeo will extract in a directory hidden by kaniko
+	# We create the directory below.
+	"-ldflags", " -X github.com/containers/image/v5/internal/tmpdir.unixTempDirForBigFiles=/workspace/tmp -X github.com/containers/image/v5/signature.systemDefaultPolicyPath=/kaniko/containers/policy.json -extldflags \"-static\" -w -s", \
+	"./cmd/skopeo"]
 
-# %include taskcluster/docker/recipes/install-mercurial.sh
-ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+FROM golang:1.14 as kaniko
+WORKDIR /go/src/
+RUN ["git", "clone", "--no-checkout", "--depth=1", "--branch=v0.24.0", "https://github.com/GoogleContainerTools/kaniko", "."]
+RUN ["git", "checkout", "cdbd8af0578c56e2801b57461e9f417f9479d303"]
+RUN ["make"]
 
-# %include testing/mozharness/external_tools/robustcheckout.py
-ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
+# Build the `build-image` command as a static binary using musl
+# The setup is loosely based on a stripped down version of
+# https://github.com/emk/rust-musl-builder/blob/master/Dockerfile
+FROM debian:buster as build-image
 
-# %include taskcluster/docker/recipes/hgrc
-COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
+COPY apt.conf /etc/apt/apt.conf.d/99taskcluster
 
-# %include taskcluster/scripts/run-task
-ADD topsrcdir/taskcluster/scripts/run-task /usr/local/bin/run-task
+RUN apt-get update && \
+    apt-get install \
+        build-essential \
+        ca-certificates \
+        curl \
+        musl-dev \
+        musl-tools \
+        && \
+    useradd rust --user-group --create-home --shell /bin/bash
 
-# Add and run setup script
-ADD build-image.sh      /usr/local/bin/build-image.sh
-ADD download-and-compress /usr/local/bin/download-and-compress
-ADD setup.sh            /setup/setup.sh
-ADD requirements/py2.txt /setup/requirements-py2.txt
-ADD requirements/py3.txt /setup/requirements-py3.txt
-RUN bash /setup/setup.sh
+# Run all further code as user `rust`, and create our working directories
+# as the appropriate user.
+USER rust
 
-# Setup a workspace that won't use AUFS.
-VOLUME /builds/worker/checkouts
-VOLUME /builds/worker/workspace
+# Set up our path with all our binary directories, including those for the
+# musl-gcc toolchain and for our Rust toolchain.
+ENV PATH=/home/rust/.cargo/bin:$PATH
 
-# Set variable normally configured at login, by the shells parent process, these
-# are taken from GNU su manual
-ENV           HOME          /builds/worker
-ENV           SHELL         /bin/bash
-ENV           USER          worker
-ENV           LOGNAME       worker
-ENV           HOSTNAME      taskcluster-worker
-ENV           LC_ALL        C
+# The Rust toolchain to use when building our image.  Set by `hooks/build`.
+ENV TOOLCHAIN=1.42.0 \
+    TARGET=x86_64-unknown-linux-musl
 
-# Create worker user
-RUN useradd -d /builds/worker -s /bin/bash -m worker
+# Install our Rust toolchain and the `musl` target.  We patch the
+# command-line we pass to the installer so that it won't attempt to
+# interact with the user or fool around with TTYs.  We also set the default
+# `--target` to musl so that our users don't need to keep overriding it
+# manually.
+RUN curl https://sh.rustup.rs -sSf | \
+    sh -s -- -y \
+        --profile minimal \
+        --default-toolchain $TOOLCHAIN \
+        --target $TARGET
 
-# Set some sane defaults
-WORKDIR /builds/worker/
-CMD     build-image.sh
+# Expect our source code to live in /home/rust/src.  We'll run the build as
+# user `rust`, which will be uid 1000, gid 1000 outside the container.
+RUN mkdir -p /home/rust/src
+WORKDIR /home/rust/src
+# Add our source code.
+ADD --chown=rust:rust build-image/ ./
+
+# --out-dir is not yet stable
+ENV RUSTC_BOOTSTRAP=1
+# Build our application.
+RUN ["cargo", "build", "--target", "x86_64-unknown-linux-musl", "--out-dir=bin", "--release", "-Zunstable-options"]
+
+FROM scratch as empty
+
+FROM scratch
+
+COPY --from=skopeo /go/src/out/skopeo /kaniko/skopeo
+COPY --from=kaniko /go/src/out/executor /kaniko/executor
+COPY --from=build-image \
+    /home/rust/src/bin/build-image \
+    /kaniko/build-image
+
+ADD https://mkcert.org/generate/ /kaniko/ssl/certs/ca-certificats.crt
+ENV SSL_CERT_DIR=/kaniko/ssl/certs
+
+ADD policy.json /kaniko/containers/policy.json
+
+ENV HOME /root
+ENV USER /root
+WORKDIR /workspace
+
+ENV PATH /usr/local/bin:/kaniko
+
+VOLUME /workspace
+# Create an empty temporary directory for skopeo
+COPY --from=empty / /workspace/tmp
+COPY --from=empty / /workspace/cache
+ENTRYPOINT ["/kaniko/build-image"]

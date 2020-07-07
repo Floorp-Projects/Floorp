@@ -1,4 +1,3 @@
-# %ARG DOCKER_IMAGE_PARENT
 FROM $DOCKER_IMAGE_PARENT
 MAINTAINER Mike Hommey <mhommey@mozilla.com>
 
@@ -8,8 +7,8 @@ VOLUME /builds/worker/tooltool-cache
 
 ENV XZ_OPT=-T0
 
-# %ARG DOCKER_IMAGE_PACKAGES
-# %ARG TASKCLUSTER_ROOT_URL
+ARG DOCKER_IMAGE_PACKAGES
+ARG TASKCLUSTER_ROOT_URL
 RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
 
 RUN apt-get update && \
