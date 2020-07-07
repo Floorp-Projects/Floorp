@@ -72,6 +72,9 @@ Review groups
    * - #perftest-reviewers
      - Perf Tests
      - `Member list <https://phabricator.services.mozilla.com/project/members/102/>`__
+   * - #preferences-reviewers
+     - Firefox for Desktop Preferences (Options) user interface
+     - `Member list <https://phabricator.services.mozilla.com/project/members/132/>`__
    * - #remote-protocol-reviewers
      - Remote protocol
      - `Member list <https://phabricator.services.mozilla.com/project/members/101/>`__
