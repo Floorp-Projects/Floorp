@@ -63,8 +63,17 @@ struct BufferFreer {
     CoTaskMemFree(b);
   }
 };
+struct LsaDeregistrator {
+  typedef HANDLE pointer;
+  void operator()(HANDLE h) {
+    if (h != INVALID_HANDLE_VALUE) {
+      LsaDeregisterLogonProcess(h);
+    }
+  }
+};
 typedef std::unique_ptr<HANDLE, HandleCloser> ScopedHANDLE;
 typedef std::unique_ptr<LPVOID, BufferFreer> ScopedBuffer;
+typedef std::unique_ptr<HANDLE, LsaDeregistrator> ScopedLsaHANDLE;
 
 constexpr int64_t Int32Modulo = 2147483648;
 
@@ -293,7 +302,7 @@ static nsresult ReauthenticateUserWindows(
   credui.hbmBanner = nullptr;  // ignored
 
   while (!reauthenticated) {
-    HANDLE lsa;
+    HANDLE lsa = INVALID_HANDLE_VALUE;
     // Get authentication handle for future user authentications.
     // https://docs.microsoft.com/en-us/windows/desktop/api/ntsecapi/nf-ntsecapi-lsaconnectuntrusted
     if (LsaConnectUntrusted(&lsa) != ERROR_SUCCESS) {
@@ -301,7 +310,7 @@ static nsresult ReauthenticateUserWindows(
               ("Error acquiring lsa. Authentication attempts will fail."));
       return NS_ERROR_FAILURE;
     }
-    ScopedHANDLE scopedLsa(lsa);
+    ScopedLsaHANDLE scopedLsa(lsa);
 
     if (!userTokenInfo || lsa == INVALID_HANDLE_VALUE) {
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
@@ -349,7 +358,7 @@ static nsresult ReauthenticateUserWindows(
     ULONG profileBufferLength = 0;
     QUOTA_LIMITS limits = {0};
     LUID luid;
-    HANDLE token;
+    HANDLE token = INVALID_HANDLE_VALUE;
     LSA_STRING name;
     name.Buffer = contextName;
     name.Length = strlen(name.Buffer);
@@ -361,7 +370,6 @@ static nsresult ReauthenticateUserWindows(
         &profileBuffer, &profileBufferLength, &luid, &token, &limits, &substs);
     ScopedHANDLE scopedToken(token);
     LsaFreeReturnBuffer(profileBuffer);
-    LsaDeregisterLogonProcess(scopedLsa.get());
     if (sts == ERROR_SUCCESS) {
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
               ("User logged in successfully."));
