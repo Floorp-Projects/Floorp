@@ -72,6 +72,10 @@ projects:
     path: components/feature/media
     description: 'Feature component for website media related features.'
     publish: true
+  feature-logins:
+    path: components/feature/logins
+    description: 'Feature component for logins related features.'
+    publish: true
   feature-p2p:
     path: components/feature/p2p
     description: 'Feature used for peer-to-peer communication.'

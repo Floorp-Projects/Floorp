@@ -111,6 +111,17 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        /*
+         * If an implementation of [LoginExceptions] is hooked up to [PromptFeature], we will not
+         * show this save login dialog for any origin saved as an exception.
+         */
+        CoroutineScope(IO).launch {
+            if (feature?.loginExceptionStorage?.isLoginExceptionByOrigin(origin) == true) {
+                feature?.onCancel(sessionId)
+                dismiss()
+            }
+        }
+
         return inflateRootView(container)
     }
 
@@ -125,9 +136,16 @@ internal class LoginDialogFragment : PromptDialogFragment() {
             onPositiveClickAction()
         }
 
-        view.findViewById<Button>(R.id.save_cancel).setOnClickListener {
-            feature?.onCancel(sessionId)
-            dismiss()
+        view.findViewById<Button>(R.id.save_cancel).apply {
+            setOnClickListener {
+                if (this.text == context?.getString(R.string.mozac_feature_prompt_never_save)) {
+                    CoroutineScope(IO).launch {
+                        feature?.loginExceptionStorage?.addLoginException(origin)
+                    }
+                }
+                feature?.onCancel(sessionId)
+                dismiss()
+            }
         }
         update()
     }
@@ -269,7 +287,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
                     Result.CanBeCreated -> {
                         setViewState(
                             headline = context?.getString(R.string.mozac_feature_prompt_login_save_headline),
-                            negativeText = context?.getString(R.string.mozac_feature_prompt_dont_save),
+                            negativeText = context?.getString(R.string.mozac_feature_prompt_never_save),
                             confirmText = context?.getString(R.string.mozac_feature_prompt_save_confirmation)
                         )
                     }

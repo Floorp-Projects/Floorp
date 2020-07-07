@@ -106,7 +106,7 @@
         android:layout_marginEnd="12dp"
         android:background="?android:attr/selectableItemBackground"
         android:letterSpacing="0"
-        android:text="@string/mozac_feature_prompt_dont_save"
+        android:text="@string/mozac_feature_prompt_never_save"
         android:textAllCaps="false"
         android:textColor="@color/button_state_list"
         android:textSize="14sp"
