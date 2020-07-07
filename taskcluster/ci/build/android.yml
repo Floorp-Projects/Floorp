@@ -60,6 +60,7 @@ android-api-16/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -83,6 +84,7 @@ android-x86/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -103,6 +105,7 @@ android-x86-fuzzing/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86-fuzzing-debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -157,6 +160,7 @@ android-api-16/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -210,6 +214,7 @@ android-aarch64/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -233,6 +238,7 @@ android-aarch64/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64-debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -286,6 +292,7 @@ android-x86_64/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -337,6 +344,7 @@ android-x86_64/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -362,6 +370,7 @@ android-api-16-gcp/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -389,6 +398,7 @@ android-x86-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -415,6 +425,7 @@ android-api-16-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -441,6 +452,7 @@ android-aarch64-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -467,6 +479,7 @@ android-aarch64-gcp/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64-debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -493,6 +506,7 @@ android-x86_64-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang
@@ -540,6 +554,7 @@ android-x86_64-asan-fuzzing/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-fuzzing-asan
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-clang-android-cross

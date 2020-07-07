@@ -211,6 +211,7 @@ def use_fetches(config, jobs):
         dependencies = job.setdefault('dependencies', {})
         worker = job.setdefault('worker', {})
         prefix = get_artifact_prefix(job)
+        has_sccache = False
         for kind, artifacts in fetches.items():
             if kind in ('fetch', 'toolchain'):
                 for fetch_name in artifacts:
@@ -230,7 +231,7 @@ def use_fetches(config, jobs):
                     })
 
                     if kind == 'toolchain' and fetch_name.endswith('-sccache'):
-                        job['use-sccache'] = True
+                        has_sccache = True
             else:
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
@@ -278,6 +279,9 @@ def use_fetches(config, jobs):
                     if dest is not None:
                         fetch['dest'] = dest
                     job_fetches.append(fetch)
+
+        if job.get('use-sccache') and not has_sccache:
+            raise Exception("Must provide an sccache toolchain if using sccache.")
 
         job_artifact_prefixes = {
             mozpath.dirname(fetch["artifact"])

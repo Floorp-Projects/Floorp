@@ -45,6 +45,7 @@ win32/debug:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -97,6 +98,7 @@ win32/opt:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -149,6 +151,7 @@ win64/debug:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -195,6 +198,7 @@ win64-fuzzing/debug:
             - builds/taskcluster_sub_win64/debug.py
         mozconfig-variant: debug-fuzzing
     run-on-projects: ['trunk']
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -285,6 +289,7 @@ win64/opt:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -494,6 +499,7 @@ win32-add-on-devel/opt:
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -543,6 +549,7 @@ win64-add-on-devel/opt:
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -592,6 +599,7 @@ win64-noopt/debug:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -641,6 +649,7 @@ win32-noopt/debug:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -689,6 +698,7 @@ win32-rusttests/opt:
             disable_package_metrics: true
         mozconfig-variant: rusttests
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -729,6 +739,7 @@ win32-rusttests/debug:
             disable_package_metrics: true
         mozconfig-variant: rusttests-debug
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -766,6 +777,7 @@ win64-rusttests/opt:
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -803,6 +815,7 @@ win64-rusttests/debug:
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests-debug
     run-on-projects: ['trunk']
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -846,6 +859,7 @@ win64-ccov/opt:
             - builds/taskcluster_sub_win64/ccov_opt.py
         mozconfig-variant: code-coverage
     run-on-projects: ['mozilla-central']
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -883,6 +897,7 @@ win64-asan/debug:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/asan_debug.py
         mozconfig-variant: debug-asan
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -927,6 +942,7 @@ win64-asan/opt:
         extra-config:
             stage_platform: win64-asan
         mozconfig-variant: nightly-asan
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -1013,6 +1029,7 @@ win64-asan-fuzzing/opt:
         extra-config:
             stage_platform: win64-fuzzing-asan
         mozconfig-variant: nightly-fuzzing-asan
+    use-sccache: true
     fetches:
         toolchain:
             - win64-clang-cl
@@ -1183,6 +1200,7 @@ win64-aarch64/debug:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: debug
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -1241,6 +1259,7 @@ win64-aarch64/opt:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+    use-sccache: true
     fetches:
         toolchain:
             - linux64-binutils
