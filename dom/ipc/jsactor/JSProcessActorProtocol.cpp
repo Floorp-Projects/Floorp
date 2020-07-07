@@ -26,6 +26,9 @@ JSProcessActorProtocol::FromIPC(const JSProcessActorInfo& aInfo) {
   RefPtr<JSProcessActorProtocol> proto =
       new JSProcessActorProtocol(aInfo.name());
 
+  // Content processes aren't the parent process, so this flag is irrelevant and
+  // not propagated.
+  proto->mIncludeParent = false;
   proto->mRemoteTypes = aInfo.remoteTypes().Clone();
   proto->mChild.mModuleURI = aInfo.url();
   proto->mChild.mObservers = aInfo.observers().Clone();
@@ -51,6 +54,7 @@ JSProcessActorProtocol::FromWebIDLOptions(const nsACString& aName,
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSProcessActorProtocol> proto = new JSProcessActorProtocol(aName);
+  proto->mIncludeParent = aOptions.mIncludeParent;
 
   if (aOptions.mRemoteTypes.WasPassed()) {
     MOZ_ASSERT(aOptions.mRemoteTypes.Value().Length());
@@ -136,6 +140,10 @@ bool JSProcessActorProtocol::RemoteTypePrefixMatches(
 }
 
 bool JSProcessActorProtocol::Matches(const nsACString& aRemoteType) {
+  if (!mIncludeParent && aRemoteType.IsEmpty()) {
+    return false;
+  }
+
   if (!mRemoteTypes.IsEmpty() &&
       !RemoteTypePrefixMatches(RemoteTypePrefix(aRemoteType))) {
     return false;
