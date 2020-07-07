@@ -394,14 +394,14 @@ SessionHistoryEntry::SetStateData(nsIStructuredCloneContainer* aStateData) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::GetDocshellID(nsID& aDocshellID) {
-  MOZ_CRASH("This lives in the child process");
-  return NS_ERROR_FAILURE;
+  aDocshellID = mSharedInfo->mDocShellID;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 SessionHistoryEntry::SetDocshellID(const nsID& aDocshellID) {
-  NS_WARNING("This lives in the child process");
-  return NS_ERROR_FAILURE;
+  mSharedInfo->mDocShellID = aDocshellID;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
