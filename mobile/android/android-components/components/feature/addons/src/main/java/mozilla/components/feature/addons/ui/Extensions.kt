@@ -12,9 +12,19 @@ import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
-import java.text.NumberFormat
 import java.text.DateFormat
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+
+/**
+ * Used to parse [Addon.createdAt] and [Addon.updatedAt].
+ */
+private val dateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROOT).apply {
+    timeZone = TimeZone.getTimeZone("GMT")
+}
 
 /**
  * A shortcut to get the localized name of an add-on.
@@ -30,6 +40,19 @@ val Addon.translatedSummary: String get() = translatableSummary.translate(this)
  * A shortcut to get the localized description of an add-on.
  */
 val Addon.translatedDescription: String get() = translatableDescription.translate(this)
+
+/**
+ * The date the add-on was created, as a JVM date object.
+ */
+val Addon.createdAtDate: Date get() =
+    // This method never returns null and will throw a ParseException if parsing fails
+    dateParser.parse(createdAt)!!
+
+/**
+ * The date of the last time the add-on was updated by its developer(s),
+ * as a JVM date object.
+ */
+val Addon.updatedAtDate: Date get() = dateParser.parse(updatedAt)!!
 
 /**
  * Try to find the default language on the map otherwise defaults to [Addon.DEFAULT_LOCALE].

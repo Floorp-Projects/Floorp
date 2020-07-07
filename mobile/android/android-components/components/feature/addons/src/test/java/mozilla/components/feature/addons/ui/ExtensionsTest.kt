@@ -7,22 +7,27 @@ package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
+import mozilla.components.feature.addons.ui.createdAtDate
 import mozilla.components.feature.addons.ui.getFormattedAmount
 import mozilla.components.feature.addons.ui.toLocalizedString
 import mozilla.components.feature.addons.ui.translate
 import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.updatedAtDate
 import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.addons.update.AddonUpdater.Status.NotInstalled
-import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
 import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
+import mozilla.components.feature.addons.update.AddonUpdater.Status.NotInstalled
+import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.Calendar.MILLISECOND
 import java.util.Date
+import java.util.GregorianCalendar
 import java.util.Locale
+import java.util.TimeZone
 
 @RunWith(AndroidJUnit4::class)
 class ExtensionsTest {
@@ -71,6 +76,34 @@ class ExtensionsTest {
         Locale.setDefault(Locale.ITALIAN)
 
         assertEquals("Hello", map.translate(addon))
+    }
+
+    @Test
+    fun createdAtUpdatedAtDate() {
+        val addon = Addon(
+            id = "id",
+            createdAt = "2015-04-25T07:26:22Z",
+            updatedAt = "2020-06-28T12:45:18Z"
+        )
+
+        val expectedCreatedAt = GregorianCalendar(TimeZone.getTimeZone("GMT")).apply {
+            set(2015, 3, 25, 7, 26, 22)
+            set(MILLISECOND, 0)
+        }.time
+        val expectedUpdatedAt = GregorianCalendar(TimeZone.getTimeZone("GMT")).apply {
+            set(2020, 5, 28, 12, 45, 18)
+            set(MILLISECOND, 0)
+        }.time
+        assertEquals(expectedCreatedAt, addon.createdAtDate)
+        assertEquals(expectedUpdatedAt, addon.updatedAtDate)
+
+        Locale.setDefault(Locale.GERMAN)
+        assertEquals(expectedCreatedAt, addon.createdAtDate)
+        assertEquals(expectedUpdatedAt, addon.updatedAtDate)
+
+        Locale.setDefault(Locale.ITALIAN)
+        assertEquals(expectedCreatedAt, addon.createdAtDate)
+        assertEquals(expectedUpdatedAt, addon.updatedAtDate)
     }
 
     @Test
