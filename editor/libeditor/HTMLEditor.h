@@ -4385,15 +4385,6 @@ class HTMLEditor final : public TextEditor,
   static nsresult StripFormattingNodes(nsIContent& aNode,
                                        bool aOnlyList = false);
 
-  /**
-   * @param aContextStr as indicated by nsITransferable's kHTMLContext.
-   * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
-   */
-  nsresult CreateDOMFragmentFromPaste(
-      const nsAString& aInputString, const nsAString& aContextStr,
-      const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
-      nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-      int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput) const;
   static nsresult ParseFragment(const nsAString& aStr,
                                 nsAtom* aContextLocalName, Document* aTargetDoc,
                                 dom::DocumentFragment** aFragment,
