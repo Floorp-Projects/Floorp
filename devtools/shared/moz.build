@@ -71,7 +71,6 @@ DevToolsModules(
     'picker-constants.js',
     'plural-form.js',
     'protocol.js',
-    'service-workers-debug-helper.js',
     'system.js',
     'task.js',
     'ThreadSafeDevToolsUtils.js',
