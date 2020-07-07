@@ -214,7 +214,7 @@ task_description_schema = Schema({
     'worker-type': text_type,
 
     # Whether the job should use sccache compiler caching.
-    Required('use-sccache'): bool,
+    Required('needs-sccache'): bool,
 
     # Set of artifacts relevant to release tasks
     Optional('release-artifacts'): [text_type],
@@ -489,7 +489,7 @@ def build_docker_worker_payload(config, task, task_def):
     if worker.get('docker-in-docker'):
         features['dind'] = True
 
-    if task.get('use-sccache'):
+    if task.get('needs-sccache'):
         features['taskclusterProxy'] = True
         task_def['scopes'].append(
             'assume:project:taskcluster:{trust_domain}:level-{level}-sccache-buckets'.format(
@@ -761,7 +761,7 @@ def build_generic_worker_payload(config, task, task_def):
 
     env = worker.get('env', {})
 
-    if task.get('use-sccache'):
+    if task.get('needs-sccache'):
         features['taskclusterProxy'] = True
         task_def['scopes'].append(
             'assume:project:taskcluster:{trust_domain}:level-{level}-sccache-buckets'.format(
@@ -1391,8 +1391,8 @@ def build_script_engine_autophone_payload(config, task, task_def):
     if worker.get('reboot'):
         task_def['payload'] = worker['reboot']
 
-    if task.get('use-sccache'):
-        raise Exception('use-sccache not supported in taskcluster-worker')
+    if task.get('needs-sccache'):
+        raise Exception('needs-sccache not supported in taskcluster-worker')
 
 
 transforms = TransformSequence()
