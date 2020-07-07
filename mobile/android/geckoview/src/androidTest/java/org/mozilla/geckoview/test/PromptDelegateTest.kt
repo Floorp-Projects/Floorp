@@ -16,6 +16,7 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -147,8 +148,10 @@ class PromptDelegateTest : BaseSessionTest() {
                 equalTo(false))
     }
 
+    // disable test on opt for frequently failing Bug 1640418
     @Test
     fun onBeforeUnloadTest() {
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
         ))
@@ -163,15 +166,12 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        val promptResult = GeckoResult<PromptDelegate.PromptResponse>()
-        val promptResult2 = GeckoResult<PromptDelegate.PromptResponse>()
-
+        var promptResult = GeckoResult<PromptDelegate.PromptResponse>()
         sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
-            @AssertCalled(count = 2)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 // We have to return something here because otherwise the delegate will be invoked
                 // before we have a chance to override it in the waitUntilCalled call below
-                return forEachCall(promptResult, promptResult2)
+                return promptResult
             }
         })
 
@@ -186,20 +186,18 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.waitForResult(promptResult)
-
         // This request will go through and end the test. Doing the negative case first will
         // ensure that if either of this tests fail the test will fail.
+        promptResult = GeckoResult()
         sessionRule.session.evaluateJS("document.querySelector('#navigateAway2').click()")
         sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                promptResult2.complete(prompt.confirm(AllowOrDeny.ALLOW))
-                return promptResult2
+                promptResult.complete(prompt.confirm(AllowOrDeny.ALLOW))
+                return promptResult
             }
         })
 
-        sessionRule.waitForResult(promptResult2)
         sessionRule.waitForResult(result)
     }
 
