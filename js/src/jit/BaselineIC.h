@@ -373,7 +373,7 @@ class ICStubIterator {
 
   bool atEnd() const { return currentStub_ == (ICStub*)fallbackStub_; }
 
-  void unlink(JSContext* cx);
+  void unlink(JSContext* cx, JSScript* script);
 };
 
 //
@@ -705,9 +705,16 @@ class ICFallbackStub : public ICStub {
 
   ICStubIterator beginChain() { return ICStubIterator(this); }
 
-  void discardStubs(JSContext* cx);
+  void discardStubs(JSContext* cx, JSScript* script);
 
-  void unlinkStub(Zone* zone, ICStub* prev, ICStub* stub);
+  void clearUsedByTranspiler() { state_.clearUsedByTranspiler(); }
+  void setUsedByTranspiler() { state_.setUsedByTranspiler(); }
+
+  // If the transpiler optimized based on this IC, invalidate the script's Warp
+  // code.
+  void maybeInvalidateWarp(JSContext* cx, JSScript* script);
+
+  void unlinkStubDontInvalidateWarp(Zone* zone, ICStub* prev, ICStub* stub);
 
   // Return the number of times this stub has successfully provided a value to
   // the caller.

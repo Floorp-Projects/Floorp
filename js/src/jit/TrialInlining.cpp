@@ -48,7 +48,7 @@ void TrialInliner::cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
 void TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                                  CacheKind kind) {
   ICFallbackStub* fallbackStub = entry.fallbackStub();
-  fallbackStub->discardStubs(cx());
+  fallbackStub->discardStubs(cx(), script_);
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
   bool attached = false;
