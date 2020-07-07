@@ -15,7 +15,9 @@ function init() {
 
   window.addEventListener("TabPaint:OpenFromContent", (event) => {
     let target = document.getElementById("target");
-    let now = Date.now(); // eslint-disable-line mozilla/avoid-Date-timing
+
+    //win.performance.now() + win.performance.timing.navigationStart gives the UNIX timestamp.
+    let now = window.performance.now() + window.performance.timing.navigationStart;
 
     target.href = `${targetURL.href}?${now}`;
     target.click();
