@@ -229,6 +229,7 @@ def taskgraph_decision(options, parameters=None):
         root_dir=options.get('root'),
         parameters=parameters,
         decision_task_id=decision_task_id,
+        write_artifacts=True,
     )
 
     # write out the parameters used to generate this graph
