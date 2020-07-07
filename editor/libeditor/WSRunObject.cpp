@@ -982,9 +982,11 @@ WSRunScanner::TextFragmentData::GetInvisibleLeadingWhiteSpaceRange() const {
     return EditorDOMRangeType(mStart.PointRef(), mEnd.PointRef());
   }
 
-  // TODO: Implement other cases in the following patches.
   MOZ_ASSERT(mNBSPData.LastPointRef().IsSetAndValid());
-  return EditorDOMRangeType();
+
+  // Even if the first NBSP is the start, i.e., there is no invisible leading
+  // white-space, return collapsed range.
+  return EditorDOMRangeType(mStart.PointRef(), mNBSPData.FirstPointRef());
 }
 
 template <typename EditorDOMRangeType>
@@ -1146,35 +1148,34 @@ void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
   }
 
   MOZ_ASSERT(StartsFromHardLineBreak());
+  MOZ_ASSERT(maybeHaveLeadingWhiteSpaces);
 
   WSFragment* startRun = aFragments.AppendElement();
   startRun->MarkAsStartOfHardLine();
-  if (mStart.PointRef().IsSet()) {
-    startRun->mStartNode = mStart.PointRef().GetContainer();
-    startRun->mStartOffset = mStart.PointRef().Offset();
+  if (leadingWhiteSpaceRange.StartRef().IsSet()) {
+    startRun->mStartNode = leadingWhiteSpaceRange.StartRef().GetContainer();
+    startRun->mStartOffset = leadingWhiteSpaceRange.StartRef().Offset();
   }
   startRun->SetStartFrom(mStart.RawReason());
-  if (mNBSPData.FirstPointRef().IsSet()) {
-    startRun->mEndNode = mNBSPData.FirstPointRef().GetContainer();
-    startRun->mEndOffset = mNBSPData.FirstPointRef().Offset();
+  if (leadingWhiteSpaceRange.EndRef().IsSet()) {
+    startRun->mEndNode = leadingWhiteSpaceRange.EndRef().GetContainer();
+    startRun->mEndOffset = leadingWhiteSpaceRange.EndRef().Offset();
   }
   startRun->SetEndByNormalWiteSpaces();
 
   // set up next run
   WSFragment* normalRun = aFragments.AppendElement();
   normalRun->MarkAsVisible();
-  if (mNBSPData.FirstPointRef().IsSet()) {
-    normalRun->mStartNode = mNBSPData.FirstPointRef().GetContainer();
-    normalRun->mStartOffset = mNBSPData.FirstPointRef().Offset();
-  }
+  normalRun->mStartNode = startRun->mEndNode;
+  normalRun->mStartOffset = startRun->mEndOffset;
   normalRun->SetStartFromLeadingWhiteSpaces();
   if (!EndsByBlockBoundary()) {
     // then no trailing ws.  this normal run ends the overall ws run.
-    normalRun->SetEndBy(mEnd.RawReason());
     if (mEnd.PointRef().IsSet()) {
       normalRun->mEndNode = mEnd.PointRef().GetContainer();
       normalRun->mEndOffset = mEnd.PointRef().Offset();
     }
+    normalRun->SetEndBy(mEnd.RawReason());
     return;
   }
 
