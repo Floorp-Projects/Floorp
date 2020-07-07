@@ -205,6 +205,7 @@
   MACRO(h24, h24, "h24")                                                       \
   MACRO(Handle, Handle, "Handle")                                              \
   MACRO(has, has, "has")                                                       \
+  MACRO(hashConstructor, hashConstructor, "#constructor")                      \
   MACRO(hasOwn, hasOwn, "hasOwn")                                              \
   MACRO(hasOwnProperty, hasOwnProperty, "hasOwnProperty")                      \
   MACRO(highWaterMark, highWaterMark, "highWaterMark")                         \
