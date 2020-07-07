@@ -66,13 +66,7 @@ class WorkerTargetFront extends TargetMixin(
     this._attach = (async () => {
       const response = await super.attach();
 
-      if (this.isServiceWorker && this.getTrait("isParentInterceptEnabled")) {
-        // In parentIntercept mode, the worker target actor cannot call the APIs needed
-        // to prevent the worker from shutting down. Instead call attachDebugger on the
-        // registration because the ServiceWorkerRegistration actor lives in the parent
-        // process.
-        // TODO: Cleanup after Bug 1496997 lands (no need to check
-        // isParentInterceptEnabled trait)
+      if (this.isServiceWorker) {
         this.registration = await this._getRegistrationIfActive();
         if (this.registration) {
           await this.registration.preventShutdown();

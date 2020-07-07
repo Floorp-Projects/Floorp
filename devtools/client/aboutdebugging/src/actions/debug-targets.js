@@ -143,24 +143,11 @@ function installTemporaryExtension() {
 function pushServiceWorker(id, registrationFront) {
   return async (_, getState) => {
     try {
-      /**
-       * Older servers will not define `ServiceWorkerRegistrationFront.push`,
-       * and `ServiceWorkerRegistrationFront.push` will only work if the
-       * underlying ServiceWorkerRegistration is "connected" to the
-       * corresponding running Service Worker - this is only guaranteed with
-       * parent-intercept mode. The `else` statement is for backward
-       * compatibility and can be removed when the release channel is >= FF69
-       * _and_ parent-intercept is stable (which definitely won't happen when
-       * the release channel is < FF69).
-       */
-      const { isParentInterceptEnabled } = registrationFront.traits;
-      if (registrationFront.push && isParentInterceptEnabled) {
-        await registrationFront.push();
-      } else {
-        const clientWrapper = getCurrentClient(getState().runtimes);
-        const workerActor = await clientWrapper.getServiceWorkerFront({ id });
-        await workerActor.push();
-      }
+      // The push button is only available if canDebugServiceWorkers is true,
+      // which is only true if dom.serviceWorkers.parent_intercept is true.
+      // With this configuration, `push` should always be called on the
+      // registration front, and not on the (service) WorkerTargetActor.
+      await registrationFront.push();
     } catch (e) {
       console.error(e);
     }
