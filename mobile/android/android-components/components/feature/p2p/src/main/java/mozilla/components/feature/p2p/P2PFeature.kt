@@ -108,7 +108,7 @@ class P2PFeature(
     private fun startExtension() {
         observeSelected() // this sets actionSession
 
-        extensionController = WebExtensionController(P2P_EXTENSION_ID, P2P_EXTENSION_URL)
+        extensionController = WebExtensionController(P2P_EXTENSION_ID, P2P_EXTENSION_URL, P2P_MESSAGING_ID)
         registerP2PContentMessageHandler()
         extensionController?.install(engine)
 
@@ -172,7 +172,10 @@ class P2PFeature(
     @VisibleForTesting
     companion object {
         @VisibleForTesting
-        internal const val P2P_EXTENSION_ID = "mozacP2P"
+        internal const val P2P_EXTENSION_ID = "p2p@mozac.org"
+
+        @VisibleForTesting
+        internal const val P2P_MESSAGING_ID = "mozacP2P"
 
         @VisibleForTesting
         internal const val P2P_EXTENSION_URL = "resource://android/assets/extensions/p2p/"

@@ -1,5 +1,10 @@
 {
   "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "borderify@mozac.org"
+    }
+  },
   "name": "Mozilla Android Components - Borderify",
   "version": "1.0",
   "content_scripts": [

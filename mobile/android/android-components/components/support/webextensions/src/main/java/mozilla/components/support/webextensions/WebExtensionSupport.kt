@@ -158,6 +158,7 @@ object WebExtensionSupport {
      * the updated extension will not be installed, until the user grants the new permissions.
      * @param onExtensionsLoaded (optional) callback invoked when the extensions are loaded by the
      * engine. Note that the UI (browser/page actions etc.) may not be initialized at this point.
+     * System add-ons (built-in extensions) will not be passed along.
      */
     @Suppress("LongParameterList")
     fun initialize(
@@ -290,7 +291,7 @@ object WebExtensionSupport {
                 extensions -> extensions.forEach { registerInstalledExtension(store, it) }
                 emitWebExtensionsInitializedFact(extensions)
                 initializationResult.complete(Unit)
-                onExtensionsLoaded?.invoke(extensions)
+                onExtensionsLoaded?.invoke(extensions.filter { !it.isBuiltIn() })
             },
             onError = {
                 throwable -> logger.error("Failed to query installed extension", throwable)

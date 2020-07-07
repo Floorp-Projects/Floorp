@@ -203,12 +203,10 @@ class GeckoEngine(
     override fun installWebExtension(
         id: String,
         url: String,
-        allowContentMessaging: Boolean,
-        supportActions: Boolean,
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
     ): CancellableOperation {
-        val ext = GeckoWebExtension(id, url, runtime, allowContentMessaging, supportActions)
+        val ext = GeckoWebExtension(id, url, runtime, true, true)
         return installWebExtension(ext, onSuccess, onError)
     }
 

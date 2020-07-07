@@ -405,7 +405,7 @@ class AddonManagerTest {
         })
 
         verify(engine).installWebExtension(
-            eq("ext1"), any(), anyBoolean(), anyBoolean(), onSuccessCaptor.capture(), any()
+            eq("ext1"), any(), onSuccessCaptor.capture(), any()
         )
 
         val extension: WebExtension = mock()
@@ -439,7 +439,7 @@ class AddonManagerTest {
         })
 
         verify(engine).installWebExtension(
-            eq("ext1"), any(), anyBoolean(), anyBoolean(), any(), onErrorCaptor.capture()
+            eq("ext1"), any(), any(), onErrorCaptor.capture()
         )
 
         onErrorCaptor.value.invoke(addon.id, IllegalStateException("test"))
@@ -466,7 +466,7 @@ class AddonManagerTest {
         })
 
         verify(engine, never()).installWebExtension(
-            any(), any(), anyBoolean(), anyBoolean(), any(), any()
+            any(), any(), any(), any()
         )
 
         assertNotNull(throwable!!)

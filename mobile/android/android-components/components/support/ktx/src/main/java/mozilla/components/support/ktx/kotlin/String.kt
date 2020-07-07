@@ -35,6 +35,11 @@ fun String.isUrl() = URLStringUtils.isURLLike(this)
  */
 fun String.isExtensionUrl() = this.startsWith("moz-extension://")
 
+/**
+ * Checks if this String is a URL of a resource.
+ */
+fun String.isResourceUrl() = this.startsWith("resource://")
+
 fun String.toNormalizedUrl() = URLStringUtils.toNormalizedURL(this)
 
 fun String.isPhone() = re.phoneish.matches(this)

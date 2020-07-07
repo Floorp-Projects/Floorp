@@ -627,18 +627,28 @@ class WebExtensionSupportTest {
     fun `invokes onExtensionsLoaded callback`() {
         var executed = false
         val engine: Engine = mock()
+
         val ext: WebExtension = mock()
         whenever(ext.id).thenReturn("test")
+        whenever(ext.isBuiltIn()).thenReturn(false)
+
+        val builtInExt: WebExtension = mock()
+        whenever(builtInExt.id).thenReturn("test2")
+        whenever(builtInExt.isBuiltIn()).thenReturn(true)
+
         val store = spy(BrowserStore(BrowserState(extensions = mapOf(ext.id to WebExtensionState(ext.id)))))
 
         val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
-            callbackCaptor.value.invoke(listOf())
+            callbackCaptor.value.invoke(listOf(ext, builtInExt))
         }
 
-        val onExtensionsLoaded: ((List<WebExtension>) -> Unit) = { executed = true }
+        val onExtensionsLoaded: ((List<WebExtension>) -> Unit) = {
+            assertEquals(1, it.size)
+            assertEquals(ext, it[0])
+            executed = true
+        }
         WebExtensionSupport.initialize(runtime = engine, store = store, onExtensionsLoaded = onExtensionsLoaded)
-
         assertTrue(executed)
     }
 

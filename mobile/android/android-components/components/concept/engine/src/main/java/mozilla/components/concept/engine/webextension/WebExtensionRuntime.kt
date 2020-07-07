@@ -20,10 +20,6 @@ interface WebExtensionRuntime {
      * within the APK file (e.g. resource://android/assets/extensions/my_web_ext) or to a
      * local (e.g. resource://android/assets/extensions/my_web_ext.xpi) or remote
      * (e.g. https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi) XPI file.
-     * @param allowContentMessaging whether or not the web extension is allowed
-     * to send messages from content scripts, defaults to true.
-     * @param supportActions whether or not browser and page actions are handled when
-     * received from the web extension, defaults to false.
      * @param onSuccess (optional) callback invoked if the extension was installed successfully,
      * providing access to the [WebExtension] object for bi-directional messaging.
      * @param onError (optional) callback invoked if there was an error installing the extension.
@@ -34,8 +30,6 @@ interface WebExtensionRuntime {
     fun installWebExtension(
         id: String,
         url: String,
-        allowContentMessaging: Boolean = true,
-        supportActions: Boolean = false,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ): CancellableOperation {

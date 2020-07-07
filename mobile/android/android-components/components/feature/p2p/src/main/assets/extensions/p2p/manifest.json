@@ -1,5 +1,10 @@
 {
   "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "p2p@mozac.org"
+    }
+  },
   "name": "Mozilla Android Components - P2P",
   "version": "1.0",
   "content_scripts": [
@@ -11,6 +16,7 @@
   ],
   "permissions": [
     "geckoViewAddons",
-    "nativeMessaging"
+    "nativeMessaging",
+    "nativeMessagingFromContent"
   ]
 }
