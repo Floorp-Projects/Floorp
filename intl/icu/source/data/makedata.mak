@@ -378,7 +378,7 @@ icu4j-data-install :
 #
 # testdata - nmake will invoke pkgdata, which will create testdata.dat
 #
-"$(TESTDATAOUT)\testdata.dat": "$(TESTDATA)\*" $(TOOLS_TS) $(COREDATA_TS)
+"$(TESTDATAOUT)\testdata.dat": "$(TESTDATA)\*" $(TOOLS_TS)
 	@cd "$(TESTDATA)"
 	@echo building testdata...
 	nmake /nologo /f "$(TESTDATA)\testdata.mak" TESTDATA=. ICUTOOLS="$(ICUTOOLS)" ICUPBIN="$(ICUPBIN)" ICUP="$(ICUP)" CFG=$(CFGTOOLS) TESTDATAOUT="$(TESTDATAOUT)" TESTDATABLD="$(TESTDATABLD)" ICUSRCDATA="$(ICUSRCDATA)" DLL_OUTPUT="$(DLL_OUTPUT)"
