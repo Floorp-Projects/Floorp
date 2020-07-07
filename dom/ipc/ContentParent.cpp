@@ -5713,7 +5713,7 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
         aChannel, getter_AddRefs(storagePrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsISupports> dummy;
+    RefPtr<Promise> dummy;
     rv = lsm->Preload(storagePrincipal, nullptr, getter_AddRefs(dummy));
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to preload local storage!");
