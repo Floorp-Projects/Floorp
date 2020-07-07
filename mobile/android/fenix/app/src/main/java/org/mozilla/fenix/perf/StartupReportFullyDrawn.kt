@@ -9,6 +9,7 @@ import android.view.View
 import androidx.core.view.doOnPreDraw
 import kotlinx.android.synthetic.main.activity_home.*
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.reportFullyDrawnSafe
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSiteItemViewHolder
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.APP_LINK
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.HOMESCREEN
@@ -64,6 +65,6 @@ class StartupReportFullyDrawn {
         // - the difference in timing is minimal (< 7ms on Pixel 2)
         // - if we compare against another app using a preDrawListener, as we are with Fennec, it
         // should be comparable
-        view.doOnPreDraw { activity.reportFullyDrawn() }
+        view.doOnPreDraw { activity.reportFullyDrawnSafe() }
     }
 }
