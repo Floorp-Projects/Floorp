@@ -8,7 +8,7 @@ import re
 
 
 def run_perfdocs(config, logger=None, paths=None, generate=True):
-    """
+    '''
     Build up performance testing documentation dynamically by combining
     text data from YAML files that reside in `perfdoc` folders
     across the `testing` directory. Each directory is expected to have
@@ -42,13 +42,13 @@ def run_perfdocs(config, logger=None, paths=None, generate=True):
     :param list paths: The paths that are being tested. Used to filter
         out errors from files outside of these paths.
     :param bool generate: If true, the docs will be (re)generated.
-    """
+    '''
     from perfdocs.logger import PerfDocLogger
 
-    top_dir = os.environ.get("WORKSPACE", None)
+    top_dir = os.environ.get('WORKSPACE', None)
     if not top_dir:
         floc = os.path.abspath(__file__)
-        top_dir = floc.split("tools")[0]
+        top_dir = floc.split('tools')[0]
 
     PerfDocLogger.LOGGER = logger
     # Convert all the paths to relative ones
@@ -56,7 +56,7 @@ def run_perfdocs(config, logger=None, paths=None, generate=True):
     PerfDocLogger.PATHS = rel_paths
 
     # TODO: Expand search to entire tree rather than just the testing directory
-    testing_dir = os.path.join(top_dir, "testing")
+    testing_dir = os.path.join(top_dir, 'testing')
     if not os.path.exists(testing_dir):
         raise Exception("Cannot locate testing directory at %s" % testing_dir)
 
