@@ -70,6 +70,14 @@ class JSActorManager : public nsISupports {
   virtual mozilla::ipc::IProtocol* AsNativeActor() = 0;
 
  private:
+  friend class JSActorService;
+
+  /**
+   * Note that a particular actor name has been unregistered, and fire the
+   * `didDestroy` method on the actor, if it's been initialized.
+   */
+  void JSActorUnregister(const nsACString& aName);
+
   nsRefPtrHashtable<nsCStringHashKey, JSActor> mJSActors;
 };
 
