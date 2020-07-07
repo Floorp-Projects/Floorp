@@ -14,16 +14,16 @@
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/UniquePtr.h"
 
-class nsSVGGradientFrame;
-class nsSVGLinearGradientFrame;
-class nsSVGRadialGradientFrame;
-
 nsresult NS_NewSVGLinearGradientElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 nsresult NS_NewSVGRadialGradientElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class SVGGradientFrame;
+class SVGLinearGradientFrame;
+class SVGRadialGradientFrame;
+
 namespace dom {
 
 class DOMSVGAnimatedTransformList;
@@ -33,7 +33,7 @@ class DOMSVGAnimatedTransformList;
 typedef SVGElement SVGGradientElementBase;
 
 class SVGGradientElement : public SVGGradientElementBase {
-  friend class ::nsSVGGradientFrame;
+  friend class mozilla::SVGGradientFrame;
 
  protected:
   explicit SVGGradientElement(
@@ -81,7 +81,7 @@ class SVGGradientElement : public SVGGradientElementBase {
 typedef SVGGradientElement SVGLinearGradientElementBase;
 
 class SVGLinearGradientElement : public SVGLinearGradientElementBase {
-  friend class ::nsSVGLinearGradientFrame;
+  friend class mozilla::SVGLinearGradientFrame;
   friend nsresult(::NS_NewSVGLinearGradientElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
@@ -114,7 +114,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase {
 typedef SVGGradientElement SVGRadialGradientElementBase;
 
 class SVGRadialGradientElement : public SVGRadialGradientElementBase {
-  friend class ::nsSVGRadialGradientFrame;
+  friend class mozilla::SVGRadialGradientFrame;
   friend nsresult(::NS_NewSVGRadialGradientElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
