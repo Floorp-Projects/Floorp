@@ -164,6 +164,9 @@ class SendBatchRunnable : public Runnable {
 };  // class SendBatchRunnable
 
 // Can be called on any thread.
+// NOTE: Pay special attention to what you call in this method as if it
+// accumulates to a gv-streaming-enabled probe we will deadlock the calling
+// thread.
 void SendBatch(const StaticMutexAutoLock& aLock) {
   if (!gDelegate) {
     NS_WARNING(
