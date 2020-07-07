@@ -131,6 +131,7 @@ jobs:
                 env:
                     LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                     LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+        use-sccache: true
         fetches:
             toolchain:
                 - linux64-binutils
@@ -174,6 +175,7 @@ jobs:
             secrets: true
             custom-build-variant-cfg: api-16-debug-searchfox
             tooltool-downloads: internal
+        use-sccache: true
         fetches:
             toolchain:
                 - android-gradle-dependencies
