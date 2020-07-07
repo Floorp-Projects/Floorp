@@ -964,6 +964,54 @@ void WSRunScanner::EnsureWSFragments() {
   textFragmentData.InitializeWSFragmentArray(mFragments);
 }
 
+template <typename EditorDOMRangeType>
+EditorDOMRangeType
+WSRunScanner::TextFragmentData::GetInvisibleLeadingWhiteSpaceRange() const {
+  // If it's preformatted or not start of line, the range is not invisible
+  // leading white-spaces.
+  // TODO: We should check each text node style rather than WSRunScanner's
+  //       scan start position's style.
+  if (mIsPreformatted || !StartsFromHardLineBreak()) {
+    return EditorDOMRangeType();
+  }
+
+  // If there is no NBSP, all of the given range is leading white-spaces.
+  // Note that this result may be collapsed if there is no leading white-spaces.
+  if (!mNBSPData.FoundNBSP()) {
+    MOZ_ASSERT(mStart.PointRef().IsSet() || mEnd.PointRef().IsSet());
+    return EditorDOMRangeType(mStart.PointRef(), mEnd.PointRef());
+  }
+
+  // TODO: Implement other cases in the following patches.
+  MOZ_ASSERT(mNBSPData.LastPointRef().IsSetAndValid());
+  return EditorDOMRangeType();
+}
+
+template <typename EditorDOMRangeType>
+EditorDOMRangeType
+WSRunScanner::TextFragmentData::GetInvisibleTrailingWhiteSpaceRange() const {
+  // If it's preformatted or not immediately before block boundary, the range is
+  // not invisible trailing white-spaces.  Note that collapsible white-spaces
+  // before a `<br>` element is visible.
+  // TODO: We should check each text node style rather than WSRunScanner's
+  //       scan start position's style.
+  if (mIsPreformatted || !EndsByBlockBoundary()) {
+    return EditorDOMRangeType();
+  }
+
+  // If there is no NBSP, all of the given range is trailing white-spaces.
+  // Note that this result may be collapsed if there is no trailing white-
+  // spaces.
+  if (!mNBSPData.FoundNBSP()) {
+    MOZ_ASSERT(mStart.PointRef().IsSet() || mEnd.PointRef().IsSet());
+    return EditorDOMRangeType(mStart.PointRef(), mEnd.PointRef());
+  }
+
+  // TODO: Implement other cases in the following patches.
+  MOZ_ASSERT(mNBSPData.LastPointRef().IsSetAndValid());
+  return EditorDOMRangeType();
+}
+
 void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
     WSFragmentArray& aFragments) const {
   MOZ_ASSERT(aFragments.IsEmpty());
@@ -993,25 +1041,61 @@ void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
     return;
   }
 
-  // if we are before or after a block (or after a break), and there are no
-  // nbsp's, then it's all non-rendering ws.
-  if (!mNBSPData.FoundNBSP() &&
-      (StartsFromHardLineBreak() || EndsByBlockBoundary())) {
+  const auto leadingWhiteSpaceRange =
+      GetInvisibleLeadingWhiteSpaceRange<EditorRawDOMRange>();
+  const auto trailingWhiteSpaceRange =
+      GetInvisibleTrailingWhiteSpaceRange<EditorRawDOMRange>();
+  // XXX `IsPositioned()` is not availble here because currently it is not
+  //     guaranteed that both boundaries are set or unset at same time.
+  const bool maybeHaveLeadingWhiteSpaces =
+      leadingWhiteSpaceRange.StartRef().IsSet() ||
+      leadingWhiteSpaceRange.EndRef().IsSet();
+  const bool maybeHaveTrailingWhiteSpaces =
+      trailingWhiteSpaceRange.StartRef().IsSet() ||
+      trailingWhiteSpaceRange.EndRef().IsSet();
+
+  // If leading white-space range is all of the range, all of them are
+  // invisible.
+  if (maybeHaveLeadingWhiteSpaces &&
+      leadingWhiteSpaceRange.StartRef() == mStart.PointRef() &&
+      leadingWhiteSpaceRange.EndRef() == mEnd.PointRef()) {
+    MOZ_ASSERT(StartsFromHardLineBreak());
     WSFragment* startRun = aFragments.AppendElement();
-    if (StartsFromHardLineBreak()) {
-      startRun->MarkAsStartOfHardLine();
-    }
+    startRun->MarkAsStartOfHardLine();
     if (EndsByBlockBoundary()) {
+      MOZ_ASSERT(leadingWhiteSpaceRange == trailingWhiteSpaceRange);
       startRun->MarkAsEndOfHardLine();
     }
-    if (mStart.PointRef().IsSet()) {
-      startRun->mStartNode = mStart.PointRef().GetContainer();
-      startRun->mStartOffset = mStart.PointRef().Offset();
+    if (leadingWhiteSpaceRange.StartRef().IsSet()) {
+      startRun->mStartNode = leadingWhiteSpaceRange.StartRef().GetContainer();
+      startRun->mStartOffset = leadingWhiteSpaceRange.StartRef().Offset();
     }
     startRun->SetStartFrom(mStart.RawReason());
-    if (mEnd.PointRef().IsSet()) {
-      startRun->mEndNode = mEnd.PointRef().GetContainer();
-      startRun->mEndOffset = mEnd.PointRef().Offset();
+    if (leadingWhiteSpaceRange.EndRef().IsSet()) {
+      startRun->mEndNode = leadingWhiteSpaceRange.EndRef().GetContainer();
+      startRun->mEndOffset = leadingWhiteSpaceRange.EndRef().Offset();
+    }
+    startRun->SetEndBy(mEnd.RawReason());
+    return;
+  }
+
+  // If trailing white-space range is all of the range, all of them are
+  // invisible.
+  if (maybeHaveTrailingWhiteSpaces &&
+      trailingWhiteSpaceRange.StartRef() == mStart.PointRef() &&
+      trailingWhiteSpaceRange.EndRef() == mEnd.PointRef()) {
+    MOZ_ASSERT(!StartsFromHardLineBreak());
+    MOZ_ASSERT(EndsByBlockBoundary());
+    WSFragment* startRun = aFragments.AppendElement();
+    startRun->MarkAsEndOfHardLine();
+    if (trailingWhiteSpaceRange.StartRef().IsSet()) {
+      startRun->mStartNode = trailingWhiteSpaceRange.StartRef().GetContainer();
+      startRun->mStartOffset = trailingWhiteSpaceRange.StartRef().Offset();
+    }
+    startRun->SetStartFrom(mStart.RawReason());
+    if (trailingWhiteSpaceRange.EndRef().IsSet()) {
+      startRun->mEndNode = trailingWhiteSpaceRange.EndRef().GetContainer();
+      startRun->mEndOffset = trailingWhiteSpaceRange.EndRef().Offset();
     }
     startRun->SetEndBy(mEnd.RawReason());
     return;
