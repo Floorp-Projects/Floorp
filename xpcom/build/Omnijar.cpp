@@ -11,6 +11,7 @@
 #include "nsIFile.h"
 #include "nsZipArchive.h"
 #include "nsNetUtil.h"
+#include "mozilla/scache/StartupCache.h"
 
 namespace mozilla {
 
@@ -21,6 +22,7 @@ bool Omnijar::sInitialized = false;
 bool Omnijar::sIsUnified = false;
 
 static const char* sProp[2] = {NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR};
+static const char* sCachePrefixes[2] = {"GreOmnijar:", "AppOmnijar:"};
 
 #define SPROP(Type) ((Type == mozilla::Omnijar::GRE) ? sProp[GRE] : sProp[APP])
 
@@ -78,8 +80,34 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
   }
 
   RefPtr<nsZipArchive> zipReader = new nsZipArchive();
-  if (NS_FAILED(zipReader->OpenArchive(file))) {
+  auto* cache = scache::StartupCache::GetSingleton();
+  const uint8_t* centralBuf = nullptr;
+  uint32_t centralBufLength = 0;
+  nsPrintfCString startupCacheKey("::%s:OmnijarCentral", sCachePrefixes[aType]);
+  if (cache) {
+    nsresult rv = cache->GetBuffer(startupCacheKey.get(),
+                                   reinterpret_cast<const char**>(&centralBuf),
+                                   &centralBufLength);
+    if (NS_FAILED(rv)) {
+      centralBuf = nullptr;
+      centralBufLength = 0;
+    }
+  }
+  if (NS_FAILED(zipReader->OpenArchive(file, centralBuf, centralBufLength))) {
     return;
+  }
+
+  if (cache && !centralBuf) {
+    size_t bufSize;
+
+    // Annoyingly, nsZipArchive and the startupcache use different types to
+    // represent bytes (uint8_t vs char), so we have to do a little dance to
+    // convert the UniquePtr over.
+    UniquePtr<char[]> centralBuf(reinterpret_cast<char*>(
+        zipReader->CopyCentralDirectoryBuffer(&bufSize).release()));
+    if (centralBuf) {
+      cache->PutBuffer(startupCacheKey.get(), std::move(centralBuf), bufSize);
+    }
   }
 
   RefPtr<nsZipArchive> outerReader;
