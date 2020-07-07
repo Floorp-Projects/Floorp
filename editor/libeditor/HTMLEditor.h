@@ -4385,10 +4385,6 @@ class HTMLEditor final : public TextEditor,
   static nsresult StripFormattingNodes(nsIContent& aNode,
                                        bool aOnlyList = false);
 
-  static nsresult ParseFragment(const nsAString& aStr,
-                                nsAtom* aContextLocalName, Document* aTargetDoc,
-                                dom::DocumentFragment** aFragment,
-                                bool aTrustedInput);
 
   /**
    * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.

@@ -231,6 +231,11 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       int32_t* aOutStartOffset, int32_t* aOutEndOffset,
       bool aTrustedInput) const;
 
+  static nsresult ParseFragment(const nsAString& aStr,
+                                nsAtom* aContextLocalName, Document* aTargetDoc,
+                                dom::DocumentFragment** aFragment,
+                                bool aTrustedInput);
+
   HTMLEditor& mHTMLEditor;
 };
 
@@ -3002,15 +3007,19 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
   nsCOMPtr<nsINode> targetNode;
   RefPtr<DocumentFragment> documentFragmentForContext;
   if (!aContextStr.IsEmpty()) {
-    nsresult rv = HTMLEditor::ParseFragment(
-        aContextStr, nullptr, document,
-        getter_AddRefs(documentFragmentForContext), aTrustedInput);
+    nsresult rv = ParseFragment(aContextStr, nullptr, document,
+                                getter_AddRefs(documentFragmentForContext),
+                                aTrustedInput);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::ParseFragment(aContextStr) failed");
+      NS_WARNING(
+          "HTMLEditor::HTMLWithContextInserter::ParseFragment(aContextStr) "
+          "failed");
       return rv;
     }
     if (!documentFragmentForContext) {
-      NS_WARNING("HTMLEditor::ParseFragment(aContextStr) returned nullptr");
+      NS_WARNING(
+          "HTMLEditor::HTMLWithContextInserter::ParseFragment(aContextStr) "
+          "returned nullptr");
       return NS_ERROR_FAILURE;
     }
 
@@ -3039,15 +3048,19 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     contextLocalNameAtom = nsGkAtoms::body;
   }
   RefPtr<DocumentFragment> documentFragmentToInsert;
-  nsresult rv = HTMLEditor::ParseFragment(
-      aInputString, contextLocalNameAtom, document,
-      getter_AddRefs(documentFragmentToInsert), aTrustedInput);
+  nsresult rv =
+      ParseFragment(aInputString, contextLocalNameAtom, document,
+                    getter_AddRefs(documentFragmentToInsert), aTrustedInput);
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::ParseFragment(aInputString) failed");
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::ParseFragment(aInputString) "
+        "failed");
     return rv;
   }
   if (!documentFragmentToInsert) {
-    NS_WARNING("HTMLEditor::ParseFragment(aInputString) returned nullptr");
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::ParseFragment(aInputString) "
+        "returned nullptr");
     return NS_ERROR_FAILURE;
   }
 
@@ -3129,11 +3142,10 @@ nsresult HTMLEditor::MoveStartAndEndAccordingToHTMLInfo(
 }
 
 // static
-nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
-                                   nsAtom* aContextLocalName,
-                                   Document* aTargetDocument,
-                                   DocumentFragment** aFragment,
-                                   bool aTrustedInput) {
+nsresult HTMLEditor::HTMLWithContextInserter::ParseFragment(
+    const nsAString& aFragStr, nsAtom* aContextLocalName,
+    Document* aTargetDocument, DocumentFragment** aFragment,
+    bool aTrustedInput) {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
   RefPtr<DocumentFragment> fragment = new (aTargetDocument->NodeInfoManager())
