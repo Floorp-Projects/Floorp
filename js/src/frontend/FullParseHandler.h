@@ -1037,6 +1037,20 @@ class FullParseHandler {
     return node->isKind(ParseNodeKind::PrivateName);
   }
 
+  bool isPrivateField(Node node) {
+    if (node->isKind(ParseNodeKind::ElemExpr) ||
+        node->isKind(ParseNodeKind::OptionalElemExpr)) {
+      PropertyByValueBase& pbv = node->as<PropertyByValueBase>();
+      if (isPrivateName(&pbv.key())) {
+        return true;
+      }
+    }
+    if (node->isKind(ParseNodeKind::OptionalChain)) {
+      return isPrivateField(node->as<UnaryNode>().kid());
+    }
+    return false;
+  }
+
   PropertyName* maybeDottedProperty(Node pn) {
     return pn->is<PropertyAccessBase>() ? &pn->as<PropertyAccessBase>().name()
                                         : nullptr;
