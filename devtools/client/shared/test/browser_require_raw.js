@@ -13,7 +13,7 @@ const { require: browserRequire } = BrowserLoader({
 });
 
 const variableFileContents = browserRequire(
-  "raw!chrome://devtools/skin/variables.css"
+  "raw!devtools/client/themes/variables.css"
 );
 
 function test() {

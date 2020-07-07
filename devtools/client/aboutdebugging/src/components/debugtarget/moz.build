@@ -3,13 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'DebugTargetItem.css',
     'DebugTargetItem.js',
+    'DebugTargetList.css',
     'DebugTargetList.js',
+    'DebugTargetPane.css',
     'DebugTargetPane.js',
     'ExtensionDetail.js',
+    'FieldPair.css',
     'FieldPair.js',
     'InspectAction.js',
     'ProcessDetail.js',
+    'ServiceWorkerAction.css',
     'ServiceWorkerAction.js',
     'ServiceWorkerAdditionalActions.js',
     'TabAction.js',
@@ -17,6 +22,7 @@ DevToolsModules(
     'TemporaryExtensionAdditionalActions.js',
     'TemporaryExtensionDetail.js',
     'TemporaryExtensionInstaller.js',
+    'TemporaryExtensionInstallSection.css',
     'TemporaryExtensionInstallSection.js',
     'WorkerDetail.js',
 )

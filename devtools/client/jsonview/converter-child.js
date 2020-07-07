@@ -302,7 +302,7 @@ function initialHTML(doc) {
           element("link", {
             rel: "stylesheet",
             type: "text/css",
-            href: "chrome://devtools-jsonview-styles/content/main.css",
+            href: baseURI + "css/main.css",
           }),
         ]),
         element("body", {}, [

@@ -4,4 +4,5 @@
 
 DevToolsModules(
     'main.js',
+    'whats-new.css'
 )
