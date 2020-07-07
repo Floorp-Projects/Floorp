@@ -351,7 +351,10 @@ hsb{
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
+                MMd{"d. MM"}
+                MMdd{"dd. MM"}
                 Md{"d.M."}
                 d{"d"}
                 h{"h a"}
@@ -361,9 +364,12 @@ hsb{
                 y{"y"}
                 yM{"M.y"}
                 yMEd{"E, d.M.y"}
+                yMM{"MM y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d. MMM y"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d. MMM y"}
+                yMMdd{"dd. MM y"}
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
