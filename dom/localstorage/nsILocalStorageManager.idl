@@ -27,9 +27,9 @@ interface nsILocalStorageManager : nsISupports
    * This method will not create a QuotaManager-managed directory on disk if
    * one does not already exist for the principal.
    */
-  [implicit_jscontext] nsISupports
-  preload(in nsIPrincipal aPrincipal);
+  [implicit_jscontext]
+  Promise preload(in nsIPrincipal aPrincipal);
 
-  [implicit_jscontext] nsISupports
-  isPreloaded(in nsIPrincipal aPrincipal);
+  [implicit_jscontext]
+  Promise isPreloaded(in nsIPrincipal aPrincipal);
 };
