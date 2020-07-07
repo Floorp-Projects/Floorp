@@ -161,15 +161,19 @@ class SearchBox extends PureComponent {
 
     switch (e.key) {
       case "ArrowDown":
+        e.preventDefault();
         autocomplete.jumpBy(1);
         break;
       case "ArrowUp":
+        e.preventDefault();
         autocomplete.jumpBy(-1);
         break;
       case "PageDown":
+        e.preventDefault();
         autocomplete.jumpBy(5);
         break;
       case "PageUp":
+        e.preventDefault();
         autocomplete.jumpBy(-5);
         break;
       case "Enter":
@@ -182,9 +186,11 @@ class SearchBox extends PureComponent {
         this.onBlur();
         break;
       case "Home":
+        e.preventDefault();
         autocomplete.jumpToTop();
         break;
       case "End":
+        e.preventDefault();
         autocomplete.jumpToBottom();
         break;
     }
