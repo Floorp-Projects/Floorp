@@ -636,7 +636,7 @@ nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
 NS_IMETHODIMP
 nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
                            const nsACString& aBreakpadID, JSContext* aCx,
-                           nsISupports** aPromise) {
+                           Promise** aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_WARN_IF(!aCx)) {

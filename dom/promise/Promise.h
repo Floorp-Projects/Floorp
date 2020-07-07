@@ -35,22 +35,14 @@ class PromiseInit;
 class PromiseNativeHandler;
 class PromiseDebugging;
 
-#define NS_PROMISE_IID                               \
-  {                                                  \
-    0x1b8d6215, 0x3e67, 0x43ba, {                    \
-      0x8a, 0xf9, 0x31, 0x5e, 0x8f, 0xce, 0x75, 0x65 \
-    }                                                \
-  }
-
-class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
+class Promise : public SupportsWeakPtr<Promise> {
   friend class PromiseTask;
   friend class PromiseWorkerProxy;
   friend class PromiseWorkerProxyRunnable;
 
  public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROMISE_IID)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Promise)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Promise)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Promise)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Promise)
 
   enum PropagateUserInteraction {
@@ -344,8 +336,6 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
 
   JS::Heap<JSObject*> mPromiseObj;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(Promise, NS_PROMISE_IID)
 
 }  // namespace dom
 }  // namespace mozilla

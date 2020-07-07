@@ -924,22 +924,6 @@ bool XPCConvert::NativeInterface2JSObject(JSContext* cx, MutableHandleValue d,
     return true;
   }
 
-  // NOTE(nika): Remove if Promise becomes non-nsISupports
-  if (iid->Equals(NS_GET_IID(nsISupports))) {
-    // Check for a Promise being returned via nsISupports.  In that
-    // situation, we want to dig out its underlying JS object and return
-    // that.
-    RefPtr<Promise> promise = do_QueryObject(aHelper.Object());
-    if (promise) {
-      flat = promise->PromiseObj();
-      if (!JS_WrapObject(cx, &flat)) {
-        return false;
-      }
-      d.setObjectOrNull(flat);
-      return true;
-    }
-  }
-
   // Go ahead and create an XPCWrappedNative for this object.
   RefPtr<XPCNativeInterface> iface = XPCNativeInterface::GetNewOrUsed(cx, iid);
   if (!iface) {
@@ -1057,18 +1041,6 @@ bool XPCConvert::JSObject2NativeInterface(JSContext* cx, void** dest,
       }
 
       return false;
-    }
-
-    // NOTE(nika): Remove if Promise becomes non-nsISupports
-    // Deal with Promises being passed as nsISupports.  In that situation we
-    // want to create a dom::Promise and use that.
-    if (iid->Equals(NS_GET_IID(nsISupports))) {
-      RootedObject innerObj(RootingCx(), inner);
-      if (IsPromiseObject(innerObj)) {
-        nsIGlobalObject* glob = NativeGlobal(innerObj);
-        RefPtr<Promise> p = Promise::CreateFromExisting(glob, innerObj);
-        return p && NS_SUCCEEDED(p->QueryInterface(*iid, dest));
-      }
     }
   }
 

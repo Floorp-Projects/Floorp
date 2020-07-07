@@ -173,7 +173,7 @@ interface nsIProfiler : nsISupports
    * (new TextDecoder()).decode(buffer.subarray(index[i], index[i + 1]))
    */
   [implicit_jscontext]
-  nsISupports getSymbolTable(in ACString aDebugPath, in ACString aBreakpadID);
+  Promise getSymbolTable(in ACString aDebugPath, in ACString aBreakpadID);
 
   /**
    * Dump the collected profile to a file.
