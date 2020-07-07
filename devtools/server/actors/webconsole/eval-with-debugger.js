@@ -41,13 +41,13 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "eagerEcmaWhitelist",
-  "devtools/server/actors/webconsole/eager-ecma-whitelist"
+  "eagerEcmaAllowlist",
+  "devtools/server/actors/webconsole/eager-ecma-allowlist"
 );
 loader.lazyRequireGetter(
   this,
-  "eagerFunctionWhitelist",
-  "devtools/server/actors/webconsole/eager-function-whitelist"
+  "eagerFunctionAllowlist",
+  "devtools/server/actors/webconsole/eager-function-allowlist"
 );
 
 function isObject(value) {
@@ -389,7 +389,7 @@ function makeSideeffectFreeDebugger() {
   dbg.onNativeCall = (callee, reason) => {
     try {
       // Getters are never considered effectful, and setters are always effectful.
-      // Natives called normally are handled with a whitelist.
+      // Natives called normally are handled with an allowlist.
       if (
         reason == "get" ||
         (reason == "call" && nativeHasNoSideEffects(callee))
@@ -400,7 +400,7 @@ function makeSideeffectFreeDebugger() {
     } catch (err) {
       DevToolsUtils.reportException(
         "evalWithDebugger onNativeCall",
-        new Error("Unable to validate native function against whitelist")
+        new Error("Unable to validate native function against allowlist")
       );
     }
     // Returning null terminates the current evaluation.
@@ -419,11 +419,11 @@ function ensureSideEffectFreeNatives() {
   }
 
   const natives = [
-    ...eagerEcmaWhitelist,
+    ...eagerEcmaAllowlist,
 
     // Pull in all of the non-ECMAScript native functions that we want to
-    // whitelist as well.
-    ...eagerFunctionWhitelist,
+    // allow as well.
+    ...eagerFunctionAllowlist,
   ];
 
   const map = new Map();

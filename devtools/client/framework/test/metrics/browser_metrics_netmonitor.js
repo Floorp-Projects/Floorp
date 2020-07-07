@@ -29,7 +29,7 @@ add_task(async function() {
   // Uncomment after Bug 1581068 is fixed, otherwise the test might fail too
   // frequently.
 
-  // const whitelist = [
+  // const allowedDupes = [
   //   "@loader/unload.js",
   //   "@loader/options.js",
   //   "chrome.js",
@@ -81,7 +81,7 @@ add_task(async function() {
   //   "resource://devtools/client/netmonitor/src/workers/search/index.js",
   //   "resource://devtools/client/netmonitor/src/workers/worker-utils.js",
   // ];
-  // runDuplicatedModulesTest(loaders, whitelist);
+  // runDuplicatedModulesTest(loaders, allowedDupes);
 
   runMetricsTest({
     filterString: "devtools/client/netmonitor",

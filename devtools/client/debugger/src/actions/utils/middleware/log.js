@@ -8,7 +8,7 @@ import { isTesting } from "devtools-environment";
 import type { ThunkArgs } from "../../types";
 import { prefs } from "../../../utils/prefs";
 
-const blacklist = [
+const ignoreList = [
   "ADD_BREAKPOINT_POSITIONS",
   "SET_SYMBOLS",
   "OUT_OF_SCOPE_LOCATIONS",
@@ -67,7 +67,7 @@ function formatPause(pause) {
 function serializeAction(action) {
   try {
     action = cloneAction(action);
-    if (blacklist.includes(action.type)) {
+    if (ignoreList.includes(action.type)) {
       action = {};
     }
 

@@ -10,7 +10,7 @@
 function log({ dispatch, getState }) {
   return next => action => {
     try {
-      // whitelist of fields, rather than printing the whole object
+      // Only print the action type, rather than printing the whole object
       console.log("[DISPATCH] action type:", action.type);
       /*
        * USE WITH CAUTION!! This will output everything from an action object,
