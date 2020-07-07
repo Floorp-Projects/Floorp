@@ -45,9 +45,9 @@ class FakeKind(Kind):
     def _get_loader(self):
         return fake_loader
 
-    def load_tasks(self, parameters, loaded_tasks):
+    def load_tasks(self, parameters, loaded_tasks, write_artifacts):
         FakeKind.loaded_kinds.append(self.name)
-        return super(FakeKind, self).load_tasks(parameters, loaded_tasks)
+        return super(FakeKind, self).load_tasks(parameters, loaded_tasks, write_artifacts)
 
 
 class WithFakeKind(TaskGraphGenerator):
