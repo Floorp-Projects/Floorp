@@ -195,78 +195,64 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
 
   const waitForFrameListUpdate = toolbox.target.once("frame-update");
 
-  toolbox
-    .selectTool("webconsole")
-    .then(async console => {
-      const clickNoAutoHideMenu = () => {
-        return new Promise(resolve => {
-          toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
-          toolbox.doc.addEventListener(
-            "popupshown",
-            () => {
-              const menuItem = toolbox.doc.getElementById(
-                "toolbox-meatball-menu-noautohide"
-              );
-              menuItem.click();
-              resolve();
-            },
-            { once: true }
-          );
-        });
-      };
+  const webconsole = await toolbox.selectTool("webconsole");
 
-      dump(`Clicking the menu button\n`);
-      await clickNoAutoHideMenu();
-      dump(`Clicked the menu button\n`);
+  info("Clicking the menu button");
+  await new Promise(resolve => {
+    toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
+    toolbox.doc.addEventListener(
+      "popupshown",
+      () => {
+        const menuItem = toolbox.doc.getElementById(
+          "toolbox-meatball-menu-noautohide"
+        );
+        menuItem.click();
+        resolve();
+      },
+      { once: true }
+    );
+  });
+  info("Clicked the menu button");
 
-      const consoleWrapper = console.hud.ui.wrapper;
-      consoleWrapper.dispatchEvaluateExpression("myWebExtensionShowPopup()");
+  const consoleWrapper = webconsole.hud.ui.wrapper;
+  consoleWrapper.dispatchEvaluateExpression("myWebExtensionShowPopup()");
 
-      await Promise.all([
-        // Wait the initial frame update (which list the background page).
-        waitForFrameListUpdate,
-        // Wait the new frame update (once the extension popup has been opened).
-        popupFramePromise,
-      ]);
+  await Promise.all([
+    // Wait the initial frame update (which list the background page).
+    waitForFrameListUpdate,
+    // Wait the new frame update (once the extension popup has been opened).
+    popupFramePromise,
+  ]);
 
-      dump(`Clicking the frame list button\n`);
-      const btn = toolbox.doc.getElementById("command-button-frames");
-      btn.click();
+  info("Clicking the frame list button");
+  const btn = toolbox.doc.getElementById("command-button-frames");
+  btn.click();
 
-      const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
-      const frames = Array.from(menuList.querySelectorAll(".command"));
+  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+  const frames = Array.from(menuList.querySelectorAll(".command"));
 
-      if (frames.length != 2) {
-        throw Error(`Number of frames found is wrong: ${frames.length} != 2`);
-      }
+  is(frames.length, 2, "Has the expected number of frames");
 
-      const popupFrameBtn = frames
-        .filter(frame => {
-          return frame
-            .querySelector(".label")
-            .textContent.endsWith("popup.html");
-        })
-        .pop();
-
-      if (!popupFrameBtn) {
-        throw Error("Extension Popup frame not found in the listed frames");
-      }
-
-      const waitForNavigated = toolbox.target.once("navigate");
-      popupFrameBtn.click();
-      await waitForNavigated;
-      consoleWrapper.dispatchEvaluateExpression(
-        "myWebExtensionPopupAddonFunction()"
-      );
-
-      info("Wait for all pending requests to settle on the DevToolsClient");
-      await toolbox.target.client.waitForRequestsToSettle();
-
-      await removeTab(devtoolsTab);
+  const popupFrameBtn = frames
+    .filter(frame => {
+      return frame.querySelector(".label").textContent.endsWith("popup.html");
     })
-    .catch(error => {
-      dump("Error while running code in the browser toolbox process:\n");
-      dump(error + "\n");
-      dump("stack:\n" + error.stack + "\n");
-    });
+    .pop();
+
+  ok(popupFrameBtn, "Extension Popup frame found in the listed frames");
+
+  info("Click on the extension popup frame and wait for `navigate`");
+  const waitForNavigated = toolbox.target.once("navigate");
+  popupFrameBtn.click();
+  await waitForNavigated;
+
+  info("Execute `myWebExtensionPopupAddonFunction()`");
+  consoleWrapper.dispatchEvaluateExpression(
+    "myWebExtensionPopupAddonFunction()"
+  );
+
+  info("Wait for all pending requests to settle on the DevToolsClient");
+  await toolbox.target.client.waitForRequestsToSettle();
+
+  await removeTab(devtoolsTab);
 }
