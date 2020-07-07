@@ -7,7 +7,7 @@
   },
   "name": "Mozilla Android Components - Test extension",
   "description": "This extension is used for testing web extension functionality in Android Components",
-  "version": "1.0",
+  "version": "${version}",
   "background": {
     "scripts": ["background.js"]
   },

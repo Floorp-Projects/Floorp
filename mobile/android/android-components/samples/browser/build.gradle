@@ -57,6 +57,14 @@ android {
     }
 }
 
+tasks.register("updateBorderifyExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/borderify')
+}
+
+tasks.register("updateTestExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/test')
+}
+
 dependencies {
     implementation project(':concept-awesomebar')
     implementation project(':concept-fetch')
@@ -150,3 +158,6 @@ if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcd
     ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
     apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
 }
+
+preBuild.dependsOn updateBorderifyExtensionVersion
+preBuild.dependsOn updateTestExtensionVersion

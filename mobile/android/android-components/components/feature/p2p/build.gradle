@@ -28,6 +28,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     ]
 }
 
+tasks.register("updateBuiltInExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/p2p')
+}
+
 dependencies {
     implementation project(':browser-session')
     implementation project(':browser-state')
@@ -51,3 +55,5 @@ dependencies {
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
+
+preBuild.dependsOn updateBuiltInExtensionVersion

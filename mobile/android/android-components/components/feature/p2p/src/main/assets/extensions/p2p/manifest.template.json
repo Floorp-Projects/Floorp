@@ -6,7 +6,7 @@
     }
   },
   "name": "Mozilla Android Components - P2P",
-  "version": "1.0",
+  "version": "${version}",
   "content_scripts": [
     {
       "matches": ["*://*/*"],
