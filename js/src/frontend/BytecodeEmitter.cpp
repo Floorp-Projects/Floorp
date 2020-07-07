@@ -9855,6 +9855,54 @@ bool BytecodeEmitter::emitClass(
       //            [stack] HERITAGE
       return false;
     }
+
+    for (ParseNode* classElement : classNode->memberList()->contents()) {
+      if (!classElement->is<ClassField>()) {
+        continue;
+      }
+
+      ParseNode* fieldName = &classElement->as<ClassField>().name();
+      if (!fieldName->isKind(ParseNodeKind::PrivateName)) {
+        continue;
+      }
+
+      RootedAtom privateName(cx, fieldName->as<NameNode>().name());
+
+      // TODO: Add a new bytecode to create private names.
+      if (!emitAtomOp(JSOp::GetIntrinsic, cx->names().NewPrivateName)) {
+        //          [stack] HERITAGE NEWPRIVATENAME
+        return false;
+      }
+
+      // Push `undefined` as `this` parameter for call.
+      if (!emit1(JSOp::Undefined)) {
+        //          [stack] HERITAGE NEWPRIVATENAME UNDEFINED
+        return false;
+      }
+
+      if (!emitAtomOp(JSOp::String, privateName)) {
+        //          [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
+        return false;
+      }
+
+      int argc = 1;
+      if (!emitCall(JSOp::Call, argc)) {
+        //          [stack] HERITAGE PRIVATENAME
+        return false;
+      }
+
+      // Add a binding for #name => privatename
+      if (!emitLexicalInitialization(privateName)) {
+        //          [stack] HERITAGE PRIVATENAME
+        return false;
+      }
+
+      // Pop Private name off the stack.
+      if (!emit1(JSOp::Pop)) {
+        //          [stack] HERITAGE
+        return false;
+      }
+    }
   }
 
   bool hasNameOnStack = nameKind == ClassNameKind::ComputedName;
