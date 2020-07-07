@@ -2818,8 +2818,7 @@ main {
     min-width: 40px;
     padding: 0 0 0 40px;
     position: absolute;
-    transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
-    z-index: 1; }
+    transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms; }
     .ds-card .playhead:hover {
       color: white;
       padding: 0 20px 0 40px; }
