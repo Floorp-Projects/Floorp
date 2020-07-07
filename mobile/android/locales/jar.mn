@@ -43,8 +43,6 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/search/search.properties        (%chrome/search/search.properties)
 # plugins
   locale/@AB_CD@/browser/overrides/plugins/pluginproblem.dtd       (%chrome/pluginproblem/pluginproblem.dtd)
-#about:mozilla
-  locale/@AB_CD@/browser/overrides/global/mozilla.dtd                (%chrome/global/mozilla.dtd)
 #about:webrtc
   locale/@AB_CD@/browser/overrides/global/aboutWebrtc.properties  (%chrome/global/aboutWebrtc.properties)
 
@@ -73,6 +71,8 @@ relativesrcdir toolkit/locales:
   crashreporter                                    (%crashreporter/**/*.ftl)
 #about:about
   toolkit/about                                    (%toolkit/about/*About.ftl)
+#about:mozilla
+  toolkit/about                                    (%toolkit/about/*Mozilla.ftl)
 #about:support
   toolkit/about                                    (%toolkit/about/*Support.ftl)
 #about:rights

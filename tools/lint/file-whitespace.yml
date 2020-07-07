@@ -159,7 +159,6 @@ file-whitespace:
         - testing/web-platform/tests/tools/wptrunner/wptrunner/tests/test_update.py
         - testing/web-platform/tests/tools/lint/tests/dummy/broken.html
         - testing/web-platform/tests/tools/lint/tests/dummy/broken_ignored.html
-        - toolkit/locales/en-US/chrome/global/mozilla.dtd
         - toolkit/components/telemetry/build_scripts/setup.py
         - toolkit/components/telemetry/tests/marionette/mach_commands.py
         - toolkit/content/tests/chrome
