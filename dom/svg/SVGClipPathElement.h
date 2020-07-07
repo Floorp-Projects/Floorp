@@ -10,18 +10,18 @@
 #include "SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 
-class nsSVGClipPathFrame;
-
 nsresult NS_NewSVGClipPathElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class SVGClipPathFrame;
+
 namespace dom {
 
 typedef SVGTransformableElement SVGClipPathElementBase;
 
 class SVGClipPathElement final : public SVGClipPathElementBase {
-  friend class ::nsSVGClipPathFrame;
+  friend class mozilla::SVGClipPathFrame;
 
  protected:
   friend nsresult(::NS_NewSVGClipPathElement(

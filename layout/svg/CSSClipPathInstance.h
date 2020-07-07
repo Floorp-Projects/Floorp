@@ -18,10 +18,10 @@ class gfxContext;
 
 namespace mozilla {
 
-class MOZ_STACK_CLASS nsCSSClipPathInstance {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::Path Path;
-  typedef mozilla::gfx::Rect Rect;
+class MOZ_STACK_CLASS CSSClipPathInstance {
+  typedef gfx::DrawTarget DrawTarget;
+  typedef gfx::Path Path;
+  typedef gfx::Rect Rect;
 
  public:
   static void ApplyBasicShapeOrPathClip(gfxContext& aContext, nsIFrame* aFrame,
@@ -34,8 +34,7 @@ class MOZ_STACK_CLASS nsCSSClipPathInstance {
       nsIFrame* aFrame, const StyleClipPath&);
 
  private:
-  explicit nsCSSClipPathInstance(nsIFrame* aFrame,
-                                 const StyleClipPath& aClipPath)
+  explicit CSSClipPathInstance(nsIFrame* aFrame, const StyleClipPath& aClipPath)
       : mTargetFrame(aFrame), mClipPathStyle(aClipPath) {}
 
   already_AddRefed<Path> CreateClipPath(DrawTarget* aDrawTarget,

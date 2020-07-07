@@ -56,8 +56,6 @@
 #include "nsBoxFrame.h"
 #include "nsImageFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "SVGObserverUtils.h"
-#include "nsSVGClipPathFrame.h"
 #include "GeckoProfiler.h"
 #include "nsViewManager.h"
 #include "ImageLayers.h"
@@ -78,7 +76,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/SVGClipPathFrame.h"
 #include "mozilla/SVGMaskFrame.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -9555,7 +9555,7 @@ void nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo) {
     first = false;
     aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }
-  nsSVGClipPathFrame* clipPathFrame;
+  SVGClipPathFrame* clipPathFrame;
   // XXX Check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
   if (clipPathFrame) {

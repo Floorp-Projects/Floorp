@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsCSSClipPathInstance.h"
+#include "CSSClipPathInstance.h"
 
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPathData.h"
@@ -20,19 +20,20 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
+namespace mozilla {
+
 /* static*/
-void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(
+void CSSClipPathInstance::ApplyBasicShapeOrPathClip(
     gfxContext& aContext, nsIFrame* aFrame, const gfxMatrix& aTransform) {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   MOZ_ASSERT(clipPathStyle.IsShape() || clipPathStyle.IsBox() ||
                  clipPathStyle.IsPath(),
              "This is used with basic-shape, geometry-box, and path() only");
 
-  nsCSSClipPathInstance instance(aFrame, clipPathStyle);
+  CSSClipPathInstance instance(aFrame, clipPathStyle);
 
   aContext.NewPath();
   RefPtr<Path> path =
@@ -45,17 +46,17 @@ void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(
 }
 
 /* static*/
-bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
-    nsIFrame* aFrame, const gfxPoint& aPoint) {
+bool CSSClipPathInstance::HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
+                                                      const gfxPoint& aPoint) {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   MOZ_ASSERT(!clipPathStyle.IsNone(), "unexpected none value");
-  // In the future nsCSSClipPathInstance may handle <clipPath> references as
+  // In the future CSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
   if (clipPathStyle.IsUrl()) {
     return false;
   }
 
-  nsCSSClipPathInstance instance(aFrame, clipPathStyle);
+  CSSClipPathInstance instance(aFrame, clipPathStyle);
 
   RefPtr<DrawTarget> drawTarget =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
@@ -67,12 +68,12 @@ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
 }
 
 /* static */
-Maybe<Rect> nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
+Maybe<Rect> CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
     nsIFrame* aFrame, const StyleClipPath& aClipPathStyle) {
   MOZ_ASSERT(aClipPathStyle.IsShape() || aClipPathStyle.IsBox() ||
              aClipPathStyle.IsPath());
 
-  nsCSSClipPathInstance instance(aFrame, aClipPathStyle);
+  CSSClipPathInstance instance(aFrame, aClipPathStyle);
 
   RefPtr<DrawTarget> drawTarget =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
@@ -81,7 +82,7 @@ Maybe<Rect> nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
   return path ? Some(path->GetBounds()) : Nothing();
 }
 
-already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPath(
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
     DrawTarget* aDrawTarget, const gfxMatrix& aTransform) {
   if (mClipPathStyle.IsPath()) {
     return CreateClipPathPath(aDrawTarget);
@@ -135,7 +136,7 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPath(
   return builder->Finish();
 }
 
-already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathCircle(
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathCircle(
     DrawTarget* aDrawTarget, const nsRect& aRefBox) {
   const auto& basicShape = *mClipPathStyle.AsShape()._0;
 
@@ -152,7 +153,7 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathCircle(
   return builder->Finish();
 }
 
-already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathEllipse(
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathEllipse(
     DrawTarget* aDrawTarget, const nsRect& aRefBox) {
   const auto& basicShape = *mClipPathStyle.AsShape()._0;
 
@@ -170,7 +171,7 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathEllipse(
   return builder->Finish();
 }
 
-already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathPolygon(
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPolygon(
     DrawTarget* aDrawTarget, const nsRect& aRefBox) {
   const auto& basicShape = *mClipPathStyle.AsShape()._0;
   auto fillRule = basicShape.AsPolygon().fill == StyleFillRule::Nonzero
@@ -195,7 +196,7 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathPolygon(
   return builder->Finish();
 }
 
-already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathInset(
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathInset(
     DrawTarget* aDrawTarget, const nsRect& aRefBox) {
   const auto& basicShape = *mClipPathStyle.AsShape()._0;
 
@@ -221,7 +222,7 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathInset(
   return builder->Finish();
 }
 
-already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathPath(
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
     DrawTarget* aDrawTarget) {
   const auto& path = mClipPathStyle.AsPath();
 
@@ -233,3 +234,5 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathPath(
   return SVGPathData::BuildPath(path.path._0.AsSpan(), builder,
                                 StyleStrokeLinecap::Butt, 0.0, scale);
 }
+
+}  // namespace mozilla

@@ -11,21 +11,21 @@
 #include "gfxDrawable.h"
 
 #include "nsCSSAnonBoxes.h"
-#include "nsCSSClipPathInstance.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "gfxContext.h"
-#include "nsSVGClipPathFrame.h"
 #include "SVGFilterPaintCallback.h"
-#include "nsSVGPaintServerFrame.h"
+#include "SVGPaintServerFrame.h"
 #include "nsSVGUtils.h"
 #include "FrameLayerBuilder.h"
 #include "BasicLayers.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/CSSClipPathInstance.h"
 #include "mozilla/FilterInstance.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/SVGClipPathFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/Unused.h"
@@ -812,7 +812,7 @@ bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     MoveContextOriginToUserSpace(firstFrame, aParams);
 
     basicShapeSR.SetContext(&ctx);
-    nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(
+    CSSClipPathInstance::ApplyBasicShapeOrPathClip(
         ctx, frame, nsSVGUtils::GetCSSPxToDevPxMatrix(frame));
     if (!maskUsage.shouldGenerateMaskLayer) {
       // Only have basic-shape clip-path effect. Fill clipped region by
@@ -845,7 +845,7 @@ bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     Matrix clipMaskTransform;
     gfxMatrix cssPxToDevPxMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
 
-    nsSVGClipPathFrame* clipPathFrame;
+    SVGClipPathFrame* clipPathFrame;
     // XXX check return value?
     SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
     RefPtr<SourceSurface> maskSurface =
@@ -896,7 +896,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
 
-  nsSVGClipPathFrame* clipPathFrame;
+  SVGClipPathFrame* clipPathFrame;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
 
@@ -963,7 +963,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
         maskTransform.Invert();
       } else {
         // Either entire surface is clipped out, or gfx buffer allocation
-        // failure in nsSVGClipPathFrame::GetClipMask.
+        // failure in SVGClipPathFrame::GetClipMask.
         return;
       }
 
@@ -1009,8 +1009,8 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
     if (maskUsage.shouldApplyClipPath) {
       clipPathFrame->ApplyClipPath(context, frame, cssPxToDevPxMatrix);
     } else {
-      nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(context, frame,
-                                                       cssPxToDevPxMatrix);
+      CSSClipPathInstance::ApplyBasicShapeOrPathClip(context, frame,
+                                                     cssPxToDevPxMatrix);
     }
   }
 
@@ -1338,7 +1338,7 @@ already_AddRefed<gfxDrawable> nsSVGIntegrationUtils::DrawableFromPaintServer(
     // aFrame is either a pattern or a gradient. These fill the whole target
     // frame by default, so aPaintServerSize is the whole target background fill
     // area.
-    nsSVGPaintServerFrame* server = static_cast<nsSVGPaintServerFrame*>(aFrame);
+    auto* server = static_cast<SVGPaintServerFrame*>(aFrame);
 
     gfxRect overrideBounds(0, 0, aPaintServerSize.width,
                            aPaintServerSize.height);

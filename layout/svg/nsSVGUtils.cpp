@@ -16,7 +16,6 @@
 #include "gfxPlatform.h"
 #include "gfxRect.h"
 #include "gfxUtils.h"
-#include "nsCSSClipPathInstance.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 #include "nsFrameList.h"
@@ -29,17 +28,18 @@
 #include "nsStyleStruct.h"
 #include "nsStyleTransformMatrix.h"
 #include "SVGAnimatedLength.h"
-#include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGDisplayableFrame.h"
 #include "SVGFilterPaintCallback.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsSVGPaintServerFrame.h"
+#include "SVGPaintServerFrame.h"
 #include "nsTextFrame.h"
+#include "mozilla/CSSClipPathInstance.h"
 #include "mozilla/FilterInstance.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_svg.h"
+#include "mozilla/SVGClipPathFrame.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGContextPaint.h"
 #include "mozilla/SVGForeignObjectFrame.h"
@@ -441,7 +441,7 @@ void nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
   aUsage.shouldGenerateMaskLayer = (maskFrames.Length() > 0);
 
-  nsSVGClipPathFrame* clipPathFrame;
+  SVGClipPathFrame* clipPathFrame;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
   MOZ_ASSERT(!clipPathFrame || svgReset->mClipPath.IsUrl());
@@ -649,7 +649,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
 
   /* Properties are added lazily and may have been removed by a restyle,
      so make sure all applicable ones are set again. */
-  nsSVGClipPathFrame* clipPathFrame;
+  SVGClipPathFrame* clipPathFrame;
   nsTArray<SVGMaskFrame*> maskFrames;
   // TODO: We currently pass nullptr instead of an nsTArray* here, but we
   // actually should get the filter frames and then pass them into
@@ -723,7 +723,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
         maskSurface = clipMaskSurface;
       } else {
         // Either entire surface is clipped out, or gfx buffer allocation
-        // failure in nsSVGClipPathFrame::GetClipMask.
+        // failure in SVGClipPathFrame::GetClipMask.
         return;
       }
       shouldPushMask = true;
@@ -750,8 +750,8 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     if (maskUsage.shouldApplyClipPath) {
       clipPathFrame->ApplyClipPath(aContext, aFrame, aTransform);
     } else {
-      nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(aContext, aFrame,
-                                                       aTransform);
+      CSSClipPathInstance::ApplyBasicShapeOrPathClip(aContext, aFrame,
+                                                     aTransform);
     }
   }
 
@@ -815,13 +815,13 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
 bool nsSVGUtils::HitTestClip(nsIFrame* aFrame, const gfxPoint& aPoint) {
   // If the clip-path property references non-existent or invalid clipPath
   // element(s) we ignore it.
-  nsSVGClipPathFrame* clipPathFrame;
+  SVGClipPathFrame* clipPathFrame;
   SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame);
   if (clipPathFrame) {
     return clipPathFrame->PointIsInsideClipPath(aFrame, aPoint);
   }
   if (aFrame->StyleSVGReset()->HasClipPath()) {
-    return nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
+    return CSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
   }
   return true;
 }
@@ -1068,7 +1068,7 @@ gfxRect nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
         clipRect = matrix.TransformBounds(clipRect);
       }
     }
-    nsSVGClipPathFrame* clipPathFrame;
+    SVGClipPathFrame* clipPathFrame;
     if (SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
         SVGObserverUtils::eHasRefsSomeInvalid) {
       bbox = gfxRect(0, 0, 0, 0);
@@ -1373,7 +1373,7 @@ void nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
 
   const DrawTarget* dt = aContext->GetDrawTarget();
 
-  nsSVGPaintServerFrame* ps =
+  SVGPaintServerFrame* ps =
       SVGObserverUtils::GetAndObservePaintServer(aFrame, &nsStyleSVG::mFill);
 
   if (ps) {
@@ -1440,7 +1440,7 @@ void nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
 
   const DrawTarget* dt = aContext->GetDrawTarget();
 
-  nsSVGPaintServerFrame* ps =
+  SVGPaintServerFrame* ps =
       SVGObserverUtils::GetAndObservePaintServer(aFrame, &nsStyleSVG::mStroke);
 
   if (ps) {

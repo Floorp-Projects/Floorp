@@ -16,19 +16,19 @@
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/UniquePtr.h"
 
-class nsSVGPatternFrame;
-
 nsresult NS_NewSVGPatternElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class SVGPatternFrame;
+
 namespace dom {
 class DOMSVGAnimatedTransformList;
 
 typedef SVGElement SVGPatternElementBase;
 
 class SVGPatternElement final : public SVGPatternElementBase {
-  friend class ::nsSVGPatternFrame;
+  friend class mozilla::SVGPatternFrame;
 
  protected:
   friend nsresult(::NS_NewSVGPatternElement(

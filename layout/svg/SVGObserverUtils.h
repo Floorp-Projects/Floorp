@@ -24,13 +24,13 @@
 
 class nsAtom;
 class nsIURI;
-class nsSVGClipPathFrame;
-class nsSVGPaintServerFrame;
 
 namespace mozilla {
+class SVGClipPathFrame;
 class SVGFilterFrame;
 class SVGMarkerFrame;
 class SVGMaskFrame;
+class SVGPaintServerFrame;
 
 namespace dom {
 class CanvasRenderingContext2D;
@@ -246,7 +246,7 @@ class SVGObserverUtils {
   /**
    * Get the paint server for aPaintedFrame.
    */
-  static nsSVGPaintServerFrame* GetAndObservePaintServer(
+  static SVGPaintServerFrame* GetAndObservePaintServer(
       nsIFrame* aPaintedFrame, mozilla::StyleSVGPaint nsStyleSVG::*aPaint);
 
   /**
@@ -331,7 +331,7 @@ class SVGObserverUtils {
    * case.
    */
   static ReferenceState GetAndObserveClipPath(
-      nsIFrame* aClippedFrame, nsSVGClipPathFrame** aClipPathFrame);
+      nsIFrame* aClippedFrame, SVGClipPathFrame** aClipPathFrame);
 
   /**
    * If masking is applied to aMaskedFrame, gets an array of any SVG masks

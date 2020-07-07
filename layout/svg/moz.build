@@ -22,7 +22,9 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'CSSClipPathInstance.h',
     'FilterInstance.h',
+    'SVGClipPathFrame.h',
     'SVGContextPaint.h',
     'SVGFilterInstance.h',
     'SVGForeignObjectFrame.h',
@@ -36,19 +38,16 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'CSSClipPathInstance.cpp',
     'CSSFilterInstance.cpp',
     'FilterInstance.cpp',
-    'nsCSSClipPathInstance.cpp',
-    'nsSVGClipPathFrame.cpp',
     'nsSVGContainerFrame.cpp',
-    'nsSVGGradientFrame.cpp',
     'nsSVGIntegrationUtils.cpp',
     'nsSVGOuterSVGFrame.cpp',
-    'nsSVGPatternFrame.cpp',
-    'nsSVGStopFrame.cpp',
     'nsSVGSwitchFrame.cpp',
     'nsSVGUtils.cpp',
     'SVGAFrame.cpp',
+    'SVGClipPathFrame.cpp',
     'SVGContextPaint.cpp',
     'SVGFEContainerFrame.cpp',
     'SVGFEImageFrame.cpp',
@@ -60,12 +59,15 @@ UNIFIED_SOURCES += [
     'SVGGenericContainerFrame.cpp',
     'SVGGeometryFrame.cpp',
     'SVGGFrame.cpp',
+    'SVGGradientFrame.cpp',
     'SVGImageContext.cpp',
     'SVGImageFrame.cpp',
     'SVGInnerSVGFrame.cpp',
     'SVGMarkerFrame.cpp',
     'SVGMaskFrame.cpp',
     'SVGObserverUtils.cpp',
+    'SVGPatternFrame.cpp',
+    'SVGStopFrame.cpp',
     'SVGSymbolFrame.cpp',
     'SVGTextFrame.cpp',
     'SVGUseFrame.cpp',

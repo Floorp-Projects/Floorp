@@ -23,9 +23,8 @@
 
 class gfxContext;
 
-class nsSVGPaintServerFrame;
-
 namespace mozilla {
+class SVGPaintServerFrame;
 
 namespace dom {
 class SVGDocument;
@@ -177,7 +176,7 @@ struct SVGContextPaintImpl : public SVGContextPaint {
     Paint() : mPaintDefinition{}, mPaintType(Tag::None) {}
 
     void SetPaintServer(nsIFrame* aFrame, const gfxMatrix& aContextMatrix,
-                        nsSVGPaintServerFrame* aPaintServerFrame) {
+                        SVGPaintServerFrame* aPaintServerFrame) {
       mPaintType = Tag::PaintServer;
       mPaintDefinition.mPaintServerFrame = aPaintServerFrame;
       mFrame = aFrame;
@@ -196,7 +195,7 @@ struct SVGContextPaintImpl : public SVGContextPaint {
     }
 
     union {
-      nsSVGPaintServerFrame* mPaintServerFrame;
+      SVGPaintServerFrame* mPaintServerFrame;
       SVGContextPaint* mContextPaint;
       nscolor mColor;
     } mPaintDefinition;

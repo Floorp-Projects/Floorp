@@ -25,7 +25,7 @@
 #include "nsQuickSort.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsSVGPaintServerFrame.h"
+#include "SVGPaintServerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsTArray.h"
