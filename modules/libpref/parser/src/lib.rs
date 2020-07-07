@@ -8,6 +8,7 @@
 //! differences between the grammar for a default prefs files and a user prefs
 //! file.
 //!
+//! ```text
 //! <pref-file>   = <pref>*
 //! <pref>        = <pref-spec> "(" <pref-name> "," <pref-value> <pref-attrs> ")" ";"
 //! <pref-spec>   = "user_pref" | "pref" | "sticky_pref" // in default pref files
@@ -27,43 +28,44 @@
 //! <pref-attrs>  = ("," <pref-attr>)*      // in default pref files
 //!               = <empty>                 // in user pref files
 //! <pref-attr>   = "sticky" | "locked"     // default pref files only
+//! ```
 //!
 //! Comments can take three forms:
-//! - # Python-style comments
-//! - // C++ style comments
-//! - /* C style comments (non-nested) */
+//! - `# Python-style comments`
+//! - `// C++ style comments`
+//! - `/* C style comments (non-nested) */`
 //!
-//! Non-end-of-line whitespace chars are \t, \v, \f, and space.
+//! Non-end-of-line whitespace chars are `\t`, `\v`, `\f`, and space.
 //!
-//! End-of-line sequences can take three forms, each of which is considered as a
-//! single EoL:
-//! - \n
-//! - \r (without subsequent \n)
-//! - \r\n
+//! End-of-line sequences can take three forms, each of which is considered as
+//! a single EOL:
+//! - `\n`
+//! - `\r` (without subsequent `\n`)
+//! - `\r\n`
 //!
-//! The valid range for <int-value> is -2,147,483,648..2,147,483,647. Values
+//! The valid range for `<int-value>` is -2,147,483,648..2,147,483,647. Values
 //! outside that range will result in a parse error.
 //!
-//! A '\0' char is interpreted as the end of the file. The use of this character
-//! in a prefs file is not recommended. Within string literals \x00 or \u0000
-//! can be used instead.
+//! A `\0` char is interpreted as the end of the file. The use of this character
+//! in a prefs file is not recommended. Within string literals `\x00` or
+//! `\u0000` can be used instead.
 //!
 //! The parser performs error recovery. On a syntax error, it will scan forward
-//! to the next ';' token and then continue parsing. If the syntax error occurs
+//! to the next `;` token and then continue parsing. If the syntax error occurs
 //! in the middle of a token, it will first finish obtaining the current token
 //! in an appropriate fashion.
 
 // This parser uses several important optimizations.
 //
-// - Because "'\0' means EOF" is part of the grammar (see above), EOF is
+// - Because "`\0` means EOF" is part of the grammar (see above), EOF is
 //   representable by a u8. If EOF was represented by an out-of-band value such
-//   as -1 or 256, we'd have to return a larger type such as u16 or i16 from
-//   get_char().
+//   as -1 or 256, we'd have to return a larger type such as `u16` or `i16`
+//   from `get_char()`.
 //
 // - When starting a new token, it uses a lookup table with the first char,
 //   which quickly identifies what kind of token it will be. Furthermore, if
-//   that token is an unambiguous single-char token (e.g. '(', ')', '+', ',',
-//   '-', ';'), the parser will return the appropriate token kind value at
+//   that token is an unambiguous single-char token (e.g. `(`, `)`, `+`, `,`,
+//   `-`, `;`), the parser will return the appropriate token kind value at
 //   minimal cost because the single-char tokens have a uniform representation.
 //
 // - It has a lookup table that identifies chars in string literals that need
