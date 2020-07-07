@@ -5071,6 +5071,7 @@ var AboutHomeStartupCache = {
   _enabled: false,
   _initted: false,
   _hasWrittenThisSession: false,
+  _finalized: false,
 
   init() {
     if (this._initted) {
@@ -5193,6 +5194,7 @@ var AboutHomeStartupCache = {
 
     this._appender = null;
     this._cacheDeferred = null;
+    this._finalized = false;
   },
 
   _aboutHomeURI: null,
@@ -5237,6 +5239,7 @@ var AboutHomeStartupCache = {
 
     if (this._cacheTask.isArmed) {
       this.log.trace("Finalizing cache task on shutdown");
+      this._finalized = true;
       await this._cacheTask.finalize();
     }
   },
@@ -5659,6 +5662,12 @@ var AboutHomeStartupCache = {
     if (!this._initted || !this._enabled) {
       return;
     }
+
+    if (this._finalized) {
+      this.log.trace("Ignoring preloaded newtab update after finalization.");
+      return;
+    }
+
     this.log.trace("Preloaded about:newtab was updated.");
 
     this._cacheTask.disarm();

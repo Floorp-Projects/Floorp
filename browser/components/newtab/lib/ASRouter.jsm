@@ -991,6 +991,9 @@ class _ASRouter {
       ac.BroadcastToContent({
         type: at.AS_ROUTER_INITIALIZED,
         data: ASRouterPreferences.specialConditions,
+        meta: {
+          isStartup: true,
+        },
       })
     );
 

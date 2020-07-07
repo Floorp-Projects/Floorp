@@ -94,8 +94,8 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 
   postInit() {
-    SectionsManager.enableSection(SECTION_ID);
-    this.fetchHighlights({ broadcast: true });
+    SectionsManager.enableSection(SECTION_ID, true /* isStartup */);
+    this.fetchHighlights({ broadcast: true, isStartup: true });
     this.downloadsManager.init(this.store);
   }
 
@@ -240,7 +240,7 @@ this.HighlightsFeed = class HighlightsFeed {
       // If we already have the image for the card, use that immediately. Else
       // asynchronously fetch the image. NEVER fetch a screenshot for downloads
       if (!page.image && page.type !== "download") {
-        this.fetchImage(page);
+        this.fetchImage(page, options.isStartup);
       }
 
       // Adjust the type for 'history' items that are also 'bookmarked' when we
@@ -285,7 +285,8 @@ this.HighlightsFeed = class HighlightsFeed {
     SectionsManager.updateSection(
       SECTION_ID,
       { rows: highlights },
-      shouldBroadcast
+      shouldBroadcast,
+      options.isStartup
     );
   }
 
@@ -293,7 +294,7 @@ this.HighlightsFeed = class HighlightsFeed {
    * Fetch an image for a given highlight and update the card with it. If no
    * image is available then fallback to fetching a screenshot.
    */
-  fetchImage(page) {
+  fetchImage(page, isStartup = false) {
     // Request a screenshot if we don't already have one pending
     const { preview_image_url: imageUrl, url } = page;
     return Screenshots.maybeCacheScreenshot(
@@ -301,7 +302,13 @@ this.HighlightsFeed = class HighlightsFeed {
       imageUrl || url,
       "image",
       image => {
-        SectionsManager.updateSectionCard(SECTION_ID, url, { image }, true);
+        SectionsManager.updateSectionCard(
+          SECTION_ID,
+          url,
+          { image },
+          true,
+          isStartup
+        );
       }
     );
   }
@@ -315,7 +322,10 @@ this.HighlightsFeed = class HighlightsFeed {
         break;
       case at.SYSTEM_TICK:
       case at.TOP_SITES_UPDATED:
-        this.fetchHighlights({ broadcast: false });
+        this.fetchHighlights({
+          broadcast: false,
+          isStartup: !!action.meta?.isStartup,
+        });
         break;
       case at.PREF_CHANGED:
         // Update existing pages when the user changes what should be shown
