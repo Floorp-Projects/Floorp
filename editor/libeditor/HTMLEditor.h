@@ -4382,9 +4382,6 @@ class HTMLEditor final : public TextEditor,
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
                        char16_t** aCfcontext);
 
-  static nsresult StripFormattingNodes(nsIContent& aNode,
-                                       bool aOnlyList = false);
-
   /**
    * CollectTopMostChildContentsCompletelyInRange() collects topmost child
    * contents which are completely in the given range.
