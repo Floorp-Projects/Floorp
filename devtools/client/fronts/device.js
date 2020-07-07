@@ -18,14 +18,6 @@ class DeviceFront extends FrontClassWithSpec(deviceSpec) {
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "deviceActor";
-
-    // Backward compatibility when connected to Firefox 69 or older.
-    // Re-emit the "multi-e10s-updated" event as "can-debug-sw-updated".
-    // Front events are all cleared via EventEmitter::clearEvents in the Front
-    // base class destroy.
-    this.on("multi-e10s-updated", (e, isMultiE10s) => {
-      this.emit("can-debug-sw-updated", !isMultiE10s);
-    });
   }
 
   /**
