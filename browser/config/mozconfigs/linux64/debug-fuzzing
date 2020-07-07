@@ -15,6 +15,13 @@ unset MOZ_STDCXX_COMPAT
 # Hence we need to disable jemalloc until bug 1435148 is fully resolved.
 ac_add_options --disable-jemalloc
 
+# Also, for consistency we disable the crash reporter and solely rely
+# on libFuzzer to provide stacks both in the browser fuzzing case as
+# well as for libFuzzer targets. See also bug 1649062.
+ac_add_options --disable-crashreporter
+ac_add_options --disable-install-strip
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=fuzzing
 
