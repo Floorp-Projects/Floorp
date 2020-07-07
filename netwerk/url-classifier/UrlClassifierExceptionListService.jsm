@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+this.UrlClassifierExceptionListService = function() {};
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -12,20 +12,19 @@ ChromeUtils.defineModuleGetter(
   "resource://services-settings/remote-settings.js"
 );
 
-const COLLECTION_NAME = "partitioning-exempt-urls";
-const PREF_NAME = "privacy.restrict3rdpartystorage.skip_list";
+const COLLECTION_NAME = "url-classifier-skip-urls";
 
 class Feature {
-  constructor() {
-    this.prefName = PREF_NAME;
+  constructor(name, prefName) {
+    this.name = name;
+    this.prefName = prefName;
     this.observers = new Set();
-    this.prefValue = [];
-    this.remoteEntries = [];
+    this.prefValue = null;
+    this.remoteEntries = null;
 
-    if (this.prefName) {
-      let prefValue = Services.prefs.getStringPref(this.prefName, null);
-      this.prefValue = prefValue ? prefValue.split(";") : [];
-      Services.prefs.addObserver(this.prefName, this);
+    if (prefName) {
+      this.prefValue = Services.prefs.getStringPref(this.prefName, null);
+      Services.prefs.addObserver(prefName, this);
     }
   }
 
@@ -44,8 +43,7 @@ class Feature {
       return;
     }
 
-    let prefValue = Services.prefs.getStringPref(this.prefName, null);
-    this.prefValue = prefValue ? prefValue.split(";") : [];
+    this.prefValue = Services.prefs.getStringPref(this.prefName, null);
     this.notifyObservers();
   }
 
@@ -53,31 +51,42 @@ class Feature {
     this.remoteEntries = [];
 
     for (let entry of entries) {
-      this.remoteEntries.push(
-        `${entry.firstPartyOrigin},${entry.thirdPartyOrigin}`
-      );
+      if (entry.feature == this.name) {
+        this.remoteEntries.push(entry.pattern.toLowerCase());
+      }
     }
   }
 
   notifyObservers(observer = null) {
-    let entries = this.prefValue.concat(this.remoteEntries);
-    let entriesAsString = entries.join(";").toLowerCase();
+    let entries = [];
+    if (this.prefValue) {
+      entries = this.prefValue.split(",");
+    }
+
+    if (this.remoteEntries) {
+      for (let entry of this.remoteEntries) {
+        entries.push(entry);
+      }
+    }
+
+    let entriesAsString = entries.join(",").toLowerCase();
     if (observer) {
-      observer.onSkipListUpdate(entriesAsString);
+      observer.onExceptionListUpdate(entriesAsString);
     } else {
       for (let obs of this.observers) {
-        obs.onSkipListUpdate(entriesAsString);
+        obs.onExceptionListUpdate(entriesAsString);
       }
     }
   }
 }
 
-this.PartitioningSkipListService = function() {};
+UrlClassifierExceptionListService.prototype = {
+  classID: Components.ID("{b9f4fd03-9d87-4bfd-9958-85a821750ddc}"),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIUrlClassifierExceptionListService,
+  ]),
 
-PartitioningSkipListService.prototype = {
-  classID: Components.ID("{ab94809d-33f0-4f28-af38-01efbd3baf22}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPartitioningSkipListService]),
-
+  features: {},
   _initialized: false,
 
   async lazyInit() {
@@ -85,19 +94,17 @@ PartitioningSkipListService.prototype = {
       return;
     }
 
-    this.feature = new Feature();
-
     let rs = RemoteSettings(COLLECTION_NAME);
     rs.on("sync", event => {
       let {
         data: { current },
       } = event;
+      this.entries = current || [];
       this.onUpdateEntries(current);
     });
 
     this._initialized = true;
 
-    let entries;
     // If the remote settings list hasn't been populated yet we have to make sure
     // to do it before firing the first notification.
     // This has to be run after _initialized is set because we'll be
@@ -106,23 +113,27 @@ PartitioningSkipListService.prototype = {
     try {
       // The data will be initially available from the local DB (via a
       // resource:// URI).
-      entries = await rs.get();
+      this.entries = await rs.get();
     } catch (e) {}
 
     // RemoteSettings.get() could return null, ensure passing a list to
     // onUpdateEntries.
-    this.onUpdateEntries(entries || []);
+    if (!this.entries) {
+      this.entries = [];
+    }
+
+    this.onUpdateEntries(this.entries);
   },
 
   onUpdateEntries(entries) {
-    if (!this.feature) {
-      return;
+    for (let key of Object.keys(this.features)) {
+      let feature = this.features[key];
+      feature.onRemoteSettingsUpdate(entries);
+      feature.notifyObservers();
     }
-    this.feature.onRemoteSettingsUpdate(entries);
-    this.feature.notifyObservers();
   },
 
-  registerAndRunSkipListObserver(observer) {
+  registerAndRunExceptionListObserver(feature, prefName, observer) {
     // We don't await this; the caller is C++ and won't await this function,
     // and because we prevent re-entering into this method, once it's been
     // called once any subsequent calls will early-return anyway - so
@@ -132,15 +143,30 @@ PartitioningSkipListService.prototype = {
     // immediately.
     this.lazyInit();
 
-    this.feature.addAndRunObserver(observer);
+    if (!this.features[feature]) {
+      let featureObj = new Feature(feature, prefName);
+      this.features[feature] = featureObj;
+      // If we've previously initialized, we need to pass the entries
+      // we already have to the new feature.
+      if (this.entries) {
+        featureObj.onRemoteSettingsUpdate(this.entries);
+      }
+    }
+    this.features[feature].addAndRunObserver(observer);
   },
 
-  unregisterSkipListObserver(observer) {
-    if (!this.feature) {
+  unregisterExceptionListObserver(feature, observer) {
+    if (!this.features[feature]) {
       return;
     }
-    this.feature.removeObserver(observer);
+    this.features[feature].removeObserver(observer);
+  },
+
+  clear() {
+    this.features = {};
+    this._initialized = false;
+    this.entries = null;
   },
 };
 
-var EXPORTED_SYMBOLS = ["PartitioningSkipListService"];
+var EXPORTED_SYMBOLS = ["UrlClassifierExceptionListService"];

@@ -4,14 +4,14 @@ var EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
 
 const ANNOTATION_TABLE_NAME = "mochitest1-track-simple";
 const ANNOTATION_TABLE_PREF = "urlclassifier.trackingAnnotationTable";
-const ANNOTATION_WHITELIST_TABLE_NAME = "mochitest1-trackwhite-simple";
-const ANNOTATION_WHITELIST_TABLE_PREF =
+const ANNOTATION_ENTITYLIST_TABLE_NAME = "mochitest1-trackwhite-simple";
+const ANNOTATION_ENTITYLIST_TABLE_PREF =
   "urlclassifier.trackingAnnotationWhitelistTable";
 
 const TRACKING_TABLE_NAME = "mochitest2-track-simple";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
-const WHITELIST_TABLE_NAME = "mochitest2-trackwhite-simple";
-const WHITELIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
+const ENTITYLIST_TABLE_NAME = "mochitest2-trackwhite-simple";
+const ENTITYLIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
 
 const SOCIAL_ANNOTATION_TABLE_NAME = "mochitest3-track-simple";
 const SOCIAL_ANNOTATION_TABLE_PREF =
@@ -32,11 +32,11 @@ var UrlClassifierTestUtils = {
     let annotationURL3 = "trackertest.org/";
     let annotationURL4 = "another-tracking.example.net/";
     let annotationURL5 = "tlsresumptiontest.example.org/";
-    let annotationWhitelistedURL = "itisatrap.org/?resource=example.org";
+    let annotationEntitylistedURL = "itisatrap.org/?resource=example.org";
     let trackingURL1 = "tracking.example.com/"; // only for TP
     let trackingURL2 = "itisatracker.org/";
     let trackingURL3 = "trackertest.org/";
-    let whitelistedURL = "itisatrap.org/?resource=itisatracker.org";
+    let entitylistedURL = "itisatrap.org/?resource=itisatracker.org";
     let socialTrackingURL = "social-tracking.example.org/";
 
     let annotationUpdate =
@@ -77,14 +77,14 @@ var UrlClassifierTestUtils = {
       "\n" +
       socialTrackingURL +
       "\n";
-    let annotationWhitelistUpdate =
+    let annotationEntitylistUpdate =
       "n:1000\ni:" +
-      ANNOTATION_WHITELIST_TABLE_NAME +
+      ANNOTATION_ENTITYLIST_TABLE_NAME +
       "\nad:1\n" +
       "a:1:32:" +
-      annotationWhitelistedURL.length +
+      annotationEntitylistedURL.length +
       "\n" +
-      annotationWhitelistedURL +
+      annotationEntitylistedURL +
       "\n";
     let trackingUpdate =
       "n:1000\ni:" +
@@ -114,14 +114,14 @@ var UrlClassifierTestUtils = {
       "\n" +
       socialTrackingURL +
       "\n";
-    let whitelistUpdate =
+    let entitylistUpdate =
       "n:1000\ni:" +
-      WHITELIST_TABLE_NAME +
+      ENTITYLIST_TABLE_NAME +
       "\nad:1\n" +
       "a:1:32:" +
-      whitelistedURL.length +
+      entitylistedURL.length +
       "\n" +
-      whitelistedURL +
+      entitylistedURL +
       "\n";
 
     var tables = [
@@ -136,9 +136,9 @@ var UrlClassifierTestUtils = {
         update: socialAnnotationUpdate,
       },
       {
-        pref: ANNOTATION_WHITELIST_TABLE_PREF,
-        name: ANNOTATION_WHITELIST_TABLE_NAME,
-        update: annotationWhitelistUpdate,
+        pref: ANNOTATION_ENTITYLIST_TABLE_PREF,
+        name: ANNOTATION_ENTITYLIST_TABLE_NAME,
+        update: annotationEntitylistUpdate,
       },
       {
         pref: TRACKING_TABLE_PREF,
@@ -151,9 +151,9 @@ var UrlClassifierTestUtils = {
         update: socialTrackingUpdate,
       },
       {
-        pref: WHITELIST_TABLE_PREF,
-        name: WHITELIST_TABLE_NAME,
-        update: whitelistUpdate,
+        pref: ENTITYLIST_TABLE_PREF,
+        name: ENTITYLIST_TABLE_NAME,
+        update: entitylistUpdate,
       },
     ];
 
@@ -182,10 +182,10 @@ var UrlClassifierTestUtils = {
   cleanupTestTrackers() {
     Services.prefs.clearUserPref(ANNOTATION_TABLE_PREF);
     Services.prefs.clearUserPref(SOCIAL_ANNOTATION_TABLE_PREF);
-    Services.prefs.clearUserPref(ANNOTATION_WHITELIST_TABLE_PREF);
+    Services.prefs.clearUserPref(ANNOTATION_ENTITYLIST_TABLE_PREF);
     Services.prefs.clearUserPref(TRACKING_TABLE_PREF);
     Services.prefs.clearUserPref(SOCIAL_TRACKING_TABLE_PREF);
-    Services.prefs.clearUserPref(WHITELIST_TABLE_PREF);
+    Services.prefs.clearUserPref(ENTITYLIST_TABLE_PREF);
   },
 
   /**

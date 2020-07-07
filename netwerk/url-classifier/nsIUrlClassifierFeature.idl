@@ -21,14 +21,14 @@ interface nsIURI;
 interface nsIUrlClassifierFeature : nsISupports
 {
   cenum listType: 8 {
-    blacklist = 0,
-    whitelist = 1,
+    blocklist = 0,
+    entitylist = 1,
   };
 
   cenum URIType: 8 {
-    blacklistURI = 0,
-    whitelistURI = 1,
-    pairwiseWhitelistURI = 2,
+    blocklistURI = 0,
+    entitylistURI = 1,
+    pairwiseEntitylistURI = 2,
   };
 
   /**
@@ -58,7 +58,7 @@ interface nsIUrlClassifierFeature : nsISupports
   /**
    * Returns a comma-separated list of hosts to be ignored.
    */
-  readonly attribute ACString skipHostList;
+  readonly attribute ACString exceptionHostList;
 
   /**
    * When this feature matches the channel, this method is executed to do
@@ -77,8 +77,8 @@ interface nsIUrlClassifierFeature : nsISupports
    * Features can work with different URLs from a channel (channel url, or
    * top-level, or something else). This method returns what we need to use for
    * the current list.
-   * If the returned URI is created by CreatePairwiseWhiteListURI(), the URIType
-   * is pairwiseWhitelistURI. Otherwise, it depends on the listType.
+   * If the returned URI is created by CreatePairwiseEntityListURI(), the
+   * URIType is pairwiseEntitylistURI. Otherwise, it depends on the listType.
    */
   [noscript] nsIURI getURIByListType(in nsIChannel channel,
                                      in nsIUrlClassifierFeature_listType listType,

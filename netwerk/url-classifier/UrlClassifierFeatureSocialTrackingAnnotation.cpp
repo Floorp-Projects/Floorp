@@ -18,19 +18,19 @@ namespace {
 
 #define SOCIALTRACKING_ANNOTATION_FEATURE_NAME "socialtracking-annotation"
 
-#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST \
+#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLOCKLIST \
   "urlclassifier.features.socialtracking.annotate.blacklistTables"
-#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST_TEST_ENTRIES \
+#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLOCKLIST_TEST_ENTRIES \
   "urlclassifier.features.socialtracking.annotate.blacklistHosts"
-#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST \
+#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_ENTITYLIST \
   "urlclassifier.features.socialtracking.annotate.whitelistTables"
-#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST_TEST_ENTRIES \
+#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_ENTITYLIST_TEST_ENTRIES \
   "urlclassifier.features.socialtracking.annotate.whitelistHosts"
-#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_SKIP_URLS \
+#define URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_EXCEPTION_URLS \
   "urlclassifier.features.socialtracking.annotate.skipURLs"
-#define TABLE_SOCIALTRACKING_ANNOTATION_BLACKLIST_PREF \
+#define TABLE_SOCIALTRACKING_ANNOTATION_BLOCKLIST_PREF \
   "socialtracking-annotate-blacklist-pref"
-#define TABLE_SOCIALTRACKING_ANNOTATION_WHITELIST_PREF \
+#define TABLE_SOCIALTRACKING_ANNOTATION_ENTITYLIST_PREF \
   "socialtracking-annotate-whitelist-pref"
 
 StaticRefPtr<UrlClassifierFeatureSocialTrackingAnnotation>
@@ -42,16 +42,16 @@ UrlClassifierFeatureSocialTrackingAnnotation::
     UrlClassifierFeatureSocialTrackingAnnotation()
     : UrlClassifierFeatureBase(
           nsLiteralCString(SOCIALTRACKING_ANNOTATION_FEATURE_NAME),
-          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST),
-          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST),
+          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLOCKLIST),
+          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_ENTITYLIST),
           nsLiteralCString(
-              URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST_TEST_ENTRIES),
+              URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLOCKLIST_TEST_ENTRIES),
           nsLiteralCString(
-              URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST_TEST_ENTRIES),
-          nsLiteralCString(TABLE_SOCIALTRACKING_ANNOTATION_BLACKLIST_PREF),
-          nsLiteralCString(TABLE_SOCIALTRACKING_ANNOTATION_WHITELIST_PREF),
-          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_SKIP_URLS)) {
-}
+              URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_ENTITYLIST_TEST_ENTRIES),
+          nsLiteralCString(TABLE_SOCIALTRACKING_ANNOTATION_BLOCKLIST_PREF),
+          nsLiteralCString(TABLE_SOCIALTRACKING_ANNOTATION_ENTITYLIST_PREF),
+          nsLiteralCString(
+              URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_EXCEPTION_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureSocialTrackingAnnotation::Name() {
   return SOCIALTRACKING_ANNOTATION_FEATURE_NAME;
@@ -164,15 +164,15 @@ UrlClassifierFeatureSocialTrackingAnnotation::GetURIByListType(
   NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    *aURIType = nsIUrlClassifierFeature::blacklistURI;
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    *aURIType = nsIUrlClassifierFeature::blocklistURI;
     return aChannel->GetURI(aURI);
   }
 
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::entitylist);
 
-  *aURIType = nsIUrlClassifierFeature::pairwiseWhitelistURI;
-  return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
+  *aURIType = nsIUrlClassifierFeature::pairwiseEntitylistURI;
+  return UrlClassifierCommon::CreatePairwiseEntityListURI(aChannel, aURI);
 }
 
 }  // namespace net

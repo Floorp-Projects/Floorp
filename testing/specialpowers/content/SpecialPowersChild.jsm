@@ -2361,7 +2361,7 @@ class SpecialPowersChild extends JSWindowActorChild {
     return classifierService.asyncClassifyLocalWithFeatures(
       WrapPrivileged.unwrap(uri),
       [feature],
-      Ci.nsIUrlClassifierFeature.blacklist,
+      Ci.nsIUrlClassifierFeature.blocklist,
       wrapCallback
     );
   }

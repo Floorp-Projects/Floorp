@@ -14,8 +14,8 @@ const { RemoteSettings } = ChromeUtils.import(
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "peuService",
-  "@mozilla.org/partitioning/skip-list-service;1",
-  "nsIPartitioningSkipListService"
+  "@mozilla.org/partitioning/exception-list-service;1",
+  "nsIPartitioningExceptionListService"
 );
 
 const TEST_REDIRECT_TOP_PAGE =
@@ -24,10 +24,10 @@ const TEST_REDIRECT_3RD_PARTY_PAGE =
   TEST_DOMAIN + TEST_PATH + "redirect.sjs?" + TEST_3RD_PARTY_PARTITIONED_PAGE;
 
 const COLLECTION_NAME = "partitioning-exempt-urls";
-const SKIP_LIST_PREF_NAME = "privacy.restrict3rdpartystorage.skip_list";
+const EXCEPTION_LIST_PREF_NAME = "privacy.restrict3rdpartystorage.skip_list";
 
 async function cleanup() {
-  Services.prefs.clearUserPref(SKIP_LIST_PREF_NAME);
+  Services.prefs.clearUserPref(EXCEPTION_LIST_PREF_NAME);
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
       resolve()
@@ -253,8 +253,8 @@ function waitForEvent(element, eventName) {
   });
 }
 
-add_task(async function testSkipListPref() {
-  info("Starting Dynamic FPI skip list test pref");
+add_task(async function testExceptionListPref() {
+  info("Starting Dynamic FPI exception list test pref");
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -288,7 +288,7 @@ add_task(async function testSkipListPref() {
   await Promise.all([
     createDataInFirstParty(browserFirstParty, "firstParty"),
     createDataInThirdParty(browserFirstParty, "thirdParty"),
-    createDataInFirstParty(browserThirdParty, "SkipListFirstParty"),
+    createDataInFirstParty(browserThirdParty, "ExceptionListFirstParty"),
   ]);
 
   info("check data");
@@ -297,12 +297,12 @@ add_task(async function testSkipListPref() {
       firstParty: "firstParty",
       thirdParty: "thirdParty",
     }),
-    checkData(browserThirdParty, { firstParty: "SkipListFirstParty" }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
 
-  info("set skip list pref");
+  info("set exception list pref");
   Services.prefs.setStringPref(
-    SKIP_LIST_PREF_NAME,
+    EXCEPTION_LIST_PREF_NAME,
     `${TEST_DOMAIN},${TEST_3RD_PARTY_DOMAIN}`
   );
 
@@ -310,9 +310,9 @@ add_task(async function testSkipListPref() {
   await Promise.all([
     checkData(browserFirstParty, {
       firstParty: "firstParty",
-      thirdParty: "SkipListFirstParty",
+      thirdParty: "ExceptionListFirstParty",
     }),
-    checkData(browserThirdParty, { firstParty: "SkipListFirstParty" }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
 
   info("Removing the tab");
@@ -322,8 +322,8 @@ add_task(async function testSkipListPref() {
   await cleanup();
 });
 
-add_task(async function testSkipListRemoteSettings() {
-  info("Starting Dynamic FPI skip list test (remote settings)");
+add_task(async function testExceptionListRemoteSettings() {
+  info("Starting Dynamic FPI exception list test (remote settings)");
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -331,21 +331,23 @@ add_task(async function testSkipListRemoteSettings() {
     ],
   });
 
-  // Make sure we have a pref initially, since the skip list service requires it.
-  Services.prefs.setStringPref(SKIP_LIST_PREF_NAME, "");
+  // Make sure we have a pref initially, since the exception list service
+  // requires it.
+  Services.prefs.setStringPref(EXCEPTION_LIST_PREF_NAME, "");
 
   // Add some initial data
   let db = await RemoteSettings(COLLECTION_NAME).db;
   await db.importChanges({}, 42, []);
 
-  // make peuSerivce start working by calling registerAndRunSkipListObserver
+  // make peuSerivce start working by calling
+  // registerAndRunExceptionListObserver
   let updateEvent = new UpdateEvent();
   let obs = data => {
     let event = new CustomEvent("update", { detail: data });
     updateEvent.dispatchEvent(event);
   };
   let promise = waitForEvent(updateEvent, "update");
-  peuService.registerAndRunSkipListObserver(obs);
+  peuService.registerAndRunExceptionListObserver(obs);
   await promise;
 
   info("Creating new tabs");
@@ -374,7 +376,7 @@ add_task(async function testSkipListRemoteSettings() {
   await Promise.all([
     createDataInFirstParty(browserFirstParty, "firstParty"),
     createDataInThirdParty(browserFirstParty, "thirdParty"),
-    createDataInFirstParty(browserThirdParty, "SkipListFirstParty"),
+    createDataInFirstParty(browserThirdParty, "ExceptionListFirstParty"),
   ]);
 
   info("check data");
@@ -383,10 +385,10 @@ add_task(async function testSkipListRemoteSettings() {
       firstParty: "firstParty",
       thirdParty: "thirdParty",
     }),
-    checkData(browserThirdParty, { firstParty: "SkipListFirstParty" }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
 
-  info("set skip list remote settings");
+  info("set exception list remote settings");
 
   // set records
   promise = waitForEvent(updateEvent, "update");
@@ -407,16 +409,16 @@ add_task(async function testSkipListRemoteSettings() {
   is(
     list,
     `${TEST_DOMAIN},${TEST_3RD_PARTY_DOMAIN}`,
-    "skip list is correctly set"
+    "exception list is correctly set"
   );
 
   info("check data");
   await Promise.all([
     checkData(browserFirstParty, {
       firstParty: "firstParty",
-      thirdParty: "SkipListFirstParty",
+      thirdParty: "ExceptionListFirstParty",
     }),
-    checkData(browserThirdParty, { firstParty: "SkipListFirstParty" }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
 
   info("Removing the tab");
@@ -429,8 +431,8 @@ add_task(async function testSkipListRemoteSettings() {
       current: [],
     },
   });
-  is(await promise, "", "skip list is cleared");
+  is(await promise, "", "Exception list is cleared");
 
-  peuService.unregisterSkipListObserver(obs);
+  peuService.unregisterExceptionListObserver(obs);
   await cleanup();
 });

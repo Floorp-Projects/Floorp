@@ -5,51 +5,51 @@
 #include "nsISupports.idl"
 
 /**
- * Observer for skip list updates.
+ * Observer for exception list updates.
  */
 [scriptable, function, uuid(f7c918e5-94bf-4b6e-9758-ef7bdab6af7e)]
-interface nsIUrlClassifierSkipListObserver : nsISupports
+interface nsIUrlClassifierExceptionListObserver : nsISupports
 {
   /**
-   * Called by nsIUrlClassifierSkipListService when the skip list
+   * Called by nsIUrlClassifierExceptionListService when the exception list
    * for a designated feature changes and when the observer is first registered.
    *
    * @param aList
    *        A comma-separated list of url patterns, intended to be parsed
    *        by nsContentUtils::IsURIInList.
    */
-  void onSkipListUpdate(in ACString aList);
+  void onExceptionListUpdate(in ACString aList);
 };
 
 /**
- * A service that monitors updates to the skip list of url-classifier
+ * A service that monitors updates to the exception list of url-classifier
  * feature from sources such as a local pref and remote settings updates.
  */
 [scriptable, uuid(75c3d1a3-e977-4079-9e27-b3b56bdb76ea)]
-interface nsIUrlClassifierSkipListService : nsISupports
+interface nsIUrlClassifierExceptionListService : nsISupports
 {
   /**
-   * Register a new observer to skip list updates. When the observer is
+   * Register a new observer to exception list updates. When the observer is
    * registered it is called immediately once. Afterwards it will be called
    * whenever the specified pref changes or when remote settings for
    * url-classifier features updates.
    *
    * @param aFeature
-   *        The feature for which to observe the skip list.
+   *        The feature for which to observe the exception list.
    *
    * @param aPrefName
    *        (Optional) A pref name to monitor. The pref must be of string
    *        type and contain a comma-separated list of URL patterns.
    *
    * @param aObserver
-   *        An nsIUrlClassifierSkipListObserver object or function that
-   *        will receive updates to the skip list as a comma-separated
-   *        string. Will be called immediately with the current skip
+   *        An nsIUrlClassifierExceptionListObserver object or function that
+   *        will receive updates to the exception list as a comma-separated
+   *        string. Will be called immediately with the current exception
    *        list value.
    */
-  void registerAndRunSkipListObserver(in ACString aFeature,
+  void registerAndRunExceptionListObserver(in ACString aFeature,
                                       in ACString aPrefName,
-                                      in nsIUrlClassifierSkipListObserver aObserver);
+                                      in nsIUrlClassifierExceptionListObserver aObserver);
 
   /**
    * Unregister an observer.
@@ -58,10 +58,10 @@ interface nsIUrlClassifierSkipListService : nsISupports
    *        The feature for which to stop observing.
    *
    * @param aObserver
-   *        The nsIUrlClassifierSkipListObserver object to unregister.
+   *        The nsIUrlClassifierExceptionListObserver object to unregister.
    */
-  void unregisterSkipListObserver(in ACString aFeature,
-                                  in nsIUrlClassifierSkipListObserver aObserver);
+  void unregisterExceptionListObserver(in ACString aFeature,
+                                  in nsIUrlClassifierExceptionListObserver aObserver);
 
   /**
    *  Clear all data in the service.

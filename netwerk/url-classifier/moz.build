@@ -10,14 +10,14 @@ with Files('**'):
 XPIDL_SOURCES += [
     'nsIChannelClassifierService.idl',
     'nsIURIClassifier.idl',
+    'nsIUrlClassifierExceptionListService.idl',
     'nsIUrlClassifierFeature.idl',
-    'nsIUrlClassifierSkipListService.idl',
 ]
 
 XPIDL_MODULE = 'url-classifier'
 
 EXTRA_JS_MODULES += [
-    'UrlClassifierSkipListService.jsm',
+    'UrlClassifierExceptionListService.jsm',
 ]
 
 XPCOM_MANIFESTS += [
