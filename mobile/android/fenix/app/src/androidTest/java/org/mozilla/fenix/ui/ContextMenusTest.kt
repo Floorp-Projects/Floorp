@@ -131,7 +131,7 @@ class ContextMenusTest {
             clickContextShareLink(genericURL.url) // verify share intent is matched with associated URL
         }
     }
-
+    @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/12367")
     @Test
     fun verifyContextOpenImageNewTab() {
         val pageLinks =
