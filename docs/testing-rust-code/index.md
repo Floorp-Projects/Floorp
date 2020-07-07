@@ -1,5 +1,11 @@
 # Testing & Debugging Rust Code
 
+This page explains how to test and debug Rust code in Firefox.
+
+The [build documentation](../build/buildsystem/rust.html) explains how to add
+new Rust code to Firefox. The [code documentation](../writing-rust-code)
+explains how to write and work with Rust code in Firefox.
+
 ## Testing Mozilla crates
 
 Rust code will naturally be tested as part of system tests such as Mochitests.

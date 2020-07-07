@@ -24,6 +24,7 @@ categories:
         - uriloader
         - widget/cocoa
         - code-quality
+        - writing-rust-code
     build_doc:
         - mach
         - tools/try

@@ -4,9 +4,12 @@
 Including Rust Code in Firefox
 ==============================
 
-The build system has support for building, linking, and vendoring Rust crates.
-It is straightforward to take an existing Rust crate and integrate it into
-Firefox.
+This page explains how to add, build, link, and vendor Rust crates.
+
+The `code documentation <../../writing-rust-code>`_ explains how to write and
+work with Rust code in Firefox. The
+`test documentation <../../testing-rust-code>`_ explains how to test and debug
+Rust code in Firefox.
 
 Linking Rust crates into libxul
 ===============================
