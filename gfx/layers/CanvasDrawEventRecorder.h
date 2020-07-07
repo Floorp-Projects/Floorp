@@ -89,6 +89,8 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
 
   bool good() const final { return mGood; }
 
+  bool WriterFailed() const { return mWrite->state == State::Failed; }
+
   void SetIsBad() final {
     mGood = false;
     mRead->state = State::Failed;
