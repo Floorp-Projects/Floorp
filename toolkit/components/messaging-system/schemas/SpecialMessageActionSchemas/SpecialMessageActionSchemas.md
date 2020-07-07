@@ -200,3 +200,14 @@ No-op action used to dismiss CFR notifications (but not remove or block them)
 
 * args: (none)
 
+### `DISABLE_DOH`
+
+User action for turning off the DoH feature
+
+* args: (none)
+
+### `ACCEPT_DOH`
+
+User action for continuing to use the DoH feature
+
+* args: (none)
