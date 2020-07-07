@@ -161,13 +161,12 @@ void WebRenderTextureHost::MaybeNofityForUse(wr::TransactionBuilder& aTxn) {
 }
 
 void WebRenderTextureHost::PrepareForUse() {
-#ifdef MOZ_WIDGET_ANDROID
-  if (mWrappedTextureHost->AsSurfaceTextureHost()) {
+  if (mWrappedTextureHost->AsSurfaceTextureHost() ||
+      mWrappedTextureHost->AsBufferTextureHost()) {
     // Call PrepareForUse on render thread.
     // See RenderAndroidSurfaceTextureHostOGL::PrepareForUse.
     wr::RenderThread::Get()->PrepareForUse(wr::AsUint64(GetExternalImageKey()));
   }
-#endif
 }
 
 gfx::SurfaceFormat WebRenderTextureHost::GetReadFormat() const {
@@ -187,6 +186,10 @@ int32_t WebRenderTextureHost::GetRGBStride() {
 
 bool WebRenderTextureHost::HasIntermediateBuffer() const {
   return mWrappedTextureHost->HasIntermediateBuffer();
+}
+
+bool WebRenderTextureHost::NeedsDeferredDeletion() const {
+  return mWrappedTextureHost->NeedsDeferredDeletion();
 }
 
 uint32_t WebRenderTextureHost::NumSubTextures() {
