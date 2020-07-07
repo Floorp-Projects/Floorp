@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=GNOME Software
-Exec=/usr/bin/gnome-software --gapplication-service
-OnlyShowIn=GNOME;Unity;
-X-Ubuntu-Gettext-Domain=gnome-software
-
-# Bug 1345105 - Do not run periodical update checks and downloads
-X-GNOME-Autostart-enabled=false

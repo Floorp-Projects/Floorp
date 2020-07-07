@@ -20,8 +20,6 @@ transforms:
 jobs:
     image_builder:
         symbol: I(ib)
-    desktop1604-test:
-        symbol: I(dt16t)
     debian10-test:
         symbol: I(deb10-test)
     ubuntu1804-test:

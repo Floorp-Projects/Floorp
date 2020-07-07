@@ -1260,8 +1260,6 @@ def enable_code_coverage(config, tasks):
                 task['mozharness']['extra-options'].append('--tptimeout,15000')
             if 'raptor' in task['test-name']:
                 task['max-run-time'] = 1800
-                if 'linux' in task['build-platform']:
-                    task['docker-image'] = {"in-tree": "desktop1604-test"}
         yield task
 
 
