@@ -341,11 +341,19 @@ nsZipHandle::~nsZipHandle() {
 //---------------------------------------------
 //  nsZipArchive::OpenArchive
 //---------------------------------------------
-nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd) {
+nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd,
+                                   const uint8_t* aCachedCentral,
+                                   size_t aCachedCentralSize) {
   mFd = aZipHandle;
 
   //-- get table of contents for archive
-  nsresult rv = BuildFileList(aFd);
+  nsresult rv;
+  if (aCachedCentral) {
+    rv = BuildFileListFromBuffer(aCachedCentral,
+                                 aCachedCentral + aCachedCentralSize);
+  } else {
+    rv = BuildFileList(aFd);
+  }
   if (NS_SUCCEEDED(rv)) {
     if (aZipHandle->mFile && XRE_IsParentProcess()) {
       static char* env = PR_GetEnv("MOZ_JAR_LOG_FILE");
@@ -399,7 +407,9 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd) {
   return rv;
 }
 
-nsresult nsZipArchive::OpenArchive(nsIFile* aFile) {
+nsresult nsZipArchive::OpenArchive(nsIFile* aFile,
+                                   const uint8_t* aCachedCentral,
+                                   size_t aCachedCentralSize) {
   RefPtr<nsZipHandle> handle;
 #if defined(XP_WIN)
   mozilla::AutoFDClose fd;
@@ -410,9 +420,9 @@ nsresult nsZipArchive::OpenArchive(nsIFile* aFile) {
   if (NS_FAILED(rv)) return rv;
 
 #if defined(XP_WIN)
-  return OpenArchive(handle, fd.get());
+  return OpenArchive(handle, fd.get(), aCachedCentral, aCachedCentralSize);
 #else
-  return OpenArchive(handle);
+  return OpenArchive(handle, nullptr, aCachedCentral, aCachedCentralSize);
 #endif
 }
 
@@ -653,6 +663,8 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
   const uint8_t* buf;
   const uint8_t* startp = mFd->mFileData;
   const uint8_t* endp = startp + mFd->mLen;
+
+  nsresult rv;
   MMAP_FAULT_HANDLER_BEGIN_HANDLE(mFd)
   uint32_t centralOffset = 4;
   // Only perform readahead in the parent process. Children processes
@@ -677,20 +689,62 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  buf = startp + centralOffset;
-
-  // avoid overflow of startp + centralOffset.
-  if (buf < startp) {
+  uintptr_t startpInt = (uintptr_t)startp;
+  if (startpInt + centralOffset < startpInt || centralOffset > mFd->mLen) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
+  buf = startp + centralOffset;
+
+  mZipCentralOffset = centralOffset;
+  rv = BuildFileListFromBuffer(buf, endp);
+
+  MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
+  return rv;
+}
+
+UniquePtr<uint8_t[]> nsZipArchive::CopyCentralDirectoryBuffer(size_t* aSize) {
+  *aSize = 0;
+
+  // mZipCentralOffset could in theory be 0. In practice though, we likely
+  // won't ever see this. If the end result is that we can't cache the buffer
+  // in these cases, that's fine.
+  if (!mZipCentralOffset || !mZipCentralSize) {
+    return nullptr;
+  }
+
+  const uint8_t* buf;
+  const uint8_t* startp = mFd->mFileData;
+  buf = startp + mZipCentralOffset;
+
+  // Just a sanity check to make sure these values haven't overflowed the
+  // buffer mapped to our file. Technically the pointer could overflow the max
+  // pointer value, but that could only happen with this check succeeding if
+  // mFd->mLen is incorrect, which we will here assume is impossible.
+  if (mZipCentralOffset + mZipCentralSize > mFd->mLen) {
+    return nullptr;
+  }
+
+  auto resultBuf = MakeUnique<uint8_t[]>(mZipCentralSize);
+
+  MMAP_FAULT_HANDLER_BEGIN_HANDLE(mFd)
+  memcpy(resultBuf.get(), buf, mZipCentralSize);
+  MMAP_FAULT_HANDLER_CATCH(nullptr)
+
+  *aSize = mZipCentralSize;
+  return resultBuf;
+}
+
+nsresult nsZipArchive::BuildFileListFromBuffer(const uint8_t* aBuf,
+                                               const uint8_t* aEnd) {
+  const uint8_t* buf = aBuf;
   //-- Read the central directory headers
   uint32_t sig = 0;
   while ((buf + int32_t(sizeof(uint32_t)) > buf) &&
-         (buf + int32_t(sizeof(uint32_t)) <= endp) &&
+         (buf + int32_t(sizeof(uint32_t)) <= aEnd) &&
          ((sig = xtolong(buf)) == CENTRALSIG)) {
     // Make sure there is enough data available.
-    if ((buf > endp) || (endp - buf < ZIPCENTRAL_SIZE)) {
+    if ((buf > aEnd) || (aEnd - buf < ZIPCENTRAL_SIZE)) {
       return NS_ERROR_FILE_CORRUPTED;
     }
 
@@ -708,7 +762,7 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
       return NS_ERROR_FILE_CORRUPTED;
     }
     if (buf >= buf + diff ||  // No overflow
-        buf >= endp - diff) {
+        buf >= aEnd - diff) {
       return NS_ERROR_FILE_CORRUPTED;
     }
 
@@ -735,18 +789,18 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
   }
 
   // Make the comment available for consumers.
-  if ((endp >= buf) && (endp - buf >= ZIPEND_SIZE)) {
+  if ((aEnd >= buf) && (aEnd - buf >= ZIPEND_SIZE)) {
     ZipEnd* zipend = (ZipEnd*)buf;
 
     buf += ZIPEND_SIZE;
     uint16_t commentlen = xtoint(zipend->commentfield_len);
-    if (endp - buf >= commentlen) {
-      mCommentPtr = (const char*)buf;
+    if (aEnd - buf >= commentlen) {
+      mCommentPtr = (const char*)aBuf;
       mCommentLen = commentlen;
     }
   }
 
-  MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
+  mZipCentralSize = buf - aBuf;
   return NS_OK;
 }
 
@@ -889,6 +943,8 @@ int64_t nsZipArchive::SizeOfMapping() { return mFd ? mFd->SizeOfMapping() : 0; }
 nsZipArchive::nsZipArchive()
     : mRefCnt(0),
       mCommentPtr(nullptr),
+      mZipCentralOffset(0),
+      mZipCentralSize(0),
       mCommentLen(0),
       mBuiltSynthetics(false),
       mUseZipLog(false) {
