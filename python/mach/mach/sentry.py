@@ -76,7 +76,7 @@ def register_sentry(argv, topsrcdir=None):
             repo = get_repository_object(topsrcdir)
             email = repo.get_user_email()
             if email in _DEVELOPER_BLOCKLIST:
-                return
+                return NoopErrorReporter()
         except InvalidRepoPath:
             pass
 
