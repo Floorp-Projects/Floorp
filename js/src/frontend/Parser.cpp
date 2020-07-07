@@ -9244,14 +9244,22 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
         return null();
       }
 
-      // Per spec, deleting any unary expression is valid -- it simply
-      // returns true -- except for one case that is illegal in strict mode.
+      // Per spec, deleting most unary expressions is valid -- it simply
+      // returns true -- except for two cases:
+      // 1. `var x; ...; delete x` is a syntax error in strict mode.
+      // 2. Private fields cannot be deleted.
       if (handler_.isName(expr)) {
         if (!strictModeErrorAt(exprOffset, JSMSG_DEPRECATED_DELETE_OPERAND)) {
           return null();
         }
 
         pc_->sc()->setBindingsAccessedDynamically();
+      }
+
+      if (handler_.isPrivateField(expr)) {
+        // should always be in strict mode if we're talking private names.
+        MOZ_ALWAYS_FALSE(strictModeErrorAt(exprOffset, JSMSG_PRIVATE_DELETE));
+        return null();
       }
 
       return handler_.newDelete(begin, expr);
