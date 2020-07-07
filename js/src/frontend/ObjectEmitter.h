@@ -618,6 +618,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 
   mozilla::Maybe<TDZCheckCache> tdzCache_;
   mozilla::Maybe<EmitterScope> innerScope_;
+  mozilla::Maybe<TDZCheckCache> bodyTdzCache_;
+  mozilla::Maybe<EmitterScope> bodyScope_;
   AutoSaveLocalStrictMode strictMode_;
 
 #ifdef DEBUG
@@ -625,14 +627,14 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //
   // clang-format off
   // +-------+
-  // | Start |-+------------------------>+-+
-  // +-------+ |                         ^ |
-  //           | [has scope]             | |
-  //           |   emitScope   +-------+ | |
-  //           +-------------->| Scope |-+ |
-  //                           +-------+   |
-  //                                       |
-  //   +-----------------------------------+
+  // | Start |-+------------------------>+--+------------------------------>+--+
+  // +-------+ |                         ^  |                               ^  |
+  //           | [has scope]             |  | [has body scope]              |  |
+  //           |   emitScope   +-------+ |  |  emitBodyScope  +-----------+ |  |
+  //           +-------------->| Scope |-+  +---------------->| BodyScope |-+  |
+  //                           +-------+                      +-----------+    |
+  //                                                                           |
+  //   +-----------------------------------------------------------------------+
   //   |
   //   |   emitClass           +-------+
   //   +-+----------------->+->| Class |-+
@@ -701,6 +703,9 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 
     // After calling emitScope.
     Scope,
+
+    // After calling emitBodyScope.
+    BodyScope,
 
     // After calling emitClass or emitDerivedClass.
     Class,
@@ -775,6 +780,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   explicit ClassEmitter(BytecodeEmitter* bce);
 
   bool emitScope(JS::Handle<LexicalScope::Data*> scopeBindings);
+
+  bool emitBodyScope(JS::Handle<LexicalScope::Data*> scopeBindings);
 
   // @param name
   //        Name of the class (nullptr if this is anonymous class)
