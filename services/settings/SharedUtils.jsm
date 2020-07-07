@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = ["SharedUtils"];
 
 // Import globals that are available by default in workers but not in JSMs.
 if (typeof crypto == "undefined") {
-  Cu.importGlobalProperties(["crypto"]);
+  Cu.importGlobalProperties(["fetch", "crypto"]);
 }
 
 var SharedUtils = {
@@ -33,5 +33,26 @@ var SharedUtils = {
     const toHex = b => b.toString(16).padStart(2, "0");
     const hashStr = Array.from(hashBytes, toHex).join("");
     return hashStr == hash;
+  },
+
+  /**
+   * Load (from disk) the JSON file distributed with the release for this collection.
+   * @param {String}  bucket
+   * @param {String}  collection
+   */
+  async loadJSONDump(bucket, collection) {
+    // When using the preview bucket, we still want to load the main dump.
+    // But we store it locally in the preview bucket.
+    const jsonBucket = bucket.replace("-preview", "");
+    const fileURI = `resource://app/defaults/settings/${jsonBucket}/${collection}.json`;
+    let response;
+    try {
+      response = await fetch(fileURI);
+    } catch (e) {
+      // Return null if file is missing.
+      return { data: null };
+    }
+    // Will throw if JSON is invalid.
+    return response.json();
   },
 };

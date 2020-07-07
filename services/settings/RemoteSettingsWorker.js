@@ -67,11 +67,10 @@ const Agent = {
    * @returns {int} Number of records loaded from dump or -1 if no dump found.
    */
   async importJSONDump(bucket, collection) {
-    // When using the preview bucket, we still want to load the main dump.
-    // But we store it locally in the preview bucket.
-    const jsonBucket = bucket.replace("-preview", "");
-
-    const { data: records } = await loadJSONDump(jsonBucket, collection);
+    const { data: records } = await SharedUtils.loadJSONDump(
+      bucket,
+      collection
+    );
     if (records === null) {
       // Return -1 if file is missing.
       return -1;
@@ -139,27 +138,6 @@ self.onmessage = event => {
     });
 };
 
-/**
- * Load (from disk) the JSON file distributed with the release for this collection.
- * @param {String}  bucket
- * @param {String}  collection
- */
-async function loadJSONDump(bucket, collection) {
-  const fileURI = `resource://app/defaults/settings/${bucket}/${collection}.json`;
-  let response;
-  try {
-    response = await fetch(fileURI);
-  } catch (e) {
-    // Return null if file is missing.
-    return { data: null };
-  }
-  if (gShutdown) {
-    throw new Error("Can't import when we've started shutting down.");
-  }
-  // Will throw if JSON is invalid.
-  return response.json();
-}
-
 let gPendingTransactions = new Set();
 
 /**
@@ -185,7 +163,7 @@ async function importDumpIDB(bucket, collection, records) {
     // Each entry of the dump will be stored in the records store.
     // They are indexed by `_cid`.
     const cid = bucket + "/" + collection;
-    // We can just modify the items in-place, as we got them from loadJSONDump.
+    // We can just modify the items in-place, as we got them from SharedUtils.loadJSONDump().
     records.forEach(item => {
       item._cid = cid;
     });
