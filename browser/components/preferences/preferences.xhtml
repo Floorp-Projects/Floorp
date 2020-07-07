@@ -93,8 +93,7 @@
                       helpTopic="prefs-home"
                       data-l10n-id="category-home"
                       data-l10n-attrs="tooltiptext"
-                      align="center"
-                      hidden="false">
+                      align="center">
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="pane-home-title"></label>
         </richlistitem>
@@ -110,11 +109,12 @@
           <label class="category-name" flex="1" data-l10n-id="pane-search-title"></label>
         </richlistitem>
 
+        <!-- hidden with CSS; this is only here to allow the containers pane to
+             be switched to using the URL or the "Settings..." button. -->
         <richlistitem id="category-containers"
                       class="category"
                       value="paneContainers"
-                      helpTopic="prefs-containers"
-                      hidden="true"/>
+                      helpTopic="prefs-containers"/>
 
         <richlistitem id="category-privacy"
                       class="category"
