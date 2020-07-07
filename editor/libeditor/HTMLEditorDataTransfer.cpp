@@ -243,6 +243,9 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                 dom::DocumentFragment** aFragment,
                                 bool aTrustedInput);
 
+  static nsresult StripFormattingNodes(nsIContent& aNode,
+                                       bool aOnlyList = false);
+
   HTMLEditor& mHTMLEditor;
 };
 
@@ -886,7 +889,8 @@ Element* HTMLEditor::GetLinkElement(nsINode* aNode) {
 }
 
 // static
-nsresult HTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly) {
+nsresult HTMLEditor::HTMLWithContextInserter::StripFormattingNodes(
+    nsIContent& aNode, bool aListOnly) {
   if (aNode.TextIsOnlyWhitespace()) {
     nsCOMPtr<nsINode> parent = aNode.GetParentNode();
     if (parent) {
@@ -904,9 +908,12 @@ nsresult HTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly) {
     nsCOMPtr<nsIContent> child = aNode.GetLastChild();
     while (child) {
       nsCOMPtr<nsIContent> previous = child->GetPreviousSibling();
-      nsresult rv = HTMLEditor::StripFormattingNodes(*child, aListOnly);
+      nsresult rv =
+          HTMLWithContextInserter::StripFormattingNodes(*child, aListOnly);
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::StripFormattingNodes() failed");
+        NS_WARNING(
+            "HTMLEditor::HTMLWithContextInserter::StripFormattingNodes() "
+            "failed");
         return rv;
       }
       child = std::move(previous);
@@ -3030,9 +3037,11 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
       return NS_ERROR_FAILURE;
     }
 
-    rv = HTMLEditor::StripFormattingNodes(*documentFragmentForContext);
+    rv = HTMLWithContextInserter::StripFormattingNodes(
+        *documentFragmentForContext);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::StripFormattingNodes() failed");
+      NS_WARNING(
+          "HTMLEditor::HTMLWithContextInserter::StripFormattingNodes() failed");
       return rv;
     }
 
@@ -3082,9 +3091,11 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     documentFragmentToInsert = documentFragmentForContext;
   }
 
-  rv = HTMLEditor::StripFormattingNodes(*documentFragmentToInsert, true);
+  rv = HTMLWithContextInserter::StripFormattingNodes(*documentFragmentToInsert,
+                                                     true);
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::StripFormattingNodes() failed");
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::StripFormattingNodes() failed");
     return rv;
   }
 
