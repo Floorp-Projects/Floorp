@@ -96,7 +96,7 @@ class TurnClient : public MtransportTest {
   ~TurnClient() = default;
 
   static void SetUpTestCase() {
-    NrIceCtx::InitializeGlobals(false, false, false);
+    NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
   }
 
   void SetTcp() { protocol_ = IPPROTO_TCP; }
