@@ -899,11 +899,20 @@ interface nsILoadInfo : nsISupports
   [noscript, notxpcom, nostdcall]
   PrincipalArrayRef AncestorPrincipals();
 
+  /**
+   * An array of BrowsingContext IDs which correspond to nsILoadInfo::AncestorPrincipals
+   * above.  AncestorBrowsingContextIDs[0] is the BrowsingContext ID of the frame
+   * associated with the principal at ancestorPrincipals[0], and so forth.
+   *
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall]
+  Uint64ArrayRef AncestorBrowsingContextIDs();
 
   /**
-   * An array of outerWindowIDs which correspond to nsILoadInfo::AncestorPrincipals
-   * above.  AncestorOuterWindowIDs[0] is the outerWindowID of the frame
-   * associated with the principal at ancestorPrincipals[0], and so forth.
+   * Like AncestorBrowsingContextIDs, but with outer window IDs rather than
+   * BrowsingContext IDs. Deprecated.
    *
    * Please note that this array has the same lifetime as the
    * loadInfo object - use with caution!
