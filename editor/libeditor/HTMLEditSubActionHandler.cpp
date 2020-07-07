@@ -4306,19 +4306,24 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
         advanced,
         "Failed to advance offset to after child of rightBlockElement, "
         "leftBlockElement is a descendant of the child");
-    nsresult rv =
-        WSRunObject::Scrub(*this, EditorDOMPoint::AtEndOf(leftBlockElement));
+    nsresult rv = WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
+        *this, EditorDOMPoint::AtEndOf(leftBlockElement));
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::Scrub() failed at left block");
+      NS_WARNING(
+          "WSRunObject::DeleteInvisibleASCIIWhiteSpaces() failed at left "
+          "block");
       return EditActionIgnored(rv);
     }
 
     {
       // We can't just track rightBlockElement because it's an Element.
       AutoTrackDOMPoint tracker(RangeUpdaterRef(), &atRightBlockChild);
-      nsresult rv = WSRunObject::Scrub(*this, atRightBlockChild);
+      nsresult rv = WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
+          *this, atRightBlockChild);
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::Scrub() failed at right block child");
+        NS_WARNING(
+            "WSRunObject::DeleteInvisibleASCIIWhiteSpaces() failed at right "
+            "block child");
         return EditActionIgnored(rv);
       }
 
@@ -4406,10 +4411,12 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
                                   &atLeftBlockChild)) {
     MOZ_ASSERT(leftBlockElement == atLeftBlockChild.GetContainer());
 
-    nsresult rv =
-        WSRunObject::Scrub(*this, EditorDOMPoint(rightBlockElement, 0));
+    nsresult rv = WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
+        *this, EditorDOMPoint(rightBlockElement, 0));
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::Scrub() failed at right block");
+      NS_WARNING(
+          "WSRunObject::DeleteInvisibleASCIIWhiteSpaces() failed at right "
+          "block");
       return EditActionIgnored(rv);
     }
 
@@ -4417,10 +4424,12 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
       // We can't just track leftBlockElement because it's an Element, so track
       // something else.
       AutoTrackDOMPoint tracker(RangeUpdaterRef(), &atLeftBlockChild);
-      rv = WSRunObject::Scrub(
+      rv = WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
           *this, EditorDOMPoint(leftBlockElement, atLeftBlockChild.Offset()));
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::Scrub() failed at left block child");
+        NS_WARNING(
+            "WSRunObject::DeleteInvisibleASCIIWhiteSpaces() failed at left "
+            "block child");
         return EditActionIgnored(rv);
       }
       // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
