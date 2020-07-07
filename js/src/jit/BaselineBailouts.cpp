@@ -1706,11 +1706,6 @@ static void HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript,
 
 static void HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript,
                                     HandleScript innerScript) {
-  if (JitOptions.warpBuilder) {
-    // Warp handles this by invalidating when the IC stub changes.
-    return;
-  }
-
   JitSpew(JitSpew_IonBailouts,
           "Shape guard failure %s:%u:%u, inlined into %s:%u:%u",
           innerScript->filename(), innerScript->lineno(), innerScript->column(),
@@ -1727,11 +1722,6 @@ static void HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript,
 
 static void HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript,
                                       HandleScript innerScript) {
-  if (JitOptions.warpBuilder) {
-    // Warp handles this by invalidating when the IC stub changes.
-    return;
-  }
-
   JitSpew(JitSpew_IonBailouts,
           "Baseline info failure %s:%u:%u, inlined into %s:%u:%u",
           innerScript->filename(), innerScript->lineno(), innerScript->column(),

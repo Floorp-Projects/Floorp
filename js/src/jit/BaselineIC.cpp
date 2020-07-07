@@ -546,14 +546,12 @@ ICStubIterator& ICStubIterator::operator++() {
   return *this;
 }
 
-void ICStubIterator::unlink(JSContext* cx, JSScript* script) {
+void ICStubIterator::unlink(JSContext* cx) {
   MOZ_ASSERT(currentStub_->next() != nullptr);
   MOZ_ASSERT(currentStub_ != fallbackStub_);
   MOZ_ASSERT(!unlinked_);
 
-  fallbackStub_->maybeInvalidateWarp(cx, script);
-  fallbackStub_->unlinkStubDontInvalidateWarp(cx->zone(), previousStub_,
-                                              currentStub_);
+  fallbackStub_->unlinkStub(cx->zone(), previousStub_, currentStub_);
 
   // Mark the current iterator position as unlinked, so operator++ works
   // properly.
@@ -602,19 +600,6 @@ uint32_t ICStub::getEnteredCount() const {
       return toCacheIR_Monitored()->enteredCount();
     default:
       return toFallbackStub()->enteredCount();
-  }
-}
-
-void ICFallbackStub::maybeInvalidateWarp(JSContext* cx, JSScript* script) {
-  if (!state_.usedByTranspiler()) {
-    return;
-  }
-
-  MOZ_ASSERT(JitOptions.warpBuilder);
-  clearUsedByTranspiler();
-
-  if (script->hasIonScript()) {
-    Invalidate(cx, script);
   }
 }
 
@@ -787,7 +772,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
                           ICFallbackStub* stub, BaselineCacheIRStubKind kind,
                           Args&&... args) {
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->script());
+    stub->discardStubs(cx);
   }
 
   if (stub->state().canAttachStub()) {
@@ -820,8 +805,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
   }
 }
 
-void ICFallbackStub::unlinkStubDontInvalidateWarp(Zone* zone, ICStub* prev,
-                                                  ICStub* stub) {
+void ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub) {
   MOZ_ASSERT(stub->next());
 
   if (prev) {
@@ -865,9 +849,9 @@ void ICFallbackStub::unlinkStubDontInvalidateWarp(Zone* zone, ICStub* prev,
 #endif
 }
 
-void ICFallbackStub::discardStubs(JSContext* cx, JSScript* script) {
+void ICFallbackStub::discardStubs(JSContext* cx) {
   for (ICStubIterator iter = beginChain(); !iter.atEnd(); iter++) {
-    iter.unlink(cx, script);
+    iter.unlink(cx);
   }
 }
 
@@ -1833,8 +1817,7 @@ bool FallbackICCodeCompiler::emit_ToBool() {
   return tailCallVM<Fn, DoToBoolFallback>(masm);
 }
 
-static void StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub,
-                                        JSScript* script) {
+static void StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub) {
   // Before the new script properties analysis has been performed on a type,
   // all instances of that type have the maximum number of fixed slots.
   // Afterwards, the objects (even the preliminary ones) might be changed
@@ -1847,13 +1830,13 @@ static void StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub,
   for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
     if (iter->isCacheIR_Regular() &&
         iter->toCacheIR_Regular()->hasPreliminaryObject()) {
-      iter.unlink(cx, script);
+      iter.unlink(cx);
     } else if (iter->isCacheIR_Monitored() &&
                iter->toCacheIR_Monitored()->hasPreliminaryObject()) {
-      iter.unlink(cx, script);
+      iter.unlink(cx);
     } else if (iter->isCacheIR_Updated() &&
                iter->toCacheIR_Updated()->hasPreliminaryObject()) {
-      iter.unlink(cx, script);
+      iter.unlink(cx);
     }
   }
 }
@@ -1865,7 +1848,7 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
   bool attached = false;
 
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->script());
+    stub->discardStubs(cx);
   }
 
   if (stub->state().canAttachStub()) {
@@ -1886,7 +1869,7 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
           if (gen.shouldNotePreliminaryObjectStub()) {
             newStub->toCacheIR_Monitored()->notePreliminaryObject();
           } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-            StripPreliminaryObjectStubs(cx, stub, script);
+            StripPreliminaryObjectStubs(cx, stub);
           }
         }
       } break;
@@ -2147,7 +2130,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   bool attached = false;
 
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
 
   if (stub->state().canAttachStub()) {
@@ -2168,7 +2151,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
           if (gen.shouldNotePreliminaryObjectStub()) {
             newStub->toCacheIR_Updated()->notePreliminaryObject();
           } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-            StripPreliminaryObjectStubs(cx, stub, script);
+            StripPreliminaryObjectStubs(cx, stub);
           }
 
           if (gen.attachedTypedArrayOOBStub()) {
@@ -2229,7 +2212,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   // The SetObjectElement call might have entered this IC recursively, so try
   // to transition.
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
 
   bool canAttachStub = stub->state().canAttachStub();
@@ -2256,7 +2239,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
           if (gen.shouldNotePreliminaryObjectStub()) {
             newStub->toCacheIR_Updated()->notePreliminaryObject();
           } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-            StripPreliminaryObjectStubs(cx, stub, script);
+            StripPreliminaryObjectStubs(cx, stub);
           }
         }
       } break;
@@ -2739,7 +2722,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   DeferType deferType = DeferType::None;
   bool attached = false;
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
 
   if (stub->state().canAttachStub()) {
@@ -2761,7 +2744,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
           if (gen.shouldNotePreliminaryObjectStub()) {
             newStub->toCacheIR_Updated()->notePreliminaryObject();
           } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-            StripPreliminaryObjectStubs(cx, stub, script);
+            StripPreliminaryObjectStubs(cx, stub);
           }
         }
       } break;
@@ -2818,7 +2801,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   // The SetProperty call might have entered this IC recursively, so try
   // to transition.
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
 
   bool canAttachStub = stub->state().canAttachStub();
@@ -2846,7 +2829,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
           if (gen.shouldNotePreliminaryObjectStub()) {
             newStub->toCacheIR_Updated()->notePreliminaryObject();
           } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-            StripPreliminaryObjectStubs(cx, stub, script);
+            StripPreliminaryObjectStubs(cx, stub);
           }
         }
       } break;
@@ -2943,7 +2926,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
 
   // Transition stub state to megamorphic or generic if warranted.
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
 
   bool canAttachStub = stub->state().canAttachStub();
@@ -3016,7 +2999,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
 
   // Try to transition again in case we called this IC recursively.
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
   canAttachStub = stub->state().canAttachStub();
 
@@ -3076,7 +3059,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
   // Transition stub state to megamorphic or generic if warranted.
   if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, script);
+    stub->discardStubs(cx);
   }
 
   // Try attaching a call stub.
