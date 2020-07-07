@@ -33,6 +33,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
+const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
+  "toolkit.telemetry.pioneer-new-studies-available";
 
 /**
  * This is the Remote Settings key that we use to get the list of available studies.
@@ -260,8 +262,22 @@ async function setup(cachedAddons) {
   });
 }
 
+function removeBadge() {
+  Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, false);
+
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
+    const badge = win.document
+      .getElementById("pioneer-button")
+      .querySelector(".toolbarbutton-badge");
+    badge.classList.remove("feature-callout");
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async domEvent => {
   showEnrollmentStatus();
+
+  document.addEventListener("focus", removeBadge);
+  removeBadge();
 
   let cachedAddons;
   if (Cu.isInAutomation) {
