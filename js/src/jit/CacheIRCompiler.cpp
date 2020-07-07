@@ -1090,28 +1090,24 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::DOMExpandoGeneration:
         break;
       case StubField::Type::Shape:
-        TraceNullableEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
-                          "cacheir-shape");
+        TraceEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
+                  "cacheir-shape");
         break;
       case StubField::Type::ObjectGroup:
-        TraceNullableEdge(
-            trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
-            "cacheir-group");
+        TraceEdge(trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
+                  "cacheir-group");
         break;
       case StubField::Type::JSObject:
-        TraceNullableEdge(trc,
-                          &stubInfo->getStubField<T, JSObject*>(stub, offset),
-                          "cacheir-object");
+        TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
+                  "cacheir-object");
         break;
       case StubField::Type::Symbol:
-        TraceNullableEdge(trc,
-                          &stubInfo->getStubField<T, JS::Symbol*>(stub, offset),
-                          "cacheir-symbol");
+        TraceEdge(trc, &stubInfo->getStubField<T, JS::Symbol*>(stub, offset),
+                  "cacheir-symbol");
         break;
       case StubField::Type::String:
-        TraceNullableEdge(trc,
-                          &stubInfo->getStubField<T, JSString*>(stub, offset),
-                          "cacheir-string");
+        TraceEdge(trc, &stubInfo->getStubField<T, JSString*>(stub, offset),
+                  "cacheir-string");
         break;
       case StubField::Type::Id:
         TraceEdge(trc, &stubInfo->getStubField<T, jsid>(stub, offset),
