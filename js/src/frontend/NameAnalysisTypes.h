@@ -84,7 +84,8 @@ enum class DeclarationKind : uint8_t {
   SloppyLexicalFunction,
   VarForAnnexBLexicalFunction,
   SimpleCatchParameter,
-  CatchParameter
+  CatchParameter,
+  PrivateName,
 };
 
 static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
@@ -109,6 +110,7 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
       return BindingKind::Let;
 
     case DeclarationKind::Const:
+    case DeclarationKind::PrivateName:
       return BindingKind::Const;
 
     case DeclarationKind::Import:
