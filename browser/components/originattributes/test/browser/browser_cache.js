@@ -37,6 +37,7 @@ let suffixes = [
   "import.js",
   "worker.js",
   "sharedworker.js",
+  "font.woff",
 ];
 
 // A random value for isolating video/audio elements across different tests.
