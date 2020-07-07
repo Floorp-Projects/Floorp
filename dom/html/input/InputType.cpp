@@ -255,7 +255,11 @@ nsresult InputType::GetValidationMessage(
       nsAutoString message;
 
       Decimal value = mInputElement->GetValueAsDecimal();
-      MOZ_ASSERT(!value.isNaN());
+      if (MOZ_UNLIKELY(NS_WARN_IF(value.isNaN()))) {
+        // TODO(bug 1651070): This should ideally never happen, but we don't
+        // deal with lang changes correctly, so it could.
+        return GetBadInputMessage(aValidationMessage);
+      }
 
       Decimal step = mInputElement->GetStep();
       MOZ_ASSERT(step != kStepAny && step > Decimal(0));
