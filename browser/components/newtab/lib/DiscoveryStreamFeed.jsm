@@ -64,6 +64,9 @@ const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 const PREF_RECS_PERSONALIZED = "discoverystream.recs.personalized";
 const PREF_SPOCS_PERSONALIZED = "discoverystream.spocs.personalized";
+const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
+const PREF_PERSONALIZATION_OVERRIDE_VERSION =
+  "discoverystream.personalization.overrideVersion";
 
 let getHardcodedLayout;
 
@@ -630,6 +633,31 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     };
   }
 
+  // This sets an override pref for personalization version.
+  personalizationVersionOverride(spoc_v2) {
+    const overrideVersion = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION_OVERRIDE_VERSION
+    ];
+
+    const currentVersion = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION_VERSION
+    ];
+
+    // If we have a downgrade override, and the current version can be downgraded,
+    // and it hasn't already been downgraded, set it to 1.
+    if (spoc_v2 === false && currentVersion === 2 && overrideVersion !== 1) {
+      this.store.dispatch(ac.SetPref(PREF_PERSONALIZATION_OVERRIDE_VERSION, 1));
+    }
+
+    // This is if we need to revert the downgrade and do cleanup.
+    if (spoc_v2 && overrideVersion === 1) {
+      this.store.dispatch({
+        type: at.CLEAR_PREF,
+        data: { name: PREF_PERSONALIZATION_OVERRIDE_VERSION },
+      });
+    }
+  }
+
   async loadSpocs(sendUpdate, isStartup) {
     const cachedData = (await this.cache.get()) || {};
     let spocsState;
@@ -673,6 +701,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
               ...spocsResponse,
             },
           };
+
+          if (spocsResponse.settings && spocsResponse.settings.feature_flags) {
+            this.personalizationVersionOverride(
+              spocsResponse.settings.feature_flags.spoc_v2
+            );
+          }
 
           const spocsResultPromises = this.getPlacements().map(
             async placement => {

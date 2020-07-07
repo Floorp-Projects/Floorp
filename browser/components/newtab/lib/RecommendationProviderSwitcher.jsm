@@ -16,6 +16,8 @@ const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
 const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
+const PREF_PERSONALIZATION_OVERRIDE_VERSION =
+  "discoverystream.personalization.overrideVersion";
 const PREF_PERSONALIZATION_MODEL_KEYS =
   "discoverystream.personalization.modelKeys";
 
@@ -108,10 +110,14 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
     const version = this.store.getState().Prefs.values[
       PREF_PERSONALIZATION_VERSION
     ];
+    const overrideVersion = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION_OVERRIDE_VERSION
+    ];
+
     const modelKeys = this.store.getState().Prefs.values[
       PREF_PERSONALIZATION_MODEL_KEYS
     ];
-    if (version === 2 && modelKeys) {
+    if (version === 2 && modelKeys && overrideVersion !== 1) {
       this.affinityProviderV2 = {
         modelKeys: modelKeys.split(",").map(i => i.trim()),
       };
