@@ -154,7 +154,7 @@ const CFR_MESSAGES = [
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
           action: {
             type: "INSTALL_ADDON_FROM_URL",
-            data: { url: null },
+            data: { url: "https://example.com", telemetrySource: "amo" },
           },
         },
         secondary: [
@@ -226,7 +226,7 @@ const CFR_MESSAGES = [
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
           action: {
             type: "INSTALL_ADDON_FROM_URL",
-            data: { url: null },
+            data: { url: "https://example.com", telemetrySource: "amo" },
           },
         },
         secondary: [
@@ -298,7 +298,7 @@ const CFR_MESSAGES = [
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
           action: {
             type: "INSTALL_ADDON_FROM_URL",
-            data: { url: null },
+            data: { url: "https://example.com", telemetrySource: "amo" },
           },
         },
         secondary: [
@@ -371,7 +371,7 @@ const CFR_MESSAGES = [
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
           action: {
             type: "INSTALL_ADDON_FROM_URL",
-            data: { url: null },
+            data: { url: "https://example.com", telemetrySource: "amo" },
           },
         },
         secondary: [
@@ -447,7 +447,7 @@ const CFR_MESSAGES = [
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
           action: {
             type: "INSTALL_ADDON_FROM_URL",
-            data: { url: null },
+            data: { url: "https://example.com", telemetrySource: "amo" },
           },
         },
         secondary: [

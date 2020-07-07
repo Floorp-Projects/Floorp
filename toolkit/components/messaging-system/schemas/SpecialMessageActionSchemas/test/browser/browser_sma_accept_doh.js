@@ -8,7 +8,7 @@ add_task(async function test_disable_doh() {
   await SpecialPowers.pushPrefEnv({
     set: [[DOH_DOORHANGER_DECISION_PREF, ""]],
   });
-  await SpecialMessageActions.handleAction({ type: "ACCEPT_DOH" }, gBrowser);
+  await SMATestUtils.executeAndValidateAction({ type: "ACCEPT_DOH" });
   Assert.equal(
     Services.prefs.getStringPref(DOH_DOORHANGER_DECISION_PREF, ""),
     "UIOk",

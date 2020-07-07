@@ -13,14 +13,7 @@ add_task(async function test_disable_doh() {
     ],
   });
 
-  SpecialMessageActions.blockMessageById = messageId =>
-    Assert.equal(
-      messageId,
-      "DOH_ROLLOUT_CONFIRMATION",
-      "Block the correct message"
-    );
-
-  await SpecialMessageActions.handleAction({ type: "DISABLE_DOH" }, gBrowser);
+  await SMATestUtils.executeAndValidateAction({ type: "DISABLE_DOH" });
 
   Assert.equal(
     Services.prefs.getStringPref(DOH_DOORHANGER_DECISION_PREF, ""),
