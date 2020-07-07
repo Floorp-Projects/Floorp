@@ -654,12 +654,12 @@ nsHttpServer.prototype = {
   //
   // see nsIHttpServer.registerFile
   //
-  registerFile(path, file, handler) {
+  registerFile(path, file) {
     if (file && (!file.exists() || file.isDirectory())) {
       throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    this._handler.registerFile(path, file, handler);
+    this._handler.registerFile(path, file);
   },
 
   //
@@ -2527,7 +2527,7 @@ ServerHandler.prototype = {
   //
   // see nsIHttpServer.registerFile
   //
-  registerFile(path, file, handler) {
+  registerFile(path, file) {
     if (!file) {
       dumpn("*** unregistering '" + path + "' mapping");
       delete this._overridePaths[path];
@@ -2543,12 +2543,7 @@ ServerHandler.prototype = {
         throw HTTP_404;
       }
 
-      dumpn("*** responding '" + path + "' as mapping to " + file.path);
-
       response.setStatusLine(request.httpVersion, 200, "OK");
-      if (typeof handler === "function") {
-        handler(request, response);
-      }
       self._writeFileResponse(request, file, response, 0, file.fileSize);
     };
   },

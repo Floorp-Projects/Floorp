@@ -110,9 +110,7 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, dom::Document* aDocument)
     : DOMEventTargetHelper(aWindow),
       mDocument(aDocument),
       mStandardFontLoadPrincipal(
-          new gfxFontSrcPrincipal(StaticPrefs::privacy_partition_network_state()
-                                      ? mDocument->PartitionedPrincipal()
-                                      : mDocument->NodePrincipal())),
+          new gfxFontSrcPrincipal(mDocument->NodePrincipal())),
       mResolveLazilyCreatedReadyPromise(false),
       mStatus(FontFaceSetLoadStatus::Loaded),
       mNonRuleFacesDirty(false),
@@ -122,6 +120,9 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, dom::Document* aDocument)
       mBypassCache(false),
       mPrivateBrowsing(false) {
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
+
+  mStandardFontLoadPrincipal =
+      new gfxFontSrcPrincipal(mDocument->NodePrincipal());
 
   // Record the state of the "bypass cache" flags from the docshell now,
   // since we want to look at them from style worker threads, and we can
@@ -1711,10 +1712,8 @@ nsPresContext* FontFaceSet::GetPresContext() {
 
 void FontFaceSet::RefreshStandardFontLoadPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
-  nsIPrincipal* principal = StaticPrefs::privacy_partition_network_state()
-                                ? mDocument->PartitionedPrincipal()
-                                : mDocument->NodePrincipal();
-  mStandardFontLoadPrincipal = new gfxFontSrcPrincipal(principal);
+  mStandardFontLoadPrincipal =
+      new gfxFontSrcPrincipal(mDocument->NodePrincipal());
   mAllowedFontLoads.Clear();
   if (mUserFontSet) {
     mUserFontSet->IncrementGeneration(false);
