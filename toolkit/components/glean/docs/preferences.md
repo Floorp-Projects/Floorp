@@ -1,5 +1,15 @@
 # Preferences
 
+## User Preferences
+
+`datareporting.healthreport.uploadEnabled`
+
+This determines whether the Glean SDK is enabled.
+It can be controlled by users via `about:preferences#privacy`.
+If this is set to false from true, we send a
+["deletion-request" ping](https://mozilla.github.io/glean/book/user/pings/deletion_request.html)
+and no data collections will be persisted or reported from that point.
+
 ## Test-only Preferences
 
 `telemetry.fog.temporary_and_just_for_testing.data_path`
