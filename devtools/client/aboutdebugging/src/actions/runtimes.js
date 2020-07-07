@@ -47,9 +47,6 @@ const {
   UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
   UPDATE_CONNECTION_PROMPT_SETTING_START,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-  UPDATE_RUNTIME_CANDEBUGSW_FAILURE,
-  UPDATE_RUNTIME_CANDEBUGSW_START,
-  UPDATE_RUNTIME_CANDEBUGSW_SUCCESS,
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
@@ -78,10 +75,6 @@ async function getRuntimeIcon(runtime, channel) {
 function onRemoteDevToolsClientClosed() {
   window.AboutDebugging.onNetworkLocationsUpdated();
   window.AboutDebugging.onUSBRuntimesUpdated();
-}
-
-function onCanDebugServiceWorkersUpdated() {
-  window.AboutDebugging.store.dispatch(updateCanDebugServiceWorkers());
 }
 
 function connectRuntime(id) {
@@ -176,11 +169,6 @@ function connectRuntime(id) {
         serviceWorkersAvailable,
       };
 
-      const deviceFront = await clientWrapper.getFront("device");
-      if (deviceFront) {
-        deviceFront.on("can-debug-sw-updated", onCanDebugServiceWorkersUpdated);
-      }
-
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         // `closed` event will be emitted when disabling remote debugging
         // on the connected remote runtime.
@@ -232,14 +220,6 @@ function disconnectRuntime(id, shouldRedirect = false) {
       const runtime = findRuntimeById(id, getState().runtimes);
       const { clientWrapper } = runtime.runtimeDetails;
 
-      const deviceFront = await clientWrapper.getFront("device");
-      if (deviceFront) {
-        deviceFront.off(
-          "can-debug-sw-updated",
-          onCanDebugServiceWorkersUpdated
-        );
-      }
-
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         clientWrapper.off("closed", onRemoteDevToolsClientClosed);
       }
@@ -287,28 +267,6 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
       });
     } catch (e) {
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_FAILURE, error: e });
-    }
-  };
-}
-
-function updateCanDebugServiceWorkers() {
-  return async (dispatch, getState) => {
-    dispatch({ type: UPDATE_RUNTIME_CANDEBUGSW_START });
-    try {
-      const runtime = getCurrentRuntime(getState().runtimes);
-      const { clientWrapper } = runtime.runtimeDetails;
-      // Re-get actual value from the runtime.
-      const {
-        canDebugServiceWorkers,
-      } = await clientWrapper.getDeviceDescription();
-
-      dispatch({
-        type: UPDATE_RUNTIME_CANDEBUGSW_SUCCESS,
-        runtime,
-        canDebugServiceWorkers,
-      });
-    } catch (e) {
-      dispatch({ type: UPDATE_RUNTIME_CANDEBUGSW_FAILURE, error: e });
     }
   };
 }
