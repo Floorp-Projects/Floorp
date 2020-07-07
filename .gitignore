@@ -36,6 +36,8 @@ ID
 /.clang_complete
 /machrc
 /.machrc
+# pyenv artifact
+/.python-version
 
 # Empty marker file that's generated when we check out NSS
 security/manager/.nss.checkout
