@@ -216,7 +216,7 @@ class SettingsPrivacyTest {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             verifySaveLoginPromptIsShown()
             // Don't save the login
-            saveLoginFromPrompt("Don’t save")
+            saveLoginFromPrompt("Never save")
         }.openTabDrawer {
         }.openHomeScreen {
         }.openThreeDotMenu {
