@@ -9104,6 +9104,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
         if (!nextMember) {
           return null();
         }
+      } else if (tt == TokenKind::PrivateName) {
+        nextMember = memberPrivateAccess(lhs, OptionalKind::Optional);
+        if (!nextMember) {
+          return null();
+        }
       } else if (tt == TokenKind::LeftBracket) {
         nextMember =
             memberElemAccess(lhs, yieldHandling, OptionalKind::Optional);
@@ -9611,7 +9616,8 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
     Node lhs, OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
-  MOZ_ASSERT(TokenKindIsPossibleIdentifierName(anyChars.currentToken().type));
+  MOZ_ASSERT(TokenKindIsPossibleIdentifierName(anyChars.currentToken().type) ||
+             anyChars.currentToken().type == TokenKind::PrivateName);
   PropertyName* field = anyChars.currentName();
   if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
     error(JSMSG_BAD_SUPERPROP, "property");
@@ -9635,7 +9641,6 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::memberPrivateAccess(
     Node lhs, OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
   MOZ_ASSERT(anyChars.currentToken().type == TokenKind::PrivateName);
-  MOZ_ASSERT(optionalKind == OptionalKind::NonOptional, "optional nyi");
 
   RootedPropertyName field(cx_, anyChars.currentName());
   // Cannot access private fields on super.
@@ -9649,6 +9654,10 @@ GeneralParser<ParseHandler, Unit>::memberPrivateAccess(
     return null();
   }
 
+  if (optionalKind == OptionalKind::Optional) {
+    MOZ_ASSERT(!handler_.isSuperBase(lhs));
+    return handler_.newOptionalPropertyByValue(lhs, privateName, pos().end);
+  }
   return handler_.newPropertyByValue(lhs, privateName, pos().end);
 }
 
