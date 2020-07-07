@@ -54,6 +54,7 @@ jobs:
                 - builds/releng_sub_linux_configs/64_stat_and_debug.py
             tooltool-downloads: public
             keep-artifacts: false
+        use-sccache: true
         fetches:
             toolchain:
                 - linux64-clang
@@ -87,6 +88,7 @@ jobs:
             tooltool-downloads: internal
             extra-config:
                 mozconfig_variant: debug
+        use-sccache: true
         fetches:
             toolchain:
                 - win64-clang-cl
