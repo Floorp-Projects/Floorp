@@ -974,6 +974,81 @@ inline void ImplCycleCollectionTraverse(
   ImplCycleCollectionTraverse(aCallback, aField.mChild, "mChild", 0);
 }
 
+template <typename EditorDOMPointType>
+class EditorDOMRangeBase;
+
+/**
+ * EditorDOMRangeBase class stores a pair of same EditorDOMPointBase type.
+ * The instance must be created with valid DOM points and start must be
+ * before or same as end.
+ */
+
+typedef EditorDOMRangeBase<EditorDOMPoint> EditorDOMRange;
+typedef EditorDOMRangeBase<EditorRawDOMPoint> EditorRawDOMRange;
+typedef EditorDOMRangeBase<EditorDOMPointInText> EditorDOMRangeInTexts;
+
+template <typename EditorDOMPointType>
+class EditorDOMRangeBase final {
+ public:
+  EditorDOMRangeBase() = default;
+  template <typename PointType>
+  explicit EditorDOMRangeBase(const PointType& aStart)
+      : mStart(aStart), mEnd(aStart) {
+    MOZ_ASSERT(!mStart.IsSet() || mStart.IsSetAndValid());
+  }
+  template <typename StartPointType, typename EndPointType>
+  explicit EditorDOMRangeBase(const StartPointType& aStart,
+                              const EndPointType& aEnd)
+      : mStart(aStart), mEnd(aEnd) {
+    MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
+    MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
+    MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
+                  mStart.EqualsOrIsBefore(mEnd));
+  }
+
+  const EditorDOMPointType& StartRef() const { return mStart; }
+  const EditorDOMPointType& EndRef() const { return mEnd; }
+
+  bool Collapsed() const {
+    MOZ_ASSERT(IsPositioned());
+    return mStart == mEnd;
+  }
+  bool IsPositioned() const { return mStart.IsSet() && mEnd.IsSet(); }
+  bool InSameContainer() const {
+    MOZ_ASSERT(IsPositioned());
+    return IsPositioned() && mStart.GetContainer() == mEnd.GetContainer();
+  }
+  template <typename OtherRangeType>
+  bool operator==(const OtherRangeType& aOther) const {
+    return mStart == aOther.mStart && mEnd == aOther.mEnd;
+  }
+  template <typename OtherRangeType>
+  bool operator!=(const OtherRangeType& aOther) const {
+    return *this == aOther;
+  }
+
+ private:
+  EditorDOMPointType mStart;
+  EditorDOMPointType mEnd;
+
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          EditorDOMRange&, const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(EditorDOMRange&);
+};
+
+inline void ImplCycleCollectionUnlink(EditorDOMRange& aField) {
+  ImplCycleCollectionUnlink(aField.mStart);
+  ImplCycleCollectionUnlink(aField.mEnd);
+}
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, EditorDOMRange& aField,
+    const char* aName, uint32_t aFlags) {
+  ImplCycleCollectionTraverse(aCallback, aField.mStart, "mStart", 0);
+  ImplCycleCollectionTraverse(aCallback, aField.mEnd, "mEnd", 0);
+}
+
 /**
  * AutoEditorDOMPointOffsetInvalidator is useful if DOM tree will be changed
  * when EditorDOMPoint instance is available and keeps referring same child
