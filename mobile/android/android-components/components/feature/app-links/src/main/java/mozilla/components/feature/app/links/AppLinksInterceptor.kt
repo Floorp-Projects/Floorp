@@ -40,6 +40,7 @@ import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SU
  * @param useCases These use cases allow for the detection of, and opening of links that other apps
  * have registered to open.
  * @param launchFromInterceptor If {true} then the interceptor will launch the link in third-party apps if available.
+ * @param allowRedirectUrls A set of URLs that allows intercept when `onLoadRequest` is triggered by redirect.
  */
 @Suppress("LongParameterList")
 class AppLinksInterceptor(
@@ -50,7 +51,8 @@ class AppLinksInterceptor(
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp,
         alwaysDeniedSchemes = alwaysDeniedSchemes),
-    private val launchFromInterceptor: Boolean = false
+    private val launchFromInterceptor: Boolean = false,
+    private val allowRedirectUrls: Set<String> = ALLOW_REDIRECT_HOSTS
 ) : RequestInterceptor {
 
     override fun onLoadRequest(
@@ -61,14 +63,17 @@ class AppLinksInterceptor(
         isRedirect: Boolean,
         isDirectNavigation: Boolean
     ): RequestInterceptor.InterceptionResponse? {
-        val uriScheme = Uri.parse(uri).scheme
+        val encodedUri = Uri.parse(uri)
+        val uriScheme = encodedUri.scheme
         val engineSupportsScheme = engineSupportedSchemes.contains(uriScheme)
+        val isAllowedRedirect = (isRedirect && encodedUri.host in allowRedirectUrls)
 
         val doNotIntercept = when {
             uriScheme == null -> true
-            // If request not from an user gesture, redirect and direct navigation
+            // If request not from an user gesture, allowed redirect and direct navigation
             // or if we're already on the site then let's not go to an external app.
-            ((!hasUserGesture && !isRedirect && !isDirectNavigation) || isSameDomain) && engineSupportsScheme -> true
+            ((!hasUserGesture && !isAllowedRedirect && !isDirectNavigation) || isSameDomain)
+                && engineSupportsScheme -> true
             // If scheme not in whitelist then follow user preference
             (!interceptLinkClicks || !launchInApp()) && engineSupportsScheme -> true
             // Never go to an external app when scheme is in blacklist
@@ -125,5 +130,11 @@ class AppLinksInterceptor(
         }
 
         return null
+    }
+
+    companion object {
+        internal val ALLOW_REDIRECT_HOSTS: Set<String> = setOf(
+            "www.ubereats.com"
+        )
     }
 }
