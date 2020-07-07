@@ -52,7 +52,6 @@ function waitForRegister(url, dbgUrl) {
   return new Promise(function(resolve) {
     wdm.addListener({
       onRegister(dbg) {
-        dump("FAK " + dbg.url + "\n");
         if (dbg.url !== url) {
           return;
         }

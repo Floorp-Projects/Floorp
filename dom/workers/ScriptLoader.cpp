@@ -334,6 +334,8 @@ struct ScriptLoadInfo {
   bool mExecutionScheduled = false;
   bool mExecutionResult = false;
 
+  Maybe<nsString> mSourceMapURL;
+
   enum CacheStatus {
     // By default a normal script is just loaded from the network. But for
     // ServiceWorkers, we have to check if the cache contains the script and
@@ -1242,6 +1244,11 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
       Unused << httpChannel->GetResponseHeader("referrer-policy"_ns,
                                                tRPHeaderCValue);
+
+      nsAutoCString sourceMapURL;
+      if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {
+        aLoadInfo.mSourceMapURL = Some(NS_ConvertUTF8toUTF16(sourceMapURL));
+      }
     }
 
     // May be null.
@@ -2142,6 +2149,10 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
 
     MOZ_ASSERT(loadInfo.mMutedErrorFlag.isSome());
     options.setMutedErrors(loadInfo.mMutedErrorFlag.valueOr(true));
+
+    if (loadInfo.mSourceMapURL) {
+      options.setSourceMapURL(loadInfo.mSourceMapURL->get());
+    }
 
     // Our ErrorResult still shouldn't be a failure.
     MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
