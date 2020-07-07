@@ -9,18 +9,14 @@ import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.clickable_region_automatic
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_automatic_radio_button
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_dark_image
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_dark_radio_button
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_light_image
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_light_radio_button
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.OnboardingThemePicker.Theme
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
+import org.mozilla.fenix.utils.view.addToRadioGroup
 
 class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -35,16 +31,13 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
             R.string.pref_key_auto_battery_theme
         }
 
-        radioLightTheme.addToRadioGroup(radioDarkTheme)
-        radioLightTheme.addToRadioGroup(radioFollowDeviceTheme)
+        addToRadioGroup(
+            radioLightTheme,
+            radioDarkTheme,
+            radioFollowDeviceTheme
+        )
         radioLightTheme.addIllustration(view.theme_light_image)
-
-        radioDarkTheme.addToRadioGroup(radioLightTheme)
-        radioDarkTheme.addToRadioGroup(radioFollowDeviceTheme)
         radioDarkTheme.addIllustration(view.theme_dark_image)
-
-        radioFollowDeviceTheme.addToRadioGroup(radioDarkTheme)
-        radioFollowDeviceTheme.addToRadioGroup(radioLightTheme)
 
         view.theme_dark_image.setOnClickListener {
             it.context.components.analytics.metrics.track(Event.OnboardingThemePicker(Theme.DARK))

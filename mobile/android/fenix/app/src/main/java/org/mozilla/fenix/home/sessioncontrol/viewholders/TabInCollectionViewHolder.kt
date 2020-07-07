@@ -13,7 +13,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.ViewHolder
+import org.mozilla.fenix.utils.view.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView

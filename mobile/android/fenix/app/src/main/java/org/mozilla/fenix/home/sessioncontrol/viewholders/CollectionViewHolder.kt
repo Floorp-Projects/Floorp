@@ -14,7 +14,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.ViewHolder
+import org.mozilla.fenix.utils.view.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getIconColor
 import org.mozilla.fenix.ext.increaseTapArea

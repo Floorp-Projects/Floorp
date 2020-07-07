@@ -6,10 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_bottom_image
-import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_bottom_radio_button
-import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_top_image
-import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_top_radio_button
+import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.OnboardingToolbarPosition.Position
@@ -17,6 +14,7 @@ import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
+import org.mozilla.fenix.utils.view.addToRadioGroup
 
 class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -25,10 +23,8 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         val radioBottomToolbar = view.toolbar_bottom_radio_button
         val radio: OnboardingRadioButton
 
-        radioTopToolbar.addToRadioGroup(radioBottomToolbar)
+        addToRadioGroup(radioTopToolbar, radioBottomToolbar)
         radioTopToolbar.addIllustration(view.toolbar_top_image)
-
-        radioBottomToolbar.addToRadioGroup(radioTopToolbar)
         radioBottomToolbar.addIllustration(view.toolbar_bottom_image)
 
         radio = if (view.context.settings().shouldUseBottomToolbar) {

@@ -16,6 +16,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.utils.view.addToRadioGroup
 
 /**
  * Lets the user customize the UI.
@@ -48,23 +49,15 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupRadioGroups() {
-        radioLightTheme.addToRadioGroup(radioDarkTheme)
-
-        radioDarkTheme.addToRadioGroup(radioLightTheme)
-
-        if (SDK_INT >= Build.VERSION_CODES.P) {
-            radioLightTheme.addToRadioGroup(radioFollowDeviceTheme)
-            radioDarkTheme.addToRadioGroup(radioFollowDeviceTheme)
-
-            radioFollowDeviceTheme.addToRadioGroup(radioDarkTheme)
-            radioFollowDeviceTheme.addToRadioGroup(radioLightTheme)
-        } else {
-            radioLightTheme.addToRadioGroup(radioAutoBatteryTheme)
-            radioDarkTheme.addToRadioGroup(radioAutoBatteryTheme)
-
-            radioAutoBatteryTheme.addToRadioGroup(radioLightTheme)
-            radioAutoBatteryTheme.addToRadioGroup(radioDarkTheme)
-        }
+        addToRadioGroup(
+            radioLightTheme,
+            radioDarkTheme,
+            if (SDK_INT >= Build.VERSION_CODES.P) {
+                radioFollowDeviceTheme
+            } else {
+                radioAutoBatteryTheme
+            }
+        )
     }
 
     private fun bindLightTheme() {
@@ -132,7 +125,6 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         topPreference.setCheckedWithoutClickListener(!requireContext().settings().shouldUseBottomToolbar)
         bottomPreference.setCheckedWithoutClickListener(requireContext().settings().shouldUseBottomToolbar)
 
-        topPreference.addToRadioGroup(bottomPreference)
-        bottomPreference.addToRadioGroup(topPreference)
+        addToRadioGroup(topPreference, bottomPreference)
     }
 }

@@ -16,12 +16,15 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.view.GroupableRadioButton
+import org.mozilla.fenix.utils.view.uncheckAll
 
+@Suppress("RestrictedApi", "PrivateResource")
 open class RadioButtonPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
-) : Preference(context, attrs) {
-    private val radioGroups = mutableListOf<RadioButtonPreference>()
+) : Preference(context, attrs), GroupableRadioButton {
+    private val radioGroups = mutableListOf<GroupableRadioButton>()
     private var summaryView: TextView? = null
     private var titleView: TextView? = null
     private var radioButton: RadioButton? = null
@@ -55,8 +58,8 @@ open class RadioButtonPreference @JvmOverloads constructor(
         }
     }
 
-    fun addToRadioGroup(radioPreference: RadioButtonPreference) {
-        radioGroups.add(radioPreference)
+    override fun addToRadioGroup(radioButton: GroupableRadioButton) {
+        radioGroups.add(radioButton)
     }
 
     fun onClickListener(listener: (() -> Unit)) {
@@ -97,7 +100,7 @@ open class RadioButtonPreference @JvmOverloads constructor(
         toggleRadioGroups()
     }
 
-    private fun updateRadioValue(isChecked: Boolean) {
+    override fun updateRadioValue(isChecked: Boolean) {
         persistBoolean(isChecked)
         radioButton?.isChecked = isChecked
         context.settings().preferences.edit().putBoolean(key, isChecked)
@@ -113,7 +116,7 @@ open class RadioButtonPreference @JvmOverloads constructor(
 
     private fun toggleRadioGroups() {
         if (radioButton?.isChecked == true) {
-            radioGroups.forEach { it.updateRadioValue(false) }
+            radioGroups.uncheckAll()
         }
     }
 

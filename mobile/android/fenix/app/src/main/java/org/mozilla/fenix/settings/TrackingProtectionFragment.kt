@@ -21,6 +21,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.trackingprotection.TrackingProtectionMode
+import org.mozilla.fenix.utils.view.addToRadioGroup
 
 /**
  * Displays the toggle for tracking protection, options for tracking protection policy and a button
@@ -46,7 +47,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val radioStrict = bindTrackingProtectionRadio(TrackingProtectionMode.STRICT)
         val radioStandard = bindTrackingProtectionRadio(TrackingProtectionMode.STANDARD)
         val radioCustom = bindCustom()
-        setupRadioGroups(radioStrict, radioStandard, radioCustom)
+        addToRadioGroup(radioStrict, radioStandard, radioCustom)
         updateCustomOptionsVisibility()
     }
 
@@ -206,21 +207,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             it.useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
             it.useCases.sessionUseCases.reload.invoke()
         }
-    }
-
-    private fun setupRadioGroups(
-        radioStrict: RadioButtonInfoPreference,
-        radioStandard: RadioButtonInfoPreference,
-        radioCustom: RadioButtonInfoPreference
-    ) {
-        radioStandard.addToRadioGroup(radioStrict)
-        radioStrict.addToRadioGroup(radioStandard)
-
-        radioStandard.addToRadioGroup(radioCustom)
-        radioCustom.addToRadioGroup(radioStandard)
-
-        radioStrict.addToRadioGroup(radioCustom)
-        radioCustom.addToRadioGroup(radioStrict)
     }
 
     private fun updateCustomOptionsVisibility() {

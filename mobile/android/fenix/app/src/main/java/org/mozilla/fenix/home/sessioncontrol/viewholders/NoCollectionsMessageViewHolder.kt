@@ -6,9 +6,9 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.no_collections_message.view.*
+import kotlinx.android.synthetic.main.no_collections_message.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.ViewHolder
+import org.mozilla.fenix.utils.view.ViewHolder
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 
 open class NoCollectionsMessageViewHolder(
@@ -18,11 +18,12 @@ open class NoCollectionsMessageViewHolder(
 ) : ViewHolder(view) {
 
     init {
-        view.add_tabs_to_collections_button.setOnClickListener {
+        add_tabs_to_collections_button.setOnClickListener {
             interactor.onAddTabsToCollectionTapped()
         }
-        view.add_tabs_to_collections_button.isVisible = hasNormalTabsOpened
+        add_tabs_to_collections_button.isVisible = hasNormalTabsOpened
     }
+
     companion object {
         const val LAYOUT_ID = R.layout.no_collections_message
     }

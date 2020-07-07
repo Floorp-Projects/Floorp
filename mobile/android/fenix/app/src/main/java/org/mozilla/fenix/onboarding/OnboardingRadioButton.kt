@@ -12,9 +12,14 @@ import androidx.core.content.edit
 import androidx.core.content.withStyledAttributes
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.view.GroupableRadioButton
+import org.mozilla.fenix.utils.view.uncheckAll
 
-class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRadioButton(context, attrs) {
-    private val radioGroups = mutableListOf<OnboardingRadioButton>()
+class OnboardingRadioButton(
+    context: Context,
+    attrs: AttributeSet
+) : AppCompatRadioButton(context, attrs), GroupableRadioButton {
+    private val radioGroups = mutableListOf<GroupableRadioButton>()
     private var illustration: ImageView? = null
     private var clickListener: (() -> Unit)? = null
     var key: Int = 0
@@ -29,7 +34,7 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
         }
     }
 
-    fun addToRadioGroup(radioButton: OnboardingRadioButton) {
+    override fun addToRadioGroup(radioButton: GroupableRadioButton) {
         radioGroups.add(radioButton)
     }
 
@@ -49,7 +54,7 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
         }
     }
 
-    fun updateRadioValue(isChecked: Boolean) {
+    override fun updateRadioValue(isChecked: Boolean) {
         this.isChecked = isChecked
         illustration?.let {
             it.isSelected = isChecked
@@ -61,7 +66,7 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
 
     private fun toggleRadioGroups() {
         if (isChecked) {
-            radioGroups.forEach { it.updateRadioValue(false) }
+            radioGroups.uncheckAll()
         }
     }
 }

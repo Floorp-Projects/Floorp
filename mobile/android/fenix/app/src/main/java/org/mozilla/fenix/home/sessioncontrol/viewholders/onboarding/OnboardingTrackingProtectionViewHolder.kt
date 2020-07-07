@@ -14,6 +14,7 @@ import org.mozilla.fenix.components.metrics.Event.OnboardingTrackingProtection.S
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
+import org.mozilla.fenix.utils.view.addToRadioGroup
 
 class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -48,8 +49,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         updateRadioGroupState(view, isChecked)
 
-        standardTrackingProtection.addToRadioGroup(strictTrackingProtection)
-        strictTrackingProtection.addToRadioGroup(standardTrackingProtection)
+        addToRadioGroup(standardTrackingProtection, strictTrackingProtection)
 
         strictTrackingProtection.isChecked =
             itemView.context.settings().useStrictTrackingProtection

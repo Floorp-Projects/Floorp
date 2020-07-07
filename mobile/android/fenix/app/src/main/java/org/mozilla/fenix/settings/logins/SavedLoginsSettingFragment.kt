@@ -15,6 +15,7 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.RadioButtonPreference
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.requirePreference
+import org.mozilla.fenix.utils.view.addToRadioGroup
 
 class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -26,7 +27,7 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preferences_passwords_save_logins))
         val save = bindSave()
         val neverSave = bindNeverSave()
-        setupRadioGroups(save, neverSave)
+        addToRadioGroup(save, neverSave)
     }
 
     private fun bindSave(): RadioButtonPreference {
@@ -65,13 +66,5 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
             }
         }
         return preferenceNeverSave
-    }
-
-    private fun setupRadioGroups(
-        radioNeverSave: RadioButtonPreference,
-        radioSave: RadioButtonPreference
-    ) {
-        radioNeverSave.addToRadioGroup(radioSave)
-        radioSave.addToRadioGroup(radioNeverSave)
     }
 }

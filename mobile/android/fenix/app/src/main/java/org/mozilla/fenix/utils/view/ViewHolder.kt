@@ -1,4 +1,4 @@
-package org.mozilla.fenix.ext
+package org.mozilla.fenix.utils.view
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
