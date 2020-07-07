@@ -43894,7 +43894,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // the function class is inferred from a call like
 // createClass or extend
 function fromCallExpression(callExpression) {
-  const whitelist = ["extend", "createClass"];
+  const allowlist = ["extend", "createClass"];
   const {
     callee
   } = callExpression.node;
@@ -43905,7 +43905,7 @@ function fromCallExpression(callExpression) {
 
   const name = t.isMemberExpression(callee) ? callee.property.name : callee.name;
 
-  if (!whitelist.includes(name)) {
+  if (!allowlist.includes(name)) {
     return null;
   }
 
