@@ -284,7 +284,13 @@ void TextureImageTextureSourceOGL::BindTexture(
 GLTextureSource::GLTextureSource(TextureSourceProvider* aProvider,
                                  GLuint aTextureHandle, GLenum aTarget,
                                  gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
-    : mGL(aProvider->GetGLContext()),
+    : GLTextureSource(aProvider->GetGLContext(), aTextureHandle, aTarget, aSize,
+                      aFormat) {}
+
+GLTextureSource::GLTextureSource(GLContext* aGL, GLuint aTextureHandle,
+                                 GLenum aTarget, gfx::IntSize aSize,
+                                 gfx::SurfaceFormat aFormat)
+    : mGL(aGL),
       mTextureHandle(aTextureHandle),
       mTextureTarget(aTarget),
       mSize(aSize),
@@ -339,15 +345,19 @@ bool GLTextureSource::IsValid() const { return !!gl() && mTextureHandle != 0; }
 ////////////////////////////////////////////////////////////////////////
 // DirectMapTextureSource
 
-DirectMapTextureSource::DirectMapTextureSource(TextureSourceProvider* aProvider,
+DirectMapTextureSource::DirectMapTextureSource(gl::GLContext* aContext,
                                                gfx::DataSourceSurface* aSurface)
-    : GLTextureSource(aProvider, 0, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+    : GLTextureSource(aContext, 0, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                       aSurface->GetSize(), aSurface->GetFormat()),
       mSync(0) {
   MOZ_ASSERT(aSurface);
 
   UpdateInternal(aSurface, nullptr, nullptr, true);
 }
+
+DirectMapTextureSource::DirectMapTextureSource(TextureSourceProvider* aProvider,
+                                               gfx::DataSourceSurface* aSurface)
+    : DirectMapTextureSource(aProvider->GetGLContext(), aSurface) {}
 
 DirectMapTextureSource::~DirectMapTextureSource() {
   if (!mSync || !gl() || !gl()->MakeCurrent() || gl()->IsDestroyed()) {
