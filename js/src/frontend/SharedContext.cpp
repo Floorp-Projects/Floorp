@@ -33,6 +33,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       allowSuperCall_(false),
       allowArguments_(true),
       inWith_(false),
+      inClass_(false),
       localStrict(false),
       hasExplicitUseStrict_(false) {
   // Compute the script kind "input" flags.
@@ -162,6 +163,15 @@ void ScopeContext::computeInWith(Scope* scope) {
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::With) {
       inWith = true;
+      break;
+    }
+  }
+}
+
+void ScopeContext::computeInClass(Scope* scope) {
+  for (ScopeIter si(scope); si; si++) {
+    if (si.kind() == ScopeKind::ClassBody) {
+      inClass = true;
       break;
     }
   }
@@ -337,6 +347,16 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 
     inWith_ = enclosing->findInnermostStatement(isWith);
   }
+
+  if (sc->inClass()) {
+    inClass_ = true;
+  } else {
+    auto isClass = [](ParseContext::Statement* stmt) {
+      return stmt->kind() == StatementKind::Class;
+    };
+
+    inClass_ = enclosing->findInnermostStatement(isClass);
+  }
 }
 
 void FunctionBox::initWithEnclosingScope(ScopeContext& scopeContext,
@@ -371,6 +391,7 @@ void FunctionBox::initWithEnclosingScope(ScopeContext& scopeContext,
   }
 
   inWith_ = scopeContext.inWith;
+  inClass_ = scopeContext.inClass;
 }
 
 void FunctionBox::setEnclosingScopeForInnerLazyFunction(

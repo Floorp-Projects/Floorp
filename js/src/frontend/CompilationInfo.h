@@ -47,6 +47,9 @@ struct ScopeContext {
   // scope.
   bool inWith = false;
 
+  // Somewhere on the scope chain this parse is embedded within a class scope.
+  bool inClass = false;
+
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<FieldInitializers> fieldInitializers = {};
@@ -56,6 +59,7 @@ struct ScopeContext {
     computeThisBinding(scope, enclosingEnv);
     computeInWith(scope);
     computeExternalInitializers(scope);
+    computeInClass(scope);
   }
 
  private:
@@ -63,6 +67,7 @@ struct ScopeContext {
   void computeThisBinding(Scope* scope, JSObject* environment = nullptr);
   void computeInWith(Scope* scope);
   void computeExternalInitializers(Scope* scope);
+  void computeInClass(Scope* scope);
 };
 
 // CompilationInfo owns a number of pieces of information about script

@@ -146,6 +146,7 @@ class SharedContext {
   bool allowSuperCall_ : 1;
   bool allowArguments_ : 1;
   bool inWith_ : 1;
+  bool inClass_ : 1;
 
   // See `strict()` below.
   bool localStrict : 1;
@@ -221,6 +222,7 @@ class SharedContext {
   bool allowSuperCall() const { return allowSuperCall_; }
   bool allowArguments() const { return allowArguments_; }
   bool inWith() const { return inWith_; }
+  bool inClass() const { return inClass_; }
 
   bool hasExplicitUseStrict() const { return hasExplicitUseStrict_; }
   void setExplicitUseStrict() { hasExplicitUseStrict_ = true; }

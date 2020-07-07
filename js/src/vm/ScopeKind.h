@@ -25,6 +25,7 @@ enum class ScopeKind : uint8_t {
   NamedLambda,
   StrictNamedLambda,
   FunctionLexical,
+  ClassBody,
 
   // WithScope
   With,
