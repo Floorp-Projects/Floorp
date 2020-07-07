@@ -30,6 +30,11 @@ ChromeUtils.defineModuleGetter(
   "TalosParentProfiler",
   "resource://talos-powers/TalosParentProfiler.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
 
 const REDUCE_MOTION_PREF = "ui.prefersReducedMotion";
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
@@ -128,12 +133,17 @@ this.tabpaint = class extends ExtensionAPI {
    *         with the time (in ms) it took to open the tab from the parent.
    */
   async openTabFromParent(gBrowser, target) {
+    let win = BrowserWindowTracker.getTopWindow();
     TalosParentProfiler.resume("tabpaint parent start");
 
-    // eslint-disable-next-line mozilla/avoid-Date-timing
-    gBrowser.selectedTab = gBrowser.addTab(`${target}?${Date.now()}`, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    gBrowser.selectedTab = gBrowser.addTab(
+      //win.performance.now() + win.performance.timing.navigationStart gives the UNIX timestamp.
+      `${target}?${win.performance.now() +
+        win.performance.timing.navigationStart}`,
+      {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      }
+    );
 
     let { tab, delta } = await this.whenTabShown();
     TalosParentProfiler.pause("tabpaint parent end");
