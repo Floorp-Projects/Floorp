@@ -30,11 +30,11 @@ function declTest(name, cfg) {
     matches,
     remoteTypes,
     messageManagerGroups,
-    fission,
     test,
   } = cfg;
 
-  // Build the actor options object which will be used to register & unregister our window actor.
+  // Build the actor options object which will be used to register & unregister
+  // our window actor.
   let actorOptions = {
     parent: Object.assign({}, windowActorOptions.parent),
     child: Object.assign({}, windowActorOptions.child),
@@ -55,26 +55,16 @@ function declTest(name, cfg) {
   add_task(async function() {
     info("Entering test: " + name);
 
-    // Create a fresh window with the correct settings, and register our actor.
-    let win = await BrowserTestUtils.openNewBrowserWindow({
-      remote: true,
-      fission,
-    });
+    // Register our actor, and load a new tab with the relevant URL
     ChromeUtils.registerWindowActor("TestWindow", actorOptions);
-
-    // Wait for the provided URL to load in our browser
-    let browser = win.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(browser, url);
-    await BrowserTestUtils.browserLoaded(browser, false, url);
-
-    // Run the provided test
-    info("browser ready");
     try {
-      await Promise.resolve(test(browser, win));
+      await BrowserTestUtils.withNewTab(url, async browser => {
+        info("browser ready");
+        await Promise.resolve(test(browser, window));
+      });
     } finally {
-      // Clean up after we're done.
+      // Unregister the actor after the test is complete.
       ChromeUtils.unregisterWindowActor("TestWindow");
-      await BrowserTestUtils.closeWindow(win);
       info("Exiting test: " + name);
     }
   });
