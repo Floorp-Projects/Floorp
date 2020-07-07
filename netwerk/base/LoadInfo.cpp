@@ -606,7 +606,8 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
       mLoadingEmbedderPolicy(nsILoadInfo::EMBEDDER_POLICY_NULL) {
   CanonicalBrowsingContext* parentBC = aParentWGP->BrowsingContext();
   MOZ_ASSERT(parentBC);
-  ComputeAncestors(parentBC, mAncestorPrincipals, mAncestorOuterWindowIDs);
+  ComputeAncestors(parentBC, mAncestorPrincipals, mAncestorBrowsingContextIDs,
+                   mAncestorOuterWindowIDs);
 
   RefPtr<WindowGlobalParent> topLevelWGP = aParentWGP->TopWindowContext();
 
@@ -777,6 +778,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
           rhs.mRedirectChainIncludingInternalRedirects.Clone()),
       mRedirectChain(rhs.mRedirectChain.Clone()),
       mAncestorPrincipals(rhs.mAncestorPrincipals.Clone()),
+      mAncestorBrowsingContextIDs(rhs.mAncestorBrowsingContextIDs.Clone()),
       mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs.Clone()),
       mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders.Clone()),
       mRequestBlockingReason(rhs.mRequestBlockingReason),
@@ -829,6 +831,7 @@ LoadInfo::LoadInfo(
     RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
     RedirectHistoryArray& aRedirectChain,
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
+    const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
     const nsTArray<uint64_t>& aAncestorOuterWindowIDs,
     const nsTArray<nsCString>& aCorsUnsafeHeaders, bool aForcePreflight,
     bool aIsPreflight, bool aLoadTriggeredFromExternal,
@@ -884,6 +887,7 @@ LoadInfo::LoadInfo(
       mSendCSPViolationEvents(aSendCSPViolationEvents),
       mOriginAttributes(aOriginAttributes),
       mAncestorPrincipals(std::move(aAncestorPrincipals)),
+      mAncestorBrowsingContextIDs(aAncestorBrowsingContextIDs.Clone()),
       mAncestorOuterWindowIDs(aAncestorOuterWindowIDs.Clone()),
       mCorsUnsafeHeaders(aCorsUnsafeHeaders.Clone()),
       mRequestBlockingReason(aRequestBlockingReason),
@@ -920,6 +924,7 @@ LoadInfo::LoadInfo(
 void LoadInfo::ComputeAncestors(
     CanonicalBrowsingContext* aBC,
     nsTArray<nsCOMPtr<nsIPrincipal>>& aAncestorPrincipals,
+    nsTArray<uint64_t>& aBrowsingContextIDs,
     nsTArray<uint64_t>& aOuterWindowIDs) {
   MOZ_ASSERT(aAncestorPrincipals.IsEmpty());
   MOZ_ASSERT(aOuterWindowIDs.IsEmpty());
@@ -928,11 +933,13 @@ void LoadInfo::ComputeAncestors(
   // window IDs.
   while (WindowGlobalParent* ancestorWGP =
              ancestorBC->GetParentWindowContext()) {
+    ancestorBC = ancestorWGP->BrowsingContext();
+
     nsCOMPtr<nsIPrincipal> parentPrincipal = ancestorWGP->DocumentPrincipal();
     MOZ_ASSERT(parentPrincipal, "Ancestor principal is null");
     aAncestorPrincipals.AppendElement(parentPrincipal.forget());
+    aBrowsingContextIDs.AppendElement(ancestorBC->Id());
     aOuterWindowIDs.AppendElement(ancestorWGP->OuterWindowId());
-    ancestorBC = ancestorWGP->BrowsingContext();
   }
 }
 void LoadInfo::ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow) {
@@ -1611,6 +1618,10 @@ const RedirectHistoryArray& LoadInfo::RedirectChain() { return mRedirectChain; }
 
 const nsTArray<nsCOMPtr<nsIPrincipal>>& LoadInfo::AncestorPrincipals() {
   return mAncestorPrincipals;
+}
+
+const nsTArray<uint64_t>& LoadInfo::AncestorBrowsingContextIDs() {
+  return mAncestorBrowsingContextIDs;
 }
 
 const nsTArray<uint64_t>& LoadInfo::AncestorOuterWindowIDs() {

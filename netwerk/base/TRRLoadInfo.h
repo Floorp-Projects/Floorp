@@ -38,7 +38,7 @@ class TRRLoadInfo final : public nsILoadInfo {
   OriginAttributes mOriginAttributes;
   nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>> mEmptyRedirectChain;
   nsTArray<nsCOMPtr<nsIPrincipal>> mEmptyPrincipals;
-  nsTArray<uint64_t> mEmptyWindowIDs;
+  nsTArray<uint64_t> mEmptyBrowsingContextIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
   Maybe<mozilla::dom::ClientInfo> mClientInfo;
   Maybe<mozilla::dom::ClientInfo> mReservedClientInfo;

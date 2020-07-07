@@ -89,12 +89,13 @@ class LoadInfo final : public nsILoadInfo {
            nsContentPolicyType aContentPolicyType,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
-  // Compute a list of ancestor principals and outer windowIDs.
-  // See methods AncestorPrincipals and AncestorOuterWindowIDs
+  // Compute a list of ancestor principals and BrowsingContext IDs.
+  // See methods AncestorPrincipals and AncestorBrowsingContextIDs
   // in nsILoadInfo.idl for details.
   static void ComputeAncestors(
       dom::CanonicalBrowsingContext* aBC,
       nsTArray<nsCOMPtr<nsIPrincipal>>& aAncestorPrincipals,
+      nsTArray<uint64_t>& aBrowsingContextIDs,
       nsTArray<uint64_t>& aOuterWindowIDs);
 
   // create an exact copy of the loadinfo
@@ -177,6 +178,7 @@ class LoadInfo final : public nsILoadInfo {
            RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
            RedirectHistoryArray& aRedirectChain,
            nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
+           const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
            const nsTArray<uint64_t>& aAncestorOuterWindowIDs,
            const nsTArray<nsCString>& aUnsafeHeaders, bool aForcePreflight,
            bool aIsPreflight, bool aLoadTriggeredFromExternal,
@@ -273,6 +275,7 @@ class LoadInfo final : public nsILoadInfo {
   RedirectHistoryArray mRedirectChainIncludingInternalRedirects;
   RedirectHistoryArray mRedirectChain;
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
+  nsTArray<uint64_t> mAncestorBrowsingContextIDs;
   nsTArray<uint64_t> mAncestorOuterWindowIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
   uint32_t mRequestBlockingReason;
