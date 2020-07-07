@@ -4,6 +4,10 @@
 
 %include ../../../components/contextualidentity/content/usercontext.css
 
+#category-containers {
+  display: none;
+}
+
 .container-header-links {
   font-size: 1.25rem;
   margin-block-end: 15px;
