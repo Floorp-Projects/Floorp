@@ -128,9 +128,13 @@ add_task(async function testBlocked() {
 });
 
 add_task(async function testUnsignedDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["xpinstall.signatures.required", true]],
-  });
+  // This pref being disabled will cause the `specialpowers` addon to be
+  // uninstalled, which can cause a number of test failures due to features no
+  // longer working correctly.
+  // In order to avoid those issues, this code manually disables the pref, and
+  // ensures that `SpecialPowers` is fully re-enabled at the end of the test.
+  const sigPref = "xpinstall.signatures.required";
+  Services.prefs.setBoolPref(sigPref, true);
 
   let id = "unsigned@mochi.test";
   gProvider.createAddons([
@@ -151,7 +155,20 @@ add_task(async function testUnsignedDisabled() {
     type: "error",
   });
 
-  await SpecialPowers.popPrefEnv();
+  // Ensure that `SpecialPowers` is fully re-initialized at the end of this
+  // test. This requires removing the existing binding so that it's
+  // re-registered, re-enabling unsigned extensions, and then waiting for the
+  // actor to be registered and ready.
+  delete window.SpecialPowers;
+  Services.prefs.setBoolPref(sigPref, false);
+  await TestUtils.waitForCondition(() => {
+    try {
+      return !!windowGlobalChild.getActor("SpecialPowers");
+    } catch (e) {
+      return false;
+    }
+  }, "wait for SpecialPowers to be reloaded");
+  ok(window.SpecialPowers, "SpecialPowers should be re-defined");
 });
 
 add_task(async function testUnsignedLangpackDisabled() {
