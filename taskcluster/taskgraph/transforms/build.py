@@ -168,6 +168,16 @@ def use_profile_data(config, jobs):
 
 
 @transforms.add
+def resolve_keys(config, jobs):
+    for job in jobs:
+        resolve_keyed_by(
+            job, 'use-sccache', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
+        )
+        yield job
+
+
+@transforms.add
 def enable_full_crashsymbols(config, jobs):
     """Enable full crashsymbols on jobs with
     'enable-full-crashsymbols' set to True and on release branches, or
