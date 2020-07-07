@@ -2199,6 +2199,15 @@ class ClassNames : public BinaryNode {
 };
 
 class ClassNode : public TernaryNode {
+ private:
+  LexicalScopeNode* innerScope() const {
+    return &kid3()->as<LexicalScopeNode>();
+  }
+
+  LexicalScopeNode* bodyScope() const {
+    return &innerScope()->scopeBody()->as<LexicalScopeNode>();
+  }
+
  public:
   ClassNode(ParseNode* names, ParseNode* heritage,
             LexicalScopeNode* memberBlock, const TokenPos& pos)
@@ -2220,14 +2229,18 @@ class ClassNode : public TernaryNode {
   ParseNode* heritage() const { return kid2(); }
 
   ListNode* memberList() const {
-    ListNode* list =
-        &kid3()->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
+    ListNode* list = &bodyScope()->scopeBody()->as<ListNode>();
     MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMemberList));
     return list;
   }
 
   LexicalScopeNode* scopeBindings() const {
-    LexicalScopeNode* scope = &kid3()->as<LexicalScopeNode>();
+    LexicalScopeNode* scope = innerScope();
+    return scope->isEmptyScope() ? nullptr : scope;
+  }
+
+  LexicalScopeNode* bodyScopeBindings() const {
+    LexicalScopeNode* scope = bodyScope();
     return scope->isEmptyScope() ? nullptr : scope;
   }
 };

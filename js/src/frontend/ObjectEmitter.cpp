@@ -456,12 +456,33 @@ bool ClassEmitter::emitScope(JS::Handle<LexicalScope::Data*> scopeBindings) {
   return true;
 }
 
+bool ClassEmitter::emitBodyScope(
+    JS::Handle<LexicalScope::Data*> scopeBindings) {
+  MOZ_ASSERT(propertyState_ == PropertyState::Start);
+  MOZ_ASSERT(classState_ == ClassState::Start ||
+             classState_ == ClassState::Scope);
+
+  bodyTdzCache_.emplace(bce_);
+
+  bodyScope_.emplace(bce_);
+  if (!bodyScope_->enterLexical(bce_, ScopeKind::Lexical, scopeBindings)) {
+    return false;
+  }
+
+#ifdef DEBUG
+  classState_ = ClassState::BodyScope;
+#endif
+
+  return true;
+}
+
 bool ClassEmitter::emitClass(JS::Handle<JSAtom*> name,
                              JS::Handle<JSAtom*> nameForAnonymousClass,
                              bool hasNameOnStack) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
-             classState_ == ClassState::Scope);
+             classState_ == ClassState::Scope ||
+             classState_ == ClassState::BodyScope);
   MOZ_ASSERT_IF(nameForAnonymousClass || hasNameOnStack, !name);
   MOZ_ASSERT(!(nameForAnonymousClass && hasNameOnStack));
 
@@ -488,11 +509,12 @@ bool ClassEmitter::emitDerivedClass(JS::Handle<JSAtom*> name,
                                     bool hasNameOnStack) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
-             classState_ == ClassState::Scope);
+             classState_ == ClassState::Scope ||
+             classState_ == ClassState::BodyScope);
   MOZ_ASSERT_IF(nameForAnonymousClass || hasNameOnStack, !name);
   MOZ_ASSERT(!nameForAnonymousClass || !hasNameOnStack);
 
-  //                [stack]
+  //                [stack] HERITAGE
 
   name_ = name;
   nameForAnonymousClass_ = nameForAnonymousClass;
@@ -841,6 +863,16 @@ bool ClassEmitter::emitBinding() {
 bool ClassEmitter::emitEnd(Kind kind) {
   MOZ_ASSERT(classState_ == ClassState::BoundName);
   //                [stack] CTOR
+
+  if (bodyScope_.isSome()) {
+    MOZ_ASSERT(bodyTdzCache_.isSome());
+
+    if (!bodyScope_->leave(bce_)) {
+      return false;
+    }
+    bodyScope_.reset();
+    bodyTdzCache_.reset();
+  }
 
   if (innerScope_.isSome()) {
     MOZ_ASSERT(tdzCache_.isSome());

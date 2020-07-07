@@ -7389,6 +7389,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   Node nameNode = null();
   Node classHeritage = null();
   LexicalScopeNodeType classBlock = null();
+  LexicalScopeNodeType classBodyBlock = null();
   uint32_t classEndOffset;
   {
     // A named class creates a new lexical scope with a const binding of the
@@ -7419,49 +7420,64 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return null();
     }
 
-    ListNodeType classMembers = handler_.newClassMemberList(pos().begin);
-    if (!classMembers) {
-      return null();
-    }
-
-    ClassFields classFields{};
-    for (;;) {
-      bool done;
-      if (!classMember(yieldHandling, classStmt, className, classStartOffset,
-                       hasHeritage, classFields, classMembers, &done)) {
+    {
+      ParseContext::Statement bodyScopeStmt(pc_, StatementKind::Block);
+      ParseContext::Scope bodyScope(this);
+      if (!bodyScope.init(pc_)) {
         return null();
       }
-      if (done) {
-        break;
-      }
-    }
 
-    if (classFields.instanceFieldKeys > 0) {
-      if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Let,
-                            namePos)) {
+      ListNodeType classMembers = handler_.newClassMemberList(pos().begin);
+      if (!classMembers) {
         return null();
       }
-    }
 
-    if (classFields.staticFields > 0) {
-      if (!noteDeclaredName(cx_->names().dotStaticInitializers,
-                            DeclarationKind::Let, namePos)) {
+      ClassFields classFields{};
+      for (;;) {
+        bool done;
+        if (!classMember(yieldHandling, classStmt, className, classStartOffset,
+                         hasHeritage, classFields, classMembers, &done)) {
+          return null();
+        }
+        if (done) {
+          break;
+        }
+      }
+
+      if (classFields.instanceFieldKeys > 0) {
+        if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Let,
+                              namePos)) {
+          return null();
+        }
+      }
+
+      if (classFields.staticFields > 0) {
+        if (!noteDeclaredName(cx_->names().dotStaticInitializers,
+                              DeclarationKind::Let, namePos)) {
+          return null();
+        }
+      }
+
+      if (classFields.staticFieldKeys > 0) {
+        if (!noteDeclaredName(cx_->names().dotStaticFieldKeys,
+                              DeclarationKind::Let, namePos)) {
+          return null();
+        }
+      }
+
+      classEndOffset = pos().end;
+      if (!finishClassConstructor(classStmt, className, hasHeritage,
+                                  classStartOffset, classEndOffset, classFields,
+                                  classMembers)) {
         return null();
       }
-    }
 
-    if (classFields.staticFieldKeys > 0) {
-      if (!noteDeclaredName(cx_->names().dotStaticFieldKeys,
-                            DeclarationKind::Let, namePos)) {
+      classBodyBlock = finishLexicalScope(bodyScope, classMembers);
+      if (!classBodyBlock) {
         return null();
       }
-    }
 
-    classEndOffset = pos().end;
-    if (!finishClassConstructor(classStmt, className, hasHeritage,
-                                classStartOffset, classEndOffset, classFields,
-                                classMembers)) {
-      return null();
+      // Pop the class body scope
     }
 
     if (className) {
@@ -7476,7 +7492,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       }
     }
 
-    classBlock = finishLexicalScope(innerScope, classMembers);
+    classBlock = finishLexicalScope(innerScope, classBodyBlock);
     if (!classBlock) {
       return null();
     }
