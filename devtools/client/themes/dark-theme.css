@@ -198,6 +198,9 @@ body {
 .cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
   border-left: solid 1px #fff;
 }
+.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor.CodeMirror-secondarycursor {
+  border-left-color: #aaa;
+}
 
 .cm-s-mozilla.CodeMirror-focused .CodeMirror-selected { /* selected text (focused) */
   background: var(--theme-selection-background-hover);
