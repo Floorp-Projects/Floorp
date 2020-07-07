@@ -168,11 +168,10 @@ class VoidWriter(object):
         pass
 
 
-def generate_context_hash(topsrcdir, image_path, image_name, args=None):
+def generate_context_hash(topsrcdir, image_path, args=None):
     """Generates a sha256 hash for context directory used to build an image."""
 
-    return stream_context_tar(
-        topsrcdir, image_path, VoidWriter(), image_name, args)
+    return stream_context_tar(topsrcdir, image_path, VoidWriter(), args=args)
 
 
 class HashingWriter(object):
@@ -190,12 +189,11 @@ class HashingWriter(object):
         return six.ensure_text(self._hash.hexdigest())
 
 
-def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):
+def create_context_tar(topsrcdir, context_dir, out_path, args=None):
     """Create a context tarball.
 
     A directory ``context_dir`` containing a Dockerfile will be assembled into
-    a gzipped tar file at ``out_path``. Files inside the archive will be
-    prefixed by directory ``prefix``.
+    a gzipped tar file at ``out_path``.
 
     We also scan the source Dockerfile for special syntax that influences
     context generation.
@@ -214,10 +212,12 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):
     Returns the SHA-256 hex digest of the created archive.
     """
     with open(out_path, 'wb') as fh:
-        return stream_context_tar(topsrcdir, context_dir, fh, prefix, args)
+        return stream_context_tar(
+            topsrcdir, context_dir, fh, image_name=os.path.basename(out_path), args=args,
+        )
 
 
-def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
+def stream_context_tar(topsrcdir, context_dir, out_file, image_name=None, args=None):
     """Like create_context_tar, but streams the tar file to the `out_file` file
     object."""
     archive_files = {}
@@ -229,8 +229,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
     for root, dirs, files in os.walk(context_dir):
         for f in files:
             source_path = os.path.join(root, f)
-            rel = source_path[len(context_dir) + 1:]
-            archive_path = os.path.join(prefix, rel)
+            archive_path = source_path[len(context_dir) + 1:]
             archive_files[archive_path] = source_path
 
     # Parse Dockerfile for special syntax of extra files to include.
@@ -268,17 +267,16 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
                     for f in files:
                         source_path = os.path.join(root, f)
                         rel = source_path[len(fs_path) + 1:]
-                        archive_path = os.path.join(prefix, 'topsrcdir', p, rel)
+                        archive_path = os.path.join('topsrcdir', p, rel)
                         archive_files[archive_path] = source_path
             else:
-                archive_path = os.path.join(prefix, 'topsrcdir', p)
+                archive_path = os.path.join('topsrcdir', p)
                 archive_files[archive_path] = fs_path
 
-    archive_files[os.path.join(prefix, 'Dockerfile')] = \
-        GeneratedFile(b''.join(six.ensure_binary(s) for s in content))
+    archive_files['Dockerfile'] = GeneratedFile(b''.join(six.ensure_binary(s) for s in content))
 
     writer = HashingWriter(out_file)
-    create_tar_gz_from_files(writer, archive_files, '%s.tar.gz' % prefix)
+    create_tar_gz_from_files(writer, archive_files, image_name)
     return writer.hexdigest()
 
 
