@@ -585,6 +585,9 @@ class GitRepository(Repository):
         finally:
             self._run('reset', 'HEAD~')
 
+    def set_config(self, name, value):
+        self._run('config', name, value)
+
 
 def get_repository_object(path, hg='hg', git='git'):
     '''Get a repository object for the repository at `path`.
