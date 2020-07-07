@@ -754,6 +754,49 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#personalizationVersionOverride", () => {
+    it("should dispatch setPref", async () => {
+      sandbox.spy(feed.store, "dispatch");
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.personalization.version": 2,
+          },
+        },
+      });
+
+      feed.personalizationVersionOverride(false);
+
+      assert.calledWithMatch(feed.store.dispatch, {
+        data: {
+          name: "discoverystream.personalization.overrideVersion",
+          value: 1,
+        },
+        type: at.SET_PREF,
+      });
+    });
+    it("should dispatch CLEAR_PREF", async () => {
+      sandbox.spy(feed.store, "dispatch");
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.personalization.version": 2,
+            "discoverystream.personalization.overrideVersion": 1,
+          },
+        },
+      });
+
+      feed.personalizationVersionOverride(true);
+
+      assert.calledWithMatch(feed.store.dispatch, {
+        data: {
+          name: "discoverystream.personalization.overrideVersion",
+        },
+        type: at.CLEAR_PREF,
+      });
+    });
+  });
+
   describe("#loadSpocs", () => {
     beforeEach(() => {
       feed._prefCache = {
@@ -870,6 +913,18 @@ describe("DiscoveryStreamFeed", () => {
         feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
         { id: "data", min_score: 0, score: 1 }
       );
+    });
+    it("should call personalizationVersionOverride with feature_flags", async () => {
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve());
+      sandbox.stub(feed, "personalizationVersionOverride").returns();
+      sandbox
+        .stub(feed, "fetchFromEndpoint")
+        .resolves({ settings: { feature_flags: {} }, spocs: [{ id: "data" }] });
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      await feed.loadSpocs(feed.store.dispatch);
+
+      assert.calledOnce(feed.personalizationVersionOverride);
     });
     it("should return expected data if normalizeSpocsItems returns no spoc data", async () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
