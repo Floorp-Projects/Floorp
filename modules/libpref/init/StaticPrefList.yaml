@@ -2647,6 +2647,11 @@
   value: false
   mirror: always
 
+- name: dom.security.unexpected_system_load_telemetry_enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for selection event APIs enabled?
 - name: dom.select_events.enabled
   type: bool
