@@ -17,6 +17,8 @@ class nsZipItem;
 
 namespace mozilla {
 
+class CacheAwareZipReader;
+
 class FileLocation {
  public:
   /**
@@ -27,7 +29,7 @@ class FileLocation {
    * - in archives within archives
    * As such, it stores a path within an archive, as well as the archive
    * path itself, or the complete file path alone when on a filesystem.
-   * When the archive is in an archive, an nsZipArchive is stored instead
+   * When the archive is in an archive, an CacheAwareZipReader is stored instead
    * of a file path.
    */
   FileLocation();
@@ -45,9 +47,14 @@ class FileLocation {
 
   /**
    * Constructors for path within an archive. The archive can be given either
-   * as nsIFile or nsZipArchive.
+   * as nsIFile or CacheAwareZipReader.
    */
-  FileLocation(nsIFile* aZip, const char* aPath);
+  FileLocation(nsIFile* aFile, const char* aPath);
+
+  /**
+   * Constructors for path within a zip archive.
+   */
+  FileLocation(CacheAwareZipReader* aZip, const char* aPath);
 
   FileLocation(nsZipArchive* aZip, const char* aPath);
 
@@ -61,9 +68,11 @@ class FileLocation {
    */
   void Init(nsIFile* aFile);
 
-  void Init(nsIFile* aZip, const char* aPath);
+  void Init(nsIFile* aFile, const char* aPath);
 
   void Init(nsZipArchive* aZip, const char* aPath);
+
+  void Init(CacheAwareZipReader* aZip, const char* aPath);
 
   /**
    * Returns an URI string corresponding to the file location
@@ -78,7 +87,7 @@ class FileLocation {
    */
   already_AddRefed<nsIFile> GetBaseFile();
 
-  nsZipArchive* GetBaseZip() { return mBaseZip; }
+  CacheAwareZipReader* GetBaseZip() { return mBaseZip; }
 
   /**
    * Returns whether the "base file" (see GetBaseFile) is an archive
@@ -119,7 +128,7 @@ class FileLocation {
    protected:
     friend class FileLocation;
     nsZipItem* mItem;
-    RefPtr<nsZipArchive> mZip;
+    RefPtr<CacheAwareZipReader> mZip;
     mozilla::AutoFDClose mFd;
   };
 
@@ -131,7 +140,7 @@ class FileLocation {
 
  private:
   nsCOMPtr<nsIFile> mBaseFile;
-  RefPtr<nsZipArchive> mBaseZip;
+  RefPtr<CacheAwareZipReader> mBaseZip;
   nsCString mPath;
 }; /* class FileLocation */
 
