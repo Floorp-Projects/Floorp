@@ -1424,7 +1424,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   // For the given private name, search the enclosing scope chain
   // to see if there's an associated binding, and if not, issue an error.
   auto verifyPrivateName = [](JSContext* cx, auto* parser,
-                              js::Scope* enclosingScope,
+                              HandleScope enclosingScope,
                               UnboundPrivateName unboundName) {
     // Walk the enclosing scope chain looking for this private name;
     for (ScopeIter si(enclosingScope); si; si++) {
@@ -1452,7 +1452,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return false;
   };
 
-  js::Scope* enclosingScope = evalSc->compilationEnclosingScope();
+  RootedScope enclosingScope(cx_, evalSc->compilationEnclosingScope());
   // It's important that the unbound private names are sorted, as we
   // want our errors to always be issued to the first textually.
   for (UnboundPrivateName unboundName : unboundPrivateNames) {
