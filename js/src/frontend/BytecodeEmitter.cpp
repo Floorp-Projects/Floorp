@@ -1675,8 +1675,23 @@ bool BytecodeEmitter::emitGetNameAtLocation(Handle<JSAtom*> name,
 }
 
 bool BytecodeEmitter::emitGetName(NameNode* name) {
+  MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
+
   RootedAtom nameAtom(cx, name->name());
   return emitGetName(nameAtom);
+}
+
+bool BytecodeEmitter::emitGetPrivateName(NameNode* name) {
+  MOZ_ASSERT(name->isKind(ParseNodeKind::PrivateName));
+
+  RootedAtom nameAtom(cx, name->name());
+
+  // The parser ensures the private name is present on the environment chain.
+  NameLocation location = lookupName(nameAtom);
+  MOZ_ASSERT(location.kind() == NameLocation::Kind::FrameSlot ||
+             location.kind() == NameLocation::Kind::EnvironmentCoordinate);
+
+  return emitGetNameAtLocation(nameAtom, location);
 }
 
 bool BytecodeEmitter::emitTDZCheckIfNeeded(HandleAtom name,
@@ -10640,6 +10655,12 @@ bool BytecodeEmitter::emitTree(
 
     case ParseNodeKind::Name:
       if (!emitGetName(&pn->as<NameNode>())) {
+        return false;
+      }
+      break;
+
+    case ParseNodeKind::PrivateName:
+      if (!emitGetPrivateName(&pn->as<NameNode>())) {
         return false;
       }
       break;

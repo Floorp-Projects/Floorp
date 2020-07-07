@@ -531,6 +531,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return emitGetNameAtLocation(name, lookupName(name));
   }
   MOZ_MUST_USE bool emitGetName(NameNode* name);
+  MOZ_MUST_USE bool emitGetPrivateName(NameNode* name);
 
   MOZ_MUST_USE bool emitTDZCheckIfNeeded(HandleAtom name,
                                          const NameLocation& loc,

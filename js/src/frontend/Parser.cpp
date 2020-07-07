@@ -7140,8 +7140,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       classFields.instanceFields++;
     }
 
-    FunctionNodeType initializer =
-        fieldInitializerOpt(propName, propAtom, classFields, isStatic);
+    FunctionNodeType initializer = fieldInitializerOpt(
+        propName, propAtom, classFields, isStatic, hasHeritage);
     if (!initializer) {
       return false;
     }
@@ -7688,10 +7688,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
-GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
-                                                       HandleAtom propAtom,
-                                                       ClassFields& classFields,
-                                                       bool isStatic) {
+GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
+    Node propName, HandleAtom propAtom, ClassFields& classFields, bool isStatic,
+    HasHeritage hasHeritage) {
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
                               TokenStream::SlashIsDiv)) {
@@ -7837,6 +7836,23 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
 
     propAssignFieldAccess = handler_.newPropertyByValue(
         propAssignThis, fieldKeyValue, wholeInitializerPos.end);
+    if (!propAssignFieldAccess) {
+      return null();
+    }
+  } else if (handler_.isPrivateName(propName)) {
+    // Private fields within derived classes need to check for already present
+    // private fields (see Step 4 of the proposal specification algorithm
+    // PrivateFieldAdd)
+    MOZ_ASSERT(hasHeritage == HasHeritage::No,
+               "derived classes don't yet support private fields");
+
+    RootedPropertyName privateName(cx_, propAtom->asPropertyName());
+    if (!noteUsedName(privateName)) {
+      return null();
+    }
+
+    propAssignFieldAccess = handler_.newPropertyByValue(
+        propAssignThis, propName, wholeInitializerPos.end);
     if (!propAssignFieldAccess) {
       return null();
     }
