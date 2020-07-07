@@ -49,7 +49,6 @@ window.Application = {
     // bind event handlers to `this`
     this.handleOnNavigate = this.handleOnNavigate.bind(this);
     this.updateDomain = this.updateDomain.bind(this);
-    this.updateCanDebugWorkers = this.updateCanDebugWorkers.bind(this);
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
 
@@ -74,14 +73,11 @@ window.Application = {
     this.workersListener = new WorkersListener(this.client.mainRoot);
     this.workersListener.addListener(this.safeUpdateWorkers);
 
-    this.deviceFront = await this.client.mainRoot.getFront("device");
-    await this.updateCanDebugWorkers();
-    if (this.deviceFront) {
-      this.canDebugWorkersListener = this.deviceFront.on(
-        "can-debug-sw-updated",
-        this.updateCanDebugWorkers
-      );
-    }
+    const deviceFront = await this.client.mainRoot.getFront("device");
+    const { canDebugServiceWorkers } = await deviceFront.getDescription();
+    this.actions.updateCanDebugWorkers(
+      canDebugServiceWorkers && services.features.doesDebuggerSupportWorkers
+    );
 
     // awaiting for watchTargets will return the targets that are currently
     // available, so we can have our first render with all the data ready
@@ -114,16 +110,6 @@ window.Application = {
     this.actions.updateDomain(this.toolbox.target.url);
   },
 
-  async updateCanDebugWorkers() {
-    const canDebugWorkers = this.deviceFront
-      ? (await this.deviceFront.getDescription()).canDebugServiceWorkers
-      : false;
-
-    this.actions.updateCanDebugWorkers(
-      canDebugWorkers && services.features.doesDebuggerSupportWorkers
-    );
-  },
-
   setupTarget(targetFront) {
     this.handleOnNavigate(); // update domain and manifest for the new target
     targetFront.on("navigate", this.handleOnNavigate);
@@ -151,9 +137,6 @@ window.Application = {
 
   destroy() {
     this.workersListener.removeListener();
-    if (this.deviceFront) {
-      this.deviceFront.off("can-debug-sw-updated", this.updateCanDebugWorkers);
-    }
 
     this.toolbox.targetList.unwatchTargets(
       [this.toolbox.targetList.TYPES.FRAME],
@@ -168,7 +151,6 @@ window.Application = {
     this.toolbox = null;
     this.client = null;
     this.workersListener = null;
-    this.deviceFront = null;
     this._destroyed = true;
   },
 };
