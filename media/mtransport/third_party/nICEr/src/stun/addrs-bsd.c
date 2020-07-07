@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <netinet6/in6_var.h>
 
 static int
 stun_ifaddr_get_v6_flags(struct ifaddrs *ifaddr)
