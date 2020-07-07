@@ -612,8 +612,9 @@ public class ContentBlocking {
             final String matchedList =
                 blockedList != null ? blockedList : loadedList;
 
+            // Note: Even if loadedList is non-empty it does not necessarily
+            // mean that the event is not a blocking event.
             final boolean blocking =
-                loadedList.isEmpty() &&
                 (blockedList != null ||
                  error != 0L ||
                  ContentBlocking.isBlockingGeckoCbCat(category));
