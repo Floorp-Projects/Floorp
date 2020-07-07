@@ -2265,6 +2265,17 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     return true;
   }
 
+  // Bug 1637091: We can do better and skip this flex item's final reflow if
+  // both this flex item's block-size and overflow areas can fit the
+  // aAvailableBSizeForItem.
+  if (aAvailableBSizeForItem != NS_UNCONSTRAINEDSIZE) {
+    FLEX_LOG(
+        "[frag] Flex item %p needed both a measuring reflow and a final "
+        "reflow due to constrained available block-size",
+        mFrame);
+    return true;
+  }
+
   // Flex item's final content-box size (in terms of its own writing-mode):
   const LogicalSize finalSize = mIsInlineAxisMainAxis
                                     ? LogicalSize(mWM, mMainSize, mCrossSize)
@@ -2291,17 +2302,6 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
       FLEX_LOG(
           "[perf] Flex item %p needed both a measuring reflow and a final "
           "reflow due to BSize potentially becoming definite",
-          mFrame);
-      return true;
-    }
-
-    // Bug 1637091: We can do better and skip this flex item's final reflow if
-    // both this flex item's block-size and overflow areas can fit the
-    // aAvailableBSizeForItem.
-    if (aAvailableBSizeForItem != NS_UNCONSTRAINEDSIZE) {
-      FLEX_LOG(
-          "[frag] Flex item %p needed both a measuring reflow and a final "
-          "reflow due to constrained available block-size",
           mFrame);
       return true;
     }
