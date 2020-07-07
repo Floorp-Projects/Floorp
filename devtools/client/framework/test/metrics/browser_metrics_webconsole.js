@@ -26,7 +26,7 @@ add_task(async function() {
     webconsoleLoader.loader,
   ];
 
-  const whitelist = [
+  const allowedDupes = [
     "@loader/unload.js",
     "@loader/options.js",
     "chrome.js",
@@ -47,7 +47,7 @@ add_task(async function() {
     "resource://devtools/client/shared/vendor/redux.js",
     "resource://devtools/client/shared/redux/middleware/thunk-with-options.js",
   ];
-  runDuplicatedModulesTest(loaders, whitelist);
+  runDuplicatedModulesTest(loaders, allowedDupes);
 
   runMetricsTest({
     filterString: "devtools/client/webconsole",

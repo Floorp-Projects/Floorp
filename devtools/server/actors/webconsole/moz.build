@@ -11,11 +11,11 @@ DIRS += [
 DevToolsModules(
     'commands.js',
     'content-process-forward.js',
-    'eager-ecma-whitelist.js',
-    'eager-function-whitelist.js',
+    'eager-ecma-allowlist.js',
+    'eager-function-allowlist.js',
     'eval-with-debugger.js',
     'message-manager-mock.js',
     'utils.js',
-    'webidl-pure-whitelist.js',
+    'webidl-pure-allowlist.js',
     'worker-listeners.js',
 )

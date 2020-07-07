@@ -1,7 +1,7 @@
 """
 This script parses mozilla-central's WebIDL bindings and writes a JSON-formatted
 subset of the function bindings to the file
-"devtools/server/actors/webconsole/webidl-pure-whitelist.js" so that they may
+"devtools/server/actors/webconsole/webidl-pure-allowlist.js" so that they may
 be used by the devtools for eager evaluation processing.
 
 Run this script via
@@ -10,7 +10,7 @@ Run this script via
 
 with a mozconfig that references a built non-artifact build, and then run
 
-> ./mach eslint --fix devtools/server/actors/webconsole/webidl-pure-whitelist.js
+> ./mach eslint --fix devtools/server/actors/webconsole/webidl-pure-allowlist.js
 
 to format the file properly.
 """
@@ -21,10 +21,10 @@ import json
 import WebIDL
 import buildconfig
 
-# This is an explicit whitelist of interfaces to load [Pure] and [Constant]
+# This is an explicit list of interfaces to load [Pure] and [Constant]
 # annotation for. There are a bunch of things that are pure in other interfaces
 # that we don't care about in the context of the devtools.
-INTERFACE_WHITELIST = set([
+INTERFACE_ALLOWLIST = set([
   "Document",
   "Node",
   "DOMTokenList",
@@ -49,7 +49,7 @@ module.exports = %(pure_data)s;
 
 output_file = path.join(
   buildconfig.topsrcdir,
-  "devtools/server/actors/webconsole/webidl-pure-whitelist.js"
+  "devtools/server/actors/webconsole/webidl-pure-allowlist.js"
 )
 
 input_file = path.join(buildconfig.topobjdir, "dom/bindings/file-lists.json")
@@ -77,7 +77,7 @@ for result in results:
       if member.isMethod() and member.affects == "Nothing":
         name = member.identifier.name
 
-        if ((INTERFACE_WHITELIST and not iface in INTERFACE_WHITELIST) or
+        if ((INTERFACE_ALLOWLIST and not iface in INTERFACE_ALLOWLIST) or
             name.startswith("_")):
           continue
         if not iface in output:

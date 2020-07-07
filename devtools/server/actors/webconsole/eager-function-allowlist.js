@@ -6,7 +6,7 @@
 
 const { CC, Cu } = require("chrome");
 
-const idlPureWhitelist = require("devtools/server/actors/webconsole/webidl-pure-whitelist.js");
+const idlPureAllowlist = require("devtools/server/actors/webconsole/webidl-pure-allowlist");
 
 // TODO: Bug 1616013 - Move more of these to be part of the pure list.
 const customEagerFunctions = {
@@ -32,7 +32,7 @@ const customEagerFunctions = {
 };
 
 const mergedFunctions = {};
-for (const [key, values] of Object.entries(idlPureWhitelist)) {
+for (const [key, values] of Object.entries(idlPureAllowlist)) {
   mergedFunctions[key] = [...values];
 }
 for (const [key, values] of Object.entries(customEagerFunctions)) {
