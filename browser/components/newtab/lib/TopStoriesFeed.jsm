@@ -81,7 +81,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
   }
 
   async onInit() {
-    SectionsManager.enableSection(SECTION_ID);
+    SectionsManager.enableSection(SECTION_ID, true /* isStartup */);
     if (this.discoveryStreamEnabled) {
       return;
     }

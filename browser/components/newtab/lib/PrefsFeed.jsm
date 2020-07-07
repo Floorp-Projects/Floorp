@@ -128,7 +128,13 @@ this.PrefsFeed = class PrefsFeed {
 
     // Set the initial state of all prefs in redux
     this.store.dispatch(
-      ac.BroadcastToContent({ type: at.PREFS_INITIAL_VALUES, data: values })
+      ac.BroadcastToContent({
+        type: at.PREFS_INITIAL_VALUES,
+        data: values,
+        meta: {
+          isStartup: true,
+        },
+      })
     );
   }
 
