@@ -105,8 +105,18 @@ class EncryptedMediaParent extends JSWindowActorParent {
       return;
     }
     let { status, keySystem } = parsedData;
-    // Don't need to show if disabled or keysystem not visible.
-    if (!this.isUiEnabled() || !this.isKeySystemVisible(keySystem)) {
+
+    // First, see if we need to do updates. We don't need to do anything for
+    // hidden keysystems:
+    if (!this.isKeySystemVisible(keySystem)) {
+      return;
+    }
+    if (status == "cdm-not-installed") {
+      Services.obs.notifyObservers(browser, "EMEVideo:CDMMissing");
+    }
+
+    // Don't need to show UI if disabled.
+    if (!this.isUiEnabled()) {
       return;
     }
 
