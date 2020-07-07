@@ -441,7 +441,7 @@ ContentBlocking::CompleteAllowAccessFor(
   // We hardcode this block reason since the first-party storage access
   // permission is granted for the purpose of blocking trackers.
   // Note that if aReason is eOpenerAfterUserInteraction and the
-  // trackingPrincipal is not in a blacklist, we don't check the
+  // trackingPrincipal is not in a blocklist, we don't check the
   // user-interaction state, because it could be that the current process has
   // just sent the request to store the user-interaction permission into the
   // parent, without having received the permission itself yet.
@@ -958,7 +958,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
   } else {
     MOZ_ASSERT(CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
     if (RejectForeignAllowList::Check(document)) {
-      LOG(("This window is whitelisted for reject foreign"));
+      LOG(("This window is exceptionlisted for reject foreign"));
       return true;
     }
 
@@ -1168,7 +1168,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   } else {
     MOZ_ASSERT(CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
     if (httpChannel && RejectForeignAllowList::Check(httpChannel)) {
-      LOG(("This channel is whitelisted"));
+      LOG(("This channel is exceptionlisted"));
       return true;
     }
     blockedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;

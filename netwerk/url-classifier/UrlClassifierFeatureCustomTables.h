@@ -19,15 +19,15 @@ class UrlClassifierFeatureCustomTables : public nsIUrlClassifierFeature {
   NS_DECL_NSIURLCLASSIFIERFEATURE
 
   explicit UrlClassifierFeatureCustomTables(
-      const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
-      const nsTArray<nsCString>& aWhitelistTables);
+      const nsACString& aName, const nsTArray<nsCString>& aBlocklistTables,
+      const nsTArray<nsCString>& aEntitylistTables);
 
  private:
   virtual ~UrlClassifierFeatureCustomTables();
 
   nsCString mName;
-  nsTArray<nsCString> mBlacklistTables;
-  nsTArray<nsCString> mWhitelistTables;
+  nsTArray<nsCString> mBlocklistTables;
+  nsTArray<nsCString> mEntitylistTables;
 };
 
 }  // namespace mozilla

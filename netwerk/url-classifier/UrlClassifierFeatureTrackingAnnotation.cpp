@@ -21,18 +21,18 @@ namespace {
 
 #define TRACKING_ANNOTATION_FEATURE_NAME "tracking-annotation"
 
-#define URLCLASSIFIER_ANNOTATION_BLACKLIST \
+#define URLCLASSIFIER_ANNOTATION_BLOCKLIST \
   "urlclassifier.trackingAnnotationTable"
-#define URLCLASSIFIER_ANNOTATION_BLACKLIST_TEST_ENTRIES \
+#define URLCLASSIFIER_ANNOTATION_BLOCKLIST_TEST_ENTRIES \
   "urlclassifier.trackingAnnotationTable.testEntries"
-#define URLCLASSIFIER_ANNOTATION_WHITELIST \
+#define URLCLASSIFIER_ANNOTATION_ENTITYLIST \
   "urlclassifier.trackingAnnotationWhitelistTable"
-#define URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES \
+#define URLCLASSIFIER_ANNOTATION_ENTITYLIST_TEST_ENTRIES \
   "urlclassifier.trackingAnnotationWhitelistTable.testEntries"
-#define URLCLASSIFIER_TRACKING_ANNOTATION_SKIP_URLS \
+#define URLCLASSIFIER_TRACKING_ANNOTATION_EXCEPTION_URLS \
   "urlclassifier.trackingAnnotationSkipURLs"
-#define TABLE_ANNOTATION_BLACKLIST_PREF "annotation-blacklist-pref"
-#define TABLE_ANNOTATION_WHITELIST_PREF "annotation-whitelist-pref"
+#define TABLE_ANNOTATION_BLOCKLIST_PREF "annotation-blacklist-pref"
+#define TABLE_ANNOTATION_ENTITYLIST_PREF "annotation-whitelist-pref"
 
 StaticRefPtr<UrlClassifierFeatureTrackingAnnotation> gFeatureTrackingAnnotation;
 
@@ -41,13 +41,13 @@ StaticRefPtr<UrlClassifierFeatureTrackingAnnotation> gFeatureTrackingAnnotation;
 UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
     : UrlClassifierFeatureBase(
           nsLiteralCString(TRACKING_ANNOTATION_FEATURE_NAME),
-          nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLACKLIST),
-          nsLiteralCString(URLCLASSIFIER_ANNOTATION_WHITELIST),
-          nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLACKLIST_TEST_ENTRIES),
-          nsLiteralCString(URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES),
-          nsLiteralCString(TABLE_ANNOTATION_BLACKLIST_PREF),
-          nsLiteralCString(TABLE_ANNOTATION_WHITELIST_PREF),
-          nsLiteralCString(URLCLASSIFIER_TRACKING_ANNOTATION_SKIP_URLS)) {}
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLOCKLIST),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_ENTITYLIST),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLOCKLIST_TEST_ENTRIES),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_ENTITYLIST_TEST_ENTRIES),
+          nsLiteralCString(TABLE_ANNOTATION_BLOCKLIST_PREF),
+          nsLiteralCString(TABLE_ANNOTATION_ENTITYLIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_TRACKING_ANNOTATION_EXCEPTION_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureTrackingAnnotation::Name() {
   return TRACKING_ANNOTATION_FEATURE_NAME;
@@ -161,15 +161,15 @@ UrlClassifierFeatureTrackingAnnotation::GetURIByListType(
   NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    *aURIType = nsIUrlClassifierFeature::blacklistURI;
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    *aURIType = nsIUrlClassifierFeature::blocklistURI;
     return aChannel->GetURI(aURI);
   }
 
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::entitylist);
 
-  *aURIType = nsIUrlClassifierFeature::pairwiseWhitelistURI;
-  return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
+  *aURIType = nsIUrlClassifierFeature::pairwiseEntitylistURI;
+  return UrlClassifierCommon::CreatePairwiseEntityListURI(aChannel, aURI);
 }
 
 }  // namespace net

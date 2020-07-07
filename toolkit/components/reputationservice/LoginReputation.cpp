@@ -134,7 +134,7 @@ RefPtr<ReputationPromise> LoginWhitelist::QueryLoginWhitelist(
   features.AppendElement(feature);
 
   rv = uriClassifier->AsyncClassifyLocalWithFeatures(
-      uri, features, nsIUrlClassifierFeature::whitelist, this);
+      uri, features, nsIUrlClassifierFeature::entitylist, this);
   if (NS_FAILED(rv)) {
     return p;
   }

@@ -412,16 +412,16 @@ bool LookupCache::IsCanonicalizedIP(const nsACString& aHost) {
   return false;
 }
 
-// This is used when the URL is created by CreatePairwiseWhiteListURI(),
+// This is used when the URL is created by CreatePairwiseEntityListURI(),
 // which returns an URI like "toplevel.page/?resource=third.party.domain"
 // The fragment rule for the hostname(toplevel.page) is still the same
 // as Safe Browsing protocol.
 // The difference is that we always keep the path and query string and
 // generate an additional fragment by removing the leading component of
 // third.party.domain. This is to make sure we can find a match when a
-// whitelisted domain is eTLD.
+// exceptionlisted domain is eTLD.
 /* static */
-nsresult LookupCache::GetLookupWhitelistFragments(
+nsresult LookupCache::GetLookupEntitylistFragments(
     const nsACString& aSpec, nsTArray<nsCString>* aFragments) {
   aFragments->Clear();
 
@@ -434,7 +434,7 @@ nsresult LookupCache::GetLookupWhitelistFragments(
 
   // Fallback to use default fragment rule when the URL doesn't contain
   // "/?resoruce=" because this means the URL is not generated in
-  // CreatePairwiseWhiteListURI()
+  // CreatePairwiseEntityListURI()
   if (!FindInReadable("/?resource="_ns, iter, iter_end)) {
     return GetLookupFragments(aSpec, aFragments);
   }
@@ -470,7 +470,7 @@ nsresult LookupCache::GetLookupWhitelistFragments(
    * Since the number of the domain name part in the third-party URL searching
    * is always less than or equal to eTLD+1, we remove the leading
    * component from the third-party domain to make sure we can find a match
-   * if the whitelisted domain stoed in the entity list is eTLD.
+   * if the exceptionlisted domain stoed in the entity list is eTLD.
    */
   nsTArray<nsCString> thirdPartyURLs;
   thirdPartyURLs.AppendElement(thirdPartyURL);
@@ -590,7 +590,7 @@ nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
   if (!pathToAdd.Equals(path)) {
     paths.AppendElement(path);
   }
-  // Check an empty path (for whole-domain blacklist entries)
+  // Check an empty path (for whole-domain blocklist entries)
   if (!paths.Contains(EmptyCString())) {
     paths.AppendElement(EmptyCString());
   }
@@ -1025,7 +1025,7 @@ nsresult LookupCacheV2::ClearLegacyFile() {
 nsCString LookupCacheV2::GetPrefixSetSuffix() const { return ".vlpset"_ns; }
 
 // Support creating built-in entries for phsihing, malware, unwanted, harmful,
-// tracking/tracking whitelist and flash block tables.
+// tracking/tracking exceptionlist and flash block tables.
 //
 nsresult LookupCacheV2::LoadMozEntries() {
   // We already have the entries, return
@@ -1052,7 +1052,7 @@ nsresult LookupCacheV2::LoadMozEntries() {
     entries.AppendElement("trackertest.org/"_ns);
     entries.AppendElement("itisatracker.org/"_ns);
   } else if (mTableName.EqualsLiteral("moztest-trackwhite-simple")) {
-    // Entries for tracking whitelist table
+    // Entries for tracking entitylist table
     entries.AppendElement("itisatrap.org/?resource=itisatracker.org"_ns);
   } else if (mTableName.EqualsLiteral("moztest-block-simple")) {
     // Entries for flash block table

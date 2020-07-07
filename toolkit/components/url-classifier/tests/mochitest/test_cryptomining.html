@@ -15,13 +15,13 @@ var tests = [
   // All disabled.
   { config: [ false, false ], loadExpected: true },
 
-  // Just whitelisted.
+  // Just entitylisted.
   { config: [ false, true ], loadExpected: true },
 
-  // Just blacklisted.
+  // Just blocklisted.
   { config: [ true, false ], loadExpected: false },
 
-  // whitelist + blacklist: whitelist wins
+  // entitylist + blocklist: entitylist wins
   { config: [ true, true ], loadExpected: true },
 ];
 

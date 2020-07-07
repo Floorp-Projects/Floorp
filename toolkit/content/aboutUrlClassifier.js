@@ -111,8 +111,8 @@ var Search = {
 
     let listType =
       document.getElementById("search-listtype").value == 0
-        ? Ci.nsIUrlClassifierFeature.blacklist
-        : Ci.nsIUrlClassifierFeature.whitelist;
+        ? Ci.nsIUrlClassifierFeature.blocklist
+        : Ci.nsIUrlClassifierFeature.entitylist;
     classifier.asyncClassifyLocalWithFeatures(uri, features, listType, list =>
       Search.showResults(list)
     );

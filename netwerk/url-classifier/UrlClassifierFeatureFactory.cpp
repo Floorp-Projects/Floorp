@@ -287,11 +287,11 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
 /* static */
 already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureFactory::CreateFeatureWithTables(
-    const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
-    const nsTArray<nsCString>& aWhitelistTables) {
+    const nsACString& aName, const nsTArray<nsCString>& aBlocklistTables,
+    const nsTArray<nsCString>& aEntitylistTables) {
   nsCOMPtr<nsIUrlClassifierFeature> feature =
-      new UrlClassifierFeatureCustomTables(aName, aBlacklistTables,
-                                           aWhitelistTables);
+      new UrlClassifierFeatureCustomTables(aName, aBlocklistTables,
+                                           aEntitylistTables);
   return feature.forget();
 }
 

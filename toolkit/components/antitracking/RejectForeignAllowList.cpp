@@ -51,18 +51,18 @@ RejectForeignAllowList* RejectForeignAllowList::GetOrCreate() {
   if (!gRejectForeignAllowList) {
     gRejectForeignAllowList = new RejectForeignAllowList();
 
-    nsCOMPtr<nsIUrlClassifierSkipListService> skipListService =
-        do_GetService("@mozilla.org/url-classifier/skip-list-service;1");
-    if (skipListService) {
-      skipListService->RegisterAndRunSkipListObserver(
+    nsCOMPtr<nsIUrlClassifierExceptionListService> exceptionListService =
+        do_GetService("@mozilla.org/url-classifier/exception-list-service;1");
+    if (exceptionListService) {
+      exceptionListService->RegisterAndRunExceptionListObserver(
           REJECTFOREIGNALLOWLIST_NAME, REJECTFOREIGNALLOWLIST_PREF,
           gRejectForeignAllowList);
     }
 
-    RunOnShutdown([skipListService] {
+    RunOnShutdown([exceptionListService] {
       if (gRejectForeignAllowList) {
-        if (skipListService) {
-          skipListService->UnregisterSkipListObserver(
+        if (exceptionListService) {
+          exceptionListService->UnregisterExceptionListObserver(
               REJECTFOREIGNALLOWLIST_NAME, gRejectForeignAllowList);
         }
         gRejectForeignAllowList = nullptr;
@@ -79,7 +79,7 @@ bool RejectForeignAllowList::CheckInternal(nsIURI* aURI) {
 }
 
 NS_IMETHODIMP
-RejectForeignAllowList::OnSkipListUpdate(const nsACString& aList) {
+RejectForeignAllowList::OnExceptionListUpdate(const nsACString& aList) {
   mList = aList;
   return NS_OK;
 }
@@ -89,8 +89,8 @@ RejectForeignAllowList::~RejectForeignAllowList() = default;
 
 NS_INTERFACE_MAP_BEGIN(RejectForeignAllowList)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports,
-                                   nsIUrlClassifierSkipListObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIUrlClassifierSkipListObserver)
+                                   nsIUrlClassifierExceptionListObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIUrlClassifierExceptionListObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(RejectForeignAllowList)
