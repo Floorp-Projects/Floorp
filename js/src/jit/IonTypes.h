@@ -167,9 +167,6 @@ enum class BailoutKind : uint8_t {
   // by the baseline IC.)
   ShapeGuard,
 
-  // Bailout triggered by MGuardProto.
-  ProtoGuard,
-
   // Bailout triggered by MGuardValue.
   ValueGuard,
 
@@ -254,8 +251,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "BailoutKind::BoundsCheck";
     case BailoutKind::ShapeGuard:
       return "BailoutKind::ShapeGuard";
-    case BailoutKind::ProtoGuard:
-      return "BailoutKind::ProtoGuard";
     case BailoutKind::ValueGuard:
       return "BailoutKind::ValueGuard";
     case BailoutKind::NullOrUndefinedGuard:

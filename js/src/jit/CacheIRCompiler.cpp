@@ -1090,24 +1090,28 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::DOMExpandoGeneration:
         break;
       case StubField::Type::Shape:
-        TraceEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
-                  "cacheir-shape");
+        TraceNullableEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
+                          "cacheir-shape");
         break;
       case StubField::Type::ObjectGroup:
-        TraceEdge(trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
-                  "cacheir-group");
+        TraceNullableEdge(
+            trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
+            "cacheir-group");
         break;
       case StubField::Type::JSObject:
-        TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
-                  "cacheir-object");
+        TraceNullableEdge(trc,
+                          &stubInfo->getStubField<T, JSObject*>(stub, offset),
+                          "cacheir-object");
         break;
       case StubField::Type::Symbol:
-        TraceEdge(trc, &stubInfo->getStubField<T, JS::Symbol*>(stub, offset),
-                  "cacheir-symbol");
+        TraceNullableEdge(trc,
+                          &stubInfo->getStubField<T, JS::Symbol*>(stub, offset),
+                          "cacheir-symbol");
         break;
       case StubField::Type::String:
-        TraceEdge(trc, &stubInfo->getStubField<T, JSString*>(stub, offset),
-                  "cacheir-string");
+        TraceNullableEdge(trc,
+                          &stubInfo->getStubField<T, JSString*>(stub, offset),
+                          "cacheir-string");
         break;
       case StubField::Type::Id:
         TraceEdge(trc, &stubInfo->getStubField<T, jsid>(stub, offset),
@@ -1852,21 +1856,6 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardNullProto(ObjOperandId objId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratch(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.loadObjProto(obj, scratch);
-  masm.branchTestPtr(Assembler::NonZero, scratch, scratch, failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardIsExtensible(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
@@ -2206,16 +2195,6 @@ bool CacheIRCompiler::emitLoadProto(ObjOperandId objId, ObjOperandId resultId) {
   Register obj = allocator.useRegister(masm, objId);
   Register reg = allocator.defineRegister(masm, resultId);
   masm.loadObjProto(obj, reg);
-
-#ifdef DEBUG
-  // We shouldn't encounter a null or lazy proto.
-  MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
-
-  Label done;
-  masm.branchPtr(Assembler::Above, reg, ImmWord(1), &done);
-  masm.assumeUnreachable("Unexpected null or lazy proto in CacheIR LoadProto");
-  masm.bind(&done);
-#endif
   return true;
 }
 
