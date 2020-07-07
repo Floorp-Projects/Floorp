@@ -163,12 +163,15 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        var promptResult = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptResult = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptResult2 = GeckoResult<PromptDelegate.PromptResponse>()
+
         sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 2)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 // We have to return something here because otherwise the delegate will be invoked
                 // before we have a chance to override it in the waitUntilCalled call below
-                return promptResult
+                return forEachCall(promptResult, promptResult2)
             }
         })
 
@@ -183,18 +186,20 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
+        sessionRule.waitForResult(promptResult)
+
         // This request will go through and end the test. Doing the negative case first will
         // ensure that if either of this tests fail the test will fail.
-        promptResult = GeckoResult()
         sessionRule.session.evaluateJS("document.querySelector('#navigateAway2').click()")
         sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                promptResult.complete(prompt.confirm(AllowOrDeny.ALLOW))
-                return promptResult
+                promptResult2.complete(prompt.confirm(AllowOrDeny.ALLOW))
+                return promptResult2
             }
         })
 
+        sessionRule.waitForResult(promptResult2)
         sessionRule.waitForResult(result)
     }
 
