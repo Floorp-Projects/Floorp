@@ -45,6 +45,7 @@ jobs:
             secrets: true
             tooltool-downloads: public
             need-xvfb: true
+        use-sccache: true
         fetches:
             toolchain:
                 - linux64-binutils
