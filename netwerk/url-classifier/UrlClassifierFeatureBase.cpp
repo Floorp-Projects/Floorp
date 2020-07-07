@@ -30,33 +30,35 @@ void OnPrefsChange(const char* aPrefName, void* aArray) {
 NS_INTERFACE_MAP_BEGIN(UrlClassifierFeatureBase)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIUrlClassifierFeature)
   NS_INTERFACE_MAP_ENTRY(nsIUrlClassifierFeature)
-  NS_INTERFACE_MAP_ENTRY(nsIUrlClassifierSkipListObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIUrlClassifierExceptionListObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(UrlClassifierFeatureBase)
 NS_IMPL_RELEASE(UrlClassifierFeatureBase)
 
 UrlClassifierFeatureBase::UrlClassifierFeatureBase(
-    const nsACString& aName, const nsACString& aPrefBlacklistTables,
-    const nsACString& aPrefWhitelistTables,
-    const nsACString& aPrefBlacklistHosts,
-    const nsACString& aPrefWhitelistHosts,
-    const nsACString& aPrefBlacklistTableName,
-    const nsACString& aPrefWhitelistTableName, const nsACString& aPrefSkipHosts)
-    : mName(aName), mPrefSkipHosts(aPrefSkipHosts) {
-  static_assert(nsIUrlClassifierFeature::blacklist == 0,
-                "nsIUrlClassifierFeature::blacklist must be 0");
-  static_assert(nsIUrlClassifierFeature::whitelist == 1,
-                "nsIUrlClassifierFeature::whitelist must be 1");
+    const nsACString& aName, const nsACString& aPrefBlocklistTables,
+    const nsACString& aPrefEntitylistTables,
+    const nsACString& aPrefBlocklistHosts,
+    const nsACString& aPrefEntitylistHosts,
+    const nsACString& aPrefBlocklistTableName,
+    const nsACString& aPrefEntitylistTableName,
+    const nsACString& aPrefExceptionHosts)
+    : mName(aName), mPrefExceptionHosts(aPrefExceptionHosts) {
+  static_assert(nsIUrlClassifierFeature::blocklist == 0,
+                "nsIUrlClassifierFeature::blocklist must be 0");
+  static_assert(nsIUrlClassifierFeature::entitylist == 1,
+                "nsIUrlClassifierFeature::entitylist must be 1");
 
-  mPrefTables[nsIUrlClassifierFeature::blacklist] = aPrefBlacklistTables;
-  mPrefTables[nsIUrlClassifierFeature::whitelist] = aPrefWhitelistTables;
+  mPrefTables[nsIUrlClassifierFeature::blocklist] = aPrefBlocklistTables;
+  mPrefTables[nsIUrlClassifierFeature::entitylist] = aPrefEntitylistTables;
 
-  mPrefHosts[nsIUrlClassifierFeature::blacklist] = aPrefBlacklistHosts;
-  mPrefHosts[nsIUrlClassifierFeature::whitelist] = aPrefWhitelistHosts;
+  mPrefHosts[nsIUrlClassifierFeature::blocklist] = aPrefBlocklistHosts;
+  mPrefHosts[nsIUrlClassifierFeature::entitylist] = aPrefEntitylistHosts;
 
-  mPrefTableNames[nsIUrlClassifierFeature::blacklist] = aPrefBlacklistTableName;
-  mPrefTableNames[nsIUrlClassifierFeature::whitelist] = aPrefWhitelistTableName;
+  mPrefTableNames[nsIUrlClassifierFeature::blocklist] = aPrefBlocklistTableName;
+  mPrefTableNames[nsIUrlClassifierFeature::entitylist] =
+      aPrefEntitylistTableName;
 }
 
 UrlClassifierFeatureBase::~UrlClassifierFeatureBase() = default;
@@ -74,13 +76,14 @@ void UrlClassifierFeatureBase::InitializePreferences() {
     }
   }
 
-  nsCOMPtr<nsIUrlClassifierSkipListService> skipListService =
-      do_GetService("@mozilla.org/url-classifier/skip-list-service;1");
-  if (NS_WARN_IF(!skipListService)) {
+  nsCOMPtr<nsIUrlClassifierExceptionListService> exceptionListService =
+      do_GetService("@mozilla.org/url-classifier/exception-list-service;1");
+  if (NS_WARN_IF(!exceptionListService)) {
     return;
   }
 
-  skipListService->RegisterAndRunSkipListObserver(mName, mPrefSkipHosts, this);
+  exceptionListService->RegisterAndRunExceptionListObserver(
+      mName, mPrefExceptionHosts, this);
 }
 
 void UrlClassifierFeatureBase::ShutdownPreferences() {
@@ -95,16 +98,16 @@ void UrlClassifierFeatureBase::ShutdownPreferences() {
     }
   }
 
-  nsCOMPtr<nsIUrlClassifierSkipListService> skipListService =
-      do_GetService("@mozilla.org/url-classifier/skip-list-service;1");
-  if (skipListService) {
-    skipListService->UnregisterSkipListObserver(mName, this);
+  nsCOMPtr<nsIUrlClassifierExceptionListService> exceptionListService =
+      do_GetService("@mozilla.org/url-classifier/exception-list-service;1");
+  if (exceptionListService) {
+    exceptionListService->UnregisterExceptionListObserver(mName, this);
   }
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureBase::OnSkipListUpdate(const nsACString& aList) {
-  mSkipHosts = aList;
+UrlClassifierFeatureBase::OnExceptionListUpdate(const nsACString& aList) {
+  mExceptionHosts = aList;
   return NS_OK;
 }
 
@@ -117,8 +120,8 @@ UrlClassifierFeatureBase::GetName(nsACString& aName) {
 NS_IMETHODIMP
 UrlClassifierFeatureBase::GetTables(nsIUrlClassifierFeature::listType aListType,
                                     nsTArray<nsCString>& aTables) {
-  if (aListType != nsIUrlClassifierFeature::blacklist &&
-      aListType != nsIUrlClassifierFeature::whitelist) {
+  if (aListType != nsIUrlClassifierFeature::blocklist &&
+      aListType != nsIUrlClassifierFeature::entitylist) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -132,8 +135,8 @@ UrlClassifierFeatureBase::HasTable(const nsACString& aTable,
                                    bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (aListType != nsIUrlClassifierFeature::blacklist &&
-      aListType != nsIUrlClassifierFeature::whitelist) {
+  if (aListType != nsIUrlClassifierFeature::blocklist &&
+      aListType != nsIUrlClassifierFeature::entitylist) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -147,8 +150,8 @@ UrlClassifierFeatureBase::HasHostInPreferences(
     nsACString& aPrefTableName, bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (aListType != nsIUrlClassifierFeature::blacklist &&
-      aListType != nsIUrlClassifierFeature::whitelist) {
+  if (aListType != nsIUrlClassifierFeature::blocklist &&
+      aListType != nsIUrlClassifierFeature::entitylist) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -160,8 +163,8 @@ UrlClassifierFeatureBase::HasHostInPreferences(
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureBase::GetSkipHostList(nsACString& aList) {
-  aList = mSkipHosts;
+UrlClassifierFeatureBase::GetExceptionHostList(nsACString& aList) {
+  aList = mExceptionHosts;
   return NS_OK;
 }
 

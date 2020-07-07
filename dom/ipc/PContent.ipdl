@@ -332,7 +332,7 @@ struct IPCURLClassifierFeature
 {
     nsCString featureName;
     nsCString[] tables;
-    nsCString skipHostList;
+    nsCString exceptionHostList;
 };
 
 // Transport structure for Notifications API notifications

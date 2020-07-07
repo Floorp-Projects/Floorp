@@ -99,7 +99,7 @@ PurgeTrackerService.prototype = {
           gClassifier.asyncClassifyLocalWithFeatures(
             principal.URI,
             [gClassifierFeature],
-            Ci.nsIUrlClassifierFeature.blacklist,
+            Ci.nsIUrlClassifierFeature.blocklist,
             list => {
               if (list.length) {
                 this._trackingState.set(host, true);
@@ -128,7 +128,7 @@ PurgeTrackerService.prototype = {
         gClassifier.asyncClassifyLocalWithFeatures(
           uri,
           [gClassifierFeature],
-          Ci.nsIUrlClassifierFeature.whitelist,
+          Ci.nsIUrlClassifierFeature.entitylist,
           list => {
             let sameList = !!list.length;
             logger.debug(`Is ${uri.spec} on the entity list?`, sameList);

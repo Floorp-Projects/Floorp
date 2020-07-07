@@ -48,7 +48,7 @@ add_test(async _ => {
     classifier.asyncClassifyLocalWithFeatures(
       uri,
       [feature],
-      Ci.nsIUrlClassifierFeature.blacklist,
+      Ci.nsIUrlClassifierFeature.blocklist,
       r => {
         resolve(r);
       }
@@ -67,7 +67,7 @@ add_test(async _ => {
     classifier.asyncClassifyLocalWithFeatures(
       uri,
       [feature],
-      Ci.nsIUrlClassifierFeature.blacklist,
+      Ci.nsIUrlClassifierFeature.blocklist,
       r => {
         resolve(r);
       }
@@ -76,7 +76,7 @@ add_test(async _ => {
   equal(results.length, 1, "Tracker");
   let result = results[0];
   equal(result.feature.name, "tracking-protection", "Correct feature");
-  equal(result.list, "tracking-blacklist-pref", "Correct list");
+  equal(result.list, "tracking-blocklist-pref", "Correct list");
 
   Services.prefs.clearUserPref("browser.safebrowsing.password.enabled");
   run_next_test();

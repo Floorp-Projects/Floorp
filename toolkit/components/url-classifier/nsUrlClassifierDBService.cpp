@@ -1763,7 +1763,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   // Let's keep the features alive and release them on the correct thread.
   RefPtr<FeatureHolder> holder =
-      FeatureHolder::Create(uri, features, nsIUrlClassifierFeature::blacklist);
+      FeatureHolder::Create(uri, features, nsIUrlClassifierFeature::blocklist);
   if (NS_WARN_IF(!holder)) {
     return NS_ERROR_FAILURE;
   }
@@ -2037,7 +2037,7 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
 
   // Let's keep the features alive and release them on the correct thread.
   RefPtr<FeatureHolder> holder =
-      FeatureHolder::Create(uri, features, nsIUrlClassifierFeature::blacklist);
+      FeatureHolder::Create(uri, features, nsIUrlClassifierFeature::blocklist);
   if (NS_WARN_IF(!holder)) {
     return NS_ERROR_FAILURE;
   }
@@ -2446,16 +2446,16 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
         continue;
       }
 
-      nsAutoCString skipHostList;
-      if (aListType == nsIUrlClassifierFeature::blacklist) {
-        rv = feature->GetSkipHostList(skipHostList);
+      nsAutoCString exceptionHostList;
+      if (aListType == nsIUrlClassifierFeature::blocklist) {
+        rv = feature->GetExceptionHostList(exceptionHostList);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           continue;
         }
       }
 
       ipcFeatures.AppendElement(
-          IPCURLClassifierFeature(name, tables, skipHostList));
+          IPCURLClassifierFeature(name, tables, exceptionHostList));
     }
 
     if (!content->SendPURLClassifierLocalConstructor(actor, aURI,
@@ -2582,13 +2582,13 @@ nsUrlClassifierDBService::GetFeatureNames(nsTArray<nsCString>& aArray) {
 
 NS_IMETHODIMP
 nsUrlClassifierDBService::CreateFeatureWithTables(
-    const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
-    const nsTArray<nsCString>& aWhitelistTables,
+    const nsACString& aName, const nsTArray<nsCString>& aBlocklistTables,
+    const nsTArray<nsCString>& aEntitylistTables,
     nsIUrlClassifierFeature** aFeature) {
   NS_ENSURE_ARG_POINTER(aFeature);
   nsCOMPtr<nsIUrlClassifierFeature> feature =
       mozilla::net::UrlClassifierFeatureFactory::CreateFeatureWithTables(
-          aName, aBlacklistTables, aWhitelistTables);
+          aName, aBlocklistTables, aEntitylistTables);
   if (NS_WARN_IF(!feature)) {
     return NS_ERROR_FAILURE;
   }

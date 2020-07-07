@@ -23,7 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
-#include "PartitioningSkipList.h"
+#include "PartitioningExceptionList.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
 
@@ -364,7 +364,7 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
 
   uint32_t unusedReason = 0;
 
-  if (PartitioningSkipList::Check(targetOrigin, trackingOrigin)) {
+  if (PartitioningExceptionList::Check(targetOrigin, trackingOrigin)) {
     return true;
   }
 

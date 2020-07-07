@@ -7,7 +7,7 @@
 #ifndef mozilla_RejectForeignAllowList_h
 #define mozilla_RejectForeignAllowList_h
 
-#include "nsIUrlClassifierSkipListService.h"
+#include "nsIUrlClassifierExceptionListService.h"
 
 class nsIHttpChannel;
 class nsIURI;
@@ -18,10 +18,11 @@ namespace dom {
 class Document;
 }
 
-class RejectForeignAllowList final : public nsIUrlClassifierSkipListObserver {
+class RejectForeignAllowList final
+    : public nsIUrlClassifierExceptionListObserver {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIURLCLASSIFIERSKIPLISTOBSERVER
+  NS_DECL_NSIURLCLASSIFIEREXCEPTIONLISTOBSERVER
 
   static bool Check(dom::Document* aDocument);
   static bool Check(nsIHttpChannel* aChannel);

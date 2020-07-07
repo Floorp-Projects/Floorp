@@ -35,7 +35,7 @@
       video.appendChild(track);
 
       function onload() {
-        ok(true, "Track should be loaded when url is not in blacklist");
+        ok(true, "Track should be loaded when url is not in blocklist");
         finish();
       }
 
@@ -55,7 +55,7 @@
     });
   }
 
-  function testBlacklistTrackSafebrowsingOff() {
+  function testBlocklistTrackSafebrowsingOff() {
     SpecialPowers.setBoolPref(PREF, false);
 
     return new Promise(function(resolve, reject) {
@@ -65,7 +65,7 @@
       video.appendChild(track);
 
       function onload() {
-        ok(true, "Track should be loaded when url is in blacklist and safebrowsing is off");
+        ok(true, "Track should be loaded when url is in blocklist and safebrowsing is off");
         finish();
       }
 
@@ -85,7 +85,7 @@
     });
   }
 
-  function testBlacklistTrackSafebrowsingOn() {
+  function testBlocklistTrackSafebrowsingOn() {
     SpecialPowers.setBoolPref(PREF, true);
 
     return new Promise(function(resolve, reject) {
@@ -97,12 +97,12 @@
       video.appendChild(track);
 
       function onload() {
-        ok(false, "Unexpected result while loading track in blacklist");
+        ok(false, "Unexpected result while loading track in blocklist");
         finish();
       }
 
       function onerror() {
-        ok(true, "Track should not be loaded when url is in blacklist and safebrowsing is on");
+        ok(true, "Track should not be loaded when url is in blocklist and safebrowsing is on");
         finish();
       }
 
@@ -141,8 +141,8 @@
       .then(classifierHelper.waitForInit)
       .then(setup)
       .then(testValidTrack)
-      .then(testBlacklistTrackSafebrowsingOff)
-      .then(testBlacklistTrackSafebrowsingOn)
+      .then(testBlocklistTrackSafebrowsingOff)
+      .then(testBlocklistTrackSafebrowsingOn)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

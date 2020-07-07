@@ -316,7 +316,7 @@ var State = {
       classifier.asyncClassifyLocalWithFeatures(
         uri,
         [feature],
-        Ci.nsIUrlClassifierFeature.blacklist,
+        Ci.nsIUrlClassifierFeature.blocklist,
         list => {
           if (list.length) {
             this._trackingState.set(host, true);

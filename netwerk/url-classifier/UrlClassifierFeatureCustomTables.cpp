@@ -17,11 +17,11 @@ NS_IMPL_ADDREF(UrlClassifierFeatureCustomTables)
 NS_IMPL_RELEASE(UrlClassifierFeatureCustomTables)
 
 UrlClassifierFeatureCustomTables::UrlClassifierFeatureCustomTables(
-    const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
-    const nsTArray<nsCString>& aWhitelistTables)
+    const nsACString& aName, const nsTArray<nsCString>& aBlocklistTables,
+    const nsTArray<nsCString>& aEntitylistTables)
     : mName(aName),
-      mBlacklistTables(aBlacklistTables.Clone()),
-      mWhitelistTables(aWhitelistTables.Clone()) {}
+      mBlocklistTables(aBlocklistTables.Clone()),
+      mEntitylistTables(aEntitylistTables.Clone()) {}
 
 UrlClassifierFeatureCustomTables::~UrlClassifierFeatureCustomTables() = default;
 
@@ -34,13 +34,13 @@ UrlClassifierFeatureCustomTables::GetName(nsACString& aName) {
 NS_IMETHODIMP
 UrlClassifierFeatureCustomTables::GetTables(
     nsIUrlClassifierFeature::listType aListType, nsTArray<nsCString>& aTables) {
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    aTables = mBlacklistTables.Clone();
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    aTables = mBlocklistTables.Clone();
     return NS_OK;
   }
 
-  if (aListType == nsIUrlClassifierFeature::whitelist) {
-    aTables = mWhitelistTables.Clone();
+  if (aListType == nsIUrlClassifierFeature::entitylist) {
+    aTables = mEntitylistTables.Clone();
     return NS_OK;
   }
 
@@ -53,13 +53,13 @@ UrlClassifierFeatureCustomTables::HasTable(
     bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    *aResult = mBlacklistTables.Contains(aTable);
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    *aResult = mBlocklistTables.Contains(aTable);
     return NS_OK;
   }
 
-  if (aListType == nsIUrlClassifierFeature::whitelist) {
-    *aResult = mWhitelistTables.Contains(aTable);
+  if (aListType == nsIUrlClassifierFeature::entitylist) {
+    *aResult = mEntitylistTables.Contains(aTable);
     return NS_OK;
   }
 
@@ -76,7 +76,7 @@ UrlClassifierFeatureCustomTables::HasHostInPreferences(
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureCustomTables::GetSkipHostList(nsACString& aList) {
+UrlClassifierFeatureCustomTables::GetExceptionHostList(nsACString& aList) {
   return NS_OK;
 }
 

@@ -1697,7 +1697,7 @@ nsresult Classifier::LoadHashStore(nsIFile* aDirectory, nsACString& aResult,
     ChunkSet& subs = store.SubChunks();
 
     // Open HashStore will always succeed even that is not a v2 table.
-    // So skip tables without add and sub chunks.
+    // So exception tables without add and sub chunks.
     if (adds.Length() == 0 && subs.Length() == 0) {
       continue;
     }

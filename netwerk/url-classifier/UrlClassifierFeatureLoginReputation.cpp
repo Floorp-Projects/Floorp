@@ -23,13 +23,13 @@ StaticRefPtr<UrlClassifierFeatureLoginReputation> gFeatureLoginReputation;
 
 UrlClassifierFeatureLoginReputation::UrlClassifierFeatureLoginReputation()
     : UrlClassifierFeatureBase(nsLiteralCString(LOGIN_REPUTATION_FEATURE_NAME),
-                               EmptyCString(),  // blacklist tables
+                               EmptyCString(),  // blocklist tables
                                nsLiteralCString(PREF_PASSWORD_ALLOW_TABLE),
-                               EmptyCString(),  // blacklist pref
-                               EmptyCString(),  // whitelist pref
-                               EmptyCString(),  // blacklist pref table name
-                               EmptyCString(),  // whitelist pref table name
-                               EmptyCString())  // skip host pref
+                               EmptyCString(),  // blocklist pref
+                               EmptyCString(),  // entitylist pref
+                               EmptyCString(),  // blocklist pref table name
+                               EmptyCString(),  // entitylist pref table name
+                               EmptyCString())  // exception host pref
 {}
 
 /* static */ const char* UrlClassifierFeatureLoginReputation::Name() {
@@ -91,10 +91,10 @@ UrlClassifierFeatureLoginReputation::GetURIByListType(
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist,
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::entitylist,
              "UrlClassifierFeatureLoginReputation is meant to be used just to "
-             "whitelist URLs");
-  *aURIType = nsIUrlClassifierFeature::URIType::whitelistURI;
+             "entitylist URLs");
+  *aURIType = nsIUrlClassifierFeature::URIType::entitylistURI;
   return aChannel->GetURI(aURI);
 }
 

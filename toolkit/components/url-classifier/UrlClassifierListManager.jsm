@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 // This is the only implementation of nsIUrlListManager.
-// A class that manages lists, namely white and black lists for
+// A class that manages lists, namely exception and block lists for
 // phishing or malware protection. The ListManager knows how to fetch,
 // update, and store lists.
 //
@@ -41,7 +41,7 @@ this.log = function log(...stuff) {
 };
 
 /**
- * A ListManager keeps track of black and white lists and knows
+ * A ListManager keeps track of exception and block lists and knows
  * how to update them.
  *
  * @constructor

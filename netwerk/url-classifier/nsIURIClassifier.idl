@@ -100,8 +100,8 @@ interface nsIURIClassifier : nsISupports
    * testing! Don't use it elsewhere.
    */
   nsIUrlClassifierFeature createFeatureWithTables(in ACString aName,
-                                                  in Array<ACString> aBlacklistTables,
-                                                  in Array<ACString> aWhitelistTables);
+                                                  in Array<ACString> aBlocklistTables,
+                                                  in Array<ACString> aEntitylistTables);
 
   /**
    * Report to the provider that a Safe Browsing warning was shown.

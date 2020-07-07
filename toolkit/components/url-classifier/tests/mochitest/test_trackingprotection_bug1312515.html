@@ -81,7 +81,7 @@ function checkPriority(aSubject, aCallback, aPriority, aMessage) {
 function testXHR1() {
   return new Promise(function(aResolve, aReject) {
     testUrl = "http://tracking.example.com/";
-    info("Not blacklisted: " + testUrl);
+    info("Not blocklisted: " + testUrl);
     resolve = aResolve;
     SpecialPowers.addObserver(checkNormalPriority, topic);
     testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
@@ -91,7 +91,7 @@ function testXHR1() {
 function testXHR2() {
   return new Promise(function(aResolve, aReject) {
     testUrl = "http://trackertest.org/";
-    info("Blacklisted and not whitelisted: " + testUrl);
+    info("Blocklisted and not entitylisted: " + testUrl);
     resolve = aResolve;
     SpecialPowers.addObserver(checkLowestPriority, topic);
     testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
@@ -100,8 +100,8 @@ function testXHR2() {
 
 function testFetch1() {
   return new Promise(function(aResolve, aReject) {
-    testUrl = "http://itisatracker.org/"; // only whitelisted in TP, not for annotations
-    info("Blacklisted and not whitelisted: " + testUrl);
+    testUrl = "http://itisatracker.org/"; // only entitylisted in TP, not for annotations
+    info("Blocklisted and not entitylisted: " + testUrl);
     resolve = aResolve;
     SpecialPowers.addObserver(checkLowestPriority, topic);
     testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");
@@ -110,8 +110,8 @@ function testFetch1() {
 
 function testFetch2() {
   return new Promise(function(aResolve, aReject) {
-    testUrl = "http://tracking.example.org/"; // only whitelisted for annotations, not in TP
-    info("Blacklisted but also whitelisted: " + testUrl);
+    testUrl = "http://tracking.example.org/"; // only entitylisted for annotations, not in TP
+    info("Blocklisted but also entitylisted: " + testUrl);
     resolve = aResolve;
     SpecialPowers.addObserver(checkNormalPriority, topic);
     testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");

@@ -45,8 +45,8 @@ class nsChannelClassifier final : public nsIURIClassifierCallback,
   // Start is called. Returns NS_OK if and only if we will get a callback
   // from the classifier service.
   nsresult StartInternal();
-  // Helper function to check a URI against the hostname whitelist
-  bool IsHostnameWhitelisted(nsIURI* aUri, const nsACString& aWhitelisted);
+  // Helper function to check a URI against the hostname entitylist
+  bool IsHostnameEntitylisted(nsIURI* aUri, const nsACString& aEntitylisted);
 
   void AddShutdownObserver();
   void RemoveShutdownObserver();

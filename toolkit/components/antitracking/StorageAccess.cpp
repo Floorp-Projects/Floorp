@@ -131,7 +131,7 @@ static StorageAccess InternalStorageAllowedCheck(
   // BEFORE:
   // localStorage, caches: allowed in 3rd-party iframes always
   // IndexedDB: allowed in 3rd-party iframes only if 3rd party URI is an about:
-  //   URI within a specific whitelist
+  //   URI within a specific allowlist
   //
   // AFTER:
   // localStorage, caches: allowed in 3rd-party iframes by default. Preference
@@ -139,7 +139,7 @@ static StorageAccess InternalStorageAllowedCheck(
   //   URIs.
   // IndexedDB: allowed in 3rd-party iframes by default. Preference can be set
   //   to disable in 3rd-party, which will disallow in about: URIs, unless they
-  //   are within a specific whitelist.
+  //   are within a specific allowlist.
   //
   // This means that behavior for storage with internal about: URIs should not
   // be affected, which is desireable due to the lack of automated testing for

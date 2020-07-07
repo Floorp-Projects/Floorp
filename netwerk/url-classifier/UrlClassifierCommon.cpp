@@ -266,8 +266,8 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
 }
 
 /* static */
-nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
-                                                         nsIURI** aURI) {
+nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
+                                                          nsIURI** aURI) {
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aURI);
 
@@ -292,7 +292,7 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
       uri->GetAsciiSpec(spec);
       spec.Truncate(
           std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(("CreatePairwiseWhiteListURI: No window URI associated with %s",
+      UC_LOG(("CreatePairwiseEntityListURI: No window URI associated with %s",
               spec.get()));
     }
     return NS_OK;
@@ -306,7 +306,7 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
                                                getter_AddRefs(chanPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Craft a whitelist URL like "toplevel.page/?resource=third.party.domain"
+  // Craft a entitylist URL like "toplevel.page/?resource=third.party.domain"
   nsAutoCString pageHostname, resourceDomain;
   rv = topWinURI->GetHost(pageHostname);
   if (NS_FAILED(rv)) {
@@ -314,7 +314,7 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
     // we don't return an error here; instead, we return success to make sure
     // that the lookup process calling this API continues to run.
     UC_LOG(
-        ("CreatePairwiseWhiteListURI: Cannot get host from the top-level "
+        ("CreatePairwiseEntityListURI: Cannot get host from the top-level "
          "(channel=%p)",
          aChannel));
     return NS_OK;
@@ -322,18 +322,18 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
 
   rv = chanPrincipal->GetBaseDomain(resourceDomain);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString whitelistEntry =
+  nsAutoCString entitylistEntry =
       "http://"_ns + pageHostname + "/?resource="_ns + resourceDomain;
   UC_LOG(
-      ("CreatePairwiseWhiteListURI: Looking for %s in the whitelist "
+      ("CreatePairwiseEntityListURI: Looking for %s in the entitylist "
        "(channel=%p)",
-       whitelistEntry.get(), aChannel));
+       entitylistEntry.get(), aChannel));
 
-  nsCOMPtr<nsIURI> whitelistURI;
-  rv = NS_NewURI(getter_AddRefs(whitelistURI), whitelistEntry);
+  nsCOMPtr<nsIURI> entitylistURI;
+  rv = NS_NewURI(getter_AddRefs(entitylistURI), entitylistEntry);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  whitelistURI.forget(aURI);
+  entitylistURI.forget(aURI);
   return NS_OK;
 }
 

@@ -414,23 +414,23 @@ this.AntiTracking = {
       await SpecialPowers.pushPrefEnv({ set: extraPrefs });
 
       for (let item of extraPrefs) {
-        // When setting up skip URLs, we need to wait to ensure our prefs
-        // actually take effect.  In order to do this, we set up a skip list
-        // observer and wait until it calls us back.
+        // When setting up exception URLs, we need to wait to ensure our prefs
+        // actually take effect.  In order to do this, we set up a exception
+        // list observer and wait until it calls us back.
         if (item[0] == "urlclassifier.trackingAnnotationSkipURLs") {
-          info("Waiting for the skip list service to initialize...");
+          info("Waiting for the exception list service to initialize...");
           let classifier = Cc[
             "@mozilla.org/url-classifier/dbservice;1"
           ].getService(Ci.nsIURIClassifier);
           let feature = classifier.getFeatureByName("tracking-annotation");
           await TestUtils.waitForCondition(() => {
             for (let x of item[1].toLowerCase().split(",")) {
-              if (feature.skipHostList.split(",").includes(x)) {
+              if (feature.exceptionHostList.split(",").includes(x)) {
                 return true;
               }
             }
             return false;
-          }, "Skip list service initialized");
+          }, "Exception list service initialized");
           break;
         }
       }
@@ -512,9 +512,9 @@ this.AntiTracking = {
         thirdPartyDomainURI = Services.io.newURI(TEST_3RD_PARTY_DOMAIN);
       }
 
-      // It's possible that the third-party domain has been whitelisted through
-      // extraPrefs, so let's try annotating it here and adjust our blocking
-      // expectations as necessary.
+      // It's possible that the third-party domain has been exceptionlisted
+      // through extraPrefs, so let's try annotating it here and adjust our
+      // blocking expectations as necessary.
       if (
         !options.dontResetExpectedBlockingNotifications &&
         options.expectedBlockingNotifications ==

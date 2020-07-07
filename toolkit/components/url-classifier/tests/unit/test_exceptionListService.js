@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* Unit tests for the nsIUrlClassifierSkipListService implementation. */
+/* Unit tests for the nsIUrlClassifierExceptionListService implementation. */
 
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
@@ -34,11 +34,12 @@ function waitForEvent(element, eventName) {
 }
 
 add_task(async function test_list_changes() {
-  let skipListService = Cc[
-    "@mozilla.org/url-classifier/skip-list-service;1"
-  ].getService(Ci.nsIUrlClassifierSkipListService);
+  let exceptionListService = Cc[
+    "@mozilla.org/url-classifier/exception-list-service;1"
+  ].getService(Ci.nsIUrlClassifierExceptionListService);
 
-  // Make sure we have a pref initially, since the skip list service requires it.
+  // Make sure we have a pref initially, since the exception list service
+  // requires it.
   Services.prefs.setStringPref(FEATURE_TRACKING_PREF_NAME, "");
 
   let updateEvent = new UpdateEvent();
@@ -61,7 +62,7 @@ add_task(async function test_list_changes() {
   await db.importChanges({}, 42, records);
   let promise = waitForEvent(updateEvent, "update");
 
-  skipListService.registerAndRunSkipListObserver(
+  exceptionListService.registerAndRunExceptionListObserver(
     FEATURE_TRACKING_NAME,
     FEATURE_TRACKING_PREF_NAME,
     obs
@@ -134,22 +135,26 @@ add_task(async function test_list_changes() {
     "Has several items in the list"
   );
 
-  skipListService.unregisterSkipListObserver(FEATURE_TRACKING_NAME, obs);
-  skipListService.clear();
+  exceptionListService.unregisterExceptionListObserver(
+    FEATURE_TRACKING_NAME,
+    obs
+  );
+  exceptionListService.clear();
 
   await db.clear();
 });
 
 /**
- * This test make sure when a feature registers itself to skiplist service,
+ * This test make sure when a feature registers itself to exceptionlist service,
  * it can get the correct initial data.
  */
 add_task(async function test_list_init_data() {
-  let skipListService = Cc[
-    "@mozilla.org/url-classifier/skip-list-service;1"
-  ].getService(Ci.nsIUrlClassifierSkipListService);
+  let exceptionListService = Cc[
+    "@mozilla.org/url-classifier/exception-list-service;1"
+  ].getService(Ci.nsIUrlClassifierExceptionListService);
 
-  // Make sure we have a pref initially, since the skip list service requires it.
+  // Make sure we have a pref initially, since the exception list service
+  // requires it.
   Services.prefs.setStringPref(FEATURE_TRACKING_PREF_NAME, "");
 
   let updateEvent = new UpdateEvent();
@@ -185,7 +190,7 @@ add_task(async function test_list_init_data() {
   let db = await RemoteSettings(COLLECTION_NAME).db;
   await db.importChanges({}, 42, records);
 
-  // The first registered feature make SkipListService get the initial data
+  // The first registered feature make ExceptionListService get the initial data
   // from remote setting.
   let promise = waitForEvent(updateEvent, "update");
 
@@ -193,7 +198,7 @@ add_task(async function test_list_init_data() {
     let event = new CustomEvent("update", { detail: data });
     updateEvent.dispatchEvent(event);
   };
-  skipListService.registerAndRunSkipListObserver(
+  exceptionListService.registerAndRunExceptionListObserver(
     FEATURE_TRACKING_NAME,
     FEATURE_TRACKING_PREF_NAME,
     obs
@@ -208,10 +213,10 @@ add_task(async function test_list_init_data() {
     "Has several items in the list"
   );
 
-  // Register another feature after SkipListService got the initial data.
+  // Register another feature after ExceptionListService got the initial data.
   promise = waitForEvent(updateEvent, "update");
 
-  skipListService.registerAndRunSkipListObserver(
+  exceptionListService.registerAndRunExceptionListObserver(
     FEATURE_SOCIAL_NAME,
     FEATURE_SOCIAL_PREF_NAME,
     obs
@@ -225,7 +230,7 @@ add_task(async function test_list_init_data() {
     "Has several items in the list"
   );
 
-  // Test registering a feature after SkipListService recieved the synced data.
+  // Test registering a feature after ExceptionListService recieved the synced data.
   records.push(
     {
       id: "5",
@@ -253,7 +258,7 @@ add_task(async function test_list_init_data() {
 
   promise = waitForEvent(updateEvent, "update");
 
-  skipListService.registerAndRunSkipListObserver(
+  exceptionListService.registerAndRunExceptionListObserver(
     FEATURE_FINGERPRINTING_NAME,
     FEATURE_FINGERPRINTING_PREF_NAME,
     obs
@@ -267,10 +272,19 @@ add_task(async function test_list_init_data() {
     "Has several items in the list"
   );
 
-  skipListService.unregisterSkipListObserver(FEATURE_TRACKING_NAME, obs);
-  skipListService.unregisterSkipListObserver(FEATURE_SOCIAL_NAME, obs);
-  skipListService.unregisterSkipListObserver(FEATURE_FINGERPRINTING_NAME, obs);
-  skipListService.clear();
+  exceptionListService.unregisterExceptionListObserver(
+    FEATURE_TRACKING_NAME,
+    obs
+  );
+  exceptionListService.unregisterExceptionListObserver(
+    FEATURE_SOCIAL_NAME,
+    obs
+  );
+  exceptionListService.unregisterExceptionListObserver(
+    FEATURE_FINGERPRINTING_NAME,
+    obs
+  );
+  exceptionListService.clear();
 
   await db.clear();
 });

@@ -362,7 +362,7 @@ NS_IMETHODIMP
 nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
                                            nsACString& aProvider) {
   GetProvider(aTableName, aProvider);
-  // Whitelist known providers to avoid reporting on private ones.
+  // Exceptionlist known providers to avoid reporting on private ones.
   // An empty provider is treated as "other"
   if (!"mozilla"_ns.Equals(aProvider) && !"google"_ns.Equals(aProvider) &&
       !"google4"_ns.Equals(aProvider) && !"baidu"_ns.Equals(aProvider) &&

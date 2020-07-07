@@ -44,10 +44,10 @@ class UrlClassifierCommon final {
                                   const nsTArray<nsCString>& aLists,
                                   const nsTArray<nsCString>& aFullHashes);
 
-  // Use this function only when you are looking for a pairwise whitelist uri
+  // Use this function only when you are looking for a pairwise entitylist uri
   // with the format: http://toplevel.page/?resource=channel.uri.domain
-  static nsresult CreatePairwiseWhiteListURI(nsIChannel* aChannel,
-                                             nsIURI** aURI);
+  static nsresult CreatePairwiseEntityListURI(nsIChannel* aChannel,
+                                              nsIURI** aURI);
 
   static void AnnotateChannel(nsIChannel* aChannel,
                               uint32_t aClassificationFlags,

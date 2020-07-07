@@ -5,7 +5,7 @@
 
 "use strict";
 
-/* Unit tests for the nsIPartitioningSkipListService implementation. */
+/* Unit tests for the nsIPartitioningExceptionListService implementation. */
 
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
@@ -27,10 +27,11 @@ function waitForEvent(element, eventName) {
 
 add_task(async _ => {
   let peuService = Cc[
-    "@mozilla.org/partitioning/skip-list-service;1"
-  ].getService(Ci.nsIPartitioningSkipListService);
+    "@mozilla.org/partitioning/exception-list-service;1"
+  ].getService(Ci.nsIPartitioningExceptionListService);
 
-  // Make sure we have a pref initially, since the skip list service requires it.
+  // Make sure we have a pref initially, since the exception list service
+  // requires it.
   Services.prefs.setStringPref(PREF_NAME, "");
 
   let updateEvent = new UpdateEvent();
@@ -52,7 +53,7 @@ add_task(async _ => {
     let event = new CustomEvent("update", { detail: data });
     updateEvent.dispatchEvent(event);
   };
-  peuService.registerAndRunSkipListObserver(obs);
+  peuService.registerAndRunExceptionListObserver(obs);
   let list = await promise;
   Assert.equal(list, "", "No items in the list");
 
@@ -103,6 +104,6 @@ add_task(async _ => {
     "Has several items in the list"
   );
 
-  peuService.unregisterSkipListObserver(obs);
+  peuService.unregisterExceptionListObserver(obs);
   await db.clear();
 });

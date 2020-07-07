@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_PartitioningSkipList_h
-#define mozilla_PartitioningSkipList_h
+#ifndef mozilla_PartitioningExceptionList_h
+#define mozilla_PartitioningExceptionList_h
 
-#include "nsIPartitioningSkipListService.h"
+#include "nsIPartitioningExceptionListService.h"
 #include "nsTArrayForwardDeclare.h"
 
 class nsIChannel;
@@ -15,27 +15,27 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-class PartitioningSkipList : public nsIPartitioningSkipListObserver {
+class PartitioningExceptionList : public nsIPartitioningExceptionListObserver {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPARTITIONINGSKIPLISTOBSERVER
+  NS_DECL_NSIPARTITIONINGEXCEPTIONLISTOBSERVER
 
   static bool Check(const nsACString& aFirstPartyOrigin,
                     const nsACString& aThirdPartyOrigin);
 
  private:
-  static PartitioningSkipList* GetOrCreate();
+  static PartitioningExceptionList* GetOrCreate();
 
-  PartitioningSkipList() = default;
-  virtual ~PartitioningSkipList() = default;
+  PartitioningExceptionList() = default;
+  virtual ~PartitioningExceptionList() = default;
 
   nsresult Init();
   void Shutdown();
 
-  nsCOMPtr<nsIPartitioningSkipListService> mService;
-  nsTArray<nsCString> mSkipList;
+  nsCOMPtr<nsIPartitioningExceptionListService> mService;
+  nsTArray<nsCString> mExceptionList;
 };
 
 }  // namespace mozilla
 
-#endif  // mozilla_PartitioningSkipList_h
+#endif  // mozilla_PartitioningExceptionList_h

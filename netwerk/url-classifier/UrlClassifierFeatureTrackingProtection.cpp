@@ -20,16 +20,16 @@ namespace {
 
 #define TRACKING_PROTECTION_FEATURE_NAME "tracking-protection"
 
-#define URLCLASSIFIER_TRACKING_BLACKLIST "urlclassifier.trackingTable"
-#define URLCLASSIFIER_TRACKING_BLACKLIST_TEST_ENTRIES \
+#define URLCLASSIFIER_TRACKING_BLOCKLIST "urlclassifier.trackingTable"
+#define URLCLASSIFIER_TRACKING_BLOCKLIST_TEST_ENTRIES \
   "urlclassifier.trackingTable.testEntries"
-#define URLCLASSIFIER_TRACKING_WHITELIST "urlclassifier.trackingWhitelistTable"
-#define URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES \
+#define URLCLASSIFIER_TRACKING_ENTITYLIST "urlclassifier.trackingWhitelistTable"
+#define URLCLASSIFIER_TRACKING_ENTITYLIST_TEST_ENTRIES \
   "urlclassifier.trackingWhitelistTable.testEntries"
-#define URLCLASSIFIER_TRACKING_PROTECTION_SKIP_URLS \
+#define URLCLASSIFIER_TRACKING_PROTECTION_EXCEPTION_URLS \
   "urlclassifier.trackingSkipURLs"
-#define TABLE_TRACKING_BLACKLIST_PREF "tracking-blacklist-pref"
-#define TABLE_TRACKING_WHITELIST_PREF "tracking-whitelist-pref"
+#define TABLE_TRACKING_BLOCKLIST_PREF "tracking-blocklist-pref"
+#define TABLE_TRACKING_ENTITYLIST_PREF "tracking-entitylist-pref"
 
 StaticRefPtr<UrlClassifierFeatureTrackingProtection> gFeatureTrackingProtection;
 
@@ -38,13 +38,13 @@ StaticRefPtr<UrlClassifierFeatureTrackingProtection> gFeatureTrackingProtection;
 UrlClassifierFeatureTrackingProtection::UrlClassifierFeatureTrackingProtection()
     : UrlClassifierFeatureBase(
           nsLiteralCString(TRACKING_PROTECTION_FEATURE_NAME),
-          nsLiteralCString(URLCLASSIFIER_TRACKING_BLACKLIST),
-          nsLiteralCString(URLCLASSIFIER_TRACKING_WHITELIST),
-          nsLiteralCString(URLCLASSIFIER_TRACKING_BLACKLIST_TEST_ENTRIES),
-          nsLiteralCString(URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES),
-          nsLiteralCString(TABLE_TRACKING_BLACKLIST_PREF),
-          nsLiteralCString(TABLE_TRACKING_WHITELIST_PREF),
-          nsLiteralCString(URLCLASSIFIER_TRACKING_PROTECTION_SKIP_URLS)) {}
+          nsLiteralCString(URLCLASSIFIER_TRACKING_BLOCKLIST),
+          nsLiteralCString(URLCLASSIFIER_TRACKING_ENTITYLIST),
+          nsLiteralCString(URLCLASSIFIER_TRACKING_BLOCKLIST_TEST_ENTRIES),
+          nsLiteralCString(URLCLASSIFIER_TRACKING_ENTITYLIST_TEST_ENTRIES),
+          nsLiteralCString(TABLE_TRACKING_BLOCKLIST_PREF),
+          nsLiteralCString(TABLE_TRACKING_ENTITYLIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_TRACKING_PROTECTION_EXCEPTION_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureTrackingProtection::Name() {
   return TRACKING_PROTECTION_FEATURE_NAME;
@@ -186,15 +186,15 @@ UrlClassifierFeatureTrackingProtection::GetURIByListType(
   NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    *aURIType = nsIUrlClassifierFeature::blacklistURI;
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    *aURIType = nsIUrlClassifierFeature::blocklistURI;
     return aChannel->GetURI(aURI);
   }
 
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::entitylist);
 
-  *aURIType = nsIUrlClassifierFeature::pairwiseWhitelistURI;
-  return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
+  *aURIType = nsIUrlClassifierFeature::pairwiseEntitylistURI;
+  return UrlClassifierCommon::CreatePairwiseEntityListURI(aChannel, aURI);
 }
 
 }  // namespace net

@@ -23,7 +23,7 @@
   const TP_ENABLE_PREF = "privacy.trackingprotection.enabled";
   const RETRY_TIMEOUT_MS = 200;
 
-  async function testPingNonBlacklist() {
+  async function testPingNonBlocklist() {
     await SpecialPowers.setBoolPref(TP_ENABLE_PREF, true);
 
     var msg = "ping should reach page not in blacklist";
@@ -37,7 +37,7 @@
     });
   }
 
-  async function testPingBlacklistSafebrowsingOff() {
+  async function testPingBlocklistSafebrowsingOff() {
     await SpecialPowers.setBoolPref(TP_ENABLE_PREF, false);
 
     var msg = "ping should reach page in blacklist when tracking protection is off";
@@ -51,7 +51,7 @@
     });
   }
 
-  async function testPingBlacklistSafebrowsingOn() {
+  async function testPingBlocklistSafebrowsingOn() {
     await SpecialPowers.setBoolPref(TP_ENABLE_PREF, true);
 
     var msg = "ping should not reach page in blacklist when tracking protection is on";
@@ -108,9 +108,9 @@
 
   function runTest() {
     classifierHelper.waitForInit()
-      .then(testPingNonBlacklist)
-      .then(testPingBlacklistSafebrowsingOff)
-      .then(testPingBlacklistSafebrowsingOn)
+      .then(testPingNonBlocklist)
+      .then(testPingBlocklistSafebrowsingOff)
+      .then(testPingBlocklistSafebrowsingOn)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

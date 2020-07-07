@@ -19,18 +19,18 @@ namespace {
 
 #define CRYPTOMINING_FEATURE_NAME "cryptomining-protection"
 
-#define URLCLASSIFIER_CRYPTOMINING_BLACKLIST \
+#define URLCLASSIFIER_CRYPTOMINING_BLOCKLIST \
   "urlclassifier.features.cryptomining.blacklistTables"
-#define URLCLASSIFIER_CRYPTOMINING_BLACKLIST_TEST_ENTRIES \
+#define URLCLASSIFIER_CRYPTOMINING_BLOCKLIST_TEST_ENTRIES \
   "urlclassifier.features.cryptomining.blacklistHosts"
-#define URLCLASSIFIER_CRYPTOMINING_WHITELIST \
+#define URLCLASSIFIER_CRYPTOMINING_ENTITYLIST \
   "urlclassifier.features.cryptomining.whitelistTables"
-#define URLCLASSIFIER_CRYPTOMINING_WHITELIST_TEST_ENTRIES \
+#define URLCLASSIFIER_CRYPTOMINING_ENTITYLIST_TEST_ENTRIES \
   "urlclassifier.features.cryptomining.whitelistHosts"
-#define URLCLASSIFIER_CRYPTOMINING_SKIP_URLS \
+#define URLCLASSIFIER_CRYPTOMINING_EXCEPTION_URLS \
   "urlclassifier.features.cryptomining.skipURLs"
-#define TABLE_CRYPTOMINING_BLACKLIST_PREF "cryptomining-blacklist-pref"
-#define TABLE_CRYPTOMINING_WHITELIST_PREF "cryptomining-whitelist-pref"
+#define TABLE_CRYPTOMINING_BLOCKLIST_PREF "cryptomining-blacklist-pref"
+#define TABLE_CRYPTOMINING_ENTITYLIST_PREF "cryptomining-whitelist-pref"
 
 StaticRefPtr<UrlClassifierFeatureCryptominingProtection>
     gFeatureCryptominingProtection;
@@ -41,13 +41,13 @@ UrlClassifierFeatureCryptominingProtection::
     UrlClassifierFeatureCryptominingProtection()
     : UrlClassifierFeatureBase(
           nsLiteralCString(CRYPTOMINING_FEATURE_NAME),
-          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_BLACKLIST),
-          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_WHITELIST),
-          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_BLACKLIST_TEST_ENTRIES),
-          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_WHITELIST_TEST_ENTRIES),
-          nsLiteralCString(TABLE_CRYPTOMINING_BLACKLIST_PREF),
-          nsLiteralCString(TABLE_CRYPTOMINING_WHITELIST_PREF),
-          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_SKIP_URLS)) {}
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_BLOCKLIST),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_ENTITYLIST),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_BLOCKLIST_TEST_ENTRIES),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_ENTITYLIST_TEST_ENTRIES),
+          nsLiteralCString(TABLE_CRYPTOMINING_BLOCKLIST_PREF),
+          nsLiteralCString(TABLE_CRYPTOMINING_ENTITYLIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_EXCEPTION_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureCryptominingProtection::Name() {
   return CRYPTOMINING_FEATURE_NAME;
@@ -191,15 +191,15 @@ UrlClassifierFeatureCryptominingProtection::GetURIByListType(
   NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    *aURIType = nsIUrlClassifierFeature::blacklistURI;
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    *aURIType = nsIUrlClassifierFeature::blocklistURI;
     return aChannel->GetURI(aURI);
   }
 
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::entitylist);
 
-  *aURIType = nsIUrlClassifierFeature::pairwiseWhitelistURI;
-  return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
+  *aURIType = nsIUrlClassifierFeature::pairwiseEntitylistURI;
+  return UrlClassifierCommon::CreatePairwiseEntityListURI(aChannel, aURI);
 }
 
 }  // namespace net

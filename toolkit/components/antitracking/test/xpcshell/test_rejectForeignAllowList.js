@@ -120,9 +120,9 @@ add_task(async function test_rejectForeignAllowList() {
   await contentPage.close();
   Assert.equal(Services.cookies.cookies.length, 1);
 
-  // Without whitelisting, no cookies should be shared.
+  // Without exceptionlisting, no cookies should be shared.
   await testThings("", "");
 
-  // Let's whitelist 3rdparty.org
+  // Let's exceptionlist 3rdparty.org
   await testThings("3rdparty.org", "cookie=wow");
 });

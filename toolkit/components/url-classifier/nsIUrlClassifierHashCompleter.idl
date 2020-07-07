@@ -74,7 +74,7 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
 
 /**
  * Clients updating the url-classifier database have the option of sending
- * partial (32-bit) hashes of URL fragments to be blacklisted.  If the
+ * partial (32-bit) hashes of URL fragments to be blocklisted.  If the
  * url-classifier encounters one of these truncated hashes, it will ask an
  * nsIUrlClassifierCompleter instance to asynchronously provide the complete
  * hash, along with some associated metadata.

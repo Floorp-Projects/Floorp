@@ -19,18 +19,18 @@ namespace {
 
 #define FINGERPRINTING_FEATURE_NAME "fingerprinting-protection"
 
-#define URLCLASSIFIER_FINGERPRINTING_BLACKLIST \
+#define URLCLASSIFIER_FINGERPRINTING_BLOCKLIST \
   "urlclassifier.features.fingerprinting.blacklistTables"
-#define URLCLASSIFIER_FINGERPRINTING_BLACKLIST_TEST_ENTRIES \
+#define URLCLASSIFIER_FINGERPRINTING_BLOCKLIST_TEST_ENTRIES \
   "urlclassifier.features.fingerprinting.blacklistHosts"
-#define URLCLASSIFIER_FINGERPRINTING_WHITELIST \
+#define URLCLASSIFIER_FINGERPRINTING_ENTITYLIST \
   "urlclassifier.features.fingerprinting.whitelistTables"
-#define URLCLASSIFIER_FINGERPRINTING_WHITELIST_TEST_ENTRIES \
+#define URLCLASSIFIER_FINGERPRINTING_ENTITYLIST_TEST_ENTRIES \
   "urlclassifier.features.fingerprinting.whitelistHosts"
-#define URLCLASSIFIER_FINGERPRINTING_SKIP_URLS \
+#define URLCLASSIFIER_FINGERPRINTING_EXCEPTION_URLS \
   "urlclassifier.features.fingerprinting.skipURLs"
-#define TABLE_FINGERPRINTING_BLACKLIST_PREF "fingerprinting-blacklist-pref"
-#define TABLE_FINGERPRINTING_WHITELIST_PREF "fingerprinting-whitelist-pref"
+#define TABLE_FINGERPRINTING_BLOCKLIST_PREF "fingerprinting-blacklist-pref"
+#define TABLE_FINGERPRINTING_ENTITYLIST_PREF "fingerprinting-whitelist-pref"
 
 StaticRefPtr<UrlClassifierFeatureFingerprintingProtection>
     gFeatureFingerprintingProtection;
@@ -41,13 +41,14 @@ UrlClassifierFeatureFingerprintingProtection::
     UrlClassifierFeatureFingerprintingProtection()
     : UrlClassifierFeatureBase(
           nsLiteralCString(FINGERPRINTING_FEATURE_NAME),
-          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_BLACKLIST),
-          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_WHITELIST),
-          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_BLACKLIST_TEST_ENTRIES),
-          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_WHITELIST_TEST_ENTRIES),
-          nsLiteralCString(TABLE_FINGERPRINTING_BLACKLIST_PREF),
-          nsLiteralCString(TABLE_FINGERPRINTING_WHITELIST_PREF),
-          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_SKIP_URLS)) {}
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_BLOCKLIST),
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ENTITYLIST),
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_BLOCKLIST_TEST_ENTRIES),
+          nsLiteralCString(
+              URLCLASSIFIER_FINGERPRINTING_ENTITYLIST_TEST_ENTRIES),
+          nsLiteralCString(TABLE_FINGERPRINTING_BLOCKLIST_PREF),
+          nsLiteralCString(TABLE_FINGERPRINTING_ENTITYLIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_EXCEPTION_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureFingerprintingProtection::Name() {
   return FINGERPRINTING_FEATURE_NAME;
@@ -195,15 +196,15 @@ UrlClassifierFeatureFingerprintingProtection::GetURIByListType(
   NS_ENSURE_ARG_POINTER(aURIType);
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (aListType == nsIUrlClassifierFeature::blacklist) {
-    *aURIType = nsIUrlClassifierFeature::blacklistURI;
+  if (aListType == nsIUrlClassifierFeature::blocklist) {
+    *aURIType = nsIUrlClassifierFeature::blocklistURI;
     return aChannel->GetURI(aURI);
   }
 
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::entitylist);
 
-  *aURIType = nsIUrlClassifierFeature::pairwiseWhitelistURI;
-  return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
+  *aURIType = nsIUrlClassifierFeature::pairwiseEntitylistURI;
+  return UrlClassifierCommon::CreatePairwiseEntityListURI(aChannel, aURI);
 }
 
 }  // namespace net

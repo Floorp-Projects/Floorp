@@ -30,7 +30,7 @@
 namespace mozilla {
 namespace net {
 
-#define URLCLASSIFIER_SKIP_HOSTNAMES "urlclassifier.skipHostnames"
+#define URLCLASSIFIER_EXCEPTION_HOSTNAMES "urlclassifier.skipHostnames"
 
 // Put CachedPrefs in anonymous namespace to avoid any collision from outside of
 // this file.
@@ -47,9 +47,9 @@ class CachedPrefs final {
 
   void Init();
 
-  nsCString GetSkipHostnames() const { return mSkipHostnames; }
-  void SetSkipHostnames(const nsACString& aHostnames) {
-    mSkipHostnames = aHostnames;
+  nsCString GetExceptionHostnames() const { return mExceptionHostnames; }
+  void SetExceptionHostnames(const nsACString& aHostnames) {
+    mExceptionHostnames = aHostnames;
   }
 
  private:
@@ -59,7 +59,7 @@ class CachedPrefs final {
 
   static void OnPrefsChange(const char* aPrefName, void*);
 
-  nsCString mSkipHostnames;
+  nsCString mExceptionHostnames;
 
   static StaticAutoPtr<CachedPrefs> sInstance;
 };
@@ -70,17 +70,18 @@ StaticAutoPtr<CachedPrefs> CachedPrefs::sInstance;
 void CachedPrefs::OnPrefsChange(const char* aPref, void* aPrefs) {
   auto prefs = static_cast<CachedPrefs*>(aPrefs);
 
-  if (!strcmp(aPref, URLCLASSIFIER_SKIP_HOSTNAMES)) {
-    nsCString skipHostnames;
-    Preferences::GetCString(URLCLASSIFIER_SKIP_HOSTNAMES, skipHostnames);
-    ToLowerCase(skipHostnames);
-    prefs->SetSkipHostnames(skipHostnames);
+  if (!strcmp(aPref, URLCLASSIFIER_EXCEPTION_HOSTNAMES)) {
+    nsCString exceptionHostnames;
+    Preferences::GetCString(URLCLASSIFIER_EXCEPTION_HOSTNAMES,
+                            exceptionHostnames);
+    ToLowerCase(exceptionHostnames);
+    prefs->SetExceptionHostnames(exceptionHostnames);
   }
 }
 
 void CachedPrefs::Init() {
   Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
-                                       URLCLASSIFIER_SKIP_HOSTNAMES, this);
+                                       URLCLASSIFIER_EXCEPTION_HOSTNAMES, this);
 }
 
 // static
@@ -100,7 +101,7 @@ CachedPrefs::~CachedPrefs() {
   MOZ_COUNT_DTOR(CachedPrefs);
 
   Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange,
-                                  URLCLASSIFIER_SKIP_HOSTNAMES, this);
+                                  URLCLASSIFIER_EXCEPTION_HOSTNAMES, this);
 }
 
 }  // anonymous namespace
@@ -172,11 +173,12 @@ nsresult nsChannelClassifier::StartInternal() {
   NS_ENSURE_SUCCESS(rv, rv);
   if (hasFlags) return NS_ERROR_UNEXPECTED;
 
-  nsCString skipHostnames = CachedPrefs::GetInstance()->GetSkipHostnames();
-  if (!skipHostnames.IsEmpty()) {
-    UC_LOG(("nsChannelClassifier[%p]:StartInternal whitelisted hostnames = %s",
-            this, skipHostnames.get()));
-    if (IsHostnameWhitelisted(uri, skipHostnames)) {
+  nsCString exceptionHostnames =
+      CachedPrefs::GetInstance()->GetExceptionHostnames();
+  if (!exceptionHostnames.IsEmpty()) {
+    UC_LOG(("nsChannelClassifier[%p]:StartInternal entitylisted hostnames = %s",
+            this, exceptionHostnames.get()));
+    if (IsHostnameEntitylisted(uri, exceptionHostnames)) {
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -239,8 +241,8 @@ nsresult nsChannelClassifier::StartInternal() {
   return NS_OK;
 }
 
-bool nsChannelClassifier::IsHostnameWhitelisted(
-    nsIURI* aUri, const nsACString& aWhitelisted) {
+bool nsChannelClassifier::IsHostnameEntitylisted(
+    nsIURI* aUri, const nsACString& aEntitylisted) {
   nsAutoCString host;
   nsresult rv = aUri->GetHost(host);
   if (NS_FAILED(rv) || host.IsEmpty()) {
@@ -248,12 +250,13 @@ bool nsChannelClassifier::IsHostnameWhitelisted(
   }
   ToLowerCase(host);
 
-  nsCCharSeparatedTokenizer tokenizer(aWhitelisted, ',');
+  nsCCharSeparatedTokenizer tokenizer(aEntitylisted, ',');
   while (tokenizer.hasMoreTokens()) {
     const nsACString& token = tokenizer.nextToken();
     if (token.Equals(host)) {
-      UC_LOG(("nsChannelClassifier[%p]:StartInternal skipping %s (whitelisted)",
-              this, host.get()));
+      UC_LOG(
+          ("nsChannelClassifier[%p]:StartInternal skipping %s (entitylisted)",
+           this, host.get()));
       return true;
     }
   }
