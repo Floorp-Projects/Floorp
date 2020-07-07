@@ -95,14 +95,14 @@ already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
   // here would be memory allocation, in which case mFace remains null.
   RefPtr<SharedFTFace> face;
   if (mFilename[0] != '/') {
-    RefPtr<CacheAwareZipReader> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+    RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
     nsZipItem* item = reader->GetItem(mFilename.get());
     NS_ASSERTION(item, "failed to find zip entry");
 
     uint32_t bufSize = item->RealSize();
     uint8_t* fontDataBuf = static_cast<uint8_t*>(malloc(bufSize));
     if (fontDataBuf) {
-      CacheAwareZipCursor cursor(item, reader, fontDataBuf, bufSize);
+      nsZipCursor cursor(item, reader, fontDataBuf, bufSize);
       cursor.Copy(&bufSize);
       NS_ASSERTION(bufSize == item->RealSize(), "error reading bundled font");
       RefPtr<FTUserFontData> ufd = new FTUserFontData(fontDataBuf, bufSize);
@@ -458,8 +458,7 @@ hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
     } else {
       // A relative path means an omnijar resource, which we may need to
       // decompress to a temporary buffer.
-      RefPtr<CacheAwareZipReader> reader =
-          Omnijar::GetReader(Omnijar::Type::GRE);
+      RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
       nsZipItem* item = reader->GetItem(mFilename.get());
       MOZ_ASSERT(item, "failed to find zip entry");
       if (item) {
@@ -470,7 +469,7 @@ hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
         uint32_t length = item->RealSize();
         uint8_t* buffer = static_cast<uint8_t*>(malloc(length));
         if (buffer) {
-          CacheAwareZipCursor cursor(item, reader, buffer, length);
+          nsZipCursor cursor(item, reader, buffer, length);
           cursor.Copy(&length);
           MOZ_ASSERT(length == item->RealSize(), "error reading font");
           if (length == item->RealSize()) {
@@ -1160,7 +1159,7 @@ void gfxFT2FontList::FindFontsInOmnijar(FontNameCache* aCache) {
   static const char* sJarSearchPaths[] = {
       "res/fonts/*.ttf$",
   };
-  RefPtr<CacheAwareZipReader> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+  RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
   for (unsigned i = 0; i < ArrayLength(sJarSearchPaths); i++) {
     nsZipFind* find;
     if (NS_SUCCEEDED(reader->FindInit(sJarSearchPaths[i], &find))) {
@@ -1275,7 +1274,7 @@ void gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
   }
 }
 
-void gfxFT2FontList::AppendFacesFromOmnijarEntry(CacheAwareZipReader* aArchive,
+void gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
                                                  const nsCString& aEntryName,
                                                  FontNameCache* aCache,
                                                  bool aJarChanged) {
@@ -1314,7 +1313,7 @@ void gfxFT2FontList::AppendFacesFromOmnijarEntry(CacheAwareZipReader* aArchive,
     return;
   }
 
-  CacheAwareZipCursor cursor(item, aArchive, (uint8_t*)buffer, bufSize);
+  nsZipCursor cursor(item, aArchive, (uint8_t*)buffer, bufSize);
   uint8_t* data = cursor.Copy(&bufSize);
   MOZ_ASSERT(data && bufSize == item->RealSize(), "error reading bundled font");
   if (!data) {
