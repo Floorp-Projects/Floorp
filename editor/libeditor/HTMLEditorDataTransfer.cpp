@@ -231,6 +231,13 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       int32_t* aOutStartOffset, int32_t* aOutEndOffset,
       bool aTrustedInput) const;
 
+  /**
+   * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
+   */
+  [[nodiscard]] static nsresult MoveStartAndEndAccordingToHTMLInfo(
+      const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
+      nsCOMPtr<nsINode>* aOutEndNode);
+
   static nsresult ParseFragment(const nsAString& aStr,
                                 nsAtom* aContextLocalName, Document* aTargetDoc,
                                 dom::DocumentFragment** aFragment,
@@ -3093,10 +3100,13 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
   *aOutStartOffset = 0;
 
   if (!aInfoStr.IsEmpty()) {
-    const nsresult rv = HTMLEditor::MoveStartAndEndAccordingToHTMLInfo(
-        aInfoStr, aOutStartNode, aOutEndNode);
+    const nsresult rv =
+        HTMLWithContextInserter::MoveStartAndEndAccordingToHTMLInfo(
+            aInfoStr, aOutStartNode, aOutEndNode);
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::MoveStartAndEndAccordingToHTMLInfo() failed");
+      NS_WARNING(
+          "HTMLEditor::HTMLWithContextInserter::"
+          "MoveStartAndEndAccordingToHTMLInfo() failed");
       return rv;
     }
   }
@@ -3106,7 +3116,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
 }
 
 // static
-nsresult HTMLEditor::MoveStartAndEndAccordingToHTMLInfo(
+nsresult
+HTMLEditor::HTMLWithContextInserter::MoveStartAndEndAccordingToHTMLInfo(
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
     nsCOMPtr<nsINode>* aOutEndNode) {
   int32_t sep = aInfoStr.FindChar((char16_t)',');
