@@ -65,7 +65,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   await removeTab(tab);
 });
 
-function toolboxTestScript(toolbox, devtoolsTab) {
+async function toolboxTestScript(toolbox, devtoolsTab) {
   function findMessages(hud, text, selector = ".message") {
     const messages = hud.ui.outputNode.querySelectorAll(selector);
     const elements = Array.prototype.filter.call(messages, el =>
@@ -74,24 +74,13 @@ function toolboxTestScript(toolbox, devtoolsTab) {
     return elements;
   }
 
-  async function waitFor(condition) {
-    while (!condition()) {
-      await new Promise(done => toolbox.win.setTimeout(done, 1000));
-    }
-  }
+  const webconsole = await toolbox.selectTool("webconsole");
+  const { hud } = webconsole;
+  const onMessage = waitUntil(() => {
+    return findMessages(hud, "Background page function called").length > 0;
+  });
+  hud.ui.wrapper.dispatchEvaluateExpression("myWebExtensionAddonFunction()");
+  await onMessage;
 
-  toolbox
-    .selectTool("webconsole")
-    .then(async console => {
-      const { hud } = console;
-      const onMessage = waitFor(() => {
-        return findMessages(hud, "Background page function called").length > 0;
-      });
-      hud.ui.wrapper.dispatchEvaluateExpression(
-        "myWebExtensionAddonFunction()"
-      );
-      await onMessage;
-      await removeTab(devtoolsTab);
-    })
-    .catch(e => dump("Exception from browser toolbox process: " + e + "\n"));
+  await removeTab(devtoolsTab);
 }
