@@ -49,7 +49,7 @@ class Kind(object):
             raise KeyError("{!r} does not define `loader`".format(self.path))
         return find_object(loader)
 
-    def load_tasks(self, parameters, loaded_tasks):
+    def load_tasks(self, parameters, loaded_tasks, write_artifacts):
         loader = self._get_loader()
         config = copy.deepcopy(self.config)
 
@@ -66,7 +66,8 @@ class Kind(object):
 
         # perform the transformations on the loaded inputs
         trans_config = TransformConfig(self.name, self.path, config, parameters,
-                                       kind_dependencies_tasks, self.graph_config)
+                                       kind_dependencies_tasks, self.graph_config,
+                                       write_artifacts=write_artifacts)
         tasks = [Task(self.name,
                       label=task_dict['label'],
                       attributes=task_dict['attributes'],
@@ -108,7 +109,12 @@ class TaskGraphGenerator(object):
     # circuit generation of the entire graph by never completing the generator.
 
     def __init__(
-            self, root_dir, parameters, decision_task_id="<decision-task>", target_kind=None,
+        self,
+        root_dir,
+        parameters,
+        decision_task_id="DECISION-TASK",
+        write_artifacts=False,
+        target_kind=None,
     ):
         """
         @param root_dir: root directory, with subdirectories for each kind
@@ -122,6 +128,7 @@ class TaskGraphGenerator(object):
         self._parameters = parameters
         self._target_kind = target_kind
         self._decision_task_id = decision_task_id
+        self._write_artifacts = write_artifacts
 
         # start the generator
         self._run = self._run()
@@ -267,7 +274,9 @@ class TaskGraphGenerator(object):
             logger.debug("Loading tasks for kind {}".format(kind_name))
             kind = kinds[kind_name]
             try:
-                new_tasks = kind.load_tasks(parameters, list(all_tasks.values()))
+                new_tasks = kind.load_tasks(
+                    parameters, list(all_tasks.values()), self._write_artifacts,
+                )
             except Exception:
                 logger.exception("Error loading tasks for kind {}:".format(kind_name))
                 raise
