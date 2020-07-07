@@ -21,6 +21,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/ReverseIterator.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
 #include "nsAlgorithm.h"
@@ -568,7 +569,14 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
   MOZ_ASSERT(size.isValid());
 
-  for (const auto val : aInput) {
+  // We construct a range over the raw pointers here because this loop is
+  // time-critical.
+  // XXX It might be good to encapsulate this in a some function to make it
+  // less error-prone and more expressive.
+  const auto inputRange = mozilla::detail::IteratorRange(
+      aInput.Elements(), aInput.Elements() + aInput.Length());
+
+  for (const auto val : inputRange) {
     if (val > ONE_BYTE_LIMIT) {
       size += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
       if (!size.isValid()) {
@@ -598,7 +606,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
   *(buffer++) = aType;
 
   // Encode string
-  for (const auto val : aInput) {
+  for (const auto val : inputRange) {
     if (val <= ONE_BYTE_LIMIT) {
       *(buffer++) = val + ONE_BYTE_ADJUST;
     } else if (char16_t(val) <= TWO_BYTE_LIMIT) {
