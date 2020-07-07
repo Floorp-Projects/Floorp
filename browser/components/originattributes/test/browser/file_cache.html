@@ -6,6 +6,13 @@
   <link rel="stylesheet" type="text/css"
         href="http://example.net/browser/browser/components/originattributes/test/browser/file_thirdPartyChild.link.css">
   <link rel="preconnect" href="http://example.net">
+  <style type="text/css">
+    @font-face {
+      font-family: foo;
+      src: url("http://example.net/browser/browser/components/originattributes/test/browser/file_thirdPartyChild.font.woff") format('woff');
+    }
+    body { font-family: foo }
+  </style>
 </head>
 <body>
 <div>file_cache.html</div>
