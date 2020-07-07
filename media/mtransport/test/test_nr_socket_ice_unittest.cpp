@@ -307,7 +307,7 @@ class TestNrSocketIceUnitTest : public ::testing::Test {
     test_utils_ = new MtransportTestUtils();
     test_utils2_ = new MtransportTestUtils();
 
-    NrIceCtx::InitializeGlobals(false, false, false);
+    NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
   }
 
   void TearDown() override {
