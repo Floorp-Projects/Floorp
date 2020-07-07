@@ -95,8 +95,7 @@ class LoadInfo final : public nsILoadInfo {
   static void ComputeAncestors(
       dom::CanonicalBrowsingContext* aBC,
       nsTArray<nsCOMPtr<nsIPrincipal>>& aAncestorPrincipals,
-      nsTArray<uint64_t>& aBrowsingContextIDs,
-      nsTArray<uint64_t>& aOuterWindowIDs);
+      nsTArray<uint64_t>& aBrowsingContextIDs);
 
   // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
@@ -179,7 +178,6 @@ class LoadInfo final : public nsILoadInfo {
            RedirectHistoryArray& aRedirectChain,
            nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
            const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
-           const nsTArray<uint64_t>& aAncestorOuterWindowIDs,
            const nsTArray<nsCString>& aUnsafeHeaders, bool aForcePreflight,
            bool aIsPreflight, bool aLoadTriggeredFromExternal,
            bool aServiceWorkerTaintingSynthesized,
@@ -276,7 +274,6 @@ class LoadInfo final : public nsILoadInfo {
   RedirectHistoryArray mRedirectChain;
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
   nsTArray<uint64_t> mAncestorBrowsingContextIDs;
-  nsTArray<uint64_t> mAncestorOuterWindowIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
   uint32_t mRequestBlockingReason;
   bool mForcePreflight;
