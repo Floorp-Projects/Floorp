@@ -75,7 +75,8 @@ Scope* ScopeCreationData::createScope(JSContext* cx) {
     case ScopeKind::Catch:
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
-    case ScopeKind::FunctionLexical: {
+    case ScopeKind::FunctionLexical:
+    case ScopeKind::ClassBody: {
       scope = createSpecificScope<LexicalScope>(cx);
       break;
     }
@@ -101,7 +102,8 @@ Scope* ScopeCreationData::createScope(JSContext* cx) {
       scope = createSpecificScope<WithScope>(cx);
       break;
     }
-    default: {
+    case ScopeKind::WasmFunction:
+    case ScopeKind::WasmInstance: {
       MOZ_CRASH("Unexpected deferred type");
     }
   }
@@ -134,7 +136,8 @@ void ScopeCreationData::trace(JSTracer* trc) {
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
-      case ScopeKind::FunctionLexical: {
+      case ScopeKind::FunctionLexical:
+      case ScopeKind::ClassBody: {
         data<LexicalScope>().trace(trc);
         break;
       }
@@ -173,6 +176,7 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
+    case ScopeKind::ClassBody:
       return nextFrameSlot<LexicalScope>();
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:

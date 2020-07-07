@@ -107,6 +107,7 @@ uint32_t AbstractScopePtr::nextFrameSlot() const {
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
+    case ScopeKind::ClassBody:
       return scope()->as<LexicalScope>().nextFrameSlot();
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:

@@ -465,7 +465,7 @@ bool ClassEmitter::emitBodyScope(
   bodyTdzCache_.emplace(bce_);
 
   bodyScope_.emplace(bce_);
-  if (!bodyScope_->enterLexical(bce_, ScopeKind::Lexical, scopeBindings)) {
+  if (!bodyScope_->enterLexical(bce_, ScopeKind::ClassBody, scopeBindings)) {
     return false;
   }
 
