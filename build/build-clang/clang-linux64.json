@@ -22,6 +22,7 @@
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
       "tsan-hang-be41a98ac222.patch",
+      "llvmorg-11-init-15486-gfc937806efd-dont-jump-to-landing-pads.patch",
       "loosen-msvc-detection.patch"
     ]
 }

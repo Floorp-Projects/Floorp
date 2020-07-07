@@ -13,6 +13,7 @@
       "downgrade-mangling-error.patch",
       "rG7e18aeba5062.patch",
       "llvmorg-10-init-5191-ga84b200e604-windows-pgo.patch",
+      "llvmorg-11-init-15486-gfc937806efd-dont-jump-to-landing-pads.patch",
       "loosen-msvc-detection.patch"
     ]
 }
