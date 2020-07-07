@@ -6,6 +6,7 @@ import mozunit
 from mozperftest.environment import METRICS
 from mozperftest.tests.support import BT_DATA, EXAMPLE_TEST, get_running_env, temp_file
 from mozperftest.utils import silence
+from mozperftest.metrics.utils import metric_fields
 
 
 def setup_env(options):
@@ -61,7 +62,7 @@ def test_notebookupload_with_filter(notebook, no_filter):
 @mock.patch("mozperftest.metrics.notebookupload.PerftestNotebook")
 def test_compare_to_success(notebook, stats):
     options = {
-        "notebook-metrics": ["firstPaint"],
+        "notebook-metrics": [metric_fields("firstPaint")],
         "notebook-prefix": "",
         "notebook-analysis": [],
         "notebook": True,
@@ -94,7 +95,7 @@ def test_compare_to_success(notebook, stats):
 @mock.patch("mozperftest.metrics.notebookupload.PerftestNotebook")
 def test_compare_to_invalid_parameter(notebook, filepath):
     options = {
-        "notebook-metrics": ["firstPaint"],
+        "notebook-metrics": [metric_fields("firstPaint")],
         "notebook-prefix": "",
         "notebook-analysis": [],
         "notebook": True,
