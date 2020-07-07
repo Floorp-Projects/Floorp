@@ -66,9 +66,8 @@ let gRecipeManager = null;
 /**
  * Tracks the last time the user cancelled the master password prompt,
  *  to avoid spamming master password prompts on autocomplete searches.
- * TODO: Bug 1646805 - Should be `Number.NEGATIVE_INFINITY`.
  */
-let gLastMPLoginCancelled = Math.NEGATIVE_INFINITY;
+let gLastMPLoginCancelled = Number.NEGATIVE_INFINITY;
 
 let gGeneratedPasswordObserver = {
   addedObserver: false,
