@@ -1255,7 +1255,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       const ClassFields& classFields, ListNodeType& classMembers);
 
   FunctionNodeType fieldInitializerOpt(Node name, HandleAtom atom,
-                                       ClassFields& classFields, bool isStatic);
+                                       ClassFields& classFields, bool isStatic,
+                                       HasHeritage hasHeritage);
   FunctionNodeType synthesizeConstructor(HandleAtom className,
                                          uint32_t classNameOffset,
                                          HasHeritage hasHeritage);
