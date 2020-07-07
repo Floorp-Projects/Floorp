@@ -1611,26 +1611,14 @@ void RecordedEvent::ReadPatternData(S& aStream,
       SurfacePatternStorage* sps =
           reinterpret_cast<SurfacePatternStorage*>(&aPattern.mStorage);
       ReadElement(aStream, *sps);
-      if (!aStream.good()) {
-        return;
-      }
-
       if (sps->mExtend < ExtendMode::CLAMP ||
           sps->mExtend > ExtendMode::REFLECT) {
-        gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-            << "Invalid ExtendMode read: value: " << int(sps->mExtend)
-            << ", min: " << int(ExtendMode::CLAMP)
-            << ", max: " << int(ExtendMode::REFLECT);
         aStream.SetIsBad();
+        return;
       }
 
       if (sps->mSamplingFilter < SamplingFilter::GOOD ||
           sps->mSamplingFilter >= SamplingFilter::SENTINEL) {
-        gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-            << "Invalid SamplingFilter read: value: "
-            << int(sps->mSamplingFilter)
-            << ", min: " << int(SamplingFilter::GOOD)
-            << ", sentinel: " << int(SamplingFilter::SENTINEL);
         aStream.SetIsBad();
       }
       return;
@@ -1758,27 +1746,14 @@ void RecordedEvent::ReadStrokeOptions(S& aStream,
 template <class S>
 static void ReadDrawOptions(S& aStream, DrawOptions& aDrawOptions) {
   ReadElement(aStream, aDrawOptions);
-  if (!aStream.good()) {
-    return;
-  }
-
   if (aDrawOptions.mAntialiasMode < AntialiasMode::NONE ||
       aDrawOptions.mAntialiasMode > AntialiasMode::DEFAULT) {
-    gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-        << "Invalid AntialiasMode read: value: "
-        << int(aDrawOptions.mAntialiasMode)
-        << ", min: " << int(AntialiasMode::NONE)
-        << ", max: " << int(AntialiasMode::DEFAULT);
     aStream.SetIsBad();
+    return;
   }
 
   if (aDrawOptions.mCompositionOp < CompositionOp::OP_OVER ||
       aDrawOptions.mCompositionOp > CompositionOp::OP_COUNT) {
-    gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-        << "Invalid CompositionOp read: value: "
-        << int(aDrawOptions.mCompositionOp)
-        << ", min: " << int(CompositionOp::OP_OVER)
-        << ", max: " << int(CompositionOp::OP_COUNT);
     aStream.SetIsBad();
   }
 }
@@ -1787,27 +1762,14 @@ template <class S>
 static void ReadDrawSurfaceOptions(S& aStream,
                                    DrawSurfaceOptions& aDrawSurfaceOptions) {
   ReadElement(aStream, aDrawSurfaceOptions);
-  if (!aStream.good()) {
-    return;
-  }
-
   if (aDrawSurfaceOptions.mSamplingFilter < SamplingFilter::GOOD ||
       aDrawSurfaceOptions.mSamplingFilter >= SamplingFilter::SENTINEL) {
-    gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-        << "Invalid SamplingFilter read: value: "
-        << int(aDrawSurfaceOptions.mSamplingFilter)
-        << ", min: " << int(SamplingFilter::GOOD)
-        << ", sentinel: " << int(SamplingFilter::SENTINEL);
     aStream.SetIsBad();
+    return;
   }
 
   if (aDrawSurfaceOptions.mSamplingBounds < SamplingBounds::UNBOUNDED ||
       aDrawSurfaceOptions.mSamplingBounds > SamplingBounds::BOUNDED) {
-    gfxDevCrash(LogReason::InvalidConstrainedValueRead)
-        << "Invalid SamplingBounds read: value: "
-        << int(aDrawSurfaceOptions.mSamplingBounds)
-        << ", min: " << int(SamplingBounds::UNBOUNDED)
-        << ", max: " << int(SamplingBounds::BOUNDED);
     aStream.SetIsBad();
   }
 }
