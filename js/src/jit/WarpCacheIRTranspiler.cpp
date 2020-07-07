@@ -222,6 +222,28 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
+  MDefinition* def = getOperand(objId);
+
+  auto* ins = MGuardProto::New(alloc(), def, /* maybeProto = */ nullptr);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
+                                           uint32_t protoOffset) {
+  MDefinition* def = getOperand(objId);
+  JSObject* proto = objectStubField(protoOffset);
+
+  auto* ins = MGuardProto::New(alloc(), def, proto);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardFunctionPrototype(ObjOperandId objId,
                                                        ObjOperandId protoId,
                                                        uint32_t slotOffset) {
