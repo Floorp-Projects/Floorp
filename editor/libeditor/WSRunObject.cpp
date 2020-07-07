@@ -1007,9 +1007,21 @@ WSRunScanner::TextFragmentData::GetInvisibleTrailingWhiteSpaceRange() const {
     return EditorDOMRangeType(mStart.PointRef(), mEnd.PointRef());
   }
 
-  // TODO: Implement other cases in the following patches.
   MOZ_ASSERT(mNBSPData.LastPointRef().IsSetAndValid());
-  return EditorDOMRangeType();
+
+  // If last NBSP is immediately before the end, there is no trailing white-
+  // spaces.
+  if (mEnd.PointRef().IsSet() &&
+      mNBSPData.LastPointRef().GetContainer() ==
+          mEnd.PointRef().GetContainer() &&
+      mNBSPData.LastPointRef().Offset() == mEnd.PointRef().Offset() - 1) {
+    return EditorDOMRangeType();
+  }
+
+  // Otherwise, the may be some trailing white-spaces.
+  MOZ_ASSERT(!mNBSPData.LastPointRef().IsEndOfContainer());
+  return EditorDOMRangeType(mNBSPData.LastPointRef().NextPoint(),
+                            mEnd.PointRef());
 }
 
 void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
@@ -1109,35 +1121,27 @@ void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
       startRun->mStartOffset = mStart.PointRef().Offset();
     }
     startRun->SetStartFrom(mStart.RawReason());
-    if (mNBSPData.LastPointRef().IsSet()) {
-      startRun->mEndNode = mNBSPData.LastPointRef().GetContainer();
-      startRun->mEndOffset = mNBSPData.LastPointRef().Offset() + 1;
-    }
-
-    // we might have trailing ws.
-    // it so happens that *if* there is an nbsp at end, {mEndNode,mEndOffset-1}
-    // will point to it, even though in general start/end points not
-    // guaranteed to be in text nodes.
-    if (mNBSPData.LastPointRef().IsSet() && mEnd.PointRef().IsSet() &&
-        mNBSPData.LastPointRef().GetContainer() ==
-            mEnd.PointRef().GetContainer() &&
-        mNBSPData.LastPointRef().Offset() == mEnd.PointRef().Offset() - 1) {
-      startRun->SetEndBy(mEnd.RawReason());
+    if (!maybeHaveTrailingWhiteSpaces) {
       startRun->mEndNode = mEnd.PointRef().GetContainer();
       startRun->mEndOffset = mEnd.PointRef().Offset();
+      startRun->SetEndBy(mEnd.RawReason());
       return;
     }
+
+    if (trailingWhiteSpaceRange.StartRef().IsSet()) {
+      startRun->mEndNode = trailingWhiteSpaceRange.StartRef().GetContainer();
+      startRun->mEndOffset = trailingWhiteSpaceRange.StartRef().Offset();
+    }
+    startRun->SetEndByTrailingWhiteSpaces();
 
     // set up next run
     WSFragment* lastRun = aFragments.AppendElement();
     lastRun->MarkAsEndOfHardLine();
-    if (mNBSPData.LastPointRef().IsSet()) {
-      lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
-      lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
-    }
+    lastRun->mStartNode = startRun->mEndNode;
+    lastRun->mStartOffset = startRun->mEndOffset;
     lastRun->SetStartFromNormalWhiteSpaces();
+    // XXX Why don't we set end boundary here??
     lastRun->SetEndBy(mEnd.RawReason());
-    startRun->SetEndByTrailingWhiteSpaces();
     return;
   }
 
@@ -1174,39 +1178,30 @@ void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
     return;
   }
 
-  // we might have trailing ws.
-  // it so happens that *if* there is an nbsp at end,
-  // {mEndNode,mEndOffset-1} will point to it, even though in general
-  // start/end points not guaranteed to be in text nodes.
-  if (mNBSPData.LastPointRef().IsSet() && mEnd.PointRef().IsSet() &&
-      mNBSPData.LastPointRef().GetContainer() ==
-          mEnd.PointRef().GetContainer() &&
-      mNBSPData.LastPointRef().Offset() == mEnd.PointRef().Offset() - 1) {
+  if (!maybeHaveTrailingWhiteSpaces) {
     // normal ws runs right up to adjacent block (nbsp next to block)
-    normalRun->SetEndBy(mEnd.RawReason());
     normalRun->mEndNode = mEnd.PointRef().GetContainer();
     normalRun->mEndOffset = mEnd.PointRef().Offset();
+    normalRun->SetEndBy(mEnd.RawReason());
     return;
   }
 
-  if (mNBSPData.LastPointRef().IsSet()) {
-    normalRun->mEndNode = mNBSPData.LastPointRef().GetContainer();
-    normalRun->mEndOffset = mNBSPData.LastPointRef().Offset() + 1;
+  if (trailingWhiteSpaceRange.StartRef().IsSet()) {
+    normalRun->mEndNode = trailingWhiteSpaceRange.StartRef().GetContainer();
+    normalRun->mEndOffset = trailingWhiteSpaceRange.StartRef().Offset();
   }
   normalRun->SetEndByTrailingWhiteSpaces();
 
   // set up next run
   WSFragment* lastRun = aFragments.AppendElement();
   lastRun->MarkAsEndOfHardLine();
-  if (mNBSPData.LastPointRef().IsSet()) {
-    lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
-    lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
-  }
-  if (mEnd.PointRef().IsSet()) {
-    lastRun->mEndNode = mEnd.PointRef().GetContainer();
-    lastRun->mEndOffset = mEnd.PointRef().Offset();
-  }
+  lastRun->mStartNode = normalRun->mEndNode;
+  lastRun->mStartOffset = normalRun->mEndOffset;
   lastRun->SetStartFromNormalWhiteSpaces();
+  if (trailingWhiteSpaceRange.EndRef().IsSet()) {
+    lastRun->mEndNode = trailingWhiteSpaceRange.EndRef().GetContainer();
+    lastRun->mEndOffset = trailingWhiteSpaceRange.EndRef().Offset();
+  }
   lastRun->SetEndBy(mEnd.RawReason());
 }
 
