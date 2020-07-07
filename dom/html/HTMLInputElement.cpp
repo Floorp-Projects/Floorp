@@ -1280,7 +1280,7 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                aValue->Equals(nsGkAtoms::_auto, eIgnoreCase)) {
       SetDirectionFromValue(aNotify);
     } else if (aName == nsGkAtoms::lang) {
-      // FIXME(emilio, bug 1605158): This doesn't account for lang changes on
+      // FIXME(emilio, bug 1651070): This doesn't account for lang changes on
       // ancestors.
       if (mType == NS_FORM_INPUT_NUMBER) {
         // The validity of our value may have changed based on the locale.
