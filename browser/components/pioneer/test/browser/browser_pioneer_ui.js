@@ -9,6 +9,8 @@
 "use strict";
 
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
+const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
+  "toolkit.telemetry.pioneer-new-studies-available";
 
 const PREF_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDON_INSTALLED = "toolkit.pioneer.testAddonInstalled";
@@ -52,7 +54,12 @@ const CACHED_ADDONS = [
   },
 ];
 
-add_task(async function() {
+const waitForAnimationFrame = () =>
+  new Promise(resolve => {
+    content.window.requestAnimationFrame(resolve);
+  });
+
+add_task(async function testAboutPage() {
   const cachedAddons = JSON.stringify(CACHED_ADDONS);
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -66,11 +73,6 @@ add_task(async function() {
     url: "about:pioneer",
     gBrowser,
   });
-
-  const waitForAnimationFrame = () =>
-    new Promise(resolve => {
-      content.window.requestAnimationFrame(resolve);
-    });
 
   const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
   ok(beforePref === null, "before enrollment, Pioneer pref is null.");
@@ -136,4 +138,58 @@ add_task(async function() {
   }
 
   await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testPioneerBadge() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_PIONEER_NEW_STUDIES_AVAILABLE, true]],
+    clear: [
+      [PREF_PIONEER_NEW_STUDIES_AVAILABLE, false],
+      [PREF_PIONEER_ID, ""],
+    ],
+  });
+
+  let pioneerTab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:pioneer",
+    gBrowser,
+  });
+
+  const enrollmentButton = content.document.getElementById("enrollment-button");
+  enrollmentButton.click();
+
+  let blankTab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:home",
+    gBrowser,
+  });
+
+  Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
+
+  const toolbarButton = document.getElementById("pioneer-button");
+  const toolbarBadge = toolbarButton.querySelector(".toolbarbutton-badge");
+
+  ok(
+    toolbarBadge.classList.contains("feature-callout"),
+    "When pref is true, Pioneer toolbar button is called out in the current window."
+  );
+
+  toolbarButton.click();
+
+  ok(
+    !toolbarBadge.classList.contains("feature-callout"),
+    "When about:pioneer toolbar button is pressed, call-out is removed."
+  );
+
+  Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
+
+  const newWin = await BrowserTestUtils.openNewBrowserWindow();
+  const newToolbarBadge = toolbarButton.querySelector(".toolbarbutton-badge");
+
+  ok(
+    newToolbarBadge.classList.contains("feature-callout"),
+    "When pref is true, Pioneer toolbar button is called out in a new window."
+  );
+
+  await BrowserTestUtils.closeWindow(newWin);
+  await BrowserTestUtils.removeTab(pioneerTab);
+  await BrowserTestUtils.removeTab(blankTab);
 });
