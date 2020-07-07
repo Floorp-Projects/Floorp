@@ -105,7 +105,11 @@ def import_clang_tidy(source_dir, build_clang_tidy_alpha):
                                    'clang-tools-extra/clang-tidy')
     sys.path.append(clang_plugin_path)
     from import_mozilla_checks import do_import
-    do_import(clang_plugin_path, clang_tidy_path, build_clang_tidy_alpha)
+    import_options = {
+      "alpha": build_clang_tidy_alpha,
+      "external": False
+    }
+    do_import(clang_plugin_path, clang_tidy_path, import_options)
 
 
 def build_package(package_build_dir, cmake_args):
