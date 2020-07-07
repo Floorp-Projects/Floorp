@@ -130,12 +130,7 @@ async function testEditProperty(view, rule, name, value, isValid) {
   );
 
   info("Checking that the style property was changed on the content page");
-  const propValue = await executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name,
-  });
-
+  const propValue = await getRulePropertyValue(0, 0, name);
   if (isValid) {
     is(propValue, value, name + " should have been set.");
   } else {

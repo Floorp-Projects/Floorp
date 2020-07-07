@@ -21,7 +21,6 @@ const TEST_URL_ROOT =
 const TEST_URL_ROOT_SSL =
   "https://example.com/browser/devtools/client/inspector/shared/test/";
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
-const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(
   "devtools/shared/locales/styleinspector.properties"
 );
@@ -72,23 +71,6 @@ registerCleanupFunction(() => {
  * Add new tabs, open the toolbox and switch to the various panels, select
  * nodes, get node references, ...
  */
-
-/**
- * The rule-view tests rely on a frame-script to be injected in the content test
- * page. So override the shared-head's addTab to load the frame script after the
- * tab was added.
- * FIXME: Refactor the rule-view tests to use the testActor instead of a frame
- * script, so they can run on remote targets too.
- */
-var _addTab = addTab;
-addTab = function(url) {
-  return _addTab(url).then(tab => {
-    info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-    const browser = tab.linkedBrowser;
-    browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-    return tab;
-  });
-};
 
 /**
  * Polls a given function waiting for it to return true.
