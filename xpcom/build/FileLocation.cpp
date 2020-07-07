@@ -7,6 +7,7 @@
 #include "FileLocation.h"
 #include "nsZipArchive.h"
 #include "nsURLHelper.h"
+#include "mozilla/Omnijar.h"
 
 namespace mozilla {
 
@@ -16,12 +17,12 @@ FileLocation::~FileLocation() = default;
 
 FileLocation::FileLocation(nsIFile* aFile) { Init(aFile); }
 
-FileLocation::FileLocation(nsIFile* aFile, const char* aPath) {
-  Init(aFile, aPath);
+FileLocation::FileLocation(CacheAwareZipReader* aZip, const char* aPath) {
+  Init(aZip, aPath);
 }
 
 FileLocation::FileLocation(nsZipArchive* aZip, const char* aPath) {
-  Init(aZip, aPath);
+  Init(new CacheAwareZipReader(aZip, nullptr), aPath);
 }
 
 FileLocation::FileLocation(const FileLocation& aOther)
@@ -88,8 +89,14 @@ void FileLocation::Init(nsIFile* aFile, const char* aPath) {
   mPath = aPath;
 }
 
-void FileLocation::Init(nsZipArchive* aZip, const char* aPath) {
+void FileLocation::Init(CacheAwareZipReader* aZip, const char* aPath) {
   mBaseZip = aZip;
+  mBaseFile = nullptr;
+  mPath = aPath;
+}
+
+void FileLocation::Init(nsZipArchive* aZip, const char* aPath) {
+  mBaseZip = new CacheAwareZipReader(aZip, nullptr);
   mBaseFile = nullptr;
   mPath = aPath;
 }
@@ -98,8 +105,7 @@ void FileLocation::GetURIString(nsACString& aResult) const {
   if (mBaseFile) {
     net_GetURLSpecFromActualFile(mBaseFile, aResult);
   } else if (mBaseZip) {
-    RefPtr<nsZipHandle> handler = mBaseZip->GetFD();
-    handler->mFile.GetURIString(aResult);
+    mBaseZip->GetURIString(aResult);
   }
   if (IsZip()) {
     aResult.InsertLiteral("jar:", 0);
@@ -110,11 +116,7 @@ void FileLocation::GetURIString(nsACString& aResult) const {
 
 already_AddRefed<nsIFile> FileLocation::GetBaseFile() {
   if (IsZip() && mBaseZip) {
-    RefPtr<nsZipHandle> handler = mBaseZip->GetFD();
-    if (handler) {
-      return handler->mFile.GetBaseFile();
-    }
-    return nullptr;
+    return mBaseZip->GetBaseFile();
   }
 
   nsCOMPtr<nsIFile> file = mBaseFile;
@@ -126,23 +128,17 @@ bool FileLocation::Equals(const FileLocation& aFile) const {
     return false;
   }
 
-  if (mBaseFile && aFile.mBaseFile) {
-    bool eq;
-    return NS_SUCCEEDED(mBaseFile->Equals(aFile.mBaseFile, &eq)) && eq;
+  nsCOMPtr<nsIFile> a = mBaseFile;
+  nsCOMPtr<nsIFile> b = aFile.mBaseFile;
+  if (!mBaseFile && mBaseZip) {
+    a = mBaseZip->GetBaseFile();
+  }
+  if (!aFile.mBaseFile && aFile.mBaseZip) {
+    b = mBaseZip->GetBaseFile();
   }
 
-  const FileLocation* a = this;
-  const FileLocation* b = &aFile;
-  if (a->mBaseZip) {
-    RefPtr<nsZipHandle> handler = a->mBaseZip->GetFD();
-    a = &handler->mFile;
-  }
-  if (b->mBaseZip) {
-    RefPtr<nsZipHandle> handler = b->mBaseZip->GetFD();
-    b = &handler->mFile;
-  }
-
-  return a->Equals(*b);
+  bool eq;
+  return NS_SUCCEEDED(a->Equals(b, &eq)) && eq;
 }
 
 nsresult FileLocation::GetData(Data& aData) {
@@ -151,7 +147,7 @@ nsresult FileLocation::GetData(Data& aData) {
   }
   aData.mZip = mBaseZip;
   if (!aData.mZip) {
-    aData.mZip = new nsZipArchive();
+    aData.mZip = new CacheAwareZipReader();
     aData.mZip->OpenArchive(mBaseFile);
   }
   aData.mItem = aData.mZip->GetItem(mPath.get());
@@ -195,8 +191,8 @@ nsresult FileLocation::Data::Copy(char* aBuf, uint32_t aLen) {
     return NS_OK;
   }
   if (mItem) {
-    nsZipCursor cursor(mItem, mZip, reinterpret_cast<uint8_t*>(aBuf), aLen,
-                       true);
+    CacheAwareZipCursor cursor(mItem, mZip, reinterpret_cast<uint8_t*>(aBuf),
+                               aLen, true);
     uint32_t readLen;
     cursor.Copy(&readLen);
     if (readLen != aLen) {

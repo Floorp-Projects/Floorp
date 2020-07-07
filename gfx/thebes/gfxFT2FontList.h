@@ -11,6 +11,9 @@
 #include "gfxPlatformFontList.h"
 
 namespace mozilla {
+
+class CacheAwareZipReader;
+
 namespace dom {
 class SystemFontListEntry;
 };
@@ -174,7 +177,7 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   void AppendFacesFromFontFile(const nsCString& aFileName,
                                FontNameCache* aCache, StandardFile aStdFile);
 
-  void AppendFacesFromOmnijarEntry(nsZipArchive* aReader,
+  void AppendFacesFromOmnijarEntry(mozilla::CacheAwareZipReader* aArchive,
                                    const nsCString& aEntryName,
                                    FontNameCache* aCache, bool aJarChanged);
 
