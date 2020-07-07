@@ -64,42 +64,28 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
 async function toolboxTestScript(toolbox, devtoolsTab) {
   const targetName = toolbox.target.name;
   const isAddonTarget = toolbox.target.isAddon;
-  if (!(isAddonTarget && targetName === ADDON_NOBG_NAME)) {
-    dump(`Expected target name "${ADDON_NOBG_NAME}", got ${targetName}`);
-    throw new Error("Toolbox doesn't have the expected target");
-  }
+  ok(isAddonTarget, "Toolbox target is an addon");
+  is(targetName, ADDON_NOBG_NAME, "Toolbox has the expected target");
 
-  toolbox
-    .selectTool("inspector")
-    .then(async inspector => {
-      let nodeActor;
+  const inspector = await toolbox.selectTool("inspector");
 
-      dump(`Wait the fallback window to be fully loaded\n`);
-      await asyncWaitUntil(async () => {
-        nodeActor = await inspector.walker.querySelector(
-          inspector.walker.rootNode,
-          "h1"
-        );
-        return nodeActor && nodeActor.inlineTextChild;
-      });
+  let nodeActor;
+  info(`Wait the fallback window to be fully loaded`);
+  await asyncWaitUntil(async () => {
+    nodeActor = await inspector.walker.querySelector(
+      inspector.walker.rootNode,
+      "h1"
+    );
+    return nodeActor && nodeActor.inlineTextChild;
+  });
 
-      dump("Got a nodeActor with an inline text child\n");
-      const expectedValue = "Your addon does not have any document opened yet.";
-      const actualValue = nodeActor.inlineTextChild._form.nodeValue;
+  info("Got a nodeActor with an inline text child");
+  const actualValue = nodeActor.inlineTextChild._form.nodeValue;
+  is(
+    actualValue,
+    "Your addon does not have any document opened yet.",
+    "nodeActor has the expected inlineTextChild value"
+  );
 
-      if (actualValue !== expectedValue) {
-        throw new Error(
-          `mismatched inlineTextchild value: "${actualValue}" !== "${expectedValue}"`
-        );
-      }
-
-      dump("Got the expected inline text content in the selected node\n");
-
-      await removeTab(devtoolsTab);
-    })
-    .catch(error => {
-      dump("Error while running code in the browser toolbox process:\n");
-      dump(error + "\n");
-      dump("stack:\n" + error.stack + "\n");
-    });
+  await removeTab(devtoolsTab);
 }
