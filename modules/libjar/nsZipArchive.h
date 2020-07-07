@@ -17,9 +17,11 @@
 #include "nsIFile.h"
 #include "nsISupportsImpl.h"  // For mozilla::ThreadSafeAutoRefCnt
 #include "mozilla/ArenaAllocator.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/FileLocation.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/RWLock.h"
 
 class nsZipFind;
 struct PRFileDesc;
@@ -84,6 +86,22 @@ class nsZipArchive final {
   /** destructing the object closes the archive */
   ~nsZipArchive();
 
+  /**
+   * LazyOpenArchiveParams is a class which is used to store cached
+   * contents of omnijars.
+   *
+   */
+  struct LazyOpenArchiveParams {
+    nsCOMPtr<nsIFile> mFile;
+    mozilla::Span<const uint8_t> mCachedCentral;
+
+    LazyOpenArchiveParams(nsIFile* aFile,
+                          mozilla::Span<const uint8_t> aCachedCentral)
+        : mFile(nullptr), mCachedCentral(aCachedCentral) {
+      aFile->Clone(getter_AddRefs(mFile));
+    }
+  };
+
  public:
   static const char* sFileCorruptedReason;
 
@@ -102,12 +120,11 @@ class nsZipArchive final {
                               optimization
    * @param   aCachedCentral  Optional cached buffer containing the zip central
                               for this zip.
-   * @param   aCachedCentralSize  Optional size of aCachedCentral.
    * @return  status code
    */
   nsresult OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd = nullptr,
-                       const uint8_t* aCachedCentral = nullptr,
-                       size_t aCachedCentralSize = 0);
+                       mozilla::Span<const uint8_t> aCachedCentral =
+                           mozilla::Span<const uint8_t>());
 
   /**
    * OpenArchive
@@ -117,11 +134,44 @@ class nsZipArchive final {
    * @param   aFile         The file used to access the zip
    * @param   aCachedCentral  Optional cached buffer containing the zip central
                               for this zip.
-   * @param   aCachedCentralSize  Optional size of aCachedCentral.
    * @return  status code
    */
-  nsresult OpenArchive(nsIFile* aFile, const uint8_t* aCachedCentral = nullptr,
-                       size_t aCachedCentralSize = 0);
+  nsresult OpenArchive(nsIFile* aFile,
+                       mozilla::Span<const uint8_t> aCachedCentral =
+                           mozilla::Span<const uint8_t>());
+
+  /**
+   * Ensures underlying archive is opened, if it was opened with
+   * LazyOpenArchive.
+   *
+   * Convenience function that generates nsZipHandle
+   *
+   * @param   aFile         The file used to access the zip
+   * @return  status code
+   */
+  nsresult EnsureArchiveOpenedOnDisk();
+
+  /**
+   * OpenArchive
+   *
+   * Lazily opens the zip archive on the first request to get data from it.
+   * NOTE: The buffer provided for aCachedCentral must outlive this
+   * nsZipArchive. This is presently true for the StartupCache, as it ensures
+   * that even past cache invalidation, all accessed buffers persist for the
+   * lifetime of the application, but we will need to ensure that this remains
+   * true.
+   *
+   * @param   aFile               The file used to access the zip
+   * @param   aCachedCentral      Cached buffer containing the zip central
+                                  for this zip.
+   * @return  status code
+   */
+  nsresult LazyOpenArchive(nsIFile* aFile,
+                           mozilla::Span<const uint8_t> aCachedCentral) {
+    mozilla::AutoWriteLock lock(mLazyOpenLock);
+    mLazyOpenParams.emplace(aFile, aCachedCentral);
+    return NS_OK;
+  }
 
   /**
    * Test the integrity of items in this archive by running
@@ -177,6 +227,21 @@ class nsZipArchive final {
    */
   nsZipHandle* GetFD();
 
+  /*
+   * Gets the URI string to the mapped file. One could get this URI string
+   * in a roundabout way using GetFD, but GetFD requires opening the file for
+   * read access, which can be expensive.
+   */
+  void GetURIString(nsACString& result);
+
+  /*
+   * Gets the underlying nsIFile pointer. Like GetURIString, this is to be
+   * preferred over GetFD where possible, because it does not require opening
+   * the file for read access, which can be expensive, and is to be avoided
+   * when possible during application startup.
+   */
+  already_AddRefed<nsIFile> GetBaseFile();
+
   /**
    * Gets the data offset.
    * @param   aItem       Pointer to nsZipItem
@@ -231,9 +296,13 @@ class nsZipArchive final {
 
   // Whether we synthesized the directory entries
   bool mBuiltSynthetics;
+  bool mBuiltFileList;
 
   // file handle
   RefPtr<nsZipHandle> mFd;
+
+  mozilla::Maybe<LazyOpenArchiveParams> mLazyOpenParams;
+  mozilla::RWLock mLazyOpenLock;
 
   // file URI, for logging
   nsCString mURI;
@@ -248,6 +317,7 @@ class nsZipArchive final {
   nsresult BuildFileList(PRFileDesc* aFd = nullptr);
   nsresult BuildFileListFromBuffer(const uint8_t* aBuf, const uint8_t* aEnd);
   nsresult BuildSynthetics();
+  nsresult EnsureFileListBuilt();
 
   nsZipArchive& operator=(const nsZipArchive& rhs) = delete;
   nsZipArchive(const nsZipArchive& rhs) = delete;
