@@ -88,7 +88,7 @@ def run_fxc(shader_model,
         '-Vn{0}'.format(shader_name),
         '-Vi',
     ]
-    if 'Linux' in buildconfig.substs['HOST_OS_ARCH']:
+    if 'WINNT' not in buildconfig.substs['HOST_OS_ARCH']:
         argv.insert(0, buildconfig.substs['WINE'])
     if shader_model.startswith('vs_'):
         argv += ['-DVERTEX_SHADER']
@@ -130,7 +130,7 @@ def find_dependencies(fxc_output):
         dep_path = os.path.normpath(dep_path)
         # When run via Wine, FXC's output contains Windows paths on the Z drive.
         # We want to normalize them back to unix paths for the build system.
-        if 'Linux' in buildconfig.substs['HOST_OS_ARCH'] and dep_path.lower().startswith('z:'):
+        if 'WINNT' not in buildconfig.substs['HOST_OS_ARCH'] and dep_path.lower().startswith('z:'):
             dep_path = dep_path[2:].replace('\\', '/')
         if os.path.isfile(dep_path):
             deps.add(dep_path)

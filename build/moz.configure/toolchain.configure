@@ -2128,9 +2128,9 @@ set_config('LINKER_KIND', select_linker.KIND)
 
 @depends_if(select_linker, macos_sdk)
 def linker_ldflags(linker, macos_sdk):
-    flags = list(linker.LINKER_FLAG or [])
+    flags = list((linker and linker.LINKER_FLAG) or [])
     if macos_sdk:
-        if linker.KIND == 'ld64':
+        if linker and linker.KIND == 'ld64':
             flags.append('-Wl,-syslibroot,%s' % macos_sdk)
         else:
             flags.append('-Wl,--sysroot=%s' % macos_sdk)
