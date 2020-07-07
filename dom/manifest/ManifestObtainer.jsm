@@ -27,9 +27,6 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { PromiseMessage } = ChromeUtils.import(
-  "resource://gre/modules/PromiseMessage.jsm"
-);
 const { ManifestProcessor } = ChromeUtils.import(
   "resource://gre/modules/ManifestProcessor.jsm"
 );
@@ -52,15 +49,20 @@ var ManifestObtainer = {
     if (!isXULBrowser(aBrowser)) {
       throw new TypeError("Invalid input. Expected XUL browser.");
     }
-    const mm = aBrowser.messageManager;
-    const {
-      data: { success, result },
-    } = await PromiseMessage.send(mm, "DOM:ManifestObtainer:Obtain", aOptions);
-    if (!success) {
-      const error = toError(result);
+
+    const actor = aBrowser.browsingContext.currentWindowGlobal.getActor(
+      "ManifestMessages"
+    );
+
+    const reply = await actor.sendQuery(
+      "DOM:ManifestObtainer:Obtain",
+      aOptions
+    );
+    if (!reply.success) {
+      const error = toError(reply.result);
       throw error;
     }
-    return result;
+    return reply.result;
   },
   /**
    * Public interface for obtaining a web manifest from a XUL browser.
