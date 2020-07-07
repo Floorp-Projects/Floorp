@@ -88,6 +88,12 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
 
   nsISerialEventTarget* GetBackgroundTarget();
 
+  using ChildEndpointPromise =
+      MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
+  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
+      Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
+      Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint);
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -90,6 +90,9 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvSetClassifierMatchedTrackingInfo(const ClassifierInfo& info);
 
+  IPCResult RecvAttachStreamFilter(
+      Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void CreateDataBridge();
