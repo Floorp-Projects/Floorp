@@ -59,6 +59,22 @@ When `"display": "fullscreen"` is set in the web app manifest, the web app will 
 
 `WebAppSiteControlsFeature` will display a silent notification whenever a web app is open. This notification contains controls to interact with the web app, such as a refresh button and a shortcut to copy the URL.
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item    | Extras         | Description                        |
+|--------|---------|----------------|------------------------------------|
+| CLICK  | homescreen_icon_tap  |   | The user tapped the PWA icon on the homescreen. |
+| INTERACTION | enter_background | `itemExtras` | The current system time when the app is backgrounded. |
+| INTERACTION | enter_foreground | `itemExtras` | The current system time when the app is foregrounded. |
+
+#### `itemExtras`
+
+| Key          | Type    | Value                             |
+|--------------|---------|-----------------------------------|
+| timingNs     | Long | The current system time when a foreground or background action is taken. |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
