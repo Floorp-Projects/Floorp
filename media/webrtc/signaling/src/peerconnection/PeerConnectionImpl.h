@@ -167,7 +167,6 @@ class PeerConnectionImpl final
 
   static already_AddRefed<PeerConnectionImpl> Constructor(
       const mozilla::dom::GlobalObject& aGlobal);
-  static PeerConnectionImpl* CreatePeerConnection();
 
   // DataConnection observers
   void NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aChannel)
