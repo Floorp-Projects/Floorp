@@ -62,7 +62,8 @@ def _proc_matches(args, regex):
     the given arguments"""
     output = subprocess.Popen(args=args,
                               stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT).stdout.read()
+                              stderr=subprocess.STDOUT,
+                              universal_newlines=True).stdout.read()
     return re.findall(regex, output)
 
 

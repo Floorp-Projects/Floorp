@@ -11,6 +11,8 @@ import sys
 import tempfile
 from multiprocessing import cpu_count
 
+import six
+
 from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
@@ -97,7 +99,7 @@ class MachCommands(MachCommandBase):
                      action='store_true',
                      help='Verbose output.')
     @CommandArgument('--python',
-                     default='2.7',
+                     default='3',
                      help='Version of Python for Pipenv to use. When given a '
                           'Python version, Pipenv will automatically scan your '
                           'system for a Python that matches that given version.')
@@ -124,7 +126,11 @@ class MachCommands(MachCommandBase):
                            'passed as it is to pytest'))
     def python_test(self, *args, **kwargs):
         try:
-            tempdir = os.environ[b'PYTHON_TEST_TMP'] = str(tempfile.mkdtemp(suffix='-python-test'))
+            tempdir = str(tempfile.mkdtemp(suffix='-python-test'))
+            if six.PY2:
+                os.environ[b'PYTHON_TEST_TMP'] = tempdir
+            else:
+                os.environ['PYTHON_TEST_TMP'] = tempdir
             return self.run_python_tests(*args, **kwargs)
         finally:
             import mozfile
@@ -282,6 +288,7 @@ class MachCommands(MachCommandBase):
         file_displayed_test = []  # used as boolean
 
         def _line_handler(line):
+            line = six.ensure_str(line)
             if not file_displayed_test:
                 output = ('Ran' in line or 'collected' in line or
                           line.startswith('TEST-'))
@@ -289,8 +296,8 @@ class MachCommands(MachCommandBase):
                     file_displayed_test.append(True)
 
             # Hack to make sure treeherder highlights pytest failures
-            if b'FAILED' in line.rsplit(b' ', 1)[-1]:
-                line = line.replace(b'FAILED', b'TEST-UNEXPECTED-FAIL')
+            if 'FAILED' in line.rsplit(' ', 1)[-1]:
+                line = line.replace('FAILED', 'TEST-UNEXPECTED-FAIL')
 
             _log(line)
 
@@ -298,12 +305,18 @@ class MachCommands(MachCommandBase):
         python = self.virtualenv_manager.python_path
         cmd = [python, test['path']]
         env = os.environ.copy()
-        env[b'PYTHONDONTWRITEBYTECODE'] = b'1'
+        if six.PY2:
+            env[b'PYTHONDONTWRITEBYTECODE'] = b'1'
+        else:
+            env['PYTHONDONTWRITEBYTECODE'] = '1'
 
         # Homebrew on OS X will change Python's sys.executable to a custom value
         # which messes with mach's virtualenv handling code. Override Homebrew's
         # changes with the correct sys.executable value.
-        env[b'PYTHONEXECUTABLE'] = python.encode('utf-8')
+        if six.PY2:
+            env[b'PYTHONEXECUTABLE'] = python.encode('utf-8')
+        else:
+            env['PYTHONEXECUTABLE'] = python
 
         proc = ProcessHandler(cmd, env=env, processOutputLine=_line_handler, storeOutput=False)
         proc.run()
