@@ -1113,7 +1113,7 @@ class ProcessReader(object):
             else:
                 if output_timeout is not None:
                     output_timeout = now + self.output_timeout
-                callback(line.rstrip())
+                callback(six.ensure_str(line).rstrip())
             if timeout is not None and now > timeout:
                 timed_out = True
                 break
