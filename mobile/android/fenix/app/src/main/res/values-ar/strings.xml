@@ -11,11 +11,14 @@
     <string name="content_description_disable_private_browsing_button">عطّل التصفّح الخاص</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ابحث أو أدخِل عنوانا</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">لا ألسنة مفتوحة</string>
 
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">ستظهر الألسنة المفتوحة هنا.</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">ستظهر الألسنة الخاصة هنا.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">لسان واحد مفتوح. انقر لتبديل الألسنة.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
@@ -28,7 +31,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">احذف الجلسة</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">أضِف اختصارًا لفتح الألسنة الخاصة من الشاشة الرئيسية.</string>
     <!-- Text for the positive button -->
@@ -48,6 +51,10 @@
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">الألسنة المفتوحة</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">السابق</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">التالي</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
     <string name="browser_menu_refresh">أعِد التحميل</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
@@ -82,8 +89,6 @@
     <string name="browser_menu_new_tab">لسان جديد</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">احفظ في التجميعة</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">أبلِغ عن مشكلة بالموقع</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">شارِك</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -97,12 +102,16 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">تدعمها %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">منظور القارئ</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">افتح في التطبيق</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">المظهر</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">تعذّر الاتصال، لم أتعرّف على مخطّط المسار.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -335,6 +344,11 @@
     <!-- Preference for using bottom toolbar -->
     <string name="preference_bottom_toolbar">بالأسفل</string>
 
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">فاتحة</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">داكنة</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">حسب وضع توفير الطاقة</string>
     <!-- Preference for using following device theme -->

@@ -489,6 +489,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Няма гісторыі</string>
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Выбачайце. %1$s не можа загрузіць гэтую старонку.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Вы можаце паспрабаваць аднавіць ці закрыць гэтую картку ніжэй.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Адправіць справаздачу аб краху ў Mozilla</string>
     <!-- Close tab button text on the tab crash page -->

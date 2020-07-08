@@ -370,7 +370,7 @@
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Eksperymenty</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Pozwala Mozilli instalować i zbierać dane dla funkcji eksperymentalnych</string>
+    <string name="preference_experiments_summary">Pozwala Mozilli instalować i zbierać dane dla funkcji eksperymentalnych.</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Zgłaszanie awarii</string>
     <!-- Preference switch for Mozilla location service -->
@@ -892,8 +892,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Automatycznie usuwa dane przeglądania po wybraniu „Zakończ” z głównego menu</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Automatycznie usuwa dane przeglądania po wybraniu „Zakończ” z głównego menu</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historia przeglądania</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Zakończ</string>
 
