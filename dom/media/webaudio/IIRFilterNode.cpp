@@ -174,7 +174,7 @@ already_AddRefed<IIRFilterNode> IIRFilterNode::Create(
   if (aOptions.mFeedback.Length() == 0 || aOptions.mFeedback.Length() > 20) {
     aRv.ThrowNotSupportedError(
         nsPrintfCString("\"feedback\" length %zu is not in the range [1,20]",
-                        aOptions.mFeedforward.Length()));
+                        aOptions.mFeedback.Length()));
     return nullptr;
   }
 
