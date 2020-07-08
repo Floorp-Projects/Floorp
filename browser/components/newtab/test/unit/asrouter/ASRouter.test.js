@@ -388,9 +388,6 @@ describe("ASRouter", () => {
         ac.BroadcastToContent({
           type: "AS_ROUTER_INITIALIZED",
           data: ASRouterPreferences.specialConditions,
-          meta: {
-            isStartup: true,
-          },
         })
       );
     });
