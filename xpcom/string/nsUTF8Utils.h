@@ -6,13 +6,14 @@
 #ifndef nsUTF8Utils_h_
 #define nsUTF8Utils_h_
 
-// This file may be used in two ways: if MOZILLA_INTERNAL_API is defined, this
-// file will provide signatures for the Mozilla abstract string types. It will
+// NB: This code may be used from non-XPCOM code, in particular, the
+// standalone updater executable.  That is, this file may be used in
+// two ways: if MOZILLA_INTERNAL_API is defined, this file will
+// provide signatures for the Mozilla abstract string types. It will
 // use XPCOM assertion/debugging macros, etc.
 
 #include <type_traits>
 
-#include "nscore.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
 
