@@ -524,20 +524,20 @@ var BrowserTestUtils = {
 
   /**
    * Waits for the web progress listener associated with this tab to fire a
-   * STATE_STOP for the toplevel document.
+   * state change that matches checkFn for the toplevel document.
    *
    * @param {xul:browser} browser
    *        A xul:browser.
    * @param {String} expectedURI (optional)
    *        A specific URL to check the channel load against
-   * @param {Boolean} checkAborts (optional, defaults to false)
-   *        Whether NS_BINDING_ABORTED stops 'count' as 'real' stops
-   *        (e.g. caused by the stop button or equivalent APIs)
+   * @param {Function} checkFn
+   *        If checkFn(aStateFlags, aStatus) returns false, the state change
+   *        is ignored and we continue to wait.
    *
    * @return {Promise}
-   * @resolves When STATE_STOP reaches the tab's progress listener
+   * @resolves When the desired state change reaches the tab's progress listener
    */
-  browserStopped(browser, expectedURI, checkAborts = false) {
+  waitForBrowserStateChange(browser, expectedURI, checkFn) {
     return new Promise(resolve => {
       let wpl = {
         onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -548,14 +548,13 @@ var BrowserTestUtils = {
               aStatus.toString(16) +
               "\n"
           );
-          if (
-            aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
-            aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-            (checkAborts || aStatus != Cr.NS_BINDING_ABORTED) &&
-            aWebProgress.isTopLevel
-          ) {
+          if (checkFn(aStateFlags, aStatus) && aWebProgress.isTopLevel) {
             let chan = aRequest.QueryInterface(Ci.nsIChannel);
-            dump("Browser loaded " + chan.originalURI.spec + "\n");
+            dump(
+              "Browser got expected state change " +
+                chan.originalURI.spec +
+                "\n"
+            );
             if (!expectedURI || chan.originalURI.spec == expectedURI) {
               browser.removeProgressListener(wpl);
               BrowserTestUtils._webProgressListeners.delete(wpl);
@@ -576,11 +575,77 @@ var BrowserTestUtils = {
       browser.addProgressListener(wpl);
       this._webProgressListeners.add(wpl);
       dump(
-        "Waiting for browser load" +
+        "Waiting for browser state change" +
           (expectedURI ? " of " + expectedURI : "") +
           "\n"
       );
     });
+  },
+
+  /**
+   * Waits for the web progress listener associated with this tab to fire a
+   * STATE_STOP for the toplevel document.
+   *
+   * @param {xul:browser} browser
+   *        A xul:browser.
+   * @param {String} expectedURI (optional)
+   *        A specific URL to check the channel load against
+   * @param {Boolean} checkAborts (optional, defaults to false)
+   *        Whether NS_BINDING_ABORTED stops 'count' as 'real' stops
+   *        (e.g. caused by the stop button or equivalent APIs)
+   *
+   * @return {Promise}
+   * @resolves When STATE_STOP reaches the tab's progress listener
+   */
+  browserStopped(browser, expectedURI, checkAborts = false) {
+    let testFn = function(aStateFlags, aStatus) {
+      return (
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        (checkAborts || aStatus != Cr.NS_BINDING_ABORTED)
+      );
+    };
+    dump(
+      "Waiting for browser load" +
+        (expectedURI ? " of " + expectedURI : "") +
+        "\n"
+    );
+    return BrowserTestUtils.waitForBrowserStateChange(
+      browser,
+      expectedURI,
+      testFn
+    );
+  },
+
+  /**
+   * Waits for the web progress listener associated with this tab to fire a
+   * STATE_START for the toplevel document.
+   *
+   * @param {xul:browser} browser
+   *        A xul:browser.
+   * @param {String} expectedURI (optional)
+   *        A specific URL to check the channel load against
+   *
+   * @return {Promise}
+   * @resolves When STATE_START reaches the tab's progress listener
+   */
+  browserStarted(browser, expectedURI) {
+    let testFn = function(aStateFlags, aStatus) {
+      return (
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_START
+      );
+    };
+    dump(
+      "Waiting for browser to start load" +
+        (expectedURI ? " of " + expectedURI : "") +
+        "\n"
+    );
+    return BrowserTestUtils.waitForBrowserStateChange(
+      browser,
+      expectedURI,
+      testFn
+    );
   },
 
   /**
