@@ -10,7 +10,7 @@ Adds normal and private search buttons to text selection context menus.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DefaultSelectionActionDelegate(searchAdapter: `[`SearchAdapter`](../../mozilla.components.feature.search/-search-adapter/index.md)`, resources: <ERROR CLASS>, appName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, shareTextClicked: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Adds normal and private search buttons to text selection context menus. |
+| [&lt;init&gt;](-init-.md) | `DefaultSelectionActionDelegate(searchAdapter: `[`SearchAdapter`](../../mozilla.components.feature.search/-search-adapter/index.md)`, resources: <ERROR CLASS>, shareTextClicked: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Adds normal and private search buttons to text selection context menus. |
 
 ### Functions
 

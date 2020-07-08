@@ -443,6 +443,9 @@
 | [mozilla.components.support.base.log.sink.LogSink](../mozilla.components.support.base.log.sink/-log-sink/index.md) |  |
 | [mozilla.components.support.base.log.logger.Logger](../mozilla.components.support.base.log.logger/-logger/index.md) | A wrapper for the Log object providing a more convenient API for logging. |
 | [mozilla.components.concept.storage.Login](../mozilla.components.concept.storage/-login/index.md) | Represents a login that can be used by autofill APIs. |
+| [mozilla.components.feature.logins.exceptions.LoginException](../mozilla.components.feature.logins.exceptions/-login-exception/index.md) | A login exception. |
+| [mozilla.components.feature.logins.exceptions.LoginExceptionStorage](../mozilla.components.feature.logins.exceptions/-login-exception-storage/index.md) | A storage implementation for organizing login exceptions. |
+| [mozilla.components.feature.prompts.LoginExceptions](../mozilla.components.feature.prompts/-login-exceptions/index.md) | Interface to be implemented by a storage layer to exclude the save logins prompt from showing. |
 | [mozilla.components.concept.storage.LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) | Used to handle [Login](../mozilla.components.concept.storage/-login/index.md) storage so that the underlying engine doesn't have to. An instance of this should be attached to the Gecko runtime in order to be used. |
 | [mozilla.components.concept.storage.LoginValidationDelegate](../mozilla.components.concept.storage/-login-validation-delegate/index.md) | Provides a method for checking whether or not a given login can be stored. |
 | [mozilla.components.concept.storage.LoginsStorage](../mozilla.components.concept.storage/-logins-storage/index.md) | An interface describing a storage layer for logins/passwords. |
