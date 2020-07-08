@@ -14,6 +14,21 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(kDocChanPref);
   });
   await Services.search.init();
+
+  // Create an engine to use for the test.
+  await Services.search.addEngineWithDetails("MozSearch1", {
+    method: "GET",
+    template: "https://example.com/?q={searchTerms}",
+  });
+
+  let originalEngine = await Services.search.getDefault();
+  let engineDefault = Services.search.getEngineByName("MozSearch1");
+  await Services.search.setDefault(engineDefault);
+
+  registerCleanupFunction(async function() {
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engineDefault);
+  });
 });
 
 /*
@@ -26,18 +41,18 @@ add_task(async function test_unknown_host() {
     Services.prefs.setBoolPref(kDocChanPref, docChan);
     await BrowserTestUtils.withNewTab("about:blank", async browser => {
       const kNonExistingHost = "idontreallyexistonthisnetwork";
-      let searchPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
-        Services.uriFixup.keywordToURI(kNonExistingHost).preferredURI.spec,
+      let searchPromise = BrowserTestUtils.browserStarted(
         browser,
-        () => {
-          ok(kButton.hasAttribute("displaystop"), "Should be showing stop");
-          return true;
-        }
+        Services.uriFixup.keywordToURI(kNonExistingHost).preferredURI.spec
       );
+
       gURLBar.value = kNonExistingHost;
       gURLBar.select();
       EventUtils.synthesizeKey("KEY_Enter");
+
       await searchPromise;
+      ok(kButton.hasAttribute("displaystop"), "Should be showing stop");
+
       await BrowserTestUtils.waitForCondition(
         () => !kButton.hasAttribute("displaystop")
       );
