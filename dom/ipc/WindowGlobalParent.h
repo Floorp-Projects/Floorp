@@ -194,7 +194,7 @@ class WindowGlobalParent final : public WindowContext,
 
   nsITransportSecurityInfo* GetSecurityInfo() { return mSecurityInfo; }
 
-  const nsACString& GetRemoteType() override;
+  const nsAString& GetRemoteType() override;
 
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,

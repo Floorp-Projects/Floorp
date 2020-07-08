@@ -1314,7 +1314,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     return false;
   }
 
-  nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
+  nsAutoString currentRemoteType(VoidString());
   if (RefPtr<ContentParent> contentParent =
           browsingContext->GetContentParent()) {
     currentRemoteType = contentParent->GetRemoteType();
@@ -1322,7 +1322,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   MOZ_ASSERT_IF(currentRemoteType.IsEmpty(), !OtherPid());
 
   // Determine what type of content process this load should finish in.
-  nsAutoCString preferredRemoteType(currentRemoteType);
+  nsAutoString preferredRemoteType(currentRemoteType);
   bool replaceBrowsingContext = false;
   uint64_t specificGroupId = 0;
 
@@ -1370,12 +1370,13 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       // high-resolution timers.
       nsAutoCString siteOrigin;
       resultPrincipal->GetSiteOrigin(siteOrigin);
-      preferredRemoteType = WITH_COOP_COEP_REMOTE_TYPE_PREFIX;
-      preferredRemoteType.Append(siteOrigin);
+      preferredRemoteType =
+          NS_LITERAL_STRING_FROM_CSTRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX);
+      AppendUTF8toUTF16(siteOrigin, preferredRemoteType);
     } else if (isCOOPSwitch) {
       // If we're doing a COOP switch, we do not need any affinity to the
       // current remote type. Clear it back to the default value.
-      preferredRemoteType = DEFAULT_REMOTE_TYPE;
+      preferredRemoteType = NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE);
     }
   }
 
@@ -1386,10 +1387,12 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   if (browsingContext->IsTop() &&
       browsingContext->Group()->Toplevels().Length() == 1) {
     if (IsLargeAllocationLoad(browsingContext, mChannel)) {
-      preferredRemoteType = LARGE_ALLOCATION_REMOTE_TYPE;
+      preferredRemoteType =
+          NS_LITERAL_STRING_FROM_CSTRING(LARGE_ALLOCATION_REMOTE_TYPE);
       replaceBrowsingContext = true;
-    } else if (preferredRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
-      preferredRemoteType = DEFAULT_REMOTE_TYPE;
+    } else if (preferredRemoteType.EqualsLiteral(
+                   LARGE_ALLOCATION_REMOTE_TYPE)) {
+      preferredRemoteType = NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE);
       replaceBrowsingContext = true;
     }
   }
@@ -1401,9 +1404,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       // Toplevel extension BrowsingContexts must be loaded in the extension
       // browsing context group, within the extension content process.
       if (ExtensionPolicyService::GetSingleton().UseRemoteExtensions()) {
-        preferredRemoteType = EXTENSION_REMOTE_TYPE;
+        preferredRemoteType =
+            NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE);
       } else {
-        preferredRemoteType = NOT_REMOTE_TYPE;
+        preferredRemoteType = VoidString();
       }
 
       if (browsingContext->Group()->Id() !=
@@ -1422,7 +1426,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   LOG(
       ("DocumentLoadListener GetRemoteTypeForPrincipal "
        "[this=%p, contentParent=%s, preferredRemoteType=%s]",
-       this, currentRemoteType.get(), preferredRemoteType.get()));
+       this, NS_ConvertUTF16toUTF8(currentRemoteType).get(),
+       NS_ConvertUTF16toUTF8(preferredRemoteType).get()));
 
   nsCOMPtr<nsIE10SUtils> e10sUtils =
       do_ImportModule("resource://gre/modules/E10SUtils.jsm", "E10SUtils");
@@ -1437,7 +1442,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     currentPrincipal = wgp->DocumentPrincipal();
   }
 
-  nsAutoCString remoteType;
+  nsAutoString remoteType;
   rv = e10sUtils->GetRemoteTypeForPrincipal(
       resultPrincipal, mChannelCreationURI, browsingContext->UseRemoteTabs(),
       browsingContext->UseRemoteSubframes(), preferredRemoteType,
@@ -1451,16 +1456,18 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // other remote type, ensure the browsing context is replaced so that we leave
   // the extension-specific BrowsingContextGroup.
   if (browsingContext->IsTop() && currentRemoteType != remoteType &&
-      currentRemoteType == EXTENSION_REMOTE_TYPE) {
+      currentRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
     replaceBrowsingContext = true;
   }
 
   LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
-       currentRemoteType.get(), remoteType.get()));
+       NS_ConvertUTF16toUTF8(currentRemoteType).get(),
+       NS_ConvertUTF16toUTF8(remoteType).get()));
 
   // Check if a process switch is needed.
   if (currentRemoteType == remoteType && !replaceBrowsingContext) {
-    LOG(("Process Switch Abort: type (%s) is compatible", remoteType.get()));
+    LOG(("Process Switch Abort: type (%s) is compatible",
+         NS_ConvertUTF16toUTF8(remoteType).get()));
     return false;
   }
 
@@ -1472,7 +1479,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   *aWillSwitchToRemote = !remoteType.IsEmpty();
 
   LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
-       currentRemoteType.get(), remoteType.get()));
+       NS_ConvertUTF16toUTF8(currentRemoteType).get(),
+       NS_ConvertUTF16toUTF8(remoteType).get()));
 
   mDoingProcessSwitch = true;
 
@@ -2030,7 +2038,7 @@ DocumentLoadListener::Delete() {
 }
 
 NS_IMETHODIMP
-DocumentLoadListener::GetRemoteType(nsACString& aRemoteType) {
+DocumentLoadListener::GetRemoteType(nsAString& aRemoteType) {
   RefPtr<CanonicalBrowsingContext> browsingContext = GetBrowsingContext();
   if (!browsingContext) {
     return NS_ERROR_UNEXPECTED;
@@ -2039,7 +2047,7 @@ DocumentLoadListener::GetRemoteType(nsACString& aRemoteType) {
   ErrorResult error;
   browsingContext->GetCurrentRemoteType(aRemoteType, error);
   if (error.Failed()) {
-    aRemoteType = NOT_REMOTE_TYPE;
+    aRemoteType = VoidString();
   }
   return NS_OK;
 }
