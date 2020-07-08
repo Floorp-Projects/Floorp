@@ -323,13 +323,14 @@ void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
 
 static bool LinkCodeGen(JSContext* cx, CodeGenerator* codegen,
                         HandleScript script,
-                        CompilerConstraintList* constraints) {
+                        CompilerConstraintList* constraints,
+                        const WarpSnapshot* snapshot) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
   AutoTraceLog logScript(logger, event);
   AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
-  if (!codegen->link(cx, constraints)) {
+  if (!codegen->link(cx, constraints, snapshot)) {
     return false;
   }
 
@@ -344,7 +345,8 @@ static bool LinkBackgroundCodeGen(JSContext* cx, IonCompileTask* task) {
 
   JitContext jctx(cx, &task->alloc());
   RootedScript script(cx, task->script());
-  return LinkCodeGen(cx, codegen, script, task->constraints());
+  return LinkCodeGen(cx, codegen, script, task->constraints(),
+                     task->snapshot());
 }
 
 void jit::LinkIonScript(JSContext* cx, HandleScript calleeScript) {
@@ -1752,7 +1754,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
       return AbortReason::Disable;
     }
 
-    succeeded = LinkCodeGen(cx, codegen.get(), script, constraints);
+    succeeded = LinkCodeGen(cx, codegen.get(), script, constraints, snapshot);
   }
 
   if (succeeded) {
