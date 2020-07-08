@@ -118,7 +118,7 @@ add_task(async function awaitPromiseResolve({ client }) {
   });
 
   is(result.type, "number", "The type is correct");
-  is(result.subtype, null, "The subtype is null for numbers");
+  is(result.subtype, undefined, "The subtype is undefined for numbers");
   is(result.value, 42, "The result is the promise's resolution");
 });
 
@@ -133,7 +133,7 @@ add_task(async function awaitPromiseDelayedResolve({ client }) {
     executionContextId,
   });
   is(result.type, "number", "The type is correct");
-  is(result.subtype, null, "The subtype is null for numbers");
+  is(result.subtype, undefined, "The subtype is undefined for numbers");
   is(result.value, 42, "The result is the promise's resolution");
 });
 
@@ -318,7 +318,7 @@ add_task(async function objectId({ client }) {
   });
 
   is(result.type, "object", "The type is correct");
-  is(result.subtype, null, "The subtype is null for objects");
+  is(result.subtype, undefined, "The subtype is undefined for objects");
   ok(!!result.objectId, "Got an object id");
 
   // Then apply a method on this object
@@ -329,7 +329,7 @@ add_task(async function objectId({ client }) {
   });
 
   is(result2.type, "number", "The type is correct");
-  is(result2.subtype, null, "The subtype is null for numbers");
+  is(result2.subtype, undefined, "The subtype is undefined for numbers");
   is(result2.value, 42, "Expected value returned");
 });
 
@@ -345,7 +345,7 @@ add_task(async function objectIdArgumentReference({ client }) {
   });
 
   is(result.type, "object", "The type is correct");
-  is(result.subtype, null, "The subtype is null for objects");
+  is(result.subtype, undefined, "The subtype is undefined for objects");
   ok(!!result.objectId, "Got an object id");
 
   // Then increment the `foo` attribute of this JS object,
@@ -374,7 +374,7 @@ add_task(async function objectIdArgumentReference({ client }) {
   });
 
   is(result3.type, "object", "The type is correct");
-  is(result3.subtype, null, "The subtype is null for objects");
+  is(result3.subtype, undefined, "The subtype is undefined for objects");
   // Remote objects don't have unique ids. So you may have multiple object ids
   // that reference the same remote object
   ok(!!result3.objectId, "Got an object id");
