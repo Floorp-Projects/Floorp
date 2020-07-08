@@ -476,6 +476,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
     if (!(loadInfo &&
           loadInfo->RedirectChainIncludingInternalRedirects().IsEmpty())) {
       mDisconnected = true;
+      mDisconnectedByOnStartRequest = true;
 
       RefPtr<StreamFilterParent> self(this);
       RunOnActorThread(FUNC, [=] {
@@ -493,6 +494,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
     RefPtr<net::HttpBaseChannel> chan = do_QueryObject(aRequest);
     if (chan && chan->IsDeliveringAltData()) {
       mDisconnected = true;
+      mDisconnectedByOnStartRequest = true;
 
       RefPtr<StreamFilterParent> self(this);
       RunOnActorThread(FUNC, [=] {
@@ -603,7 +605,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
                                     uint64_t aOffset, uint32_t aCount) {
   AssertIsIOThread();
 
-  if (mState == State::Disconnected) {
+  if (mState == State::Disconnected || mDisconnectedByOnStartRequest) {
     // If we're offloading data in a thread pool, it's possible that we'll
     // have buffered some additional data while waiting for the buffer to
     // flush. So, if there's any buffered data left, flush that before we
