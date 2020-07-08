@@ -1,6 +1,6 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
    TEXT_COLOR, TAB_BACKGROUND_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor,
-   waitForTransition */
+   waitForTransition, loadTestSubscript */
 
 "use strict";
 
@@ -96,4 +96,8 @@ function testBorderColor(element, expected) {
     hexToCSS(expected),
     "Element bottom border color should be set."
   );
+}
+
+function loadTestSubscript(filePath) {
+  Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
 }
