@@ -812,6 +812,9 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   bool foundObjectSrc = false;
   bool foundUnsafeEval = false;
   bool foundUnsafeInline = false;
+  bool foundScriptSrc = false;
+  bool foundWorkerSrc = false;
+  bool foundWebScheme = false;
   if (csp) {
     uint32_t policyCount = 0;
     csp->GetPolicyCount(&policyCount);
@@ -829,6 +832,16 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
       }
       if (parsedPolicyStr.Find("'unsafe-inline'") >= 0) {
         foundUnsafeInline = true;
+      }
+      if (parsedPolicyStr.Find("script-src") >= 0) {
+        foundScriptSrc = true;
+      }
+      if (parsedPolicyStr.Find("worker-src") >= 0) {
+        foundWorkerSrc = true;
+      }
+      if (parsedPolicyStr.Find("http:") >= 0 ||
+          parsedPolicyStr.Find("https:") >= 0) {
+        foundWebScheme = true;
       }
     }
   }
@@ -875,6 +888,38 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
              "about: page must contain a CSP including default-src");
   MOZ_ASSERT(foundObjectSrc,
              "about: page must contain a CSP denying object-src");
+
+  // preferences and downloads allow legacy inline scripts through hash src.
+  MOZ_ASSERT(!foundScriptSrc ||
+                 StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:downloads"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:logins"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:compat"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:welcome"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:profiling"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:studies"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:home"_ns),
+             "about: page must not contain a CSP including script-src");
+
+  MOZ_ASSERT(!foundWorkerSrc,
+             "about: page must not contain a CSP including worker-src");
+
+  // addons, preferences, debugging, newinstall, pioneer, devtools all have
+  // to allow some remote web resources
+  MOZ_ASSERT(!foundWebScheme ||
+                 StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:addons"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:debugging"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:newinstall"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:pioneer"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:compat"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:logins"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:home"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:welcome"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:devtools"_ns),
+             "about: page must not contain a CSP including a web scheme");
 
   if (aDocument->IsExtensionPage()) {
     // Extensions have two CSP policies applied where the baseline CSP
