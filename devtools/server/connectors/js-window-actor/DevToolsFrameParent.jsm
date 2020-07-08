@@ -184,8 +184,8 @@ class DevToolsFrameParent extends JSWindowActorParent {
    * Supported Queries
    */
 
-  async sendPacket(packet, prefix) {
-    return this.sendQuery("DevToolsFrameParent:packet", { packet, prefix });
+  sendPacket(packet, prefix) {
+    this.sendAsyncMessage("DevToolsFrameParent:packet", { packet, prefix });
   }
 
   /**
