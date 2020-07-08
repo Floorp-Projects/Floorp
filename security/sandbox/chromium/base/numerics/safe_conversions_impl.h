@@ -80,8 +80,9 @@ template <typename T>
 constexpr typename std::make_unsigned<T>::type SafeUnsignedAbs(T value) {
   static_assert(std::is_integral<T>::value, "Type must be integral");
   using UnsignedT = typename std::make_unsigned<T>::type;
-  return IsValueNegative(value) ? 0 - static_cast<UnsignedT>(value)
-                                : static_cast<UnsignedT>(value);
+  return IsValueNegative(value)
+             ? static_cast<UnsignedT>(0u - static_cast<UnsignedT>(value))
+             : static_cast<UnsignedT>(value);
 }
 
 // This allows us to switch paths on known compile-time constants.
