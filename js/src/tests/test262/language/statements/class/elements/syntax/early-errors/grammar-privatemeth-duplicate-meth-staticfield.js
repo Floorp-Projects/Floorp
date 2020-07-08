@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-methods-private,class-static-fields-private is not supported
+// |reftest| skip error:SyntaxError -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-privatemeth-duplicate-meth-staticfield.case
 // - src/class-elements/syntax/invalid/cls-decl-elements-invalid-syntax.template

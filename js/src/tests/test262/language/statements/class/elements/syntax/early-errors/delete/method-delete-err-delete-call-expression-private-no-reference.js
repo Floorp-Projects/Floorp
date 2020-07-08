@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-private is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/class-elements/err-delete-call-expression-private-no-reference.case
 // - src/class-elements/delete-error/cls-decl-method-delete.template

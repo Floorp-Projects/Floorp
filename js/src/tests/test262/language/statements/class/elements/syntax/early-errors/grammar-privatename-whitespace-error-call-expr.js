@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-private is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-privatename-whitespace-error-call-expr.case
 // - src/class-elements/syntax/invalid/cls-decl-elements-invalid-syntax.template

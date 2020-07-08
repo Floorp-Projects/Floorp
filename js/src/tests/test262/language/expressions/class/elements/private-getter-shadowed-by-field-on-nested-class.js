@@ -1,4 +1,4 @@
-// |reftest| skip -- class-methods-private,class-fields-private is not supported
+// |reftest| skip -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-getter-shadowed-by-field-on-nested-class.case
 // - src/class-elements/default/cls-expr.template
