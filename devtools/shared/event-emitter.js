@@ -333,10 +333,6 @@ class EventEmitter {
       EventEmitter.emit(this, ...args);
     }
   }
-
-  count(...args) {
-    return EventEmitter.count(this, ...args);
-  }
 }
 
 module.exports = EventEmitter;

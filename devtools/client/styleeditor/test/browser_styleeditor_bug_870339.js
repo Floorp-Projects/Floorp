@@ -22,21 +22,21 @@ const DOCUMENT_WITH_ONE_STYLESHEET =
 add_task(async function() {
   const { ui } = await openStyleEditorForURL(DOCUMENT_WITH_ONE_STYLESHEET);
 
-  // Spam the _onOrigSourcesPrefChanged callback multiple times before the
+  // Spam the _onNewDocument callback multiple times before the
   // StyleEditorActor has a chance to respond to the first one.
   const SPAM_COUNT = 2;
   for (let i = 0; i < SPAM_COUNT; ++i) {
-    ui._onOrigSourcesPrefChanged();
+    ui._onNewDocument();
   }
 
-  // Wait for the StyleEditorActor to respond to each "onOrigSourcesPrefChanged"
+  // Wait for the StyleEditorActor to respond to each "newDocument"
   // message.
   await new Promise(resolve => {
     let loadCount = 0;
-    ui.on("stylesheets-refreshed", function onReset() {
+    ui.on("stylesheets-reset", function onReset() {
       ++loadCount;
       if (loadCount == SPAM_COUNT) {
-        ui.off("stylesheets-refreshed", onReset);
+        ui.off("stylesheets-reset", onReset);
         // No matter how large SPAM_COUNT is, the number of style
         // sheets should never be more than the number of style sheets
         // in the document.
