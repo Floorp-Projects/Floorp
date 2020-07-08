@@ -486,15 +486,9 @@
 /* ----- CONTENT ----- */
 
 .browserContainer > findbar {
+  /* Use the default background gradient from findBar.css */
+  background-color: transparent;
   color: -moz-DialogText;
-  text-shadow: none;
-}
-
-:root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme {
-  background-color: var(--lwt-accent-color);
-  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
-  border-top-color: var(--chrome-content-separator-color);
-  color: var(--toolbar-color);
 }
 
 .openintabs-menuitem {
