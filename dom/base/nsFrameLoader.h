@@ -398,7 +398,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // `TryRemoteBrowser`, and a script blocker must be on the stack.
   //
   // |aContentParent|, if set, must have the remote type |aRemoteType|.
-  void ConfigRemoteProcess(const nsAString& aRemoteType,
+  void ConfigRemoteProcess(const nsACString& aRemoteType,
                            mozilla::dom::ContentParent* aContentParent);
 
   void MaybeNotifyCrashed(mozilla::dom::BrowsingContext* aBrowsingContext,
@@ -515,7 +515,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   RefPtr<mozilla::dom::TabListener> mSessionStoreListener;
 
-  nsString mRemoteType;
+  nsCString mRemoteType;
 
   bool mDepthTooGreat : 1;
   bool mIsTopLevelContent : 1;

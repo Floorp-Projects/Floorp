@@ -293,7 +293,7 @@ class StartupCache : public nsIMemoryReporter {
   nsresult GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
                                       nsIObjectOutputStream** outStream);
 
-  static ProcessType GetChildProcessType(const nsAString& remoteType);
+  static ProcessType GetChildProcessType(const nsACString& remoteType);
   static StartupCache* GetSingleton();
 
   // This will get the StartupCache up and running to get cached entries, but

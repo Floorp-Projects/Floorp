@@ -763,7 +763,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 /* static */
 void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
     nsIURI* aFinalURI, nsContentPolicyType aContentPolicyType,
-    const nsAString& aRemoteType) {
+    const nsACString& aRemoteType) {
   if (!StaticPrefs::dom_security_unexpected_system_load_telemetry_enabled()) {
     return;
   }
@@ -784,8 +784,7 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
   }
   // sanitize remoteType because it may contain sensitive
   // info, like URLs. e.g. `webIsolated=https://example.com`
-  nsAutoCString loggedRemoteType =
-      NS_ConvertUTF16toUTF8(dom::RemoteTypePrefix(aRemoteType));
+  nsAutoCString loggedRemoteType(dom::RemoteTypePrefix(aRemoteType));
   nsAutoCString loggedContentType(NS_CP_ContentTypeName(aContentPolicyType));
 
   MOZ_LOG(sCSMLog, LogLevel::Debug, ("UnexpectedPrivilegedLoadTelemetry:\n"));
@@ -867,7 +866,7 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     }
   }
 
-  nsAutoString remoteType;
+  nsAutoCString remoteType;
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIParentChannel> parentChannel;
     NS_QueryNotificationCallbacks(aChannel, parentChannel);

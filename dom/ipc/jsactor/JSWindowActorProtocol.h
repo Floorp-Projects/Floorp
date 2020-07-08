@@ -70,12 +70,12 @@ class JSWindowActorProtocol final : public JSActorProtocol,
   void AddObservers();
   void RemoveObservers();
   bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI,
-               const nsAString& aRemoteType);
+               const nsACString& aRemoteType);
 
  private:
   explicit JSWindowActorProtocol(const nsACString& aName) : mName(aName) {}
   extensions::MatchPatternSet* GetURIMatcher();
-  bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
+  bool RemoteTypePrefixMatches(const nsDependentCSubstring& aRemoteType);
   bool MessageManagerGroupMatches(BrowsingContext* aBrowsingContext);
   ~JSWindowActorProtocol() = default;
 
@@ -83,7 +83,7 @@ class JSWindowActorProtocol final : public JSActorProtocol,
   bool mAllFrames = false;
   bool mIncludeChrome = false;
   nsTArray<nsString> mMatches;
-  nsTArray<nsString> mRemoteTypes;
+  nsTArray<nsCString> mRemoteTypes;
   nsTArray<nsString> mMessageManagerGroups;
 
   ParentSide mParent;

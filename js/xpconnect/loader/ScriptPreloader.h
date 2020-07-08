@@ -75,7 +75,7 @@ class ScriptPreloader : public nsIObserver,
   static ScriptPreloader& GetSingleton();
   static ScriptPreloader& GetChildSingleton();
 
-  static ProcessType GetChildProcessType(const nsAString& remoteType);
+  static ProcessType GetChildProcessType(const nsACString& remoteType);
 
   // Retrieves the script with the given cache key from the script cache.
   // Returns null if the script is not cached.

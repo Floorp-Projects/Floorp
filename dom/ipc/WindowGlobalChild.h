@@ -111,7 +111,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
                        JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
-  const nsAString& GetRemoteType() override;
+  const nsACString& GetRemoteType() override;
 
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,
