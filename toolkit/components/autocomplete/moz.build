@@ -13,9 +13,14 @@ XPIDL_SOURCES += [
     'nsIAutoCompleteResult.idl',
     'nsIAutoCompleteSearch.idl',
     'nsIAutoCompleteSimpleResult.idl',
+    'nsIAutoCompleteSimpleSearch.idl',
 ]
 
 XPIDL_MODULE = 'autocomplete'
+
+EXTRA_JS_MODULES += [
+    'AutoCompleteSimpleSearch.jsm',
+]
 
 UNIFIED_SOURCES += [
     'nsAutoCompleteController.cpp',
