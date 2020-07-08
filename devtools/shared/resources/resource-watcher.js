@@ -439,6 +439,7 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   PLATFORM_MESSAGE: "platform-message",
   DOCUMENT_EVENT: "document-event",
   ROOT_NODE: "root-node",
+  STYLESHEET: "stylesheet",
 };
 module.exports = { ResourceWatcher };
 
@@ -475,6 +476,8 @@ const LegacyListeners = {
   },
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/legacy-listeners/root-node"),
+  [ResourceWatcher.TYPES
+    .STYLESHEET]: require("devtools/shared/resources/legacy-listeners/stylesheet"),
 };
 
 // Optional transformers for each type of resource.
