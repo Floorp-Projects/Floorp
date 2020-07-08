@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -78,7 +78,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -681,7 +681,10 @@
       "../../fbjs/lib/invariant.js": 530,
       "../../fbjs/lib/emptyObject.js": 531,
       "../../fbjs/lib/emptyFunction.js": 532,
-      "external \"\\n(() => {\\n  let factory;\\n  function define(...args) {\\n    if (factory) {\\n      throw new Error(\\\"expected a single define call\\\");\\n    }\\n\\n    if (\\n      args.length !== 2 ||\\n      !Array.isArray(args[0]) ||\\n      args[0].length !== 0 ||\\n      typeof args[1] !== \\\"function\\\"\\n    ) {\\n      throw new Error(\\\"whatwg-url had unexpected factory arguments.\\\");\\n    }\\n\\n    factory = args[1];\\n  }\\n  define.amd = true;\\n\\n  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, \\\"define\\\");\\n  globalThis.define = define;\\n  let err;\\n  try {\\n    importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n\\n    if (!factory) {\\n      throw new Error(\\\"Failed to load whatwg-url factory\\\");\\n    }\\n  } finally {\\n    if (existingDefine) {\\n      Object.defineProperty(globalThis, \\\"define\\\", existingDefine);\\n    } else {\\n      delete globalThis.define;\\n    }\\n\\n  }\\n\\n  return factory();\\n})()\\n\"": 533
+      "external \"\\n(() => {\\n  let factory;\\n  function define(...args) {\\n    if (factory) {\\n      throw new Error(\\\"expected a single define call\\\");\\n    }\\n\\n    if (\\n      args.length !== 2 ||\\n      !Array.isArray(args[0]) ||\\n      args[0].length !== 0 ||\\n      typeof args[1] !== \\\"function\\\"\\n    ) {\\n      throw new Error(\\\"whatwg-url had unexpected factory arguments.\\\");\\n    }\\n\\n    factory = args[1];\\n  }\\n  define.amd = true;\\n\\n  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, \\\"define\\\");\\n  globalThis.define = define;\\n  let err;\\n  try {\\n    importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n\\n    if (!factory) {\\n      throw new Error(\\\"Failed to load whatwg-url factory\\\");\\n    }\\n  } finally {\\n    if (existingDefine) {\\n      Object.defineProperty(globalThis, \\\"define\\\", existingDefine);\\n    } else {\\n      delete globalThis.define;\\n    }\\n\\n  }\\n\\n  return factory();\\n})()\\n\"": 533,
+      "../../@babel/types/lib/builders/flow/createFlowUnionType.js": 534,
+      "../../@babel/types/lib/builders/typescript/createTSUnionType.js": 535,
+      "../../@babel/types/lib/modifications/typescript/removeTypeDuplicates.js": 536
     },
     "usedIds": {
       "0": 0,
@@ -1217,7 +1220,10 @@
       "530": 530,
       "531": 531,
       "532": 532,
-      "533": 533
+      "533": 533,
+      "534": 534,
+      "535": 535,
+      "536": 536
     }
   },
   "chunks": {
