@@ -214,15 +214,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return this._providerSwitcher;
   }
 
-  setupPrefs(isStartup = false) {
+  setupPrefs() {
     // Send the initial state of the pref on our reducer
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_CONFIG_SETUP,
         data: this.config,
-        meta: {
-          isStartup,
-        },
       })
     );
     this.store.dispatch(
@@ -232,9 +229,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           value: this.store.getState().Prefs.values[
             PREF_COLLECTION_DISMISSIBLE
           ],
-        },
-        meta: {
-          isStartup,
         },
       })
     );
@@ -384,7 +378,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return layout;
   }
 
-  updatePlacements(sendUpdate, layout, isStartup = false) {
+  updatePlacements(sendUpdate, layout) {
     const placements = [];
     const placementsMap = {};
     for (const row of layout.filter(r => r.components && r.components.length)) {
@@ -402,9 +396,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       sendUpdate({
         type: at.DISCOVERY_STREAM_SPOCS_PLACEMENTS,
         data: { placements },
-        meta: {
-          isStartup,
-        },
       });
     }
   }
@@ -430,9 +421,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     sendUpdate({
       type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
       data: layoutResp,
-      meta: {
-        isStartup,
-      },
     });
 
     if (layoutResp.spocs) {
@@ -451,11 +439,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             url,
             spocs_per_domain: layoutResp.spocs.spocs_per_domain,
           },
-          meta: {
-            isStartup,
-          },
         });
-        this.updatePlacements(sendUpdate, layoutResp.layout, isStartup);
+        this.updatePlacements(sendUpdate, layoutResp.layout);
       }
     }
   }
@@ -469,11 +454,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    *                     the scope for isStartup and the promises object.
    *                     Combines feed results and promises for each component with a feed.
    */
-  buildFeedPromise(
-    { newFeedsPromises, newFeeds },
-    isStartup = false,
-    sendUpdate
-  ) {
+  buildFeedPromise({ newFeedsPromises, newFeeds }, isStartup, sendUpdate) {
     return component => {
       const { url } = component.feed;
 
@@ -494,9 +475,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
               data: {
                 feed: newFeeds[url],
                 url,
-              },
-              meta: {
-                isStartup,
               },
             });
 
@@ -582,7 +560,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       .reduce(this.reduceFeedComponents(isStartup, sendUpdate), initialData);
   }
 
-  async loadComponentFeeds(sendUpdate, isStartup = false) {
+  async loadComponentFeeds(sendUpdate, isStartup) {
     const { DiscoveryStream } = this.store.getState();
 
     if (!DiscoveryStream || !DiscoveryStream.layout) {
@@ -609,9 +587,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.cache.set("feeds", newFeeds);
     sendUpdate({
       type: at.DISCOVERY_STREAM_FEEDS_UPDATE,
-      meta: {
-        isStartup,
-      },
     });
   }
 
@@ -852,9 +827,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         lastUpdated: spocsState.lastUpdated,
         spocs: spocsState.spocs,
       },
-      meta: {
-        isStartup,
-      },
     });
   }
 
@@ -882,7 +854,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * We can call this on startup because it's generally fast.
    * It reports to devtools the last time the data in the cache was updated.
    */
-  async loadAffinityScoresCache(isStartup = false) {
+  async loadAffinityScoresCache() {
     const cachedData = (await this.cache.get()) || {};
     const { affinities } = cachedData;
     if (this.personalized && affinities && affinities.scores) {
@@ -901,9 +873,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
           data: {
             lastUpdated: this.domainAffinitiesLastUpdated,
-          },
-          meta: {
-            isStartup,
           },
         })
       );
@@ -1243,9 +1212,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * @param {RefreshAll} options
    */
   async refreshAll(options = {}) {
-    const affinityCacheLoadPromise = this.loadAffinityScoresCache(
-      options.isStartup
-    );
+    const affinityCacheLoadPromise = this.loadAffinityScoresCache();
 
     const spocsPersonalized = this.store.getState().Prefs.values[
       PREF_SPOCS_PERSONALIZED
@@ -1732,7 +1699,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.INIT:
         // During the initialization of Firefox:
         // 1. Set-up listeners and initialize the redux state for config;
-        this.setupPrefs(true /* isStartup */);
+        this.setupPrefs();
         // 2. If config.enabled is true, start loading data.
         if (this.config.enabled) {
           await this.enable();
