@@ -6,6 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 
+import six
+
 from taskgraph.util.time import json_time_from_now
 from taskgraph.util.taskcluster import get_artifact_url
 
@@ -22,7 +24,7 @@ def _recurse(val, param_fns):
                 for param_key, param_fn in param_fns.items():
                     if val.keys() == [param_key]:
                         return param_fn(val[param_key])
-            return {k: recurse(v) for k, v in val.iteritems()}
+            return {k: recurse(v) for k, v in six.iteritems(val)}
         else:
             return val
     return recurse(val)
