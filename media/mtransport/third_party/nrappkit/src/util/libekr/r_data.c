@@ -97,7 +97,9 @@ int r_data_create(dp,d,l)
     if(!(d_->data=(UCHAR *)RMALLOC(l)))
       ABORT(R_NO_MEMORY);
 
-    memcpy(d_->data,d,l);
+    if (d) {
+      memcpy(d_->data,d,l);
+    }
     d_->len=l;
 
     *dp=d_;
