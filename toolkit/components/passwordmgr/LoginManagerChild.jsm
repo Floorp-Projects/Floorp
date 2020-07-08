@@ -401,7 +401,11 @@ const observer = {
 
   _storeUserInput(docState, field) {
     if (
-      !Services.prefs.getBoolPref("signon.capture.inputChanges.enabled", false)
+      !Services.prefs.getBoolPref(
+        "signon.capture.inputChanges.enabled",
+        false
+      ) ||
+      !field.value
     ) {
       return;
     }

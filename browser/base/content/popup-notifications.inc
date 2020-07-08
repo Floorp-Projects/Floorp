@@ -53,10 +53,15 @@
     <popupnotification id="password-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
         <stack>
-          <html:input id="password-notification-username"/>
+          <html:input id="password-notification-username" 
+                      class="ac-has-end-icon"
+                      autocompletesearch="login-doorhanger-username"
+                      autocompletepopup="PopupAutoComplete"
+                      is="autocomplete-input"
+                      maxrows="10"
+                      maxdropmarkerrows="10"/>
           <dropmarker id="password-notification-username-dropmarker"
-                      class="ac-dropmarker"
-                      hidden="true"/>
+                      class="ac-dropmarker"/>
         </stack>
         <stack>
           <html:input id="password-notification-password" type="password"/>

@@ -113,12 +113,6 @@
 
       this._popup = null;
 
-      /**
-       * This is the maximum number of drop-down rows we get when we
-       * hit the drop marker beside fields that have it (like the URLbar).
-       */
-      this.maxDropMarkerRows = 14;
-
       this.nsIAutocompleteInput = this.getCustomInterfaceCallback(
         Ci.nsIAutoCompleteInput
       );
@@ -310,7 +304,8 @@
       return this === document.activeElement;
     }
     /**
-     * maximum number of rows to display at a time
+     * maximum number of rows to display at a time when opening the popup normally
+     * (e.g., focus element and press the down arrow)
      */
     set maxRows(val) {
       this.setAttribute("maxrows", val);
@@ -319,6 +314,18 @@
 
     get maxRows() {
       return parseInt(this.getAttribute("maxrows")) || 0;
+    }
+    /**
+     * maximum number of rows to display at a time when opening the popup by
+     * clicking the dropmarker (for inputs that have one)
+     */
+    set maxdropmarkerrows(val) {
+      this.setAttribute("maxdropmarkerrows", val);
+      return val;
+    }
+
+    get maxdropmarkerrows() {
+      return parseInt(this.getAttribute("maxdropmarkerrows"), 10) || 14;
     }
     /**
      * option to allow scrolling through the list via the tab key, rather than
@@ -455,10 +462,10 @@
       // value when the popup is hidden.
       this.popup._normalMaxRows = this.maxRows;
 
-      // Increase our maxRows temporarily, since we want the dropdown to
-      // be bigger in this case. The popup's popupshowing/popuphiding
+      // Temporarily change our maxRows, since we want the dropdown to be a
+      // different size in this case. The popup's popupshowing/popuphiding
       // handlers will take care of resetting this.
-      this.maxRows = this.maxDropMarkerRows;
+      this.maxRows = this.maxdropmarkerrows;
 
       // Ensure that we have focus.
       if (!this.focused) {
