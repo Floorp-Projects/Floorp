@@ -33,7 +33,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
   struct testCasesAndResults {
     nsCString urlstring;
     nsContentPolicyType contentType;
-    nsString remoteType;
+    nsCString remoteType;
     testResults expected;
   };
 
@@ -54,36 +54,36 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
   testCasesAndResults myTestCases[] = {
       {"chrome://firegestures/content/browser.js"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       u"default"_ns,
+       "default"_ns,
        {"chromeuri"_ns, "TYPE_SCRIPT"_ns, "default"_ns,
         "chrome://firegestures/content/browser.js"_ns}},
       {"resource://firegestures/content/browser.js"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       u"default"_ns,
+       "default"_ns,
        {"resourceuri"_ns, "TYPE_SCRIPT"_ns, "default"_ns,
         "resource://firegestures/content/browser.js"_ns}},
       {// test that we don't report blob details
        // ..and test that we strip of URLs from remoteTypes
        "blob://000-000"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       u"webIsolated=https://blob.example/"_ns,
+       "webIsolated=https://blob.example/"_ns,
        {"bloburi"_ns, "TYPE_SCRIPT"_ns, "webIsolated"_ns, "unknown"_ns}},
       {// test for cases where finalURI is null, due to a broken nested URI
        // .. like malformed moz-icon URLs
        "moz-icon:blahblah"_ns,
        nsIContentPolicy::TYPE_IMAGE,
-       u"default"_ns,
+       "default"_ns,
        {"other"_ns, "TYPE_IMAGE"_ns, "default"_ns, "unknown"_ns}},
       {// we dont report data urls
        // ..and test that we strip of URLs from remoteTypes
        "data://blahblahblah"_ns,
        nsIContentPolicy::TYPE_DOCUMENT,
-       u"webCOOP+COEP=https://data.example"_ns,
+       "webCOOP+COEP=https://data.example"_ns,
        {"dataurl"_ns, "TYPE_DOCUMENT"_ns, "webCOOP+COEP"_ns, "unknown"_ns}},
       {// we only report file URLs on windows, where we can easily sanitize
        "file://c/users/tom/file.txt"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       u"default"_ns,
+       "default"_ns,
        {
 #if defined(XP_WIN)
            "sanitizedWindowsURL"_ns, "TYPE_SCRIPT"_ns, "default"_ns,

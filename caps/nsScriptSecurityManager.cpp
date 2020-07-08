@@ -938,7 +938,7 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
         }
 
         auto& remoteType = dom::ContentChild::GetSingleton()->GetRemoteType();
-        if (remoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+        if (remoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
           return NS_OK;
         }
       }
