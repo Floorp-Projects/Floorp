@@ -5751,6 +5751,7 @@
     "alert_emails": ["julianwels@mozilla.com", "seceng-telemetry@mozilla.com"],
     "bug_numbers": [1627206],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "low": 50,
     "high": 300000,

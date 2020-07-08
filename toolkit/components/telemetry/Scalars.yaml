@@ -1192,6 +1192,7 @@ security:
     notification_emails:
       - julianwels@mozilla.com
       - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
