@@ -26,6 +26,12 @@ if CONFIG['MOZ_REPLACE_MALLOC_STATIC'] and \
         OS_LIBS += [
             'dbghelp',
         ]
+    if CONFIG['MOZ_LINKER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+        LOCAL_INCLUDES += [
+            '/mozglue/linker',
+        ]
+        DEFINES['__wrap_dladdr'] = 'dladdr'
+
 
 if CONFIG['MOZ_DMD'] or CONFIG['MOZ_PHC']:
     if CONFIG['MOZ_BUILD_APP'] == 'memory':
