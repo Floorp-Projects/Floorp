@@ -47,7 +47,7 @@ MockGMPInstallManager.prototype = {
   checkForAddons: () =>
     Promise.resolve({
       usedFallback: true,
-      gmpAddons: [...gMockAddons.values()],
+      addons: [...gMockAddons.values()],
     }),
 
   installAddon: addon => {

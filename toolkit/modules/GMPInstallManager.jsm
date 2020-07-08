@@ -40,10 +40,99 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/UpdateUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ServiceRequest",
+  "resource://gre/modules/ServiceRequest.jsm"
+);
+
 function getScopedLogger(prefix) {
   // `PARENT_LOGGER_ID.` being passed here effectively links this logger
   // to the parentLogger.
   return Log.repository.getLoggerWithMessagePrefix("Toolkit.GMP", prefix + " ");
+}
+
+const LOCAL_GMP_SOURCES = [
+  {
+    id: "gmp-gmpopenh264",
+    src: "chrome://global/content/gmp-sources/openh264.json",
+  },
+  {
+    id: "gmp-widevinecdm",
+    src: "chrome://global/content/gmp-sources/widevinecdm.json",
+  },
+];
+
+function downloadJSON(uri) {
+  let log = getScopedLogger("GMPInstallManager.checkForAddons");
+  log.info("fetching config from: " + uri);
+  return new Promise((resolve, reject) => {
+    let xmlHttp = new ServiceRequest({ mozAnon: true });
+
+    xmlHttp.onload = function(aResponse) {
+      resolve(JSON.parse(this.responseText));
+    };
+
+    xmlHttp.onerror = function(e) {
+      reject("Fetching " + uri + " results in error code: " + e.target.status);
+    };
+
+    xmlHttp.open("GET", uri);
+    xmlHttp.overrideMimeType("application/json");
+    xmlHttp.send();
+  });
+}
+
+/**
+ * If downloading from the network fails (AUS server is down),
+ * load the sources from local build configuration.
+ */
+function downloadLocalConfig() {
+  let log = getScopedLogger("GMPInstallManager.checkForAddons");
+  return Promise.all(
+    LOCAL_GMP_SOURCES.map(conf => {
+      return downloadJSON(conf.src).then(addons => {
+        let platforms = addons.vendors[conf.id].platforms;
+        let target = Services.appinfo.OS + "_" + UpdateUtils.ABI;
+        let details = null;
+
+        while (!details) {
+          if (!(target in platforms)) {
+            // There was no matching platform so return false, this addon
+            // will be filtered from the results below
+            log.info("no details found for: " + target);
+            return false;
+          }
+          // Field either has the details of the binary or is an alias
+          // to another build target key that does
+          if (platforms[target].alias) {
+            target = platforms[target].alias;
+          } else {
+            details = platforms[target];
+          }
+        }
+
+        log.info("found plugin: " + conf.id);
+        return {
+          id: conf.id,
+          URL: details.fileUrl,
+          hashFunction: addons.hashFunction,
+          hashValue: details.hashValue,
+          version: addons.vendors[conf.id].version,
+          size: details.filesize,
+        };
+      });
+    })
+  ).then(addons => {
+    // Some filters may not match this platform so
+    // filter those out
+    addons = addons.filter(x => x !== false);
+
+    return {
+      usedFallback: true,
+      addons,
+    };
+  });
 }
 
 /**
@@ -78,7 +167,7 @@ GMPInstallManager.prototype = {
    * Performs an addon check.
    * @return a promise which will be resolved or rejected.
    *         The promise is resolved with an object with properties:
-   *           gmpAddons: array of GMPAddons
+   *           addons: array of addons
    *           usedFallback: whether the data was collected from online or
    *                         from fallback data within the build
    *         The promise is rejected with an object with properties:
@@ -92,6 +181,12 @@ GMPInstallManager.prototype = {
       log.error("checkForAddons already called");
       return Promise.reject({ type: "alreadycalled" });
     }
+
+    if (!GMPPrefs.getBool(GMPPrefs.KEY_UPDATE_ENABLED, true)) {
+      log.info("Updates are disabled via media.gmp-manager.updateEnabled");
+      return { usedFallback: true, addons: [] };
+    }
+
     this._deferred = PromiseUtils.defer();
 
     let allowNonBuiltIn = true;
@@ -112,14 +207,14 @@ GMPInstallManager.prototype = {
       url,
       allowNonBuiltIn,
       certs
-    );
+    ).catch(downloadLocalConfig);
 
     addonPromise.then(
       res => {
-        if (!res || !res.gmpAddons) {
-          this._deferred.resolve({ gmpAddons: [] });
+        if (!res || !res.addons) {
+          this._deferred.resolve({ addons: [] });
         } else {
-          res.gmpAddons = res.gmpAddons.map(a => new GMPAddon(a));
+          res.addons = res.addons.map(a => new GMPAddon(a));
           this._deferred.resolve(res);
         }
         delete this._deferred;
@@ -223,10 +318,10 @@ GMPInstallManager.prototype = {
     }
 
     try {
-      let { usedFallback, gmpAddons } = await this.checkForAddons();
+      let { usedFallback, addons } = await this.checkForAddons();
       this._updateLastCheck();
-      log.info("Found " + gmpAddons.length + " addons advertised.");
-      let addonsToInstall = gmpAddons.filter(function(gmpAddon) {
+      log.info("Found " + addons.length + " addons advertised.");
+      let addonsToInstall = addons.filter(function(gmpAddon) {
         log.info("Found addon: " + gmpAddon.toString());
 
         if (!gmpAddon.isValid) {

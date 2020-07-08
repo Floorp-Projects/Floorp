@@ -3894,17 +3894,20 @@ var XPIInstall = {
     url = await UpdateUtils.formatUpdateURL(url);
 
     logger.info(`Starting system add-on update check from ${url}.`);
-    let res = await ProductAddonChecker.getProductAddonList(url);
+    let res = await ProductAddonChecker.getProductAddonList(
+      url,
+      true
+    ).catch(e => logger.error(`System addon update list error ${e}`));
 
     // If there was no list then do nothing.
-    if (!res || !res.gmpAddons) {
+    if (!res || !res.addons) {
       logger.info("No system add-ons list was returned.");
       await installer.cleanDirectories();
       return;
     }
 
     let addonList = new Map(
-      res.gmpAddons.map(spec => [spec.id, { spec, path: null, addon: null }])
+      res.addons.map(spec => [spec.id, { spec, path: null, addon: null }])
     );
 
     let setMatches = (wanted, existing) => {
