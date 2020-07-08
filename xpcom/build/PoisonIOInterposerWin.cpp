@@ -274,7 +274,9 @@ static NTSTATUS NTAPI InterposedNtCreateFile(
       aFileHandle, aDesiredAccess, aObjectAttributes, aIoStatusBlock,
       aAllocationSize, aFileAttributes, aShareAccess, aCreateDisposition,
       aCreateOptions, aEaBuffer, aEaLength);
-  timer.SetHandle(*aFileHandle);
+  if (NT_SUCCESS(status) && aFileHandle) {
+    timer.SetHandle(*aFileHandle);
+  }
   return status;
 }
 
