@@ -116,7 +116,7 @@ UrlClassifierFeatureTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
+  if (!UrlClassifierCommon::ShouldEnableProtectionForChannel(aChannel)) {
     return nullptr;
   }
 

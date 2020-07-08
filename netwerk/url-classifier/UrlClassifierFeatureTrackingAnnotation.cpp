@@ -86,10 +86,6 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
-    return nullptr;
-  }
-
   MaybeInitialize();
   MOZ_ASSERT(gFeatureTrackingAnnotation);
 

@@ -89,10 +89,6 @@ UrlClassifierFeatureSocialTrackingAnnotation::MaybeCreate(
        "%p",
        aChannel));
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
-    return nullptr;
-  }
-
   MaybeInitialize();
   MOZ_ASSERT(gFeatureSocialTrackingAnnotation);
 
