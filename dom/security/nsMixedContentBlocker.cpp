@@ -393,6 +393,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   RefPtr<WindowContext> requestingWindow =
       WindowContext::GetById(aLoadInfo->GetInnerWindowID());
 
+  bool isPreload = nsContentUtils::IsPreloadType(contentType);
+
   // The content policy type that we receive may be an internal type for
   // scripts.  Let's remember if we have seen a worker type, and reset it to the
   // external type in all cases right now.
@@ -813,11 +815,15 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     }
   }
 
-  LogMixedContentMessage(classification, aContentLocation, topWC->Id(),
-                         (*aDecision == nsIContentPolicy::REJECT_REQUEST)
-                             ? eBlocked
-                             : eUserOverride,
-                         requestingLocation);
+  // To avoid duplicate errors on the console, we do not report blocked
+  // preloads to the console.
+  if (!isPreload) {
+    LogMixedContentMessage(classification, aContentLocation, topWC->Id(),
+                           (*aDecision == nsIContentPolicy::REJECT_REQUEST)
+                               ? eBlocked
+                               : eUserOverride,
+                           requestingLocation);
+  }
 
   // Notify the top WindowContext of the flags we've computed, and it
   // will handle updating any relevant security UI.
