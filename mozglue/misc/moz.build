@@ -85,7 +85,7 @@ else:
         'Mutex_posix.cpp',
     ]
 
-if CONFIG['MOZ_LINKER'] or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+if CONFIG['MOZ_LINKER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
         '/mozglue/linker',
     ]
