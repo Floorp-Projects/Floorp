@@ -218,6 +218,25 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
 
  private:
   /**
+   * CollectTopMostChildContentsCompletelyInRange() collects topmost child
+   * contents which are completely in the given range.
+   * For example, if the range points a node with its container node, the
+   * result is only the node (meaning does not include its descendants).
+   * If the range starts start of a node and ends end of it, and if the node
+   * does not have children, returns no nodes, otherwise, if the node has
+   * some children, the result includes its all children (not including their
+   * descendants).
+   *
+   * @param aStartPoint         Start point of the range.
+   * @param aEndPoint           End point of the range.
+   * @param aOutArrayOfContents [Out] Topmost children which are completely in
+   *                            the range.
+   */
+  static void CollectTopMostChildContentsCompletelyInRange(
+      const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
+
+  /**
    * @return nullptr, if there's no invisible `<br>`.
    */
   HTMLBRElement* GetInvisibleBRElementAtPoint(
@@ -435,7 +454,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   Unused << streamStartPoint;
   Unused << streamEndPoint;
 
-  HTMLEditor::CollectTopMostChildContentsCompletelyInRange(
+  HTMLWithContextInserter::CollectTopMostChildContentsCompletelyInRange(
       EditorRawDOMPoint(streamStartParent, streamStartOffset),
       EditorRawDOMPoint(streamEndParent, streamEndOffset),
       arrayOfTopMostChildContents);
@@ -3205,9 +3224,11 @@ nsresult HTMLEditor::HTMLWithContextInserter::ParseFragment(
 }
 
 // static
-void HTMLEditor::CollectTopMostChildContentsCompletelyInRange(
-    const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
-    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
+void HTMLEditor::HTMLWithContextInserter::
+    CollectTopMostChildContentsCompletelyInRange(
+        const EditorRawDOMPoint& aStartPoint,
+        const EditorRawDOMPoint& aEndPoint,
+        nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
   MOZ_ASSERT(aStartPoint.IsSetAndValid());
   MOZ_ASSERT(aEndPoint.IsSetAndValid());
 
