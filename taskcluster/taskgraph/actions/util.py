@@ -241,7 +241,7 @@ def update_dependencies(task, graph):
 
 
 def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
-                 params, decision_task_id=None, suffix='', modifier=lambda t: t):
+                 params, decision_task_id, suffix='', modifier=lambda t: t):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
     this function to create new tasks,
