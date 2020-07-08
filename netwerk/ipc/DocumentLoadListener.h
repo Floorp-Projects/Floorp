@@ -314,6 +314,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Returns false if the docshell will ignore the load entirely.
   bool DocShellWillDisplayContent(nsresult aStatus);
 
+  // Returns true if this is a failed load, where we have successfully
+  // created a fixed URI to attempt loading instead.
+  // If successful, this calls DisconnectListeners to completely finish
+  // the current load, and calls BrowsingContext::LoadURI to start the new one.
+  bool MaybeHandleLoadErrorWithURIFixup(nsresult aStatus);
+
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
   //
