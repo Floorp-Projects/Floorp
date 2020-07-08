@@ -19,7 +19,6 @@ class HighlighterFront extends FrontClassWithSpec(highlighterSpec) {
     super(client, targetFront, parentFront);
 
     this.isNodeFrontHighlighted = false;
-    this.isPicking = false;
   }
 
   // Update the object given a form representation off the wire.
@@ -27,37 +26,6 @@ class HighlighterFront extends FrontClassWithSpec(highlighterSpec) {
     this.actorID = json.actor;
     // FF42+ HighlighterActors starts exposing custom form, with traits object
     this.traits = json.traits || {};
-  }
-
-  /**
-   * Start the element picker on the debuggee target.
-   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
-   *                            activated.
-   * @return promise that resolves when the picker has started or immediately
-   * if it is already started
-   */
-  pick(doFocus) {
-    if (this.isPicking) {
-      return null;
-    }
-    this.isPicking = true;
-    if (doFocus && super.pickAndFocus) {
-      return super.pickAndFocus();
-    }
-    return super.pick();
-  }
-
-  /**
-   * Stop the element picker.
-   * @return promise that resolves when the picker has stopped or immediately
-   * if it is already stopped
-   */
-  cancelPick() {
-    if (!this.isPicking) {
-      return Promise.resolve();
-    }
-    this.isPicking = false;
-    return super.cancelPick();
   }
 
   /**

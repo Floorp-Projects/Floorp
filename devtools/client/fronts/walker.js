@@ -23,6 +23,7 @@ loader.lazyRequireGetter(
 class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
+    this._isPicking = false;
     this._orphaned = new Set();
     this._retainedOrphans = new Set();
 
@@ -586,6 +587,46 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       //   `watchRootNode`, so we call `onRootNodeAvailable` immediately.
       await onRootNodeAvailable(this.rootNode);
     }
+  }
+
+  /**
+   * Start the element picker on the debuggee target.
+   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
+   *                            activated.
+   */
+  pick(doFocus) {
+    if (this._isPicking) {
+      return Promise.resolve();
+    }
+    this._isPicking = true;
+
+    // Firefox 80 - backwards compatibility for servers without walker.pick()
+    if (!this.traits.supportsNodePicker) {
+      // parent is InspectorFront
+      return doFocus
+        ? this.parentFront.highlighter.pickAndFocus()
+        : this.parentFront.highlighter.pick();
+    }
+
+    return super.pick(doFocus);
+  }
+
+  /**
+   * Stop the element picker.
+   */
+  cancelPick() {
+    if (!this._isPicking) {
+      return Promise.resolve();
+    }
+    this._isPicking = false;
+
+    // Firefox 80 - backwards compatibility for servers without walker.cancelPick()
+    if (!this.traits.supportsNodePicker) {
+      // parent is InspectorFront
+      return this.parentFront.highlighter.cancelPick();
+    }
+
+    return super.cancelPick();
   }
 
   unwatchRootNode(onRootNodeAvailable) {
