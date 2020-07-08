@@ -28,7 +28,7 @@ class ProcessActor : public JSActorManager {
       JSActorService* aActorSvc, const nsACString& aName,
       ErrorResult& aRv) final;
 
-  virtual const nsACString& GetRemoteType() const = 0;
+  virtual const nsAString& GetRemoteType() const = 0;
 };
 
 }  // namespace dom

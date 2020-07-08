@@ -259,7 +259,7 @@ struct JSWindowActorInfo
   // Observer notifications this actor listens to.
   nsCString[] observers;
   nsString[] matches;
-  nsCString[] remoteTypes;
+  nsString[] remoteTypes;
   nsString[] messageManagerGroups;
 };
 
@@ -272,7 +272,7 @@ struct JSProcessActorInfo
 
     // Observer notifications this actor listens to.
     nsCString[] observers;
-    nsCString[] remoteTypes;
+    nsString[] remoteTypes;
 };
 
 struct GMPAPITags
@@ -636,7 +636,7 @@ child:
     /**
      * Send the remote type associated with the content process.
      */
-    async RemoteType(nsCString aRemoteType);
+    async RemoteType(nsString aRemoteType);
 
     /**
      * Send ServiceWorkerRegistrationData to child process.

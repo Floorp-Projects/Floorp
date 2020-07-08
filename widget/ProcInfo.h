@@ -68,7 +68,7 @@ struct ProcInfo {
   // Process type
   ProcType type;
   // Origin, if any
-  nsCString origin;
+  nsString origin;
   // Process filename (without the path name).
   nsString filename;
   // VMS in bytes.
@@ -94,12 +94,12 @@ typedef MozPromise<ProcInfo, nsresult, true> ProcInfoPromise;
 #ifdef XP_MACOSX
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
                                     const ProcType& processType,
-                                    const nsACString& origin,
+                                    const nsAString& origin,
                                     mach_port_t aChildTask = MACH_PORT_NULL);
 #else
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
                                     const ProcType& processType,
-                                    const nsACString& origin);
+                                    const nsAString& origin);
 #endif
 
 }  // namespace mozilla

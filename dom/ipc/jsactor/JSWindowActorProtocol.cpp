@@ -295,7 +295,7 @@ extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
 }
 
 bool JSWindowActorProtocol::RemoteTypePrefixMatches(
-    const nsDependentCSubstring& aRemoteType) {
+    const nsDependentSubstring& aRemoteType) {
   for (auto& remoteType : mRemoteTypes) {
     if (StringBeginsWith(aRemoteType, remoteType)) {
       return true;
@@ -317,7 +317,7 @@ bool JSWindowActorProtocol::MessageManagerGroupMatches(
 
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
                                     nsIURI* aURI,
-                                    const nsACString& aRemoteType) {
+                                    const nsAString& aRemoteType) {
   MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
   MOZ_ASSERT(aURI, "Must have URI!");
 

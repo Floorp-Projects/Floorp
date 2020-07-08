@@ -37,7 +37,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   // See comments on PreallocatedProcessManager for these methods.
   void AddBlocker(ContentParent* aParent);
   void RemoveBlocker(ContentParent* aParent);
-  already_AddRefed<ContentParent> Take(const nsACString& aRemoteType);
+  already_AddRefed<ContentParent> Take(const nsAString& aRemoteType);
   bool Provide(ContentParent* aParent);
   void Erase(ContentParent* aParent);
 
@@ -190,17 +190,17 @@ void PreallocatedProcessManagerImpl::RereadPrefs() {
 }
 
 already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
-    const nsACString& aRemoteType) {
+    const nsAString& aRemoteType) {
   if (!mEnabled || sShutdown) {
     return nullptr;
   }
   RefPtr<ContentParent> process;
-  if (aRemoteType == DEFAULT_REMOTE_TYPE) {
+  if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
     // we can recycle processes via Provide() for e10s only
     process = mPreallocatedE10SProcess.forget();
     if (process) {
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-              ("Reuse web process %p", process.get()));
+              ("Reuse " DEFAULT_REMOTE_TYPE " process %p", process.get()));
     }
   }
   if (!process && !mPreallocatedProcesses.empty()) {
@@ -210,7 +210,7 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     // soon.
     AllocateOnIdle();
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Use prealloc process %p", process.get()));
+            ("Use " PREALLOC_REMOTE_TYPE " process %p", process.get()));
   }
   if (process) {
     ProcessPriorityManager::SetProcessPriority(process,
@@ -220,14 +220,15 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
 }
 
 bool PreallocatedProcessManagerImpl::Provide(ContentParent* aParent) {
-  MOZ_DIAGNOSTIC_ASSERT(aParent->GetRemoteType() == DEFAULT_REMOTE_TYPE);
+  MOZ_DIAGNOSTIC_ASSERT(
+      aParent->GetRemoteType().EqualsLiteral(DEFAULT_REMOTE_TYPE));
 
   // This will take the already-running process even if there's a
   // launch in progress; if that process hasn't been taken by the
   // time the launch completes, the new process will be shut down.
   if (mEnabled && !sShutdown && !mPreallocatedE10SProcess) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Store for reuse web process %p", aParent));
+            ("Store for reuse " DEFAULT_REMOTE_TYPE " process %p", aParent));
     ProcessPriorityManager::SetProcessPriority(aParent,
                                                PROCESS_PRIORITY_BACKGROUND);
     mPreallocatedE10SProcess = aParent;
@@ -299,7 +300,8 @@ bool PreallocatedProcessManagerImpl::CanAllocate() {
   return mEnabled && sNumBlockers == 0 &&
          mPreallocatedProcesses.size() < mNumberPreallocs && !sShutdown &&
          (FissionAutostart() ||
-          !ContentParent::IsMaxProcessCountReached(DEFAULT_REMOTE_TYPE));
+          !ContentParent::IsMaxProcessCountReached(
+              NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE)));
 }
 
 void PreallocatedProcessManagerImpl::AllocateAfterDelay() {
@@ -400,11 +402,11 @@ PreallocatedProcessManager::GetPPMImpl() {
 }
 
 /* static */
-void PreallocatedProcessManager::AddBlocker(const nsACString& aRemoteType,
+void PreallocatedProcessManager::AddBlocker(const nsAString& aRemoteType,
                                             ContentParent* aParent) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("AddBlocker: %s %p (sNumBlockers=%d)",
-           PromiseFlatCString(aRemoteType).get(), aParent,
+           NS_ConvertUTF16toUTF8(aRemoteType).get(), aParent,
            PreallocatedProcessManagerImpl::sNumBlockers));
   if (auto impl = GetPPMImpl()) {
     impl->AddBlocker(aParent);
@@ -412,11 +414,11 @@ void PreallocatedProcessManager::AddBlocker(const nsACString& aRemoteType,
 }
 
 /* static */
-void PreallocatedProcessManager::RemoveBlocker(const nsACString& aRemoteType,
+void PreallocatedProcessManager::RemoveBlocker(const nsAString& aRemoteType,
                                                ContentParent* aParent) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("RemoveBlocker: %s %p (sNumBlockers=%d)",
-           PromiseFlatCString(aRemoteType).get(), aParent,
+           NS_ConvertUTF16toUTF8(aRemoteType).get(), aParent,
            PreallocatedProcessManagerImpl::sNumBlockers));
   if (auto impl = GetPPMImpl()) {
     impl->RemoveBlocker(aParent);
@@ -425,7 +427,7 @@ void PreallocatedProcessManager::RemoveBlocker(const nsACString& aRemoteType,
 
 /* static */
 already_AddRefed<ContentParent> PreallocatedProcessManager::Take(
-    const nsACString& aRemoteType) {
+    const nsAString& aRemoteType) {
   if (auto impl = GetPPMImpl()) {
     return impl->Take(aRemoteType);
   }

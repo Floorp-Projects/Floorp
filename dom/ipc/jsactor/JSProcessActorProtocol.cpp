@@ -121,7 +121,7 @@ void JSProcessActorProtocol::RemoveObservers() {
 }
 
 bool JSProcessActorProtocol::RemoteTypePrefixMatches(
-    const nsDependentCSubstring& aRemoteType) {
+    const nsDependentSubstring& aRemoteType) {
   for (auto& remoteType : mRemoteTypes) {
     if (StringBeginsWith(aRemoteType, remoteType)) {
       return true;
@@ -130,7 +130,7 @@ bool JSProcessActorProtocol::RemoteTypePrefixMatches(
   return false;
 }
 
-bool JSProcessActorProtocol::Matches(const nsACString& aRemoteType) {
+bool JSProcessActorProtocol::Matches(const nsAString& aRemoteType) {
   if (!mRemoteTypes.IsEmpty() &&
       !RemoteTypePrefixMatches(RemoteTypePrefix(aRemoteType))) {
     return false;
