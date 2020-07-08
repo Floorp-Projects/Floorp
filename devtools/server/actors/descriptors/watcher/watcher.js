@@ -35,12 +35,29 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._browser = options && options.browser;
 
-    if (this._browser) {
-      // The browsing context might change over time, which makes this code not ideal.
-      // This should be fixed in Bug 1625027.
-      this.browsingContextID = this._browser.browsingContext.id;
-    }
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
+  },
+
+  /**
+   * If we are debugging only one Tab or Document, returns its BrowserElement.
+   * For Tabs, it will be the <browser> element used to load the web page.
+   *
+   * This is typicaly used to fetch:
+   * - its `browserId` attribute, which uniquely defines it,
+   * - its `browsingContextID` or `browsingContext`, which helps inspecting its content.
+   */
+  get browserElement() {
+    return this._browser;
+  },
+
+  /**
+   * Unique identifier, which helps designates one precise browser element, the one
+   * we may debug. This is only set if we actually debug a browser element.
+   * So, that will be typically set when we debug a tab, but not when we debug
+   * a process, or a worker.
+   */
+  get browserId() {
+    return this._browser?.browserId;
   },
 
   destroy: function() {
@@ -85,7 +102,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // content process targets yet. Bug 1620248 should help supporting them and enable
           // this more broadly.
           [Resources.TYPES.CONSOLE_MESSAGE]:
-            enableServerWatcher && !!this._browser,
+            enableServerWatcher && !!this.browserElement,
           [Resources.TYPES.PLATFORM_MESSAGE]: enableServerWatcher,
         },
       },
@@ -245,8 +262,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
      * We will eventually get rid of this code once all targets are properly supported by
      * the Watcher Actor and we have target helpers for all of them.
      */
-    const targetActor = this.browsingContextID
-      ? TargetActorRegistry.getTargetActor(this.browsingContextID)
+    const targetActor = this.browserElement
+      ? TargetActorRegistry.getTargetActor(this.browserId)
       : TargetActorRegistry.getParentProcessTargetActor();
     if (targetActor) {
       await targetActor.watchTargetResources(resourceTypes);
@@ -284,7 +301,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     // Prevent trying to unwatch when the related BrowsingContext has already
     // been destroyed
-    if (!this._browser || this._browser.browsingContext) {
+    if (!this.browserElement || this.browserElement.browsingContext) {
       for (const targetType in TARGET_HELPERS) {
         // Frame target helper handles the top level target, if it runs in the content process
         // so we should always process it. It does a second check to isWatchingTargets.
@@ -303,8 +320,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     }
 
     // See comment in watchResources.
-    const targetActor = this.browsingContextID
-      ? TargetActorRegistry.getTargetActor(this.browsingContextID)
+    const targetActor = this.browserElement
+      ? TargetActorRegistry.getTargetActor(this.browserId)
       : TargetActorRegistry.getParentProcessTargetActor();
     if (targetActor) {
       targetActor.unwatchTargetResources(contentProcessResourceTypes);

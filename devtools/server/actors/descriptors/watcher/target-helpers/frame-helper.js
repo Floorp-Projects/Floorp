@@ -22,7 +22,7 @@ async function createTargets(watcher, watchedResources) {
   // - Force the instantiation of a DevToolsFrameChild
   // - Have the DevToolsFrameChild to spawn the BrowsingContextTargetActor
   const browsingContexts = getFilteredRemoteBrowsingContext(
-    watcher.browsingContextID
+    watcher.browserElement
   );
   const promises = [];
   for (const browsingContext of browsingContexts) {
@@ -38,7 +38,7 @@ async function createTargets(watcher, watchedResources) {
       .instantiateTarget({
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
-        browsingContextID: watcher.browsingContextID,
+        browserId: watcher.browserId,
         watchedResources: watcher.watchedResources,
       });
     promises.push(promise);
@@ -55,7 +55,7 @@ async function createTargets(watcher, watchedResources) {
 async function destroyTargets(watcher) {
   // Go over all existing BrowsingContext in order to destroy all targets
   const browsingContexts = getFilteredRemoteBrowsingContext(
-    watcher.browsingContextID
+    watcher.browserElement
   );
   const promises = [];
   for (const browsingContext of browsingContexts) {
@@ -68,7 +68,7 @@ async function destroyTargets(watcher) {
       .getActor("DevToolsFrame")
       .destroyTarget({
         watcherActorID: watcher.actorID,
-        browsingContextID: watcher.browsingContextID,
+        browserId: watcher.browserId,
       });
     promises.push(promise);
   }
@@ -85,28 +85,7 @@ async function destroyTargets(watcher) {
  *        List of all resource types to fetch.
  */
 async function watchResources({ watcher, resourceTypes }) {
-  // If we are watching for additional frame targets, it means that fission mode is enabled,
-  // either via devtools.contenttoolbox.fission or devtools.browsertoolbox.fission pref.
-  const watchingAdditionalTargets = WatcherRegistry.isWatchingTargets(
-    watcher,
-    "frame"
-  );
-  const { browsingContextID } = watcher;
-  const browsingContexts = watchingAdditionalTargets
-    ? getFilteredRemoteBrowsingContext(browsingContextID)
-    : [];
-  // Even if we aren't watching additional target, we want to process the top level target.
-  // The top level target isn't returned by getFilteredRemoteBrowsingContext, so add it in both cases.
-  if (browsingContextID) {
-    const topBrowsingContext = BrowsingContext.get(browsingContextID);
-    // Ignore if we are against a page running in the parent process,
-    // which would not support JSWindowActor API
-    // XXX May be we should toggle `includeChrome` and ensure watch/unwatch works
-    // with such page?
-    if (topBrowsingContext.currentWindowGlobal.osPid != -1) {
-      browsingContexts.push(topBrowsingContext);
-    }
-  }
+  const browsingContexts = getWatchingBrowsingContexts(watcher);
   const promises = [];
   for (const browsingContext of browsingContexts) {
     logWindowGlobal(
@@ -118,7 +97,7 @@ async function watchResources({ watcher, resourceTypes }) {
       .getActor("DevToolsFrame")
       .watchFrameResources({
         watcherActorID: watcher.actorID,
-        browsingContextID: watcher.browsingContextID,
+        browserId: watcher.browserId,
         resourceTypes,
       });
     promises.push(promise);
@@ -133,28 +112,7 @@ async function watchResources({ watcher, resourceTypes }) {
  * See watchResources for argument documentation.
  */
 function unwatchResources({ watcher, resourceTypes }) {
-  // If we are watching for additional frame targets, it means that fission mode is enabled,
-  // either via devtools.contenttoolbox.fission or devtools.browsertoolbox.fission pref.
-  const watchingAdditionalTargets = WatcherRegistry.isWatchingTargets(
-    watcher,
-    "frame"
-  );
-  const { browsingContextID } = watcher;
-  const browsingContexts = watchingAdditionalTargets
-    ? getFilteredRemoteBrowsingContext(browsingContextID)
-    : [];
-  // Even if we aren't watching additional target, we want to process the top level target.
-  // The top level target isn't returned by getFilteredRemoteBrowsingContext, so add it in both cases.
-  if (browsingContextID) {
-    const topBrowsingContext = BrowsingContext.get(browsingContextID);
-    // Ignore if we are against a page running in the parent process,
-    // which would not support JSWindowActor API.
-    // XXX May be we should toggle `includeChrome` and ensure watch/unwatch works
-    // with such page?
-    if (topBrowsingContext.currentWindowGlobal.osPid != -1) {
-      browsingContexts.push(topBrowsingContext);
-    }
-  }
+  const browsingContexts = getWatchingBrowsingContexts(watcher);
   for (const browsingContext of browsingContexts) {
     logWindowGlobal(
       browsingContext.currentWindowGlobal,
@@ -165,7 +123,7 @@ function unwatchResources({ watcher, resourceTypes }) {
       .getActor("DevToolsFrame")
       .unwatchFrameResources({
         watcherActorID: watcher.actorID,
-        browsingContextID: watcher.browsingContextID,
+        browserId: watcher.browserId,
         resourceTypes,
       });
   }
@@ -179,21 +137,55 @@ module.exports = {
 };
 
 /**
+ * Return the list of BrowsingContexts which should be targeted in order to communicate
+ * a new list of resource types to listen or stop listening to.
+ *
+ * @param WatcherActor watcher
+ *        The watcher actor will be used to know which target we debug
+ *        and what BrowsingContext should be considered.
+ */
+function getWatchingBrowsingContexts(watcher) {
+  // If we are watching for additional frame targets, it means that fission mode is enabled,
+  // either via devtools.contenttoolbox.fission or devtools.browsertoolbox.fission pref.
+  const watchingAdditionalTargets = WatcherRegistry.isWatchingTargets(
+    watcher,
+    "frame"
+  );
+  const { browserElement } = watcher;
+  const browsingContexts = watchingAdditionalTargets
+    ? getFilteredRemoteBrowsingContext(browserElement)
+    : [];
+  // Even if we aren't watching additional target, we want to process the top level target.
+  // The top level target isn't returned by getFilteredRemoteBrowsingContext, so add it in both cases.
+  if (browserElement) {
+    const topBrowsingContext = browserElement.browsingContext;
+    // Ignore if we are against a page running in the parent process,
+    // which would not support JSWindowActor API
+    // XXX May be we should toggle `includeChrome` and ensure watch/unwatch works
+    // with such page?
+    if (topBrowsingContext.currentWindowGlobal.osPid != -1) {
+      browsingContexts.push(topBrowsingContext);
+    }
+  }
+  return browsingContexts;
+}
+
+/**
  * Get the list of all BrowsingContext we should interact with.
  * The precise condition of which BrowsingContext we should interact with are defined
  * in `shouldNotifyWindowGlobal`
  *
- * @param Number browsingContextID (optional)
- *        If defined, this will restrict to only the Browsing Context matching this ID
- *        and any of its (nested) children.
+ * @param BrowserElement browserElement (optional)
+ *        If defined, this will restrict to only the Browsing Context matching this
+ *        Browser Element and any of its (nested) children iframes.
  */
-function getFilteredRemoteBrowsingContext(watchedBrowsingContextID) {
+function getFilteredRemoteBrowsingContext(browserElement) {
   return getAllRemoteBrowsingContexts(
-    watchedBrowsingContextID
+    browserElement?.browsingContext
   ).filter(browsingContext =>
     shouldNotifyWindowGlobal(
       browsingContext.currentWindowGlobal,
-      watchedBrowsingContextID
+      browserElement?.browserId
     )
   );
 }
@@ -206,11 +198,11 @@ function getFilteredRemoteBrowsingContext(watchedBrowsingContextID) {
  * - For all chrome *and* content contexts (privileged windows, as well as <browser> elements and their inner content documents)
  * - For all nested browsing context. We fetch the contexts recursively.
  *
- * @param Number browsingContextID (optional)
- *        If defined, this will restrict to only the Browsing Context matching this ID
+ * @param BrowsingContext topBrowsingContext (optional)
+ *        If defined, this will restrict to this Browsing Context only
  *        and any of its (nested) children.
  */
-function getAllRemoteBrowsingContexts(browsingContextID) {
+function getAllRemoteBrowsingContexts(topBrowsingContext) {
   const browsingContexts = [];
 
   // For a given BrowsingContext, add the `browsingContext`
@@ -237,9 +229,9 @@ function getAllRemoteBrowsingContexts(browsingContextID) {
     }
   }
 
-  // If a browsingContextID is passed, only walk through the given BrowsingContext
-  if (browsingContextID) {
-    walk(BrowsingContext.get(browsingContextID));
+  // If a Browsing Context is passed, only walk through the given BrowsingContext
+  if (topBrowsingContext) {
+    walk(topBrowsingContext);
     // Remove the top level browsing context we just added by calling walk.
     browsingContexts.shift();
   } else {
@@ -261,7 +253,7 @@ function getAllRemoteBrowsingContexts(browsingContextID) {
  * but may be not, it looks like the checks are really differents because WindowGlobalParent and WindowGlobalChild
  * expose very different attributes. (WindowGlobalChild exposes much less!)
  */
-function shouldNotifyWindowGlobal(windowGlobal, watchedBrowsingContextID) {
+function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   const browsingContext = windowGlobal.browsingContext;
   // Ignore extension for now as attaching to them is special.
   if (browsingContext.currentRemoteType == "extension") {
@@ -282,10 +274,7 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowsingContextID) {
     return false;
   }
 
-  if (
-    watchedBrowsingContextID &&
-    browsingContext.top.id != watchedBrowsingContextID
-  ) {
+  if (watchedBrowserId && browsingContext.browserId != watchedBrowserId) {
     return false;
   }
 
@@ -307,7 +296,9 @@ function logWindowGlobal(windowGlobal, message) {
   const browsingContext = windowGlobal.browsingContext;
   dump(
     message +
-      " | BrowsingContext.id: " +
+      " | BrowsingContext.browserId: " +
+      browsingContext.browserId +
+      " id: " +
       browsingContext.id +
       " Inner Window ID: " +
       windowGlobal.innerWindowId +
