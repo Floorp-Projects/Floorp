@@ -52,28 +52,24 @@ async function createTargets(watcher, watchedResources) {
  * @param WatcherActor watcher
  *        The Watcher Actor requesting to stop watching for new targets.
  */
-async function destroyTargets(watcher) {
+function destroyTargets(watcher) {
   // Go over all existing BrowsingContext in order to destroy all targets
   const browsingContexts = getFilteredRemoteBrowsingContext(
     watcher.browserElement
   );
-  const promises = [];
   for (const browsingContext of browsingContexts) {
     logWindowGlobal(
       browsingContext.currentWindowGlobal,
       "Existing WindowGlobal"
     );
 
-    const promise = browsingContext.currentWindowGlobal
+    browsingContext.currentWindowGlobal
       .getActor("DevToolsFrame")
       .destroyTarget({
         watcherActorID: watcher.actorID,
         browserId: watcher.browserId,
       });
-    promises.push(promise);
   }
-  // Await for the queries in order to try to resolve only *after* we destroyed all existing targets.
-  return Promise.all(promises);
 }
 
 /**
