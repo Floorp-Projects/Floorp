@@ -34,6 +34,10 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [Merge day process]({{ site.baseurl }}/contributing/merge-day)
 * [Updating the tracking protection lists process]({{ site.baseurl }}/contributing/update-tracking-protection-list)
 
+### Accepted RFCs
+
+* [0001 - Introducing a lightweight RFC]({{ site.baseurl }}/rfc/0001-rfc-process)
+
 ### Presentations
 
 * [GeckoView and Android components (June 2018)](https://onlinexperiences.com/Launch/Event.htm?ShowKey=44908&DisplayItem=E271804) **[Mozilla internal only]**
