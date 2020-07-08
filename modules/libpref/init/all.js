@@ -563,10 +563,6 @@ pref("media.video-queue.send-to-compositor-size", 9999);
 // "verbose", "normal" and "" (log disabled).
 pref("media.cubeb.logging_level", "");
 
-#if defined(XP_MACOSX)
-  pref("media.cubeb.backend", "audiounit-rust");
-#endif
-
 pref("media.cubeb.output_voice_routing", true);
 
 // GraphRunner (fixed MediaTrackGraph thread) control
