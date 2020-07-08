@@ -420,8 +420,6 @@ class ICStub {
   void updateCode(JitCode* stubCode);
   void trace(JSTracer* trc);
 
-  bool stubDataHasNurseryPointers(const CacheIRStubInfo* stubInfo);
-
   static const uint16_t EXPECTED_TRACE_MAGIC = 0b1100011;
 
   template <typename T, typename... Args>
