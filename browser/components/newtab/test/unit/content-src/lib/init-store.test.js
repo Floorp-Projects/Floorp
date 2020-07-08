@@ -139,6 +139,17 @@ describe("initStore", () => {
       dispatch(action);
       assert.calledWith(next, action);
     });
+    it("should not let startup actions go through for the preloaded about:home document", () => {
+      globals.set("__FROM_STARTUP_CACHE__", true);
+      const next = sinon.spy();
+      const dispatch = rehydrationMiddleware(store)(next);
+      const action = ac.BroadcastToContent(
+        { type: "FOO", meta: { isStartup: true } },
+        123
+      );
+      dispatch(action);
+      assert.notCalled(next);
+    });
   });
   describe("queueEarlyMessageMiddleware", () => {
     it("should allow all local actions to go through", () => {
