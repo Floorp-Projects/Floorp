@@ -6,7 +6,6 @@
 
 #include "nsArray.h"
 #include "nsContentSecurityManager.h"
-#include "nsContentSecurityUtils.h"
 #include "nsEscape.h"
 #include "nsDataHandler.h"
 #include "nsIChannel.h"
@@ -28,8 +27,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -761,62 +758,6 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 }
 
 /* static */
-void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
-    nsIURI* aFinalURI, nsContentPolicyType aContentPolicyType,
-    const nsAString& aRemoteType) {
-  if (!StaticPrefs::dom_security_unexpected_system_load_telemetry_enabled()) {
-    return;
-  }
-  nsAutoCString uriString;
-  if (aFinalURI) {
-    aFinalURI->GetAsciiSpec(uriString);
-  } else {
-    uriString.AssignLiteral("");
-  }
-  FilenameTypeAndDetails fileNameTypeAndDetails =
-      nsContentSecurityUtils::FilenameToFilenameType(
-          NS_ConvertUTF8toUTF16(uriString), false);
-
-  nsCString loggedFileDetails = "unknown"_ns;
-  if (fileNameTypeAndDetails.second.isSome()) {
-    loggedFileDetails.Assign(
-        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()));
-  }
-  // sanitize remoteType because it may contain sensitive
-  // info, like URLs. e.g. `webIsolated=https://example.com`
-  nsAutoCString loggedRemoteType =
-      NS_ConvertUTF16toUTF8(dom::RemoteTypePrefix(aRemoteType));
-  nsAutoCString loggedContentType(NS_CP_ContentTypeName(aContentPolicyType));
-
-  MOZ_LOG(sCSMLog, LogLevel::Debug, ("UnexpectedPrivilegedLoadTelemetry:\n"));
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- contentType: %s\n", loggedContentType.get()));
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- URL (not to be reported): %s\n", uriString.get()));
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- remoteType: %s\n", loggedRemoteType.get()));
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- fileInfo: %s\n", fileNameTypeAndDetails.first.get()));
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- fileDetails: %s\n\n", loggedFileDetails.get()));
-
-  // Send Telemetry
-  auto extra = Some<nsTArray<EventExtraEntry>>(
-      {EventExtraEntry{"contenttype"_ns, loggedContentType},
-       EventExtraEntry{"remotetype"_ns, loggedRemoteType},
-       EventExtraEntry{"filedetails"_ns, loggedFileDetails}});
-
-  if (!sTelemetryEventEnabled.exchange(true)) {
-    Telemetry::SetEventRecordingEnabled("security"_ns, true);
-  }
-
-  Telemetry::EventID eventType =
-      Telemetry::EventID::Security_Unexpectedload_Systemprincipal;
-  Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
-                         extra);
-}
-
-/* static */
 nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     nsIChannel* aChannel) {
   // Check and assert that we never allow remote documents/scripts (http:,
@@ -866,31 +807,15 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
       nested->GetInnerURI(getter_AddRefs(finalURI));
     }
   }
-
-  nsAutoString remoteType;
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(aChannel, parentChannel);
-    if (parentChannel) {
-      parentChannel->GetRemoteType(remoteType);
-    }
-  } else {
-    remoteType.Assign(
-        mozilla::dom::ContentChild::GetSingleton()->GetRemoteType());
-  }
-
   // This is our escape hatch, if things break in release.
   // We expect to remove the pref in bug 1638770
   bool cancelNonLocalSystemPrincipal = StaticPrefs::
       security_cancel_non_local_loads_triggered_by_systemprincipal();
 
   // GetInnerURI can return null for malformed nested URIs like moz-icon:trash
-  if (!finalURI) {
-    MeasureUnexpectedPrivilegedLoads(finalURI, contentPolicyType, remoteType);
-    if (cancelNonLocalSystemPrincipal) {
-      aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
+  if (!finalURI && cancelNonLocalSystemPrincipal) {
+    aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+    return NS_ERROR_CONTENT_BLOCKED;
   }
   // loads of userContent.css during startup and tests that show up as file:
   if (finalURI->SchemeIs("file")) {
@@ -906,11 +831,6 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   if (finalURI->SchemeIs("jar") || finalURI->SchemeIs("about") ||
       finalURI->SchemeIs("moz-extension")) {
     return NS_OK;
-  }
-  // Telemetry for unexpected privileged loads.
-  // pref check & data sanitization happens in the called function
-  if (finalURI) {
-    MeasureUnexpectedPrivilegedLoads(finalURI, contentPolicyType, remoteType);
   }
 
   // Relaxing restrictions for our test suites:
