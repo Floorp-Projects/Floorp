@@ -136,7 +136,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
   // synchronously create WindowGlobalParent. It can throw if somehow the
   // content process has died.
   [Throws]
-  readonly attribute DOMString? currentRemoteType;
+  readonly attribute UTF8String? currentRemoteType;
 
   readonly attribute WindowGlobalParent? embedderWindowGlobal;
 

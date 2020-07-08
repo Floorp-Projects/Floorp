@@ -21,7 +21,7 @@ nsTArray<nsCString> LoadIPCMessageBlacklist(const char* aPath) {
 }
 
 mozilla::dom::ContentParent* ProtocolFuzzerHelper::CreateContentParent(
-    const nsAString& aRemoteType) {
+    const nsACString& aRemoteType) {
   auto* cp = new mozilla::dom::ContentParent(aRemoteType);
   // TODO: this duplicates MessageChannel::Open
   cp->GetIPCChannel()->mWorkerThread = GetCurrentSerialEventTarget();

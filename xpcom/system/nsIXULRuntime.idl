@@ -112,7 +112,7 @@ interface nsIXULRuntime : nsISupports
    * a URI if Fission is enabled, so don't use it for any kind of
    * telemetry.
    */
-  readonly attribute AString remoteType;
+  readonly attribute AUTF8String remoteType;
 
   /**
    * If true, browser tabs may be opened by default in a different process

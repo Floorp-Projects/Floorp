@@ -322,7 +322,7 @@ interface mixin MessageSenderMixin {
    * Otherwise, it is empty.
    */
   [Throws]
-  readonly attribute DOMString remoteType;
+  readonly attribute UTF8String remoteType;
 };
 
 [ChromeOnly, Exposed=Window]

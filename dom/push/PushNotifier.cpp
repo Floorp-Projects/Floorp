@@ -103,8 +103,7 @@ nsresult PushNotifier::Dispatch(PushDispatcher& aDispatcher) {
         // remote type is acceptable. This should not run when Fission is
         // enabled, and we specifically don't want this for
         // LARGE_ALLOCATION_REMOTE_TYPE, so don't use IsWebRemoteType().
-        if (!contentActors[i]->GetRemoteType().EqualsLiteral(
-                DEFAULT_REMOTE_TYPE)) {
+        if (contentActors[i]->GetRemoteType() != DEFAULT_REMOTE_TYPE) {
           continue;
         }
 

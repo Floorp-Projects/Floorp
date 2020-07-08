@@ -64,7 +64,7 @@ SimpleChannelParent::Delete() {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::GetRemoteType(nsAString& aRemoteType) {
+SimpleChannelParent::GetRemoteType(nsACString& aRemoteType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

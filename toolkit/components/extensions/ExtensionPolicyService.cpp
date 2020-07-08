@@ -119,7 +119,7 @@ bool ExtensionPolicyService::IsExtensionProcess() const {
 
   if (isRemote && XRE_IsContentProcess()) {
     auto& remoteType = dom::ContentChild::GetSingleton()->GetRemoteType();
-    return remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE);
+    return remoteType == EXTENSION_REMOTE_TYPE;
   }
   return !isRemote && XRE_IsParentProcess();
 }

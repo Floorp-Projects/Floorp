@@ -45,7 +45,7 @@ interface nsIContentProcessProvider : nsISupports
    * nsIContentProcessProvider.NEW_PROCESS to ask the caller to create a new
    * content process.
    */
-  int32_t provideProcess(in AString aType,
+  int32_t provideProcess(in AUTF8String aType,
                          in Array<nsIContentProcessInfo> aAliveProcesses,
                          in uint32_t aMaxCount);
 };
