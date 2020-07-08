@@ -159,8 +159,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   RefPtr<NrIceResolver> mDNSResolver;
   std::map<std::string, Transport> mTransports;
   bool mObfuscateHostAddresses = false;
-  uint32_t mMinDtlsVersion = 0;
-  uint32_t mMaxDtlsVersion = 0;
+  uint32_t minDtlsVersion = 0;
+  uint32_t maxDtlsVersion = 0;
 
   std::set<std::string> mSignaledAddresses;
 
@@ -340,56 +340,6 @@ nsresult MediaTransportHandler::ConvertIceServers(
   return NS_OK;
 }
 
-static NrIceCtx::GlobalConfig GetGlobalConfig() {
-  NrIceCtx::GlobalConfig config;
-  config.mAllowLinkLocal =
-      Preferences::GetBool("media.peerconnection.ice.link_local", false);
-  config.mAllowLoopback =
-      Preferences::GetBool("media.peerconnection.ice.loopback", false);
-  config.mTcpEnabled =
-      Preferences::GetBool("media.peerconnection.ice.tcp", false);
-  config.mStunClientMaxTransmits = Preferences::GetInt(
-      "media.peerconnection.ice.stun_client_maximum_transmits",
-      config.mStunClientMaxTransmits);
-  config.mTrickleIceGracePeriod =
-      Preferences::GetInt("media.peerconnection.ice.trickle_grace_period",
-                          config.mTrickleIceGracePeriod);
-  config.mIceTcpSoSockCount = Preferences::GetInt(
-      "media.peerconnection.ice.tcp_so_sock_count", config.mIceTcpSoSockCount);
-  config.mIceTcpListenBacklog =
-      Preferences::GetInt("media.peerconnection.ice.tcp_listen_backlog",
-                          config.mIceTcpListenBacklog);
-  (void)Preferences::GetCString("media.peerconnection.ice.force_interface",
-                                config.mForceNetInterface);
-  return config;
-}
-
-static Maybe<NrIceCtx::NatSimulatorConfig> GetNatConfig() {
-  bool block_tcp = Preferences::GetBool(
-      "media.peerconnection.nat_simulator.block_tcp", false);
-  bool block_udp = Preferences::GetBool(
-      "media.peerconnection.nat_simulator.block_udp", false);
-  nsAutoCString mapping_type;
-  (void)Preferences::GetCString(
-      "media.peerconnection.nat_simulator.mapping_type", mapping_type);
-  nsAutoCString filtering_type;
-  (void)Preferences::GetCString(
-      "media.peerconnection.nat_simulator.filtering_type", filtering_type);
-
-  if (block_udp || block_tcp || !mapping_type.IsEmpty() ||
-      !filtering_type.IsEmpty()) {
-    CSFLogDebug(LOGTAG, "NAT filtering type: %s", filtering_type.get());
-    CSFLogDebug(LOGTAG, "NAT mapping type: %s", mapping_type.get());
-    NrIceCtx::NatSimulatorConfig natConfig;
-    natConfig.mBlockUdp = block_udp;
-    natConfig.mBlockTcp = block_tcp;
-    natConfig.mFilteringType = filtering_type;
-    natConfig.mMappingType = mapping_type;
-    return Some(natConfig);
-  }
-  return Nothing();
-}
-
 nsresult MediaTransportHandlerSTS::CreateIceCtx(
     const std::string& aName, const nsTArray<dom::RTCIceServer>& aIceServers,
     dom::RTCIceTransportPolicy aIcePolicy) {
@@ -421,80 +371,72 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
           mozilla::psm::DisableMD5();
         }
 
-        static bool globalInitDone = false;
-        if (!globalInitDone) {
-          mStsThread->Dispatch(
-              WrapRunnableNM(&NrIceCtx::InitializeGlobals, GetGlobalConfig()),
-              NS_DISPATCH_NORMAL);
-          globalInitDone = true;
+        // This stuff will probably live on the other side of IPC; errors down
+        // here will either need to be ignored, or plumbed back in some way
+        // other than the return.
+        bool allowLoopback =
+            Preferences::GetBool("media.peerconnection.ice.loopback", false);
+        bool tcpEnabled =
+            Preferences::GetBool("media.peerconnection.ice.tcp", false);
+        bool allowLinkLocal =
+            Preferences::GetBool("media.peerconnection.ice.link_local", false);
+
+        mIceCtx = NrIceCtx::Create(aName, allowLoopback, tcpEnabled,
+                                   allowLinkLocal, toNrIcePolicy(aIcePolicy));
+        if (!mIceCtx) {
+          return InitPromise::CreateAndReject("NrIceCtx::Create failed",
+                                              __func__);
         }
 
+        mIceCtx->SignalGatheringStateChange.connect(
+            this, &MediaTransportHandlerSTS::OnGatheringStateChange);
+        mIceCtx->SignalConnectionStateChange.connect(
+            this, &MediaTransportHandlerSTS::OnConnectionStateChange);
+
+        nsresult rv;
+
+        if (NS_FAILED(rv = mIceCtx->SetStunServers(stunServers))) {
+          CSFLogError(LOGTAG, "%s: Failed to set stun servers", __FUNCTION__);
+          return InitPromise::CreateAndReject("Failed to set stun servers",
+                                              __func__);
+        }
         // Give us a way to globally turn off TURN support
-        bool turnDisabled =
+        bool disabled =
             Preferences::GetBool("media.peerconnection.turn.disable", false);
+        if (!disabled) {
+          if (NS_FAILED(rv = mIceCtx->SetTurnServers(turnServers))) {
+            CSFLogError(LOGTAG, "%s: Failed to set turn servers", __FUNCTION__);
+            return InitPromise::CreateAndReject("Failed to set turn servers",
+                                                __func__);
+          }
+        } else if (!turnServers.empty()) {
+          CSFLogError(LOGTAG, "%s: Setting turn servers disabled",
+                      __FUNCTION__);
+        }
+
+        mDNSResolver = new NrIceResolver;
+        if (NS_FAILED(rv = mDNSResolver->Init())) {
+          CSFLogError(LOGTAG, "%s: Failed to initialize dns resolver",
+                      __FUNCTION__);
+          return InitPromise::CreateAndReject(
+              "Failed to initialize dns resolver", __func__);
+        }
+        if (NS_FAILED(
+                rv = mIceCtx->SetResolver(mDNSResolver->AllocateResolver()))) {
+          CSFLogError(LOGTAG, "%s: Failed to get dns resolver", __FUNCTION__);
+          return InitPromise::CreateAndReject("Failed to get dns resolver",
+                                              __func__);
+        }
+
         // We are reading these here, because when we setup the DTLS transport
         // we are on the wrong thread to read prefs
-        mMinDtlsVersion =
+        minDtlsVersion =
             Preferences::GetUint("media.peerconnection.dtls.version.min");
-        mMaxDtlsVersion =
+        maxDtlsVersion =
             Preferences::GetUint("media.peerconnection.dtls.version.max");
 
-        NrIceCtx::Config config;
-        config.mPolicy = toNrIcePolicy(aIcePolicy);
-        config.mNatSimulatorConfig = GetNatConfig();
-
-        return InvokeAsync(
-            mStsThread, __func__,
-            [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
-              mIceCtx = NrIceCtx::Create(aName, config);
-              if (!mIceCtx) {
-                return InitPromise::CreateAndReject("NrIceCtx::Create failed",
-                                                    __func__);
-              }
-
-              mIceCtx->SignalGatheringStateChange.connect(
-                  this, &MediaTransportHandlerSTS::OnGatheringStateChange);
-              mIceCtx->SignalConnectionStateChange.connect(
-                  this, &MediaTransportHandlerSTS::OnConnectionStateChange);
-
-              nsresult rv;
-
-              if (NS_FAILED(rv = mIceCtx->SetStunServers(stunServers))) {
-                CSFLogError(LOGTAG, "%s: Failed to set stun servers",
-                            __FUNCTION__);
-                return InitPromise::CreateAndReject(
-                    "Failed to set stun servers", __func__);
-              }
-              if (!turnDisabled) {
-                if (NS_FAILED(rv = mIceCtx->SetTurnServers(turnServers))) {
-                  CSFLogError(LOGTAG, "%s: Failed to set turn servers",
-                              __FUNCTION__);
-                  return InitPromise::CreateAndReject(
-                      "Failed to set turn servers", __func__);
-                }
-              } else if (!turnServers.empty()) {
-                CSFLogError(LOGTAG, "%s: Setting turn servers disabled",
-                            __FUNCTION__);
-              }
-
-              mDNSResolver = new NrIceResolver;
-              if (NS_FAILED(rv = mDNSResolver->Init())) {
-                CSFLogError(LOGTAG, "%s: Failed to initialize dns resolver",
-                            __FUNCTION__);
-                return InitPromise::CreateAndReject(
-                    "Failed to initialize dns resolver", __func__);
-              }
-              if (NS_FAILED(rv = mIceCtx->SetResolver(
-                                mDNSResolver->AllocateResolver()))) {
-                CSFLogError(LOGTAG, "%s: Failed to get dns resolver",
-                            __FUNCTION__);
-                return InitPromise::CreateAndReject(
-                    "Failed to get dns resolver", __func__);
-              }
-
-              CSFLogDebug(LOGTAG, "%s done", __func__);
-              return InitPromise::CreateAndResolve(true, __func__);
-            });
+        CSFLogDebug(LOGTAG, "%s done", __func__);
+        return InitPromise::CreateAndResolve(true, __func__);
       });
   return NS_OK;
 }
@@ -1251,8 +1193,8 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
   dtls->SetIdentity(aDtlsIdentity);
 
   dtls->SetMinMaxVersion(
-      static_cast<TransportLayerDtls::Version>(mMinDtlsVersion),
-      static_cast<TransportLayerDtls::Version>(mMaxDtlsVersion));
+      static_cast<TransportLayerDtls::Version>(minDtlsVersion),
+      static_cast<TransportLayerDtls::Version>(maxDtlsVersion));
 
   for (const auto& digest : aDigests) {
     rv = dtls->SetVerificationDigest(digest);
