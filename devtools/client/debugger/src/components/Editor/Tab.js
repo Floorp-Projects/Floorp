@@ -137,7 +137,7 @@ class Tab extends PureComponent<Props> {
       { item: { type: "separator" } },
       {
         item: {
-          ...tabMenuItems.copyToClipboard,
+          ...tabMenuItems.copySource,
           disabled: selectedSource.id !== tab,
           click: () => copyToClipboard(sourceTab),
         },
