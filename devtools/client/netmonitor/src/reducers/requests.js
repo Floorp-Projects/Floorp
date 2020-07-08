@@ -208,8 +208,8 @@ function updateRequest(state, action) {
 
 function setEventStreamFlag(state, action) {
   const { requests } = state;
-  const { id } = action;
-  const index = requests.findIndex(needle => needle.id === id);
+  const { channelId } = action;
+  const index = requests.findIndex(needle => needle.channelId === channelId);
   if (index === -1) {
     return state;
   }

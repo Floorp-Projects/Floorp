@@ -18,6 +18,9 @@ class EventSourceFront extends FrontClassWithSpec(eventSourceSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
 
+    this._onEventSourceConnectionOpened = this._onEventSourceConnectionOpened.bind(
+      this
+    );
     this._onEventSourceConnectionClosed = this._onEventSourceConnectionClosed.bind(
       this
     );
@@ -27,6 +30,10 @@ class EventSourceFront extends FrontClassWithSpec(eventSourceSpec) {
     // out of the target actor's form
     this.formAttributeName = "eventSourceActor";
 
+    this.on(
+      "serverEventSourceConnectionOpened",
+      this._onEventSourceConnectionOpened
+    );
     this.on(
       "serverEventSourceConnectionClosed",
       this._onEventSourceConnectionClosed
@@ -38,9 +45,22 @@ class EventSourceFront extends FrontClassWithSpec(eventSourceSpec) {
    * Close the EventSourceFront.
    */
   destroy() {
+    this.off("serverEventSourceConnectionOpened");
     this.off("serverEventSourceConnectionClosed");
     this.off("serverEventReceived");
     return super.destroy();
+  }
+
+  /**
+   * The "eventSourceConnectionOpened" message type handler. We redirect any
+   * message to the UI for displaying.
+   *
+   * @private
+   * @param number httpChannelId
+   *        Channel ID of the eventsource connection.
+   */
+  async _onEventSourceConnectionOpened(httpChannelId) {
+    this.emit("eventSourceConnectionOpened", httpChannelId);
   }
 
   /**

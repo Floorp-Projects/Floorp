@@ -42,14 +42,12 @@ function updateRequest(id, data, batch) {
   };
 }
 
-function setEventStreamFlag(id, batch) {
+function setEventStreamFlag(channelId) {
   return {
     type: SET_EVENT_STREAM_FLAG,
-    id,
-    meta: { batch },
+    channelId,
   };
 }
-
 /**
  * Clone request by id. Used when cloning a request
  * through the "Edit and Resend" option present in the context menu.
