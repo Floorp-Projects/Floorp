@@ -955,7 +955,7 @@ class AsyncPanZoomController {
   // The metrics that we expect content to have. This is updated when we
   // request a content repaint, and when we receive a shadow layers update.
   // This allows us to transform events into Gecko's coordinate space.
-  FrameMetrics mExpectedGeckoMetrics;
+  ExpectedGeckoMetrics mExpectedGeckoMetrics;
 
   // This holds important state from the Metrics() at previous times
   // SampleCompositedAsyncTransform() was called. This will always have at least
