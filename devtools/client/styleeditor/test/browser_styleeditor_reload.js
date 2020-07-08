@@ -16,21 +16,27 @@ add_task(async function() {
 
   info("Selecting the second editor");
   await ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
+  const selectedStyleSheetIndex = ui.editors[1].styleSheet.styleSheetIndex;
 
-  await reloadPageAndWaitForStyleSheets(ui);
-
-  is(ui.editors.length, 2, "Two sheets present after reload.");
+  await reloadPageAndWaitForStyleSheets(ui, 2);
 
   info("Waiting for source editor to be ready.");
-  await ui.editors[1].getSourceEditor();
+  const newEditor = findEditor(ui, selectedStyleSheetIndex);
+  await newEditor.getSourceEditor();
 
   is(
     ui.selectedEditor,
-    ui.editors[1],
-    "second editor is selected after reload"
+    newEditor,
+    "Editor of stylesheet that has styleSheetIndex we selected is selected after reload"
   );
 
   const { line, ch } = ui.selectedEditor.sourceEditor.getCursor();
   is(line, LINE_NO, "correct line selected");
   is(ch, COL_NO, "correct column selected");
 });
+
+function findEditor(ui, styleSheetIndex) {
+  return ui.editors.find(
+    editor => editor.styleSheet.styleSheetIndex === styleSheetIndex
+  );
+}

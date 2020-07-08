@@ -64,7 +64,7 @@ async function testEditor(editor, expectedName, expectedText) {
 /* Helpers */
 
 function togglePref(UI) {
-  const editorsPromise = UI.once("stylesheets-reset");
+  const editorsPromise = UI.once("stylesheets-refreshed");
   const selectedPromise = UI.once("editor-selected");
 
   Services.prefs.setBoolPref(PREF, false);
