@@ -2,7 +2,7 @@
 
 # getActionTitle
 
-`fun getActionTitle(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/DefaultSelectionActionDelegate.kt#L46)
+`fun getActionTitle(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/DefaultSelectionActionDelegate.kt#L45)
 
 Overrides [SelectionActionDelegate.getActionTitle](../../mozilla.components.concept.engine.selection/-selection-action-delegate/get-action-title.md)
 

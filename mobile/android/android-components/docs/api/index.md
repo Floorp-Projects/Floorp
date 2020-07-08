@@ -126,6 +126,7 @@
 | [mozilla.components.feature.findinpage.view](mozilla.components.feature.findinpage.view/index.md) |  |
 | [mozilla.components.feature.intent.ext](mozilla.components.feature.intent.ext/index.md) |  |
 | [mozilla.components.feature.intent.processing](mozilla.components.feature.intent.processing/index.md) |  |
+| [mozilla.components.feature.logins.exceptions](mozilla.components.feature.logins.exceptions/index.md) |  |
 | [mozilla.components.feature.media](mozilla.components.feature.media/index.md) |  |
 | [mozilla.components.feature.media.ext](mozilla.components.feature.media.ext/index.md) |  |
 | [mozilla.components.feature.media.facts](mozilla.components.feature.media.facts/index.md) |  |

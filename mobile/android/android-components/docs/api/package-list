@@ -55,6 +55,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)moz
 $dokka.location:mozilla.components.support.ktx.kotlin$isExtensionUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-extension-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
+$dokka.location:mozilla.components.support.ktx.kotlin$isResourceUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-resource-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isSameOriginAs(kotlin.String, kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-same-origin-as.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$pkcs7unpad(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/pkcs7unpad.md
@@ -202,6 +203,7 @@ mozilla.components.feature.findinpage.facts
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent.ext
 mozilla.components.feature.intent.processing
+mozilla.components.feature.logins.exceptions
 mozilla.components.feature.media
 mozilla.components.feature.media.ext
 mozilla.components.feature.media.facts

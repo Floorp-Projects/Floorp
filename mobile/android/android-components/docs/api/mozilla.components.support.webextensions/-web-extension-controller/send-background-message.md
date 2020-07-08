@@ -2,7 +2,7 @@
 
 # sendBackgroundMessage
 
-`fun sendBackgroundMessage(msg: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = extensionId): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/webextensions/src/main/java/mozilla/components/support/webextensions/WebExtensionController.kt#L132)
+`fun sendBackgroundMessage(msg: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = messagingId): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/webextensions/src/main/java/mozilla/components/support/webextensions/WebExtensionController.kt#L135)
 
 Sends a background message to the provided extension.
 
@@ -10,4 +10,4 @@ Sends a background message to the provided extension.
 
 `msg` - the message to send
 
-`name` - (optional) name of the port, defaults to the provided extensionId.
+`name` - (optional) name of the port, defaults to the provided [messagingId](#).

@@ -19,9 +19,11 @@
 
 | Name | Summary |
 |---|---|
+| [createdAtDate](created-at-date.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.createdAtDate: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)<br>The date the add-on was created, as a JVM date object. |
 | [translatedDescription](translated-description.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized description of an add-on. |
 | [translatedName](translated-name.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized name of an add-on. |
 | [translatedSummary](translated-summary.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedSummary: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized summary of an add-on. |
+| [updatedAtDate](updated-at-date.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.updatedAtDate: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)<br>The date of the last time the add-on was updated by its developer(s), as a JVM date object. |
 
 ### Functions
 

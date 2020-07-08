@@ -71,9 +71,11 @@ https://addons.mozilla.org/en-US/firefox/
 
 | Name | Summary |
 |---|---|
+| [createdAtDate](../../mozilla.components.feature.addons.ui/created-at-date.md) | `val `[`Addon`](./index.md)`.createdAtDate: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)<br>The date the add-on was created, as a JVM date object. |
 | [translatedDescription](../../mozilla.components.feature.addons.ui/translated-description.md) | `val `[`Addon`](./index.md)`.translatedDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized description of an add-on. |
 | [translatedName](../../mozilla.components.feature.addons.ui/translated-name.md) | `val `[`Addon`](./index.md)`.translatedName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized name of an add-on. |
 | [translatedSummary](../../mozilla.components.feature.addons.ui/translated-summary.md) | `val `[`Addon`](./index.md)`.translatedSummary: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized summary of an add-on. |
+| [updatedAtDate](../../mozilla.components.feature.addons.ui/updated-at-date.md) | `val `[`Addon`](./index.md)`.updatedAtDate: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)<br>The date of the last time the add-on was updated by its developer(s), as a JVM date object. |
 
 ### Extension Functions
 

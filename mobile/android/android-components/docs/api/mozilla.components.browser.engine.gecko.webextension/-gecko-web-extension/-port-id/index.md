@@ -2,7 +2,7 @@
 
 # PortId
 
-`data class PortId` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L59)
+`data class PortId` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L46)
 
 Uniquely identifies a port using its name and the session it
 was opened for. Ports connected from background scripts will

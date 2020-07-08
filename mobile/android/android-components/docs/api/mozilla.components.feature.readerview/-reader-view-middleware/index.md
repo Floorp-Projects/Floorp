@@ -2,7 +2,7 @@
 
 # ReaderViewMiddleware
 
-`class ReaderViewMiddleware : `[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewMiddleware.kt#L27)
+`class ReaderViewMiddleware : `[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewMiddleware.kt#L28)
 
 [Middleware](../../mozilla.components.lib.state/-middleware.md) implementation for translating [BrowserAction](../../mozilla.components.browser.state.action/-browser-action.md)s to
 [ReaderAction](../../mozilla.components.browser.state.action/-reader-action/index.md)s (e.g. if the URL is updated a new "readerable"
