@@ -1679,6 +1679,8 @@ class Document : public nsINode,
    */
   void StyleSheetApplicableStateChanged(StyleSheet&);
 
+  void PostStyleSheetApplicableStateChangeEvent(StyleSheet&);
+
   enum additionalSheetType {
     eAgentSheet,
     eUserSheet,
