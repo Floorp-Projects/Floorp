@@ -32,6 +32,7 @@
 #ifndef BASE_THREAD_ANNOTATIONS_H_
 #define BASE_THREAD_ANNOTATIONS_H_
 
+#include "base/logging.h"
 #include "build/build_config.h"
 
 #if defined(__clang__)
@@ -236,5 +237,28 @@ inline T& ts_unchecked_read(T& v) NO_THREAD_SAFETY_ANALYSIS {
 }
 
 }  // namespace thread_safety_analysis
+
+// The above is imported as-is from abseil-cpp. The following Chromium-specific
+// synonyms are added for Chromium concepts (SequenceChecker/ThreadChecker).
+#if DCHECK_IS_ON()
+
+// Equivalent to GUARDED_BY for SequenceChecker/ThreadChecker. Currently,
+// clang's error message "requires holding mutex" is misleading. Usage of this
+// macro is discouraged until the message is updated.
+// TODO(etiennep): Update comment above once clang's error message is updated.
+#define GUARDED_BY_CONTEXT(name) GUARDED_BY(name)
+
+// Equivalent to EXCLUSIVE_LOCKS_REQUIRED for SequenceChecker/ThreadChecker.
+// Currently, clang's error message "requires holding mutex" is misleading.
+// Usage of this macro is discouraged until the message is updated.
+// TODO(etiennep): Update comment above once clang's error message is updated.
+#define VALID_CONTEXT_REQUIRED(name) EXCLUSIVE_LOCKS_REQUIRED(name)
+
+#else  // DCHECK_IS_ON()
+
+#define GUARDED_BY_CONTEXT(name)
+#define VALID_CONTEXT_REQUIRED(name)
+
+#endif  // DCHECK_IS_ON()
 
 #endif  // BASE_THREAD_ANNOTATIONS_H_
