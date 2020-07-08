@@ -284,7 +284,7 @@ body {
     background: center/contain no-repeat url("../data/content/assets/zap.svg");
     content: '';
     position: absolute;
-    top: calc(100% - 0.15em);
+    top: calc(100% - 0.2em);
     width: 100%;
     height: 0.3em;
     left: 0;
