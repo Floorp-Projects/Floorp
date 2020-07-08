@@ -57,6 +57,7 @@ raptor_description_schema = Schema({
         'pageload',
         'test-name',
         'raptor-test',
+        'subtest',
         test_description_schema['run-on-projects']
     ),
     Optional('webrender-run-on-projects'): optionally_keyed_by(

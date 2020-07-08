@@ -41,35 +41,70 @@ job-defaults:
 browsertime-tp6:
     description: "Raptor (browsertime) tp6 page-load tests"
     raptor-test: tp6
-    raptor-subtests: ['amazon']
-    apps: ['firefox', 'chrome']
+    raptor-subtests:
+        - amazon
+        - apple
+        - [bing-search, bing]
+        - ebay
+        - [facebook, fb]
+        - [facebook-redesign, fbr]
+        - fandom
+        - [google-docs, gdocs]
+        - [google-mail, gmail]
+        - [google-search, gsearch]
+        - [google-sheets, gsheets]
+        - [google-slides, gslides]
+        - imdb
+        - imgur
+        - instagram
+        - linkedin
+        - microsoft
+        - netflix
+        - office
+        - outlook
+        - paypal
+        - pinterest
+        - reddit
+        - tumblr
+        - twitch
+        - twitter
+        - wikipedia
+        - yahoo-mail
+        - yahoo-news
+        - yandex
+        - youtube
+    tier: 3
+    apps: ['firefox', 'chrome', 'chromium']
     variants:
         by-app:
-            firefox: []
+            firefox: ['webrender', 'fission']
             default: []
     pageload:
         by-app:
             firefox: 'both'
-            chrome: 'cold'
-            default: 'warm'
+            chrome: 'both'
+            chromium: 'both'
+            default: 'cold'
     run-on-projects:
         by-app:
-            chrome: []
-            default:
-                by-test-platform:
-                    linux.*shippable[^-qr].*: ['mozilla-central']
+            firefox:
+                by-subtest:
+                    amazon:
+                        by-test-platform:
+                            linux.*shippable[^-qr].*: ['mozilla-central']
+                            default: []
                     default: []
+            default: []
     limit-platforms:
         by-app:
             chrome:
                 - linux.*shippable[^-qr].*
+            chromium:
+                - .*shippable[^-qr].*
             default: []
     treeherder-symbol: Btime(tp6)
     max-run-time: 4000
-    run-visual-metrics:
-        by-app:
-            chrome: false
-            default: true
+    run-visual-metrics: true
 
 browsertime-speedometer:
     description: "Raptor (browsertime) Speedometer on Firefox"
