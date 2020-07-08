@@ -16,6 +16,7 @@ path:tools/lint/eslint/eslint-plugin-mozilla/manifest.tt
 path:tools/lint/eslint/manifest.tt
 path:tools/lint/python/flake8_requirements.txt
 path:tools/lint/python/pylint_requirements.txt
+path:tools/lint/python/black_requirements.txt
 path:tools/lint/tox/tox_requirements.txt
 
 # Required for the webrender docker image

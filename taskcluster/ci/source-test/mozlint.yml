@@ -217,6 +217,20 @@ py-flake8:
             # moz.configure files are also Python files.
             - '**/*.configure'
 
+py-black:
+    description: black run over the gecko codebase
+    treeherder:
+        symbol: py(black)
+    run:
+        mach: lint -v -l black -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/*.py'
+            - 'pyproject.toml'
+            - 'tools/lint/flake8.yml'
+            # moz.configure files are also Python files.
+            # However, we don't currently check them with black
+
 py-pylint:
     description: pylint run over the gecko codebase
     treeherder:
