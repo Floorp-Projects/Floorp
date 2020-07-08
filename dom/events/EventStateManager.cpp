@@ -3873,6 +3873,8 @@ static CursorImage ComputeCustomCursor(nsPresContext* aPresContext,
     if (!container) {
       continue;
     }
+    container = nsLayoutUtils::OrientImage(
+        container, aFrame.StyleVisibility()->mImageOrientation);
     Maybe<gfx::Point> specifiedHotspot =
         image.has_hotspot ? Some(gfx::Point{image.hotspot_x, image.hotspot_y})
                           : Nothing();

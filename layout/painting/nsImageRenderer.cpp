@@ -134,6 +134,11 @@ bool nsImageRenderer::PrepareImage() {
                "If GetImage() is failing, mImage->IsComplete() "
                "should have returned false");
 
+    if (srcImage) {
+      srcImage = nsLayoutUtils::OrientImage(
+          srcImage, mForFrame->StyleVisibility()->mImageOrientation);
+    }
+
     if (!mImage->IsRect()) {
       mImageContainer.swap(srcImage);
     } else {
