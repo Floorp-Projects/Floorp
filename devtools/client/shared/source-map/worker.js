@@ -4245,7 +4245,7 @@ async function convertToJSON(buffer) {
   // Note: We don't 'await' here because it could mean that multiple
   // calls to 'convertToJSON' could cause multiple fetches to be started.
   cachedWasmModule = cachedWasmModule || loadConverterModule();
-  return convertDwarf(buffer, (await cachedWasmModule));
+  return convertDwarf(buffer, await cachedWasmModule);
 }
 
 async function loadConverterModule() {
