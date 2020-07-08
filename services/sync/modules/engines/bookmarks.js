@@ -379,10 +379,6 @@ BaseBookmarksEngine.prototype = {
         { newSyncID }
       );
       await this._ensureCurrentSyncID(newSyncID);
-      // Update the sync ID in prefs to allow downgrading to older Firefox
-      // releases that don't store Sync metadata in Places. This can be removed
-      // in bug 1443021.
-      await super.ensureCurrentSyncID(newSyncID);
       return newSyncID;
     }
     // We didn't take the new sync ID because we need to wipe the server
@@ -411,7 +407,6 @@ BaseBookmarksEngine.prototype = {
   async resetLocalSyncID() {
     let newSyncID = await PlacesSyncUtils.bookmarks.resetSyncId();
     this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
-    await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
   },
 
@@ -563,7 +558,6 @@ BookmarksEngine.prototype = {
 
   async setLastSync(lastSync) {
     await PlacesSyncUtils.bookmarks.setLastSync(lastSync);
-    await super.setLastSync(lastSync); // Remove in bug 1443021.
   },
 
   emptyChangeset() {
@@ -873,7 +867,6 @@ BufferedBookmarksEngine.prototype = {
     // Update the last sync time in Places so that reverting to the original
     // bookmarks engine doesn't download records we've already applied.
     await PlacesSyncUtils.bookmarks.setLastSync(lastSync);
-    await super.setLastSync(lastSync); // Remove in bug 1443021.
   },
 
   emptyChangeset() {
