@@ -1,0 +1,22 @@
+---
+black:
+    description: Reformat python
+    include:
+        - python/mozperftest/mozperftest
+        - taskcluster/docker/funsize-update-generator
+        - testing/condprofile/condprof
+        - tools/crashreporter/system-symbols
+        - tools/lint/python/black.py
+        - tools/lint/test/test_black.py
+        - tools/tryselect/selectors/scriptworker.py
+    exclude:
+        - layout/style/ServoCSSPropList.mako.py
+        - testing/mozharness/configs/test/test_malformed.py
+        - tools/lint/test/files
+    extensions:
+        - py
+    support-files:
+        - 'tools/lint/python/**'
+    type: external
+    payload: python.black:lint
+    setup: python.black:setup
