@@ -544,47 +544,41 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
             return NS_ERROR_FAILURE;
           }
         }
-        rv = WSRunObject(*this, pointToAdjust).AdjustWhiteSpace();
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
+        rv = WSRunObject::NormalizeWhiteSpacesAround(*this, pointToAdjust);
         if (NS_FAILED(rv)) {
-          NS_WARNING("WSRunObject::AdjustWhiteSpace() failed");
+          NS_WARNING("WSRunObject::NormalizeWhiteSpacesAround() failed");
           return rv;
         }
 
         // also do this for original selection endpoints.
-        // XXX Hmm, if `AdjustWhiteSpace()` runs mutation event listener
-        //     and that causes changing `mSelectedRange`, what we should do?
+        // XXX Hmm, if `NormalizeWhiteSpacesAround()` runs mutation event
+        //     listener and that causes changing `mSelectedRange`, what we
+        //     should do?
         if (NS_WARN_IF(
                 !TopLevelEditSubActionDataRef().mSelectedRange->IsSet())) {
           return NS_ERROR_FAILURE;
         }
-        DebugOnly<nsresult> rvIgnored =
-            WSRunObject(
-                *this,
-                TopLevelEditSubActionDataRef().mSelectedRange->StartRawPoint())
-                .AdjustWhiteSpace();
-        if (NS_WARN_IF(Destroyed())) {
+        rv = WSRunObject::NormalizeWhiteSpacesAround(
+            *this,
+            TopLevelEditSubActionDataRef().mSelectedRange->StartRawPoint());
+        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "WSRunObject::AdjustWhiteSpace() failed, but ignored");
+            NS_SUCCEEDED(rv),
+            "WSRunObject::NormalizeWhiteSpacesAround() failed, but ignored");
         // we only need to handle old selection endpoint if it was different
         // from start
         if (TopLevelEditSubActionDataRef().mSelectedRange->IsCollapsed()) {
-          DebugOnly<nsresult> rvIgnored =
-              WSRunObject(
-                  *this,
-                  TopLevelEditSubActionDataRef().mSelectedRange->EndRawPoint())
-                  .AdjustWhiteSpace();
-          if (NS_WARN_IF(Destroyed())) {
+          nsresult rv = WSRunObject::NormalizeWhiteSpacesAround(
+              *this,
+              TopLevelEditSubActionDataRef().mSelectedRange->EndRawPoint());
+          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           NS_WARNING_ASSERTION(
-              NS_SUCCEEDED(rvIgnored),
-              "WSRunObject::AdjustWhiteSpace() failed, but ignored");
+              NS_SUCCEEDED(rv),
+              "WSRunObject::NormalizeWhiteSpacesAround() failed, but ignored");
         }
         break;
       }
