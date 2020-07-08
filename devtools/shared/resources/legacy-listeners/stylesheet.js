@@ -14,12 +14,20 @@ module.exports = async function({ targetFront, onAvailable }) {
   }
 
   const styleSheetsFront = await targetFront.getFront("stylesheets");
-  const styleSheets = await styleSheetsFront.getStyleSheets();
-  onAvailable(styleSheets.map(styleSheet => toResource(styleSheet, false)));
+  try {
+    const styleSheets = await styleSheetsFront.getStyleSheets();
+    onAvailable(styleSheets.map(styleSheet => toResource(styleSheet, false)));
 
-  styleSheetsFront.on("stylesheet-added", (styleSheet, isNew) => {
-    onAvailable([toResource(styleSheet, isNew)]);
-  });
+    styleSheetsFront.on("stylesheet-added", (styleSheet, isNew) => {
+      onAvailable([toResource(styleSheet, isNew)]);
+    });
+  } catch (e) {
+    // There are cases that the stylesheet front was destroyed already when/while calling
+    // methods of stylesheet.
+    // Especially, since source map url service starts to watch the stylesheet resources
+    // lazily, the possibility will be extended.
+    console.warn("fetching stylesheets failed", e);
+  }
 };
 
 function toResource(styleSheet, isNew) {
