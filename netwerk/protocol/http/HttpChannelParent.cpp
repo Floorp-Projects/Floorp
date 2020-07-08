@@ -1491,10 +1491,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   bool useResponseHead = !!responseHead;
   nsHttpResponseHead cleanedUpResponseHead;
 
-  bool hasSetCookie =
-      responseHead && responseHead->HasHeader(nsHttp::Set_Cookie);
-
-  if (hasSetCookie || multiPartID) {
+  if (responseHead &&
+      (responseHead->HasHeader(nsHttp::Set_Cookie) || multiPartID)) {
     cleanedUpResponseHead = *responseHead;
     cleanedUpResponseHead.ClearHeader(nsHttp::Set_Cookie);
     if (multiPartID) {
@@ -1545,10 +1543,11 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Bug 1645901: Currently Set-Cookie is passed to child process on main
-  // thread, which is racy with PBackground. We should have a way to set cookie
-  // in child for Set-Cookie response header.
-  args.shouldWaitForOnStartRequestSent() = isDocument || hasSetCookie;
+  nsLoadFlags loadflags;
+  chan->GetLoadFlags(&loadflags);
+  bool documentNeedsCookie = loadflags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
+
+  args.shouldWaitForOnStartRequestSent() = isDocument || documentNeedsCookie;
 
   rv = NS_OK;
 
@@ -1561,9 +1560,9 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   }
   requestHead->Exit();
 
-  // Need to wait for the permission to content process, which is sent via
-  // PContent in AboutToLoadHttpFtpDocumentForChild. For multipart channel,
-  // send only one time since the permissions are the same.
+  // Need to wait for the cookies/permissions to content process, which is sent
+  // via PContent in AboutToLoadHttpFtpDocumentForChild. For multipart channel,
+  // send only one time since the cookies/permissions are the same.
   if (NS_SUCCEEDED(rv) && args.shouldWaitForOnStartRequestSent() &&
       multiPartID.valueOr(0) == 0) {
     LOG(("HttpChannelParent::SendOnStartRequestSent\n"));
