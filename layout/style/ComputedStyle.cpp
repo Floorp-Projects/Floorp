@@ -244,6 +244,14 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
     }
   }
 
+  if (HasAuthorSpecifiedBorderOrBackground() !=
+          aNewStyle.HasAuthorSpecifiedBorderOrBackground() &&
+      StyleDisplay()->HasAppearance()) {
+    // A background-specified change may cause padding to change, so we may need
+    // to reflow.  We use the same hint here as we do for "appearance" changes.
+    hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
+  }
+
   MOZ_ASSERT(NS_IsHintSubset(hint, nsChangeHint_AllHints),
              "Added a new hint without bumping AllHints?");
   return hint & ~nsChangeHint_NeutralChange;
