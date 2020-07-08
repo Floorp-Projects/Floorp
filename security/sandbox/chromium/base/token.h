@@ -11,7 +11,7 @@
 #include <tuple>
 
 #include "base/base_export.h"
-#include "base/hash.h"
+#include "base/hash/hash.h"
 
 namespace base {
 

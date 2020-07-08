@@ -273,7 +273,7 @@ void PlatformThread::Join(PlatformThreadHandle thread_handle) {
   // the thread referred to by |thread_handle| may still be running long-lived /
   // blocking tasks.
   base::internal::ScopedBlockingCallWithBaseSyncPrimitives scoped_blocking_call(
-      base::BlockingType::MAY_BLOCK);
+      FROM_HERE, base::BlockingType::MAY_BLOCK);
   CHECK_EQ(0, pthread_join(thread_handle.platform_handle(), nullptr));
 }
 

@@ -7,10 +7,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <atomic>
 #include <string>
 #include <vector>
 
-#include "base/atomicops.h"
 #include "base/logging.h"
 #include "base/strings/utf_string_conversions.h"
 #include "sandbox/win/src/crosscall_client.h"
@@ -124,7 +124,7 @@ bool IsSizeWithinRange(uint32_t buffer_size,
   return true;
 }
 
-CrossCallParamsEx::CrossCallParamsEx() : CrossCallParams(0, 0) {}
+CrossCallParamsEx::CrossCallParamsEx() : CrossCallParams(IpcTag::UNUSED, 0) {}
 
 // We override the delete operator because the object's backing memory
 // is hand allocated in CreateFromBuffer. We don't override the new operator
@@ -190,7 +190,7 @@ CrossCallParamsEx* CrossCallParamsEx::CreateFromBuffer(void* buffer_base,
     // Avoid compiler optimizations across this point. Any value stored in
     // memory should be stored for real, and values previously read from memory
     // should be actually read.
-    base::subtle::MemoryBarrier();
+    std::atomic_thread_fence(std::memory_order_seq_cst);
 
     min_declared_size = GetMinDeclaredActualCallParamsSize(param_count);
 
@@ -277,8 +277,7 @@ bool CrossCallParamsEx::GetParameterVoidPtr(uint32_t index, void** param) {
 
 // Covers the common case of reading a string. Note that the string is not
 // scanned for invalid characters.
-bool CrossCallParamsEx::GetParameterStr(uint32_t index,
-                                        base::string16* string) {
+bool CrossCallParamsEx::GetParameterStr(uint32_t index, std::wstring* string) {
   DCHECK(string->empty());
   uint32_t size = 0;
   ArgType type;
@@ -288,14 +287,16 @@ bool CrossCallParamsEx::GetParameterStr(uint32_t index,
 
   // Check if this is an empty string.
   if (size == 0) {
-    *string = base::WideToUTF16(L"");
+    *string = std::wstring();
     return true;
   }
 
   if (!start || ((size % sizeof(wchar_t)) != 0))
     return false;
-  return base::WideToUTF16(reinterpret_cast<wchar_t*>(start),
-                           size / sizeof(wchar_t), string);
+
+  string->assign(reinterpret_cast<const wchar_t*>(start),
+                 size / sizeof(wchar_t));
+  return true;
 }
 
 bool CrossCallParamsEx::GetParameterPtr(uint32_t index,
