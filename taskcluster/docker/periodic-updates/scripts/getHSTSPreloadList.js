@@ -26,7 +26,7 @@ const { FileUtils } = ChromeUtils.import(
 const SOURCE =
   "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
 const TOOL_SOURCE =
-  "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js";
+  "https://hg.mozilla.org/mozilla-central/file/default/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js";
 const OUTPUT = "nsSTSPreloadList.inc";
 const ERROR_OUTPUT = "nsSTSPreloadList.errors";
 const MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
