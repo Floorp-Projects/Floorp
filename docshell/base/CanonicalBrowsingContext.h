@@ -150,8 +150,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Internal method to change which process a BrowsingContext is being loaded
   // in. The returned promise will resolve when the process switch is completed.
   //
-  // A VoidCString() aRemoteType argument will perform a process switch into the
-  // parent process, and the method will resolve with a null BrowserParent.
+  // A NOT_REMOTE_TYPE aRemoteType argument will perform a process switch into
+  // the parent process, and the method will resolve with a null BrowserParent.
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
   RefPtr<RemotenessPromise> ChangeRemoteness(const nsACString& aRemoteType,
                                              uint64_t aPendingSwitchId,
