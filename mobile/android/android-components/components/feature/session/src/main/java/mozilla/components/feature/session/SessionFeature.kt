@@ -56,4 +56,15 @@ class SessionFeature(
     override fun stop() {
         presenter.stop()
     }
+
+    /**
+     * Stops the feature from rendering sessions on the [EngineView] (until explicitly started again)
+     * and releases an already rendering session from the [EngineView].
+     */
+    fun release() {
+        // Once we fully migrated to BrowserStore we may be able to get rid of the need for cleanup().
+        // See https://github.com/mozilla-mobile/android-components/issues/7657
+        presenter.stop()
+        engineView.release()
+    }
 }

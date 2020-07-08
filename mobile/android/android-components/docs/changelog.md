@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-session**
+  * Added `SessionFeature.release()`: Calling this method stops the feature from rendering sessions on the `EngineView` (until explicitly started again) and releases an already rendering session from the `EngineView`.
+
 * **support-ktx**
   * Adds `Bundle.contentEquals` function to check if two bundles are equal.
 
