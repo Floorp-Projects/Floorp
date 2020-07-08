@@ -23,12 +23,14 @@ using namespace js::jit;
 static_assert(!std::is_polymorphic_v<WarpOpSnapshot>,
               "WarpOpSnapshot should not have any virtual methods");
 
-WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script,
+WarpSnapshot::WarpSnapshot(JSContext* cx, TempAllocator& alloc,
+                           WarpScriptSnapshot* script,
                            const WarpBailoutInfo& bailoutInfo)
     : script_(script),
       globalLexicalEnv_(&cx->global()->lexicalEnvironment()),
       globalLexicalEnvThis_(globalLexicalEnv_->thisObject()),
-      bailoutInfo_(bailoutInfo) {}
+      bailoutInfo_(bailoutInfo),
+      nurseryObjects_(alloc) {}
 
 WarpScriptSnapshot::WarpScriptSnapshot(
     JSScript* script, const WarpEnvironment& env,
@@ -58,6 +60,12 @@ void WarpSnapshot::dump(GenericPrinter& out) const {
   out.printf("globalLexicalEnvThis: 0x%p\n", globalLexicalEnvThis());
   out.printf("failedBoundsCheck: %u\n", bailoutInfo().failedBoundsCheck());
   out.printf("failedLexicalCheck: %u\n", bailoutInfo().failedLexicalCheck());
+  out.printf("\n");
+
+  out.printf("Nursery objects (%u):\n", unsigned(nurseryObjects_.length()));
+  for (size_t i = 0; i < nurseryObjects_.length(); i++) {
+    out.printf("  %u: 0x%p\n", unsigned(i), nurseryObjects_[i]);
+  }
   out.printf("\n");
 
   script_->dump(out);
@@ -184,6 +192,12 @@ void WarpSnapshot::trace(JSTracer* trc) {
   script_->trace(trc);
   TraceWarpGCPtr(trc, globalLexicalEnv_, "warp-lexical");
   TraceWarpGCPtr(trc, globalLexicalEnvThis_, "warp-lexicalthis");
+
+  // Note: nursery objects can be moved in parallel with Warp compilation,
+  // so don't use TraceWarpGCPtr here as that asserts non-moving.
+  for (size_t i = 0; i < nurseryObjects_.length(); i++) {
+    TraceManuallyBarrieredEdge(trc, &nurseryObjects_[i], "warp-nursery-object");
+  }
 }
 
 void WarpScriptSnapshot::trace(JSTracer* trc) {
