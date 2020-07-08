@@ -1411,14 +1411,11 @@ class TreeMetadataEmitter(LoggingMixin):
                                             context.config.substs.get('NASM_ASFLAGS', []))
 
         if context.get('USE_INTEGRATED_CLANGCL_AS') is True:
-            clangcl = context.config.substs.get('CLANG_CL')
-            if not clangcl:
+            if context.config.substs.get('CC_TYPE') != 'clang-cl':
                 raise SandboxValidationError('clang-cl is not available', context)
-            passthru.variables['AS'] = 'clang-cl'
+            passthru.variables['AS'] = context.config.substs.get('CC')
             passthru.variables['AS_DASH_C_FLAG'] = '-c'
             passthru.variables['ASOUTOPTION'] = '-o '
-            computed_as_flags.resolve_flags('OS',
-                                            context.config.substs.get('CLANGCL_ASFLAGS', []))
 
         if passthru.variables:
             yield passthru
