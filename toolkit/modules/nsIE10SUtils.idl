@@ -32,11 +32,11 @@ interface nsIE10SUtils : nsISupports {
    *
    * @return  The remote type to complete this load in.
    */
-  AString getRemoteTypeForPrincipal(in nsIPrincipal aPrincipal,
-                                    in nsIURI aChannelOriginalURI,
-                                    in boolean aMultiProcess,
-                                    in boolean aRemoteSubframes,
-                                    in AString aPreferredRemoteType,
-                                    in nsIPrincipal aCurrentPrincipal,
-                                    in boolean aIsSubframe);
+  AUTF8String getRemoteTypeForPrincipal(in nsIPrincipal aPrincipal,
+                                        in nsIURI aChannelOriginalURI,
+                                        in boolean aMultiProcess,
+                                        in boolean aRemoteSubframes,
+                                        in AUTF8String aPreferredRemoteType,
+                                        in nsIPrincipal aCurrentPrincipal,
+                                        in boolean aIsSubframe);
 };

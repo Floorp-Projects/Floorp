@@ -54,15 +54,15 @@ class JSProcessActorProtocol final : public JSActorProtocol,
 
   void AddObservers();
   void RemoveObservers();
-  bool Matches(const nsAString& aRemoteType);
+  bool Matches(const nsACString& aRemoteType);
 
  private:
   explicit JSProcessActorProtocol(const nsACString& aName) : mName(aName) {}
-  bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
+  bool RemoteTypePrefixMatches(const nsDependentCSubstring& aRemoteType);
   ~JSProcessActorProtocol() = default;
 
   nsCString mName;
-  nsTArray<nsString> mRemoteTypes;
+  nsTArray<nsCString> mRemoteTypes;
 
   ParentSide mParent;
   ChildSide mChild;
