@@ -129,6 +129,8 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvGetSocketData(GetSocketDataResolver&& aResolve);
   mozilla::ipc::IPCResult RecvGetDNSCacheEntries(
       GetDNSCacheEntriesResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvGetHttpConnectionData(
+      GetHttpConnectionDataResolver&& aResolve);
 
  protected:
   friend class SocketProcessImpl;
