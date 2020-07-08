@@ -10,7 +10,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
@@ -59,8 +60,8 @@ class TelemetrySessionObserverTest {
             triggeredByRedirect = false,
             triggeredByWebContent = false
         )
-        Assert.assertEquals(sessionUrl, singleSessionObserver.originSessionUrl)
-        Assert.assertEquals(url, singleSessionObserver.redirectChain[0])
+        assertEquals(sessionUrl, singleSessionObserver.originSessionUrl)
+        assertEquals(url, singleSessionObserver.redirectChain[0])
     }
 
     @Test
@@ -77,9 +78,9 @@ class TelemetrySessionObserverTest {
             triggeredByRedirect = false,
             triggeredByWebContent = false
         )
-        Assert.assertEquals(url, singleSessionObserver.originSessionUrl)
-        Assert.assertEquals(url, singleSessionObserver.redirectChain[0])
-        Assert.assertEquals(newUrl, singleSessionObserver.redirectChain[1])
+        assertEquals(url, singleSessionObserver.originSessionUrl)
+        assertEquals(url, singleSessionObserver.redirectChain[0])
+        assertEquals(newUrl, singleSessionObserver.redirectChain[1])
     }
 
     @Test
@@ -93,8 +94,8 @@ class TelemetrySessionObserverTest {
             triggeredByRedirect = false,
             triggeredByWebContent = false
         )
-        Assert.assertNull(singleSessionObserver.originSessionUrl)
-        Assert.assertEquals(0, singleSessionObserver.redirectChain.size)
+        assertNull(singleSessionObserver.originSessionUrl)
+        assertEquals(0, singleSessionObserver.redirectChain.size)
     }
 
     @Test
@@ -116,7 +117,7 @@ class TelemetrySessionObserverTest {
                 redirectChain
             )
         }
-        Assert.assertNull(singleSessionObserver.originSessionUrl)
-        Assert.assertEquals(0, singleSessionObserver.redirectChain.size)
+        assertNull(singleSessionObserver.originSessionUrl)
+        assertEquals(0, singleSessionObserver.redirectChain.size)
     }
 }

@@ -9,8 +9,8 @@ import androidx.annotation.StringRes
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import org.mozilla.fenix.components.FenixSnackbar
 
-class FenixSnackbarDelegate(val view: View) :
-    ContextMenuCandidate.SnackbarDelegate {
+class FenixSnackbarDelegate(private val view: View) : ContextMenuCandidate.SnackbarDelegate {
+
     override fun show(
         snackBarParentView: View,
         @StringRes text: Int,

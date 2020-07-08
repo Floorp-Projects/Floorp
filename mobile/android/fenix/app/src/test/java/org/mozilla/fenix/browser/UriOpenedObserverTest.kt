@@ -5,6 +5,7 @@
 package org.mozilla.fenix.browser
 
 import androidx.lifecycle.LifecycleOwner
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.Session
@@ -41,7 +42,34 @@ class UriOpenedObserverTest {
         observer.onSessionAdded(session)
         verify { session.register(observer.singleSessionObserver, owner) }
 
+        observer.onSessionSelected(session)
+        verify { session.register(observer.singleSessionObserver, owner) }
+
         observer.onSessionRemoved(session)
         verify { session.unregister(observer.singleSessionObserver) }
+    }
+
+    @Test
+    fun `registers when all sessions are restored`() {
+        val session1: Session = mockk(relaxed = true)
+        val session2: Session = mockk(relaxed = true)
+        every { sessionManager.sessions } returns listOf(session1, session2)
+
+        observer.onSessionsRestored()
+
+        verify { session1.register(observer.singleSessionObserver, owner) }
+        verify { session2.register(observer.singleSessionObserver, owner) }
+    }
+
+    @Test
+    fun `unregisters when all sessions are removed`() {
+        val session1: Session = mockk(relaxed = true)
+        val session2: Session = mockk(relaxed = true)
+        every { sessionManager.sessions } returns listOf(session1, session2)
+
+        observer.onAllSessionsRemoved()
+
+        verify { session1.unregister(observer.singleSessionObserver) }
+        verify { session2.unregister(observer.singleSessionObserver) }
     }
 }
