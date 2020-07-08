@@ -55,13 +55,50 @@ const gOuterFlex = document.getElementById("outerFlex");
 const gMidFlex = document.getElementById("midFlex");
 const gInnerBlock = document.getElementById("innerBlock");
 
+// This cleanup helper-function removes all children from 'parent'
+// except for 'childToPreserve' (if specified)
+function removeChildrenExcept(parent, childToPreserve)
+{
+  if (childToPreserve && childToPreserve.parentNode != parent) {
+    // This is just a sanity/integrity-check -- if this fails, it's probably a
+    // bug in this test rather than in the code.  I'm not checking this via
+    // e.g. "is(childToPreserve.parentNode, parent)", because this *should*
+    // always pass, and each "pass" is not interesting here since it's a
+    // sanity-check.  It's only interesting/noteworthy if it fails. So, to
+    // avoid bloating this test's passed-subtest-count & output, we only bother
+    // reporting on this in the case where something's wrong.
+    ok(false, "bug in test; 'childToPreserve' should be child of 'parent'");
+  }
+
+  // For simplicity, we just remove *all children* and then reappend
+  // childToPreserve as the sole child.
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  }
+  if (childToPreserve) {
+    parent.appendChild(childToPreserve);
+  }
+}
+
+// Appends 'childCount' new children to 'parent'
+function addNChildren(parent, childCount)
+{
+  for (let i = 0; i < childCount; i++) {
+    let newChild = document.createElement("div");
+    // Give the new child some text so it's got a nonzero content-size:
+    newChild.append("a");
+    parent.appendChild(newChild);
+  }
+}
+
 // Remove contents of inner block, and remove manual styling:
 function cleanup()
 {
   outerFlex.style = midFlex.style = innerBlock.style = "";
-  while (innerBlock.firstChild) {
-    innerBlock.firstChild.remove();
-  }
+  removeChildrenExcept(innerBlock);
+  removeChildrenExcept(midFlex, innerBlock);
+  removeChildrenExcept(outerFlex, midFlex);
+  removeChildrenExcept(content, outerFlex);
 }
 
 // Each testcase here has a label (used in test output), a function to set up
@@ -83,6 +120,31 @@ let gTestcases = [
     label : "margin on flex items",
     addTestStyle : function() {
       midFlex.style.margin = innerBlock.style.margin = "2px";
+    },
+ },
+ {
+    // When we make a change in one flex item, the number of reflows should not
+    // scale with its number of siblings (as long as those siblings' sizes
+    // aren't impacted by the change):
+    label : "additional flex items in outer flex container",
+
+    // Compare 5 bonus flex items vs. 1 bonus flex item:
+    addTestStyle : function() {
+      addNChildren(outerFlex, 5);
+    },
+    addReferenceStyle : function() {
+      addNChildren(outerFlex, 1);
+    },
+ },
+ {
+    // (As above, but now the bonus flex items are one step deeper in the tree,
+    // on the nested flex container rather than the outer one)
+    label : "additional flex items in nested flex container",
+    addTestStyle : function() {
+      addNChildren(midFlex, 5);
+    },
+    addReferenceStyle : function() {
+      addNChildren(midFlex, 1);
     },
  },
 ];
