@@ -186,6 +186,10 @@ class alignas(8) IonScript final : public TrailingArray {
   size_t numNurseryObjects() const {
     return numElements<HeapPtrObject>(nurseryObjectsOffset(), osiIndexOffset());
   }
+  void* addressOfNurseryObject(uint32_t index) {
+    MOZ_ASSERT(index < numNurseryObjects());
+    return &nurseryObjects()[index];
+  }
 
   //
   // Map OSI-point displacement to snapshot.
