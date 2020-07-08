@@ -80,7 +80,7 @@ function getNodeNames(snapshot) {
 }
 
 async function navigateTo(uri, toolbox, tab) {
-  const onSwitched = once(toolbox, "switched-target");
+  const onSwitched = toolbox.targetList.once("switched-target");
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
   await onLoaded;
