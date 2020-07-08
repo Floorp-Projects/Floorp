@@ -13,8 +13,6 @@
 #include "Layers.h"             // for Layer, etc
 #include "ShadowLayers.h"       // for ShadowLayerForwarder
 #include "SynchronousTask.h"
-#include "base/platform_thread.h"      // for PlatformThread
-#include "base/process.h"              // for ProcessId
 #include "mozilla/Assertions.h"        // for MOZ_ASSERT, etc
 #include "mozilla/Monitor.h"           // for Monitor, MonitorAutoLock
 #include "mozilla/ReentrantMonitor.h"  // for ReentrantMonitor, etc
@@ -53,8 +51,6 @@ class Shmem;
 
 namespace layers {
 
-using base::ProcessId;
-using base::Thread;
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 using namespace mozilla::media;
@@ -168,7 +164,7 @@ void ImageBridgeChild::CancelWaitForNotifyNotUsed(uint64_t aTextureId) {
 // Singleton
 static StaticMutex sImageBridgeSingletonLock;
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
-static StaticRefPtr<nsISerialEventTarget> sImageBridgeChildThread;
+static StaticRefPtr<nsIThread> sImageBridgeChildThread;
 
 // dispatched function
 void ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask) {
@@ -400,9 +396,8 @@ bool ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint,
   gfxPlatform::GetPlatform();
 
   if (!sImageBridgeChildThread) {
-    nsCOMPtr<nsISerialEventTarget> thread;
-    nsresult rv =
-        NS_CreateBackgroundTaskQueue("ImageBridgeChld", getter_AddRefs(thread));
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_NewNamedThread("ImageBridgeChld", getter_AddRefs(thread));
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
                        "Failed to start ImageBridgeChild thread!");
     sImageBridgeChildThread = thread.forget();
@@ -466,7 +461,10 @@ void ImageBridgeChild::ShutDown() {
 
   ShutdownSingleton();
 
-  sImageBridgeChildThread = nullptr;
+  if (sImageBridgeChildThread) {
+    sImageBridgeChildThread->Shutdown();
+    sImageBridgeChildThread = nullptr;
+  }
 }
 
 /* static */
@@ -511,9 +509,8 @@ void ImageBridgeChild::InitSameProcess(uint32_t aNamespace) {
   MOZ_ASSERT(!sImageBridgeChildSingleton);
   MOZ_ASSERT(!sImageBridgeChildThread);
 
-  nsCOMPtr<nsISerialEventTarget> thread;
-  nsresult rv =
-      NS_CreateBackgroundTaskQueue("ImageBridgeChld", getter_AddRefs(thread));
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("ImageBridgeChld", getter_AddRefs(thread));
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
                      "Failed to start ImageBridgeChild thread!");
   sImageBridgeChildThread = thread.forget();
@@ -540,9 +537,8 @@ void ImageBridgeChild::InitWithGPUProcess(
   MOZ_ASSERT(!sImageBridgeChildSingleton);
   MOZ_ASSERT(!sImageBridgeChildThread);
 
-  nsCOMPtr<nsISerialEventTarget> thread;
-  nsresult rv =
-      NS_CreateBackgroundTaskQueue("ImageBridgeChld", getter_AddRefs(thread));
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("ImageBridgeChld", getter_AddRefs(thread));
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
                      "Failed to start ImageBridgeChild thread!");
   sImageBridgeChildThread = thread.forget();

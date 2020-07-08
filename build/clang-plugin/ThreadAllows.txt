@@ -41,6 +41,7 @@ IMAP
 IPC Launch
 IPDL Background
 IdentityCrypto
+ImageBridgeChld
 LS Thread
 LayerScope
 MDCDMThread
