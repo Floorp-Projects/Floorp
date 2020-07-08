@@ -1774,6 +1774,39 @@ bool DocumentLoadListener::DocShellWillDisplayContent(nsresult aStatus) {
   return NS_FAILED(rv);
 }
 
+bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
+  nsCOMPtr<nsIInputStream> newPostData;
+  nsCOMPtr<nsIURI> newURI = nsDocShell::AttemptURIFixup(
+      mChannel, aStatus, mOriginalUriString, mLoadStateLoadType,
+      GetBrowsingContext()->IsTop(),
+      mLoadStateLoadFlags &
+          nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+      GetBrowsingContext()->UsePrivateBrowsing(), true,
+      getter_AddRefs(newPostData));
+  if (!newURI) {
+    return false;
+  }
+
+  // If we got a new URI, then we should initiate a load with that.
+  // Notify the listeners that this load is complete (with a code that
+  // won't trigger an error page), and then start the new one.
+  DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
+
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(newURI);
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+
+  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = loadInfo->GetCspToInherit();
+  loadState->SetCsp(cspToInherit);
+
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
+  loadState->SetTriggeringPrincipal(triggeringPrincipal);
+
+  loadState->SetPostDataStream(newPostData);
+
+  GetBrowsingContext()->LoadURI(loadState, false);
+  return true;
+}
+
 NS_IMETHODIMP
 DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   LOG(("DocumentLoadListener OnStartRequest [this=%p]", this));
@@ -1807,6 +1840,13 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   aRequest->GetStatus(&status);
   if (status == NS_ERROR_NO_CONTENT) {
     DisconnectListeners(status, status);
+    return NS_OK;
+  }
+
+  // If this was a failed load and we want to try fixing the uri, then
+  // this will initiate a new load (and disconnect this one), and we don't
+  // need to do anything else.
+  if (MaybeHandleLoadErrorWithURIFixup(status)) {
     return NS_OK;
   }
 
