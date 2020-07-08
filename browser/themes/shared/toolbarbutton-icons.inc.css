@@ -264,12 +264,9 @@ toolbar[brighttext] {
   transform: scaleX(-1);
 }
 
-#profiler-button.profiler-active {
+#profiler-button.profiler-active > image {
   fill: #0060df;
   fill-opacity: 1;
-}
-
-#profiler-button.profiler-active > image {
   background-color: #0060df33;
 }
 
@@ -282,7 +279,11 @@ toolbar[brighttext] {
 }
 
 #profiler-button > .toolbarbutton-menu-dropmarker {
+  /* Inherit the fill and fill-opacity values from the toolbarbutton
+     instead of using the values from .toolbarbutton-menu-dropmarker */
   -moz-context-properties: fill, fill-opacity;
+  fill: inherit;
+  fill-opacity: inherit;
 }
 
 .widget-overflow-list #profiler-button > .toolbarbutton-menu-dropmarker,
