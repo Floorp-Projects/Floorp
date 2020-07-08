@@ -81,7 +81,7 @@ def _get_optimizations(target_task_graph, strategies):
     def optimizations(label):
         task = target_task_graph.tasks[label]
         if task.optimization:
-            opt_by, arg = task.optimization.items()[0]
+            opt_by, arg = list(task.optimization.items())[0]
             strategy = strategies[opt_by]
             if hasattr(strategy, 'description'):
                 opt_by += " ({})".format(strategy.description)
@@ -97,7 +97,7 @@ def _log_optimization(verb, opt_counts):
             '{} '.format(verb.title()) +
             ', '.join(
                 '{} tasks by {}'.format(c, b)
-                for b, c in sorted(opt_counts.iteritems())) +
+                for b, c in sorted(opt_counts.items())) +
             ' during optimization.')
     else:
         logger.info('No tasks {} during optimization'.format(verb))
@@ -226,13 +226,13 @@ def get_subgraph(
     tasks_by_taskid = {}
     named_links_dict = target_task_graph.graph.named_links_dict()
     omit = removed_tasks | replaced_tasks
-    for label, task in target_task_graph.tasks.iteritems():
+    for label, task in six.iteritems(target_task_graph.tasks):
         if label in omit:
             continue
         task.task_id = label_to_taskid[label]
         named_task_dependencies = {
             name: label_to_taskid[label]
-            for name, label in named_links_dict.get(label, {}).iteritems()}
+            for name, label in named_links_dict.get(label, {}).items()}
 
         # Add remaining soft dependencies
         if task.soft_dependencies:
@@ -250,7 +250,7 @@ def get_subgraph(
             dependencies=named_task_dependencies,
         )
         deps = task.task.setdefault('dependencies', [])
-        deps.extend(sorted(named_task_dependencies.itervalues()))
+        deps.extend(sorted(named_task_dependencies.values()))
         tasks_by_taskid[task.task_id] = task
 
     # resolve edges to taskIds
