@@ -11,6 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import RELEASE_PROJECTS
 from taskgraph.util.schema import resolve_keyed_by
+from taskgraph.util.treeherder import add_suffix
 from taskgraph.util.workertypes import worker_type_implementation
 
 from mozbuild.artifact_builds import JOB_CHOICES as ARTIFACT_JOBS
@@ -131,7 +132,7 @@ def use_artifact(config, jobs):
             # If tests aren't packaged, then we are not able to rebuild all the packages
             and job['worker']['env'].get('MOZ_AUTOMATION_PACKAGE_TESTS') == '1'
         ):
-            job['treeherder']['symbol'] += 'a'
+            job['treeherder']['symbol'] = add_suffix(job['treeherder']['symbol'], 'a')
             job['worker']['env']['USE_ARTIFACT'] = '1'
             job['attributes']['artifact-build'] = True
         yield job
