@@ -314,7 +314,10 @@ void StreamFilterParent::FinishDisconnect() {
     self->FlushBufferedData();
 
     RunOnMainThread(FUNC, [=] {
-      if (self->mLoadGroup && !self->mDisconnected) {
+      if (self->mReceivedStop && !self->mSentStop) {
+        nsresult rv = self->EmitStopRequest(NS_OK);
+        Unused << NS_WARN_IF(NS_FAILED(rv));
+      } else if (self->mLoadGroup && !self->mDisconnected) {
         Unused << self->mLoadGroup->RemoveRequest(self, nullptr, NS_OK);
       }
       self->mDisconnected = true;
@@ -659,16 +662,6 @@ nsresult StreamFilterParent::FlushBufferedData() {
 
     nsresult rv = Write(data->mData);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (mReceivedStop && !mSentStop) {
-    RefPtr<StreamFilterParent> self(this);
-    RunOnMainThread(FUNC, [=] {
-      if (!mSentStop) {
-        nsresult rv = self->EmitStopRequest(NS_OK);
-        Unused << NS_WARN_IF(NS_FAILED(rv));
-      }
-    });
   }
 
   return NS_OK;
