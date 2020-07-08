@@ -10,6 +10,13 @@
 
 namespace mozilla {
 namespace layers {
+
+void ExpectedGeckoMetrics::UpdateFrom(const FrameMetrics& aMetrics) {
+  mScrollOffset = aMetrics.GetScrollOffset();
+  mZoom = aMetrics.GetZoom();
+  mDevPixelsPerCSSPixel = aMetrics.GetDevPixelsPerCSSPixel();
+}
+
 namespace apz {
 
 /*static*/ void InitializeGlobalState() {
