@@ -36,6 +36,8 @@ ADD topsrcdir/tools/lint/python/pylint_requirements.txt /tmp/pylint_requirements
 ADD topsrcdir/tools/lint/spell/codespell_requirements.txt /tmp/codespell_requirements.txt
 # %include tools/lint/tox/tox_requirements.txt
 ADD topsrcdir/tools/lint/tox/tox_requirements.txt /tmp/tox_requirements.txt
+# %include tools/lint/python/black_requirements.txt
+ADD topsrcdir/tools/lint/python/black_requirements.txt /tmp/black_requirements.txt
 RUN bash /tmp/system-setup.sh
 
 # %include taskcluster/scripts/run-task

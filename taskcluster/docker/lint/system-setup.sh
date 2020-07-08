@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This allows ubuntu-desktop to be installed without human interaction
+# This allows packages to be installed without human interaction
 export DEBIAN_FRONTEND=noninteractive
 
 set -ve
@@ -108,6 +108,14 @@ pip3 install --require-hashes -r /tmp/codespell_requirements.txt
 cd /setup
 
 pip3 install --require-hashes -r /tmp/tox_requirements.txt
+
+###
+# Black Setup
+###
+
+cd /setup
+
+pip3 install --require-hashes -r /tmp/black_requirements.txt
 
 ###
 # rustfmt and clippy
