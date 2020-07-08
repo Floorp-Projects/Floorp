@@ -1025,6 +1025,31 @@ WSRunScanner::TextFragmentData::GetInvisibleTrailingWhiteSpaceRange() const {
                             mEnd.PointRef());
 }
 
+Maybe<WSRunScanner::WSFragment>
+WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleAndMiddleOfLine()
+    const {
+  WSFragment fragment;
+  if (mIsPreformatted ||
+      ((StartsFromNormalText() || StartsFromSpecialContent()) &&
+       (EndsByNormalText() || EndsBySpecialContent() || EndsByBRElement()))) {
+    fragment.MarkAsVisible();
+    if (mStart.PointRef().IsSet()) {
+      fragment.mStartNode = mStart.PointRef().GetContainer();
+      fragment.mStartOffset = mStart.PointRef().Offset();
+    }
+    fragment.SetStartFrom(mStart.RawReason());
+    if (mEnd.PointRef().IsSet()) {
+      fragment.mEndNode = mEnd.PointRef().GetContainer();
+      fragment.mEndOffset = mEnd.PointRef().Offset();
+    }
+    fragment.SetEndBy(mEnd.RawReason());
+    return Some(fragment);
+  }
+
+  // TODO: Implement other cases in the following patches.
+  return Nothing();
+}
+
 void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
     WSFragmentArray& aFragments) const {
   MOZ_ASSERT(aFragments.IsEmpty());
@@ -1039,18 +1064,7 @@ void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
   if (mIsPreformatted ||
       ((StartsFromNormalText() || StartsFromSpecialContent()) &&
        (EndsByNormalText() || EndsBySpecialContent() || EndsByBRElement()))) {
-    WSFragment* startRun = aFragments.AppendElement();
-    startRun->MarkAsVisible();
-    if (mStart.PointRef().IsSet()) {
-      startRun->mStartNode = mStart.PointRef().GetContainer();
-      startRun->mStartOffset = mStart.PointRef().Offset();
-    }
-    startRun->SetStartFrom(mStart.RawReason());
-    if (mEnd.PointRef().IsSet()) {
-      startRun->mEndNode = mEnd.PointRef().GetContainer();
-      startRun->mEndOffset = mEnd.PointRef().Offset();
-    }
-    startRun->SetEndBy(mEnd.RawReason());
+    aFragments.AppendElement(CreateWSFragmentForVisibleAndMiddleOfLine().ref());
     return;
   }
 
