@@ -154,6 +154,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "NodePicker",
+  "devtools/server/actors/inspector/node-picker",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "LayoutActor",
   "devtools/server/actors/layout",
   true
@@ -369,6 +375,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     eventListenerService.addListenerChangeListener(this._onEventListenerChange);
   },
 
+  get nodePicker() {
+    if (!this._nodePicker) {
+      this._nodePicker = new NodePicker(this, this.targetActor);
+    }
+
+    return this._nodePicker;
+  },
+
   watchRootNode() {
     if (this._isWatchingRootNode) {
       throw new Error("WalkerActor::watchRootNode should only be called once");
@@ -438,6 +452,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       actor: this.actorID,
       root: this.rootNode.form(),
       traits: {
+        // Walker implements node picker starting with Firefox 80
+        supportsNodePicker: true,
         // watch/unwatchRootNode are available starting with Fx77
         watchRootNode: true,
       },
@@ -523,6 +539,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.customElementWatcher = null;
 
       this.walkerSearch.destroy();
+
+      if (this._nodePicker) {
+        this._nodePicker.destroy();
+        this._nodePicker = null;
+      }
 
       this.layoutChangeObserver.off("reflows", this._onReflows);
       this.layoutChangeObserver.off("resize", this._onResize);
@@ -2906,6 +2927,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     return this.attachElement(rawNode);
+  },
+
+  pick(doFocus) {
+    this.nodePicker.pick(doFocus);
+  },
+
+  cancelPick() {
+    this.nodePicker.cancelPick();
   },
 });
 

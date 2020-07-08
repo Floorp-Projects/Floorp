@@ -9,13 +9,12 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 /**
  * Client-side NodePicker module.
  * To be used by inspector front when it needs to select DOM elements.
- */
-
-/**
- * Get the NodePicker instance for an inspector front.
- * The NodePicker wraps the highlighter so that it can interact with the
- * walkerFront and selection api. The nodeFront is stateless, with the
- * HighlighterFront managing it's own state.
+ *
+ * NodePicker is a proxy for the node picker functionality from WalkerFront instances
+ * of all available InspectorFronts. It is a single point of entry for the client to:
+ * - invoke actions to start and stop picking nodes on all walkers
+ * - listen to node picker events from all walkers and relay them to subscribers
+ *
  *
  * @param {TargetList} targetList
  *        The TargetList component referencing all the targets to be debugged
@@ -85,13 +84,12 @@ class NodePicker extends EventEmitter {
       "inspector"
     );
 
-    for (const { walker, highlighter } of this._currentInspectorFronts) {
+    for (const { walker } of this._currentInspectorFronts) {
       walker.on("picker-node-hovered", this._onHovered);
       walker.on("picker-node-picked", this._onPicked);
       walker.on("picker-node-previewed", this._onPreviewed);
       walker.on("picker-node-canceled", this._onCanceled);
-
-      await highlighter.pick(doFocus);
+      await walker.pick(doFocus);
     }
 
     this.emit("picker-started");
@@ -107,13 +105,12 @@ class NodePicker extends EventEmitter {
     }
     this.isPicking = false;
 
-    for (const { walker, highlighter } of this._currentInspectorFronts) {
-      await highlighter.cancelPick();
-
+    for (const { walker } of this._currentInspectorFronts) {
       walker.off("picker-node-hovered", this._onHovered);
       walker.off("picker-node-picked", this._onPicked);
       walker.off("picker-node-previewed", this._onPreviewed);
       walker.off("picker-node-canceled", this._onCanceled);
+      await walker.cancelPick();
     }
 
     this._currentInspectorFronts = [];
@@ -125,6 +122,12 @@ class NodePicker extends EventEmitter {
    * Stop the picker, but also emit an event that the picker was canceled.
    */
   async cancel() {
+    // TODO: Remove once migrated to process-agnostic box model highlighter (Bug 1646028)
+    Promise.all(
+      this._currentInspectorFronts.map(({ highlighter }) =>
+        highlighter.hideBoxModel()
+      )
+    ).catch(e => console.error);
     await this.stop();
     this.emit("picker-node-canceled");
   }
@@ -135,8 +138,11 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the node being hovered
    */
-  _onHovered(data) {
+  async _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
+
+    // TODO: Remove once migrated to process-agnostic box model highlighter (Bug 1646028)
+    await data.node.highlighterFront.showBoxModel(data.node);
 
     // One of the HighlighterActor instances, in one of the current targets, is hovering
     // over a node. Because we may be connected to several targets, we have several
@@ -170,8 +176,11 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the picked node
    */
-  _onPreviewed(data) {
+  async _onPreviewed(data) {
     this.emit("picker-node-previewed", data.node);
+
+    // TODO: Remove once migrated to process-agnostic box model highlighter (Bug 1646028)
+    await data.node.highlighterFront.showBoxModel(data.node);
   }
 
   /**

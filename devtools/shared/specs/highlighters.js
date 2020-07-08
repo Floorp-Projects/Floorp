@@ -27,6 +27,8 @@ const highlighterSpec = generateActorSpec({
     hideBoxModel: {
       request: {},
     },
+    // WalkerFront implements pick(doFocus) and cancelPick() since Firefox 80
+    // Keep these on HighlighterSpec for backwards compat until Firefox 80 reaches Release
     pick: {},
     pickAndFocus: {},
     cancelPick: {},

@@ -363,6 +363,15 @@ const walkerSpec = generateActorSpec({
         nodeFront: RetVal("disconnectedNode"),
       },
     },
+    pick: {
+      request: {
+        doFocus: Arg(0, "nullable:boolean"),
+      },
+    },
+    cancelPick: {
+      request: {},
+      response: {},
+    },
     watchRootNode: {
       request: {},
       response: {},
