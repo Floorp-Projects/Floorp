@@ -30,7 +30,7 @@ job-defaults:
             - linux64-nasm
             - linux64-node
     when:
-        # Extension list from https://hg.mozilla.org/mozilla-central/file/tip/python/mozbuild/mozbuild/mach_commands.py#l1664
+        # Extension list from https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/mach_commands.py#l1664
         files-changed:
             - '**/*.c'
             - '**/*.cpp'

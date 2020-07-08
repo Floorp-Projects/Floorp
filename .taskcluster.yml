@@ -1,6 +1,6 @@
 # yamllint disable rule:line-length
 # This file is rendered via JSON-e by
-# - hg-push - https://hg.mozilla.org/ci/ci-admin/file/tip/build-decision/src/build_decision/hg_push.py
+# - hg-push - https://hg.mozilla.org/ci/ci-admin/file/default/build-decision/src/build_decision/hg_push.py
 #   {
 #     tasks_for: 'hg-push',
 #     push: {owner, comment, pushlog_id, pushdate},
@@ -10,7 +10,7 @@
 #     ownTaskId: // taskId of the task that will be created
 #   }
 #
-# - cron tasks - https://hg.mozilla.org/ci/ci-admin/file/tip/build-decision/src/build_decision/cron/decision.py
+# - cron tasks - https://hg.mozilla.org/ci/ci-admin/file/default/build-decision/src/build_decision/cron/decision.py
 #   {
 #     tasks_for: 'cron',
 #     push: {revision, pushlog_id, pushdate, owner}
