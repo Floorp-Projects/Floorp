@@ -4,37 +4,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_JSProcessActorChild_h
-#define mozilla_dom_JSProcessActorChild_h
+#ifndef mozilla_dom_JSProcessActorParent_h
+#define mozilla_dom_JSProcessActorParent_h
 
+#include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/JSActor.h"
-#include "nsIDOMProcessChild.h"
+#include "mozilla/extensions/WebExtensionContentScript.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMProcessParent.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
 
-// Placeholder implementation.
-class JSProcessActorChild final : public JSActor {
+class JSProcessActorParent final : public JSActor {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSProcessActorChild,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSProcessActorParent,
                                                          JSActor)
 
-  explicit JSProcessActorChild(nsISupports* aGlobal = nullptr)
-      : JSActor(aGlobal) {}
+  nsIGlobalObject* GetParentObject() const override {
+    return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<JSProcessActorChild> Constructor(
+  static already_AddRefed<JSProcessActorParent> Constructor(
       GlobalObject& aGlobal) {
-    return MakeAndAddRef<JSProcessActorChild>(aGlobal.GetAsSupports());
+    return MakeAndAddRef<JSProcessActorParent>();
   }
 
-  nsIDOMProcessChild* Manager() const { return mManager; }
+  nsIDOMProcessParent* Manager() const { return mManager; }
 
-  void Init(const nsACString& aName, nsIDOMProcessChild* aManager);
-  void ClearManager() override;
+  void Init(const nsACString& aName, nsIDOMProcessParent* aManager);
+  void AfterDestroy();
 
  protected:
   // Send the message described by the structured clone data |aData|, and the
@@ -46,12 +54,13 @@ class JSProcessActorChild final : public JSActor {
                               ErrorResult& aRv) override;
 
  private:
-  ~JSProcessActorChild() { MOZ_ASSERT(!mManager); }
+  ~JSProcessActorParent();
 
-  nsCOMPtr<nsIDOMProcessChild> mManager;
+  bool mCanSend = true;
+  nsCOMPtr<nsIDOMProcessParent> mManager;
 };
 
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_JSProcessActorChild_h
+#endif  // mozilla_dom_JSProcessActorParent_h

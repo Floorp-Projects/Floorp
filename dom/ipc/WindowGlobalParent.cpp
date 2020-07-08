@@ -403,7 +403,14 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSetClientInfo(
 IPCResult WindowGlobalParent::RecvDestroy() {
   // Make a copy so that we can avoid potential iterator invalidation when
   // calling the user-provided Destroy() methods.
-  JSActorWillDestroy();
+  nsTArray<RefPtr<JSWindowActorParent>> windowActors(mWindowActors.Count());
+  for (auto iter = mWindowActors.Iter(); !iter.Done(); iter.Next()) {
+    windowActors.AppendElement(iter.UserData());
+  }
+
+  for (auto& windowActor : windowActors) {
+    windowActor->StartDestroy();
+  }
 
   if (CanSend()) {
     RefPtr<BrowserParent> browserParent = GetBrowserParent();
@@ -425,12 +432,22 @@ IPCResult WindowGlobalParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
-const nsACString& WindowGlobalParent::GetRemoteType() {
+void WindowGlobalParent::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+                                           StructuredCloneData&& aData,
+                                           StructuredCloneData&& aStack) {
+  RefPtr<JSWindowActorParent> actor =
+      GetActor(aMeta.actorName(), IgnoreErrors());
+  if (actor) {
+    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
+  }
+}
+
+const nsAString& WindowGlobalParent::GetRemoteType() {
   if (RefPtr<BrowserParent> browserParent = GetBrowserParent()) {
     return browserParent->Manager()->GetRemoteType();
   }
 
-  return NOT_REMOTE_TYPE;
+  return VoidString();
 }
 
 void WindowGlobalParent::NotifyContentBlockingEvent(
@@ -475,24 +492,33 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     const nsACString& aName, ErrorResult& aRv) {
-  return JSActorManager::GetActor(aName, aRv).downcast<JSWindowActorParent>();
-}
+  if (!CanSend()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
 
-already_AddRefed<JSActor> WindowGlobalParent::InitJSActor(
-    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
+  // Check if this actor has already been created, and return it if it has.
+  if (mWindowActors.Contains(aName)) {
+    return do_AddRef(mWindowActors.GetWeak(aName));
+  }
+
+  // Otherwise, we want to create a new instance of this actor.
+  JS::RootedObject obj(RootingCx());
+  ConstructActor(aName, &obj, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Unwrap our actor to a JSWindowActorParent object.
   RefPtr<JSWindowActorParent> actor;
-  if (aMaybeActor.get()) {
-    aRv = UNWRAP_OBJECT(JSWindowActorParent, aMaybeActor.get(), actor);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  } else {
-    actor = new JSWindowActorParent();
+  if (NS_FAILED(UNWRAP_OBJECT(JSWindowActorParent, &obj, actor))) {
+    return nullptr;
   }
 
   MOZ_RELEASE_ASSERT(!actor->GetManager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
+  mWindowActors.Put(aName, RefPtr{actor});
   return actor.forget();
 }
 
@@ -773,7 +799,13 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   // Destroy our JSWindowActors, and reject any pending queries.
-  JSActorDidDestroy();
+  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorParent> windowActors;
+  mWindowActors.SwapElements(windowActors);
+  for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+    iter.Data()->AfterDestroy();
+  }
+  windowActors.Clear();
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
@@ -785,7 +817,9 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-WindowGlobalParent::~WindowGlobalParent() = default;
+WindowGlobalParent::~WindowGlobalParent() {
+  MOZ_ASSERT(!mWindowActors.Count());
+}
 
 JSObject* WindowGlobalParent::WrapObject(JSContext* aCx,
                                          JS::Handle<JSObject*> aGivenProto) {
@@ -848,7 +882,8 @@ void WindowGlobalParent::AddMixedContentSecurityState(uint32_t aStateFlags) {
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
+                                   mWindowActors)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WindowGlobalParent,
                                                WindowContext)

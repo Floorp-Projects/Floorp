@@ -60,8 +60,8 @@ void TransmitPermissionsAndBlobURLsForPrincipalInfo(
 }  // namespace
 
 // static
-bool RemoteWorkerManager::MatchRemoteType(const nsACString& processRemoteType,
-                                          const nsACString& workerRemoteType) {
+bool RemoteWorkerManager::MatchRemoteType(const nsAString& processRemoteType,
+                                          const nsAString& workerRemoteType) {
   if (processRemoteType.Equals(workerRemoteType)) {
     return true;
   }
@@ -89,7 +89,7 @@ bool RemoteWorkerManager::MatchRemoteType(const nsACString& processRemoteType,
 }
 
 // static
-Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
+Result<nsString, nsresult> RemoteWorkerManager::GetRemoteType(
     const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerType aWorkerType) {
   AssertIsOnMainThread();
 
@@ -100,7 +100,7 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  nsCString remoteType = NOT_REMOTE_TYPE;
+  nsString remoteType;
 
   // If Gecko is running in single process mode, there is no child process
   // to select, return without assigning any remoteType.
@@ -131,21 +131,23 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
       "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 
   if (isMozExtension) {
-    remoteType = EXTENSION_REMOTE_TYPE;
+    remoteType.Assign(NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE));
   } else if (separatePrivilegedMozilla) {
     bool isPrivilegedMozilla = false;
     aPrincipal->IsURIInPrefList("browser.tabs.remote.separatedMozillaDomains",
                                 &isPrivilegedMozilla);
 
     if (isPrivilegedMozilla) {
-      remoteType = PRIVILEGEDMOZILLA_REMOTE_TYPE;
-    } else if (aWorkerType == WorkerType::WorkerTypeShared && contentChild) {
-      remoteType = contentChild->GetRemoteType();
+      remoteType.Assign(
+          NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDMOZILLA_REMOTE_TYPE));
     } else {
-      remoteType = DEFAULT_REMOTE_TYPE;
+      remoteType.Assign(
+          aWorkerType == WorkerType::WorkerTypeShared && contentChild
+              ? contentChild->GetRemoteType()
+              : NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE));
     }
   } else {
-    remoteType = DEFAULT_REMOTE_TYPE;
+    remoteType.Assign(NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE));
   }
 
   return remoteType;
@@ -347,7 +349,7 @@ void RemoteWorkerManager::AsyncCreationFailed(
 }
 
 /* static */
-nsCString RemoteWorkerManager::GetRemoteTypeForActor(
+nsString RemoteWorkerManager::GetRemoteTypeForActor(
     const RemoteWorkerServiceParent* aActor) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
@@ -360,10 +362,10 @@ nsCString RemoteWorkerManager::GetRemoteTypeForActor(
       MakeScopeExit([&] { NS_ReleaseOnMainThread(contentParent.forget()); });
 
   if (NS_WARN_IF(!contentParent)) {
-    return EmptyCString();
+    return EmptyString();
   }
 
-  nsCString aRemoteType(contentParent->GetRemoteType());
+  nsString aRemoteType(contentParent->GetRemoteType());
 
   return aRemoteType;
 }
@@ -549,7 +551,7 @@ void RemoteWorkerManager::LaunchNewContentProcess(
                                 bgEventTarget = std::move(bgEventTarget),
                                 self = RefPtr<RemoteWorkerManager>(this)](
                                    const CallbackParamType& aValue,
-                                   const nsCString& remoteType) mutable {
+                                   const nsString& remoteType) mutable {
     if (aValue.IsResolve()) {
       if (isServiceWorker) {
         TransmitPermissionsAndBlobURLsForPrincipalInfo(aValue.ResolveValue(),
@@ -586,7 +588,9 @@ void RemoteWorkerManager::LaunchNewContentProcess(
       __func__, [callback = std::move(processLaunchCallback),
                  workerRemoteType = aData.remoteType()]() mutable {
         auto remoteType =
-            workerRemoteType.IsEmpty() ? DEFAULT_REMOTE_TYPE : workerRemoteType;
+            workerRemoteType.IsEmpty()
+                ? NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE)
+                : workerRemoteType;
 
         ContentParent::GetNewOrUsedBrowserProcessAsync(
             /* aFrameElement = */ nullptr,

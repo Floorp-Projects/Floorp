@@ -95,6 +95,10 @@ class WindowGlobalParent final : public WindowContext,
 
   ContentParent* GetContentParent();
 
+  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+                         ipc::StructuredCloneData&& aData,
+                         ipc::StructuredCloneData&& aStack);
+
   // The principal of this WindowGlobal. This value will not change over the
   // lifetime of the WindowGlobal object, even to reflect changes in
   // |document.domain|.
@@ -194,13 +198,10 @@ class WindowGlobalParent final : public WindowContext,
 
   nsITransportSecurityInfo* GetSecurityInfo() { return mSecurityInfo; }
 
-  const nsACString& GetRemoteType() override;
+  const nsAString& GetRemoteType() override;
 
  protected:
-  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
-                                        const nsACString& aName,
-                                        ErrorResult& aRv) override;
-  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
+  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
 
   // IPC messages
   mozilla::ipc::IPCResult RecvLoadURI(
@@ -265,6 +266,7 @@ class WindowGlobalParent final : public WindowContext,
   nsCOMPtr<nsIURI> mDocumentURI;
   nsString mDocumentTitle;
 
+  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorParent> mWindowActors;
   bool mIsInitialDocument;
 
   // True if this window has a "beforeunload" event listener.

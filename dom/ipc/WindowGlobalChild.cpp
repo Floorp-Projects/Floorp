@@ -320,7 +320,16 @@ void WindowGlobalChild::Destroy() {
       "WindowGlobalChild::Destroy", [self = RefPtr<WindowGlobalChild>(this)]() {
         // Make a copy so that we can avoid potential iterator invalidation when
         // calling the user-provided Destroy() methods.
-        self->JSActorWillDestroy();
+        nsTArray<RefPtr<JSWindowActorChild>> windowActors(
+            self->mWindowActors.Count());
+        for (auto iter = self->mWindowActors.Iter(); !iter.Done();
+             iter.Next()) {
+          windowActors.AppendElement(iter.UserData());
+        }
+
+        for (auto& windowActor : windowActors) {
+          windowActor->StartDestroy();
+        }
 
         // Perform async IPC shutdown unless we're not in-process, and our
         // BrowserChild is in the process of being destroyed, which will destroy
@@ -359,7 +368,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameLocal(
 
   // Trigger a process switch into the current process.
   RemotenessOptions options;
-  options.mRemoteType = NOT_REMOTE_TYPE;
+  options.mRemoteType.Assign(VoidString());
   options.mPendingSwitchID.Construct(aPendingSwitchId);
   options.mSwitchingInProgressLoad = true;
   flo->ChangeRemoteness(options, IgnoreErrors());
@@ -548,6 +557,16 @@ IPCResult WindowGlobalChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
+void WindowGlobalChild::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+                                          StructuredCloneData&& aData,
+                                          StructuredCloneData&& aStack) {
+  RefPtr<JSWindowActorChild> actor =
+      GetActor(aMeta.actorName(), IgnoreErrors());
+  if (actor) {
+    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
+  }
+}
+
 void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
 #ifdef MOZ_GECKO_PROFILER
   // Registers a DOM Window with the profiler. It re-registers the same Inner
@@ -573,34 +592,43 @@ void WindowGlobalChild::SetDocumentPrincipal(
   SendUpdateDocumentPrincipal(aNewDocumentPrincipal);
 }
 
-const nsACString& WindowGlobalChild::GetRemoteType() {
+const nsAString& WindowGlobalChild::GetRemoteType() {
   if (XRE_IsContentProcess()) {
     return ContentChild::GetSingleton()->GetRemoteType();
   }
 
-  return NOT_REMOTE_TYPE;
+  return VoidString();
 }
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
     const nsACString& aName, ErrorResult& aRv) {
-  return JSActorManager::GetActor(aName, aRv).downcast<JSWindowActorChild>();
-}
+  if (!CanSend()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
 
-already_AddRefed<JSActor> WindowGlobalChild::InitJSActor(
-    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
+  // Check if this actor has already been created, and return it if it has.
+  if (mWindowActors.Contains(aName)) {
+    return do_AddRef(mWindowActors.GetWeak(aName));
+  }
+
+  // Otherwise, we want to create a new instance of this actor.
+  JS::RootedObject obj(RootingCx());
+  ConstructActor(aName, &obj, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Unwrap our actor to a JSWindowActorChild object.
   RefPtr<JSWindowActorChild> actor;
-  if (aMaybeActor.get()) {
-    aRv = UNWRAP_OBJECT(JSWindowActorChild, aMaybeActor.get(), actor);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  } else {
-    actor = new JSWindowActorChild();
+  if (NS_FAILED(UNWRAP_OBJECT(JSWindowActorChild, &obj, actor))) {
+    return nullptr;
   }
 
   MOZ_RELEASE_ASSERT(!actor->GetManager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
+  mWindowActors.Put(aName, RefPtr{actor});
   return actor.forget();
 }
 
@@ -615,12 +643,19 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
   // Destroy our JSActors, and reject any pending queries.
-  JSActorDidDestroy();
+  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorChild> windowActors;
+  mWindowActors.SwapElements(windowActors);
+  for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+    iter.Data()->AfterDestroy();
+  }
+  windowActors.Clear();
 }
 
 WindowGlobalChild::~WindowGlobalChild() {
   MOZ_ASSERT(!gWindowGlobalChildById ||
              !gWindowGlobalChildById->Contains(InnerWindowId()));
+  MOZ_ASSERT(!mWindowActors.Count());
 }
 
 JSObject* WindowGlobalChild::WrapObject(JSContext* aCx,
@@ -632,7 +667,8 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
+                                      mWindowActors)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
