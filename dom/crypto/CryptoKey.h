@@ -113,13 +113,17 @@ class CryptoKey final : public nsISupports, public nsWrapperCache {
   nsresult AddPublicKeyData(SECKEYPublicKey* point);
   void ClearUsages();
   nsresult AddUsage(const nsString& aUsage);
-  nsresult AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask);
+  nsresult AddAllowedUsage(const nsString& aUsage, const nsString& aAlgorithm);
+  nsresult AddAllowedUsageIntersecting(const nsString& aUsage,
+                                       const nsString& aAlgorithm,
+                                       uint32_t aUsageMask = USAGES_MASK);
   void AddUsage(KeyUsage aUsage);
   bool HasAnyUsage();
   bool HasUsage(KeyUsage aUsage);
   bool HasUsageOtherThan(uint32_t aUsages);
   static bool IsRecognizedUsage(const nsString& aUsage);
   static bool AllUsagesRecognized(const Sequence<nsString>& aUsages);
+  static uint32_t GetAllowedUsagesForAlgorithm(const nsString& aAlgorithm);
 
   nsresult SetSymKey(const CryptoBuffer& aSymKey);
   nsresult SetPrivateKey(SECKEYPrivateKey* aPrivateKey);
