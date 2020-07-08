@@ -150,8 +150,8 @@ export function initStore(reducers, initialState) {
     initialState,
     global.RPMAddMessageListener &&
       applyMiddleware(
-        rehydrationMiddleware,
         queueEarlyMessageMiddleware,
+        rehydrationMiddleware,
         messageMiddleware
       )
   );

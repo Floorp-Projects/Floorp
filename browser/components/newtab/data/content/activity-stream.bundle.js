@@ -2887,7 +2887,7 @@ const queueEarlyMessageMiddleware = ({
  */
 
 function initStore(reducers, initialState) {
-  const store = Object(redux__WEBPACK_IMPORTED_MODULE_1__["createStore"])(mergeStateReducer(Object(redux__WEBPACK_IMPORTED_MODULE_1__["combineReducers"])(reducers)), initialState, global.RPMAddMessageListener && Object(redux__WEBPACK_IMPORTED_MODULE_1__["applyMiddleware"])(rehydrationMiddleware, queueEarlyMessageMiddleware, messageMiddleware));
+  const store = Object(redux__WEBPACK_IMPORTED_MODULE_1__["createStore"])(mergeStateReducer(Object(redux__WEBPACK_IMPORTED_MODULE_1__["combineReducers"])(reducers)), initialState, global.RPMAddMessageListener && Object(redux__WEBPACK_IMPORTED_MODULE_1__["applyMiddleware"])(queueEarlyMessageMiddleware, rehydrationMiddleware, messageMiddleware));
 
   if (global.RPMAddMessageListener) {
     global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {
