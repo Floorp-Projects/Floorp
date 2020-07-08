@@ -451,8 +451,14 @@ class WarpSnapshot : public TempObject {
 
   const WarpBailoutInfo bailoutInfo_;
 
+  // List of (originally) nursery-allocated objects. Must only be accessed on
+  // the main thread. See also WarpObjectField.
+  using NurseryObjectVector = Vector<JSObject*, 0, JitAllocPolicy>;
+  NurseryObjectVector nurseryObjects_;
+
  public:
-  explicit WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script,
+  explicit WarpSnapshot(JSContext* cx, TempAllocator& alloc,
+                        WarpScriptSnapshot* script,
                         const WarpBailoutInfo& bailoutInfo);
 
   WarpScriptSnapshot* script() const { return script_; }
@@ -465,6 +471,9 @@ class WarpSnapshot : public TempObject {
   void trace(JSTracer* trc);
 
   const WarpBailoutInfo& bailoutInfo() const { return bailoutInfo_; }
+
+  NurseryObjectVector& nurseryObjects() { return nurseryObjects_; }
+  const NurseryObjectVector& nurseryObjects() const { return nurseryObjects_; }
 
 #ifdef JS_JITSPEW
   void dump() const;
