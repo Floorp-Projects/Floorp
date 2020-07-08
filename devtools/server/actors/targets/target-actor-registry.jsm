@@ -24,17 +24,17 @@ var TargetActorRegistry = {
   },
 
   /**
-   * Return the target actor matching the passed browsing context id. Returns null if
+   * Return the target actor matching the passed browser element id. Returns null if
    * no matching target actors could be found.
    *
-   * @param {Integer} browsingContextID
+   * @param {Integer} browserId
    * @returns {TargetActor|null}
    */
-  getTargetActor(browsingContextID) {
+  getTargetActor(browserId) {
     for (const actor of browsingContextTargetActors) {
       if (
-        actor.browsingContextID == browsingContextID ||
-        (browsingContextID === null && actor.typeName === "parentProcessTarget")
+        actor.browserId == browserId ||
+        (browserId === null && actor.typeName === "parentProcessTarget")
       ) {
         return actor;
       }
@@ -45,7 +45,6 @@ var TargetActorRegistry = {
   /**
    * Return the parent process target actor. Returns null if it couldn't be found.
    *
-   * @param {Integer} browsingContextID
    * @returns {TargetActor|null}
    */
   getParentProcessTargetActor() {

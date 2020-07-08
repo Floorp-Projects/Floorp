@@ -28,7 +28,7 @@ const DEBUG = false;
 /**
  * Helper function to know if a given WindowGlobal should be exposed via watchTargets("frame") API
  */
-function shouldNotifyWindowGlobal(windowGlobal, watchedBrowsingContextID) {
+function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   const browsingContext = windowGlobal.browsingContext;
 
   // Ignore about:blank loads, which spawn a document that never finishes loading
@@ -40,12 +40,9 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowsingContextID) {
     return false;
   }
 
-  // If we are focusing only on a sub-tree of BrowsingContext,
+  // If we are focusing only on a sub-tree of Browsing Element,
   // Ignore the out of the sub tree elements.
-  if (
-    watchedBrowsingContextID &&
-    browsingContext.top.id != watchedBrowsingContextID
-  ) {
+  if (watchedBrowserId && browsingContext.browserId != watchedBrowserId) {
     return false;
   }
 
@@ -56,7 +53,7 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowsingContextID) {
   // For now we don't expect a target to be created, but we will as TabDescriptors arise.
   if (
     !browsingContext.parent &&
-    browsingContext.id == watchedBrowsingContextID
+    browsingContext.browserId == watchedBrowserId
   ) {
     return false;
   }
@@ -95,7 +92,9 @@ function logWindowGlobal(windowGlobal, message) {
   const browsingContext = windowGlobal.browsingContext;
   dump(
     message +
-      " | BrowsingContext.id: " +
+      " | BrowsingContext.browserId: " +
+      browsingContext.browserId +
+      " id: " +
       browsingContext.id +
       " Inner Window ID: " +
       windowGlobal.innerWindowId +
@@ -143,11 +142,11 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // Create one Target actor for each prefix/client which listen to frames
     for (const [
       watcherActorID,
-      { targets, connectionPrefix, browsingContextID, resources },
+      { targets, connectionPrefix, browserId, resources },
     ] of watchedDataByWatcherActor) {
       if (
         targets.has("frame") &&
-        shouldNotifyWindowGlobal(this.manager, browsingContextID)
+        shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
         this._createTargetActor(watcherActorID, connectionPrefix, resources);
       }
@@ -325,21 +324,21 @@ class DevToolsFrameChild extends JSWindowActorChild {
   }
 
   receiveMessage(message) {
-    // All messages but "packet" one pass `browsingContextID` and are expected
+    // All messages but "packet" one pass `browserId` and are expected
     // to match shouldNotifyWindowGlobal result.
     if (message.name != "DevToolsFrameParent:packet") {
-      const { browsingContextID } = message.data;
+      const { browserId } = message.data;
       // Re-check here, just to ensure that both parent and content processes agree
       // on what should or should not be watched.
       if (
-        this.manager.browsingContext.id != browsingContextID &&
-        !shouldNotifyWindowGlobal(this.manager, browsingContextID)
+        this.manager.browsingContext.browserId != browserId &&
+        !shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
         throw new Error(
           "Mismatch between DevToolsFrameParent and DevToolsFrameChild  " +
-            (this.manager.browsingContext.id == browsingContextID
+            (this.manager.browsingContext.browserId == browserId
               ? "window global shouldn't be notified (shouldNotifyWindowGlobal mismatch)"
-              : `expected browsing context with ID ${browsingContextID}, but got ${this.manager.browsingContext.id}`)
+              : `expected browsing context with browserId ${browserId}, but got ${this.manager.browsingContext.browserId}`)
         );
       }
     }
@@ -361,28 +360,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
         return this._destroyTargetActor(watcherActorID);
       }
       case "DevToolsFrameParent:watchResources": {
-        const {
-          watcherActorID,
-          browsingContextID,
-          resourceTypes,
-        } = message.data;
-        return this._watchResources(
-          watcherActorID,
-          browsingContextID,
-          resourceTypes
-        );
+        const { watcherActorID, browserId, resourceTypes } = message.data;
+        return this._watchResources(watcherActorID, browserId, resourceTypes);
       }
       case "DevToolsFrameParent:unwatchResources": {
-        const {
-          watcherActorID,
-          browsingContextID,
-          resourceTypes,
-        } = message.data;
-        return this._unwatchResources(
-          watcherActorID,
-          browsingContextID,
-          resourceTypes
-        );
+        const { watcherActorID, browserId, resourceTypes } = message.data;
+        return this._unwatchResources(watcherActorID, browserId, resourceTypes);
       }
       case "DevToolsFrameParent:packet":
         return this.emit("packet-received", message);
@@ -393,7 +376,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  _getTargetActorForWatcherActorID(watcherActorID, browsingContextID) {
+  _getTargetActorForWatcherActorID(watcherActorID, browserId) {
     const connectionInfo = this._connections.get(watcherActorID);
     let targetActor = connectionInfo ? connectionInfo.actor : null;
     // We might not get the target actor created by DevToolsFrameChild.
@@ -403,29 +386,29 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // We will surely remove all of this. "Message manager connector", and
     // this special codepath once we are ready to make the top level target to
     // be destroyed on navigations. See bug 1602748 for more context.
-    if (!targetActor && this.manager.browsingContext.id == browsingContextID) {
-      targetActor = TargetActorRegistry.getTargetActor(browsingContextID);
+    if (!targetActor && this.manager.browsingContext.browserId == browserId) {
+      targetActor = TargetActorRegistry.getTargetActor(browserId);
     }
     return targetActor;
   }
 
-  _watchResources(watcherActorID, browsingContextID, resourceTypes) {
+  _watchResources(watcherActorID, browserId, resourceTypes) {
     const targetActor = this._getTargetActorForWatcherActorID(
       watcherActorID,
-      browsingContextID
+      browserId
     );
     if (!targetActor) {
       throw new Error(
-        `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowsingContextID:${browsingContextID}`
+        `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${browserId}`
       );
     }
     return targetActor.watchTargetResources(resourceTypes);
   }
 
-  _unwatchResources(watcherActorID, browsingContextID, resourceTypes) {
+  _unwatchResources(watcherActorID, browserId, resourceTypes) {
     const targetActor = this._getTargetActorForWatcherActorID(
       watcherActorID,
-      browsingContextID
+      browserId
     );
     // By the time we are calling unwatchResource, the target may already have been destroyed.
     if (targetActor) {

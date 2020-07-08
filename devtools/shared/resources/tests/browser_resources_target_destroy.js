@@ -47,7 +47,7 @@ add_task(async function() {
 
     // Retrieve the target actor instance and its watcher for console messages
     const targetActor = TargetActorRegistry.getTargetActor(
-      content.browsingContext.id
+      content.browsingContext.browserId
     );
     const watcher = getResourceWatcher(targetActor, TYPES.CONSOLE_MESSAGE);
 
