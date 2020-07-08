@@ -66,6 +66,8 @@ job-defaults:
             - raptor/android_hw_config.py
         extra-options:
             - --browsertime
+            # Bug 1635749, disable window recorder temporarily
+            - --browsertime-no-ffwindowrecorder
     optimization:
         push-interval-25: null
     variants:

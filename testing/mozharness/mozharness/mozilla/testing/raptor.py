@@ -91,6 +91,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
             "default": False,
             "help": argparse.SUPPRESS
         }],
+        [["--browsertime-no-ffwindowrecorder"], {
+            "dest": "browsertime_no_ffwindowrecorder",
+            "action": "store_true",
+            "default": False,
+            "help": argparse.SUPPRESS
+        }],
         [["--browsertime"], {
             "dest": "browsertime",
             "action": "store_true",
