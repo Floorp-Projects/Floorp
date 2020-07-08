@@ -3382,17 +3382,15 @@ bool CacheIRCompiler::emitGuardTagNotEqual(ValueTagOperandId lhsId,
 }
 
 bool CacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto(
-    ObjOperandId objId, bool hasExpando, uint32_t shapeWrapperOffset) {
+    ObjOperandId objId, uint32_t shapeWrapperOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
   Register obj = allocator.useRegister(masm, objId);
   StubFieldOffset shapeWrapper(shapeWrapperOffset, StubField::Type::JSObject);
 
   AutoScratchRegister scratch(allocator, masm);
-  Maybe<AutoScratchRegister> scratch2, scratch3;
-  if (hasExpando) {
-    scratch2.emplace(allocator, masm);
-    scratch3.emplace(allocator, masm);
-  }
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3405,38 +3403,52 @@ bool CacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto(
   Address expandoAddress(scratch, NativeObject::getFixedSlotOffset(
                                       GetXrayJitInfo()->holderExpandoSlot));
 
-  if (hasExpando) {
-    masm.branchTestObject(Assembler::NotEqual, holderAddress, failure->label());
-    masm.unboxObject(holderAddress, scratch);
-    masm.branchTestObject(Assembler::NotEqual, expandoAddress,
-                          failure->label());
-    masm.unboxObject(expandoAddress, scratch);
+  masm.branchTestObject(Assembler::NotEqual, holderAddress, failure->label());
+  masm.unboxObject(holderAddress, scratch);
+  masm.branchTestObject(Assembler::NotEqual, expandoAddress, failure->label());
+  masm.unboxObject(expandoAddress, scratch);
 
-    // Unwrap the expando before checking its shape.
-    masm.loadPtr(Address(scratch, ProxyObject::offsetOfReservedSlots()),
-                 scratch);
-    masm.unboxObject(
-        Address(scratch, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
-        scratch);
+  // Unwrap the expando before checking its shape.
+  masm.loadPtr(Address(scratch, ProxyObject::offsetOfReservedSlots()), scratch);
+  masm.unboxObject(
+      Address(scratch, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
+      scratch);
 
-    emitLoadStubField(shapeWrapper, scratch2.ref());
-    LoadShapeWrapperContents(masm, scratch2.ref(), scratch2.ref(),
-                             failure->label());
-    masm.branchTestObjShape(Assembler::NotEqual, scratch, *scratch2, *scratch3,
-                            scratch, failure->label());
+  emitLoadStubField(shapeWrapper, scratch2);
+  LoadShapeWrapperContents(masm, scratch2, scratch2, failure->label());
+  masm.branchTestObjShape(Assembler::NotEqual, scratch, scratch2, scratch3,
+                          scratch, failure->label());
 
-    // The reserved slots on the expando should all be in fixed slots.
-    Address protoAddress(scratch, NativeObject::getFixedSlotOffset(
-                                      GetXrayJitInfo()->expandoProtoSlot));
-    masm.branchTestUndefined(Assembler::NotEqual, protoAddress,
-                             failure->label());
-  } else {
-    Label done;
-    masm.branchTestObject(Assembler::NotEqual, holderAddress, &done);
-    masm.unboxObject(holderAddress, scratch);
-    masm.branchTestObject(Assembler::Equal, expandoAddress, failure->label());
-    masm.bind(&done);
+  // The reserved slots on the expando should all be in fixed slots.
+  Address protoAddress(scratch, NativeObject::getFixedSlotOffset(
+                                    GetXrayJitInfo()->expandoProtoSlot));
+  masm.branchTestUndefined(Assembler::NotEqual, protoAddress, failure->label());
+
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardXrayNoExpando(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
   }
+
+  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
+  Address holderAddress(scratch,
+                        sizeof(Value) * GetXrayJitInfo()->xrayHolderSlot);
+  Address expandoAddress(scratch, NativeObject::getFixedSlotOffset(
+                                      GetXrayJitInfo()->holderExpandoSlot));
+
+  Label done;
+  masm.branchTestObject(Assembler::NotEqual, holderAddress, &done);
+  masm.unboxObject(holderAddress, scratch);
+  masm.branchTestObject(Assembler::Equal, expandoAddress, failure->label());
+  masm.bind(&done);
 
   return true;
 }

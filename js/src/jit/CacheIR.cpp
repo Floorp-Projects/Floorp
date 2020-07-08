@@ -1464,14 +1464,19 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
   // (as we checked earlier), which store a pointer to their expando
   // directly. Xrays in other compartments may share their expandos with each
   // other and a VM call is needed just to find the expando.
-  writer.guardXrayExpandoShapeAndDefaultProto(objId, !!expandoShapeWrapper,
-                                              expandoShapeWrapper);
+  if (expandoShapeWrapper) {
+    writer.guardXrayExpandoShapeAndDefaultProto(objId, expandoShapeWrapper);
+  } else {
+    writer.guardXrayNoExpando(objId);
+  }
   for (size_t i = 0; i < prototypes.length(); i++) {
     JSObject* proto = prototypes[i];
     ObjOperandId protoId = writer.loadObject(proto);
-    JSObject* protoShapeWrapper = prototypeExpandoShapeWrappers[i];
-    writer.guardXrayExpandoShapeAndDefaultProto(protoId, !!protoShapeWrapper,
-                                                protoShapeWrapper);
+    if (JSObject* protoShapeWrapper = prototypeExpandoShapeWrappers[i]) {
+      writer.guardXrayExpandoShapeAndDefaultProto(protoId, protoShapeWrapper);
+    } else {
+      writer.guardXrayNoExpando(protoId);
+    }
   }
 
   writer.callNativeGetterResult(objId, &getter->as<JSFunction>());
