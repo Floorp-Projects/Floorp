@@ -541,7 +541,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ff928647b1c0"
+        "revision": "71b99e192438"
     },
     "fr": {
         "platforms": [
@@ -1141,7 +1141,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "3422e511746a"
+        "revision": "dc3464987245"
     },
     "oc": {
         "platforms": [
