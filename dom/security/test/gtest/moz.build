@@ -10,8 +10,15 @@ UNIFIED_SOURCES += [
      'TestSecureContext.cpp',
 ]
 
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+     'TestUnexpectedPrivilegedLoads.cpp',
+    ]
+
 FINAL_LIBRARY = 'xul-gtest'
 
 LOCAL_INCLUDES += [
     '/caps',
+    '/toolkit/components/telemetry/',
+    '/toolkit/components/telemetry/tests/gtest',
 ]
