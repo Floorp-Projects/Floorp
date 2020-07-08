@@ -1042,6 +1042,7 @@ pub struct Device {
 
     color_formats: TextureFormatPair<ImageFormat>,
     bgra_formats: TextureFormatPair<gl::GLuint>,
+    bgra_pixel_type: gl::GLuint,
     swizzle_settings: SwizzleSettings,
     depth_format: gl::GLuint,
 
@@ -1400,7 +1401,8 @@ impl Device {
         let avoid_tex_image = is_emulator;
         let gl_version = gl.get_string(gl::VERSION);
 
-        let supports_texture_storage = allow_texture_storage_support &&
+        // We block texture storage on mac because it doesn't support BGRA
+        let supports_texture_storage = allow_texture_storage_support && !cfg!(target_os = "macos") &&
             match gl.get_type() {
                 gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_texture_storage"),
                 // ES 3 technically always supports glTexStorage, but only check here for the extension
@@ -1415,18 +1417,20 @@ impl Device {
                 gl::GlType::Gles => true,
             };
 
-        let (color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage) = match gl.get_type() {
+        let (color_formats, bgra_formats, bgra_pixel_type, bgra8_sampling_swizzle, texture_storage_usage) = match gl.get_type() {
             // There is `glTexStorage`, use it and expect RGBA on the input.
             gl::GlType::Gl if supports_texture_storage && supports_texture_swizzle => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair { internal: gl::RGBA8, external: gl::RGBA },
+                gl::UNSIGNED_BYTE,
                 Swizzle::Bgra, // pretend it's RGBA, rely on swizzling
                 TexStorageUsage::Always
             ),
             // There is no `glTexStorage`, upload as `glTexImage` with BGRA input.
             gl::GlType::Gl => (
-                TextureFormatPair { internal: ImageFormat::RGBA8, external: ImageFormat::BGRA8 },
+                TextureFormatPair { internal: ImageFormat::BGRA8, external: ImageFormat::BGRA8 },
                 TextureFormatPair { internal: gl::RGBA, external: gl::BGRA },
+                gl::UNSIGNED_INT_8_8_8_8_REV,
                 Swizzle::Rgba, // converted on uploads by the driver, no swizzling needed
                 TexStorageUsage::Never
             ),
@@ -1434,6 +1438,7 @@ impl Device {
             gl::GlType::Gles if supports_gles_bgra && supports_texture_storage => (
                 TextureFormatPair::from(ImageFormat::BGRA8),
                 TextureFormatPair { internal: gl::BGRA8_EXT, external: gl::BGRA_EXT },
+                gl::UNSIGNED_BYTE,
                 Swizzle::Rgba, // no conversion needed
                 TexStorageUsage::Always,
             ),
@@ -1444,6 +1449,7 @@ impl Device {
             gl::GlType::Gles if supports_gles_bgra && !avoid_tex_image => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair::from(gl::BGRA_EXT),
+                gl::UNSIGNED_BYTE,
                 Swizzle::Rgba, // no conversion needed
                 TexStorageUsage::NonBGRA8,
             ),
@@ -1452,6 +1458,7 @@ impl Device {
             gl::GlType::Gles if supports_texture_swizzle => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair { internal: gl::RGBA8, external: gl::RGBA },
+                gl::UNSIGNED_BYTE,
                 Swizzle::Bgra, // pretend it's RGBA, rely on swizzling
                 TexStorageUsage::Always,
             ),
@@ -1459,6 +1466,7 @@ impl Device {
             gl::GlType::Gles => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair { internal: gl::RGBA8, external: gl::BGRA },
+                gl::UNSIGNED_BYTE,
                 Swizzle::Rgba,
                 TexStorageUsage::Always,
             ),
@@ -1517,7 +1525,9 @@ impl Device {
         // from GL_TEXTURE_EXTERNAL_OES before binding another to GL_TEXTURE_2D. See bug 1636085.
         let requires_texture_external_unbind = is_emulator;
 
-        let is_amd_macos = cfg!(target_os = "macos") && renderer_name.starts_with("AMD");
+        let is_macos = cfg!(target_os = "macos");
+             //  && renderer_name.starts_with("AMD");
+             //  (XXX: we apply this restriction to all GPUs to handle switching)
 
         // On certain GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data is a multiple of a certain value.
@@ -1529,7 +1539,7 @@ impl Device {
         // The default value should be 4 bytes.
         let optimal_pbo_stride = if is_adreno {
             StrideAlignment::Pixels(NonZeroUsize::new(64).unwrap())
-        } else if is_amd_macos {
+        } else if is_macos {
             StrideAlignment::Bytes(NonZeroUsize::new(256).unwrap())
         } else {
             StrideAlignment::Bytes(NonZeroUsize::new(4).unwrap())
@@ -1537,7 +1547,7 @@ impl Device {
 
         // On AMD Macs there is a driver bug which causes some texture uploads
         // from a non-zero offset within a PBO to fail. See bug 1603783.
-        let supports_nonzero_pbo_offsets = !is_amd_macos;
+        let supports_nonzero_pbo_offsets = !is_macos;
 
         Device {
             gl,
@@ -1563,6 +1573,7 @@ impl Device {
 
             color_formats,
             bgra_formats,
+            bgra_pixel_type,
             swizzle_settings: SwizzleSettings {
                 bgra8_sampling_swizzle,
             },
@@ -3690,7 +3701,7 @@ impl Device {
                     internal: self.bgra_formats.internal,
                     external: self.bgra_formats.external,
                     read: gl::BGRA,
-                    pixel_type: gl::UNSIGNED_BYTE,
+                    pixel_type: self.bgra_pixel_type,
                 }
             },
             ImageFormat::RGBA8 => {
@@ -3976,7 +3987,7 @@ impl<'a> UploadTarget<'a> {
         let (gl_format, bpp, data_type) = match format {
             ImageFormat::R8 => (gl::RED, 1, gl::UNSIGNED_BYTE),
             ImageFormat::R16 => (gl::RED, 2, gl::UNSIGNED_SHORT),
-            ImageFormat::BGRA8 => (self.device.bgra_formats.external, 4, gl::UNSIGNED_BYTE),
+            ImageFormat::BGRA8 => (self.device.bgra_formats.external, 4, self.device.bgra_pixel_type),
             ImageFormat::RGBA8 => (gl::RGBA, 4, gl::UNSIGNED_BYTE),
             ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
             ImageFormat::RG16 => (gl::RG, 4, gl::UNSIGNED_SHORT),
