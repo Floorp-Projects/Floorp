@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError module -- class-fields-private is not supported
+// |reftest| error:SyntaxError module
 // This file was procedurally generated from the following sources:
 // - src/invalid-private-names/call-expression-this.case
 // - src/invalid-private-names/default/top-level-modulebody.template

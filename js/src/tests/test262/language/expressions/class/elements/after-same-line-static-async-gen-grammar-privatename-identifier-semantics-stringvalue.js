@@ -1,4 +1,4 @@
-// |reftest| skip async -- class-fields-private is not supported
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-privatename-identifier-semantics-stringvalue.case
 // - src/class-elements/productions/cls-expr-after-same-line-static-async-gen.template

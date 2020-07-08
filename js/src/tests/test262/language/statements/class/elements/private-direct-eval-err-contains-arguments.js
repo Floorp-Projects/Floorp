@@ -1,4 +1,3 @@
-// |reftest| skip -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/eval-err-contains-arguments.case
 // - src/class-elements/initializer-eval-arguments/cls-decl-private-fields-eval.template

@@ -1,4 +1,3 @@
-// |reftest| skip -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-privatenames-multi-line.case
 // - src/class-elements/syntax/valid/cls-decl-elements-valid-syntax.template

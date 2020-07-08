@@ -1,4 +1,3 @@
-// |reftest| skip -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-field-on-nested-class.case
 // - src/class-elements/default/cls-decl.template

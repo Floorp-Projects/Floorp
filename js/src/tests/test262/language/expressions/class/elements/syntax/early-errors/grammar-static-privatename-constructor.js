@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-static-fields-private is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-static-privatename-constructor.case
 // - src/class-elements/syntax/invalid/cls-expr-elements-invalid-syntax.template

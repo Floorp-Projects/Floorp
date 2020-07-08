@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError module -- class-static-fields-private is not supported
+// |reftest| error:SyntaxError module
 // Copyright (C) 2019 Caio Lima (Igalia SL). All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

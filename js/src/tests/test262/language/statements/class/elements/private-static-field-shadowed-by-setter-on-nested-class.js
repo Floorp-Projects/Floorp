@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-fields-private,class-methods-private is not supported
+// |reftest| skip -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-static-field-shadowed-by-setter-on-nested-class.case
 // - src/class-elements/default/cls-decl.template
