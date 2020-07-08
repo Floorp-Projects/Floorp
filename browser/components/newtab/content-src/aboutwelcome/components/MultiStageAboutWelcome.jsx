@@ -198,26 +198,41 @@ export class WelcomeScreen extends React.PureComponent {
     switch (this.props.content.tiles.type) {
       case "topsites":
         return this.props.topSites ? (
-          <div className="tiles-topsites-section">
-            {this.props.topSites.slice(0, 5).map(({ icon, label }) => (
-              <div className="site" key={icon + label}>
-                <div
-                  className="icon"
-                  style={
-                    icon
-                      ? {
-                          backgroundColor: "transparent",
-                          backgroundImage: `url(${icon})`,
-                        }
-                      : {}
-                  }
-                >
-                  {icon ? "" : label[0].toUpperCase()}
-                </div>
-                {label && <div className="host">{label}</div>}
+          <Localized
+            text={
+              typeof this.props.content.tiles.tooltip === "object"
+                ? this.props.content.tiles.tooltip
+                : {}
+            }
+          >
+            <div
+              className={`tiles-container ${
+                this.props.content.tiles.tooltip ? "info" : ""
+              }`}
+              title={this.props.content.tiles.tooltip}
+            >
+              <div className="tiles-topsites-section">
+                {this.props.topSites.slice(0, 5).map(({ icon, label }) => (
+                  <div className="site" key={icon + label}>
+                    <div
+                      className="icon"
+                      style={
+                        icon
+                          ? {
+                              backgroundColor: "transparent",
+                              backgroundImage: `url(${icon})`,
+                            }
+                          : {}
+                      }
+                    >
+                      {icon ? "" : label[0].toUpperCase()}
+                    </div>
+                    {label && <div className="host">{label}</div>}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          </Localized>
         ) : null;
       case "theme":
         return this.props.content.tiles.data ? (
