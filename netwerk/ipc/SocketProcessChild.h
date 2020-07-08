@@ -126,6 +126,8 @@ class SocketProcessChild final
   virtual already_AddRefed<PRemoteLazyInputStreamChild>
   AllocPRemoteLazyInputStreamChild(const nsID& aID, const uint64_t& aSize);
 
+  mozilla::ipc::IPCResult RecvGetSocketData(GetSocketDataResolver&& aResolve);
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();

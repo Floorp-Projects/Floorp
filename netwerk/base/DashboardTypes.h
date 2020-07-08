@@ -5,6 +5,7 @@
 #ifndef mozilla_net_DashboardTypes_h_
 #define mozilla_net_DashboardTypes_h_
 
+#include "ipc/IPCMessageUtils.h"
 #include "nsHttp.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -20,6 +21,11 @@ struct SocketInfo {
   bool active;
   bool tcp;
 };
+
+inline bool operator==(const SocketInfo& a, const SocketInfo& b) {
+  return a.host == b.host && a.sent == b.sent && a.received == b.received &&
+         a.port == b.port && a.active == b.active && a.tcp == b.tcp;
+}
 
 struct HalfOpenSockets {
   bool speculative;
@@ -56,5 +62,33 @@ struct HttpRetParams {
 
 }  // namespace net
 }  // namespace mozilla
+
+namespace IPC {
+
+template <>
+struct ParamTraits<mozilla::net::SocketInfo> {
+  typedef mozilla::net::SocketInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.host);
+    WriteParam(aMsg, aParam.sent);
+    WriteParam(aMsg, aParam.received);
+    WriteParam(aMsg, aParam.port);
+    WriteParam(aMsg, aParam.active);
+    WriteParam(aMsg, aParam.tcp);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->host) &&
+           ReadParam(aMsg, aIter, &aResult->sent) &&
+           ReadParam(aMsg, aIter, &aResult->received) &&
+           ReadParam(aMsg, aIter, &aResult->port) &&
+           ReadParam(aMsg, aIter, &aResult->active) &&
+           ReadParam(aMsg, aIter, &aResult->tcp);
+  }
+};
+
+}  // namespace IPC
 
 #endif  // mozilla_net_DashboardTypes_h_
