@@ -166,9 +166,13 @@ UNIFIED_SOURCES += [
     'Utf8.cpp',
 ]
 
-if CONFIG['MOZ_BUILD_APP'] not in ('memory', 'tools/crashreporter', 'tools/update-packaging'):
-    # Building MFBT tests adds a large overhead when building
-    # tools/crashreporter.
+if CONFIG['MOZ_BUILD_APP'] not in (
+        'memory',
+        'tools/crashreporter',
+        'tools/update-packaging',
+        'tools/update-programs',
+    ):
+    # Building MFBT tests adds a large overhead when building.
     TEST_DIRS += ['tests']
 
 DEFINES['IMPL_MFBT'] = True
