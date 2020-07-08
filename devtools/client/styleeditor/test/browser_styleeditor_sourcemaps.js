@@ -127,7 +127,7 @@ function testEditor(editor, possibleNames) {
 /* Helpers */
 
 function togglePref(UI) {
-  const editorsPromise = UI.once("stylesheets-refreshed");
+  const editorsPromise = UI.once("stylesheets-reset");
   const selectedPromise = UI.once("editor-selected");
 
   Services.prefs.setBoolPref(PREF, false);

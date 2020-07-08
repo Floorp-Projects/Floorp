@@ -651,17 +651,22 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
     this.parentActor = targetActor;
 
-    this._onApplicableStateChanged = this._onApplicableStateChanged.bind(this);
     this._onNewStyleSheetActor = this._onNewStyleSheetActor.bind(this);
+    this._onSheetAdded = this._onSheetAdded.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
     this._transitionSheetLoaded = false;
 
     this.parentActor.on("stylesheet-added", this._onNewStyleSheetActor);
     this.parentActor.on("window-ready", this._onWindowReady);
 
+    // We listen for StyleSheetApplicableStateChanged rather than
+    // StyleSheetAdded, because the latter will be sent before the
+    // rules are ready.  Using the former (with a check to ensure that
+    // the sheet is enabled) ensures that the sheet is ready before we
+    // try to make an actor for it.
     this.parentActor.chromeEventHandler.addEventListener(
       "StyleSheetApplicableStateChanged",
-      this._onApplicableStateChanged,
+      this._onSheetAdded,
       true
     );
 
@@ -683,7 +688,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
     this.parentActor.chromeEventHandler.removeEventListener(
       "StyleSheetApplicableStateChanged",
-      this._onApplicableStateChanged,
+      this._onSheetAdded,
       true
     );
 
@@ -740,7 +745,10 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     // Special case about:PreferenceStyleSheet, as it is generated on the
     // fly and the URI is not registered with the about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-    if (sheet.href?.toLowerCase() === "about:preferencestylesheet") {
+    if (
+      sheet.href &&
+      sheet.href.toLowerCase() == "about:preferencestylesheet"
+    ) {
       return false;
     }
 
@@ -748,32 +756,18 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   /**
-   * Event handler that is called when the state of applicable of style sheet is changed.
+   * Event handler that is called when a new style sheet is added to
+   * a document.  In particular,  StyleSheetApplicableStateChanged is
+   * listened for, because StyleSheetAdded is sent too early, before
+   * the rules are ready.
    *
-   * For now, StyleSheetApplicableStateChanged event will be called at following timings.
-   * - Append <link> of stylesheet to document
-   * - Append <style> to document
-   * - Change disable attribute of stylesheet object
-   * - Change disable attribute of <link> to false
-   * When appending <link>, <style> or changing `disable` attribute to false, `applicable`
-   * is passed as true. The other hand, when changing `disable` to true, this will be
-   * false.
-   * NOTE: For now, StyleSheetApplicableStateChanged will not be called when removing the
-   *       link and style element.
-   *
-   * @param {StyleSheetApplicableStateChanged}
+   * @param {Event} evt
    *        The triggering event.
    */
-  _onApplicableStateChanged: function({ applicable, stylesheet }) {
-    if (
-      // Have interest in applicable stylesheet only.
-      applicable &&
-      // No ownerNode means that this stylesheet is *not* associated to a DOM Element.
-      stylesheet.ownerNode &&
-      this._shouldListSheet(stylesheet) &&
-      !this._haveAncestorWithSameURL(stylesheet)
-    ) {
-      this.parentActor.createStyleSheetActor(stylesheet);
+  _onSheetAdded: function(evt) {
+    const sheet = evt.stylesheet;
+    if (this._shouldListSheet(sheet) && !this._haveAncestorWithSameURL(sheet)) {
+      this.parentActor.createStyleSheetActor(sheet);
     }
   },
 
