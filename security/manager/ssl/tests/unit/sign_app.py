@@ -37,12 +37,12 @@ def coseAlgorithmToPykeyHash(algorithm):
     and returns the corresponding pykey.HASH_* identifier."""
     if algorithm == ES256:
         return pykey.HASH_SHA256
-    elif algorithm == ES384:
+    if algorithm == ES384:
         return pykey.HASH_SHA384
-    elif algorithm == ES512:
+    if algorithm == ES512:
         return pykey.HASH_SHA512
-    else:
-        raise UnknownCOSEAlgorithmError(algorithm)
+    raise UnknownCOSEAlgorithmError(algorithm)
+
 
 # COSE_Signature = [
 #     protected : serialized_map,

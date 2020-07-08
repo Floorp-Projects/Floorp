@@ -107,8 +107,7 @@ def get_trailing_blank_line_state(depname):
 
     if not lines[-1].strip():
         return "has blank line"
-    else:
-        return "no blank line"
+    return "no blank line"
 
 
 def update_nspr_or_nss(tag, depfile, destination, hgpath):
