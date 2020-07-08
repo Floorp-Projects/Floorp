@@ -27,7 +27,6 @@ add_task(async function testBasicNavigation({ client }) {
 
   await loadEventFired;
   const currentFrame = await getTopFrame(client);
-  is(4, "4", "identical");
   is(frameId, currentFrame.id, "Page.navigate returns expected frameId");
 
   is(

@@ -35,7 +35,7 @@ add_task(async function awaitPromiseResolve({ client }) {
   });
 
   is(result.type, "number", "The type is correct");
-  is(result.subtype, null, "The subtype is null for numbers");
+  is(result.subtype, undefined, "The subtype is undefined for numbers");
   is(result.value, 42, "The result is the promise's resolution");
 });
 
@@ -66,7 +66,7 @@ add_task(async function awaitPromiseDelayedResolve({ client }) {
     awaitPromise: true,
   });
   is(result.type, "number", "The type is correct");
-  is(result.subtype, null, "The subtype is null for numbers");
+  is(result.subtype, undefined, "The subtype is undefined for numbers");
   is(result.value, 42, "The result is the promise's resolution");
 });
 
@@ -193,8 +193,8 @@ add_task(async function returnAsObjectTypes({ client }) {
   await enableRuntime(client);
 
   const expressions = [
-    { expression: "({foo:true})", type: "object", subtype: null },
-    { expression: "Symbol('foo')", type: "symbol", subtype: null },
+    { expression: "({foo:true})", type: "object", subtype: undefined },
+    { expression: "Symbol('foo')", type: "symbol", subtype: undefined },
     { expression: "new Promise(()=>{})", type: "object", subtype: "promise" },
     { expression: "new Int8Array(8)", type: "object", subtype: "typedarray" },
     { expression: "new WeakMap()", type: "object", subtype: "weakmap" },

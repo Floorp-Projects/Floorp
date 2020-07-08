@@ -31,7 +31,7 @@ async function testObjectRelease({ Runtime }, contextId) {
     contextId,
     expression: "({ foo: 42 })",
   });
-  is(result.subtype, null, "JS Object have no subtype");
+  is(result.subtype, undefined, "JS Object has no subtype");
   is(result.type, "object", "The type is correct");
   ok(!!result.objectId, "Got an object id");
 

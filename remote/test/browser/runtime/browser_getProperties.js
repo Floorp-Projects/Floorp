@@ -34,7 +34,7 @@ async function testGetOwnSimpleProperties({ Runtime }, contextId) {
     contextId,
     expression: "({ bool: true, fun() {}, int: 1, object: {}, string: 'foo' })",
   });
-  is(result.subtype, null, "JS Object have no subtype");
+  is(result.subtype, undefined, "JS Object has no subtype");
   is(result.type, "object", "The type is correct");
   ok(!!result.objectId, "Got an object id");
 
@@ -94,7 +94,7 @@ async function testGetPrototypeProperties({ Runtime }, contextId) {
     contextId,
     expression: "({ foo: 42 })",
   });
-  is(result.subtype, null, "JS Object have no subtype");
+  is(result.subtype, undefined, "JS Object has no subtype");
   is(result.type, "object", "The type is correct");
   ok(!!result.objectId, "Got an object id");
 
@@ -121,7 +121,7 @@ async function testGetGetterSetterProperties({ Runtime }, contextId) {
     expression:
       "({ get prop() { return this.x; }, set prop(v) { this.x = v; } })",
   });
-  is(result.subtype, null, "JS Object have no subtype");
+  is(result.subtype, undefined, "JS Object has no subtype");
   is(result.type, "object", "The type is correct");
   ok(!!result.objectId, "Got an object id");
 
@@ -156,7 +156,7 @@ async function testGetGetterSetterProperties({ Runtime }, contextId) {
     ],
   });
   is(result3.type, "number", "The type is correct");
-  is(result3.subtype, null, "The subtype is null for numbers");
+  is(result3.subtype, undefined, "The subtype is undefined for numbers");
   is(result3.value, 42, "The getter returned the value set by the setter");
 }
 
@@ -165,7 +165,7 @@ async function testGetCustomProperty({ Runtime }, contextId) {
     contextId,
     expression: `const obj = {}; Object.defineProperty(obj, "prop", { value: 42 }); obj`,
   });
-  is(result.subtype, null, "JS Object have no subtype");
+  is(result.subtype, undefined, "JS Object has no subtype");
   is(result.type, "object", "The type is correct");
   ok(!!result.objectId, "Got an object id");
 

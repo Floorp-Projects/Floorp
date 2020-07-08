@@ -9,8 +9,8 @@ add_task(async function returnAsObjectTypes({ client }) {
   const { id: executionContextId } = await enableRuntime(client);
 
   const expressions = [
-    { expression: "({foo:true})", type: "object", subtype: null },
-    { expression: "Symbol('foo')", type: "symbol", subtype: null },
+    { expression: "({foo:true})", type: "object", subtype: undefined },
+    { expression: "Symbol('foo')", type: "symbol", subtype: undefined },
     { expression: "new Promise(()=>{})", type: "object", subtype: "promise" },
     { expression: "new Int8Array(8)", type: "object", subtype: "typedarray" },
     { expression: "new WeakMap()", type: "object", subtype: "weakmap" },
