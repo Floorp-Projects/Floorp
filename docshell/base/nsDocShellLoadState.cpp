@@ -212,7 +212,8 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     }
   }
 
-  nsCOMPtr<nsIURIFixupInfo> fixupInfo;
+  nsAutoString searchProvider, keyword;
+  bool didFixup = false;
   if (fixup) {
     uint32_t fixupFlags;
     if (NS_FAILED(sURIFixup->WebNavigationFlagsToFixupFlags(
@@ -230,41 +231,47 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
       fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
     }
 
-    nsCOMPtr<nsIInputStream> fixupStream;
+    RefPtr<nsIInputStream> fixupStream;
     if (XRE_IsContentProcess()) {
       dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
       if (contentChild) {
-        RefPtr<nsIInputStream> postData;
-        RefPtr<nsIURI> fixedURI, preferredURI;
-        nsAutoString providerName;
-        nsAutoCString stringURI(uriString);
+        RefPtr<nsIURI> preferredURI;
         // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
-        if (contentChild->SendGetFixupURIInfo(stringURI, fixupFlags,
-                                              &providerName, &postData,
-                                              &fixedURI, &preferredURI)) {
+        if (contentChild->SendGetFixupURIInfo(
+                PromiseFlatString(aURI), fixupFlags,
+                loadFlags &
+                    nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+                &searchProvider, &fixupStream, &preferredURI)) {
           if (preferredURI) {
-            fixupInfo =
-                do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
-            if (fixupInfo) {
-              fixupInfo->SetKeywordProviderName(providerName);
-              fixupStream = postData;
-              fixupInfo->SetFixedURI(fixedURI);
-              fixupInfo->SetPreferredURI(preferredURI);
-            }
+            didFixup = true;
+            rv = NS_OK;
+            uri = preferredURI;
           }
         }
       }
     } else {
+      nsCOMPtr<nsIURIFixupInfo> fixupInfo;
       sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
                                  getter_AddRefs(fixupStream),
                                  getter_AddRefs(fixupInfo));
-    }
+      if (fixupInfo) {
+        // We could fix the uri, clear NS_ERROR_MALFORMED_URI.
+        rv = NS_OK;
+        fixupInfo->GetPreferredURI(getter_AddRefs(uri));
+        fixupInfo->SetConsumer(aBrowsingContext);
+        fixupInfo->GetKeywordProviderName(searchProvider);
+        fixupInfo->GetKeywordAsSent(keyword);
+        didFixup = true;
 
-    if (fixupInfo) {
-      // We could fix the uri, clear NS_ERROR_MALFORMED_URI.
-      rv = NS_OK;
-      fixupInfo->GetPreferredURI(getter_AddRefs(uri));
-      fixupInfo->SetConsumer(aBrowsingContext);
+        if (fixupInfo &&
+            loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+          nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+          if (serv) {
+            serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
+                                  PromiseFlatString(aURI).get());
+          }
+        }
+      }
     }
 
     if (fixupStream) {
@@ -272,15 +279,6 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
       // and changed the URI, in which case we should override the
       // passed-in post data.
       postData = fixupStream;
-    }
-
-    if (fixupInfo &&
-        loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-      nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-      if (serv) {
-        serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
-                              PromiseFlatString(aURI).get());
-      }
     }
   }
 
@@ -348,10 +346,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     loadState->SetCancelContentJSEpoch(aLoadURIOptions.mCancelContentJSEpoch);
   }
 
-  if (fixupInfo) {
-    nsAutoString searchProvider, keyword;
-    fixupInfo->GetKeywordProviderName(searchProvider);
-    fixupInfo->GetKeywordAsSent(keyword);
+  if (didFixup) {
     nsDocShell::MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
   }
 
