@@ -5154,9 +5154,10 @@ static void AddMirrorCallback(T* aMirror, const nsACString& aPref) {
   Internals::RegisterCallback<T>(aMirror, aPref);
 }
 
+// Don't inline because it explodes compile times.
 template <typename T>
-static void AddMirror(T* aMirror, const nsACString& aPref,
-                      StripAtomic<T> aDefault) {
+static MOZ_NEVER_INLINE void AddMirror(T* aMirror, const nsACString& aPref,
+                                       StripAtomic<T> aDefault) {
   *aMirror = Internals::GetPref(PromiseFlatCString(aPref).get(), aDefault);
   AddMirrorCallback(aMirror, aPref);
 }
