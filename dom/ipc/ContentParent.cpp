@@ -6855,15 +6855,11 @@ NS_IMETHODIMP ContentParent::GetOsPid(int32_t* aOut) {
 IPCResult ContentParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                         const ClonedMessageData& aData,
                                         const ClonedMessageData& aStack) {
-  RefPtr<JSProcessActorParent> actor;
-  GetActor(aMeta.actorName(), getter_AddRefs(actor));
-  if (actor) {
-    StructuredCloneData data;
-    data.BorrowFromClonedMessageDataForParent(aData);
-    StructuredCloneData stack;
-    stack.BorrowFromClonedMessageDataForParent(aStack);
-    actor->ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
-  }
+  StructuredCloneData data;
+  data.BorrowFromClonedMessageDataForParent(aData);
+  StructuredCloneData stack;
+  stack.BorrowFromClonedMessageDataForParent(aStack);
+  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();
 }
 

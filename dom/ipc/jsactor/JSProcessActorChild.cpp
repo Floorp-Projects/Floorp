@@ -28,39 +28,6 @@ JSObject* JSProcessActorChild::WrapObject(JSContext* aCx,
   return JSProcessActorChild_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-namespace {
-
-class AsyncMessageToProcessParent : public Runnable {
- public:
-  AsyncMessageToProcessParent(const JSActorMessageMeta& aMetadata,
-                              ipc::StructuredCloneData&& aData,
-                              ipc::StructuredCloneData&& aStack)
-      : mozilla::Runnable("InProcessParent::HandleAsyncMessage"),
-        mMetadata(aMetadata),
-        mData(std::move(aData)),
-        mStack(std::move(aStack)) {}
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
-    if (auto* parent = InProcessParent::Singleton()) {
-      RefPtr<JSProcessActorParent> actor;
-      parent->GetActor(mMetadata.actorName(), getter_AddRefs(actor));
-      if (actor) {
-        actor->ReceiveRawMessage(mMetadata, std::move(mData),
-                                 std::move(mStack));
-      }
-    }
-    return NS_OK;
-  }
-
- private:
-  JSActorMessageMeta mMetadata;
-  ipc::StructuredCloneData mData;
-  ipc::StructuredCloneData mStack;
-};
-
-}  // namespace
-
 void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ipc::StructuredCloneData&& aStack,
@@ -83,9 +50,9 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
   // and can dispatch the message directly to the event loop.
   ContentChild* contentChild = mManager->AsContentChild();
   if (!contentChild) {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-    NS_DispatchToMainThread(MakeAndAddRef<AsyncMessageToProcessParent>(
-        aMeta, std::move(aData), std::move(aStack)));
+    SendRawMessageInProcess(aMeta, std::move(aData), std::move(aStack), []() {
+      return do_AddRef(InProcessParent::Singleton());
+    });
     return;
   }
 

@@ -89,10 +89,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   // |nullptr| if the actor has been torn down, or is in-process.
   already_AddRefed<BrowserChild> GetBrowserChild();
 
-  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                         ipc::StructuredCloneData&& aData,
-                         ipc::StructuredCloneData&& aStack);
-
   // Get a JS actor object by name.
   already_AddRefed<JSWindowActorChild> GetActor(const nsACString& aName,
                                                 ErrorResult& aRv);
