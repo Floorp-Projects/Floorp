@@ -380,6 +380,20 @@ body {
     }
   }
 
+  .tiles-container {
+    margin: 10px auto;
+
+    &.info {
+      padding: 6px 12px 12px;
+
+      &:hover,
+      &:focus {
+        background-color: rgba(217, 217, 227, 0.3);
+        border-radius: 4px;
+      }
+    }
+  }
+
   .tiles-topsites-section {
     $host-size: 12px;
     $tile-size: 96px;
@@ -387,7 +401,6 @@ body {
     display: grid;
     grid-gap: $tile-size / 4;
     grid-template-columns: repeat(5, auto);
-    margin: 10px auto;
 
     @media (max-width: $break-point-medium) {
       grid-template-columns: repeat(3, auto);
