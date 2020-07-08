@@ -70,7 +70,8 @@ void JSActor::AfterDestroy() {
   nsRefPtrHashtable<nsUint64HashKey, Promise> pendingQueries;
   mPendingQueries.SwapElements(pendingQueries);
   for (auto& entry : pendingQueries) {
-    entry.GetData()->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+    entry.GetData()->MaybeRejectWithAbortError(nsPrintfCString(
+        "Actor '%s' destroyed before query was resolved", mName.get()));
   }
 
   InvokeCallback(CallbackFunction::DidDestroy);
@@ -192,7 +193,9 @@ void JSActor::SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
   ipc::StructuredCloneData data;
   if (!nsFrameMessageManager::GetParamsForMessage(
           aCx, aObj, JS::UndefinedHandleValue, data)) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    aRv.ThrowDataCloneError(nsPrintfCString(
+        "Failed to serialize message '%s::%s'",
+        NS_LossyConvertUTF16toASCII(aMessageName).get(), mName.get()));
     return;
   }
 
@@ -211,13 +214,15 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
   ipc::StructuredCloneData data;
   if (!nsFrameMessageManager::GetParamsForMessage(
           aCx, aObj, JS::UndefinedHandleValue, data)) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    aRv.ThrowDataCloneError(nsPrintfCString(
+        "Failed to serialize message '%s::%s'",
+        NS_LossyConvertUTF16toASCII(aMessageName).get(), mName.get()));
     return nullptr;
   }
 
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
   if (NS_WARN_IF(!global)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.ThrowUnknownError("Unable to get current native global");
     return nullptr;
   }
 
@@ -295,21 +300,21 @@ void JSActor::ReceiveQueryReply(JSContext* aCx,
                                 const JSActorMessageMeta& aMetadata,
                                 JS::Handle<JS::Value> aData, ErrorResult& aRv) {
   if (NS_WARN_IF(aMetadata.actorName() != mName)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.ThrowUnknownError("Mismatched actor name for query reply");
     return;
   }
 
   RefPtr<Promise> promise;
   if (NS_WARN_IF(!mPendingQueries.Remove(aMetadata.queryId(),
                                          getter_AddRefs(promise)))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowUnknownError("Received reply for non-pending query");
     return;
   }
 
   JSAutoRealm ar(aCx, promise->PromiseObj());
   JS::RootedValue data(aCx, aData);
   if (NS_WARN_IF(!JS_WrapValue(aCx, &data))) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
