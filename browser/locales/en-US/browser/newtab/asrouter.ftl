@@ -271,3 +271,9 @@ cfr-doorhanger-doh-primary-button = OK, Got it
   .accesskey = O
 cfr-doorhanger-doh-secondary-button = Disable
   .accesskey = D
+
+## What's new: Cookies message
+
+cfr-whatsnew-clear-cookies-header = Automatic protection from sneaky tracking tactics
+cfr-whatsnew-clear-cookies-body = Some trackers redirect you to other websites that secretly set cookies. { -brand-short-name } now automatically clears those cookies so you can’t be followed.
+cfr-whatsnew-clear-cookies-image-alt = Cookie blocked illustration
