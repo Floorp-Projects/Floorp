@@ -319,12 +319,11 @@ void js::intl::LanguageTag::performComplexRegionMappings() {
 
         first_case = True
         for replacement_region in replacement_regions:
-            replacement_language_script = sorted(((language, script)
-                                                  for (language, script, region) in (
-                                                      non_default_replacements
-                                                  )
-                                                  if region == replacement_region),
-                                                 key=itemgetter(0))
+            replacement_language_script = sorted((language, script)
+                                                 for (language, script, region) in (
+                                                     non_default_replacements
+                                                 )
+                                                 if region == replacement_region)
 
             if_kind = u"if" if first_case else u"else if"
             first_case = False
