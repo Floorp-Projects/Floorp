@@ -1236,10 +1236,7 @@ bool gfxPlatform::CanMigrateMacGPUs() {
   bool forceDisable = pMigration == 0;
   bool forceEnable = pMigration == 2;
 
-  // Don't use migration with webrender (too buggy for nightly) - Bug 1600178
-  bool blocked = UseWebRender();
-
-  return forceEnable || (!forceDisable && !blocked);
+  return forceEnable || !forceDisable;
 }
 
 static bool sLayersIPCIsUp = false;
