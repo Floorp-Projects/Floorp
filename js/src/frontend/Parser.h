@@ -573,13 +573,15 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   FunctionBox* newFunctionBox(FunctionNodeType funNode, JSFunction* fun,
                               uint32_t toStringStart, Directives directives,
                               GeneratorKind generatorKind,
-                              FunctionAsyncKind asyncKind);
+                              FunctionAsyncKind asyncKind,
+                              TopLevelFunction isTopLevel);
 
   FunctionBox* newFunctionBox(FunctionNodeType funNode, HandleAtom explicitName,
                               FunctionFlags flags, uint32_t toStringStart,
                               Directives directives,
                               GeneratorKind generatorKind,
-                              FunctionAsyncKind asyncKind);
+                              FunctionAsyncKind asyncKind,
+                              TopLevelFunction isTopLevel);
 
  public:
   // ErrorReportMixin.

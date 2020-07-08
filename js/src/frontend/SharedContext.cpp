@@ -223,12 +223,14 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          SourceExtent extent, CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* atom,
-                         FunctionFlags flags, size_t index)
+                         FunctionFlags flags, size_t index,
+                         TopLevelFunction isTopLevel)
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
       traceLink_(traceListHead),
       atom_(atom),
       funcDataIndex_(index),
       flags_(flags),
+      isTopLevel_(isTopLevel),
       emitBytecode(false),
       isStandalone(false),
       wasEmitted(false),
@@ -489,6 +491,9 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
 }
 
 MutableHandle<ScriptStencil> FunctionBox::functionStencil() const {
+  if (isTopLevel_ == TopLevelFunction::Yes) {
+    return &compilationInfo_.topLevel;
+  }
   return compilationInfo_.funcData[funcDataIndex_];
 }
 
