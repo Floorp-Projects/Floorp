@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.pwa
 
+import mozilla.components.feature.pwa.ProgressiveWebAppFacts.Companion.MS_PRECISION
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -29,6 +30,11 @@ class ProgressiveWebAppFacts {
         const val BACKGROUND_TIME = "background_time"
         const val FOREGROUND_TIME = "foreground_time"
     }
+
+    companion object {
+        // We only care about millisecond precision in this context
+        internal const val MS_PRECISION = 1_000_000L
+    }
 }
 
 private fun emitPwaFact(
@@ -52,24 +58,20 @@ internal fun emitHomescreenIconTapFact() =
         ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP
     )
 
-@Suppress("MagicNumber")
 internal fun emitForegroundTimingFact(timingNs: Long) =
     emitPwaFact(
         Action.INTERACTION,
         ProgressiveWebAppFacts.Items.ENTER_FOREGROUND,
         metadata = mapOf(
-            // We only care about millisecond precision here, so convert from ns to ms before emitting.
-            ProgressiveWebAppFacts.MetadataKeys.FOREGROUND_TIME to (timingNs / 1_000_000L)
+            ProgressiveWebAppFacts.MetadataKeys.FOREGROUND_TIME to (timingNs / MS_PRECISION)
         )
     )
 
-@Suppress("MagicNumber")
 internal fun emitBackgroundTimingFact(timingNs: Long) =
     emitPwaFact(
         Action.INTERACTION,
         ProgressiveWebAppFacts.Items.ENTER_BACKGROUND,
         metadata = mapOf(
-            // We only care about millisecond precision here, so convert from ns to ms before emitting.
-            ProgressiveWebAppFacts.MetadataKeys.BACKGROUND_TIME to (timingNs / 1_000_000L)
+            ProgressiveWebAppFacts.MetadataKeys.BACKGROUND_TIME to (timingNs / MS_PRECISION)
         )
     )
