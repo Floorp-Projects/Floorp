@@ -64,6 +64,7 @@ tasks:
                   then: {$fromNow: '28 days'}
                   else: {$fromNow: '1 year'}
               trustDomain: gecko
+              treeherder_link: '[Treeherder job](https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}&selectedTaskRun=${ownTaskId})'
           in:
               taskId: {$if: 'tasks_for != "action"', then: '${ownTaskId}'}
               taskGroupId:
@@ -84,7 +85,7 @@ tasks:
                       - $if: 'tasks_for == "hg-push"'
                         then:
                             name: "Gecko Decision Task"
-                            description: 'The task that creates all of the other tasks in the task graph'
+                            description: 'The task that creates all of the other tasks in the task graph (${treeherder_link})'
                         else:
                             $if: 'tasks_for == "action"'
                             then:
@@ -92,10 +93,12 @@ tasks:
                                 description: |
                                     ${action.description}
 
+                                    ${treeherder_link}
+
                                     Action triggered by clientID `${clientId}`
                             else:
                                 name: "Decision Task for cron job ${cron.job_name}"
-                                description: 'Created by a [cron task](https://firefox-ci-tc.services.mozilla.com/tasks/${cron.task_id})'
+                                description: 'Created by a [cron task](https://firefox-ci-tc.services.mozilla.com/tasks/${cron.task_id}) (${treeherder_link})'
 
               provisionerId: "${trustDomain}-${repository.level}"
               workerType: "decision"
