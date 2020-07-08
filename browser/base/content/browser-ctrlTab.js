@@ -117,7 +117,7 @@ var tabPreviewPanelHelper = {
  * Ctrl-Tab panel
  */
 var ctrlTab = {
-  maxTabPreviews: 6,
+  maxTabPreviews: 7,
   get panel() {
     delete this.panel;
     return (this.panel = document.getElementById("ctrlTab-panel"));
