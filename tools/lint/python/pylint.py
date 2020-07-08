@@ -106,7 +106,7 @@ def lint(paths, config, **lintargs):
     # And ignore a bit more elements
     cmd_args += ["-fjson",
                  "--disable=all",
-                 "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",  # NOQA: E501
+                 "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode,no-else-return",  # NOQA: E501
                  "--disable=import-error,no-member"]
 
     base_command = cmd_args + paths
