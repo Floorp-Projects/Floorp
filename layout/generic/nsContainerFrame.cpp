@@ -3297,6 +3297,24 @@ void nsContainerFrame::ListWithMatchedRules(FILE* out,
   }
 }
 
+void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
+                                      ListFlags aFlags,
+                                      ChildListIDs aSkippedListIDs) const {
+  const nsCString nestedPfx = nsCString(aPrefix) + "  "_ns;
+
+  for (const auto& [list, listID] : ChildLists()) {
+    if (aSkippedListIDs.contains(listID)) {
+      continue;
+    }
+    fprintf_stderr(aOut, "%s%s %p <\n", aPrefix, ChildListName(listID),
+                   &GetChildList(listID));
+    for (nsIFrame* kid : list) {
+      kid->List(aOut, nestedPfx.get(), aFlags);
+    }
+    fprintf_stderr(aOut, "%s>\n", aPrefix);
+  }
+}
+
 void nsContainerFrame::ExtraContainerFrameInfo(nsACString& aTo) const {
   (void)aTo;
 }

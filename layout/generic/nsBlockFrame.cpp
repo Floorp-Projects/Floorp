@@ -521,20 +521,7 @@ void nsBlockFrame::List(FILE* out, const char* aPrefix,
   // skip the principal list - we printed the lines above
   // skip the overflow list - we printed the overflow lines above
   ChildListIDs skip = {kPrincipalList, kOverflowList};
-  for (const auto& [list, listID] : ChildLists()) {
-    if (skip.contains(listID)) {
-      continue;
-    }
-    fprintf_stderr(out, "%s%s %p <\n", pfx.get(),
-                   mozilla::layout::ChildListName(listID),
-                   &GetChildList(listID));
-    nsCString nestedPfx(pfx);
-    nestedPfx += "  ";
-    for (nsIFrame* kid : list) {
-      kid->List(out, nestedPfx.get(), aFlags);
-    }
-    fprintf_stderr(out, "%s>\n", pfx.get());
-  }
+  ListChildLists(out, pfx.get(), aFlags, skip);
 
   fprintf_stderr(out, "%s>\n", aPrefix);
 }
