@@ -11070,12 +11070,14 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
     return false;
   }
 
+  size_t numNurseryObjects = 0;
+
   IonScript* ionScript = IonScript::New(
       cx, compilationId, graph.totalSlotCount(), argumentSlots, scriptFrameSize,
       snapshots_.listSize(), snapshots_.RVATableSize(), recovers_.size(),
-      bailouts_.length(), graph.numConstants(), safepointIndices_.length(),
-      osiIndices_.length(), icList_.length(), runtimeData_.length(),
-      safepoints_.size(), optimizationLevel);
+      bailouts_.length(), graph.numConstants(), numNurseryObjects,
+      safepointIndices_.length(), osiIndices_.length(), icList_.length(),
+      runtimeData_.length(), safepoints_.size(), optimizationLevel);
   if (!ionScript) {
     return false;
   }
