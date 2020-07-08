@@ -22,6 +22,8 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 EXPORTS += [
     'nsSocketProviderService.h',
 ]
