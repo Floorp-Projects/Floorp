@@ -403,14 +403,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSetClientInfo(
 IPCResult WindowGlobalParent::RecvDestroy() {
   // Make a copy so that we can avoid potential iterator invalidation when
   // calling the user-provided Destroy() methods.
-  nsTArray<RefPtr<JSWindowActorParent>> windowActors(mWindowActors.Count());
-  for (auto iter = mWindowActors.Iter(); !iter.Done(); iter.Next()) {
-    windowActors.AppendElement(iter.UserData());
-  }
-
-  for (auto& windowActor : windowActors) {
-    windowActor->StartDestroy();
-  }
+  JSActorWillDestroy();
 
   if (CanSend()) {
     RefPtr<BrowserParent> browserParent = GetBrowserParent();
@@ -492,33 +485,24 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     const nsACString& aName, ErrorResult& aRv) {
-  if (!CanSend()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
+  return JSActorManager::GetActor(aName, aRv).downcast<JSWindowActorParent>();
+}
 
-  // Check if this actor has already been created, and return it if it has.
-  if (mWindowActors.Contains(aName)) {
-    return do_AddRef(mWindowActors.GetWeak(aName));
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ConstructActor(aName, &obj, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Unwrap our actor to a JSWindowActorParent object.
+already_AddRefed<JSActor> WindowGlobalParent::InitJSActor(
+    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
   RefPtr<JSWindowActorParent> actor;
-  if (NS_FAILED(UNWRAP_OBJECT(JSWindowActorParent, &obj, actor))) {
-    return nullptr;
+  if (aMaybeActor.get()) {
+    aRv = UNWRAP_OBJECT(JSWindowActorParent, aMaybeActor.get(), actor);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  } else {
+    actor = new JSWindowActorParent();
   }
 
   MOZ_RELEASE_ASSERT(!actor->GetManager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
-  mWindowActors.Put(aName, RefPtr{actor});
   return actor.forget();
 }
 
@@ -799,13 +783,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   // Destroy our JSWindowActors, and reject any pending queries.
-  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorParent> windowActors;
-  mWindowActors.SwapElements(windowActors);
-  for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->RejectPendingQueries();
-    iter.Data()->AfterDestroy();
-  }
-  windowActors.Clear();
+  JSActorDidDestroy();
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
@@ -817,9 +795,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-WindowGlobalParent::~WindowGlobalParent() {
-  MOZ_ASSERT(!mWindowActors.Count());
-}
+WindowGlobalParent::~WindowGlobalParent() = default;
 
 JSObject* WindowGlobalParent::WrapObject(JSContext* aCx,
                                          JS::Handle<JSObject*> aGivenProto) {
@@ -882,8 +858,7 @@ void WindowGlobalParent::AddMixedContentSecurityState(uint32_t aStateFlags) {
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
-                                   mWindowActors)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WindowGlobalParent,
                                                WindowContext)

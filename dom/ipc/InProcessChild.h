@@ -46,7 +46,12 @@ class InProcessChild final : public nsIDOMProcessChild,
   static IProtocol* ParentActorFor(IProtocol* aActor);
 
   const nsAString& GetRemoteType() const override { return VoidString(); }
-  JSActor::Type GetSide() override { return JSActor::Type::Child; }
+
+ protected:
+  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
+                                        const nsACString& aName,
+                                        ErrorResult& aRv) override;
+  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
 
  private:
   // NOTE: PInProcess lifecycle management is declared as staic methods and

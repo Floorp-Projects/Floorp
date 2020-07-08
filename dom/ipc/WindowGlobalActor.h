@@ -14,13 +14,14 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "mozilla/dom/JSActor.h"
+#include "mozilla/dom/JSActorManager.h"
 #include "mozilla/dom/WindowGlobalTypes.h"
 
 namespace mozilla {
 namespace dom {
 
 // Common base class for WindowGlobal{Parent, Child}.
-class WindowGlobalActor : public nsISupports {
+class WindowGlobalActor : public JSActorManager {
  public:
   // Called to determine initial state for a window global actor created for an
   // initial about:blank document.
@@ -34,14 +35,12 @@ class WindowGlobalActor : public nsISupports {
  protected:
   virtual ~WindowGlobalActor() = default;
 
-  // Load the module for the named Window Actor and contruct it.
-  // This method will not initialize the actor or set its manager,
-  // which is handled by callers.
-  void ConstructActor(const nsACString& aName, JS::MutableHandleObject aActor,
-                      ErrorResult& aRv);
+  already_AddRefed<JSActorProtocol> MatchingJSActorProtocol(
+      JSActorService* aActorSvc, const nsACString& aName,
+      ErrorResult& aRv) final;
+
   virtual nsIURI* GetDocumentURI() = 0;
   virtual const nsAString& GetRemoteType() = 0;
-  virtual JSActor::Type GetSide() = 0;
   virtual dom::BrowsingContext* BrowsingContext() = 0;
 
   static WindowGlobalInit BaseInitializer(

@@ -111,10 +111,12 @@ InProcessParent::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void InProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
+  JSActorDidDestroy();
   InProcessParent::Shutdown();
 }
 
 void InProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
+  JSActorDidDestroy();
   InProcessParent::Shutdown();
 }
 
@@ -139,38 +141,32 @@ InProcessParent::GetOsPid(int32_t* aOsPid) {
 NS_IMETHODIMP
 InProcessParent::GetActor(const nsACString& aName,
                           JSProcessActorParent** aActor) {
-  if (!CanSend()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  ErrorResult error;
+  RefPtr<JSProcessActorParent> actor =
+      JSActorManager::GetActor(aName, error).downcast<JSProcessActorParent>();
+  if (error.Failed()) {
+    return error.StealNSResult();
   }
+  actor.forget(aActor);
+  return NS_OK;
+}
 
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    RefPtr<JSProcessActorParent> actor(mProcessActors.Get(aName));
-    actor.forget(aActor);
-    return NS_OK;
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ErrorResult result;
-  ConstructActor(aName, &obj, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-
-  // Unwrap our actor to a JSProcessActorParent object.
+already_AddRefed<JSActor> InProcessParent::InitJSActor(
+    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
   RefPtr<JSProcessActorParent> actor;
-  nsresult rv = UNWRAP_OBJECT(JSProcessActorParent, &obj, actor);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (aMaybeActor.get()) {
+    aRv = UNWRAP_OBJECT(JSProcessActorParent, aMaybeActor.get(), actor);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  } else {
+    actor = new JSProcessActorParent();
   }
 
   MOZ_RELEASE_ASSERT(!actor->Manager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  actor.forget(aActor);
-  return NS_OK;
+  return actor.forget();
 }
 
 NS_IMETHODIMP
@@ -194,38 +190,32 @@ InProcessChild::GetChildID(uint64_t* aChildID) {
 NS_IMETHODIMP
 InProcessChild::GetActor(const nsACString& aName,
                          JSProcessActorChild** aActor) {
-  if (!CanSend()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  ErrorResult error;
+  RefPtr<JSProcessActorChild> actor =
+      JSActorManager::GetActor(aName, error).downcast<JSProcessActorChild>();
+  if (error.Failed()) {
+    return error.StealNSResult();
   }
+  actor.forget(aActor);
+  return NS_OK;
+}
 
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    RefPtr<JSProcessActorChild> actor(mProcessActors.Get(aName));
-    actor.forget(aActor);
-    return NS_OK;
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ErrorResult result;
-  ConstructActor(aName, &obj, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-
-  // Unwrap our actor to a JSProcessActorChild object.
+already_AddRefed<JSActor> InProcessChild::InitJSActor(
+    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
   RefPtr<JSProcessActorChild> actor;
-  nsresult rv = UNWRAP_OBJECT(JSProcessActorChild, &obj, actor);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (aMaybeActor.get()) {
+    aRv = UNWRAP_OBJECT(JSProcessActorChild, aMaybeActor.get(), actor);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  } else {
+    actor = new JSProcessActorChild();
   }
 
   MOZ_RELEASE_ASSERT(!actor->Manager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  actor.forget(aActor);
-  return NS_OK;
+  return actor.forget();
 }
 
 NS_IMETHODIMP
