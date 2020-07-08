@@ -14,9 +14,9 @@ typedef WCHAR NS_tchar;
 typedef char NS_tchar;
 #endif
 
-nsresult GetInstallHash(const char16_t* installPath, const char* vendor,
-                        mozilla::UniquePtr<NS_tchar[]>& result,
-                        bool useCompatibilityMode = false);
+bool GetInstallHash(const char16_t* installPath, const char* vendor,
+                    mozilla::UniquePtr<NS_tchar[]>& result,
+                    bool useCompatibilityMode = false);
 
 #ifdef XP_WIN
 enum class SetPermissionsOf {
