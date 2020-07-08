@@ -3306,8 +3306,13 @@ void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
     if (aSkippedListIDs.contains(listID)) {
       continue;
     }
-    fprintf_stderr(aOut, "%s%s %p <\n", aPrefix, ChildListName(listID),
-                   &GetChildList(listID));
+
+    // Use nsPrintfCString so that %p don't output prefix "0x". This is
+    // consistent with nsIFrame::ListTag().
+    const nsPrintfCString str("%s%s@%p <\n", aPrefix, ChildListName(listID),
+                              &GetChildList(listID));
+    fprintf_stderr(aOut, "%s", str.get());
+
     for (nsIFrame* kid : list) {
       kid->List(aOut, nestedPfx.get(), aFlags);
     }

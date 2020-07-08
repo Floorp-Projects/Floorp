@@ -490,7 +490,7 @@ void nsBlockFrame::List(FILE* out, const char* aPrefix,
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
 
-  fprintf_stderr(out, "%s<\n", str.get());
+  fprintf_stderr(out, "%s <\n", str.get());
 
   nsCString pfx(aPrefix);
   pfx += "  ";
