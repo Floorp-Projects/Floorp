@@ -66,13 +66,14 @@ This component emits the following [Facts](../../support/base/README.md#Facts):
 | Action | Item    | Extras         | Description                        |
 |--------|---------|----------------|------------------------------------|
 | CLICK  | homescreen_icon_tap  |   | The user tapped the PWA icon on the homescreen. |
-| INTERACTION | background_timing | `itemExtras` | Length of time that the app was in the background before foregrounding. |
+| INTERACTION | enter_background | `itemExtras` | The current system time when the app is backgrounded. |
+| INTERACTION | enter_foreground | `itemExtras` | The current system time when the app is foregrounded. |
 
 #### `itemExtras`
 
 | Key          | Type    | Value                             |
 |--------------|---------|-----------------------------------|
-| timingNs     | Long | Length of time that the app was in the background. |
+| timingNs     | Long | The current system time when a foreground or background action is taken. |
 
 ## License
 
