@@ -8,7 +8,7 @@ in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org
 We make changes to Firefox by writing patches, testing them and pushing them into "the tree", the
 term we use for all the code in Mozilla-Central. Let's get started.
 
-Please see the :ref:`Firefox Contributors’ Quick Reference` for simple check list.
+Please see the :ref:`Firefox Contributors Quick Reference <Firefox Contributors' Quick Reference>` for simple check list.
 
 Finding something to work on
 ----------------------------
