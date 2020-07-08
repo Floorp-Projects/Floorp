@@ -52,6 +52,10 @@ const TEST_MULTISTAGE_CONTENT = {
       order: 1,
       content: {
         title: "Step 2",
+        tiles: {
+          type: "topsites",
+          tooltip: "test",
+        },
         primary_button: {
           label: "Next",
           action: {
@@ -188,7 +192,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "div.indicator.current",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP2", "main.AW_STEP3"]
+    ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
   );
 
   await onButtonClick(browser, "button.primary");
@@ -196,7 +200,12 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     browser,
     "multistage step 2",
     // Expected selectors:
-    ["div.multistageContainer", "main.AW_STEP2", "button.secondary"],
+    [
+      "div.multistageContainer",
+      "main.AW_STEP2",
+      "button.secondary",
+      "div.tiles-container.info",
+    ],
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "h1.welcomeZap"]
   );

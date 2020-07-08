@@ -465,7 +465,12 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   renderTiles() {
     switch (this.props.content.tiles.type) {
       case "topsites":
-        return this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        return this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+          text: typeof this.props.content.tiles.tooltip === "object" ? this.props.content.tiles.tooltip : {}
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: `tiles-container ${this.props.content.tiles.tooltip ? "info" : ""}`,
+          title: this.props.content.tiles.tooltip
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "tiles-topsites-section"
         }, this.props.topSites.slice(0, 5).map(({
           icon,
@@ -481,7 +486,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           } : {}
         }, icon ? "" : label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "host"
-        }, label)))) : null;
+        }, label)))))) : null;
 
       case "theme":
         return this.props.content.tiles.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {

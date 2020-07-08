@@ -357,11 +357,17 @@ body {
       .multistageContainer .tiles-theme-section .theme:focus, .multistageContainer .tiles-theme-section .theme:active {
         outline: 4px solid #0090ED;
         outline-offset: -4px; }
+  .multistageContainer .tiles-container {
+    margin: 10px auto; }
+    .multistageContainer .tiles-container.info {
+      padding: 6px 12px 12px; }
+      .multistageContainer .tiles-container.info:hover, .multistageContainer .tiles-container.info:focus {
+        background-color: rgba(217, 217, 227, 0.3);
+        border-radius: 4px; }
   .multistageContainer .tiles-topsites-section {
     display: grid;
     grid-gap: 24px;
-    grid-template-columns: repeat(5, auto);
-    margin: 10px auto; }
+    grid-template-columns: repeat(5, auto); }
     @media (max-width: 610px) {
       .multistageContainer .tiles-topsites-section {
         grid-template-columns: repeat(3, auto); } }
