@@ -11394,11 +11394,14 @@ template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
 
 CompilationInfo::RewindToken CompilationInfo::getRewindToken() {
-  return RewindToken{traceListHead};
+  MOZ_ASSERT(funcData.length() == functions.length());
+  return RewindToken{traceListHead, funcData.length()};
 }
 
 void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
   traceListHead = pos.funbox;
+  funcData.get().shrinkTo(pos.funcDataLength);
+  functions.get().shrinkTo(pos.funcDataLength);
 }
 
 }  // namespace js::frontend
