@@ -73,10 +73,16 @@ job-defaults:
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lint'
-                        default:
+                        # No testRelease on this job, gradle task isn't defined
+                        tooling-detekt:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
+                            - ':{component}:lintRelease'
+                        default:
+                            - ':{component}:assemble'
+                            - ':{component}:assembleAndroidTest'
+                            - ':{component}:testRelease'
                             - ':{component}:lintRelease'
         using: gradlew
         use-caches: false
