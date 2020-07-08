@@ -1,0 +1,11 @@
+<!doctype html>
+<textarea>FOO BAR</textarea><br>
+<input value="FOO BAR">
+<script>
+onload = function() {
+  for (let e of document.querySelectorAll("input, textarea")) {
+    e.getBoundingClientRect().top;
+    e.style.background = "transparent";
+  }
+}
+</script>
