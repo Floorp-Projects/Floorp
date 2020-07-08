@@ -8,6 +8,12 @@
   --drag-drop-transition-duration: .3s;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --drag-drop-transition-duration: 0s;
+  }
+}
+
 :root[customizing] .customization-target:not(#widget-overflow-fixed-list) {
   min-width: 100px;
 }
@@ -170,17 +176,17 @@
   background-image: url("chrome://browser/skin/customizableui/density-normal.svg");
 }
 
-#widget-overflow-fixed-list > toolbarpaletteitem[place="menu-panel"],
-toolbarpaletteitem[place="toolbar"] {
-  transition: border-width 250ms ease-in-out;
+#widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="menu-panel"],
+toolbarpaletteitem:not([notransition])[place="toolbar"] {
+  transition: border-width var(--drag-drop-transition-duration) ease-in-out;
 }
 
 toolbarpaletteitem[mousedown] {
   cursor: -moz-grabbing;
 }
 
-toolbarpaletteitem[place="palette"],
-toolbarpaletteitem[place="menu-panel"] {
+toolbarpaletteitem:not([notransition])[place="palette"],
+toolbarpaletteitem:not([notransition])[place="menu-panel"] {
   transition: transform var(--drag-drop-transition-duration) ease-in-out;
 }
 
@@ -195,13 +201,6 @@ toolbarpaletteitem[place="menu-panel"] {
 
 toolbarpaletteitem toolbarbutton[disabled] {
   color: inherit !important;
-}
-
-#widget-overflow-fixed-list > toolbarpaletteitem[notransition][place="menu-panel"],
-toolbarpaletteitem[notransition][place="toolbar"],
-toolbarpaletteitem[notransition][place="palette"],
-toolbarpaletteitem[notransition][place="menu-panel"] {
-  transition: none;
 }
 
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
