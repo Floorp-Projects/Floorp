@@ -1958,6 +1958,34 @@ security:
       - main
     extra_keys:
       fileinfo: Information about the filename that was requested to be loaded
+  unexpectedload:
+    objects: ["systemprincipal"]
+    bug_numbers:
+      - 1644671
+    description: >
+      Long term want to block all loads from the system principal that cause us to parse non-trivial data.
+      We don't look to break existing functionality and will allow exceptions, for this we are collecting
+      information about unexpected requests triggered by the system principal
+      Our measurement *excludes* acceptable requests. Those are:
+      - annotated using the 'AllowedDeprecatedSystemRequests' loadinfo flag
+      - using a nsContentPolicyType of FETCH, XMLHTTPREQUEST, WEBSOCKET, SAVEAS_DOWNLOAD or IMAGE
+      - with a requested URI object has the flag URI_IS_UI_RESOURCE
+      - if the URL scheme is 'view-source'
+      - if the URL scheme is 'file' and the Content-Type is STYLESHEET or OTHER
+      - if the scheme is 'jar', 'about' or 'moz-extension'
+    notification_emails:
+      - fbraun@mozilla.com
+      - ckerschb@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    expiry_version: "never"
+    record_in_processes:
+      - all
+    extra_keys:
+      contenttype: Information about the content-type we expect to receive
+      remotetype: Information about the remoteType in which we triggered the load
+      filedetails: Information about the file that triggered the load
 
 pictureinpicture:
   create:
