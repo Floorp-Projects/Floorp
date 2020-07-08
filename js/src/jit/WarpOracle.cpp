@@ -54,6 +54,9 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   AbortReasonOr<WarpEnvironment> createEnvironment();
   AbortReasonOr<Ok> maybeInlineIC(WarpOpSnapshotList& snapshots,
                                   BytecodeLocation loc);
+  MOZ_MUST_USE bool replaceNurseryPointers(ICStub* stub,
+                                           const CacheIRStubInfo* stubInfo,
+                                           uint8_t* stubDataCopy);
 
  public:
   WarpScriptOracle(JSContext* cx, WarpOracle* oracle, HandleScript script)
@@ -112,6 +115,10 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   auto* snapshot = new (alloc_.fallible())
       WarpSnapshot(cx_, alloc_, scriptSnapshot, bailoutInfo_);
   if (!snapshot) {
+    return abort(outerScript_, AbortReason::Alloc);
+  }
+
+  if (!snapshot->nurseryObjects().appendAll(nurseryObjects_)) {
     return abort(outerScript_, AbortReason::Alloc);
   }
 
@@ -783,12 +790,6 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
   const uint8_t* stubData = stub->cacheIRStubData();
 
-  // TODO: we don't support stubs with nursery pointers for now. Handling this
-  // well requires special machinery. See bug 1631267.
-  if (stub->stubDataHasNurseryPointers(stubInfo)) {
-    return Ok();
-  }
-
   // Only create a snapshots if all opcodes are supported by the transpiler.
   CacheIRReader reader(stubInfo);
   while (reader.more()) {
@@ -849,9 +850,13 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     return abort(AbortReason::Alloc);
   }
 
-  // We don't need any GC barriers because the stub data does not contain
-  // nursery pointers (checked above) so we can do a bitwise copy.
+  // Note: nursery pointers are handled below so we don't need to trigger any GC
+  // barriers and can do a bitwise copy.
   std::copy_n(stubData, bytesNeeded, stubDataCopy);
+
+  if (!replaceNurseryPointers(stub, stubInfo, stubDataCopy)) {
+    return abort(AbortReason::Alloc);
+  }
 
   JitCode* jitCode = stub->jitCode();
 
@@ -863,4 +868,94 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   fallbackStub->setUsedByTranspiler();
 
   return Ok();
+}
+
+bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
+                                              const CacheIRStubInfo* stubInfo,
+                                              uint8_t* stubDataCopy) {
+  // If the stub data contains nursery object pointers, replace them with the
+  // corresponding nursery index. See WarpObjectField.
+  //
+  // Also asserts non-object fields don't contain nursery pointers.
+
+  uint32_t field = 0;
+  size_t offset = 0;
+  while (true) {
+    StubField::Type fieldType = stubInfo->fieldType(field);
+    switch (fieldType) {
+      case StubField::Type::RawWord:
+      case StubField::Type::RawInt64:
+      case StubField::Type::DOMExpandoGeneration:
+        break;
+      case StubField::Type::Shape:
+        static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
+                      "Code assumes shapes are tenured");
+        break;
+      case StubField::Type::ObjectGroup:
+        static_assert(std::is_convertible_v<ObjectGroup*, gc::TenuredCell*>,
+                      "Code assumes groups are tenured");
+        break;
+      case StubField::Type::Symbol:
+        static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
+                      "Code assumes symbols are tenured");
+        break;
+      case StubField::Type::JSObject: {
+        JSObject* obj = stubInfo->getStubField<ICStub, JSObject*>(stub, offset);
+        if (IsInsideNursery(obj)) {
+          uint32_t nurseryIndex;
+          if (!oracle_->registerNurseryObject(obj, &nurseryIndex)) {
+            return false;
+          }
+          uintptr_t oldWord = WarpObjectField::fromObject(obj).rawData();
+          uintptr_t newWord =
+              WarpObjectField::fromNurseryIndex(nurseryIndex).rawData();
+          stubInfo->replaceStubRawWord(stubDataCopy, offset, oldWord, newWord);
+        }
+        break;
+      }
+      case StubField::Type::String: {
+#ifdef DEBUG
+        JSString* str = stubInfo->getStubField<ICStub, JSString*>(stub, offset);
+        MOZ_ASSERT(!IsInsideNursery(str));
+#endif
+        break;
+      }
+      case StubField::Type::Id: {
+#ifdef DEBUG
+        // jsid never contains nursery-allocated things.
+        jsid id = stubInfo->getStubField<ICStub, jsid>(stub, offset);
+        MOZ_ASSERT_IF(id.isGCThing(),
+                      !IsInsideNursery(id.toGCCellPtr().asCell()));
+#endif
+        break;
+      }
+      case StubField::Type::Value: {
+#ifdef DEBUG
+        Value v = stubInfo->getStubField<ICStub, JS::Value>(stub, offset);
+        MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
+#endif
+        break;
+      }
+      case StubField::Type::Limit:
+        return true;  // Done.
+    }
+    field++;
+    offset += StubField::sizeInBytes(fieldType);
+  }
+}
+
+bool WarpOracle::registerNurseryObject(JSObject* obj, uint32_t* nurseryIndex) {
+  MOZ_ASSERT(IsInsideNursery(obj));
+
+  auto p = nurseryObjectsMap_.lookupForAdd(obj);
+  if (p) {
+    *nurseryIndex = p->value();
+    return true;
+  }
+
+  if (!nurseryObjects_.append(obj)) {
+    return false;
+  }
+  *nurseryIndex = nurseryObjects_.length() - 1;
+  return nurseryObjectsMap_.add(p, obj, *nurseryIndex);
 }

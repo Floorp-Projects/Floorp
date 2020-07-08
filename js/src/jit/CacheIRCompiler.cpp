@@ -1000,6 +1000,15 @@ int64_t CacheIRStubInfo::getStubRawInt64(ICStub* stub, uint32_t offset) const {
   return getStubRawInt64(stubData, offset);
 }
 
+void CacheIRStubInfo::replaceStubRawWord(uint8_t* stubData, uint32_t offset,
+                                         uintptr_t oldWord,
+                                         uintptr_t newWord) const {
+  MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+  uintptr_t* addr = reinterpret_cast<uintptr_t*>(stubData + offset);
+  MOZ_ASSERT(*addr == oldWord);
+  *addr = newWord;
+}
+
 template <class Stub, class T>
 GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
   uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
