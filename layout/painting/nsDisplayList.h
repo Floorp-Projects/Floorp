@@ -7133,6 +7133,9 @@ class nsDisplayPerspective : public nsDisplayHitTestInfoBase {
                                                            mActiveScrolledRoot);
   }
 
+  bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                         nsRegion* aVisibleRegion) override;
+
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
                                  nsRegion* aInvalidRegion) const override {}
