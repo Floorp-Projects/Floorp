@@ -27,7 +27,6 @@ class SourceMapURLService {
     this._pendingURLSubscriptions = new Map();
     this._urlToIDMap = new Map();
     this._mapsById = new Map();
-    this._listeningStylesheetFront = null;
     this._sourcesLoading = null;
     this._runningCallback = false;
 
@@ -205,13 +204,16 @@ class SourceMapURLService {
     this._pendingURLSubscriptions.clear();
     this._urlToIDMap.clear();
 
-    if (this._listeningStylesheetFront) {
-      this._listeningStylesheetFront.off(
-        "stylesheet-added",
-        this._onNewStyleSheet
+    try {
+      this._toolbox.resourceWatcher.unwatchResources(
+        [this._toolbox.resourceWatcher.TYPES.STYLESHEET],
+        { onAvailable: this._onResourceAvailable }
       );
-      this._listeningStylesheetFront = null;
+    } catch (e) {
+      // If unwatchResources is called before finishing process of watchResources,
+      // it throws an error during stopping listener.
     }
+
     this._sourcesLoading = null;
   }
 
@@ -426,39 +428,17 @@ class SourceMapURLService {
           return;
         }
 
+        this._onResourceAvailable = async ({ resource }) => {
+          if (this._sourcesLoading === sourcesLoading) {
+            this._onNewStyleSheet(resource.styleSheet);
+          }
+        };
+
         await Promise.all([
-          (async () => {
-            if (!this._target.hasActor("styleSheets")) {
-              return;
-            }
-
-            try {
-              const front = await this._target.getFront("stylesheets");
-
-              if (this._listeningStylesheetFront) {
-                this._listeningStylesheetFront.off(
-                  "stylesheet-added",
-                  this._onNewStyleSheet
-                );
-              }
-              this._listeningStylesheetFront = front;
-              this._listeningStylesheetFront.on(
-                "stylesheet-added",
-                this._onNewStyleSheet
-              );
-
-              const sheets = await front.getStyleSheets();
-              if (this._sourcesLoading === sourcesLoading) {
-                // If we've cleared the state since starting this request,
-                // we don't want to populate these.
-                for (const sheet of sheets) {
-                  this._onNewStyleSheet(sheet);
-                }
-              }
-            } catch (err) {
-              // Ignore any protocol-based errors.
-            }
-          })(),
+          this._toolbox.resourceWatcher.watchResources(
+            [this._toolbox.resourceWatcher.TYPES.STYLESHEET],
+            { onAvailable: this._onResourceAvailable }
+          ),
           (async () => {
             const { threadFront } = this._toolbox;
             if (!threadFront) {
