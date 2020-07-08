@@ -26,13 +26,6 @@ function connectionFailed(status) {
 }
 
 function test_sockets(serverSocket) {
-  // TODO: enable this test in bug 1581892.
-  if (mozinfo.socketprocess_networking) {
-    info("skip test_sockets");
-    do_test_finished();
-    return;
-  }
-
   do_test_pending();
   gDashboard.requestSockets(function(data) {
     let index = -1;
