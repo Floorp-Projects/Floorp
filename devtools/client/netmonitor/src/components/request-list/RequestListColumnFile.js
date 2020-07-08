@@ -71,7 +71,7 @@ class RequestListColumnFile extends Component {
       isSlow &&
         dom.div({
           title: L10N.getFormatStr(
-            "netmonitor.audits.slowTooltip",
+            "netmonitor.audits.slowIconTooltip",
             getFormattedTime(waitingTime),
             getFormattedTime(slowLimit)
           ),
