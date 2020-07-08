@@ -11,6 +11,7 @@ DevToolsModules(
   'document-walker.js',
   'event-collector.js',
   'inspector.js',
+  'node-picker.js',
   'node.js',
   'utils.js',
   'walker.js',
