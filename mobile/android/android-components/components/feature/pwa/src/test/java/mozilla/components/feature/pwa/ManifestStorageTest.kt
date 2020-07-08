@@ -37,6 +37,18 @@ class ManifestStorageTest {
         scope = "/"
     )
 
+    private val googleMapsManifest = WebAppManifest(
+        name = "Google Maps",
+        startUrl = "https://google.com/maps",
+        scope = "https://google.com/maps/"
+    )
+
+    private val exampleWebAppManifest = WebAppManifest(
+        name = "Example Web App",
+        startUrl = "https://pwa.example.com/dashboard",
+        scope = "https://pwa.example.com/"
+    )
+
     @Test
     fun `load returns null if entry does not exist`() = runBlocking {
         val storage = spy(ManifestStorage(testContext))
@@ -200,6 +212,65 @@ class ManifestStorageTest {
             activeThresholdMs = testThreshold + 10L,
             currentTimeMs = currentTime
         ))
+    }
+
+    @Test
+    fun `warmUpScopes populates cache of already installed web app scopes`() = runBlocking {
+        val storage = spy(ManifestStorage(testContext))
+        val dao = mockDatabase(storage)
+
+        val manifest1 = ManifestEntity(manifest = firefoxManifest, createdAt = 0, updatedAt = 0)
+        val manifest2 = ManifestEntity(manifest = googleMapsManifest, createdAt = 0, updatedAt = 0)
+        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, createdAt = 0, updatedAt = 0)
+
+        whenever(dao.getInstalledScopes(0)).thenReturn(listOf(manifest1, manifest2, manifest3))
+
+        storage.warmUpScopes(ManifestStorage.ACTIVE_THRESHOLD_MS)
+
+        assertEquals(
+            mapOf(
+                Pair("/", "https://firefox.com"),
+                Pair("https://google.com/maps/", "https://google.com/maps"),
+                Pair("https://pwa.example.com/", "https://pwa.example.com/dashboard")
+            ),
+            storage.installedScopes
+        )
+    }
+
+    @Test
+    fun `getInstalledScope returns cached scope for an url`() = runBlocking {
+        val storage = spy(ManifestStorage(testContext))
+        val dao = mockDatabase(storage)
+
+        val manifest1 = ManifestEntity(manifest = firefoxManifest, createdAt = 0, updatedAt = 0)
+        val manifest2 = ManifestEntity(manifest = googleMapsManifest, createdAt = 0, updatedAt = 0)
+        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, createdAt = 0, updatedAt = 0)
+
+        whenever(dao.getInstalledScopes(0)).thenReturn(listOf(manifest1, manifest2, manifest3))
+
+        storage.warmUpScopes(ManifestStorage.ACTIVE_THRESHOLD_MS)
+
+        val result = storage.getInstalledScope("https://pwa.example.com/profile/me")
+
+        assertEquals("https://pwa.example.com/", result)
+    }
+
+    @Test
+    fun `getStartUrlForInstalledScope returns cached start url for a currently installed scope`() = runBlocking {
+        val storage = spy(ManifestStorage(testContext))
+        val dao = mockDatabase(storage)
+
+        val manifest1 = ManifestEntity(manifest = firefoxManifest, createdAt = 0, updatedAt = 0)
+        val manifest2 = ManifestEntity(manifest = googleMapsManifest, createdAt = 0, updatedAt = 0)
+        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, createdAt = 0, updatedAt = 0)
+
+        whenever(dao.getInstalledScopes(0)).thenReturn(listOf(manifest1, manifest2, manifest3))
+
+        storage.warmUpScopes(ManifestStorage.ACTIVE_THRESHOLD_MS)
+
+        val result = storage.getStartUrlForInstalledScope("https://pwa.example.com/")
+
+        assertEquals("https://pwa.example.com/dashboard", result)
     }
 
     private fun mockDatabase(storage: ManifestStorage): ManifestDao = mock<ManifestDao>().also {

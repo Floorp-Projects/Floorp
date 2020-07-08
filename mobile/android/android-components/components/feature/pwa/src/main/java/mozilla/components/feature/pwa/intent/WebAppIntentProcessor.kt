@@ -10,7 +10,10 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.pwa.ext.getUrlOverride
 import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ManifestStorage
@@ -45,13 +48,14 @@ class WebAppIntentProcessor(
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val webAppManifest = runBlocking { storage.loadManifest(url) } ?: return false
+            val targetUrl = intent.getUrlOverride() ?: url
 
-            val session = Session(url, private = false, source = Source.HOME_SCREEN)
-            session.webAppManifest = webAppManifest
-            session.customTabConfig = webAppManifest.toCustomTabConfig()
+            val session = findExistingSession(webAppManifest) ?: createSession(webAppManifest, url)
 
-            sessionManager.add(session)
-            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+            if (targetUrl !== url) {
+                loadUrlUseCase(targetUrl, session, EngineSession.LoadUrlFlags.external())
+            }
+
             intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
             intent.putSessionId(session.id)
             intent.putWebAppManifest(webAppManifest)
@@ -60,6 +64,30 @@ class WebAppIntentProcessor(
         } else {
             false
         }
+    }
+
+    /**
+     * Returns an existing web app session that matches the manifest.
+     */
+    private fun findExistingSession(webAppManifest: WebAppManifest): Session? {
+        return sessionManager.all.find {
+            it.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP &&
+                    it.webAppManifest?.startUrl == webAppManifest.startUrl
+        }
+    }
+
+    /**
+     * Returns a new web app session.
+     */
+    private fun createSession(webAppManifest: WebAppManifest, url: String): Session {
+        return Session(url, private = false, source = Source.HOME_SCREEN)
+                .apply {
+                    this.webAppManifest = webAppManifest
+                    this.customTabConfig = webAppManifest.toCustomTabConfig()
+                }.also {
+                    sessionManager.add(it)
+                    loadUrlUseCase(url, it, EngineSession.LoadUrlFlags.external())
+                }
     }
 
     companion object {

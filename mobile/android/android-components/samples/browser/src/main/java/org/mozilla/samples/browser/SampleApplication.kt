@@ -5,6 +5,9 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.fetch.Client
@@ -50,6 +53,10 @@ class SampleApplication : Application() {
         Facts.registerProcessor(LogFactProcessor())
 
         components.engine.warmUp()
+
+        GlobalScope.launch(Dispatchers.IO) {
+            components.webAppManifestStorage.warmUpScopes(System.currentTimeMillis())
+        }
 
         try {
             GlobalAddonDependencyProvider.initialize(

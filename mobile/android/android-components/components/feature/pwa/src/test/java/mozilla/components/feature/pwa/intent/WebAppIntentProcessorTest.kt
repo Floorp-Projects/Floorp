@@ -17,7 +17,11 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.getWebAppManifest
+import mozilla.components.feature.pwa.ext.putUrlOverride
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor.Companion.ACTION_VIEW_PWA
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,6 +30,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
@@ -86,5 +91,27 @@ class WebAppIntentProcessorTest {
         val sessionState = store.state.customTabs.first()
         assertNotNull(sessionState.config)
         assertEquals(ExternalAppType.PROGRESSIVE_WEB_APP, sessionState.config.externalAppType)
+    }
+
+    @Test
+    fun `url override is applied to session if present`() = runBlockingTest {
+        val storage: ManifestStorage = mock()
+        val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase = mock()
+        val processor = WebAppIntentProcessor(mock(), loadUrlUseCase, storage)
+        val urlOverride = "https://mozilla.com/deep/link/index.html"
+
+        val manifest = WebAppManifest(
+                name = "Test Manifest",
+                startUrl = "https://mozilla.com"
+        )
+
+        `when`(storage.loadManifest("https://mozilla.com")).thenReturn(manifest)
+
+        val intent = Intent(ACTION_VIEW_PWA, "https://mozilla.com".toUri())
+
+        intent.putUrlOverride(urlOverride)
+
+        assertTrue(processor.process(intent))
+        verify(loadUrlUseCase).invoke(eq(urlOverride), any(), any(), any())
     }
 }

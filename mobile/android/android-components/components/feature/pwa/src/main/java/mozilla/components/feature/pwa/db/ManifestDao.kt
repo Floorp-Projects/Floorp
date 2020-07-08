@@ -43,4 +43,8 @@ internal interface ManifestDao {
     @WorkerThread
     @Query("DELETE FROM manifests WHERE start_url IN (:startUrls)")
     fun deleteManifests(startUrls: List<String>)
+
+    @WorkerThread
+    @Query("SELECT * from manifests WHERE used_at > :expiresAt ORDER BY LENGTH(scope)")
+    fun getInstalledScopes(expiresAt: Long): List<ManifestEntity>
 }
