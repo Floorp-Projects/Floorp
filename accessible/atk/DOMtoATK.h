@@ -122,6 +122,12 @@ gchar* NewATKString(AccessibleOrProxy* aAccessible, gint aStartOffset,
                           gint(aAccessible->CharacterCount()));
   nsAutoString str;
   aAccessible->TextSubstring(startOffset, endOffset, str);
+
+  if (str.Length() == 0) {
+    // Bogus offsets, or empty string, either way we do not need conversion.
+    return g_strdup("");
+  }
+
   if (aFlags & AtkStringConvertFlags::ConvertTextToAsterisks)
     ConvertTexttoAsterisks(str);
   return converter.ConvertAdjusted(str);
