@@ -221,21 +221,37 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            showTabSavedToCollectionSnackbar()
+            showTabSavedToCollectionSnackbar(sessions.size, true)
         }
 
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
-            showTabSavedToCollectionSnackbar()
+            showTabSavedToCollectionSnackbar(sessions.size)
         }
 
-        private fun showTabSavedToCollectionSnackbar() {
+        private fun showTabSavedToCollectionSnackbar(tabSize: Int, isNewCollection: Boolean = false) {
             view?.let { view ->
+                val messageStringRes = when {
+                    isNewCollection -> {
+                        R.string.create_collection_tabs_saved_new_collection
+                    }
+                    tabSize > 1 -> {
+                        R.string.create_collection_tabs_saved
+                    }
+                    else -> {
+                        R.string.create_collection_tab_saved
+                    }
+                }
                 FenixSnackbar.make(
                     view = view,
                     duration = Snackbar.LENGTH_SHORT,
                     isDisplayedWithBrowserToolbar = true
                 )
-                    .setText(view.context.getString(R.string.create_collection_tab_saved))
+                    .setText(view.context.getString(messageStringRes))
+                    .setAction(requireContext().getString(R.string.create_collection_view)) {
+                        findNavController().navigate(
+                            BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = false)
+                        )
+                    }
                     .show()
             }
         }
