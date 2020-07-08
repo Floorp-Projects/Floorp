@@ -185,11 +185,11 @@ void ScriptPreloader::InitContentChild(ContentParent& parent) {
   }
 }
 
-ProcessType ScriptPreloader::GetChildProcessType(const nsAString& remoteType) {
-  if (remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
+ProcessType ScriptPreloader::GetChildProcessType(const nsACString& remoteType) {
+  if (remoteType == EXTENSION_REMOTE_TYPE) {
     return ProcessType::Extension;
   }
-  if (remoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+  if (remoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
     return ProcessType::PrivilegedAbout;
   }
   return ProcessType::Web;

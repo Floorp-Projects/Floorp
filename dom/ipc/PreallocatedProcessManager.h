@@ -42,8 +42,8 @@ class PreallocatedProcessManager final {
    * background. To avoid that, the PreallocatedProcessManager won't start up
    * any processes while there is a blocker active.
    */
-  static void AddBlocker(const nsAString& aRemoteType, ContentParent* aParent);
-  static void RemoveBlocker(const nsAString& aRemoteType,
+  static void AddBlocker(const nsACString& aRemoteType, ContentParent* aParent);
+  static void RemoveBlocker(const nsACString& aRemoteType,
                             ContentParent* aParent);
 
   /**
@@ -56,7 +56,7 @@ class PreallocatedProcessManager final {
    * If we use a preallocated process, it will schedule the start of
    * another on Idle (AllocateOnIdle()).
    */
-  static already_AddRefed<ContentParent> Take(const nsAString& aRemoteType);
+  static already_AddRefed<ContentParent> Take(const nsACString& aRemoteType);
 
   /**
    * Cache a process (currently only DEFAULT_REMOTE_TYPE) for reuse later
