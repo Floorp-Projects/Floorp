@@ -822,7 +822,7 @@
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_message">Deleting this tab will delete the entire collection. You can create new collections at any time.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">Delete collection %1$s?</string>
+    <string name="delete_tab_and_collection_dialog_title">Delete %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Delete</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
