@@ -18,7 +18,7 @@ add_task(async function() {
   info("Selecting the second editor");
   await ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
 
-  await navigateToAndWaitForStyleSheets(NEW_URI, ui);
+  await navigateToAndWaitForStyleSheets(NEW_URI, ui, 2);
 
   info("Waiting for source editor to be ready.");
   await ui.editors[0].getSourceEditor();
