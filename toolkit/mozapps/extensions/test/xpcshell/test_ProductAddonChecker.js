@@ -80,23 +80,31 @@ function compareFiles(file1, file2) {
 }
 
 add_task(async function test_404() {
-  let res = await ProductAddonChecker.getProductAddonList(root + "404.xml");
-  Assert.ok(res.usedFallback);
+  await Assert.rejects(
+    ProductAddonChecker.getProductAddonList(root + "404.xml"),
+    /got node name: html/
+  );
 });
 
 add_task(async function test_not_xml() {
-  let res = await ProductAddonChecker.getProductAddonList(root + "bad.txt");
-  Assert.ok(res.usedFallback);
+  await Assert.rejects(
+    ProductAddonChecker.getProductAddonList(root + "bad.txt"),
+    /got node name: parsererror/
+  );
 });
 
 add_task(async function test_invalid_xml() {
-  let res = await ProductAddonChecker.getProductAddonList(root + "bad.xml");
-  Assert.ok(res.usedFallback);
+  await Assert.rejects(
+    ProductAddonChecker.getProductAddonList(root + "bad.xml"),
+    /got node name: parsererror/
+  );
 });
 
 add_task(async function test_wrong_xml() {
-  let res = await ProductAddonChecker.getProductAddonList(root + "bad2.xml");
-  Assert.ok(res.usedFallback);
+  await Assert.rejects(
+    ProductAddonChecker.getProductAddonList(root + "bad2.xml"),
+    /got node name: test/
+  );
 });
 
 add_task(async function test_missing() {
@@ -108,18 +116,18 @@ add_task(async function test_missing() {
 
 add_task(async function test_empty() {
   let res = await ProductAddonChecker.getProductAddonList(root + "empty.xml");
-  Assert.ok(Array.isArray(res.gmpAddons));
-  Assert.equal(res.gmpAddons.length, 0);
+  Assert.ok(Array.isArray(res.addons));
+  Assert.equal(res.addons.length, 0);
 });
 
 add_task(async function test_good_xml() {
   let res = await ProductAddonChecker.getProductAddonList(root + "good.xml");
-  Assert.ok(Array.isArray(res.gmpAddons));
+  Assert.ok(Array.isArray(res.addons));
 
   // There are three valid entries in the XML
-  Assert.equal(res.gmpAddons.length, 5);
+  Assert.equal(res.addons.length, 5);
 
-  let addon = res.gmpAddons[0];
+  let addon = res.addons[0];
   Assert.equal(addon.id, "test1");
   Assert.equal(addon.URL, "http://example.com/test1.xpi");
   Assert.equal(addon.hashFunction, undefined);
@@ -127,7 +135,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
 
-  addon = res.gmpAddons[1];
+  addon = res.addons[1];
   Assert.equal(addon.id, "test2");
   Assert.equal(addon.URL, "http://example.com/test2.xpi");
   Assert.equal(addon.hashFunction, "md5");
@@ -135,7 +143,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
 
-  addon = res.gmpAddons[2];
+  addon = res.addons[2];
   Assert.equal(addon.id, "test3");
   Assert.equal(addon.URL, "http://example.com/test3.xpi");
   Assert.equal(addon.hashFunction, undefined);
@@ -143,7 +151,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.version, "1.0");
   Assert.equal(addon.size, 45);
 
-  addon = res.gmpAddons[3];
+  addon = res.addons[3];
   Assert.equal(addon.id, "test4");
   Assert.equal(addon.URL, undefined);
   Assert.equal(addon.hashFunction, undefined);
@@ -151,7 +159,7 @@ add_task(async function test_good_xml() {
   Assert.equal(addon.version, undefined);
   Assert.equal(addon.size, undefined);
 
-  addon = res.gmpAddons[4];
+  addon = res.addons[4];
   Assert.equal(addon.id, undefined);
   Assert.equal(addon.URL, "http://example.com/test5.xpi");
   Assert.equal(addon.hashFunction, undefined);
