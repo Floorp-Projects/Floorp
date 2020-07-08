@@ -54,7 +54,6 @@ class NetworkObserver {
     ChannelEventSinkFactory.getService().registerCollector(this);
 
     this._redirectMap = new Map();
-    this._windowIdToFrameIdMap = new Map();
 
     // Request interception state.
     this._browserSuspendedChannels = new Map();
@@ -237,7 +236,7 @@ class NetworkObserver {
       isNavigationRequest: httpChannel.isMainDocumentChannel,
       cause: causeType,
       causeString: causeTypeToString(causeType),
-      frameId: this.frameId(httpChannel, causeType),
+      frameId: this.frameId(httpChannel),
       // clients expect loaderId == requestId for document navigation
       loaderId: [
         Ci.nsIContentPolicy.TYPE_DOCUMENT,
@@ -268,6 +267,7 @@ class NetworkObserver {
     } catch (e) {
       // remoteAddress is not defined for cached requests.
     }
+
     this.emit("response", httpChannel, {
       requestId: requestId(httpChannel),
       securityDetails: getSecurityDetails(httpChannel),
@@ -280,7 +280,7 @@ class NetworkObserver {
       statusText: httpChannel.responseStatusText,
       cause: causeType,
       causeString: causeTypeToString(causeType),
-      frameId: this.frameId(httpChannel, causeType),
+      frameId: this.frameId(httpChannel),
       // clients expect loaderId == requestId for document navigation
       loaderId: [
         Ci.nsIContentPolicy.TYPE_DOCUMENT,
@@ -348,32 +348,10 @@ class NetworkObserver {
 
   /**
    * Returns the frameId of the current httpChannel.
-   *
-   * Only Document and Subdocument requests contain a reference
-   * to the browsing context, and as such the id, which is used
-   * as frameId. To be able to send a frameId for resource requests
-   * a map has to be kept up-to-date to retrieve that id from the
-   * window id. Hereby window ids are unique for all requests
-   * belonging to the same frame, but differ between frames.
    */
-  frameId(httpChannel, causeType) {
-    const loadContext = getLoadContext(httpChannel);
-    const wrappedChannel = ChannelWrapper.get(httpChannel);
-
-    // Document requests indicate a fresh navigation cycle.
-    // As such cleanup all the old window id references.
-    if (causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
-      this._windowIdToFrameIdMap.clear();
-    }
-
-    let frameId = loadContext.id;
-    if (frameId) {
-      this._windowIdToFrameIdMap.set(wrappedChannel.windowId, frameId);
-    } else {
-      frameId = this._windowIdToFrameIdMap.get(wrappedChannel.windowId);
-    }
-
-    return frameId;
+  frameId(httpChannel) {
+    const loadInfo = httpChannel.loadInfo;
+    return loadInfo.frameBrowsingContext?.id || loadInfo.browsingContext.id;
   }
 }
 
