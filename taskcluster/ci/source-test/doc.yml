@@ -28,6 +28,8 @@ generate:
 upload:
     description: Generate and upload the Sphinx documentation
     platform: doc/opt
+    attributes:
+        code-review: true
     treeherder:
         symbol: doc(upload)
         kind: test
@@ -38,9 +40,13 @@ upload:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
         taskcluster-proxy: true
+        artifacts:
+            - type: file
+              name: public/firefox-source-docs-url.txt
+              path: /builds/worker/firefox-source-docs-url.txt
     run:
         using: mach
-        mach: doc --upload --no-open --no-serve
+        mach: doc --upload --no-open --no-serve --write-url /builds/worker/firefox-source-docs-url.txt
         sparse-profile: sphinx-docs
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
