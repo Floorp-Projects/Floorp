@@ -1424,13 +1424,6 @@ NSS_IMPLEMENT PRBool
 nssToken_IsPresent(
     NSSToken *token)
 {
-#if defined(_MSC_VER)
-    if (!token) {
-        __debugbreak();
-        *((volatile int*)NULL) = __LINE__;
-        TerminateProcess(GetCurrentProcess(), 3);
-    }
-#endif
     return nssSlot_IsTokenPresent(token->slot);
 }
 
