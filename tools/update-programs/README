@@ -1,0 +1,20 @@
+This directory defines a build project for focused work on the "update
+programs": programs owned or maintained by the Install/Update team
+that are standalone binaries (i.e., not part of the Firefox binary
+proper).
+
+To use this build project, prepare a minimal mozconfig with
+```
+ac_add_options --enable-project=tools/update-programs
+```
+
+Depending on the mozconfig options and host and target OS, some of the
+following will be built:
+
+1. the maintenance service (when `--enable-maintenance-service`);
+2. the updater binary (when `MOZ_UPDATER=1`);
+3. the Windows Default Browser Agent (when `--enable-default-browser-agent`);
+4. the Background Update Agent (when `--enable-update-agent`).
+
+Packaging the installer and uninstaller is not yet supported: instead,
+use an (artifact) build with `--enable-application=browser`.

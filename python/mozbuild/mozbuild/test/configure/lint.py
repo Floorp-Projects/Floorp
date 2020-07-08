@@ -32,6 +32,7 @@ class LintMeta(type):
             'js',
             'memory',
             'mobile/android',
+            'tools/update-programs',
         ):
             attrs['test_%s' % project.replace('/', '_')] = create_test(
                 project, attrs['lint'])

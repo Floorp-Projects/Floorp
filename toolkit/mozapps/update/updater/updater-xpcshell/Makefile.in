@@ -39,8 +39,10 @@ ifdef MOCHITESTBROWSERDIR
 	rsync -a -C $(XPCSHELLTESTDIR)/data/updater.app $(MOCHITESTBROWSERDIR)/
 endif
 else
+	$(MKDIR) -p $(XPCSHELLTESTDIR)/data
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(XPCSHELLTESTDIR)/data/updater$(BIN_SUFFIX)
 ifdef MOCHITESTBROWSERDIR
+	$(MKDIR) -p $(MOCHITESTBROWSERDIR)
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTBROWSERDIR)/updater$(BIN_SUFFIX)
 endif
 endif
