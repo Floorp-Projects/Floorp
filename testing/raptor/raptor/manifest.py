@@ -49,6 +49,7 @@ whitelist_live_site_tests = [
     "nytimes",
     "people-article",
     "raptor-youtube-playback",
+    "youtube-playback",
     "reddit-thread",
     "rumble-fox",
     "stackoverflow-question",
