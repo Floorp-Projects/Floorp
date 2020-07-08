@@ -1,0 +1,68 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Verify MAR signatures
+# ==============================================================
+
+option('--disable-verify-mar', help='Disable verifying MAR signatures')
+
+set_define('MOZ_VERIFY_MAR_SIGNATURE',
+           depends_if('--enable-verify-mar')(lambda _: True))
+set_config('MOZ_VERIFY_MAR_SIGNATURE',
+           depends_if('--enable-verify-mar')(lambda _: True))
+
+# Maintenance service (Windows only)
+# ==============================================================
+
+option('--enable-maintenance-service',
+       when=target_is_windows, default=target_is_windows,
+       help='{Enable|Disable} building of maintenance service')
+
+set_define('MOZ_MAINTENANCE_SERVICE',
+           depends_if('--enable-maintenance-service',
+                      when=target_is_windows)(lambda _: True))
+set_config('MOZ_MAINTENANCE_SERVICE',
+           depends_if('--enable-maintenance-service',
+                      when=target_is_windows)(lambda _: True))
+
+# Update agent (currently Windows only)
+# This is an independent task that runs on a schedule to
+# check for, download, and install updates.
+# ==============================================================
+
+option('--enable-update-agent',
+       when=target_is_windows, default=False,
+       help='{Enable|Disable} building update agent')
+
+set_define('MOZ_UPDATE_AGENT',
+           depends_if('--enable-update-agent',
+                      when=target_is_windows)(lambda _: True))
+
+set_config('MOZ_UPDATE_AGENT',
+           depends_if('--enable-update-agent',
+                      when=target_is_windows)(lambda _: True))
+
+# Enable or disable the default browser agent, which monitors the user's default
+# browser setting on Windows.
+# ==============================================================================
+
+
+@depends(target)
+def default_browser_agent_default(target):
+    return target.os == 'WINNT'
+
+
+option('--enable-default-browser-agent', default=default_browser_agent_default,
+       help='{Enable|Disable} building the default browser agent')
+
+
+@depends('--enable-default-browser-agent', when=target_is_windows)
+def default_agent_flag(enabled):
+    if enabled:
+        return True
+
+
+set_config('MOZ_DEFAULT_BROWSER_AGENT', default_agent_flag)
