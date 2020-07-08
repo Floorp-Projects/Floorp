@@ -229,10 +229,7 @@ class LoginManagerParent extends JSWindowActorParent {
         "The child process should not send an origin to the parent process. See bug 1513003"
       );
     }
-    // We still need getLoginOrigin to remove the path for file: URIs until we fix bug 1625391.
-    let origin = LoginHelper.getLoginOrigin(
-      this.manager.documentPrincipal?.originNoSuffix
-    );
+    let origin = this.manager.documentPrincipal?.originNoSuffix;
     if (!origin) {
       throw new Error("An origin is required");
     }
