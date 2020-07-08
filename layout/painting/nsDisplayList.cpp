@@ -8741,6 +8741,12 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   return true;
 }
 
+bool nsDisplayPerspective::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                             nsRegion* aVisibleRegion) {
+  return mList.ComputeVisibilityForSublist(aBuilder, aVisibleRegion,
+                                           GetPaintRect());
+}
+
 nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder,
                              nsTextFrame* aFrame,
                              const Maybe<bool>& aIsSelected)
