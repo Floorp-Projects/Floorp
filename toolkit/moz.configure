@@ -1302,37 +1302,6 @@ def llvm_dlltool_flags(target):
 
 set_config('LLVM_DLLTOOL_FLAGS', llvm_dlltool_flags)
 
-# Maintenance service (Windows only)
-# ==============================================================
-
-option('--enable-maintenance-service',
-       when=target_is_windows, default=target_is_windows,
-       help='{Enable|Disable} building of maintenance service')
-
-set_define('MOZ_MAINTENANCE_SERVICE',
-           depends_if('--enable-maintenance-service',
-                      when=target_is_windows)(lambda _: True))
-set_config('MOZ_MAINTENANCE_SERVICE',
-           depends_if('--enable-maintenance-service',
-                      when=target_is_windows)(lambda _: True))
-
-# Update agent (currently Windows only)
-# This is an independent task that runs on a schedule to
-# check for, download, and install updates.
-# ==============================================================
-
-option('--enable-update-agent',
-        when=target_is_windows, default=False,
-        help='{Enable|Disable} building update agent')
-
-set_define('MOZ_UPDATE_AGENT',
-           depends_if('--enable-update-agent',
-                      when=target_is_windows)(lambda _: True))
-
-set_config('MOZ_UPDATE_AGENT',
-           depends_if('--enable-update-agent',
-                      when=target_is_windows)(lambda _: True))
-
 # BITS download (Windows only)
 # ==============================================================
 
@@ -1364,16 +1333,6 @@ option('--enable-bundled-fonts', default=bundled_fonts_default,
 
 set_define('MOZ_BUNDLED_FONTS',
            depends_if('--enable-bundled-fonts', when=allow_bundled_fonts)(lambda _: True))
-
-# Verify MAR signatures
-# ==============================================================
-
-option('--disable-verify-mar', help='Disable verifying MAR signatures')
-
-set_define('MOZ_VERIFY_MAR_SIGNATURE',
-           depends_if('--enable-verify-mar')(lambda _: True))
-set_config('MOZ_VERIFY_MAR_SIGNATURE',
-           depends_if('--enable-verify-mar')(lambda _: True))
 
 # TaskTracer
 # ==============================================================
@@ -2064,44 +2023,11 @@ with only_when(compile_environment & target_is_linux):
     set_config('HAVE_GETCONTEXT', getcontext)
     set_define('HAVE_GETCONTEXT', getcontext)
 
-
-# Enable or disable the default browser agent, which monitors the user's default
-# browser setting on Windows.
-# ==============================================================================
-
-@depends(target)
-def default_browser_agent_default(target):
-    return target.os == 'WINNT'
-
-option('--enable-default-browser-agent', default=default_browser_agent_default,
-       help='{Enable|Disable} building the default browser agent')
-
-@depends('--enable-default-browser-agent', when=target_is_windows)
-def default_agent_flag(enabled):
-    if enabled:
-        return True
-
-set_config('MOZ_DEFAULT_BROWSER_AGENT', default_agent_flag)
-
 # NSS
-# ===
-option('--with-system-nss', help='Use system NSS')
+# ==============================================================
+include('../build/moz.configure/nss.configure')
 
-imply_option('--with-system-nspr', True, when='--with-system-nss')
-
-nss_pkg = pkg_check_modules('NSS', 'nss >= 3.54', when='--with-system-nss', config=False)
-
-set_config('MOZ_SYSTEM_NSS', True, when='--with-system-nss')
-
-@depends(nss_pkg, check_build_environment)
-def nss_config(nss_pkg, build_env):
-    cflags = ['-I%s' % os.path.join(build_env.dist, 'include', 'nss')]
-    libs = None
-    if nss_pkg:
-        cflags = list(nss_pkg.cflags) + cflags
-        libs = nss_pkg.libs
-    return namespace(cflags=cflags, libs=libs)
-
-set_config('NSS_CFLAGS', nss_config.cflags)
-set_config('NSS_LIBS', nss_config.libs)
-add_old_configure_assignment('NSS_CFLAGS', nss_config.cflags)
+# Update-related programs: updater, maintenance service, update agent,
+# default browser agent.
+# ==============================================================
+include('../build/moz.configure/update-programs.configure')

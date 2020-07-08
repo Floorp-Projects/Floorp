@@ -1,0 +1,28 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option('--with-system-nss', help='Use system NSS')
+
+imply_option('--with-system-nspr', True, when='--with-system-nss')
+
+nss_pkg = pkg_check_modules('NSS', 'nss >= 3.54', when='--with-system-nss', config=False)
+
+set_config('MOZ_SYSTEM_NSS', True, when='--with-system-nss')
+
+
+@depends(nss_pkg, check_build_environment)
+def nss_config(nss_pkg, build_env):
+    cflags = ['-I%s' % os.path.join(build_env.dist, 'include', 'nss')]
+    libs = None
+    if nss_pkg:
+        cflags = list(nss_pkg.cflags) + cflags
+        libs = nss_pkg.libs
+    return namespace(cflags=cflags, libs=libs)
+
+
+set_config('NSS_CFLAGS', nss_config.cflags)
+set_config('NSS_LIBS', nss_config.libs)
+add_old_configure_assignment('NSS_CFLAGS', nss_config.cflags)
