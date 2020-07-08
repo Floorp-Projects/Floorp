@@ -14,9 +14,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/dom/JSActor.h"
-#include "mozilla/dom/JSProcessActorProtocol.h"
-#include "mozilla/dom/JSWindowActorProtocol.h"
-
 #include "nsIObserver.h"
 #include "nsIDOMEventListener.h"
 #include "mozilla/EventListenerManager.h"
@@ -24,11 +21,14 @@
 
 namespace mozilla {
 namespace dom {
+
 struct ProcessActorOptions;
 struct WindowActorOptions;
 class JSProcessActorInfo;
 class JSWindowActorInfo;
 class EventTarget;
+class JSWindowActorProtocol;
+class JSProcessActorProtocol;
 
 class JSActorService final {
  public:
@@ -86,9 +86,23 @@ class JSActorService final {
   nsRefPtrHashtable<nsCStringHashKey, JSWindowActorProtocol>
       mWindowActorDescriptors;
 
-  // -- Content Actor
+  // -- Process Actor
   nsRefPtrHashtable<nsCStringHashKey, JSProcessActorProtocol>
       mProcessActorDescriptors;
+};
+
+/**
+ * Base clsas for both `JSWindowActorProtocol` and `JSProcessActorProtocol`
+ * which can be used by generic code.
+ */
+class JSActorProtocol : public nsISupports {
+ public:
+  struct Sided {
+    Maybe<nsCString> mModuleURI;
+  };
+
+  virtual const Sided& Parent() const = 0;
+  virtual const Sided& Child() const = 0;
 };
 
 }  // namespace dom

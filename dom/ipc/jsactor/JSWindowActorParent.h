@@ -33,20 +33,20 @@ class JSWindowActorParent final : public JSActor {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSWindowActorParent,
                                                          JSActor)
 
+  explicit JSWindowActorParent(nsISupports* aGlobal = nullptr)
+      : JSActor(aGlobal) {}
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<JSWindowActorParent> Constructor(
       GlobalObject& aGlobal) {
-    return MakeAndAddRef<JSWindowActorParent>();
+    return MakeAndAddRef<JSWindowActorParent>(aGlobal.GetAsSupports());
   }
-
-  nsIGlobalObject* GetParentObject() const override;
 
   WindowGlobalParent* GetManager() const;
   void Init(const nsACString& aName, WindowGlobalParent* aManager);
-  void StartDestroy();
-  void AfterDestroy();
+  void ClearManager() override;
   CanonicalBrowsingContext* GetBrowsingContext(ErrorResult& aRv);
 
  protected:
@@ -58,7 +58,6 @@ class JSWindowActorParent final : public JSActor {
  private:
   ~JSWindowActorParent();
 
-  bool mCanSend = true;
   RefPtr<WindowGlobalParent> mManager;
 };
 
