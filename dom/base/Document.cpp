@@ -6565,7 +6565,23 @@ void Document::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
     }
   }
 
-  PostStyleSheetApplicableStateChangeEvent(aSheet);
+  if (StyleSheetChangeEventsEnabled()) {
+    StyleSheetApplicableStateChangeEventInit init;
+    init.mBubbles = true;
+    init.mCancelable = true;
+    init.mStylesheet = &aSheet;
+    init.mApplicable = applicable;
+
+    RefPtr<StyleSheetApplicableStateChangeEvent> event =
+        StyleSheetApplicableStateChangeEvent::Constructor(
+            this, u"StyleSheetApplicableStateChanged"_ns, init);
+    event->SetTrusted(true);
+    event->SetTarget(this);
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, event);
+    asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
+    asyncDispatcher->PostDOMEvent();
+  }
 
   if (!mSSApplicableStateNotificationPending) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -6575,28 +6591,6 @@ void Document::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
     mSSApplicableStateNotificationPending =
         NS_SUCCEEDED(Dispatch(TaskCategory::Other, notification.forget()));
   }
-}
-
-void Document::PostStyleSheetApplicableStateChangeEvent(StyleSheet& aSheet) {
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
-
-  StyleSheetApplicableStateChangeEventInit init;
-  init.mBubbles = true;
-  init.mCancelable = true;
-  init.mStylesheet = &aSheet;
-  init.mApplicable = aSheet.IsApplicable();
-
-  RefPtr<StyleSheetApplicableStateChangeEvent> event =
-      StyleSheetApplicableStateChangeEvent::Constructor(
-          this, u"StyleSheetApplicableStateChanged"_ns, init);
-  event->SetTrusted(true);
-  event->SetTarget(this);
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event);
-  asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
-  asyncDispatcher->PostDOMEvent();
 }
 
 void Document::NotifyStyleSheetApplicableStateChanged() {

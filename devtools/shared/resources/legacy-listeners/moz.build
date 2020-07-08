@@ -9,5 +9,4 @@ DevToolsModules(
     'error-messages.js',
     'platform-messages.js',
     'root-node.js',
-    'stylesheet.js',
 )

@@ -42,16 +42,6 @@ class ResourceWatcher {
   }
 
   /**
-   * Return all specified resources cached in this watcher.
-   *
-   * @param {String} resourceType
-   * @return {Array} resources cached in this watcher
-   */
-  getAllResources(resourceType) {
-    return this._cache.filter(r => r.resourceType === resourceType);
-  }
-
-  /**
    * Request to start retrieving all already existing instances of given
    * type of resources and also start watching for the one to be created after.
    *
@@ -70,11 +60,7 @@ class ResourceWatcher {
    *                                  existing resources.
    */
   async watchResources(resources, options) {
-    const {
-      onAvailable,
-      onDestroyed,
-      ignoreExistingResources = false,
-    } = options;
+    const { onAvailable, ignoreExistingResources = false } = options;
 
     // Cache the Watcher once for all, the first time we call `watch()`.
     // This `watcher` attribute may be then used in any function of the ResourceWatcher after this.
@@ -99,16 +85,8 @@ class ResourceWatcher {
     await this._watchAllTargets();
 
     for (const resource of resources) {
-      // If we are registering the first listener, so start listening from the server about
-      // this one resource.
-      if (this._availableListeners.count(resource) === 0) {
-        await this._startListening(resource);
-      }
-      this._availableListeners.on(resource, onAvailable);
-
-      if (onDestroyed) {
-        this._destroyedListeners.on(resource, onDestroyed);
-      }
+      await this._startListening(resource);
+      this._registerListeners(resource, options);
     }
 
     if (!ignoreExistingResources) {
@@ -124,28 +102,34 @@ class ResourceWatcher {
     const { onAvailable, onDestroyed } = options;
 
     for (const resource of resources) {
+      this._availableListeners.off(resource, onAvailable);
       if (onDestroyed) {
         this._destroyedListeners.off(resource, onDestroyed);
       }
-
-      const hadAtLeastOneListener =
-        this._availableListeners.count(resource) > 0;
-      this._availableListeners.off(resource, onAvailable);
-      if (
-        hadAtLeastOneListener &&
-        this._availableListeners.count(resource) === 0
-      ) {
-        this._stopListening(resource);
-      }
+      this._stopListening(resource);
     }
 
     // Stop watching for targets if we removed the last listener.
     let listeners = 0;
-    for (const count of this._listenerCount.values()) {
+    for (const count of this._listenerCount) {
       listeners += count;
     }
     if (listeners <= 0) {
       this._unwatchAllTargets();
+    }
+  }
+
+  /**
+   * Register listeners to watch for a given type of resource.
+   *
+   * @param {Object}
+   *        - {Function} onAvailable: mandatory
+   *        - {Function} onDestroyed: optional
+   */
+  _registerListeners(resource, { onAvailable, onDestroyed }) {
+    this._availableListeners.on(resource, onAvailable);
+    if (onDestroyed) {
+      this._destroyedListeners.on(resource, onDestroyed);
     }
   }
 
@@ -455,7 +439,6 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   PLATFORM_MESSAGE: "platform-message",
   DOCUMENT_EVENT: "document-event",
   ROOT_NODE: "root-node",
-  STYLESHEET: "stylesheet",
 };
 module.exports = { ResourceWatcher };
 
@@ -492,8 +475,6 @@ const LegacyListeners = {
   },
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/legacy-listeners/root-node"),
-  [ResourceWatcher.TYPES
-    .STYLESHEET]: require("devtools/shared/resources/legacy-listeners/stylesheet"),
 };
 
 // Optional transformers for each type of resource.
