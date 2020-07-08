@@ -48,7 +48,7 @@ const UPDATED_MSG_SUMMARY_PROPS = ["count", "totalMs", "totalSize"];
 class StatusBar extends Component {
   static get propTypes() {
     return {
-      channelType: PropTypes.string.isRequired,
+      channelType: PropTypes.string,
       summary: PropTypes.object.isRequired,
     };
   }

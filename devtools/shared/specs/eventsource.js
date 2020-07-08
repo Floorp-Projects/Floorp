@@ -13,10 +13,6 @@ const eventSourceSpec = generateActorSpec({
    */
   events: {
     // In order to avoid a naming collision, we rename the server event.
-    serverEventSourceConnectionOpened: {
-      type: "eventSourceConnectionOpened",
-      httpChannelId: Arg(0, "number"),
-    },
     serverEventSourceConnectionClosed: {
       type: "eventSourceConnectionClosed",
       httpChannelId: Arg(0, "number"),

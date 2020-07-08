@@ -54,7 +54,7 @@ class Toolbar extends Component {
       setMessageFilterText: PropTypes.func.isRequired,
       messageFilterType: PropTypes.string.isRequired,
       showControlFrames: PropTypes.bool.isRequired,
-      channelType: PropTypes.string.isRequired,
+      channelType: PropTypes.string,
     };
   }
 
