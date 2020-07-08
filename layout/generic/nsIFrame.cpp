@@ -7682,9 +7682,6 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     aTo += nsPrintfCString(" normal-position=%s",
                            ConvertToString(normalPosition, aFlags).c_str());
   }
-  if (0 != mState) {
-    aTo += nsPrintfCString(" [state=%016llx]", (unsigned long long)mState);
-  }
   if (HasProperty(BidiDataProperty())) {
     FrameBidiData bidi = GetBidiData();
     aTo += nsPrintfCString(" bidi(%d,%d,%d)", bidi.baseLevel,
