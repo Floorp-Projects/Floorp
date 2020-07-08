@@ -72,7 +72,6 @@ class PDMFactoryImpl final {
 #ifdef MOZ_FFMPEG
     FFmpegRuntimeLinker::Init();
 #endif
-    RemoteDecoderModule::Init();
   }
 };
 
