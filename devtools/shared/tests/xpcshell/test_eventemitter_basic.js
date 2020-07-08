@@ -28,8 +28,8 @@ const TESTS = {
       hasMethod(emitter, "on") &&
         hasMethod(emitter, "off") &&
         hasMethod(emitter, "once") &&
-        !hasMethod(emitter, "decorate") &&
-        !hasMethod(emitter, "count"),
+        hasMethod(emitter, "count") &&
+        !hasMethod(emitter, "decorate"),
       `Event Emitter ${
         isAnEmitter ? "instance" : "mixin"
       } has the expected methods.`
