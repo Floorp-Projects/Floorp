@@ -726,15 +726,24 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
 }
 
 // Content form helpers
-async function changeContentFormValues(browser, selectorValues) {
+async function changeContentFormValues(
+  browser,
+  selectorValues,
+  shouldBlur = true
+) {
   for (let [sel, value] of Object.entries(selectorValues)) {
     info("changeContentFormValues, update: " + sel + ", to: " + value);
-    await changeContentInputValue(browser, sel, value);
+    await changeContentInputValue(browser, sel, value, shouldBlur);
     await TestUtils.waitForTick();
   }
 }
 
-async function changeContentInputValue(browser, selector, str) {
+async function changeContentInputValue(
+  browser,
+  selector,
+  str,
+  shouldBlur = true
+) {
   await SimpleTest.promiseFocus(browser.ownerGlobal);
   let oldValue = await ContentTask.spawn(browser, [selector], function(sel) {
     return content.document.querySelector(sel).value;
@@ -745,42 +754,45 @@ async function changeContentInputValue(browser, selector, str) {
     return;
   }
   info(`changeContentInputValue: from "${oldValue}" to "${str}"`);
-  await ContentTask.spawn(browser, { selector, str }, async function({
-    selector,
-    str,
-  }) {
-    const EventUtils = ContentTaskUtils.getEventUtils(content);
-    let input = content.document.querySelector(selector);
+  await ContentTask.spawn(
+    browser,
+    { selector, str, shouldBlur },
+    async function({ selector, str, shouldBlur }) {
+      const EventUtils = ContentTaskUtils.getEventUtils(content);
+      let input = content.document.querySelector(selector);
 
-    input.focus();
-    if (!str) {
-      input.select();
-      await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
-    } else if (input.value.startsWith(str)) {
-      info(
-        `New string is substring of value: ${str.length}, ${input.value.length}`
-      );
-      input.setSelectionRange(str.length, input.value.length);
-      await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
-    } else if (str.startsWith(input.value)) {
-      info(
-        `New string appends to value: ${input.value}, ${str.substring(
-          input.value.length
-        )}`
-      );
-      input.setSelectionRange(input.value.length, input.value.length);
-      await EventUtils.sendString(str.substring(input.value.length), content);
-    } else {
-      input.select();
-      await EventUtils.sendString(str, content);
+      input.focus();
+      if (!str) {
+        input.select();
+        await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
+      } else if (input.value.startsWith(str)) {
+        info(
+          `New string is substring of value: ${str.length}, ${input.value.length}`
+        );
+        input.setSelectionRange(str.length, input.value.length);
+        await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
+      } else if (str.startsWith(input.value)) {
+        info(
+          `New string appends to value: ${input.value}, ${str.substring(
+            input.value.length
+          )}`
+        );
+        input.setSelectionRange(input.value.length, input.value.length);
+        await EventUtils.sendString(str.substring(input.value.length), content);
+      } else {
+        input.select();
+        await EventUtils.sendString(str, content);
+      }
+
+      if (shouldBlur) {
+        let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
+        input.blur();
+        await changedPromise;
+      }
+
+      is(str, input.value, `Expected value '${str}' is set on input`);
     }
-
-    let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
-    input.blur();
-    await changedPromise;
-
-    is(str, input.value, `Expected value '${str}' is set on input`);
-  });
+  );
   info("Input value changed");
   await TestUtils.waitForTick();
 }

@@ -73,9 +73,8 @@ add_task(async function test_context_menu_iframe_fill() {
       );
 
       info("Clicking on the firstLoginItem");
-      // click on the login item to fill the password field, and send tab to trigger a change event
+      // click on the login item to fill the password field, triggering an "input" event
       await EventUtils.synthesizeMouseAtCenter(firstLoginItem, {});
-      await EventUtils.synthesizeKey("KEY_Tab");
 
       let passwordValue = await TestUtils.waitForCondition(async () => {
         let value = await promiseFrameInputValue("form-basic-password");
