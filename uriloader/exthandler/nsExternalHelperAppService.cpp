@@ -46,6 +46,7 @@
 #include "nsIRedirectHistoryEntry.h"
 #include "nsOSHelperAppService.h"
 #include "nsOSHelperAppServiceChild.h"
+#include "nsContentSecurityUtils.h"
 
 // used to access our datastore of user-configured helper applications
 #include "nsIHandlerService.h"
@@ -1557,6 +1558,16 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
   nsresult rv;
+  nsAutoCString MIMEType;
+  if (mMimeInfo) {
+    mMimeInfo->GetMIMEType(MIMEType);
+  }
+
+  if (!nsContentSecurityUtils::IsDownloadAllowed(aChannel, MIMEType)) {
+    mCanceled = true;
+    request->Cancel(NS_ERROR_ABORT);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(request));
   mIsFileChannel = fileChan != nullptr;
@@ -1577,7 +1588,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (mBrowsingContext) {
     mMaybeCloseWindowHelper = new MaybeCloseWindowHelper(mBrowsingContext);
     mMaybeCloseWindowHelper->SetShouldCloseWindow(mShouldCloseWindow);
-
     nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
     // Determine whether a new window was opened specifically for this request
     if (props) {
@@ -1666,8 +1676,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
   bool alwaysAsk = true;
   mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
-  nsAutoCString MIMEType;
-  mMimeInfo->GetMIMEType(MIMEType);
   if (alwaysAsk) {
     // But we *don't* ask if this mimeInfo didn't come from
     // our user configuration datastore and the user has said

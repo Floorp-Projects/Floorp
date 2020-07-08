@@ -19,6 +19,9 @@ add_task(async function setup() {
       // cookies. This is incompatible with the cookie sameSite schemeful
       // feature and we need to disable it.
       ["network.cookie.sameSite.schemeful", false],
+      // This Test trys to download mixed content
+      // so we need to make sure that this is not blocked
+      ["dom.block_download_insecure", false],
     ],
   });
 });
