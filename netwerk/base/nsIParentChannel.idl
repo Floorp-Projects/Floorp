@@ -77,5 +77,5 @@ interface nsIParentChannel : nsIStreamListener
   /**
    * The remote type of the target process for this load.
    */
-  readonly attribute AString remoteType;
+  readonly attribute AUTF8String remoteType;
 };
