@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import os
 import re
 import taskcluster_urls
 
@@ -156,8 +157,9 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
 
     # Create the task and any of its dependencies. This uses a new taskGroupId to avoid
     # polluting the existing taskGroup with interactive tasks.
+    action_task_id = os.environ.get('TASK_ID')
     label_to_taskid = create_tasks(graph_config, [label], full_task_graph, label_to_taskid,
-                                   parameters, modifier=edit)
+                                   parameters, decision_task_id=action_task_id, modifier=edit)
 
     taskId = label_to_taskid[label]
     logger.info('Created interactive task {}; sending notification'.format(taskId))
