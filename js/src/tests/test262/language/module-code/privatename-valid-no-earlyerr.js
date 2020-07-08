@@ -1,4 +1,4 @@
-// |reftest| skip module -- class-fields-private is not supported
+// |reftest| module
 // Copyright (C) 2017 Valerie Young. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

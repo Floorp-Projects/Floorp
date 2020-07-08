@@ -1,4 +1,3 @@
-// |reftest| skip -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-field-usage.case
 // - src/class-elements/productions/cls-expr-same-line-generator.template

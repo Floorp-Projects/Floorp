@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-private is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/invalid-private-names/member-expression-bad-reference.case
 // - src/invalid-private-names/default/cls-decl-method.template

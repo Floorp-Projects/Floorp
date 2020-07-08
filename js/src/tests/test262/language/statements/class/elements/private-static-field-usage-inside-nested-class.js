@@ -1,4 +1,3 @@
-// |reftest| skip -- class-static-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-static-field-usage-inside-nested-class.case
 // - src/class-elements/default/cls-decl.template
