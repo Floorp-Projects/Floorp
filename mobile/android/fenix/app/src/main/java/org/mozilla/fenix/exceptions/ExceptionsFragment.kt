@@ -28,6 +28,7 @@ import org.mozilla.fenix.settings.SupportUtils
  * along with controls to remove the exception.
  */
 class ExceptionsFragment : Fragment() {
+
     private lateinit var exceptionsStore: ExceptionsFragmentStore
     private lateinit var exceptionsView: ExceptionsView
     private lateinit var exceptionsInteractor: ExceptionsInteractor
@@ -48,7 +49,7 @@ class ExceptionsFragment : Fragment() {
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
                 ExceptionsFragmentState(
-                    items = listOf()
+                    items = emptyList()
                 )
             )
         }
@@ -61,7 +62,6 @@ class ExceptionsFragment : Fragment() {
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         consumeFrom(exceptionsStore) {
             exceptionsView.update(it)
         }

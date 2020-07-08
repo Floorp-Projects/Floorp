@@ -4,16 +4,16 @@
 
 package org.mozilla.fenix.exceptions
 
-import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_exceptions.view.*
+import kotlinx.android.synthetic.main.component_exceptions.*
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import org.mozilla.fenix.R
 
@@ -42,35 +42,36 @@ interface ExceptionsViewInteractor {
  * View that contains and configures the Exceptions List
  */
 class ExceptionsView(
-    override val containerView: ViewGroup,
-    val interactor: ExceptionsInteractor
+    container: ViewGroup,
+    interactor: ExceptionsInteractor
 ) : LayoutContainer {
 
-    val view: FrameLayout = LayoutInflater.from(containerView.context)
-        .inflate(R.layout.component_exceptions, containerView, true)
+    override val containerView: FrameLayout = LayoutInflater.from(container.context)
+        .inflate(R.layout.component_exceptions, container, true)
         .findViewById(R.id.exceptions_wrapper)
 
     private val exceptionsAdapter = ExceptionsAdapter(interactor)
 
     init {
-        view.exceptions_list.apply {
+        exceptions_list.apply {
             adapter = exceptionsAdapter
-            layoutManager = LinearLayoutManager(containerView.context)
+            layoutManager = LinearLayoutManager(container.context)
         }
-        val learnMoreText = view.exceptions_learn_more.text.toString()
-        val textWithLink = SpannableString(learnMoreText).apply {
-            setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
-        }
-        with(view.exceptions_learn_more) {
+
+        with(exceptions_learn_more) {
+            val learnMoreText = text
+            text = learnMoreText.toSpannable().apply {
+                setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
+            }
+
             movementMethod = LinkMovementMethod.getInstance()
-            text = textWithLink
             setOnClickListener { interactor.onLearnMore() }
         }
     }
 
     fun update(state: ExceptionsFragmentState) {
-        view.exceptions_empty_view.isVisible = state.items.isEmpty()
-        view.exceptions_list.isVisible = state.items.isNotEmpty()
+        exceptions_empty_view.isVisible = state.items.isEmpty()
+        exceptions_list.isVisible = state.items.isNotEmpty()
         exceptionsAdapter.updateData(state.items)
     }
 }

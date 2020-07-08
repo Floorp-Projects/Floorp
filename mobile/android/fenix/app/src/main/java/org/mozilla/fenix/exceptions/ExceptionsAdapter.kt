@@ -14,19 +14,13 @@ import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
 
-sealed class AdapterItem {
-    object DeleteButton : AdapterItem()
-    object Header : AdapterItem()
-    data class Item(val item: TrackingProtectionException) : AdapterItem()
-}
-
 /**
  * Adapter for a list of sites that are exempted from Tracking Protection,
  * along with controls to remove the exception.
  */
 class ExceptionsAdapter(
     private val interactor: ExceptionsInteractor
-) : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(DiffCallback) {
+) : ListAdapter<ExceptionsAdapter.AdapterItem, RecyclerView.ViewHolder>(DiffCallback) {
 
     /**
      * Change the list of items that are displayed.
@@ -65,6 +59,12 @@ class ExceptionsAdapter(
             val adapterItem = getItem(position) as AdapterItem.Item
             holder.bind(adapterItem.item)
         }
+    }
+
+    sealed class AdapterItem {
+        object DeleteButton : AdapterItem()
+        object Header : AdapterItem()
+        data class Item(val item: TrackingProtectionException) : AdapterItem()
     }
 
     private object DiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
