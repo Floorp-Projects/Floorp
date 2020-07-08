@@ -304,8 +304,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * Supported Queries
    */
 
-  async sendPacket(packet, prefix) {
-    return this.sendQuery("DevToolsFrameChild:packet", { packet, prefix });
+  sendPacket(packet, prefix) {
+    this.sendAsyncMessage("DevToolsFrameChild:packet", { packet, prefix });
   }
 
   /**
