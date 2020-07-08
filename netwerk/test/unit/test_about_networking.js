@@ -50,6 +50,13 @@ add_test(function test_dns() {
 });
 
 add_test(function test_sockets() {
+  // TODO: enable this test in bug 1581892.
+  if (mozinfo.socketprocess_networking) {
+    info("skip test_sockets");
+    run_next_test();
+    return;
+  }
+
   let sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
     Ci.nsISocketTransportService
   );
