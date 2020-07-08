@@ -6118,17 +6118,35 @@ class LGuardShape : public LInstructionHelper<1, 1, 1> {
   const MGuardShape* mir() const { return mir_->toGuardShape(); }
 };
 
-class LGuardProto : public LInstructionHelper<0, 1, 1> {
+class LGuardProto : public LInstructionHelper<0, 2, 1> {
  public:
   LIR_HEADER(GuardProto)
 
-  LGuardProto(const LAllocation& obj, const LDefinition& temp)
+  LGuardProto(const LAllocation& obj, const LAllocation& expected,
+              const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setOperand(1, expected);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* expected() { return getOperand(1); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
+class LGuardNullProto : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardNullProto)
+
+  LGuardNullProto(const LAllocation& obj, const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
     setTemp(0, temp);
   }
+
+  const LAllocation* object() { return getOperand(0); }
   const LDefinition* temp() { return getTemp(0); }
-  const MGuardProto* mir() const { return mir_->toGuardProto(); }
 };
 
 class LGuardObjectGroup : public LInstructionHelper<1, 1, 1> {

@@ -4083,8 +4083,19 @@ void LIRGenerator::visitGuardShape(MGuardShape* ins) {
 
 void LIRGenerator::visitGuardProto(MGuardProto* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->expected()->type() == MIRType::Object);
 
-  auto* lir = new (alloc()) LGuardProto(useRegister(ins->object()), temp());
+  auto* lir = new (alloc()) LGuardProto(useRegister(ins->object()),
+                                        useRegister(ins->expected()), temp());
+  assignSnapshot(lir, BailoutKind::ProtoGuard);
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
+void LIRGenerator::visitGuardNullProto(MGuardNullProto* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LGuardNullProto(useRegister(ins->object()), temp());
   assignSnapshot(lir, BailoutKind::ProtoGuard);
   add(lir, ins);
   redefine(ins, ins->object());

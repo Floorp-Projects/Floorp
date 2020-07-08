@@ -9028,13 +9028,11 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
   }
 };
 
-// Guard on an object's proto. If maybeProto_ is nullptr, guard the object has
-// no proto.
-class MGuardProto : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  CompilerObject maybeProto_;
-
-  MGuardProto(MDefinition* obj, JSObject* maybeProto)
-      : MUnaryInstruction(classOpcode, obj), maybeProto_(maybeProto) {
+// Guard the object's proto is |expected|.
+class MGuardProto : public MBinaryInstruction, public SingleObjectPolicy::Data {
+  MGuardProto(MDefinition* obj, MDefinition* expected)
+      : MBinaryInstruction(classOpcode, obj, expected) {
+    MOZ_ASSERT(expected->isConstant() || expected->isNurseryObject());
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
@@ -9044,26 +9042,38 @@ class MGuardProto : public MUnaryInstruction, public SingleObjectPolicy::Data {
  public:
   INSTRUCTION_HEADER(GuardProto)
   TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, expected))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+};
+
+// Guard the object has no proto.
+class MGuardNullProto : public MUnaryInstruction,
+                        public SingleObjectPolicy::Data {
+  explicit MGuardNullProto(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(obj->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardNullProto)
+  TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  JSObject* maybeProto() const { return maybeProto_; }
   bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isGuardProto()) {
-      return false;
-    }
-    if (maybeProto() != ins->toGuardProto()->maybeProto()) {
-      return false;
-    }
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
-  }
-  bool appendRoots(MRootList& roots) const override {
-    if (!maybeProto_) {
-      return true;
-    }
-    return roots.append(maybeProto_);
   }
 };
 
