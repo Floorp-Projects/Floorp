@@ -672,6 +672,8 @@ parent:
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
                              int32_t aAppUnitsPerDevPixel);
 
+    async SetAllowDeprecatedTls(bool value);
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this side. This

@@ -328,6 +328,9 @@ partial interface Document {
 
   [Func="Document::CallerIsTrustedAboutNetError", Throws]
   NetErrorInfo getNetErrorInfo();
+
+  [Func="Document::CallerIsTrustedAboutNetError"]
+  attribute boolean allowDeprecatedTls;
 };
 
 // https://w3c.github.io/page-visibility/#extensions-to-the-document-interface
