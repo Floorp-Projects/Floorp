@@ -256,6 +256,9 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       int32_t* aOutStartOffset, int32_t* aOutEndOffset,
       bool aTrustedInput) const;
 
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MoveCaretOutsideOfLink(
+      Element& aLinkElement, const EditorDOMPoint& aPointToPutCaret);
+
   /**
    * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
    */
@@ -879,6 +882,21 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   if (!linkElement) {
     return NS_OK;
   }
+  rv = MoveCaretOutsideOfLink(*linkElement, pointToPutCaret);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink "
+        "failed.");
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink(
+    Element& aLinkElement, const EditorDOMPoint& aPointToPutCaret) {
+  MOZ_ASSERT(HTMLEditUtils::IsLink(&aLinkElement));
+
   // The reason why do that instead of just moving caret after it is, the
   // link might have ended in an invisible `<br>` element.  If so, the code
   // above just placed selection inside that.  So we need to split it instead.
@@ -887,7 +905,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   SplitNodeResult splitLinkResult =
       MOZ_KnownLive(mHTMLEditor)
           .SplitNodeDeepWithTransaction(
-              *linkElement, pointToPutCaret,
+              aLinkElement, aPointToPutCaret,
               SplitAtEdges::eDoNotCreateEmptyContainer);
   NS_WARNING_ASSERTION(
       splitLinkResult.Succeeded(),
