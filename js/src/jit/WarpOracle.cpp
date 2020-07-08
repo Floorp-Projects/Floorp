@@ -109,8 +109,8 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   WarpScriptSnapshot* scriptSnapshot;
   MOZ_TRY_VAR(scriptSnapshot, scriptOracle.createScriptSnapshot());
 
-  auto* snapshot =
-      new (alloc_.fallible()) WarpSnapshot(cx_, scriptSnapshot, bailoutInfo_);
+  auto* snapshot = new (alloc_.fallible())
+      WarpSnapshot(cx_, alloc_, scriptSnapshot, bailoutInfo_);
   if (!snapshot) {
     return abort(outerScript_, AbortReason::Alloc);
   }
