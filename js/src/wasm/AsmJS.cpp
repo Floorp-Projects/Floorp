@@ -36,6 +36,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
+#include "frontend/SharedContext.h"  // TopLevelFunction
 #include "gc/Policy.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "js/MemoryMetrics.h"
@@ -6008,7 +6009,8 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
   FunctionFlags flags(FunctionFlags::INTERPRETED_NORMAL);
   FunctionBox* funbox = m.parser().newFunctionBox(
       funNode, name, flags, toStringStart, directives,
-      GeneratorKind::NotGenerator, FunctionAsyncKind::SyncFunction);
+      GeneratorKind::NotGenerator, FunctionAsyncKind::SyncFunction,
+      TopLevelFunction::No);
   if (!funbox) {
     return false;
   }
