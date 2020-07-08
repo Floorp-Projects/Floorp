@@ -57,10 +57,7 @@
   display: none;
 }
 
-#font-editor details[open] .label-close {
-  display: inline-block;
-}
-
+#font-editor details[open] .label-close,
 #font-editor details:not([open]) .label-open {
   display: inline-block;
 }
@@ -221,8 +218,7 @@
 .font-control-used-fonts {
   align-items: flex-start;
   border-bottom: 1px solid var(--theme-splitter-color);
-  margin-top: 0;
-  margin-bottom: 1em;
+  margin-block: 0 1em;
   padding-top: 1em;
 }
 
@@ -308,8 +304,7 @@
 .font-value-label {
   /* Combined width of .font-value-input and .font-value-select */
   width: calc(60px + 3.8em);
-  padding-top: 2px;
-  padding-bottom: 4px;
+  padding-block: 2px 4px;
 }
 
 /* Mock separator because inputs don't have distinguishable borders in dark theme */
@@ -333,12 +328,12 @@
   min-width: 3.8em;
 }
 
-.font-value-input + .font-value-select:dir(ltr){
+.font-value-input + .font-value-select:dir(ltr) {
   border-inline-start: none;
 }
 
 /* Swap around order of value input and unit dropdown for RTL */
-.font-value-input + .font-value-select:dir(rtl){
+.font-value-input + .font-value-select:dir(rtl) {
   border-inline-end: none;
   order: 2;
   text-align: left;
@@ -376,7 +371,7 @@
 .font-control-input:hover .font-value-slider-container::before,
 .font-control-input:hover .font-value-slider-container::after,
 .font-control-input:focus-within .font-value-slider-container::before,
-.font-control-input:focus-within .font-value-slider-container::after{
+.font-control-input:focus-within .font-value-slider-container::after {
   visibility: visible;
 }
 
@@ -450,6 +445,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  direction: ltr;
 }
 
 .font-origin .copy-icon {
