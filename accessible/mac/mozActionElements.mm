@@ -75,7 +75,7 @@ enum CheckboxValue {
   }
 }
 
-- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent {
+- (BOOL)ignoreWithParent:(mozAccessible*)parent {
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
     if (acc->IsContent() && acc->GetContent()->IsXULElement(nsGkAtoms::menulist)) {
       // The way select elements work is that content has a COMBOBOX accessible, when it is clicked
@@ -87,7 +87,7 @@ enum CheckboxValue {
     }
   }
 
-  return [super moxIgnoreWithParent:parent];
+  return [super ignoreWithParent:parent];
 }
 
 @end
