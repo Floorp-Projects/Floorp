@@ -199,17 +199,6 @@ function unwrapPrivileged(x) {
   return wrappedObjects.get(x);
 }
 
-function wrapExceptions(global, fn) {
-  try {
-    return fn();
-  } catch (e) {
-    if (!Cu.getObjectPrincipal(global).subsumes(Cu.getObjectPrincipal(e))) {
-      throw wrapPrivileged(e, global);
-    }
-    throw e;
-  }
-}
-
 function specialPowersHasInstance(value) {
   // Because we return wrapped versions of this function, when it's called its
   // wrapper will unwrap the "this" as well as the function itself.  So our
@@ -225,41 +214,53 @@ let SpecialPowersHandler = {
     );
 
     // We want to invoke "obj" as a constructor, but using unwrappedArgs as
-    // the arguments.
-    let global = Cu.getGlobalForObject(this);
-    return wrapExceptions(global, () =>
-      wrapIfUnwrapped(
+    // the arguments.  Make sure to wrap and re-throw exceptions!
+    try {
+      return wrapIfUnwrapped(
         Reflect.construct(this.wrapped.get(target).obj, unwrappedArgs),
-        global
-      )
-    );
+        Cu.getGlobalForObject(this)
+      );
+    } catch (e) {
+      throw wrapIfUnwrapped(e, Cu.getGlobalForObject(this));
+    }
   },
 
   apply(target, thisValue, args) {
     let wrappedObject = this.wrapped.get(target).obj;
-    let global = Cu.getGlobalForObject(this);
+    let contentWindow = Cu.getGlobalForObject(this);
     // The invocant and arguments may or may not be wrappers. Unwrap
     // them if necessary.
     var invocant = unwrapIfWrapped(thisValue);
 
-    return wrapExceptions(global, () => {
-      if (noAutoWrap.has(wrappedObject)) {
-        args = Array.from(Cu.waiveXrays(args), x => Cu.unwaiveXrays(x));
+    if (noAutoWrap.has(wrappedObject)) {
+      args = Array.from(Cu.waiveXrays(args), x => Cu.unwaiveXrays(x));
+      try {
         return doApply(wrappedObject, invocant, args);
+      } catch (e) {
+        // Wrap exceptions and re-throw them.
+        throw wrapIfUnwrapped(e, contentWindow);
       }
+    }
 
-      if (wrappedObject.name == "then") {
-        args = Array.from(Cu.waiveXrays(args), x =>
-          wrapCallback(Cu.unwaiveXrays(x), global)
-        );
-      } else {
-        args = Array.from(Cu.waiveXrays(args), x =>
-          unwrapIfWrapped(Cu.unwaiveXrays(x))
-        );
-      }
+    if (wrappedObject.name == "then") {
+      args = Array.from(Cu.waiveXrays(args), x =>
+        wrapCallback(Cu.unwaiveXrays(x), contentWindow)
+      );
+    } else {
+      args = Array.from(Cu.waiveXrays(args), x =>
+        unwrapIfWrapped(Cu.unwaiveXrays(x))
+      );
+    }
 
-      return wrapIfUnwrapped(doApply(wrappedObject, invocant, args), global);
-    });
+    try {
+      return wrapIfUnwrapped(
+        doApply(wrappedObject, invocant, args),
+        contentWindow
+      );
+    } catch (e) {
+      // Wrap exceptions and re-throw them.
+      throw wrapIfUnwrapped(e, contentWindow);
+    }
   },
 
   has(target, prop) {
@@ -267,33 +268,29 @@ let SpecialPowersHandler = {
   },
 
   get(target, prop, receiver) {
-    let global = Cu.getGlobalForObject(this);
-    return wrapExceptions(global, () => {
-      let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
-      let val = Reflect.get(obj, prop);
-      if (val === undefined && prop == Symbol.hasInstance) {
-        // Special-case Symbol.hasInstance to pass the hasInstance check on to our
-        // target.  We only do this when the target doesn't have its own
-        // Symbol.hasInstance already.  Once we get rid of JS engine class
-        // instance hooks (bug 1448218) and always use Symbol.hasInstance, we can
-        // remove this bit (bug 1448400).
-        return wrapPrivileged(specialPowersHasInstance, global);
-      }
-      return wrapIfUnwrapped(val, global);
-    });
+    let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
+    let val = Reflect.get(obj, prop);
+    if (val === undefined && prop == Symbol.hasInstance) {
+      // Special-case Symbol.hasInstance to pass the hasInstance check on to our
+      // target.  We only do this when the target doesn't have its own
+      // Symbol.hasInstance already.  Once we get rid of JS engine class
+      // instance hooks (bug 1448218) and always use Symbol.hasInstance, we can
+      // remove this bit (bug 1448400).
+      return wrapPrivileged(
+        specialPowersHasInstance,
+        Cu.getGlobalForObject(this)
+      );
+    }
+    return wrapIfUnwrapped(val, Cu.getGlobalForObject(this));
   },
 
   set(target, prop, val, receiver) {
-    return wrapExceptions(Cu.getGlobalForObject(this), () => {
-      let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
-      return Reflect.set(obj, prop, unwrapIfWrapped(val));
-    });
+    let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
+    return Reflect.set(obj, prop, unwrapIfWrapped(val));
   },
 
   delete(target, prop) {
-    return wrapExceptions(Cu.getGlobalForObject(this), () => {
-      return Reflect.deleteProperty(this.wrapped.get(target).obj, prop);
-    });
+    return Reflect.deleteProperty(this.wrapped.get(target).obj, prop);
   },
 
   defineProperty(target, prop, descriptor) {
@@ -303,46 +300,46 @@ let SpecialPowersHandler = {
   },
 
   getOwnPropertyDescriptor(target, prop) {
-    let global = Cu.getGlobalForObject(this);
-    return wrapExceptions(global, () => {
-      let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
-      let desc = Reflect.getOwnPropertyDescriptor(obj, prop);
+    let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
+    let desc = Reflect.getOwnPropertyDescriptor(obj, prop);
 
-      if (desc === undefined) {
-        if (prop == Symbol.hasInstance) {
-          // Special-case Symbol.hasInstance to pass the hasInstance check on to
-          // our target.  We only do this when the target doesn't have its own
-          // Symbol.hasInstance already.  Once we get rid of JS engine class
-          // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
-          // can remove this bit (bug 1448400).
-          return {
-            value: wrapPrivileged(specialPowersHasInstance, global),
-            writeable: true,
-            configurable: true,
-            enumerable: false,
-          };
-        }
-
-        return undefined;
+    if (desc === undefined) {
+      if (prop == Symbol.hasInstance) {
+        // Special-case Symbol.hasInstance to pass the hasInstance check on to
+        // our target.  We only do this when the target doesn't have its own
+        // Symbol.hasInstance already.  Once we get rid of JS engine class
+        // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
+        // can remove this bit (bug 1448400).
+        return {
+          value: wrapPrivileged(
+            specialPowersHasInstance,
+            Cu.getGlobalForObject(this)
+          ),
+          writeable: true,
+          configurable: true,
+          enumerable: false,
+        };
       }
 
-      // Transitively maintain the wrapper membrane.
-      let wrapIfExists = key => {
-        if (key in desc) {
-          desc[key] = wrapIfUnwrapped(desc[key], global);
-        }
-      };
+      return undefined;
+    }
 
-      wrapIfExists("value");
-      wrapIfExists("get");
-      wrapIfExists("set");
+    // Transitively maintain the wrapper membrane.
+    let wrapIfExists = key => {
+      if (key in desc) {
+        desc[key] = wrapIfUnwrapped(desc[key], Cu.getGlobalForObject(this));
+      }
+    };
 
-      // A trapping proxy's properties must always be configurable, but sometimes
-      // we come across non-configurable properties. Tell a white lie.
-      desc.configurable = true;
+    wrapIfExists("value");
+    wrapIfExists("get");
+    wrapIfExists("set");
 
-      return wrapIfUnwrapped(desc, global);
-    });
+    // A trapping proxy's properties must always be configurable, but sometimes
+    // we come across non-configurable properties. Tell a white lie.
+    desc.configurable = true;
+
+    return wrapIfUnwrapped(desc, Cu.getGlobalForObject(this));
   },
 
   ownKeys(target) {
