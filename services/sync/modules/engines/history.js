@@ -70,7 +70,6 @@ HistoryEngine.prototype = {
       { newSyncID }
     );
     await PlacesSyncUtils.history.ensureCurrentSyncId(newSyncID);
-    await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
   },
 
@@ -86,7 +85,6 @@ HistoryEngine.prototype = {
   async resetLocalSyncID() {
     let newSyncID = await PlacesSyncUtils.history.resetSyncId();
     this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
-    await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
   },
 
@@ -97,7 +95,6 @@ HistoryEngine.prototype = {
 
   async setLastSync(lastSync) {
     await PlacesSyncUtils.history.setLastSync(lastSync);
-    await super.setLastSync(lastSync); // Remove in bug 1443021.
   },
 
   shouldSyncURL(url) {
