@@ -570,6 +570,15 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
     return handler_.newPropertyAccess(expr, key);
   }
 
+ private:
+  FunctionBox* newFunctionBoxImpl(FunctionNodeType funNode, JSFunction* fun,
+                                  JSAtom* explicitName, FunctionFlags flags,
+                                  uint32_t toStringStart, Directives directives,
+                                  GeneratorKind generatorKind,
+                                  FunctionAsyncKind asyncKind,
+                                  TopLevelFunction isTopLevel);
+
+ public:
   FunctionBox* newFunctionBox(FunctionNodeType funNode, JSFunction* fun,
                               uint32_t toStringStart, Directives directives,
                               GeneratorKind generatorKind,

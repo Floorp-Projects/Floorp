@@ -244,20 +244,20 @@ inline void GeneralParser<ParseHandler, Unit>::setInParametersOfAsyncFunction(
 }
 
 template <class ParseHandler>
-FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
-    FunctionNodeType funNode, JSFunction* fun, uint32_t toStringStart,
-    Directives inheritedDirectives, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, TopLevelFunction isTopLevel) {
+FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBoxImpl(
+    FunctionNodeType funNode, JSFunction* fun, JSAtom* explicitName,
+    FunctionFlags flags, uint32_t toStringStart, Directives inheritedDirectives,
+    GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+    TopLevelFunction isTopLevel) {
   MOZ_ASSERT(funNode);
-  MOZ_ASSERT(fun);
 
-  size_t index = this->getCompilationInfo().funcData.length();
-  if (!this->getCompilationInfo().functions.emplaceBack(fun)) {
+  size_t index = compilationInfo_.funcData.length();
+  if (!compilationInfo_.functions.emplaceBack(fun)) {
     return nullptr;
   }
   // Allocate `funcData` item even if isTopLevel == Yes, to use same index
-  // with `compilationInfo.functions` and `compilationInfo.asmJS`.
-  if (!this->getCompilationInfo().funcData.emplaceBack(cx_)) {
+  // with `compilationInfo_.functions` and `compilationInfo_.asmJS`.
+  if (!compilationInfo_.funcData.emplaceBack(cx_)) {
     return nullptr;
   }
 
@@ -273,9 +273,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, compilationInfo_.traceListHead, extent, this->getCompilationInfo(),
-      inheritedDirectives, generatorKind, asyncKind, fun->displayAtom(),
-      fun->flags(), index, isTopLevel);
+      cx_, compilationInfo_.traceListHead, extent, compilationInfo_,
+      inheritedDirectives, generatorKind, asyncKind, explicitName, flags, index,
+      isTopLevel);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -289,49 +289,24 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
 template <class ParseHandler>
 FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
+    FunctionNodeType funNode, JSFunction* fun, uint32_t toStringStart,
+    Directives inheritedDirectives, GeneratorKind generatorKind,
+    FunctionAsyncKind asyncKind, TopLevelFunction isTopLevel) {
+  MOZ_ASSERT(fun);
+  return newFunctionBoxImpl(funNode, fun, fun->displayAtom(), fun->flags(),
+                            toStringStart, inheritedDirectives, generatorKind,
+                            asyncKind, isTopLevel);
+}
+
+template <class ParseHandler>
+FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionNodeType funNode, HandleAtom explicitName, FunctionFlags flags,
     uint32_t toStringStart, Directives inheritedDirectives,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
     TopLevelFunction isTopLevel) {
-  MOZ_ASSERT(funNode);
-
-  CompilationInfo& compilationInfo = this->getCompilationInfo();
-
-  size_t index = compilationInfo.funcData.length();
-  if (!compilationInfo.functions.emplaceBack(nullptr)) {
-    return nullptr;
-  }
-  // Allocate `funcData` item even if isTopLevel == Yes, to use same index
-  // with `compilationInfo.functions` and `compilationInfo.asmJS`.
-  if (!compilationInfo.funcData.emplaceBack(cx_)) {
-    return nullptr;
-  }
-
-  // This source extent will be further filled in during the remainder of parse.
-  SourceExtent extent;
-  extent.toStringStart = toStringStart;
-
-  /*
-   * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-   * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-   * arenas containing the entries must be alive until we are done with
-   * scanning, parsing and code generation for the whole script or top-level
-   * function.
-   */
-  FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, compilationInfo.traceListHead, extent, compilationInfo,
-      inheritedDirectives, generatorKind, asyncKind, explicitName, flags, index,
-      isTopLevel);
-
-  if (!funbox) {
-    ReportOutOfMemory(cx_);
-    return nullptr;
-  }
-
-  compilationInfo.traceListHead = funbox;
-  handler_.setFunctionBox(funNode, funbox);
-
-  return funbox;
+  return newFunctionBoxImpl(funNode, nullptr, explicitName, flags,
+                            toStringStart, inheritedDirectives, generatorKind,
+                            asyncKind, isTopLevel);
 }
 
 void CompilationInfo::trace(JSTracer* trc) {
