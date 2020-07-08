@@ -491,7 +491,7 @@ nsresult nsComponentManagerImpl::Init() {
     InitializeModuleLocations();
     ComponentLocation* cl = sModuleLocations->AppendElement();
     cl->type = NS_APP_LOCATION;
-    RefPtr<nsZipArchive> greOmnijar =
+    RefPtr<CacheAwareZipReader> greOmnijar =
         mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
     if (greOmnijar) {
       cl->location.Init(greOmnijar, "chrome.manifest");
@@ -500,7 +500,7 @@ nsresult nsComponentManagerImpl::Init() {
       cl->location.Init(lf);
     }
 
-    RefPtr<nsZipArchive> appOmnijar =
+    RefPtr<CacheAwareZipReader> appOmnijar =
         mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
     if (appOmnijar) {
       cl = sModuleLocations->AppendElement();
