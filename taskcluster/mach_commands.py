@@ -212,7 +212,7 @@ class MachCommands(MachCommandBase):
     def taskgraph_cron(self, **options):
         print(
             'Handling of ".cron.yml" files has move to '
-            "https://hg.mozilla.org/ci/ci-admin/file/tip/build-decision."
+            "https://hg.mozilla.org/ci/ci-admin/file/default/build-decision."
         )
         sys.exit(1)
 
