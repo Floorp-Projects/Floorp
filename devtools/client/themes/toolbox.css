@@ -74,6 +74,10 @@
   --border-inline-end-width: 0;
 }
 
+.debug-target-info .navigation-button > img:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .debug-target-info .navigation-button:hover {
   background-color: var(--toolbarbutton-hover-background);
 }
@@ -106,6 +110,9 @@
   border-radius: 2px;
   height: 20px;
   padding-inline-start: 10px;
+  /* Ensure that the url is displayed correctly for RTL locales. */
+  unicode-bidi: plaintext;
+  text-align: match-parent;
 }
 
 .debug-target-info .debug-target-url-input,
@@ -243,8 +250,7 @@
 .devtools-tab > img {
   border: none;
   margin: 0;
-  margin-inline-start: 8px;
-  margin-inline-end: 6px;
+  margin-inline: 8px 6px;
   height: 16px;
   width: 16px;
   vertical-align: text-top;
