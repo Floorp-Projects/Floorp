@@ -702,10 +702,9 @@ nsXULAppInfo::GetUniqueProcessID(uint64_t* aResult) {
 NS_IMETHODIMP
 nsXULAppInfo::GetRemoteType(nsACString& aRemoteType) {
   if (XRE_IsContentProcess()) {
-    ContentChild* cc = ContentChild::GetSingleton();
-    aRemoteType.Assign(cc->GetRemoteType());
+    aRemoteType = ContentChild::GetSingleton()->GetRemoteType();
   } else {
-    aRemoteType = VoidCString();
+    aRemoteType = NOT_REMOTE_TYPE;
   }
 
   return NS_OK;
@@ -843,8 +842,8 @@ NS_IMETHODIMP
 nsXULAppInfo::EnsureContentProcess() {
   if (!XRE_IsParentProcess()) return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr<ContentParent> unused = ContentParent::GetNewOrUsedBrowserProcess(
-      nullptr, DEFAULT_REMOTE_TYPE);
+  RefPtr<ContentParent> unused =
+      ContentParent::GetNewOrUsedBrowserProcess(nullptr, DEFAULT_REMOTE_TYPE);
   return NS_OK;
 }
 
