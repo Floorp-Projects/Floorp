@@ -35,14 +35,14 @@ class RemoteWorkerManager final {
   void Launch(RemoteWorkerController* aController,
               const RemoteWorkerData& aData, base::ProcessId aProcessId);
 
-  static bool MatchRemoteType(const nsACString& processRemoteType,
-                              const nsACString& workerRemoteType);
+  static bool MatchRemoteType(const nsAString& processRemoteType,
+                              const nsAString& workerRemoteType);
 
   /**
    * Get the child process RemoteType where a RemoteWorker should be
    * launched.
    */
-  static Result<nsCString, nsresult> GetRemoteType(
+  static Result<nsString, nsresult> GetRemoteType(
       const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerType aWorkerType);
 
   /**
@@ -73,7 +73,7 @@ class RemoteWorkerManager final {
 
   void AsyncCreationFailed(RemoteWorkerController* aController);
 
-  static nsCString GetRemoteTypeForActor(
+  static nsString GetRemoteTypeForActor(
       const RemoteWorkerServiceParent* aActor);
 
   // Iterate through all RemoteWorkerServiceParent actors, starting from a

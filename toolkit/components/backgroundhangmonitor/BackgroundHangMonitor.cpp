@@ -22,7 +22,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/RemoteType.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -506,7 +505,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
 
   HangDetails hangDetails(aHangTime,
                           nsDependentCString(XRE_GetProcessTypeString()),
-                          NOT_REMOTE_TYPE, mThreadName, mRunnableName,
+                          VoidString(), mThreadName, mRunnableName,
                           std::move(mHangStack), std::move(mAnnotations));
 
   PersistedToDisk persistedToDisk = aPersistedToDisk;

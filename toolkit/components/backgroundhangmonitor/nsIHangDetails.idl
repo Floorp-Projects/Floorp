@@ -50,7 +50,7 @@ interface nsIHangDetails : nsISupports
   /**
    * The remote type of the content process which produced the hang.
    */
-  readonly attribute AUTF8String remoteType;
+  readonly attribute AString remoteType;
 
   /**
    * Returns the stack which was captured by BHR. The offset is encoded as a hex

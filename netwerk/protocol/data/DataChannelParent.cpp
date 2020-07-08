@@ -66,7 +66,7 @@ DataChannelParent::Delete() {
 }
 
 NS_IMETHODIMP
-DataChannelParent::GetRemoteType(nsACString& aRemoteType) {
+DataChannelParent::GetRemoteType(nsAString& aRemoteType) {
   if (!CanSend()) {
     return NS_ERROR_UNEXPECTED;
   }

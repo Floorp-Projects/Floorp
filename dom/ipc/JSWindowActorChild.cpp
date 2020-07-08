@@ -17,6 +17,10 @@
 namespace mozilla {
 namespace dom {
 
+JSWindowActorChild::JSWindowActorChild(nsIGlobalObject* aGlobal)
+    : mGlobal(aGlobal ? aGlobal
+                      : xpc::NativeGlobal(xpc::PrivilegedJunkScope())) {}
+
 JSWindowActorChild::~JSWindowActorChild() { MOZ_ASSERT(!mManager); }
 
 JSObject* JSWindowActorChild::WrapObject(JSContext* aCx,
@@ -35,19 +39,51 @@ void JSWindowActorChild::Init(const nsACString& aName,
   InvokeCallback(CallbackFunction::ActorCreated);
 }
 
+namespace {
+
+class AsyncMessageToParent : public Runnable {
+ public:
+  AsyncMessageToParent(const JSActorMessageMeta& aMetadata,
+                       ipc::StructuredCloneData&& aData,
+                       ipc::StructuredCloneData&& aStack,
+                       WindowGlobalChild* aManager)
+      : mozilla::Runnable("WindowGlobalParent::HandleAsyncMessage"),
+        mMetadata(aMetadata),
+        mData(std::move(aData)),
+        mStack(std::move(aStack)),
+        mManager(aManager) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
+    RefPtr<WindowGlobalParent> parent = mManager->GetParentActor();
+    if (parent) {
+      parent->ReceiveRawMessage(mMetadata, std::move(mData), std::move(mStack));
+    }
+    return NS_OK;
+  }
+
+ private:
+  JSActorMessageMeta mMetadata;
+  ipc::StructuredCloneData mData;
+  ipc::StructuredCloneData mStack;
+  RefPtr<WindowGlobalChild> mManager;
+};
+
+}  // anonymous namespace
+
 void JSWindowActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
                                         ipc::StructuredCloneData&& aData,
                                         ipc::StructuredCloneData&& aStack,
                                         ErrorResult& aRv) {
-  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->CanSend())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   if (mManager->IsInProcess()) {
-    SendRawMessageInProcess(
-        aMeta, std::move(aData), std::move(aStack),
-        [manager{mManager}]() { return manager->GetParentActor(); });
+    nsCOMPtr<nsIRunnable> runnable = new AsyncMessageToParent(
+        aMeta, std::move(aData), std::move(aStack), mManager);
+    NS_DispatchToMainThread(runnable.forget());
     return;
   }
 
@@ -108,7 +144,15 @@ Nullable<WindowProxyHolder> JSWindowActorChild::GetContentWindow(
   return nullptr;
 }
 
-void JSWindowActorChild::ClearManager() { mManager = nullptr; }
+void JSWindowActorChild::StartDestroy() {
+  JSActor::StartDestroy();
+  mCanSend = false;
+}
+
+void JSWindowActorChild::AfterDestroy() {
+  JSActor::AfterDestroy();
+  mManager = nullptr;
+}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(JSWindowActorChild, JSActor, mManager)
 
