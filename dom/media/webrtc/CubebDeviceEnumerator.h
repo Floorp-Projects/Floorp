@@ -80,6 +80,8 @@ class CubebDeviceEnumerator final {
   bool mManualOutputInvalidation;
   MediaEventProducer<void> mOnInputDeviceListChange;
   MediaEventProducer<void> mOnOutputDeviceListChange;
+  // The singleton instance.
+  static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 };
 
 typedef CubebDeviceEnumerator Enumerator;
