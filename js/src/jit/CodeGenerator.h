@@ -339,6 +339,16 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   Vector<CodeOffset, 0, JitAllocPolicy> ionScriptLabels_;
 
+  // Used to bake in a pointer into the IonScript's list of nursery objects, for
+  // MNurseryObject codegen.
+  struct NurseryObjectLabel {
+    CodeOffset offset;
+    uint32_t nurseryIndex;
+    NurseryObjectLabel(CodeOffset offset, uint32_t nurseryIndex)
+        : offset(offset), nurseryIndex(nurseryIndex) {}
+  };
+  Vector<NurseryObjectLabel, 0, JitAllocPolicy> ionNurseryObjectLabels_;
+
   void branchIfInvalidated(Register temp, Label* invalidated);
 
 #ifdef DEBUG

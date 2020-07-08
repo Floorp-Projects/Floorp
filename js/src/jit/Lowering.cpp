@@ -4090,6 +4090,13 @@ void LIRGenerator::visitGuardProto(MGuardProto* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitNurseryObject(MNurseryObject* ins) {
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LNurseryObject();
+  define(lir, ins);
+}
+
 void LIRGenerator::visitGuardObjectGroup(MGuardObjectGroup* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
