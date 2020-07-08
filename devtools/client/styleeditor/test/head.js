@@ -46,19 +46,22 @@ var addTab = function(url, win) {
   });
 };
 
-var navigateToAndWaitForStyleSheets = async function(url, ui) {
-  const onReset = ui.once("stylesheets-reset");
+var navigateToAndWaitForStyleSheets = async function(url, ui, editorCount) {
+  const onClear = ui.once("stylesheets-clear");
   await navigateTo(url);
-  await onReset;
+  await onClear;
+  await waitUntil(() => ui.editors.length === editorCount);
 };
 
-var reloadPageAndWaitForStyleSheets = async function(ui) {
+var reloadPageAndWaitForStyleSheets = async function(ui, editorCount) {
   info("Reloading the page.");
 
-  const onReset = ui.once("stylesheets-reset");
+  const onClear = ui.once("stylesheets-clear");
   const browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], () => content.location.reload());
-  await onReset;
+  await onClear;
+
+  await waitUntil(() => ui.editors.length === editorCount);
 };
 
 /**
