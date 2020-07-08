@@ -87,20 +87,20 @@ job-defaults:
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lint'
-                            - 'writeGithubBuildDetails'
+                            - 'githubBuildDetails'
                         # No testRelease on this job, gradle task isn't defined
                         tooling-detekt:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lintRelease'
-                            - 'writeGithubBuildDetails'
+                            - 'githubBuildDetails'
                         default:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:testRelease'
                             - ':{component}:lintRelease'
-                            - 'writeGithubBuildDetails'
+                            - 'githubBuildDetails'
         using: gradlew
         use-caches: false
     run-on-tasks-for:
