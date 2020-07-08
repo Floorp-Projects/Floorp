@@ -77,9 +77,8 @@ already_AddRefed<JSActor> JSActorManager::GetActor(const nsACString& aName,
     }
 
     if (NS_WARN_IF(!ctor.isObject())) {
-      aRv.ThrowNotFoundError(
-          nsPrintfCString("Could not find actor constructor '%s'",
-                          PromiseFlatCString(ctorName).get()));
+      aRv.ThrowNotFoundError(nsPrintfCString(
+          "Could not find actor constructor '%s'", ctorName.get()));
       return nullptr;
     }
 
@@ -99,8 +98,90 @@ already_AddRefed<JSActor> JSActorManager::GetActor(const nsACString& aName,
   return actor.forget();
 }
 
+#define CHILD_DIAGNOSTIC_ASSERT(test, msg) \
+  do {                                     \
+    if (XRE_IsParentProcess()) {           \
+      MOZ_ASSERT(test, msg);               \
+    } else {                               \
+      MOZ_DIAGNOSTIC_ASSERT(test, msg);    \
+    }                                      \
+  } while (0)
+
+void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
+                                       ipc::StructuredCloneData&& aData,
+                                       ipc::StructuredCloneData&& aStack) {
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+
+  CrashReporter::AutoAnnotateCrashReport autoActorName(
+      CrashReporter::Annotation::JSActorName, aMetadata.actorName());
+  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+      CrashReporter::Annotation::JSActorMessage,
+      NS_LossyConvertUTF16toASCII(aMetadata.messageName()));
+
+  // We're going to be running JS. Enter the privileged junk realm so we can set
+  // up our JS state correctly.
+  AutoEntryScript aes(xpc::PrivilegedJunkScope(), "JSActor message handler");
+  JSContext* cx = aes.cx();
+
+  // Ensure any errors reported to `error` are set on the scope, so they're
+  // reported.
+  ErrorResult error;
+  auto autoSetException =
+      MakeScopeExit([&] { Unused << error.MaybeSetPendingException(cx); });
+
+  // If an async stack was provided, set up our async stack state.
+  JS::Rooted<JSObject*> stack(cx);
+  Maybe<JS::AutoSetAsyncStackForNewCalls> stackSetter;
+  {
+    JS::Rooted<JS::Value> stackVal(cx);
+    aStack.Read(cx, &stackVal, error);
+    if (error.Failed()) {
+      return;
+    }
+
+    if (stackVal.isObject()) {
+      stack = &stackVal.toObject();
+      if (!js::IsSavedFrame(stack)) {
+        CHILD_DIAGNOSTIC_ASSERT(false, "Stack must be a SavedFrame object");
+        error.ThrowDataError("Actor async stack must be a SavedFrame object");
+        return;
+      }
+      stackSetter.emplace(cx, stack, "JSActor query");
+    }
+  }
+
+  RefPtr<JSActor> actor = GetActor(aMetadata.actorName(), error);
+  if (error.Failed()) {
+    return;
+  }
+
+  JS::Rooted<JS::Value> data(cx);
+  aData.Read(cx, &data, error);
+  if (error.Failed()) {
+    CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
+    return;
+  }
+
+  switch (aMetadata.kind()) {
+    case JSActorMessageKind::QueryResolve:
+    case JSActorMessageKind::QueryReject:
+      actor->ReceiveQueryReply(cx, aMetadata, data, error);
+      break;
+
+    case JSActorMessageKind::Message:
+    case JSActorMessageKind::Query:
+      actor->ReceiveMessageOrQuery(cx, aMetadata, data, error);
+      break;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+}
+
 void JSActorManager::JSActorWillDestroy() {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+      CrashReporter::Annotation::JSActorMessage, "<WillDestroy>"_ns);
 
   // Make a copy so that we can avoid potential iterator invalidation when
   // calling the user-provided Destroy() methods.
@@ -109,18 +190,24 @@ void JSActorManager::JSActorWillDestroy() {
     actors.AppendElement(entry.GetData());
   }
   for (auto& actor : actors) {
+    CrashReporter::AutoAnnotateCrashReport autoActorName(
+        CrashReporter::Annotation::JSActorName, actor->Name());
     actor->StartDestroy();
   }
 }
 
 void JSActorManager::JSActorDidDestroy() {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+      CrashReporter::Annotation::JSActorMessage, "<DidDestroy>"_ns);
 
   // Swap the table with `mJSActors` so that we don't invalidate it while
   // iterating.
   nsRefPtrHashtable<nsCStringHashKey, JSActor> actors;
   mJSActors.SwapElements(actors);
   for (auto& entry : actors) {
+    CrashReporter::AutoAnnotateCrashReport autoActorName(
+        CrashReporter::Annotation::JSActorName, entry.GetData()->Name());
     entry.GetData()->AfterDestroy();
   }
 }
