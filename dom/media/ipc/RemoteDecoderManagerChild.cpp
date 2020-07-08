@@ -5,15 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteDecoderManagerChild.h"
 
-#include "base/task.h"
-
 #include "RemoteDecoderChild.h"
+#include "VideoUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
 
@@ -21,7 +20,7 @@ using namespace layers;
 using namespace gfx;
 
 // Only modified on the main-thread
-StaticRefPtr<nsIThread> sRemoteDecoderManagerChildThread;
+StaticRefPtr<TaskQueue> sRemoteDecoderManagerChildThread;
 
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild>
@@ -36,10 +35,12 @@ void RemoteDecoderManagerChild::InitializeThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sRemoteDecoderManagerChildThread) {
-    RefPtr<nsIThread> childThread;
-    nsresult rv = NS_NewNamedThread("RemVidChild", getter_AddRefs(childThread));
-    NS_ENSURE_SUCCESS_VOID(rv);
-    sRemoteDecoderManagerChildThread = childThread;
+    // We can't use a MediaThreadType::PLAYBACK as the GpuDecoderModule and
+    // RemoteDecoderModule runs on it and dispatch synchronous tasks to the
+    // manager thread, should more than 4 concurrent videos being instantiated
+    // at the same time, we could end up in a deadlock.
+    sRemoteDecoderManagerChildThread = new TaskQueue(
+        GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "RemVidChild");
 
     sRecreateTasks = MakeUnique<nsTArray<RefPtr<Runnable>>>();
   }
@@ -49,20 +50,18 @@ void RemoteDecoderManagerChild::InitializeThread() {
 void RemoteDecoderManagerChild::InitForRDDProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
   InitializeThread();
-  sRemoteDecoderManagerChildThread->Dispatch(
+  MOZ_ALWAYS_SUCCEEDS(sRemoteDecoderManagerChildThread->Dispatch(
       NewRunnableFunction("InitForContentRunnable", &OpenForRDDProcess,
-                          std::move(aVideoManager)),
-      NS_DISPATCH_NORMAL);
+                          std::move(aVideoManager))));
 }
 
 /* static */
 void RemoteDecoderManagerChild::InitForGPUProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
   InitializeThread();
-  sRemoteDecoderManagerChildThread->Dispatch(
+  MOZ_ALWAYS_SUCCEEDS(sRemoteDecoderManagerChildThread->Dispatch(
       NewRunnableFunction("InitForContentRunnable", &OpenForGPUProcess,
-                          std::move(aVideoManager)),
-      NS_DISPATCH_NORMAL);
+                          std::move(aVideoManager))));
 }
 
 /* static */
@@ -70,24 +69,23 @@ void RemoteDecoderManagerChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sRemoteDecoderManagerChildThread) {
-    sRemoteDecoderManagerChildThread->Dispatch(
-        NS_NewRunnableFunction(
-            "dom::RemoteDecoderManagerChild::Shutdown",
-            []() {
+    MOZ_ALWAYS_SUCCEEDS(
+        sRemoteDecoderManagerChildThread->Dispatch(NS_NewRunnableFunction(
+            "dom::RemoteDecoderManagerChild::Shutdown", []() {
               if (sRemoteDecoderManagerChildForRDDProcess &&
                   sRemoteDecoderManagerChildForRDDProcess->CanSend()) {
                 sRemoteDecoderManagerChildForRDDProcess->Close();
-                sRemoteDecoderManagerChildForRDDProcess = nullptr;
               }
+              sRemoteDecoderManagerChildForRDDProcess = nullptr;
               if (sRemoteDecoderManagerChildForGPUProcess &&
                   sRemoteDecoderManagerChildForGPUProcess->CanSend()) {
                 sRemoteDecoderManagerChildForGPUProcess->Close();
-                sRemoteDecoderManagerChildForGPUProcess = nullptr;
               }
-            }),
-        NS_DISPATCH_NORMAL);
+              sRemoteDecoderManagerChildForGPUProcess = nullptr;
+            })));
 
-    sRemoteDecoderManagerChildThread->Shutdown();
+    sRemoteDecoderManagerChildThread->BeginShutdown();
+    sRemoteDecoderManagerChildThread->AwaitShutdownAndIdle();
     sRemoteDecoderManagerChildThread = nullptr;
 
     sRecreateTasks = nullptr;
@@ -96,7 +94,7 @@ void RemoteDecoderManagerChild::Shutdown() {
 
 void RemoteDecoderManagerChild::RunWhenGPUProcessRecreated(
     already_AddRefed<Runnable> aTask) {
-  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
+  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
 
   // If we've already been recreated, then run the task immediately.
   if (GetGPUProcessSingleton() && GetGPUProcessSingleton() != this &&
@@ -110,18 +108,18 @@ void RemoteDecoderManagerChild::RunWhenGPUProcessRecreated(
 
 /* static */
 RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetRDDProcessSingleton() {
-  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
+  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
   return sRemoteDecoderManagerChildForRDDProcess;
 }
 
 /* static */
 RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetGPUProcessSingleton() {
-  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
+  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
   return sRemoteDecoderManagerChildForGPUProcess;
 }
 
 /* static */
-nsIThread* RemoteDecoderManagerChild::GetManagerThread() {
+nsISerialEventTarget* RemoteDecoderManagerChild::GetManagerThread() {
   return sRemoteDecoderManagerChildThread;
 }
 
@@ -151,7 +149,7 @@ RemoteDecoderManagerChild::RemoteDecoderManagerChild(
 
 void RemoteDecoderManagerChild::OpenForRDDProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aEndpoint) {
-  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
+  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
   // Only create RemoteDecoderManagerChild, bind new endpoint and init
   // ipdl if:
   // 1) haven't init'd sRemoteDecoderManagerChild
@@ -199,18 +197,17 @@ void RemoteDecoderManagerChild::InitIPDL() {
 void RemoteDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
 bool RemoteDecoderManagerChild::DeallocShmem(mozilla::ipc::Shmem& aShmem) {
-  if (NS_GetCurrentThread() != sRemoteDecoderManagerChildThread) {
+  if (!sRemoteDecoderManagerChildThread->IsOnCurrentThread()) {
     RefPtr<RemoteDecoderManagerChild> self = this;
     mozilla::ipc::Shmem shmem = aShmem;
-    sRemoteDecoderManagerChildThread->Dispatch(
-        NS_NewRunnableFunction("RemoteDecoderManagerChild::DeallocShmem",
-                               [self, shmem]() {
-                                 if (self->CanSend()) {
-                                   mozilla::ipc::Shmem shmemCopy = shmem;
-                                   self->DeallocShmem(shmemCopy);
-                                 }
-                               }),
-        NS_DISPATCH_NORMAL);
+    MOZ_ALWAYS_SUCCEEDS(
+        sRemoteDecoderManagerChildThread->Dispatch(NS_NewRunnableFunction(
+            "RemoteDecoderManagerChild::DeallocShmem", [self, shmem]() {
+              if (self->CanSend()) {
+                mozilla::ipc::Shmem shmemCopy = shmem;
+                self->DeallocShmem(shmemCopy);
+              }
+            })));
     return true;
   }
   return PRemoteDecoderManagerChild::DeallocShmem(aShmem);
@@ -242,14 +239,12 @@ already_AddRefed<SourceSurface> RemoteDecoderManagerChild::Readback(
   RefPtr<RemoteDecoderManagerChild> ref = this;
   SurfaceDescriptor sd;
   if (NS_FAILED(sRemoteDecoderManagerChildThread->Dispatch(
-          NS_NewRunnableFunction("RemoteDecoderManagerChild::Readback",
-                                 [&]() {
-                                   AutoCompleteTask complete(&task);
-                                   if (ref->CanSend()) {
-                                     ref->SendReadback(aSD, &sd);
-                                   }
-                                 }),
-          NS_DISPATCH_NORMAL))) {
+          NS_NewRunnableFunction("RemoteDecoderManagerChild::Readback", [&]() {
+            AutoCompleteTask complete(&task);
+            if (ref->CanSend()) {
+              ref->SendReadback(aSD, &sd);
+            }
+          })))) {
     return nullptr;
   }
 
@@ -278,15 +273,14 @@ void RemoteDecoderManagerChild::DeallocateSurfaceDescriptor(
     const SurfaceDescriptorGPUVideo& aSD) {
   RefPtr<RemoteDecoderManagerChild> ref = this;
   SurfaceDescriptorGPUVideo sd = std::move(aSD);
-  sRemoteDecoderManagerChildThread->Dispatch(
-      NS_NewRunnableFunction(
+  MOZ_ALWAYS_SUCCEEDS(
+      sRemoteDecoderManagerChildThread->Dispatch(NS_NewRunnableFunction(
           "RemoteDecoderManagerChild::DeallocateSurfaceDescriptor",
           [ref, sd]() {
             if (ref->CanSend()) {
               ref->SendDeallocateSurfaceDescriptorGPUVideo(sd);
             }
-          }),
-      NS_DISPATCH_NORMAL);
+          })));
 }
 
 void RemoteDecoderManagerChild::HandleFatalError(const char* aMsg) const {
