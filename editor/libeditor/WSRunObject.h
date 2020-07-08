@@ -510,6 +510,9 @@ class MOZ_STACK_CLASS WSRunScanner {
       mRightWSType = WSType::TrailingWhiteSpaces;
     }
     bool EndsByNormalText() const { return mRightWSType == WSType::NormalText; }
+    bool EndsByTrailingWhiteSpaces() const {
+      return mRightWSType == WSType::TrailingWhiteSpaces;
+    }
     bool EndsBySpecialContent() const {
       return mRightWSType == WSType::SpecialContent;
     }
