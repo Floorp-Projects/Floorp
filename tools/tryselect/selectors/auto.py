@@ -8,6 +8,15 @@ from ..cli import BaseTryParser
 from ..push import push_to_try
 
 
+TRY_AUTO_PARAMETERS = {
+    'optimize_target_tasks': True,
+    'target_tasks_method': 'try_auto',
+    'test_manifest_loader': 'bugbug',
+    'try_mode': 'try_auto',
+    'try_task_config': {},
+}
+
+
 class AutoParser(BaseTryParser):
     name = 'auto'
     common_groups = ['push']
@@ -24,22 +33,19 @@ class AutoParser(BaseTryParser):
 def run(message='{msg}', push=True, closed_tree=False, try_config=None):
     print("warning: 'mach try auto' is experimental, results may vary!")
     msg = message.format(msg='Tasks automatically selected.')
-    try_config = try_config or {}
 
     # XXX Remove once an intelligent scheduling algorithm is running on
     # autoland by default. This ensures `mach try auto` doesn't run SETA.
     try_config.setdefault('optimize-strategies',
                           'taskgraph.optimize:tryselect.bugbug_debug_disperse')
 
+    params = TRY_AUTO_PARAMETERS.copy()
+    if try_config:
+        params['try_task_config'] = try_config
+
     task_config = {
         'version': 2,
-        'parameters': {
-            'optimize_target_tasks': True,
-            'target_tasks_method': 'try_auto',
-            'test_manifest_loader': 'bugbug',
-            'try_mode': 'try_auto',
-            'try_task_config': try_config or {},
-        }
+        'parameters': params,
     }
     return push_to_try('auto', msg, try_task_config=task_config,
                        push=push, closed_tree=closed_tree)

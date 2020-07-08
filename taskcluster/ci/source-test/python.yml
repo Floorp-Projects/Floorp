@@ -32,18 +32,19 @@ job-defaults:
             - 'config/mozunit/**'
             - 'python/mach_commands.py'
 
-taskgraph-tests:
+firefox-ci:
     description: taskcluster/taskgraph unit tests
-    python-version: [2, 3]
+    python-version: [2]
     treeherder:
-        symbol: tg
+        symbol: ci
     run:
         using: python-test
-        subsuite: taskgraph
+        subsuite: ci
     when:
         files-changed:
+            - 'taskcluster/ci/**'
             - 'taskcluster/**/*.py'
-            - 'python/mach/**/*.py'
+            - 'tools/tryselect/selectors/auto.py'
 
 mach:
     description: python/mach unit tests
@@ -310,6 +311,19 @@ reftest-harness:
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
+
+taskgraph-tests:
+    description: taskcluster/taskgraph unit tests
+    python-version: [2, 3]
+    treeherder:
+        symbol: tg
+    run:
+        using: python-test
+        subsuite: taskgraph
+    when:
+        files-changed:
+            - 'taskcluster/**/*.py'
+            - 'python/mach/**/*.py'
 
 tryselect:
     description: tools/tryselect unit tests
