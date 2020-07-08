@@ -50,7 +50,6 @@ const {
   DefaultMap,
   DefaultWeakMap,
   getInnerWindowID,
-  getWinUtils,
   promiseDocumentIdle,
   promiseDocumentLoaded,
   promiseDocumentReady,
@@ -390,19 +389,19 @@ class Script {
   cleanup(window) {
     if (this.requiresCleanup) {
       if (window) {
-        let winUtils = getWinUtils(window);
+        let { windowUtils } = window;
 
         let type =
           this.cssOrigin === "user"
-            ? winUtils.USER_SHEET
-            : winUtils.AUTHOR_SHEET;
+            ? windowUtils.USER_SHEET
+            : windowUtils.AUTHOR_SHEET;
 
         for (let url of this.css) {
           this.cssCache.deleteDocument(url, window.document);
 
           if (!window.closed) {
             runSafeSyncWithoutClone(
-              winUtils.removeSheetUsingURIString,
+              windowUtils.removeSheetUsingURIString,
               url,
               type
             );
@@ -414,7 +413,7 @@ class Script {
         if (cssCodeHash && this.cssCodeCache.has(cssCodeHash)) {
           if (!window.closed) {
             this.cssCodeCache.get(cssCodeHash).then(({ uri }) => {
-              runSafeSyncWithoutClone(winUtils.removeSheet, uri, type);
+              runSafeSyncWithoutClone(windowUtils.removeSheet, uri, type);
             });
           }
           this.cssCodeCache.deleteDocument(cssCodeHash, window.document);
@@ -481,17 +480,19 @@ class Script {
     let cssPromise;
     if (this.css.length || cssCodeHash) {
       let window = context.contentWindow;
-      let winUtils = getWinUtils(window);
+      let { windowUtils } = window;
 
       let type =
-        this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
+        this.cssOrigin === "user"
+          ? windowUtils.USER_SHEET
+          : windowUtils.AUTHOR_SHEET;
 
       if (this.removeCSS) {
         for (let url of this.css) {
           this.cssCache.deleteDocument(url, window.document);
 
           runSafeSyncWithoutClone(
-            winUtils.removeSheetUsingURIString,
+            windowUtils.removeSheetUsingURIString,
             url,
             type
           );
@@ -501,7 +502,7 @@ class Script {
           const { uri } = await this.cssCodeCache.get(cssCodeHash);
           this.cssCodeCache.deleteDocument(cssCodeHash, window.document);
 
-          runSafeSyncWithoutClone(winUtils.removeSheet, uri, type);
+          runSafeSyncWithoutClone(windowUtils.removeSheet, uri, type);
         }
       } else {
         cssPromise = Promise.all(this.loadCSS()).then(sheets => {
@@ -513,7 +514,7 @@ class Script {
           for (let { url, sheet } of sheets) {
             this.cssCache.addDocument(url, window.document);
 
-            runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
+            runSafeSyncWithoutClone(windowUtils.addSheet, sheet, type);
           }
         });
 
@@ -522,7 +523,7 @@ class Script {
             const { sheet } = await this.cssCodeCache.get(cssCodeHash);
             this.cssCodeCache.addDocument(cssCodeHash, window.document);
 
-            runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
+            runSafeSyncWithoutClone(windowUtils.addSheet, sheet, type);
           });
         }
 

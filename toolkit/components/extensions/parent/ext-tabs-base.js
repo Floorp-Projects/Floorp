@@ -27,7 +27,6 @@ var {
   DefaultMap,
   DefaultWeakMap,
   ExtensionError,
-  getWinUtils,
   parseMatchPatterns,
 } = ExtensionUtils;
 
@@ -1391,7 +1390,7 @@ class WindowTrackerBase extends EventEmitter {
     });
 
     this._windowIds = new DefaultWeakMap(window => {
-      return getWinUtils(window).outerWindowID;
+      return window.windowUtils.outerWindowID;
     });
   }
 
