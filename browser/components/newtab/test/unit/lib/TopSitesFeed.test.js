@@ -598,7 +598,10 @@ describe("Top Sites Feed", () => {
       await feed.init();
 
       assert.calledOnce(feed.refresh);
-      assert.calledWithExactly(feed.refresh, { broadcast: true });
+      assert.calledWithExactly(feed.refresh, {
+        broadcast: true,
+        isStartup: true,
+      });
     });
     it("should initialise the storage", async () => {
       await feed.init();
@@ -1622,7 +1625,11 @@ describe("Top Sites Feed", () => {
             },
           ],
         },
-        meta: { from: "ActivityStream:Main", to: "ActivityStream:Content" },
+        meta: {
+          from: "ActivityStream:Main",
+          to: "ActivityStream:Content",
+          isStartup: false,
+        },
         type: "UPDATE_SEARCH_SHORTCUTS",
       });
     });

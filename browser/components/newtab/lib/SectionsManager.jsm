@@ -261,8 +261,8 @@ const SectionsManager = {
     this.emit(this.REMOVE_SECTION, id);
     this.sections.delete(id);
   },
-  enableSection(id) {
-    this.updateSection(id, { enabled: true }, true);
+  enableSection(id, isStartup = false) {
+    this.updateSection(id, { enabled: true }, true, isStartup);
     this.emit(this.ENABLE_SECTION, id);
   },
   disableSection(id) {
@@ -278,14 +278,20 @@ const SectionsManager = {
       this.updateSection(id, section, true)
     );
   },
-  updateSection(id, options, shouldBroadcast) {
+  updateSection(id, options, shouldBroadcast, isStartup = false) {
     this.updateLinkMenuOptions(options, id);
     if (this.sections.has(id)) {
       const optionsWithDedupe = Object.assign({}, options, {
         dedupeConfigurations: this._dedupeConfiguration,
       });
       this.sections.set(id, Object.assign(this.sections.get(id), options));
-      this.emit(this.UPDATE_SECTION, id, optionsWithDedupe, shouldBroadcast);
+      this.emit(
+        this.UPDATE_SECTION,
+        id,
+        optionsWithDedupe,
+        shouldBroadcast,
+        isStartup
+      );
     }
   },
 
@@ -387,14 +393,22 @@ const SectionsManager = {
    * @param url             The url of the card to update
    * @param options         The options to update for the card
    * @param shouldBroadcast Whether or not to broadcast the update
+   * @param isStartup       If this update is during startup.
    */
-  updateSectionCard(id, url, options, shouldBroadcast) {
+  updateSectionCard(id, url, options, shouldBroadcast, isStartup = false) {
     if (this.sections.has(id)) {
       const card = this.sections.get(id).rows.find(elem => elem.url === url);
       if (card) {
         Object.assign(card, options);
       }
-      this.emit(this.UPDATE_SECTION_CARD, id, url, options, shouldBroadcast);
+      this.emit(
+        this.UPDATE_SECTION_CARD,
+        id,
+        url,
+        options,
+        shouldBroadcast,
+        isStartup
+      );
     }
   },
   removeSectionCard(sectionId, url) {
@@ -456,7 +470,12 @@ class SectionsFeed {
     );
     // Catch any sections that have already been added
     SectionsManager.sections.forEach((section, id) =>
-      this.onAddSection(SectionsManager.ADD_SECTION, id, section)
+      this.onAddSection(
+        SectionsManager.ADD_SECTION,
+        id,
+        section,
+        true /* isStartup */
+      )
     );
   }
 
@@ -472,12 +491,15 @@ class SectionsFeed {
     );
   }
 
-  onAddSection(event, id, options) {
+  onAddSection(event, id, options, isStartup = false) {
     if (options) {
       this.store.dispatch(
         ac.BroadcastToContent({
           type: at.SECTION_REGISTER,
           data: Object.assign({ id }, options),
+          meta: {
+            isStartup,
+          },
         })
       );
 
@@ -498,11 +520,20 @@ class SectionsFeed {
     );
   }
 
-  onUpdateSection(event, id, options, shouldBroadcast = false) {
+  onUpdateSection(
+    event,
+    id,
+    options,
+    shouldBroadcast = false,
+    isStartup = false
+  ) {
     if (options) {
       const action = {
         type: at.SECTION_UPDATE,
         data: Object.assign(options, { id }),
+        meta: {
+          isStartup,
+        },
       };
       this.store.dispatch(
         shouldBroadcast
@@ -512,11 +543,21 @@ class SectionsFeed {
     }
   }
 
-  onUpdateSectionCard(event, id, url, options, shouldBroadcast = false) {
+  onUpdateSectionCard(
+    event,
+    id,
+    url,
+    options,
+    shouldBroadcast = false,
+    isStartup = false
+  ) {
     if (options) {
       const action = {
         type: at.SECTION_UPDATE_CARD,
         data: { id, url, options },
+        meta: {
+          isStartup,
+        },
       };
       this.store.dispatch(
         shouldBroadcast

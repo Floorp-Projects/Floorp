@@ -601,7 +601,8 @@ describe("Highlights Feed", () => {
         sectionsManagerStub.updateSection,
         SECTION_ID,
         { rows: [] },
-        true
+        true,
+        undefined
       );
     });
     it("should broadcast if options.broadcast is true", async () => {
@@ -614,7 +615,8 @@ describe("Highlights Feed", () => {
         sectionsManagerStub.updateSection,
         SECTION_ID,
         { rows: [] },
-        true
+        true,
+        undefined
       );
     });
     it("should not broadcast if options.broadcast is false and initialized is true", async () => {
@@ -627,7 +629,8 @@ describe("Highlights Feed", () => {
         sectionsManagerStub.updateSection,
         SECTION_ID,
         { rows: [] },
-        false
+        false,
+        undefined
       );
     });
   });
@@ -725,7 +728,10 @@ describe("Highlights Feed", () => {
       feed.onAction({ type: at.SYSTEM_TICK });
 
       assert.calledOnce(feed.fetchHighlights);
-      assert.calledWithExactly(feed.fetchHighlights, { broadcast: false });
+      assert.calledWithExactly(feed.fetchHighlights, {
+        broadcast: false,
+        isStartup: false,
+      });
     });
     it("should fetch highlights on PREF_CHANGED for include prefs", async () => {
       feed.fetchHighlights = sinon.spy();
@@ -794,7 +800,10 @@ describe("Highlights Feed", () => {
       feed.onAction({ type: at.TOP_SITES_UPDATED });
 
       assert.calledOnce(feed.fetchHighlights);
-      assert.calledWithExactly(feed.fetchHighlights, { broadcast: false });
+      assert.calledWithExactly(feed.fetchHighlights, {
+        broadcast: false,
+        isStartup: false,
+      });
     });
     it("should call fetchHighlights when deleting or archiving from Pocket", async () => {
       feed.fetchHighlights = sinon.spy();
