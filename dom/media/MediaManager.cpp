@@ -1969,28 +1969,6 @@ bool MediaManager::IsInMediaThread() {
 }
 #endif
 
-#ifdef XP_WIN
-class MTAThread : public base::Thread {
- public:
-  explicit MTAThread(const char* aName)
-      : base::Thread(aName), mResult(E_FAIL) {}
-
- protected:
-  virtual void Init() override {
-    mResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-  }
-
-  virtual void CleanUp() override {
-    if (SUCCEEDED(mResult)) {
-      CoUninitialize();
-    }
-  }
-
- private:
-  HRESULT mResult;
-};
-#endif
-
 // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
 // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
 // from MediaManager thread.
@@ -2008,11 +1986,7 @@ MediaManager* MediaManager::Get() {
 
     {
       UniquePtr<base::Thread> mediaThread =
-#ifdef XP_WIN
-          MakeUnique<MTAThread>("MediaManager");
-#else
           MakeUnique<base::Thread>("MediaManager");
-#endif
 
       base::Thread::Options options;
       options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
