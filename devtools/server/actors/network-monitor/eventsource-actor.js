@@ -63,7 +63,9 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
 
   // Implement functions of nsIEventSourceEventService.
 
-  eventSourceConnectionOpened(httpChannelId) {},
+  eventSourceConnectionOpened(httpChannelId) {
+    this.emit("serverEventSourceConnectionOpened", httpChannelId);
+  },
 
   eventSourceConnectionClosed(httpChannelId) {
     this.emit("serverEventSourceConnectionClosed", httpChannelId);
