@@ -214,11 +214,11 @@ nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
 }
 
 nsresult nsWindowsShellService::LaunchControlPanelDefaultPrograms() {
-  return ::LaunchControlPanelDefaultPrograms();
+  return ::LaunchControlPanelDefaultPrograms() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult nsWindowsShellService::LaunchModernSettingsDialogDefaultApps() {
-  return ::LaunchModernSettingsDialogDefaultApps();
+  return ::LaunchModernSettingsDialogDefaultApps() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult nsWindowsShellService::InvokeHTTPOpenAsVerb() {

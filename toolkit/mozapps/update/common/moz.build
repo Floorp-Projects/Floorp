@@ -12,7 +12,7 @@ EXPORTS += [
     'updatererrors.h',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += [
         'pathhash.h',
         'uachelper.h',
@@ -39,7 +39,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 DisableStlWrapping()
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'pathhash.cpp',
         'uachelper.cpp',
