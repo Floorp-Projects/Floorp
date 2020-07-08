@@ -319,6 +319,18 @@ const TESTS = {
     await new Promise(r => Services.tm.dispatchToMainThread(r));
     ok(resolved, "once we resolve all the listeners, emitAsync is resolved");
   },
+
+  testCount() {
+    const emitter = getEventEmitter();
+
+    equal(emitter.count("foo"), 0, "no listeners for 'foo' events");
+    emitter.on("foo", () => {});
+    equal(emitter.count("foo"), 1, "listener registered");
+    emitter.on("foo", () => {});
+    equal(emitter.count("foo"), 2, "another listener registered");
+    emitter.off("foo");
+    equal(emitter.count("foo"), 0, "listeners unregistered");
+  },
 };
 
 // Wait for the next call to console.warn which includes
