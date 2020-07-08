@@ -59,6 +59,18 @@ nsresult RemoveCrashReportAnnotation(Annotation key) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, bool data) {}
+
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, int data) {}
+
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key,
+                                                 unsigned data) {}
+
+AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key,
+                                                 const nsACString& data) {}
+
+AutoAnnotateCrashReport::~AutoAnnotateCrashReport() {}
+
 void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc) {
 }
 

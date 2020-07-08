@@ -109,9 +109,11 @@ class MOZ_RAII AutoAnnotateCrashReport final {
   AutoAnnotateCrashReport(Annotation key, const nsACString& data);
   ~AutoAnnotateCrashReport();
 
+#ifdef MOZ_CRASHREPORTER
  private:
   Annotation mKey;
   nsCString mPrevious;
+#endif
 };
 
 void AnnotateOOMAllocationSize(size_t size);
