@@ -16,8 +16,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/LightweightThemeManager.jsm"
 );
 
-var { getWinUtils } = ExtensionUtils;
-
 const onUpdatedEmitter = new EventEmitter();
 
 // Represents an empty theme for convenience of use
@@ -118,9 +116,9 @@ class Theme {
     }
 
     if (this.windowId) {
-      this.lwtData.window = getWinUtils(
-        windowTracker.getWindow(this.windowId)
-      ).outerWindowID;
+      this.lwtData.window = windowTracker.getWindow(
+        this.windowId
+      ).windowUtils.outerWindowID;
       windowOverrides.set(this.windowId, this);
     } else {
       windowOverrides.clear();
@@ -386,9 +384,9 @@ class Theme {
     };
 
     if (windowId) {
-      lwtData.window = getWinUtils(
-        windowTracker.getWindow(windowId)
-      ).outerWindowID;
+      lwtData.window = windowTracker.getWindow(
+        windowId
+      ).windowUtils.outerWindowID;
       windowOverrides.delete(windowId);
     } else {
       windowOverrides.clear();

@@ -108,13 +108,8 @@ class DefaultMap extends Map {
   }
 }
 
-const _winUtils = new DefaultWeakMap(win => {
-  return win.windowUtils;
-});
-const getWinUtils = win => _winUtils.get(win);
-
 function getInnerWindowID(window) {
-  return getWinUtils(window).currentInnerWindowID;
+  return window.windowUtils.currentInnerWindowID;
 }
 
 /**
@@ -310,7 +305,6 @@ var ExtensionUtils = {
   getMessageManager,
   getUniqueId,
   filterStack,
-  getWinUtils,
   parseMatchPatterns,
   promiseDocumentIdle,
   promiseDocumentLoaded,
