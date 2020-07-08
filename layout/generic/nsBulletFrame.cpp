@@ -667,6 +667,8 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
         nsCOMPtr<imgIContainer> imageCon;
         mImageRequest->GetImage(getter_AddRefs(imageCon));
         if (imageCon) {
+          imageCon = nsLayoutUtils::OrientImage(
+              imageCon, StyleVisibility()->mImageOrientation);
           nsRect dest(padding.left, padding.top,
                       mRect.width - (padding.left + padding.right),
                       mRect.height - (padding.top + padding.bottom));
