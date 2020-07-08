@@ -67,6 +67,7 @@ class GCVector {
   bool initCapacity(size_t cap) { return vector.initCapacity(cap); }
   MOZ_MUST_USE bool reserve(size_t req) { return vector.reserve(req); }
   void shrinkBy(size_t amount) { return vector.shrinkBy(amount); }
+  void shrinkTo(size_t newLen) { return vector.shrinkTo(newLen); }
   MOZ_MUST_USE bool growBy(size_t amount) { return vector.growBy(amount); }
   MOZ_MUST_USE bool resize(size_t newLen) { return vector.resize(newLen); }
 
