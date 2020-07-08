@@ -82,7 +82,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
-            // verifyPageContent(defaultWebPage.content)
+            mDevice.waitForIdle()
             clickLinkMatchingText(defaultWebPage.content)
         }
 
@@ -100,7 +100,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
-            // verifyPageContent(defaultWebPage.content)
+            mDevice.waitForIdle()
             clickLinkMatchingText(defaultWebPage.content)
         }
 

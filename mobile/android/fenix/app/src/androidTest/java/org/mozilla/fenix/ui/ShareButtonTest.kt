@@ -50,7 +50,7 @@ class ShareButtonTest {
         //  - Visit a URL, wait until it's loaded
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            // verifyPageContent(defaultWebPage.content)
+            mDevice.waitForIdle()
         }
 
         // From the 3-dot menu next to the Select share menu

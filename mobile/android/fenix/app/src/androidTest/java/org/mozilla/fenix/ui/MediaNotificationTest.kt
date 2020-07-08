@@ -58,10 +58,8 @@ class MediaNotificationTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(videoTestPage.url) {
-            // verifyPageContent(videoTestPage.content)
+            mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
-            waitForPlaybackToStart()
-            // verifyPageContent("Media file is playing")
         }.openNotificationShade {
             verifySystemNotificationExists(videoTestPage.title)
             clickMediaSystemNotificationControlButton("Pause")
@@ -92,7 +90,7 @@ class MediaNotificationTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            // verifyPageContent(audioTestPage.content)
+            mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
         }.openNotificationShade {
@@ -125,10 +123,9 @@ class MediaNotificationTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            // verifyPageContent(audioTestPage.content)
+            mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
-            // verifyPageContent("Media file is playing")
         }.openTabDrawer {
             verifyTabMediaControlButtonState("Pause")
             clickTabMediaControlButton()
@@ -146,10 +143,9 @@ class MediaNotificationTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            // verifyPageContent(audioTestPage.content)
+            mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
-            // verifyPageContent("Media file is playing")
         }.openNotificationShade {
             verifySystemNotificationExists("A site is playing media")
             clickMediaSystemNotificationControlButton("Pause")

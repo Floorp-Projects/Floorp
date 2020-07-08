@@ -61,7 +61,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("Link 1")
             verifyLinkContextMenuItems(genericURL.url)
             clickContextOpenLinkInNewTab()
@@ -83,7 +83,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("Link 2")
             verifyLinkContextMenuItems(genericURL.url)
             clickContextOpenLinkInPrivateTab()
@@ -105,7 +105,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("Link 3")
             verifyLinkContextMenuItems(genericURL.url)
             clickContextCopyLink()
@@ -125,12 +125,13 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("Link 1")
             verifyLinkContextMenuItems(genericURL.url)
             clickContextShareLink(genericURL.url) // verify share intent is matched with associated URL
         }
     }
+
     @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/12367")
     @Test
     fun verifyContextOpenImageNewTab() {
@@ -141,7 +142,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("test_link_image")
             verifyLinkImageContextMenuItems(imageResource.url)
             clickContextOpenImageNewTab()
@@ -161,7 +162,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("test_link_image")
             verifyLinkImageContextMenuItems(imageResource.url)
             clickContextCopyImageLocation()
@@ -182,7 +183,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("test_link_image")
             verifyLinkImageContextMenuItems(imageResource.url)
             clickContextSaveImage()
@@ -209,7 +210,7 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            // verifyPageContent(pageLinks.content)
+            mDevice.waitForIdle()
             longClickMatchingText("Link 1")
             verifyLinkContextMenuItems(genericURL.url)
             dismissContentContextMenu(genericURL.url)

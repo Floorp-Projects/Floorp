@@ -19,6 +19,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.ui.robots.mDevice
 
 /**
  *  Tests for verifying basic functionality of content context menus
@@ -70,7 +71,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            // verifyPageContent(readerViewPage.content)
+            mDevice.waitForIdle()
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -99,7 +100,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            // verifyPageContent(genericPage.content)
+            mDevice.waitForIdle()
         }
 
         readerViewRobot {
@@ -120,7 +121,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            // verifyPageContent(readerViewPage.content)
+            mDevice.waitForIdle()
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -152,7 +153,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            // verifyPageContent(readerViewPage.content)
+            mDevice.waitForIdle()
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -187,7 +188,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            // verifyPageContent(readerViewPage.content)
+            mDevice.waitForIdle()
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -222,7 +223,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            // verifyPageContent(readerViewPage.content)
+            mDevice.waitForIdle()
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -263,7 +264,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            // verifyPageContent(readerViewPage.content)
+            mDevice.waitForIdle()
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)

@@ -50,12 +50,10 @@ class SmokeTest {
         homeScreen {
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                // verifyPageContent(defaultWebPage.content)
+                mDevice.waitForIdle()
                 verifyNavURLBarItems()
             }.openNavigationToolbar {
             }.goBackToWebsite {
-                // Check disabled due to intermittent failures
-                // verifyPageContent(defaultWebPage.content)
             }.openTabDrawer {
                 verifyExistingTabList()
             }.openHomeScreen {
