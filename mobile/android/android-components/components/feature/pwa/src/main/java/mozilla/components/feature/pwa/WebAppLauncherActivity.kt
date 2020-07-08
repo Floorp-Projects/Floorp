@@ -31,13 +31,9 @@ class WebAppLauncherActivity : AppCompatActivity() {
     private val logger = Logger("WebAppLauncherActivity")
     private lateinit var storage: ManifestStorage
 
-    private var backgroundStartTime: Long = 0L
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         storage = ManifestStorage(this)
-
-        backgroundStartTime = savedInstanceState?.getLong("backgroundStartTime") ?: 0L
 
         val startUrl = intent.data ?: return finish()
 
@@ -49,35 +45,21 @@ class WebAppLauncherActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSaveInstanceState(bundle: Bundle) {
-        // reset background start time
-        backgroundStartTime = 0L
-        bundle.putLong("backgroundStartTime", backgroundStartTime)
-        super.onSaveInstanceState(bundle)
-    }
-
     override fun onResume() {
         super.onResume()
-
-        val backgroundEndTime = SystemClock.elapsedRealtimeNanos()
-        emitBackgroundTimingFact(backgroundEndTime - backgroundStartTime)
-        setBackgroundStartTime(0L) // reset
+        val currTime = SystemClock.elapsedRealtimeNanos()
+        emitForegroundTimingFact(currTime)
     }
 
     override fun onPause() {
         super.onPause()
-        // record when we go into the background
-        setBackgroundStartTime(SystemClock.elapsedRealtimeNanos())
+        val currTime = SystemClock.elapsedRealtimeNanos()
+        emitBackgroundTimingFact(currTime)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun setBackgroundStartTime(timeNs: Long) {
-        backgroundStartTime = timeNs
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
