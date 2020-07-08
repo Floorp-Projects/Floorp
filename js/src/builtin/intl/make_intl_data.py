@@ -2092,11 +2092,38 @@ def generateTzDataTestBackzoneLinks(tzdataDir, version, ignoreBackzone, testDir)
     )
 
 
+def generateTzDataTestVersion(tzdataDir, version, testDir):
+    fileName = "timeZone_version.js"
+
+    with io.open(os.path.join(testDir, fileName), mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(u'// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
+        println(u"")
+        println(generatedFileWarning)
+        println(tzdataVersionComment.format(version))
+        println(u"""const tzdata = "{0}";""".format(version))
+
+        println(u"""
+if (typeof getICUOptions === "undefined") {
+    var getICUOptions = SpecialPowers.Cu.getJSTestingFunctions().getICUOptions;
+}
+
+var options = getICUOptions();
+
+assertEq(options.tzdata, tzdata);
+
+if (typeof reportCompare === "function")
+    reportCompare(0, 0, "ok");
+""")
+
+
 def generateTzDataTests(tzdataDir, version, ignoreBackzone, testDir):
     generateTzDataTestBackwardLinks(tzdataDir, version, ignoreBackzone, testDir)
     generateTzDataTestNotBackwardLinks(tzdataDir, version, ignoreBackzone, testDir)
     generateTzDataTestBackzone(tzdataDir, version, ignoreBackzone, testDir)
     generateTzDataTestBackzoneLinks(tzdataDir, version, ignoreBackzone, testDir)
+    generateTzDataTestVersion(tzdataDir, version, testDir)
 
 
 def updateTzdata(topsrcdir, args):
