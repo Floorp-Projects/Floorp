@@ -34,6 +34,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#ifdef JS_HAS_INTL_API
+#  include "builtin/intl/CommonFunctions.h"
+#endif
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #ifdef DEBUG
@@ -66,6 +69,13 @@
 #include "js/Vector.h"
 #include "js/Wrapper.h"
 #include "threading/CpuCount.h"
+#ifdef JS_HAS_INTL_API
+#  include "unicode/ucal.h"
+#  include "unicode/uchar.h"
+#  include "unicode/uloc.h"
+#  include "unicode/utypes.h"
+#  include "unicode/uversion.h"
+#endif
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/AsyncFunction.h"
@@ -5914,6 +5924,62 @@ static bool NumberToDouble(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedObject info(cx, JS_NewPlainObject(cx));
+  if (!info) {
+    return false;
+  }
+
+#ifdef JS_HAS_INTL_API
+  RootedString str(cx);
+
+  str = NewStringCopyZ<CanGC>(cx, U_ICU_VERSION);
+  if (!str || !JS_DefineProperty(cx, info, "version", str, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  str = NewStringCopyZ<CanGC>(cx, U_UNICODE_VERSION);
+  if (!str || !JS_DefineProperty(cx, info, "unicode", str, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  str = NewStringCopyZ<CanGC>(cx, uloc_getDefault());
+  if (!str || !JS_DefineProperty(cx, info, "locale", str, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  const char* tzdataVersion = ucal_getTZDataVersion(&status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  str = NewStringCopyZ<CanGC>(cx, tzdataVersion);
+  if (!str || !JS_DefineProperty(cx, info, "tzdata", str, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  str = intl::CallICU(cx, ucal_getDefaultTimeZone);
+  if (!str || !JS_DefineProperty(cx, info, "timezone", str, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+#  ifndef U_HIDE_DRAFT_API
+  str = intl::CallICU(cx, ucal_getHostTimeZone);
+  if (!str ||
+      !JS_DefineProperty(cx, info, "host-timezone", str, JSPROP_ENUMERATE)) {
+    return false;
+  }
+#  endif
+#endif
+
+  args.rval().setObject(*info);
+  return true;
+}
+
 static bool PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6883,6 +6949,16 @@ gc::ZealModeHelpText),
   JS_FN_HELP("numberToDouble", NumberToDouble, 1, 0,
 "numberToDouble(number)",
 "  Return the input number as double-typed number."),
+
+JS_FN_HELP("getICUOptions", GetICUOptions, 0, 0,
+"getICUOptions()",
+"  Return an object describing the following ICU options.\n\n"
+"    version: a string containing the ICU version number, e.g. '67.1'\n"
+"    unicode: a string containing the Unicode version number, e.g. '13.0'\n"
+"    locale: the ICU default locale, e.g. 'en_US'\n"
+"    tzdata: a string containing the tzdata version number, e.g. '2020a'\n"
+"    timezone: the ICU default time zone, e.g. 'America/Los_Angeles'\n"
+"    host-timezone: the host time zone, e.g. 'America/Los_Angeles'"),
 
     JS_FS_HELP_END
 };
