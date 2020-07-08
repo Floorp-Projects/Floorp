@@ -89,10 +89,6 @@ UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(
        "%p",
        aChannel));
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
-    return nullptr;
-  }
-
   if (UrlClassifierCommon::IsPassiveContent(aChannel)) {
     return nullptr;
   }

@@ -117,7 +117,7 @@ UrlClassifierFeatureFingerprintingProtection::MaybeCreate(
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
+  if (!UrlClassifierCommon::ShouldEnableProtectionForChannel(aChannel)) {
     return nullptr;
   }
 

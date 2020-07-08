@@ -86,10 +86,6 @@ UrlClassifierFeatureCryptominingAnnotation::MaybeCreate(nsIChannel* aChannel) {
       ("UrlClassifierFeatureCryptominingAnnotation: MaybeCreate for channel %p",
        aChannel));
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
-    return nullptr;
-  }
-
   MaybeInitialize();
   MOZ_ASSERT(gFeatureCryptominingAnnotation);
 
