@@ -37,6 +37,7 @@ using namespace webrtc::videocapturemodule;
   AVCaptureConnection* _connection;
   BOOL _captureChanging;  // Guarded by _captureChangingCondition.
   NSCondition* _captureChangingCondition;
+  dispatch_queue_t _frameQueue;
 }
 
 @synthesize frameRotation = _framRotation;
@@ -85,13 +86,18 @@ using namespace webrtc::videocapturemodule;
 #endif
   }
 
+  // Create a serial queue on which video capture will run. By setting the target,
+  // blocks should still run on DISPATH_QUEUE_PRIORITY_DEFAULT rather than creating
+  // a new thread.
+  _frameQueue = dispatch_queue_create("org.webrtc.videocapture", DISPATCH_QUEUE_SERIAL);
+  dispatch_set_target_queue(_frameQueue,
+                            dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+
   return self;
 }
 
 - (void)directOutputToSelf {
-  [[self currentOutput]
-      setSampleBufferDelegate:self
-                        queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+  [[self currentOutput] setSampleBufferDelegate:self queue:_frameQueue];
 }
 
 - (void)directOutputToNil {
@@ -159,7 +165,7 @@ using namespace webrtc::videocapturemodule;
 
   _orientationHasChanged = NO;
   _captureChanging = YES;
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+  dispatch_async(_frameQueue, ^{
     [self startCaptureInBackgroundWithOutput:currentOutput];
   });
   return YES;
@@ -247,8 +253,10 @@ using namespace webrtc::videocapturemodule;
 
   _captureChanging = YES;
   [_captureSession stopRunning];
-  [self signalCaptureChangeEnd];
 
+  dispatch_sync(_frameQueue, ^{
+    [self signalCaptureChangeEnd];
+  });
   return YES;
 }
 
