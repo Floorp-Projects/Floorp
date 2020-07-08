@@ -49,7 +49,6 @@ var {
   filterStack,
   getInnerWindowID,
   getUniqueId,
-  getWinUtils,
 } = ExtensionUtils;
 
 function getConsole() {
@@ -115,7 +114,7 @@ function normalizeTime(date) {
 }
 
 function withHandlingUserInput(window, callable) {
-  let handle = getWinUtils(window).setHandlingUserInput(true);
+  let handle = window.windowUtils.setHandlingUserInput(true);
   try {
     return callable();
   } finally {
@@ -1078,7 +1077,7 @@ class LocalAPIImplementation extends SchemaAPIInterface {
     let promise;
     try {
       if (requireUserInput) {
-        if (!getWinUtils(this.context.contentWindow).isHandlingUserInput) {
+        if (!this.context.contentWindow.windowUtils.isHandlingUserInput) {
           throw new ExtensionError(
             `${this.name} may only be called from a user input handler`
           );

@@ -16,11 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-var { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
-const { getWinUtils } = ExtensionUtils;
-
 /* eslint-env mozilla/frame-script */
 
 // Minimum time between two resizes.
@@ -84,7 +79,7 @@ const BrowserListener = {
     this.oldBackground = null;
 
     if (allowScriptsToClose) {
-      getWinUtils(content).allowScriptsToClose();
+      content.windowUtils.allowScriptsToClose();
     }
 
     // Force external links to open in tabs.
@@ -130,12 +125,12 @@ const BrowserListener = {
   },
 
   loadStylesheets() {
-    let winUtils = getWinUtils(content);
+    let { windowUtils } = content;
 
     for (let url of this.stylesheets) {
-      winUtils.addSheet(
+      windowUtils.addSheet(
         ExtensionCommon.stylesheetMap.get(url),
-        winUtils.AGENT_SHEET
+        windowUtils.AGENT_SHEET
       );
     }
   },

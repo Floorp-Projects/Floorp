@@ -53,7 +53,7 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-const { DefaultMap, LimitedSet, getUniqueId, getWinUtils } = ExtensionUtils;
+const { DefaultMap, LimitedSet, getUniqueId } = ExtensionUtils;
 
 const {
   EventEmitter,
@@ -592,7 +592,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   callAsyncFunction(args, callback, requireUserInput) {
     if (requireUserInput) {
       let context = this.childApiManager.context;
-      if (!getWinUtils(context.contentWindow).isHandlingUserInput) {
+      if (!context.contentWindow.windowUtils.isHandlingUserInput) {
         let err = new context.cloneScope.Error(
           `${this.path} may only be called from a user input handler`
         );
