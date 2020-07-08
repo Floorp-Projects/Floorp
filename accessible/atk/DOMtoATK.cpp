@@ -68,7 +68,7 @@ void ATKStringConverterHelper::AdjustOffsets(gint* aStartOffset,
     mStartShifted = true;
   }
 
-  if (*aEndOffset != -1 && *aEndOffset < count) {
+  if (*aEndOffset >= 0 && *aEndOffset < count) {
     (*aEndOffset)++;
     mEndShifted = true;
   }
