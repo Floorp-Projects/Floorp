@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const CRYPT_ALGO = "AES-CBC";
 const CRYPT_ALGO_LENGTH = 256;
+const CRYPT_ALGO_USAGES = ["encrypt", "decrypt"];
 const AES_CBC_IV_SIZE = 16;
 const OPERATIONS = { ENCRYPT: 0, DECRYPT: 1 };
 const UTF_LABEL = "utf-8";
@@ -147,7 +148,7 @@ WeaveCrypto.prototype = {
       name: CRYPT_ALGO,
       length: CRYPT_ALGO_LENGTH,
     };
-    let key = await crypto.subtle.generateKey(algo, true, []);
+    let key = await crypto.subtle.generateKey(algo, true, CRYPT_ALGO_USAGES);
     let keyBytes = await crypto.subtle.exportKey("raw", key);
     return this.encodeBase64(new Uint8Array(keyBytes));
   },

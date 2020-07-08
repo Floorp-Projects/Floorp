@@ -41,11 +41,9 @@ TestArray.addTest(
     }
 
     generateKey(["encrypt", "decrypt"]).then(function() {
-      return generateKey(["encrypt"]);
-    }).then(function() {
       return generateKey(["decrypt"]);
     }).then(function() {
-      return generateKey(["sign"]);
+      return Promise.any([generateKey(["encrypt"]), generateKey(["sign"])]);
     }, error(that)).then(error(that), complete(that));
   }
 );
@@ -55,9 +53,9 @@ TestArray.addTest(
 <body>
 
 <div id="content">
-	<div id="head">
-		<b>Web</b>Crypto<br>
-	</div>
+    <div id="head">
+        <b>Web</b>Crypto<br>
+    </div>
 
     <div id="start" onclick="start();">RUN ALL</div>
 
