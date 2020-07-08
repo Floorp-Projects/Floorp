@@ -93,9 +93,6 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   JS::Symbol* symbolStubField(uint32_t offset) {
     return reinterpret_cast<JS::Symbol*>(readStubWord(offset));
   }
-  JSObject* objectStubField(uint32_t offset) {
-    return reinterpret_cast<JSObject*>(readStubWord(offset));
-  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -105,6 +102,16 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   uint32_t uint32StubField(uint32_t offset) {
     return static_cast<uint32_t>(readStubWord(offset));
   }
+
+  // This must only be called when the caller knows the object is tenured and
+  // not a nursery index.
+  JSObject* tenuredObjectStubField(uint32_t offset) {
+    WarpObjectField field = WarpObjectField::fromData(readStubWord(offset));
+    return field.toObject();
+  }
+
+  // Returns either MConstant or MNurseryIndex. See WarpObjectField.
+  MInstruction* objectStubField(uint32_t offset);
 
   MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
 
@@ -178,6 +185,20 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
   return true;
 }
 
+MInstruction* WarpCacheIRTranspiler::objectStubField(uint32_t offset) {
+  WarpObjectField field = WarpObjectField::fromData(readStubWord(offset));
+
+  if (field.isNurseryIndex()) {
+    auto* ins = MNurseryObject::New(alloc(), field.toNurseryIndex());
+    add(ins);
+    return ins;
+  }
+
+  auto* ins = MConstant::NewConstraintlessObject(alloc(), field.toObject());
+  add(ins);
+  return ins;
+}
+
 bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
                                            GuardClassKind kind) {
   MDefinition* def = getOperand(objId);
@@ -235,11 +256,9 @@ bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
 bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
                                            uint32_t protoOffset) {
   MDefinition* def = getOperand(objId);
-  JSObject* proto = objectStubField(protoOffset);
+  MDefinition* proto = objectStubField(protoOffset);
 
-  MConstant* protoConst = constant(ObjectValue(*proto));
-
-  auto* ins = MGuardProto::New(alloc(), def, protoConst);
+  auto* ins = MGuardProto::New(alloc(), def, proto);
   add(ins);
 
   setOperand(objId, ins);
@@ -295,12 +314,9 @@ bool WarpCacheIRTranspiler::emitGuardSpecificSymbol(SymbolOperandId symId,
 bool WarpCacheIRTranspiler::emitGuardSpecificObject(ObjOperandId objId,
                                                     uint32_t expectedOffset) {
   MDefinition* obj = getOperand(objId);
-  JSObject* expected = objectStubField(expectedOffset);
+  MDefinition* expected = objectStubField(expectedOffset);
 
-  auto* constObj = MConstant::NewConstraintlessObject(alloc(), expected);
-  add(constObj);
-
-  auto* ins = MGuardObjectIdentity::New(alloc(), obj, constObj,
+  auto* ins = MGuardObjectIdentity::New(alloc(), obj, expected,
                                         /* bailOnEquality = */ false);
   add(ins);
 
@@ -311,18 +327,13 @@ bool WarpCacheIRTranspiler::emitGuardSpecificObject(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitGuardSpecificFunction(
     ObjOperandId objId, uint32_t expectedOffset, uint32_t nargsAndFlagsOffset) {
   MDefinition* obj = getOperand(objId);
-  JSObject* expected = objectStubField(expectedOffset);
+  MDefinition* expected = objectStubField(expectedOffset);
   uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
-
-  MOZ_ASSERT(expected->is<JSFunction>());
-
-  auto* constObj = MConstant::NewConstraintlessObject(alloc(), expected);
-  add(constObj);
 
   uint16_t nargs = nargsAndFlags >> 16;
   FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
 
-  auto* ins = MGuardSpecificFunction::New(alloc(), obj, constObj, nargs, flags);
+  auto* ins = MGuardSpecificFunction::New(alloc(), obj, expected, nargs, flags);
   add(ins);
 
   setOperand(objId, ins);
@@ -617,10 +628,7 @@ bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
 
 bool WarpCacheIRTranspiler::emitLoadObject(ObjOperandId resultId,
                                            uint32_t objOffset) {
-  JSObject* obj = objectStubField(objOffset);
-
-  auto* ins = MConstant::NewConstraintlessObject(alloc(), obj);
-  add(ins);
+  MInstruction* ins = objectStubField(objOffset);
 
   return defineOperand(resultId, ins);
 }
@@ -1758,7 +1766,7 @@ bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
     return true;
   }
 
-  JSObject* templateObj = objectStubField(templateObjectOffset);
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
   MConstant* templateConst = constant(ObjectValue(*templateObj));
 
   // TODO: support pre-tenuring.

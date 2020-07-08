@@ -285,5 +285,7 @@ void WarpBailout::traceData(JSTracer* trc) {
 
 void WarpCacheIR::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, stubCode_, "warp-stub-code");
-  // TODO: trace pointers in stub data.
+
+  // TODO: trace pointers in stub data. Beware of nursery indexes in the stub
+  // data. See WarpObjectField.
 }
