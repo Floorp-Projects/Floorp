@@ -3243,38 +3243,22 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
   ListGeneric(str, aPrefix, aFlags);
   ExtraContainerFrameInfo(str);
 
-  // Output the children
-  bool outputOneList = false;
-  for (const auto& [list, listID] : ChildLists()) {
-    if (outputOneList) {
-      str += aPrefix;
-    }
-    if (listID != kPrincipalList) {
-      if (!outputOneList) {
-        str += "\n";
-        str += aPrefix;
-      }
-      str += nsPrintfCString("%s %p ", mozilla::layout::ChildListName(listID),
-                             &GetChildList(listID));
-    }
-    fprintf_stderr(out, "%s<\n", str.get());
-    str = "";
-    for (nsIFrame* kid : list) {
-      // Verify the child frame's parent frame pointer is correct
-      NS_ASSERTION(kid->GetParent() == this, "bad parent frame pointer");
+  // Output the frame name and various fields.
+  fprintf_stderr(out, "%s <\n", str.get());
 
-      // Have the child frame list
-      nsCString pfx(aPrefix);
-      pfx += "  ";
-      kid->List(out, pfx.get(), aFlags);
-    }
-    fprintf_stderr(out, "%s>\n", aPrefix);
-    outputOneList = true;
+  const nsCString pfx = nsCString(aPrefix) + "  "_ns;
+
+  // Output principal child list separately since we want to omit its
+  // name and address.
+  for (nsIFrame* kid : PrincipalChildList()) {
+    kid->List(out, pfx.get(), aFlags);
   }
 
-  if (!outputOneList) {
-    fprintf_stderr(out, "%s<>\n", str.get());
-  }
+  // Output rest of the child lists.
+  const ChildListIDs skippedListIDs = {kPrincipalList};
+  ListChildLists(out, pfx.get(), aFlags, skippedListIDs);
+
+  fprintf_stderr(out, "%s>\n", aPrefix);
 }
 
 void nsContainerFrame::ListWithMatchedRules(FILE* out,
@@ -3314,6 +3298,8 @@ void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
     fprintf_stderr(aOut, "%s", str.get());
 
     for (nsIFrame* kid : list) {
+      // Verify the child frame's parent frame pointer is correct.
+      NS_ASSERTION(kid->GetParent() == this, "Bad parent frame pointer!");
       kid->List(aOut, nestedPfx.get(), aFlags);
     }
     fprintf_stderr(aOut, "%s>\n", aPrefix);
