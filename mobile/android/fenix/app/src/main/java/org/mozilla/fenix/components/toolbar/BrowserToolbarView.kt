@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.annotation.LayoutRes
+import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -29,6 +30,8 @@ import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -94,9 +97,6 @@ class BrowserToolbarView(
                 view.context.resources.getDimensionPixelSize(R.dimen.context_menu_height),
                 true
             )
-
-            val selectedSession = container.context.components.core.sessionManager.selectedSession
-
             popupWindow.elevation =
                 view.context.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
 
@@ -110,11 +110,7 @@ class BrowserToolbarView(
 
             customView.copy.setOnClickListener {
                 popupWindow.dismiss()
-                if (isCustomTabSession) {
-                    clipboard.text = customTabSession?.url
-                } else {
-                    clipboard.text = selectedSession?.url
-                }
+                clipboard.text = getUrlForClipboard(it.context.components.core.store, customTabSession)
 
                 FenixSnackbar.make(
                     view = view,
@@ -300,5 +296,15 @@ class BrowserToolbarView(
 
     companion object {
         private const val TOOLBAR_ELEVATION = 16
+
+        @VisibleForTesting
+        internal fun getUrlForClipboard(store: BrowserStore, customTabSession: Session? = null): String? {
+            return if (customTabSession != null) {
+                customTabSession.url
+            } else {
+                val selectedTab = store.state.selectedTab
+                selectedTab?.readerState?.activeUrl ?: selectedTab?.content?.url
+            }
+        }
     }
 }
