@@ -1098,11 +1098,11 @@ nsresult JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
     // We do sanity-checking for these in ParseSdp
     ice->mUfrag = remote.GetIceUfrag();
     ice->mPwd = remote.GetIcePwd();
-    if (remote.HasAttribute(SdpAttribute::kCandidateAttribute)) {
-      ice->mCandidates = remote.GetCandidate();
-    }
-
     transport->mIce = std::move(ice);
+  }
+
+  if (remote.HasAttribute(SdpAttribute::kCandidateAttribute)) {
+    transport->mIce->mCandidates = remote.GetCandidate();
   }
 
   if (!transport->mDtls) {
