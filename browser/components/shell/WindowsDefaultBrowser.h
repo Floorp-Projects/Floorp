@@ -12,11 +12,10 @@
 #define windowsdefaultbrowser_h____
 
 #include "mozilla/UniquePtr.h"
-#include "nsError.h"
 
-nsresult GetInstallDirectory(mozilla::UniquePtr<wchar_t[]>& installPath);
-nsresult GetAppRegName(mozilla::UniquePtr<wchar_t[]>& aAppRegName);
-nsresult LaunchControlPanelDefaultPrograms();
-nsresult LaunchModernSettingsDialogDefaultApps();
+bool GetInstallDirectory(mozilla::UniquePtr<wchar_t[]>& installPath);
+bool GetAppRegName(mozilla::UniquePtr<wchar_t[]>& aAppRegName);
+bool LaunchControlPanelDefaultPrograms();
+bool LaunchModernSettingsDialogDefaultApps();
 
 #endif  // windowsdefaultbrowser_h____

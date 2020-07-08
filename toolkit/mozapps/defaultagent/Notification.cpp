@@ -151,8 +151,8 @@ static bool ConvertToWide(const char* toConvert,
 // Returns true on success, false on failure
 static bool GetStrings(Strings& strings) {
   mozilla::UniquePtr<wchar_t[]> installPath;
-  nsresult rv = GetInstallDirectory(installPath);
-  if (NS_FAILED(rv)) {
+  bool success = GetInstallDirectory(installPath);
+  if (!success) {
     LOG_ERROR_MESSAGE(L"Failed to get install directory when getting strings");
     return false;
   }
@@ -389,8 +389,8 @@ static NotificationActivities ShowNotification(
 
   // We need the absolute image path, not the relative path.
   mozilla::UniquePtr<wchar_t[]> installPath;
-  nsresult rv = GetInstallDirectory(installPath);
-  if (NS_FAILED(rv)) {
+  success = GetInstallDirectory(installPath);
+  if (!success) {
     LOG_ERROR_MESSAGE(L"Failed to get install directory for the image path");
     return activitiesPerformed;
   }
@@ -493,8 +493,8 @@ bool IsEnglish() {
   }
 
   mozilla::UniquePtr<wchar_t[]> installPath;
-  nsresult rv = GetInstallDirectory(installPath);
-  if (NS_FAILED(rv)) {
+  bool success = GetInstallDirectory(installPath);
+  if (!success) {
     LOG_ERROR_MESSAGE(L"Failed to get install directory when getting strings");
     return false;
   }
