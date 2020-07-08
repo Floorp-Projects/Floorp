@@ -381,6 +381,7 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/url-classifier/tests/mochitest/good.js
         - toolkit/components/url-classifier/tests/mochitest/test_annotation_vs_TP.html
         - toolkit/components/url-classifier/tests/mochitest/test_classified_annotations.html
+        - toolkit/components/url-classifier/tests/mochitest/test_classify_by_default.html
         - toolkit/components/url-classifier/tests/mochitest/test_classify_ping.html
         - toolkit/components/url-classifier/tests/mochitest/test_classify_track.html
         - toolkit/components/url-classifier/tests/mochitest/test_cryptomining_annotate.html
