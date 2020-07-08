@@ -171,6 +171,17 @@ class StartupCache : public nsIMemoryReporter {
 
   static StartupCache* GetSingletonNoInit();
   static StartupCache* GetSingleton();
+
+  // This will get the StartupCache up and running to get cached entries, but
+  // it won't init some of the deferred things which require later services
+  // to be up and running.
+  static nsresult PartialInitSingleton(nsIFile* aProfileLocalDir);
+
+  // If the startup cache singleton exists (initialized via
+  // PartialInitSingleton), this will ensure that all of the ancillary
+  // requirements of the startup cache are met.
+  static nsresult FullyInitSingleton();
+
   static void DeleteSingleton();
 
   // This measures all the heap memory used by the StartupCache, i.e. it
@@ -189,7 +200,8 @@ class StartupCache : public nsIMemoryReporter {
   friend class StartupCacheInfo;
 
   Result<Ok, nsresult> LoadArchive();
-  nsresult Init();
+  nsresult PartialInit(nsIFile* aProfileLocalDir);
+  nsresult FullyInit();
 
   // Returns a file pointer for the cache file with the given name in the
   // current profile.
@@ -204,7 +216,6 @@ class StartupCache : public nsIMemoryReporter {
   void WaitOnPrefetchThread();
   void StartPrefetchMemoryThread();
 
-  static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
   void MaybeWriteOffMainThread();
   static void ThreadedPrefetch(void* aClosure);
