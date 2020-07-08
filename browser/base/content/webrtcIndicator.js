@@ -155,30 +155,33 @@ const WebRTCIndicator = {
     }
     displayShare.setAttribute("aria-labelledby", labelledBy);
 
-    // Resize and ensure the window position is correct
-    // (sizeToContent messes with our position).
-    let docElStyle = document.documentElement.style;
-    docElStyle.minWidth = docElStyle.maxWidth = "unset";
-    docElStyle.minHeight = docElStyle.maxHeight = "unset";
-    window.sizeToContent();
+    if (window.windowState != window.STATE_MINIMIZED) {
+      // Resize and ensure the window position is correct
+      // (sizeToContent messes with our position).
+      let docElStyle = document.documentElement.style;
+      docElStyle.minWidth = docElStyle.maxWidth = "unset";
+      docElStyle.minHeight = docElStyle.maxHeight = "unset";
+      window.sizeToContent();
 
-    // On Linux GTK, the style of window we're using by default is resizable. We
-    // workaround this by setting explicit limits on the height and width of the
-    // window.
-    if (AppConstants.platform == "linux") {
-      let { width, height } = window.windowUtils.getBoundsWithoutFlushing(
-        document.documentElement
-      );
+      // On Linux GTK, the style of window we're using by default is resizable. We
+      // workaround this by setting explicit limits on the height and width of the
+      // window.
+      if (AppConstants.platform == "linux") {
+        let { width, height } = window.windowUtils.getBoundsWithoutFlushing(
+          document.documentElement
+        );
 
-      docElStyle.minWidth = docElStyle.maxWidth = `${width}px`;
-      docElStyle.minHeight = docElStyle.maxHeight = `${height}px`;
+        docElStyle.minWidth = docElStyle.maxWidth = `${width}px`;
+        docElStyle.minHeight = docElStyle.maxHeight = `${height}px`;
+      }
+
+      this.ensureOnScreen();
+
+      if (!this.positionCustomized) {
+        this.centerOnDisplay(initialLayout);
+      }
     }
 
-    this.ensureOnScreen();
-
-    if (!this.positionCustomized) {
-      this.centerOnDisplay(initialLayout);
-    }
     this.updatingIndicatorState = false;
   },
 
@@ -298,6 +301,12 @@ const WebRTCIndicator = {
         }
         break;
       }
+      case "sizemodechange": {
+        if (window.windowState != window.STATE_MINIMIZED) {
+          this.updateIndicatorState();
+        }
+        break;
+      }
     }
   },
 
@@ -307,6 +316,7 @@ const WebRTCIndicator = {
     this.updateIndicatorState(true /* initialLayout */);
 
     window.addEventListener("click", this);
+    window.addEventListener("sizemodechange", this);
     window.windowRoot.addEventListener("MozUpdateWindowPos", this);
 
     // Alert accessibility implementations stuff just changed. We only need to do
