@@ -218,10 +218,19 @@ class Browsertime(Perftest):
             # recorder.  In the future we'd like to be able to selectively use Android's `adb
             # screenrecord` as well.  (There's no harm setting Firefox options for other browsers.)
             browsertime_options.extend([
-                "--video", "true",
-                # Bug 1635749, disable window recorder temporarily
-                "--firefox.windowRecorder", "false",
+                "--video", "true"
             ])
+
+            if self.browsertime_no_ffwindowrecorder:
+                browsertime_options.extend([
+                    "--firefox.windowRecorder", "false",
+                ])
+                LOG.info("Using adb screenrecord for mobile, or ffmpeg on desktop for videos")
+            else:
+                browsertime_options.extend([
+                    "--firefox.windowRecorder", "true",
+                ])
+                LOG.info("Using Firefox Window Recorder for videos")
         else:
             browsertime_options.extend([
                 "--video", "false",
