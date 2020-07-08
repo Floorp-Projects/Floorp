@@ -8490,7 +8490,7 @@
 # a descendant frame of A) to a URI that loads externally.
 - name: security.allow_disjointed_external_uri_loads
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
