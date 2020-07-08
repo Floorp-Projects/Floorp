@@ -519,8 +519,14 @@
   cost_estimate: 2
   args:
     obj: ObjId
-    hasExpando: BoolImm
     shapeWrapper: ObjectField
+
+- name: GuardXrayNoExpando
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
 
 # Guard obj[slot] == proto.
 - name: GuardFunctionPrototype
