@@ -5,8 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import re
 
-_JOINED_SYMBOL_RE = re.match(r'([^(]*)\(([^)]*)\)$')
-
 
 def split_symbol(treeherder_symbol):
     """Split a symbol expressed as grp(sym) into its two parts.  If no group is
@@ -14,11 +12,7 @@ def split_symbol(treeherder_symbol):
     groupSymbol = '?'
     symbol = treeherder_symbol
     if '(' in symbol:
-        match = _JOINED_SYMBOL_RE.match(symbol)
-        if match:
-            groupSymbol, symbol = match
-        else:
-            raise Exception("`{}` is not a valid treeherder symbol.".format(symbol))
+        groupSymbol, symbol = re.match(r'([^(]*)\(([^)]*)\)', symbol).groups()
     return groupSymbol, symbol
 
 
