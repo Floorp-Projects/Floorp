@@ -246,34 +246,12 @@ const observer = {
           let triggeredByFillingGenerated = docState.generatedPasswordFields.has(
             aEvent.target
           );
-          if (
-            triggeredByFillingGenerated ||
-            LoginHelper.passwordEditCaptureEnabled
-          ) {
+          // Autosave generated password initial fills and subsequent edits
+          if (triggeredByFillingGenerated) {
             LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
               aEvent.target,
               {
                 triggeredByFillingGenerated,
-              }
-            );
-          }
-        } else {
-          let [usernameField, passwordField] = LoginManagerChild.forWindow(
-            window
-          ).getUserNameAndPasswordFields(aEvent.target);
-          if (
-            usernameField &&
-            aEvent.target == usernameField &&
-            passwordField &&
-            passwordField.value &&
-            LoginHelper.passwordEditCaptureEnabled
-          ) {
-            LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
-              passwordField,
-              {
-                triggeredByFillingGenerated: docState.generatedPasswordFields.has(
-                  passwordField
-                ),
               }
             );
           }
@@ -348,6 +326,35 @@ const observer = {
           docState.fillsByRootElement.delete(formLikeRoot);
         }
 
+        if (!LoginHelper.passwordEditCaptureEnabled) {
+          break;
+        }
+        if (aEvent.target.hasBeenTypePassword) {
+          // Don't check for triggeredByFillingGenerated, as we do not want to autosave
+          // a field marked as a generated password field on every "input" event
+          LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
+            aEvent.target
+          );
+        } else {
+          let [usernameField, passwordField] = LoginManagerChild.forWindow(
+            window
+          ).getUserNameAndPasswordFields(aEvent.target);
+          if (
+            usernameField &&
+            aEvent.target == usernameField &&
+            passwordField &&
+            passwordField.value
+          ) {
+            LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
+              passwordField,
+              {
+                triggeredByFillingGenerated: docState.generatedPasswordFields.has(
+                  passwordField
+                ),
+              }
+            );
+          }
+        }
         break;
       }
 
@@ -1712,7 +1719,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           form.rootElement,
           usernameValue,
           newPasswordField.value,
-          dismissedPrompt
+          dismissedPrompt,
+          triggeredByFillingGenerated
         )
       ) {
         log(

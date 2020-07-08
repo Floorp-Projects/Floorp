@@ -217,6 +217,83 @@ let testCases = [
       doorhanger: null,
     },
   },
+  {
+    name:
+      "Ensure a dismissed password-save doorhanger appears on an input event when editing an unsaved password",
+    prefEnabled: true,
+    logins: [],
+    formDefaults: {},
+    formChanges: {
+      [passwordInputSelector]: "a",
+    },
+    shouldBlur: false,
+    expected: {
+      initialForm: {
+        username: "",
+        password: "",
+      },
+      doorhanger: {
+        type: "password-save",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "",
+        password: "a",
+        toggle: "visible",
+      },
+    },
+  },
+  {
+    name:
+      "Ensure a dismissed password-save doorhanger appears with the latest input value upon editing an unsaved password",
+    prefEnabled: true,
+    logins: [],
+    formDefaults: {},
+    formChanges: {
+      [passwordInputSelector]: "a",
+      [passwordInputSelector]: "ab",
+      [passwordInputSelector]: "abc",
+    },
+    shouldBlur: false,
+    expected: {
+      initialForm: {
+        username: "",
+        password: "",
+      },
+      doorhanger: {
+        type: "password-save",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "",
+        password: "abc",
+        toggle: "visible",
+      },
+    },
+  },
+  {
+    name:
+      "Ensure a dismissed password-change doorhanger appears on an input event when editing a saved password",
+    prefEnabled: true,
+    logins: [{ username: "", password: "pass1" }],
+    formDefaults: {},
+    formChanges: {
+      [passwordInputSelector]: "pass",
+    },
+    shouldBlur: false,
+    expected: {
+      initialForm: {
+        username: "",
+        password: "pass1",
+      },
+      doorhanger: {
+        type: "password-change",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "",
+        password: "pass",
+        toggle: "visible",
+      },
+    },
+  },
 ];
 
 requestLongerTimeout(2);
@@ -255,7 +332,13 @@ async function waitForPromise(promise, timeoutMs = 5000) {
 }
 
 async function testPasswordChange(
-  { logins = [], formDefaults = {}, formChanges = {}, expected },
+  {
+    logins = [],
+    formDefaults = {},
+    formChanges = {},
+    expected,
+    shouldBlur = true,
+  },
   { passwordFieldType }
 ) {
   await LoginTestUtils.clearData();
@@ -290,7 +373,7 @@ async function testPasswordChange(
         "PasswordEditedOrGenerated"
       );
 
-      await changeContentFormValues(browser, formChanges);
+      await changeContentFormValues(browser, formChanges, shouldBlur);
       info(
         "form edited, waiting for test notification of PasswordEditedOrGenerated"
       );
