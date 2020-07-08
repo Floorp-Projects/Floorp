@@ -65,7 +65,7 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ipc::StructuredCloneData&& aStack,
                                          ErrorResult& aRv) {
-  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->GetCanSend())) {
+  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError("JSProcessActorChild cannot send at the moment");
     return;
   }
@@ -118,10 +118,7 @@ void JSProcessActorChild::Init(const nsACString& aName,
   InvokeCallback(CallbackFunction::ActorCreated);
 }
 
-void JSProcessActorChild::AfterDestroy() {
-  JSActor::AfterDestroy();
-  mManager = nullptr;
-}
+void JSProcessActorChild::ClearManager() { mManager = nullptr; }
 
 }  // namespace dom
 }  // namespace mozilla

@@ -1362,7 +1362,10 @@ class ContentParent final
 
   static bool ShouldSyncPreference(const char16_t* aData);
 
-  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
+  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
+                                        const nsACString& aName,
+                                        ErrorResult& aRv) override;
+  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
 
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
@@ -1535,8 +1538,6 @@ class ContentParent final
   // A preference serializer used to share preferences with the process.
   // Cleared once startup is complete.
   UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
-
-  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorParent> mProcessActors;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)

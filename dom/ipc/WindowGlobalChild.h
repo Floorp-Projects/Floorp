@@ -116,7 +116,11 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
  protected:
   const nsAString& GetRemoteType() override;
-  JSActor::Type GetSide() override { return JSActor::Type::Child; }
+
+  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
+                                        const nsACString& aName,
+                                        ErrorResult& aRv) override;
+  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
 
   // IPC messages
   mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
@@ -159,7 +163,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
   RefPtr<dom::WindowContext> mWindowContext;
-  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorChild> mWindowActors;
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   int64_t mBeforeUnloadListeners = 0;
