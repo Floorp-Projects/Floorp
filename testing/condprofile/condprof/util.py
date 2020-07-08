@@ -223,7 +223,8 @@ def download_file(url, target=None):
         try:
             archivedir = os.path.dirname(target)
             logger.info(
-                "Content in cache directory %s: %s" % (archivedir, os.listdir(archivedir))
+                "Content in cache directory %s: %s"
+                % (archivedir, os.listdir(archivedir))
             )
         except Exception:
             logger.info("Failed to list cache directory contents")
