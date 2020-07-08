@@ -74,9 +74,9 @@ void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
   }
 
   if (mManager->IsInProcess()) {
-    nsCOMPtr<nsIRunnable> runnable = new AsyncMessageToChild(
-        aMeta, std::move(aData), std::move(aStack), mManager);
-    NS_DispatchToMainThread(runnable.forget());
+    SendRawMessageInProcess(
+        aMeta, std::move(aData), std::move(aStack),
+        [manager{mManager}]() { return manager->GetChildActor(); });
     return;
   }
 
