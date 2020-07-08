@@ -65,6 +65,12 @@ template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPoint& aPoint) const;
 template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorRawDOMPoint& aPoint) const;
+template nsresult WSRunObject::NormalizeWhiteSpacesAround(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aScanStartPoint);
+template nsresult WSRunObject::NormalizeWhiteSpacesAround(
+    HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aScanStartPoint);
+template nsresult WSRunObject::NormalizeWhiteSpacesAround(
+    HTMLEditor& aHTMLEditor, const EditorDOMPointInText& aScanStartPoint);
 
 template <typename PT, typename CT>
 WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
@@ -673,25 +679,31 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
   return WSScanResult(mEnd.PointRef(), mEnd.RawReason());
 }
 
-nsresult WSRunObject::AdjustWhiteSpace() {
+// static
+template <typename EditorDOMPointType>
+nsresult WSRunObject::NormalizeWhiteSpacesAround(
+    HTMLEditor& aHTMLEditor, const EditorDOMPointType& aScanStartPoint) {
+  WSRunObject wsRunObject(aHTMLEditor, aScanStartPoint);
   // this routine examines a run of ws and tries to get rid of some unneeded
   // nbsp's, replacing them with regular ascii space if possible.  Keeping
   // things simple for now and just trying to fix up the trailing ws in the run.
-  if (!mNBSPData.FoundNBSP()) {
+  if (!wsRunObject.mNBSPData.FoundNBSP()) {
     // nothing to do!
     return NS_OK;
   }
-  for (const WSFragment& fragment : WSFragmentArrayRef()) {
-    if (!fragment.IsVisibleAndMiddleOfHardLine()) {
-      continue;
-    }
-    nsresult rv = NormalizeWhiteSpacesAtEndOf(fragment);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::NormalizeWhiteSpacesAtEndOf() failed");
-      return rv;
-    }
+  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+      TextFragmentData(wsRunObject.mStart, wsRunObject.mEnd,
+                       wsRunObject.mNBSPData, wsRunObject.mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  if (visibleWSFragmentInMiddleOfLine.isNothing()) {
+    return NS_OK;
   }
-  return NS_OK;
+
+  nsresult rv = wsRunObject.NormalizeWhiteSpacesAtEndOf(
+      visibleWSFragmentInMiddleOfLine.ref());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "WSRunObject::NormalizeWhiteSpacesAtEndOf() failed");
+  return rv;
 }
 
 //--------------------------------------------------------------------------------------------
@@ -1803,10 +1815,7 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
 }
 
 nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
-  // Check if it's a visible fragment in a hard line.
-  if (!aRun.IsVisibleAndMiddleOfHardLine()) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT(aRun.IsVisibleAndMiddleOfHardLine());
 
   // Remove this block if we ship Blink-compat white-space normalization.
   if (!StaticPrefs::editor_white_space_normalization_blink_compatible()) {

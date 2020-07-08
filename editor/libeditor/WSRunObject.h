@@ -949,9 +949,13 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   // makes any needed conversion to adjacent ws to retain its significance.
   MOZ_CAN_RUN_SCRIPT nsresult DeleteWSForward();
 
-  // AdjustWhiteSpace examines the ws object for nbsp's that can
-  // be safely converted to regular ascii space and converts them.
-  MOZ_CAN_RUN_SCRIPT nsresult AdjustWhiteSpace();
+  /**
+   * NormalizeWhiteSpacesAround() tries to normalize white-space sequence
+   * around aScanStartPoint.
+   */
+  template <typename EditorDOMPointType>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult NormalizeWhiteSpacesAround(
+      HTMLEditor& aHTMLEditor, const EditorDOMPointType& aSacnStartPoint);
 
  protected:
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
