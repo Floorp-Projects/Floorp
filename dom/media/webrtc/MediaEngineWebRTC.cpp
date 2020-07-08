@@ -71,7 +71,8 @@ void MediaEngineWebRTC::SetFakeDeviceChangeEventsEnabled(bool aEnable) {
         getter_AddRefs(mFakeDeviceChangeEventTimer),
         &FakeDeviceChangeEventTimerTick, this,
         FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS, nsITimer::TYPE_REPEATING_SLACK,
-        "MediaEngineWebRTC::mFakeDeviceChangeEventTimer");
+        "MediaEngineWebRTC::mFakeDeviceChangeEventTimer",
+        GetCurrentSerialEventTarget());
     return;
   }
 
@@ -322,6 +323,7 @@ void MediaEngineWebRTC::Shutdown() {
 /* static */ void MediaEngineWebRTC::FakeDeviceChangeEventTimerTick(
     nsITimer* aTimer, void* aClosure) {
   MediaEngineWebRTC* self = static_cast<MediaEngineWebRTC*>(aClosure);
+  self->AssertIsOnOwningThread();
   self->DeviceListChanged();
 }
 
