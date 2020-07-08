@@ -735,6 +735,9 @@ this.ActivityStream = class ActivityStream {
           data: {
             locale: this.locale,
           },
+          meta: {
+            isStartup: true,
+          },
         }),
         { type: at.UNINIT }
       );

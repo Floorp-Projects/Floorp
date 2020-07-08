@@ -458,6 +458,7 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         type: "DISCOVERY_STREAM_SPOCS_PLACEMENTS",
         data: { placements: [{ name: "first" }, { name: "second" }] },
+        meta: { isStartup: false },
       });
     });
     it("should fire update placements from loadLayout", async () => {
@@ -646,9 +647,11 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledWith(feed.store.dispatch.firstCall, {
         type: at.DISCOVERY_STREAM_FEED_UPDATE,
         data: { feed: { data: { status: "failed" } }, url: "foo.com" },
+        meta: { isStartup: false },
       });
       assert.calledWith(feed.store.dispatch.secondCall, {
         type: at.DISCOVERY_STREAM_FEEDS_UPDATE,
+        meta: { isStartup: false },
       });
     });
 
