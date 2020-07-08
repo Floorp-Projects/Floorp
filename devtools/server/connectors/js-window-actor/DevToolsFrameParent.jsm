@@ -69,7 +69,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
   }
 
   destroyTarget({ watcherActorID, browserId }) {
-    return this.sendAsyncMessage("DevToolsFrameParent:destroy", {
+    this.sendAsyncMessage("DevToolsFrameParent:destroy", {
       watcherActorID,
       browserId,
     });
@@ -88,7 +88,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
   }
 
   unwatchFrameResources({ watcherActorID, browserId, resourceTypes }) {
-    return this.sendAsyncMessage("DevToolsFrameParent:unwatchResources", {
+    this.sendAsyncMessage("DevToolsFrameParent:unwatchResources", {
       watcherActorID,
       browserId,
       resourceTypes,
