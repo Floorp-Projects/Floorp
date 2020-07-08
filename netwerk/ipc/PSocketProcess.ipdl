@@ -39,6 +39,7 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using PRTime from "prtime.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using struct nsID from "nsID.h";
+using mozilla::net::SocketInfo from "mozilla/net/DashboardTypes.h";
 
 namespace mozilla {
 namespace net {
@@ -57,6 +58,13 @@ struct HttpHandlerInitArgs {
   nsCString mCompatFirefox;
   nsCString mCompatDevice;
   nsCString mDeviceModelId;
+};
+
+struct SocketDataArgs
+{
+  uint64_t totalSent;
+  uint64_t totalRecv;
+  SocketInfo[] info;
 };
 
 sync protocol PSocketProcess
@@ -145,6 +153,9 @@ child:
   async NotifyObserver(nsCString aTopic, nsString aData);
 
   async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
+
+  async GetSocketData()
+    returns (SocketDataArgs data);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
