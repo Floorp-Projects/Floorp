@@ -11079,7 +11079,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
   if (!ionScript) {
     return false;
   }
-  auto guardIonScript = mozilla::MakeScopeExit([&ionScript] {
+  auto freeIonScript = mozilla::MakeScopeExit([&ionScript] {
     // Use js_free instead of IonScript::Destroy: the cache list is still
     // uninitialized.
     js_free(ionScript);
@@ -11151,8 +11151,6 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
   if (isProfilerInstrumentationEnabled()) {
     ionScript->setHasProfilingInstrumentation();
   }
-
-  script->jitScript()->setIonScript(script, ionScript);
 
   Assembler::PatchDataWithValueCheck(
       CodeLocationLabel(code, invalidateEpilogueData_), ImmPtr(ionScript),
@@ -11276,7 +11274,11 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
     script->addIonCounts(counts);
   }
 
-  guardIonScript.release();
+  // Transfer ownership of the IonScript to the JitScript. At this point enough
+  // of the IonScript must be initialized for IonScript::Destroy to work.
+  freeIonScript.release();
+  script->jitScript()->setIonScript(script, ionScript);
+
   return true;
 }
 
