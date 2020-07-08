@@ -51,6 +51,7 @@ class IonCompileTask final : public HelperThreadTask,
   TempAllocator& alloc() { return mirGen_.alloc(); }
   bool scriptHasIonScript() const { return scriptHasIonScript_; }
   CompilerConstraintList* constraints() { return constraints_; }
+  WarpSnapshot* snapshot() { return snapshot_; }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
   void trace(JSTracer* trc);

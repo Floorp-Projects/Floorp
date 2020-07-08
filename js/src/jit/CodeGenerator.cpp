@@ -48,6 +48,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/StackSlotAllocator.h"
 #include "jit/VMFunctions.h"
+#include "jit/WarpSnapshot.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
@@ -11025,7 +11026,8 @@ bool CodeGenerator::generate() {
   return !masm.oom();
 }
 
-bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
+bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints,
+                         const WarpSnapshot* snapshot) {
   // We cancel off-thread Ion compilations in a few places during GC, but if
   // this compilation was performed off-thread it will already have been
   // removed from the relevant lists by this point. Don't allow GC here.
@@ -11094,6 +11096,9 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
   }
 
   size_t numNurseryObjects = 0;
+  if (JitOptions.warpBuilder) {
+    numNurseryObjects = snapshot->nurseryObjects().length();
+  }
 
   IonScript* ionScript = IonScript::New(
       cx, compilationId, graph.totalSlotCount(), argumentSlots, scriptFrameSize,
@@ -11302,6 +11307,18 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
   // Attach any generated script counts to the script.
   if (IonScriptCounts* counts = extractScriptCounts()) {
     script->addIonCounts(counts);
+  }
+
+  // WARNING: Code after this point must be infallible!
+
+  // Copy the list of nursery objects. Note that the store buffer can add
+  // HeapPtr edges that must be cleared in IonScript::Destroy. See the
+  // infallibility warning above.
+  if (JitOptions.warpBuilder) {
+    const auto& nurseryObjects = snapshot->nurseryObjects();
+    for (size_t i = 0; i < nurseryObjects.length(); i++) {
+      ionScript->nurseryObjects()[i].init(nurseryObjects[i]);
+    }
   }
 
   // Transfer ownership of the IonScript to the JitScript. At this point enough
