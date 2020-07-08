@@ -37,7 +37,10 @@ const { ActorManagerParent } = ChromeUtils.import(
 // It is keyed by WatcherActor ID and values contains following attributes:
 // - targets: Set of strings, refering to target types to be listened to
 // - resources: Set of strings, refering to resource types to be observed
-// - browsingContextID: Optional, if set, restrict the observation to one specific BrowsingContext tree.
+// - browserId: Optional, if set, restrict the observation to one specific Browser Element tree.
+//              It can be a tab, a top-level window or a top-level iframe (e.g. special privileged iframe)
+//              See https://searchfox.org/mozilla-central/rev/31d8600b73dc85b4cdbabf45ac3f1a9c11700d8e/dom/chrome-webidl/BrowsingContext.webidl#114-121
+//              for more information.
 // - connectionPrefix: The DevToolsConnection prefix of the watcher actor. Used to compute new actor ID in the content processes.
 //
 // Unfortunately, `sharedData` is subject to race condition and may have side effect
@@ -76,11 +79,11 @@ function getWatchedData(watcher, { createData = false } = {}) {
     watchedData = {
       targets: new Set(),
       resources: new Set(),
-      // The Browsing Context ID will be helpful to identify which BrowsingContext should be considered
-      // when running code in the content process.
-      // TODO bug 1625027: update this if we navigate to parent process
-      // or <browser> navigates to another BrowsingContext.
-      browsingContextID: watcher.browsingContextID,
+      // The Browser ID will be helpful to identify which BrowsingContext should be considered
+      // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
+      // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
+      // we are currently inspecting.
+      browserId: watcher.browserId,
       // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
       connectionPrefix: watcher.conn.prefix,
     };

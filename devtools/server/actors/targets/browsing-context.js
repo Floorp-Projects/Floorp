@@ -440,6 +440,10 @@ const browsingContextTargetPrototype = {
     return this.docShell && this.docShell.browsingContext.id;
   },
 
+  get browserId() {
+    return this.docShell && this.docShell.browsingContext.browserId;
+  },
+
   /**
    * Getter for the WebExtensions ContentScript globals related to the
    * browsing context's current DOM window.

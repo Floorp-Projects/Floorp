@@ -57,21 +57,21 @@ class DevToolsFrameParent extends JSWindowActorParent {
   instantiateTarget({
     watcherActorID,
     connectionPrefix,
-    browsingContextID,
+    browserId,
     watchedResources,
   }) {
     return this.sendQuery("DevToolsFrameParent:instantiate-already-available", {
       watcherActorID,
       connectionPrefix,
-      browsingContextID,
+      browserId,
       watchedResources,
     });
   }
 
-  destroyTarget({ watcherActorID, browsingContextID }) {
+  destroyTarget({ watcherActorID, browserId }) {
     return this.sendAsyncMessage("DevToolsFrameParent:destroy", {
       watcherActorID,
-      browsingContextID,
+      browserId,
     });
   }
 
@@ -79,18 +79,18 @@ class DevToolsFrameParent extends JSWindowActorParent {
    * Request the content process to fetch all already existing resources,
    * and also start listening for the future ones to be created.
    */
-  watchFrameResources({ watcherActorID, browsingContextID, resourceTypes }) {
+  watchFrameResources({ watcherActorID, browserId, resourceTypes }) {
     return this.sendQuery("DevToolsFrameParent:watchResources", {
       watcherActorID,
-      browsingContextID,
+      browserId,
       resourceTypes,
     });
   }
 
-  unwatchFrameResources({ watcherActorID, browsingContextID, resourceTypes }) {
+  unwatchFrameResources({ watcherActorID, browserId, resourceTypes }) {
     return this.sendAsyncMessage("DevToolsFrameParent:unwatchResources", {
       watcherActorID,
-      browsingContextID,
+      browserId,
       resourceTypes,
     });
   }
