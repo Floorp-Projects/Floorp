@@ -819,8 +819,8 @@ def keyFromSpecification(specification):
     """Pass in a specification, get the appropriate key back."""
     if specification.startswith('secp'):
         return ECCKey(specification)
-    else:
-        return RSAKey(specification)
+    return RSAKey(specification)
+
 
 # The build harness will call this function with an output file-like
 # object and a path to a file containing a specification. This will
