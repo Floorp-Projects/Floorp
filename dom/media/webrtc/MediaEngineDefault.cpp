@@ -236,7 +236,7 @@ nsresult MediaEngineDefaultVideoSource::Start() {
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
   MOZ_ASSERT(mTrack, "SetTrack() must happen before Start()");
 
-  mTimer = NS_NewTimer();
+  mTimer = NS_NewTimer(GetCurrentSerialEventTarget());
   if (!mTimer) {
     return NS_ERROR_FAILURE;
   }
