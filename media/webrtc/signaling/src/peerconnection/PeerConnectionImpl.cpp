@@ -234,14 +234,6 @@ already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
   return pc.forget();
 }
 
-PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection() {
-  PeerConnectionImpl* pc = new PeerConnectionImpl();
-
-  CSFLogDebug(LOGTAG, "Created PeerConnection: %p", pc);
-
-  return pc;
-}
-
 bool PeerConnectionImpl::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto,
                                     JS::MutableHandle<JSObject*> aReflector) {
