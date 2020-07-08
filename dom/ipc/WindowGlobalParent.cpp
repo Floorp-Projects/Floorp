@@ -425,12 +425,12 @@ IPCResult WindowGlobalParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
-const nsACString& WindowGlobalParent::GetRemoteType() {
+const nsAString& WindowGlobalParent::GetRemoteType() {
   if (RefPtr<BrowserParent> browserParent = GetBrowserParent()) {
     return browserParent->Manager()->GetRemoteType();
   }
 
-  return NOT_REMOTE_TYPE;
+  return VoidString();
 }
 
 void WindowGlobalParent::NotifyContentBlockingEvent(

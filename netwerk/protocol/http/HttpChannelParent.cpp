@@ -1997,7 +1997,7 @@ HttpChannelParent::Delete() {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::GetRemoteType(nsACString& aRemoteType) {
+HttpChannelParent::GetRemoteType(nsAString& aRemoteType) {
   if (!CanSend()) {
     return NS_ERROR_UNEXPECTED;
   }

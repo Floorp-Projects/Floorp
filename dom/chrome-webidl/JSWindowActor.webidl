@@ -97,7 +97,7 @@ dictionary WindowActorOptions {
    * can prefix match remote type either `web` or `webIsolated`. If not passed,
    * all content processes are allowed to instantiate the actor.
    */
-  sequence<UTF8String> remoteTypes;
+  sequence<DOMString> remoteTypes;
 
   /**
    * An array of MessageManagerGroup values which restrict which type

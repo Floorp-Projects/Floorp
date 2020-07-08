@@ -10,7 +10,6 @@
 #include "mozilla/dom/PInProcessParent.h"
 #include "mozilla/dom/JSProcessActorParent.h"
 #include "mozilla/dom/ProcessActor.h"
-#include "mozilla/dom/RemoteType.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDOMProcessParent.h"
 
@@ -48,7 +47,7 @@ class InProcessParent final : public nsIDOMProcessParent,
   // |nullptr|.
   static IProtocol* ChildActorFor(IProtocol* aActor);
 
-  const nsACString& GetRemoteType() const override { return NOT_REMOTE_TYPE; };
+  const nsAString& GetRemoteType() const override { return VoidString(); };
 
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,

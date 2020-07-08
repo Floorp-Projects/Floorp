@@ -59,7 +59,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   uint64_t EmbedderProcessId() const { return mEmbedderProcessId; }
   ContentParent* GetContentParent() const;
 
-  void GetCurrentRemoteType(nsACString& aRemoteType, ErrorResult& aRv) const;
+  void GetCurrentRemoteType(nsAString& aRemoteType, ErrorResult& aRv) const;
 
   void SetOwnerProcessId(uint64_t aProcessId);
 
@@ -150,10 +150,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Internal method to change which process a BrowsingContext is being loaded
   // in. The returned promise will resolve when the process switch is completed.
   //
-  // A NOT_REMOTE_TYPE aRemoteType argument will perform a process switch into
-  // the parent process, and the method will resolve with a null BrowserParent.
+  // A VoidString() aRemoteType argument will perform a process switch into the
+  // parent process, and the method will resolve with a null BrowserParent.
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
-  RefPtr<RemotenessPromise> ChangeRemoteness(const nsACString& aRemoteType,
+  RefPtr<RemotenessPromise> ChangeRemoteness(const nsAString& aRemoteType,
                                              uint64_t aPendingSwitchId,
                                              bool aReplaceBrowsingContext,
                                              uint64_t aSpecificGroupId);

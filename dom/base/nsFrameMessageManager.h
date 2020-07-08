@@ -99,7 +99,7 @@ class MessageManagerCallback {
     return nullptr;
   }
 
-  virtual void DoGetRemoteType(nsACString& aRemoteType,
+  virtual void DoGetRemoteType(nsAString& aRemoteType,
                                ErrorResult& aError) const;
 
  protected:
@@ -178,7 +178,7 @@ class nsFrameMessageManager : public nsIMessageSender {
   }
   already_AddRefed<mozilla::dom::ProcessMessageManager>
   GetProcessMessageManager(mozilla::ErrorResult& aError);
-  void GetRemoteType(nsACString& aRemoteType,
+  void GetRemoteType(nsAString& aRemoteType,
                      mozilla::ErrorResult& aError) const;
 
   // SyncMessageSender
