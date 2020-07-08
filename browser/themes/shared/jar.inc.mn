@@ -77,6 +77,7 @@
   skin/classic/browser/notification-icons/desktop-notification.svg          (../shared/notification-icons/desktop-notification.svg)
   skin/classic/browser/notification-icons/drag-indicator.svg                (../shared/notification-icons/drag-indicator.svg)
   skin/classic/browser/notification-icons/focus-tab-by-prompt.svg           (../shared/notification-icons/focus-tab-by-prompt.svg)
+  skin/classic/browser/notification-icons/https-only-load-insecure-blocked.svg       (../shared/notification-icons/https-only-load-insecure-blocked.svg)
   skin/classic/browser/notification-icons/indexedDB.svg                     (../shared/notification-icons/indexedDB.svg)
   skin/classic/browser/notification-icons/microphone-blocked.svg            (../shared/notification-icons/microphone-blocked.svg)
   skin/classic/browser/notification-icons/microphone-detailed.svg           (../shared/notification-icons/microphone-detailed.svg)
