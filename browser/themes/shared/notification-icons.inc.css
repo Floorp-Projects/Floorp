@@ -174,6 +174,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
 }
 
+.https-only-load-insecure-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/https-only-load-insecure-blocked.svg);
+}
+
 #canvas-notification-icon,
 .popup-notification-icon[popupid="canvas-permissions-prompt"],
 .canvas-icon {

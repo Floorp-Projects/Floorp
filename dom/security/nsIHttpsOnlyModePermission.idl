@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+/**
+ * An interface to test for cookie permissions
+ */
+[scriptable, uuid(73f4f039-d6ff-41a7-9eb3-00db57b0b7f4)]
+interface nsIHttpsOnlyModePermission : nsISupports
+{
+  /**
+   * nsIPermissionManager permission values
+   */
+  const uint32_t LOAD_INSECURE_DEFAULT = 0;
+  const uint32_t LOAD_INSECURE_ALLOW   = 1;
+  const uint32_t LOAD_INSECURE_BLOCK   = 2;
+
+  /**
+   * additional values which do not match
+   * nsIPermissionManager. Keep space available to allow nsIPermissionManager to
+   * add values without colliding. ACCESS_SESSION is not directly returned by
+   * any methods on this interface.
+   */
+  const uint32_t LOAD_INSECURE_ALLOW_SESSION = 9;
+};

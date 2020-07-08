@@ -81,8 +81,8 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
     // Create exception for this website that expires with the session.
     Services.perms.addFromPrincipal(
       principal,
-      "https-only-mode-exception",
-      Ci.nsIPermissionManager.ALLOW_ACTION,
+      "https-only-load-insecure",
+      Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION,
       Ci.nsIPermissionManager.EXPIRE_SESSION
     );
 

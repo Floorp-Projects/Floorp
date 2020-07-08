@@ -76,3 +76,9 @@ if CONFIG['FUZZING_INTERFACES']:
         'fuzztest'
     ]
 
+
+XPIDL_SOURCES += [
+    'nsIHttpsOnlyModePermission.idl',
+]
+
+XPIDL_MODULE = 'dom_security'

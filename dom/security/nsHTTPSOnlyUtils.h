@@ -64,6 +64,13 @@ class nsHTTPSOnlyUtils {
                                  bool aFromPrivateWindow,
                                  nsIURI* aURI = nullptr);
 
+  /**
+   * Tests is the HTTPS-Only Mode upgrade exception is set for a given principal
+   * @param  aPrincipal Principal to check permission for
+   * @return            true if exempt from upgrade
+   */
+  static bool TestHttpsOnlySitePermission(nsIPrincipal* aPrincipal);
+
  private:
   /**
    * Logs localized message to either content console or browser console

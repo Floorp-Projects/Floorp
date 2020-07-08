@@ -1485,7 +1485,8 @@ var gIdentityHandler = {
 
     if (
       (aPermission.id == "popup" && !isPolicyPermission) ||
-      aPermission.id == "autoplay-media"
+      aPermission.id == "autoplay-media" ||
+      aPermission.id == "https-only-load-insecure"
     ) {
       let menulist = document.createXULElement("menulist");
       let menupopup = document.createXULElement("menupopup");
