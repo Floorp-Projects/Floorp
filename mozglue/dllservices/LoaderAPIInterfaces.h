@@ -7,6 +7,7 @@
 #ifndef mozilla_LoaderAPIInterfaces_h
 #define mozilla_LoaderAPIInterfaces_h
 
+#include "nscore.h"
 #include "mozilla/ModuleLoadInfo.h"
 
 namespace mozilla {

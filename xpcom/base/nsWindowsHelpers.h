@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// NB: This code may be used from non-XPCOM code, in particular, the
+// Windows Default Browser Agent.
+
 #ifndef nsWindowsHelpers_h
 #define nsWindowsHelpers_h
 
 #include <windows.h>
 #include "nsAutoRef.h"
-#include "nscore.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 
