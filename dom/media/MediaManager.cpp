@@ -4450,7 +4450,8 @@ void SourceListener::SetEnabledFor(MediaTrack* aTrack, bool aEnable) {
                     RefPtr<AudioDeviceInfo> outputDevice =
                         enumerator->DefaultDevice(
                             CubebDeviceEnumerator::Side::OUTPUT);
-                    if (outputDevice->GroupID().Equals(inputDeviceGroupId)) {
+                    if (outputDevice &&
+                        outputDevice->GroupID().Equals(inputDeviceGroupId)) {
                       LOG("Device group id match when %s, "
                           "not turning the input device off (%s)",
                           aEnable ? "unmuting" : "muting",
