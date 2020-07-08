@@ -491,12 +491,22 @@ nsresult GfxInfo::Init() {
   /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
   /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need
    * to compare case insenstively */
-  if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX,
-                ArrayLength(DEVICE_KEY_PREFIX) - 1) != 0)
-    return rv;
+  /* If the device key is empty, we are most likely in a remote desktop
+   * environment. In this case we set the devicekey to an empty string so
+   * it can be handled later.
+   */
+  if (displayDevice.DeviceKey[0] != '\0') {
+    if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX,
+                  ArrayLength(DEVICE_KEY_PREFIX) - 1) != 0) {
+      return rv;
+    }
 
-  // chop off DEVICE_KEY_PREFIX
-  mDeviceKey[0] = displayDevice.DeviceKey + ArrayLength(DEVICE_KEY_PREFIX) - 1;
+    // chop off DEVICE_KEY_PREFIX
+    mDeviceKey[0] =
+        displayDevice.DeviceKey + ArrayLength(DEVICE_KEY_PREFIX) - 1;
+  } else {
+    mDeviceKey[0] = EmptyString();
+  }
 
   mDeviceID[0] = displayDevice.DeviceID;
   mDeviceString[0] = displayDevice.DeviceString;
