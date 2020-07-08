@@ -1,4 +1,4 @@
-// |jit-test| --enable-private-fields;
+// |jit-test| skip-if: !this.TypedObject; --enable-private-fields;
 // More complicated IC testing.
 
 class Base {
