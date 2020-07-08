@@ -21,6 +21,8 @@
 #include <sys/inotify.h>
 #endif
 
+struct v4l2_capability;
+
 namespace webrtc
 {
 namespace videocapturemodule
@@ -55,6 +57,7 @@ public:
 private:
 
     bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
+    bool IsVideoCaptureDevice(struct v4l2_capability* cap);
 
 #ifdef WEBRTC_LINUX
     void HandleEvent(inotify_event* event, int fd);
