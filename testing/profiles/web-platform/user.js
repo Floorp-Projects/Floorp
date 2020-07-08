@@ -1,5 +1,7 @@
 // Base preferences file for web-platform-tests.
 /* globals user_pref */
+// Don't use the new tab page but about:blank for opened tabs
+user_pref("browser.newtabpage.enabled", false);
 // Don't restore the last open set of tabs if the browser has crashed
 user_pref("browser.sessionstore.resume_from_crash", false);
 // Only install add-ons from the profile and the application scope
