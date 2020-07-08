@@ -12,12 +12,16 @@ BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 EXPORTS.mozilla.scache += [
     'StartupCache.h',
+    'StartupCacheChild.h',
+    'StartupCacheParent.h',
     'StartupCacheUtils.h',
 ]
 
 UNIFIED_SOURCES += [
     'StartupCache.cpp',
+    'StartupCacheChild.cpp',
     'StartupCacheInfo.cpp',
+    'StartupCacheParent.cpp',
     'StartupCacheUtils.cpp',
 ]
 
@@ -30,5 +34,11 @@ XPIDL_MODULE = 'startupcache'
 XPIDL_SOURCES += [
     'nsIStartupCacheInfo.idl',
 ]
+
+IPDL_SOURCES += [
+    'PStartupCache.ipdl',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
