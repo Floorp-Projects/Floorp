@@ -31,7 +31,7 @@ add_task(async function() {
   const onPropertiesFetched = waitForDispatch(panel, "FETCH_PROPERTIES");
   // Also wait for the toolbox to switch to the new target, to avoid hanging requests when
   // the test ends.
-  const onTargetSwitched = toolbox.once("switched-target");
+  const onTargetSwitched = toolbox.targetList.once("switched-target");
 
   await toolbox.target.navigateTo({ url: CONTENT_PROCESS_URI });
 

@@ -33,7 +33,7 @@ loader.lazyRequireGetter(
   true
 );
 
-class TargetList {
+class TargetList extends EventEmitter {
   /**
    * This class helps managing, iterating over and listening for Targets.
    *
@@ -53,6 +53,8 @@ class TargetList {
    *        this may be replaced by a new one over time.
    */
   constructor(rootFront, targetFront) {
+    super();
+
     this.rootFront = rootFront;
 
     // Once we have descriptor for all targets we create a toolbox for,
@@ -506,6 +508,8 @@ class TargetList {
 
     // Notify about this new target to creation listeners
     await this._onTargetAvailable(newTarget, true);
+
+    this.emit("switched-target", newTarget);
   }
 
   isTargetRegistered(targetFront) {

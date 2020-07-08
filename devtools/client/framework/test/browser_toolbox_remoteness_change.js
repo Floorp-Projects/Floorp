@@ -39,7 +39,7 @@ async function navigateBetweenProcesses(enableTargetSwitching) {
 
   const onToolboxDestroyed = toolbox.once("destroyed");
   const onToolboxCreated = gDevTools.once("toolbox-created");
-  const onToolboxSwitchedToTarget = toolbox.once("switched-target");
+  const onToolboxSwitchedToTarget = toolbox.targetList.once("switched-target");
 
   info("Navigate to a URL supporting remote process");
   if (enableTargetSwitching) {
