@@ -463,7 +463,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x160d);
       APPEND_DEVICE(0x160e);
 
-#ifdef EARLY_BETA_OR_EARLIER
       // gen7.5 gt2
       APPEND_DEVICE(0x0412);
       APPEND_DEVICE(0x0416);
@@ -499,6 +498,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0d2b);
       APPEND_DEVICE(0x0d2e);
 
+#ifdef EARLY_BETA_OR_EARLIER
       // gen7 gt2
       APPEND_DEVICE(0x0162);
       APPEND_DEVICE(0x0166);
