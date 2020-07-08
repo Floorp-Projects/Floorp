@@ -313,17 +313,7 @@ using namespace mozilla::a11y;
 }
 
 - (BOOL)isAccessibilityElement {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  if ([self isExpired]) {
-    return YES;
-  }
-
-  id parent = [self moxParent];
-
-  return ![self moxIgnoreWithParent:parent];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+  return YES;
 }
 
 - (BOOL)accessibilityNotifiesWhenDestroyed {
@@ -364,50 +354,6 @@ using namespace mozilla::a11y;
 
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate {
   return nil;
-}
-
-- (NSArray*)moxChildren {
-  return @[];
-}
-
-- (NSArray*)moxUnignoredChildren {
-  NSMutableArray* unignoredChildren = [[NSMutableArray alloc] init];
-  NSArray* allChildren = [self moxChildren];
-
-  for (MOXAccessibleBase* nativeChild in allChildren) {
-    if ([nativeChild moxIgnoreWithParent:self]) {
-      // If this child should be ignored get its unignored children.
-      // This will in turn recurse to any unignored descendants if the
-      // child is ignored.
-      [unignoredChildren addObjectsFromArray:[nativeChild moxUnignoredChildren]];
-    } else {
-      [unignoredChildren addObject:nativeChild];
-    }
-  }
-
-  return unignoredChildren;
-}
-
-- (id<mozAccessible>)moxParent {
-  return nil;
-}
-
-- (id<mozAccessible>)moxUnignoredParent {
-  id nativeParent = [self moxParent];
-
-  if (![nativeParent isAccessibilityElement]) {
-    return [nativeParent moxUnignoredParent];
-  }
-
-  return GetObjectOrRepresentedView(nativeParent);
-}
-
-- (BOOL)moxIgnoreWithParent:(MOXAccessibleBase*)parent {
-  return [parent moxIgnoreChild:self];
-}
-
-- (BOOL)moxIgnoreChild:(MOXAccessibleBase*)child {
-  return NO;
 }
 
 #pragma mark -

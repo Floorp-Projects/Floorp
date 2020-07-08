@@ -26,7 +26,7 @@
 - (mozAccessible*)moxParent;
 
 // override
-- (NSArray*)moxUnignoredChildren;
+- (NSArray*)moxChildren;
 
 // override
 - (void)dealloc;
@@ -78,7 +78,7 @@
 - (NSArray*)moxColumns;
 
 // override
-- (NSArray*)moxUnignoredChildren;
+- (NSArray*)moxChildren;
 
 @end
 
