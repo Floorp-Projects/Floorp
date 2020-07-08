@@ -4,10 +4,13 @@
 
 package org.mozilla.fenix.screenshots
 
+import android.os.SystemClock
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.rule.ActivityTestRule
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import tools.fastlane.screengrab.Screengrab
 import tools.fastlane.screengrab.locale.LocaleTestRule
 import okhttp3.mockwebserver.MockWebServer
@@ -21,6 +24,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.bookmarksMenu
 import org.mozilla.fenix.ui.robots.mDevice
@@ -125,13 +129,13 @@ class MenuScreenShotTest : ScreenshotTest() {
         openBookmarksThreeDotMenu()
         Screengrab.screenshot("BookmarksRobot_bookmarks-menu")
         bookmarksMenu {
-            clickAddFolderButton()
+            clickAddFolderButtonUsingId()
             Screengrab.screenshot("BookmarksRobot_add-folder-view")
             saveNewFolder()
             Screengrab.screenshot("BookmarksRobot_error-empty-folder-name")
             addNewFolderName("test")
             saveNewFolder()
-        }.openThreeDotMenu {
+        }.openThreeDotMenu("test") {
             Screengrab.screenshot("ThreeDotMenuBookmarksRobot_folder-menu")
         }
         editBookmarkFolder()
@@ -139,7 +143,7 @@ class MenuScreenShotTest : ScreenshotTest() {
         // It may be needed to wait here to have the screenshot
         mDevice.pressBack()
         bookmarksMenu {
-        }.openThreeDotMenu {
+        }.openThreeDotMenu("test") {
             deleteBookmarkFolder()
             Screengrab.screenshot("ThreeDotMenuBookmarksRobot_delete-bookmark-folder-menu")
         }
@@ -152,21 +156,12 @@ class MenuScreenShotTest : ScreenshotTest() {
             Screengrab.screenshot("NavigationToolbarRobot_navigation-toolbar")
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             Screengrab.screenshot("BrowserRobot_enter-url")
-        }
-        tapOnTabCounter()
-        //  Homescreen with visited tabs
-        Screengrab.screenshot("HomeScreenRobot_homescreen-with-tabs-open")
-        homeScreen {
+        }.openTabDrawer {
+            TestAssetHelper.waitingTime
+            Screengrab.screenshot("TabDrawerRobot_one-tab-open")
         }.openTabsListThreeDotMenu {
-            Screengrab.screenshot("open-tabs-menu")
-        }.close {
-            // It may be needed to wait here for tests working on Firebase
-            saveToCollectionButton()
-            Screengrab.screenshot("HomeScreenRobot_save-collection-view")
-            typeCollectionName("CollectionName")
-            mDevice.pressBack()
-            // It may be needed to wait here for tests working on Firebase
-            Screengrab.screenshot("HomeScreenRobot_saved-collection")
+            TestAssetHelper.waitingTime
+            Screengrab.screenshot("TabDrawerRobot_three-dot-menu")
         }
     }
 
@@ -176,12 +171,13 @@ class MenuScreenShotTest : ScreenshotTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
-            Screengrab.screenshot("browser-tab-menu")
+            Screengrab.screenshot("TabDrawerRobot_browser-tab-menu")
         }.closeBrowserMenuToBrowser {
         }.openTabDrawer {
-            Screengrab.screenshot("tab-drawer-with-tabs")
+            Screengrab.screenshot("TabDrawerRobot_tab-drawer-with-tabs")
             closeTab()
-            Screengrab.screenshot("remove-tab")
+            TestAssetHelper.waitingTime
+            Screengrab.screenshot("TabDrawerRobot_remove-tab")
         }
     }
 
@@ -189,12 +185,11 @@ class MenuScreenShotTest : ScreenshotTest() {
     fun saveLoginPromptTest() {
         val saveLoginTest =
                 TestAssetHelper.getSaveLoginAsset(mockWebServer)
-        TestAssetHelper.waitingTimeShort
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            verifySaveLoginPromptIsShownNotSave()
+            SystemClock.sleep(TestAssetHelper.waitingTimeShort)
             Screengrab.screenshot("save-login-prompt")
-            TestAssetHelper.waitingTime
-            // verifySaveLoginPromptIsShown()
         }
     }
 }
@@ -236,3 +231,11 @@ fun loginsAndPassword() = onView(withText(R.string.preferences_passwords_logins_
 fun addOns() = onView(withText(R.string.preferences_addons)).click()
 
 fun settingsLanguage() = onView(withText(R.string.preferences_language)).click()
+
+fun verifySaveLoginPromptIsShownNotSave() {
+    mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")), TestAssetHelper.waitingTime)
+    val submitButton = mDevice.findObject(By.res("submit"))
+    submitButton.clickAndWait(Until.newWindow(), TestAssetHelper.waitingTime)
+}
+
+fun clickAddFolderButtonUsingId() = onView(withId(R.id.add_bookmark_folder)).click()

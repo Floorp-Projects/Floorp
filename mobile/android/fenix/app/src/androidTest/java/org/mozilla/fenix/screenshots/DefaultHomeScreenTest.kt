@@ -4,12 +4,14 @@
 
 package org.mozilla.fenix.screenshots
 
+import android.os.SystemClock
 import androidx.test.rule.ActivityTestRule
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.mDevice
 import tools.fastlane.screengrab.Screengrab
@@ -30,15 +32,17 @@ class DefaultHomeScreenTest : ScreenshotTest() {
     fun showDefaultHomeScreen() {
         homeScreen {
             verifyAccountsSignInButton()
-            Screengrab.screenshot("HomeScreenRobot_home-screen")
             swipeToBottom()
             Screengrab.screenshot("HomeScreenRobot_home-screen-scroll")
+            TestAssetHelper.waitingTime
         }
     }
 
     @Test
     fun privateBrowsingTest() {
         homeScreen {
+            SystemClock.sleep(TestAssetHelper.waitingTimeShort)
+            Screengrab.screenshot("HomeScreenRobot_home-screen")
         }.openThreeDotMenu {
         }.openSettings { }
         // To get private screenshot,
@@ -48,6 +52,7 @@ class DefaultHomeScreenTest : ScreenshotTest() {
             togglePrivateBrowsingModeOnOff()
             Screengrab.screenshot("HomeScreenRobot_private-browsing-menu")
             togglePrivateBrowsingModeOnOff()
+            Screengrab.screenshot("HomeScreenRobot_after-onboarding")
         }
     }
 }
