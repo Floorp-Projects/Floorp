@@ -4,6 +4,8 @@ import subprocess
 import sys
 import unittest
 
+import six
+
 import mozunit
 from mozprocess.processhandler import ProcessReader, StoreOutput
 
@@ -38,7 +40,10 @@ class TestProcessReader(unittest.TestCase):
         self.reader.start(proc)
         self.reader.thread.join()
 
-        self.assertEqual([x.decode('utf8') for x in self.out.output], ['1', '2'])
+        if six.PY2:
+            self.assertEqual([x.decode('utf8') for x in self.out.output], ['1', '2'])
+        if six.PY3:
+            self.assertEqual([x for x in self.out.output], ['1', '2'])
         self.assertEqual(self.err.output, [])
 
     def test_stderr_callback(self):
@@ -47,15 +52,22 @@ class TestProcessReader(unittest.TestCase):
         self.reader.thread.join()
 
         self.assertEqual(self.out.output, [])
-        self.assertEqual([x.decode('utf8') for x in self.err.output], ['hello world'])
+        if six.PY2:
+            self.assertEqual([x.decode('utf8') for x in self.err.output], ['hello world'])
+        elif six.PY3:
+            self.assertEqual([x for x in self.err.output], ['hello world'])
 
     def test_stdout_and_stderr_callbacks(self):
         proc = run_python('import sys; sys.stderr.write("hello world\\n"); print(1); print(2)')
         self.reader.start(proc)
         self.reader.thread.join()
 
-        self.assertEqual([x.decode('utf8') for x in self.out.output], ['1', '2'])
-        self.assertEqual([x.decode('utf8') for x in self.err.output], ['hello world'])
+        if six.PY2:
+            self.assertEqual([x.decode('utf8') for x in self.out.output], ['1', '2'])
+            self.assertEqual([x.decode('utf8') for x in self.err.output], ['hello world'])
+        elif six.PY3:
+            self.assertEqual([x for x in self.out.output], ['1', '2'])
+            self.assertEqual([x for x in self.err.output], ['hello world'])
 
     def test_finished_callback(self):
         self.assertFalse(self.finished)
@@ -86,22 +98,31 @@ class TestProcessReader(unittest.TestCase):
         proc = run_python('import sys; sys.stdout.write("1")')
         self.reader.start(proc)
         self.reader.thread.join()
-        self.assertEqual([x.decode('utf8') for x in self.out.output], ['1'])
+        if six.PY2:
+            self.assertEqual([x.decode('utf8') for x in self.out.output], ['1'])
+        elif six.PY3:
+            self.assertEqual([x for x in self.out.output], ['1'])
 
     def test_read_with_strange_eol(self):
         proc = run_python('import sys; sys.stdout.write("1\\r\\r\\r\\n")')
         self.reader.start(proc)
         self.reader.thread.join()
-        self.assertEqual([x.decode('utf8') for x in self.out.output], ['1'])
+        if six.PY2:
+            self.assertEqual([x.decode('utf8') for x in self.out.output], ['1'])
+        elif six.PY3:
+            self.assertEqual([x for x in self.out.output], ['1'])
 
     def test_mixed_stdout_stderr(self):
         proc = run_python('import sys; sys.stderr.write("hello world\\n"); print(1); print(2)',
                           stderr=subprocess.STDOUT)
         self.reader.start(proc)
         self.reader.thread.join()
-
-        self.assertEqual(sorted([x.decode('utf8') for x in self.out.output]),
-                         sorted(['1', '2', 'hello world']))
+        if six.PY2:
+            self.assertEqual(sorted([x.decode('utf8') for x in self.out.output]),
+                             sorted(['1', '2', 'hello world']))
+        elif six.PY3:
+            self.assertEqual(sorted([x for x in self.out.output]),
+                             sorted(['1', '2', 'hello world']))
         self.assertEqual(self.err.output, [])
 
 

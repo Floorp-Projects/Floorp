@@ -20,7 +20,8 @@ def iter_modules_in_path(*paths):
     for name, module in sys.modules.items():
         if getattr(module, '__file__', None) is None:
             continue
-
+        if module.__file__ is None:
+            continue
         path = module.__file__
 
         if path.endswith('.pyc'):
