@@ -156,10 +156,10 @@ void RemoteDecoderManagerChild::OpenForRDDProcess(
   // ipdl if:
   // 1) haven't init'd sRemoteDecoderManagerChild
   // or
-  // 2) if ActorDestroy was called (mCanSend is false) meaning the other
-  // end of the ipc channel was torn down
+  // 2) if ActorDestroy was called meaning the other end of the ipc channel was
+  //    torn down
   if (sRemoteDecoderManagerChildForRDDProcess &&
-      sRemoteDecoderManagerChildForRDDProcess->mCanSend) {
+      sRemoteDecoderManagerChildForRDDProcess->CanSend()) {
     return;
   }
   sRemoteDecoderManagerChildForRDDProcess = nullptr;
@@ -193,20 +193,10 @@ void RemoteDecoderManagerChild::OpenForGPUProcess(
 }
 
 void RemoteDecoderManagerChild::InitIPDL() {
-  mCanSend = true;
   mIPDLSelfRef = this;
 }
 
-void RemoteDecoderManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mCanSend = false;
-}
-
 void RemoteDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
-
-bool RemoteDecoderManagerChild::CanSend() {
-  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
-  return mCanSend;
-}
 
 bool RemoteDecoderManagerChild::DeallocShmem(mozilla::ipc::Shmem& aShmem) {
   if (NS_GetCurrentThread() != sRemoteDecoderManagerChildThread) {
