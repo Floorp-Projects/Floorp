@@ -142,18 +142,8 @@ cleanup();
 // #initiallyHidden to be dirty -- and therefore, the presence/absence of
 // #initiallyHidden shouldn't affect the number of frames that get reflowed in
 // response to the gTestNode tweak).
-//
-// More importantly: if our measurements differ by *more than 1*, then that
-// indicates that we're reflowing the non-"dirty" #initiallyHidden subtree
-// *multiple times* in response to the tweak in gTestNode. We definitely want
-// to avoid that.
-//
-// XXXdholbert The "+1" in the is() comparison here is a bit magical, and it
-// probably indicates that we are still doing some unnecessary work. But it's
-// an improvement -- without the fix that's accompanying this test, we get +5
-// reflows here instead of +1. Hopefully we can get rid of the +1 at some point.
-is(numTestReflows, numReferenceReflows + 1,
-   "Tweak should trigger roughly the same number of reflows regardless of " +
+is(numTestReflows, numReferenceReflows,
+   "Tweak should trigger the same number of reflows regardless of " +
    "content in unmodified sibling");
 
 </script>
