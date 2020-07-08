@@ -25,6 +25,10 @@ form select {
   padding-top: calc(var(--in-field-label-size) + .4em);
 }
 
+form input[type="tel"] {
+  text-align: match-parent;
+}
+
 select {
   margin: 0;
   padding-bottom: 5px;
