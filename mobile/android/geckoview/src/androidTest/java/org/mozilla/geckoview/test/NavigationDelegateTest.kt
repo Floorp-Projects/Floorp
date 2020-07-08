@@ -200,6 +200,39 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
     }
 
+    @Test fun loadDeprecatedTls() {
+        // Load an initial generic error page in order to ensure 'allowDeprecatedTls' is false
+        testLoadExpectError(UNKNOWN_HOST_URI,
+                WebRequestError.ERROR_CATEGORY_URI,
+                WebRequestError.ERROR_UNKNOWN_HOST)
+        mainSession.evaluateJS("document.allowDeprecatedTls = false")
+
+        val uri = if (sessionRule.env.isAutomation) {
+            "https://tls1.example.com/"
+        } else {
+            "https://tls-v1-0.badssl.com:1010/"
+        }
+        testLoadExpectError(uri,
+                WebRequestError.ERROR_CATEGORY_SECURITY,
+                WebRequestError.ERROR_SECURITY_SSL)
+
+        mainSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
+            @AssertCalled(count = 0)
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Load should be successful", success, equalTo(true))
+            }
+        })
+
+        mainSession.evaluateJS("document.allowDeprecatedTls = true")
+        mainSession.reload()
+        mainSession.waitForPageStop()
+    }
+
     @Ignore // Disabled for bug 1619344.
     @Test fun loadUnknownProtocol() {
         testLoadEarlyError(UNKNOWN_PROTOCOL_URI,

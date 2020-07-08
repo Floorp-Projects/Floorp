@@ -3809,6 +3809,7 @@ public class GeckoSession implements Parcelable {
          *         - document.addCertException(isTemporary), returns Promise
          *         - document.getFailedCertSecurityInfo(), returns FailedCertSecurityInfo
          *         - document.getNetErrorInfo(), returns NetErrorInfo
+         *         - document.allowDeprecatedTls, a property indicating whether or not TLS 1.0/1.1 is allowed
          * @see <a href="https://searchfox.org/mozilla-central/source/dom/webidl/FailedCertSecurityInfo.webidl">FailedCertSecurityInfo IDL</a>
          * @see <a href="https://searchfox.org/mozilla-central/source/dom/webidl/NetErrorInfo.webidl">NetErrorInfo IDL</a>
          */
