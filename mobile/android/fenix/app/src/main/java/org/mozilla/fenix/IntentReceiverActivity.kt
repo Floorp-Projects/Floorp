@@ -38,7 +38,7 @@ class IntentReceiverActivity : Activity() {
         intent.stripUnwantedFlags()
         processIntent(intent)
 
-        StartupTimeline.onActivityCreateEndIntentReceiver()
+        StartupTimeline.onActivityCreateEndIntentReceiver() // DO NOT MOVE ANYTHING BELOW HERE.
     }
 
     fun processIntent(intent: Intent) {
