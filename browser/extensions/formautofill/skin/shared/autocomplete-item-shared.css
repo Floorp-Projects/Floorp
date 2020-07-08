@@ -103,6 +103,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 
 .autofill-item-box > .profile-label-col > .profile-label {
   font-size: calc(var(--label-font-size) / var(--default-font-size) * 1em);
+  unicode-bidi: plaintext;
 }
 
 .autofill-item-box > .profile-label-col > .profile-label-affix {
@@ -118,6 +119,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 
 .autofill-item-box > .profile-comment-col > .profile-comment {
   font-size: calc(var(--comment-font-size) / var(--default-font-size) * 1em);
+  unicode-bidi: plaintext;
 }
 
 .autofill-item-box[size="small"] {
