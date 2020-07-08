@@ -277,8 +277,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         EngineView::class.java.name -> components.core.engine.createView(context, attrs).apply {
             selectionActionDelegate = DefaultSelectionActionDelegate(
                 getSearchAdapter(components.core.store),
-                resources = context.resources,
-                appName = getString(R.string.app_name)
+                resources = context.resources
             ) {
                 share(it)
             }
