@@ -60,6 +60,7 @@ EXPORTS.mozilla.dom += [
     'ReferrerInfoUtils.h',
     'RefMessageBodyService.h',
     'RemoteBrowser.h',
+    'RemoteType.h',
     'RemoteWebProgress.h',
     'RemoteWebProgressRequest.h',
     'SharedMessageBody.h',
