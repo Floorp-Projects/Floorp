@@ -290,6 +290,39 @@ TestArray.addTest(
       .then( memcmp_complete(that, tv.pbkdf2_sha256_no_salt.derived), fail );
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail while deriving key with bad hash name",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA256",
+        salt: tv.pbkdf2_sha256.salt,
+        iterations: tv.pbkdf2_sha256.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, 32).then(
+        error(that),
+        complete(that, function(e) {
+          return e.name == "NotSupportedError";
+        })
+      );
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey", "deriveBits"])
+      .then( doDerive, fail );
+  }
+);
 /* ]]>*/</script>
 </head>
 
