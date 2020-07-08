@@ -18,7 +18,7 @@ import mozilla.components.feature.pwa.WebAppShortcutManager
 class TestCore(context: Context) : Core(context) {
 
     override val engine = mockk<Engine>(relaxed = true) {
-        every { this@mockk getProperty "settings" } returns mockk<Settings>()
+        every { this@mockk getProperty "settings" } returns mockk<Settings>(relaxed = true)
     }
     override val sessionManager = SessionManager(engine)
     override val store = mockk<BrowserStore>()

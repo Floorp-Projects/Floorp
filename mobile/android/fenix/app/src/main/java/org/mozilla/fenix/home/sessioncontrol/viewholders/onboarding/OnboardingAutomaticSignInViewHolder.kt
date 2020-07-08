@@ -5,12 +5,14 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
+import android.widget.Button
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
@@ -20,42 +22,18 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
-class OnboardingAutomaticSignInViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingAutomaticSignInViewHolder(
+    view: View,
+    private val scope: CoroutineScope = MainScope()
+) : RecyclerView.ViewHolder(view) {
 
     private lateinit var shareableAccount: ShareableAccount
     private val headerText = view.header_text
 
     init {
         view.turn_on_sync_button.setOnClickListener {
-            it.context.components.analytics.metrics.track(Event.OnboardingAutoSignIn)
-
-            it.turn_on_sync_button.text = it.context.getString(
-                R.string.onboarding_firefox_account_signing_in
-            )
-            it.turn_on_sync_button.isEnabled = false
-
-            CoroutineScope(Dispatchers.Main).launch {
-                val result = view.context.components.backgroundServices.accountManager
-                    .signInWithShareableAccountAsync(shareableAccount).await()
-                when (result) {
-                    SignInWithShareableAccountResult.Failure -> {
-                        // Failed to sign-in (e.g. bad credentials). Allow to try again.
-                        it.turn_on_sync_button.text = it.context.getString(
-                            R.string.onboarding_firefox_account_auto_signin_confirm
-                        )
-                        it.turn_on_sync_button.isEnabled = true
-                        FenixSnackbar.make(
-                            view = it,
-                            duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedWithBrowserToolbar = false
-                        ).setText(
-                            it.context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
-                        ).show()
-                    }
-                    SignInWithShareableAccountResult.WillRetry, SignInWithShareableAccountResult.Success -> {
-                        // We consider both of these as a 'success'.
-                    }
-                }
+            scope.launch {
+                onClick(it.turn_on_sync_button)
             }
         }
     }
@@ -67,6 +45,34 @@ class OnboardingAutomaticSignInViewHolder(view: View) : RecyclerView.ViewHolder(
         )
         val icon = getDrawable(itemView.context, R.drawable.ic_onboarding_avatar_anonymous)
         headerText.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
+    }
+
+    @VisibleForTesting
+    internal suspend fun onClick(button: Button) {
+        val context = button.context
+        context.components.analytics.metrics.track(Event.OnboardingAutoSignIn)
+
+        button.text = context.getString(R.string.onboarding_firefox_account_signing_in)
+        button.isEnabled = false
+
+        val accountManager = context.components.backgroundServices.accountManager
+        when (accountManager.signInWithShareableAccountAsync(shareableAccount).await()) {
+            SignInWithShareableAccountResult.Failure -> {
+                // Failed to sign-in (e.g. bad credentials). Allow to try again.
+                button.text = context.getString(R.string.onboarding_firefox_account_auto_signin_confirm)
+                button.isEnabled = true
+                FenixSnackbar.make(
+                    view = button,
+                    duration = Snackbar.LENGTH_SHORT,
+                    isDisplayedWithBrowserToolbar = false
+                ).setText(
+                    context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
+                ).show()
+            }
+            SignInWithShareableAccountResult.WillRetry, SignInWithShareableAccountResult.Success -> {
+                // We consider both of these as a 'success'.
+            }
+        }
     }
 
     companion object {
