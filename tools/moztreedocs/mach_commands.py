@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 import yaml
+import uuid
 
 from functools import partial
 from pprint import pprint
@@ -71,8 +72,11 @@ class Documentation(MachCommandBase):
                      help='Upload generated files to S3.')
     @CommandArgument('-j', '--jobs', default=str(multiprocessing.cpu_count()), dest='jobs',
                      help='Distribute the build over N processes in parallel.')
+    @CommandArgument('--write-url', default=None,
+                     help='Write S3 Upload URL to text file')
     def build_docs(self, path=None, fmt='html', outdir=None, auto_open=True,
-                   serve=True, http=None, archive=False, upload=False, jobs=None):
+                   serve=True, http=None, archive=False, upload=False, jobs=None,
+                   write_url=None):
         if self.check_jsdoc():
             return die(JSDOC_NOT_FOUND)
 
@@ -81,6 +85,7 @@ class Documentation(MachCommandBase):
         import webbrowser
         from livereload import Server
         from moztreedocs.package import create_tarball
+        unique_id = str(uuid.uuid1())
 
         outdir = outdir or os.path.join(self.topobjdir, 'docs')
         savedir = os.path.join(outdir, fmt)
@@ -105,13 +110,22 @@ class Documentation(MachCommandBase):
         print('Post processing HTML files')
         self._post_process_html(savedir)
 
+        # Upload the artifact containing the link to S3
+        # This would be used by code-review to post the link to Phabricator
+        if write_url is not None:
+            base_link = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com/"
+            unique_link = base_link + unique_id + "/index.html"
+            with open(write_url, 'w') as fp:
+                fp.write(unique_link)
+                fp.flush()
+
         if archive:
             archive_path = os.path.join(outdir, '%s.tar.gz' % self.project)
             create_tarball(archive_path, savedir)
             print('Archived to %s' % archive_path)
 
         if upload:
-            self._s3_upload(savedir, self.project, self.version)
+            self._s3_upload(savedir, self.project, unique_id, self.version)
 
         if not serve:
             index_path = os.path.join(savedir, 'index.html')
@@ -247,7 +261,7 @@ class Documentation(MachCommandBase):
             if os.path.isdir(p):
                 return p
 
-    def _s3_upload(self, root, project, version=None):
+    def _s3_upload(self, root, project, unique_id, version=None):
         from moztreedocs.package import distribution_files
         from moztreedocs.upload import s3_upload, s3_set_redirects
 
@@ -260,7 +274,7 @@ class Documentation(MachCommandBase):
         # S3 bucket.
 
         files = list(distribution_files(root))
-        key_prefixes = ['%s/latest' % project]
+        key_prefixes = [unique_id]
         if version:
             key_prefixes.append('%s/%s' % (project, version))
 

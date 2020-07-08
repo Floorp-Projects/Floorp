@@ -13,6 +13,7 @@ import botocore
 import boto3
 import concurrent.futures as futures
 import requests
+import datetime
 from pprint import pprint
 
 from mozbuild.util import memoize
@@ -142,6 +143,18 @@ def s3_upload(files, key_prefix=None):
         # Need to flush to avoid buffering/interleaving from multiple threads.
         sys.stdout.write('uploading %s to %s\n' % (path, key))
         sys.stdout.flush()
+        """
+        When running on try, we need to set an
+        expiration date to make sure they
+        don't stay live forever.
+
+        for m-c, we do not want to set any expiration
+        """
+        if os.environ.get('MOZ_SCM_LEVEL') == '1':
+            now = datetime.datetime.now()
+            expires = now + datetime.timedelta(days=7)
+            extra_args['Expires'] = expires
+
         s3.upload_fileobj(f, bucket, key, ExtraArgs=extra_args)
 
     fs = []
