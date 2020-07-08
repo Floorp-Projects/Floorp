@@ -96,6 +96,10 @@ ignore =
     #       text contains quotes which breaks our custom JSON formatter
     F723, E121, E123, E126, E129, E133, E226, E241, E242, E402, E704, E741, W503,
 
+    # black will generate code that breaks these. they're not PEP8 compliant though;
+    # see https://github.com/psf/black/blob/master/docs/compatible_configs.md#flake8
+    W503, E203
+
 per-file-ignores =
     # These paths are intentionally excluded.
     ipc/ipdl/*: F403, F405
