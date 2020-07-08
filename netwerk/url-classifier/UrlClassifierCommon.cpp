@@ -319,7 +319,29 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
   nsCOMPtr<nsIURI> topWinURI;
   rv =
       UrlClassifierCommon::GetTopWindowURI(aChannel, getter_AddRefs(topWinURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) || !topWinURI) {
+    // SharedWorker and ServiceWorker don't have an associated window, use
+    // client's URI instead.
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    MOZ_ASSERT(loadInfo);
+
+    Maybe<dom::ClientInfo> clientInfo = loadInfo->GetClientInfo();
+    if (clientInfo.isSome()) {
+      if ((clientInfo->Type() == dom::ClientType::Sharedworker) ||
+          (clientInfo->Type() == dom::ClientType::Serviceworker)) {
+        UC_LOG(
+            ("CreatePairwiseWhiteListURI: Channel initiated by worker, get URI "
+             "from client"));
+        auto clientPrincipalOrErr = clientInfo->GetPrincipal();
+        if (clientPrincipalOrErr.isOk()) {
+          nsCOMPtr<nsIPrincipal> principal = clientPrincipalOrErr.unwrap();
+          auto* basePrin = BasePrincipal::Cast(principal);
+          rv = basePrin->GetURI(getter_AddRefs(topWinURI));
+          Unused << NS_WARN_IF(NS_FAILED(rv));
+        }
+      }
+    }
+  }
 
   if (!topWinURI) {
     if (UC_LOG_ENABLED()) {
@@ -334,6 +356,9 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
       UC_LOG(("CreatePairwiseEntityListURI: No window URI associated with %s",
               spec.get()));
     }
+
+    // Return success because we want to continue to look up even without
+    // whitelist.
     return NS_OK;
   }
 
