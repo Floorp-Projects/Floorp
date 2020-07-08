@@ -6,32 +6,10 @@
 # Parent  5ef34aa8c8918649528048dd60907862a4355e29
 Bug 1515088 Part 2: Set LoaderThreads to 1 in the RTL_USER_PROCESS_PARAMETERS structure on child process start-up. r=aklotz
 
-diff --git a/security/sandbox/chromium/sandbox/win/src/nt_internals.h b/security/sandbox/chromium/sandbox/win/src/nt_internals.h
---- a/security/sandbox/chromium/sandbox/win/src/nt_internals.h
-+++ b/security/sandbox/chromium/sandbox/win/src/nt_internals.h
-@@ -312,16 +312,18 @@ typedef enum _PROCESSINFOCLASS {
- // Partial definition only.
- typedef struct _PEB {
-   BYTE InheritedAddressSpace;
-   BYTE ReadImageFileExecOptions;
-   BYTE BeingDebugged;
-   BYTE SpareBool;
-   PVOID Mutant;
-   PVOID ImageBaseAddress;
-+  PVOID Ldr;
-+  PVOID ProcessParameters;
- } PEB, *PPEB;
- 
- typedef LONG KPRIORITY;
- 
- typedef struct _PROCESS_BASIC_INFORMATION {
-   union {
-     NTSTATUS ExitStatus;
-     PVOID padding_for_x64_0;
 diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 --- a/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
-@@ -453,20 +453,21 @@ bool GetNtPathFromWin32Path(const base::
+@@ -456,20 +456,21 @@ bool GetNtPathFromWin32Path(const std::w
    bool rv = GetPathFromHandle(file, nt_path);
    ::CloseHandle(file);
    return rv;
@@ -55,7 +33,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
        ::WriteProcessMemory(child_process, address, buffer, length, &written) &&
        (length == written);
  
-@@ -511,16 +512,40 @@ void* GetProcessBaseAddress(HANDLE proce
+@@ -544,16 +545,40 @@ void* GetProcessBaseAddress(HANDLE proce
                             &bytes_read) ||
        (sizeof(magic) != bytes_read)) {
      return nullptr;
@@ -73,7 +51,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
 +  // field so there is a, probably small, risk that it might change or move in
 +  // the future. In order to slightly guard against that we only update if the
 +  // value is currently 0.
-+  uint8_t* processParameters = static_cast<uint8_t*>(peb.ProcessParameters);
++  auto processParameters = reinterpret_cast<uint8_t*>(peb.ProcessParameters);
 +  const uint32_t loaderThreadsOffset = 0x40c;
 +  uint32_t maxLoaderThreads = 0;
 +  BOOL memoryRead = ::ReadProcessMemory(
@@ -91,16 +69,16 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
    return base_address;
  }
  
- };  // namespace sandbox
- 
- void ResolveNTFunctionPtr(const char* name, void* ptr) {
-   static volatile HMODULE ntdll = NULL;
- 
+ DWORD GetTokenInformation(HANDLE token,
+                           TOKEN_INFORMATION_CLASS info_class,
+                           std::unique_ptr<BYTE[]>* buffer) {
+   // Get the required buffer size.
+   DWORD size = 0;
 diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.h b/security/sandbox/chromium/sandbox/win/src/win_utils.h
 --- a/security/sandbox/chromium/sandbox/win/src/win_utils.h
 +++ b/security/sandbox/chromium/sandbox/win/src/win_utils.h
-@@ -102,17 +102,18 @@ HKEY GetReservedKeyFromName(const base::
- bool ResolveRegistryName(base::string16 name, base::string16* resolved_name);
+@@ -111,17 +111,18 @@ HKEY GetReservedKeyFromName(const std::w
+ bool ResolveRegistryName(std::wstring name, std::wstring* resolved_name);
  
  // Writes |length| bytes from the provided |buffer| into the address space of
  // |child_process|, at the specified |address|, preserving the original write
@@ -112,10 +90,10 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.h b/security/sa
 +                               size_t length,
 +                               DWORD writeProtection = PAGE_WRITECOPY);
  
- // Returns true if the provided path points to a pipe.
- bool IsPipe(const base::string16& path);
- 
- // Converts a NTSTATUS code to a Win32 error code.
- DWORD GetLastErrorFromNtStatus(NTSTATUS status);
- 
- // Returns the address of the main exe module in memory taking in account
+ // Allocates |buffer_bytes| in child (PAGE_READWRITE) and copies data
+ // from |local_buffer| in this process into |child|. |remote_buffer|
+ // contains the address in the chile.  If a zero byte copy is
+ // requested |true| is returned and no allocation or copying is
+ // attempted.  Returns false if allocation or copying fails. If
+ // copying fails, the allocation will be reversed.
+ bool CopyToChildMemory(HANDLE child,

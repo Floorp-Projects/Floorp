@@ -5,3 +5,4 @@ consult_PermissionsService_for_file_access.patch
 allow_flash_temporary_files.patch
 arm64_set_LoaderThreads.patch
 change_to_DCHECK_in_CloseHandleWrapper.patch
+move_shared_memory_duplication_after_initialization.patch

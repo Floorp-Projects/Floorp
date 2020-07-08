@@ -14,10 +14,10 @@ https://hg.mozilla.org/mozilla-central/rev/477b991bf6fa7b4511768649c9bf37c7275d3
 diff --git a/security/sandbox/chromium/base/time/time.cc b/security/sandbox/chromium/base/time/time.cc
 --- a/security/sandbox/chromium/base/time/time.cc
 +++ b/security/sandbox/chromium/base/time/time.cc
-@@ -241,16 +241,17 @@ Time Time::LocalMidnight() const {
-   Time out_time;
-   if (FromLocalExploded(exploded, &out_time))
-     return out_time;
+@@ -281,16 +281,17 @@ Time Time::Midnight(bool is_local) const
+     if (FromExploded(is_local, exploded, &out_time))
+       return out_time;
+   }
    // This function must not fail.
    NOTREACHED();
    return Time();
@@ -32,7 +32,7 @@ diff --git a/security/sandbox/chromium/base/time/time.cc b/security/sandbox/chro
  
    if (time_string[0] == '\0')
      return false;
-@@ -261,16 +262,17 @@ bool Time::FromStringInternal(const char
+@@ -301,16 +302,17 @@ bool Time::FromStringInternal(const char
                                         &result_time);
    if (PR_SUCCESS != result)
      return false;
