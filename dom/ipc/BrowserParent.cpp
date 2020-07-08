@@ -2761,6 +2761,11 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvSetAllowDeprecatedTls(bool value) {
+  Preferences::SetBool("security.tls.version.enable-deprecated", value);
+  return IPC_OK();
+}
+
 already_AddRefed<nsIBrowser> BrowserParent::GetBrowser() {
   nsCOMPtr<nsIBrowser> browser;
   RefPtr<Element> currentElement = mFrameElement;

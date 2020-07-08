@@ -1831,6 +1831,28 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   }
 }
 
+bool Document::AllowDeprecatedTls() {
+  return Preferences::GetBool("security.tls.version.enable-deprecated", false);
+}
+
+void Document::SetAllowDeprecatedTls(bool value) {
+  if (!IsErrorPage()) {
+    return;
+  }
+
+  auto docShell = GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  auto child = BrowserChild::GetFrom(docShell);
+  if (!child) {
+    return;
+  }
+
+  child->SendSetAllowDeprecatedTls(value);
+}
+
 bool Document::IsAboutPage() const {
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   return principal->SchemeIs("about");
