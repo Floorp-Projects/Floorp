@@ -536,5 +536,33 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvGetSocketData(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessChild::RecvGetDNSCacheEntries(
+    GetDNSCacheEntriesResolver&& aResolve) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDNSService> dns =
+      do_GetService("@mozilla.org/network/dns-service;1", &rv);
+  if (NS_FAILED(rv)) {
+    aResolve(nsTArray<DNSCacheEntries>());
+    return IPC_OK();
+  }
+
+  RefPtr<DataResolver<nsTArray<DNSCacheEntries>,
+                      SocketProcessChild::GetDNSCacheEntriesResolver>>
+      resolver =
+          new DataResolver<nsTArray<DNSCacheEntries>,
+                           SocketProcessChild::GetDNSCacheEntriesResolver>(
+              std::move(aResolve));
+  gSocketTransportService->Dispatch(
+      NS_NewRunnableFunction(
+          "net::SocketProcessChild::RecvGetDNSCacheEntries",
+          [resolver{std::move(resolver)}, dns{std::move(dns)}]() {
+            nsTArray<DNSCacheEntries> entries;
+            dns->GetDNSCacheEntries(&entries);
+            resolver->OnResolve(std::move(entries));
+          }),
+      NS_DISPATCH_NORMAL);
+  return IPC_OK();
+}
+
 }  // namespace net
 }  // namespace mozilla

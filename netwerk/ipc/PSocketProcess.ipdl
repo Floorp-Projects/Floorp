@@ -40,6 +40,7 @@ using PRTime from "prtime.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using struct nsID from "nsID.h";
 using mozilla::net::SocketInfo from "mozilla/net/DashboardTypes.h";
+using mozilla::net::DNSCacheEntries from "mozilla/net/DashboardTypes.h";
 
 namespace mozilla {
 namespace net {
@@ -156,6 +157,8 @@ child:
 
   async GetSocketData()
     returns (SocketDataArgs data);
+  async GetDNSCacheEntries()
+    returns (DNSCacheEntries[] entries);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
