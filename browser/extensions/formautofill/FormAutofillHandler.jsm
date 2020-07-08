@@ -364,7 +364,7 @@ class FormAutofillSection {
           fieldDetail.state == FIELD_STATES.AUTO_FILLED
         ) {
           element.focus({ preventScroll: true });
-          element.setUserInput(value);
+          formFillController.textValue = value;
           this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
       } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
