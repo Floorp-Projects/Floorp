@@ -36,4 +36,11 @@ interface SelectionActionDelegate {
      * @returns [true] if the action was consumed.
      */
     fun performAction(id: String, selectedText: String): Boolean
+
+    /**
+     * Takes in a list of actions and sorts them.
+     *
+     * @returns the sorted list.
+     */
+    fun sortedActions(actions: Array<String>): Array<String>
 }

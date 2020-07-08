@@ -42,6 +42,9 @@ class GeckoSelectionActionDelegateTest {
             override fun isActionAvailable(id: String): Boolean = false
             override fun getActionTitle(id: String): CharSequence? = ""
             override fun performAction(id: String, selectedText: String): Boolean = false
+            override fun sortedActions(actions: Array<String>): Array<String> {
+                return actions
+            }
         }
 
         val geckoDelegate = TestGeckoSelectionActionDelegate(mock(), customDelegate)
