@@ -60,8 +60,9 @@ class alignas(8) IonScript final : public TrailingArray {
   // Offset (in bytes) from `this` to the start of each trailing array. Each
   // array ends where following one begins. There is no implicit padding (except
   // possible at very end).
-  Offset constantTableOffset_ = 0;  // JS::Value aligned
-  Offset runtimeDataOffset_ = 0;    // uint64_t aligned
+  Offset constantTableOffset_ = 0;   // JS::Value aligned
+  Offset runtimeDataOffset_ = 0;     // uint64_t aligned
+  Offset nurseryObjectsOffset_ = 0;  // pointer aligned
   Offset osiIndexOffset_ = 0;
   Offset safepointIndexOffset_ = 0;
   Offset bailoutTableOffset_ = 0;
@@ -135,6 +136,7 @@ class alignas(8) IonScript final : public TrailingArray {
   // Layout helpers
   Offset constantTableOffset() const { return constantTableOffset_; }
   Offset runtimeDataOffset() const { return runtimeDataOffset_; }
+  Offset nurseryObjectsOffset() const { return nurseryObjectsOffset_; }
   Offset osiIndexOffset() const { return osiIndexOffset_; }
   Offset safepointIndexOffset() const { return safepointIndexOffset_; }
   Offset bailoutTableOffset() const { return bailoutTableOffset_; }
@@ -171,7 +173,18 @@ class alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<uint8_t>(runtimeDataOffset());
   }
   size_t runtimeSize() const {
-    return numElements<uint8_t>(runtimeDataOffset(), osiIndexOffset());
+    return numElements<uint8_t>(runtimeDataOffset(), nurseryObjectsOffset());
+  }
+
+  //
+  // List of (originally) nursery-allocated objects referenced from JIT code.
+  // (JSObject* alignment)
+  //
+  HeapPtrObject* nurseryObjects() {
+    return offsetToPointer<HeapPtrObject>(nurseryObjectsOffset());
+  }
+  size_t numNurseryObjects() const {
+    return numElements<HeapPtrObject>(nurseryObjectsOffset(), osiIndexOffset());
   }
 
   //
@@ -263,8 +276,8 @@ class alignas(8) IonScript final : public TrailingArray {
                         uint32_t frameSize, size_t snapshotsListSize,
                         size_t snapshotsRVATableSize, size_t recoversSize,
                         size_t bailoutEntries, size_t constants,
-                        size_t safepointIndices, size_t osiIndices,
-                        size_t icEntries, size_t runtimeSize,
+                        size_t nurseryObjects, size_t safepointIndices,
+                        size_t osiIndices, size_t icEntries, size_t runtimeSize,
                         size_t safepointsSize,
                         OptimizationLevel optimizationLevel);
 
