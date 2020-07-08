@@ -9,6 +9,8 @@
 #include "nsContentUtils.h"
 #include "nsHTTPSOnlyUtils.h"
 #include "nsIConsoleService.h"
+#include "nsIHttpsOnlyModePermission.h"
+#include "nsIPermissionManager.h"
 #include "nsIScriptError.h"
 #include "prnetdb.h"
 
@@ -134,6 +136,26 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsresult aError) {
            NS_ERROR_HARMFUL_URI == aError ||
            NS_ERROR_CONTENT_CRASHED == aError ||
            NS_ERROR_FRAME_CRASHED == aError);
+}
+
+/* static */
+bool nsHTTPSOnlyUtils::TestHttpsOnlySitePermission(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    // We always deny the permission if we don't have a principal.
+    return false;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      mozilla::services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+
+  uint32_t perm;
+  nsresult rv = permMgr->TestExactPermissionFromPrincipal(
+      aPrincipal, "https-only-load-insecure"_ns, &perm);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW ||
+         perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW_SESSION;
 }
 
 /* ------ Logging ------ */

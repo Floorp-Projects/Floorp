@@ -20,6 +20,7 @@
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -2093,8 +2094,8 @@ DocumentLoadListener::AsyncOnChannelRedirect(
           nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
               mChannel, getter_AddRefs(resultPrincipal));
       if (NS_SUCCEEDED(rv)) {
-        isHttpsOnlyExempt = nsContentUtils::IsExactSitePermAllow(
-            resultPrincipal, "https-only-mode-exception"_ns);
+        isHttpsOnlyExempt =
+            nsHTTPSOnlyUtils::TestHttpsOnlySitePermission(resultPrincipal);
       }
     }
 
