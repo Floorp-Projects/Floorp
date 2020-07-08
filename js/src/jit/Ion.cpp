@@ -608,9 +608,9 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSize, size_t snapshotsListSize,
                           size_t snapshotsRVATableSize, size_t recoversSize,
                           size_t bailoutEntries, size_t constants,
-                          size_t safepointIndices, size_t osiIndices,
-                          size_t icEntries, size_t runtimeSize,
-                          size_t safepointsSize,
+                          size_t nurseryObjects, size_t safepointIndices,
+                          size_t osiIndices, size_t icEntries,
+                          size_t runtimeSize, size_t safepointsSize,
                           OptimizationLevel optimizationLevel) {
   if (snapshotsListSize >= MAX_BUFFER_SIZE ||
       (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t))) {
@@ -629,6 +629,7 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   CheckedInt<Offset> allocSize = sizeof(IonScript);
   allocSize += CheckedInt<Offset>(constants) * sizeof(Value);
   allocSize += CheckedInt<Offset>(runtimeSize);
+  allocSize += CheckedInt<Offset>(nurseryObjects) * sizeof(HeapPtrObject);
   allocSize += CheckedInt<Offset>(osiIndices) * sizeof(OsiIndex);
   allocSize += CheckedInt<Offset>(safepointIndices) * sizeof(SafepointIndex);
   allocSize += CheckedInt<Offset>(bailoutEntries) * sizeof(SnapshotOffset);
@@ -660,6 +661,11 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   MOZ_ASSERT(offsetCursor % alignof(uint64_t) == 0);
   script->runtimeDataOffset_ = offsetCursor;
   offsetCursor += runtimeSize;
+
+  MOZ_ASSERT(offsetCursor % alignof(HeapPtrObject) == 0);
+  script->initElements<HeapPtrObject>(offsetCursor, nurseryObjects);
+  script->nurseryObjectsOffset_ = offsetCursor;
+  offsetCursor += nurseryObjects * sizeof(HeapPtrObject);
 
   MOZ_ASSERT(offsetCursor % alignof(OsiIndex) == 0);
   script->osiIndexOffset_ = offsetCursor;
@@ -693,6 +699,7 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
 
   MOZ_ASSERT(script->numConstants() == constants);
   MOZ_ASSERT(script->runtimeSize() == runtimeSize);
+  MOZ_ASSERT(script->numNurseryObjects() == nurseryObjects);
   MOZ_ASSERT(script->numOsiIndices() == osiIndices);
   MOZ_ASSERT(script->numSafepointIndices() == safepointIndices);
   MOZ_ASSERT(script->numBailoutEntries() == bailoutEntries);
@@ -713,6 +720,10 @@ void IonScript::trace(JSTracer* trc) {
 
   for (size_t i = 0; i < numConstants(); i++) {
     TraceEdge(trc, &getConstant(i), "constant");
+  }
+
+  for (size_t i = 0; i < numNurseryObjects(); i++) {
+    TraceEdge(trc, &nurseryObjects()[i], "nursery-object");
   }
 
   // Trace caches so that the JSScript pointer can be updated if moved.
@@ -857,6 +868,22 @@ const OsiIndex* IonScript::getOsiIndex(uint8_t* retAddr) const {
 }
 
 void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
+  // Make sure there are no pointers into the IonScript's nursery objects list
+  // in the store buffer. Because this can be called during sweeping when
+  // discarding JIT code, we have to lock the store buffer when we find an
+  // object that's (still) in the nursery.
+  mozilla::Maybe<gc::AutoLockStoreBuffer> lock;
+  for (size_t i = 0, len = script->numNurseryObjects(); i < len; i++) {
+    JSObject* obj = script->nurseryObjects()[i];
+    if (!IsInsideNursery(obj)) {
+      continue;
+    }
+    if (lock.isNothing()) {
+      lock.emplace(&fop->runtime()->gc.storeBuffer());
+    }
+    script->nurseryObjects()[i] = HeapPtrObject();
+  }
+
   // This allocation is tracked by JSScript::setIonScriptImpl.
   fop->deleteUntracked(script);
 }
