@@ -11,7 +11,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <div id="scroller" style="height: 300px; overflow: scroll;">
-  <div style="width: 100%; height: 5000px;"></div>
+  <div style="width: 100%; height: 12000px;"></div>
   <iframe id="iframe"></iframe>
   <div style="width: 100%; height: 5000px;"></div>
 </div>
@@ -20,7 +20,7 @@
   add_task(async () => {
     window.addEventListener("message", event => {
       isnot(event.data, "decodeComplete",
-            "decoceComplete should never be received");
+            "decodeComplete should never be received");
     });
 
     await new Promise(resolve => {
