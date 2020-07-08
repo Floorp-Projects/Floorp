@@ -15,6 +15,7 @@ const astKeys = [
   "start",
   "end",
   "loc",
+  "errors",
   "program",
   "comments",
   "tokens",
