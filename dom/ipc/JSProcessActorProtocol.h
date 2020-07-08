@@ -8,7 +8,6 @@
 #define mozilla_dom_JSProcessActorProtocol_h
 
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/JSActorService.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
@@ -28,8 +27,7 @@ class EventTarget;
  * This object also can act as a carrier for methods and other state related to
  * a single protocol managed by the JSActorService.
  */
-class JSProcessActorProtocol final : public JSActorProtocol,
-                                     public nsIObserver {
+class JSProcessActorProtocol final : public nsIObserver {
  public:
   NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -43,26 +41,30 @@ class JSProcessActorProtocol final : public JSActorProtocol,
       const nsACString& aName, const ProcessActorOptions& aOptions,
       ErrorResult& aRv);
 
+  struct Sided {
+    Maybe<nsCString> mModuleURI;
+  };
+
   struct ParentSide : public Sided {};
 
   struct ChildSide : public Sided {
     nsTArray<nsCString> mObservers;
   };
 
-  const ParentSide& Parent() const override { return mParent; }
-  const ChildSide& Child() const override { return mChild; }
+  const ParentSide& Parent() const { return mParent; }
+  const ChildSide& Child() const { return mChild; }
 
   void AddObservers();
   void RemoveObservers();
-  bool Matches(const nsACString& aRemoteType);
+  bool Matches(const nsAString& aRemoteType);
 
  private:
   explicit JSProcessActorProtocol(const nsACString& aName) : mName(aName) {}
-  bool RemoteTypePrefixMatches(const nsDependentCSubstring& aRemoteType);
+  bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
   ~JSProcessActorProtocol() = default;
 
   nsCString mName;
-  nsTArray<nsCString> mRemoteTypes;
+  nsTArray<nsString> mRemoteTypes;
 
   ParentSide mParent;
   ChildSide mChild;

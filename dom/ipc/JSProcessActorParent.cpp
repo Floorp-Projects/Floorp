@@ -6,8 +6,6 @@
 
 #include "mozilla/dom/JSProcessActorBinding.h"
 #include "mozilla/dom/JSProcessActorParent.h"
-#include "mozilla/dom/InProcessChild.h"
-#include "mozilla/dom/InProcessParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -39,11 +37,44 @@ void JSProcessActorParent::Init(const nsACString& aName,
 
 JSProcessActorParent::~JSProcessActorParent() { MOZ_ASSERT(!mManager); }
 
+namespace {
+
+class AsyncMessageToProcessChild : public Runnable {
+ public:
+  AsyncMessageToProcessChild(const JSActorMessageMeta& aMetadata,
+                             ipc::StructuredCloneData&& aData,
+                             ipc::StructuredCloneData&& aStack)
+      : mozilla::Runnable("InProcessChild::HandleAsyncMessage"),
+        mMetadata(aMetadata),
+        mData(std::move(aData)),
+        mStack(std::move(aStack)) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
+    if (auto* child = InProcessChild::Singleton()) {
+      RefPtr<JSProcessActorChild> actor;
+      child->GetActor(mMetadata.actorName(), getter_AddRefs(actor));
+      if (actor) {
+        actor->ReceiveRawMessage(mMetadata, std::move(mData),
+                                 std::move(mStack));
+      }
+    }
+    return NS_OK;
+  }
+
+ private:
+  JSActorMessageMeta mMetadata;
+  ipc::StructuredCloneData mData;
+  ipc::StructuredCloneData mStack;
+};
+
+}  // namespace
+
 void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
                                           ipc::StructuredCloneData&& aData,
                                           ipc::StructuredCloneData&& aStack,
                                           ErrorResult& aRv) {
-  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError(
         nsPrintfCString("Actor '%s' cannot send message '%s' during shutdown.",
                         PromiseFlatCString(aMeta.actorName()).get(),
@@ -64,9 +95,8 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
   // and can dispatch the message directly to the event loop.
   ContentParent* contentParent = mManager->AsContentParent();
   if (!contentParent) {
-    SendRawMessageInProcess(aMeta, std::move(aData), std::move(aStack), []() {
-      return do_AddRef(InProcessChild::Singleton());
-    });
+    NS_DispatchToMainThread(MakeAndAddRef<AsyncMessageToProcessChild>(
+        aMeta, std::move(aData), std::move(aStack)));
     return;
   }
 
@@ -90,7 +120,10 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
   }
 }
 
-void JSProcessActorParent::ClearManager() { mManager = nullptr; }
+void JSProcessActorParent::AfterDestroy() {
+  JSActor::AfterDestroy();
+  mManager = nullptr;
+}
 
 }  // namespace dom
 }  // namespace mozilla

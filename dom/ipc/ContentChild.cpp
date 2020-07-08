@@ -1652,7 +1652,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
   // Use the prefix to avoid URIs from Fission isolated processes.
   auto remoteTypePrefix = RemoteTypePrefix(GetRemoteType());
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
-                                     remoteTypePrefix);
+                                     NS_ConvertUTF16toUTF8(remoteTypePrefix));
 #endif /* MOZ_SANDBOX */
 
   return IPC_OK();
@@ -2135,7 +2135,13 @@ void ContentChild::ActorDestroy(ActorDestroyReason why) {
   ProcessChild::QuickExit();
 #else
   // Destroy our JSProcessActors, and reject any pending queries.
-  JSActorDidDestroy();
+  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorChild> processActors;
+  mProcessActors.SwapElements(processActors);
+  for (auto iter = processActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+    iter.Data()->AfterDestroy();
+  }
+  mProcessActors.Clear();
 
 #  if defined(XP_WIN)
   RefPtr<DllServices> dllSvc(DllServices::Get());
@@ -2550,36 +2556,38 @@ mozilla::ipc::IPCResult ContentChild::RecvAppInfo(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
-    const nsCString& aRemoteType) {
-  if (!mRemoteType.IsVoid()) {
+    const nsString& aRemoteType) {
+  if (!DOMStringIsNull(mRemoteType)) {
     // Preallocated processes are type PREALLOC_REMOTE_TYPE; they can become
     // anything except a File: process.
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Changing remoteType of process %d from %s to %s", getpid(),
-             mRemoteType.get(), aRemoteType.get()));
+             NS_ConvertUTF16toUTF8(mRemoteType).get(),
+             NS_ConvertUTF16toUTF8(aRemoteType).get()));
     // prealloc->anything (but file) or web->web allowed
-    MOZ_RELEASE_ASSERT(aRemoteType != FILE_REMOTE_TYPE &&
-                       (mRemoteType == PREALLOC_REMOTE_TYPE ||
-                        (mRemoteType == DEFAULT_REMOTE_TYPE &&
-                         aRemoteType == DEFAULT_REMOTE_TYPE)));
+    MOZ_RELEASE_ASSERT(!aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
+                       (mRemoteType.EqualsLiteral(PREALLOC_REMOTE_TYPE) ||
+                        (mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
+                         aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE))));
   } else {
     // Initial setting of remote type.  Either to 'prealloc' or the actual
     // final type (if we didn't use a preallocated process)
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Setting remoteType of process %d to %s", getpid(),
-             aRemoteType.get()));
+             NS_ConvertUTF16toUTF8(aRemoteType).get()));
   }
 
   // Update the process name so about:memory's process names are more obvious.
-  if (aRemoteType == FILE_REMOTE_TYPE) {
+  if (aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)) {
     SetProcessName(u"file:// Content"_ns);
-  } else if (aRemoteType == EXTENSION_REMOTE_TYPE) {
+  } else if (aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
     SetProcessName(u"WebExtensions"_ns);
-  } else if (aRemoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
+  } else if (aRemoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
     SetProcessName(u"Privileged Content"_ns);
-  } else if (aRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
+  } else if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
     SetProcessName(u"Large Allocation Web Content"_ns);
-  } else if (RemoteTypePrefix(aRemoteType) == FISSION_WEB_REMOTE_TYPE) {
+  } else if (RemoteTypePrefix(aRemoteType)
+                 .EqualsLiteral(FISSION_WEB_REMOTE_TYPE)) {
     SetProcessName(u"Isolated Web Content"_ns);
   }
   // else "prealloc", "web" or "webCOOP+COEP" type -> "Web Content" already set
@@ -2591,7 +2599,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
 
 // Call RemoteTypePrefix() on the result to remove URIs if you want to use this
 // for telemetry.
-const nsACString& ContentChild::GetRemoteType() const { return mRemoteType; }
+const nsAString& ContentChild::GetRemoteType() const { return mRemoteType; }
 
 mozilla::ipc::IPCResult ContentChild::RecvInitServiceWorkers(
     const ServiceWorkerConfiguration& aConfig) {
@@ -4245,42 +4253,52 @@ NS_IMETHODIMP ContentChild::GetChildID(uint64_t* aOut) {
 
 NS_IMETHODIMP ContentChild::GetActor(const nsACString& aName,
                                      JSProcessActorChild** retval) {
-  ErrorResult error;
-  RefPtr<JSProcessActorChild> actor =
-      JSActorManager::GetActor(aName, error).downcast<JSProcessActorChild>();
-  if (error.Failed()) {
-    return error.StealNSResult();
+  if (!CanSend()) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
-  actor.forget(retval);
-  return NS_OK;
-}
 
-already_AddRefed<JSActor> ContentChild::InitJSActor(
-    JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
+  // Check if this actor has already been created, and return it if it has.
+  if (mProcessActors.Contains(aName)) {
+    RefPtr<JSProcessActorChild> actor(mProcessActors.Get(aName));
+    actor.forget(retval);
+    return NS_OK;
+  }
+
+  // Otherwise, we want to create a new instance of this actor.
+  JS::RootedObject obj(RootingCx());
+  ErrorResult result;
+  ConstructActor(aName, &obj, result);
+  if (result.Failed()) {
+    return result.StealNSResult();
+  }
+
+  // Unwrap our actor to a JSProcessActorChild object.
   RefPtr<JSProcessActorChild> actor;
-  if (aMaybeActor.get()) {
-    aRv = UNWRAP_OBJECT(JSProcessActorChild, aMaybeActor.get(), actor);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  } else {
-    actor = new JSProcessActorChild();
+  nsresult rv = UNWRAP_OBJECT(JSProcessActorChild, &obj, actor);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   MOZ_RELEASE_ASSERT(!actor->Manager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
-  return actor.forget();
+  mProcessActors.Put(aName, RefPtr{actor});
+  actor.forget(retval);
+  return NS_OK;
 }
 
 IPCResult ContentChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                        const ClonedMessageData& aData,
                                        const ClonedMessageData& aStack) {
-  StructuredCloneData data;
-  data.BorrowFromClonedMessageDataForChild(aData);
-  StructuredCloneData stack;
-  stack.BorrowFromClonedMessageDataForChild(aStack);
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  RefPtr<JSProcessActorChild> actor;
+  GetActor(aMeta.actorName(), getter_AddRefs(actor));
+  if (actor) {
+    StructuredCloneData data;
+    data.BorrowFromClonedMessageDataForChild(aData);
+    StructuredCloneData stack;
+    stack.BorrowFromClonedMessageDataForChild(aStack);
+    actor->ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  }
   return IPC_OK();
 }
 

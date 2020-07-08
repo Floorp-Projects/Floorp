@@ -12,39 +12,54 @@ using namespace mozilla::dom;
 TEST(RemoteWorkerManager, TestMatchRemoteType)
 {
   static const struct {
-    const nsCString processRemoteType;
-    const nsCString workerRemoteType;
+    const nsString processRemoteType;
+    const nsString workerRemoteType;
     const bool shouldMatch;
   } tests[] = {
       // Test exact matches between process and worker remote types.
-      {DEFAULT_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, true},
-      {EXTENSION_REMOTE_TYPE, EXTENSION_REMOTE_TYPE, true},
-      {PRIVILEGEDMOZILLA_REMOTE_TYPE, PRIVILEGEDMOZILLA_REMOTE_TYPE, true},
+      {NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), true},
+      {NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE), true},
+      {NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDMOZILLA_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDMOZILLA_REMOTE_TYPE), true},
 
       // Test workers with remoteType "web" not launched on non-web or coop+coep
       // processes.
-      {PRIVILEGEDMOZILLA_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, false},
-      {PRIVILEGEDABOUT_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, false},
-      {EXTENSION_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, false},
-      {FILE_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, false},
-      {WITH_COOP_COEP_REMOTE_TYPE_PREFIX, DEFAULT_REMOTE_TYPE, false},
+      {NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDMOZILLA_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), false},
+      {NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDABOUT_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), false},
+      {NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), false},
+      {NS_LITERAL_STRING_FROM_CSTRING(FILE_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), false},
+      {NS_LITERAL_STRING_FROM_CSTRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), false},
 
       // Test workers with remoteType "web" launched in web child processes.
-      {LARGE_ALLOCATION_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, true},
-      {FISSION_WEB_REMOTE_TYPE, DEFAULT_REMOTE_TYPE, true},
+      {NS_LITERAL_STRING_FROM_CSTRING(LARGE_ALLOCATION_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), true},
+      {NS_LITERAL_STRING_FROM_CSTRING(FISSION_WEB_REMOTE_TYPE),
+       NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), true},
 
       // Test empty remoteType default to "web" remoteType.
-      {DEFAULT_REMOTE_TYPE, NOT_REMOTE_TYPE, true},
-      {WITH_COOP_COEP_REMOTE_TYPE_PREFIX, NOT_REMOTE_TYPE, false},
-      {PRIVILEGEDMOZILLA_REMOTE_TYPE, NOT_REMOTE_TYPE, false},
-      {EXTENSION_REMOTE_TYPE, NOT_REMOTE_TYPE, false},
+      {NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE), EmptyString(),
+       true},
+      {NS_LITERAL_STRING_FROM_CSTRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX),
+       EmptyString(), false},
+      {NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDMOZILLA_REMOTE_TYPE),
+       EmptyString(), false},
+      {NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE), EmptyString(),
+       false},
   };
 
   for (const auto& test : tests) {
-    auto message = nsPrintfCString(
-        R"(MatchRemoteType("%s", "%s") should return %s)",
-        test.processRemoteType.get(), test.workerRemoteType.get(),
-        test.shouldMatch ? "true" : "false");
+    auto message =
+        nsPrintfCString(R"(MatchRemoteType("%s", "%s") should return %s)",
+                        NS_ConvertUTF16toUTF8(test.processRemoteType).get(),
+                        NS_ConvertUTF16toUTF8(test.workerRemoteType).get(),
+                        test.shouldMatch ? "true" : "false");
     ASSERT_EQ(RemoteWorkerManager::MatchRemoteType(test.processRemoteType,
                                                    test.workerRemoteType),
               test.shouldMatch)

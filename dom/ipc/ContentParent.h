@@ -11,7 +11,6 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/RemoteBrowser.h"
-#include "mozilla/dom/RemoteType.h"
 #include "mozilla/dom/JSProcessActorParent.h"
 #include "mozilla/dom/ProcessActor.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
@@ -49,6 +48,22 @@
 #include "nsIReferrerInfo.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE u"child-process-shutdown"_ns
+
+// These must match the similar ones in E10SUtils.jsm and ProcInfo.h.
+// Process names as reported by about:memory are defined in
+// ContentChild:RecvRemoteType.  Add your value there too or it will be called
+// "Web Content".
+#define PREALLOC_REMOTE_TYPE "prealloc"
+#define DEFAULT_REMOTE_TYPE "web"
+#define FILE_REMOTE_TYPE "file"
+#define EXTENSION_REMOTE_TYPE "extension"
+#define PRIVILEGEDABOUT_REMOTE_TYPE "privilegedabout"
+#define PRIVILEGEDMOZILLA_REMOTE_TYPE "privilegedmozilla"
+
+// These must start with the DEFAULT_REMOTE_TYPE above.
+#define FISSION_WEB_REMOTE_TYPE "webIsolated"
+#define WITH_COOP_COEP_REMOTE_TYPE_PREFIX "webCOOP+COEP="
+#define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"
 
 class nsConsoleService;
 class nsIContentProcessInfo;
@@ -163,11 +178,11 @@ class ContentParent final
   /** Shut down the content-process machinery. */
   static void ShutDown();
 
-  static uint32_t GetPoolSize(const nsACString& aContentProcessType);
+  static uint32_t GetPoolSize(const nsAString& aContentProcessType);
 
-  static uint32_t GetMaxProcessCount(const nsACString& aContentProcessType);
+  static uint32_t GetMaxProcessCount(const nsAString& aContentProcessType);
 
-  static bool IsMaxProcessCountReached(const nsACString& aContentProcessType);
+  static bool IsMaxProcessCountReached(const nsAString& aContentProcessType);
 
   static void ReleaseCachedProcesses();
 
@@ -187,12 +202,12 @@ class ContentParent final
    * 3. normal iframe
    */
   static RefPtr<ContentParent::LaunchPromise> GetNewOrUsedBrowserProcessAsync(
-      Element* aFrameElement, const nsACString& aRemoteType,
+      Element* aFrameElement, const nsAString& aRemoteType,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
   static already_AddRefed<ContentParent> GetNewOrUsedBrowserProcess(
-      Element* aFrameElement, const nsACString& aRemoteType,
+      Element* aFrameElement, const nsAString& aRemoteType,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
@@ -208,7 +223,7 @@ class ContentParent final
    * the process to be fully launched.
    */
   static already_AddRefed<ContentParent> GetNewOrUsedLaunchingBrowserProcess(
-      Element* aFrameElement, const nsACString& aRemoteType,
+      Element* aFrameElement, const nsAString& aRemoteType,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
@@ -234,7 +249,7 @@ class ContentParent final
    */
   static already_AddRefed<RemoteBrowser> CreateBrowser(
       const TabContext& aContext, Element* aFrameElement,
-      const nsACString& aRemoteType, BrowsingContext* aBrowsingContext,
+      const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
       ContentParent* aOpenerContentParent);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
@@ -245,9 +260,9 @@ class ContentParent final
 
   static void BroadcastFontListChanged();
 
-  const nsACString& GetRemoteType() const override;
+  const nsAString& GetRemoteType() const override;
 
-  virtual void DoGetRemoteType(nsACString& aRemoteType,
+  virtual void DoGetRemoteType(nsAString& aRemoteType,
                                ErrorResult& aError) const override {
     aRemoteType = GetRemoteType();
   }
@@ -707,7 +722,7 @@ class ContentParent final
    * removed from this list, but will still be in the sContentParents list for
    * the GetAll/GetAllEvenIfDead APIs.
    */
-  static nsClassHashtable<nsCStringHashKey, nsTArray<ContentParent*>>*
+  static nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>*
       sBrowserContentParents;
   static UniquePtr<nsTArray<ContentParent*>> sPrivateContent;
   static UniquePtr<nsDataHashtable<nsUint32HashKey, ContentParent*>>
@@ -738,11 +753,11 @@ class ContentParent final
       const OriginAttributes& aOriginAttributes);
 
   explicit ContentParent(int32_t aPluginID)
-      : ContentParent(EmptyCString(), aPluginID) {}
-  explicit ContentParent(const nsACString& aRemoteType)
+      : ContentParent(EmptyString(), aPluginID) {}
+  explicit ContentParent(const nsAString& aRemoteType)
       : ContentParent(aRemoteType, nsFakePluginTag::NOT_JSPLUGIN) {}
 
-  ContentParent(const nsACString& aRemoteType, int32_t aPluginID);
+  ContentParent(const nsAString& aRemoteType, int32_t aPluginID);
 
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
@@ -865,7 +880,7 @@ class ContentParent final
    * |aContentProcessType|.
    */
   static nsTArray<ContentParent*>& GetOrCreatePool(
-      const nsACString& aContentProcessType);
+      const nsAString& aContentProcessType);
 
   mozilla::ipc::IPCResult RecvInitBackground(
       Endpoint<mozilla::ipc::PBackgroundParent>&& aEndpoint);
@@ -1342,15 +1357,12 @@ class ContentParent final
 
   static bool ShouldSyncPreference(const char16_t* aData);
 
-  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
-                                        const nsACString& aName,
-                                        ErrorResult& aRv) override;
-  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
+  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
 
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
-      const nsACString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
+      const nsAString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
       uint32_t aMaxContentParents, bool aPreferUsed);
 
   void AddToPool(nsTArray<ContentParent*>&);
@@ -1374,7 +1386,7 @@ class ContentParent final
 
   bool mIsAPreallocBlocker;  // We called AddBlocker for this ContentParent
 
-  nsCString mRemoteType;
+  nsString mRemoteType;
 
   ContentParentId mChildID;
   int32_t mGeolocationWatchID;
@@ -1518,18 +1530,20 @@ class ContentParent final
   // A preference serializer used to share preferences with the process.
   // Cleared once startup is complete.
   UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
+
+  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorParent> mProcessActors;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)
 
 // This is the C++ version of remoteTypePrefix in E10SUtils.jsm.
-const nsDependentCSubstring RemoteTypePrefix(
-    const nsACString& aContentProcessType);
+const nsDependentSubstring RemoteTypePrefix(
+    const nsAString& aContentProcessType);
 
 // This is based on isWebRemoteType in E10SUtils.jsm.
-bool IsWebRemoteType(const nsACString& aContentProcessType);
+bool IsWebRemoteType(const nsAString& aContentProcessType);
 
-bool IsWebCoopCoepRemoteType(const nsACString& aContentProcessType);
+bool IsWebCoopCoepRemoteType(const nsAString& aContentProcessType);
 
 inline nsISupports* ToSupports(mozilla::dom::ContentParent* aContentParent) {
   return static_cast<nsIDOMProcessParent*>(aContentParent);

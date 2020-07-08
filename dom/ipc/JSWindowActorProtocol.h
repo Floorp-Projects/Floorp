@@ -8,7 +8,6 @@
 #define mozilla_dom_JSWindowActorProtocol_h
 
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/JSActorService.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
@@ -32,8 +31,7 @@ class EventTarget;
  * This object also can act as a carrier for methods and other state related to
  * a single protocol managed by the JSActorService.
  */
-class JSWindowActorProtocol final : public JSActorProtocol,
-                                    public nsIObserver,
+class JSWindowActorProtocol final : public nsIObserver,
                                     public nsIDOMEventListener {
  public:
   NS_DECL_NSIOBSERVER
@@ -49,6 +47,10 @@ class JSWindowActorProtocol final : public JSActorProtocol,
       const nsACString& aName, const WindowActorOptions& aOptions,
       ErrorResult& aRv);
 
+  struct Sided {
+    Maybe<nsCString> mModuleURI;
+  };
+
   struct ParentSide : public Sided {};
 
   struct EventDecl {
@@ -62,20 +64,20 @@ class JSWindowActorProtocol final : public JSActorProtocol,
     nsTArray<nsCString> mObservers;
   };
 
-  const ParentSide& Parent() const override { return mParent; }
-  const ChildSide& Child() const override { return mChild; }
+  const ParentSide& Parent() const { return mParent; }
+  const ChildSide& Child() const { return mChild; }
 
   void RegisterListenersFor(EventTarget* aTarget);
   void UnregisterListenersFor(EventTarget* aTarget);
   void AddObservers();
   void RemoveObservers();
   bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI,
-               const nsACString& aRemoteType);
+               const nsAString& aRemoteType);
 
  private:
   explicit JSWindowActorProtocol(const nsACString& aName) : mName(aName) {}
   extensions::MatchPatternSet* GetURIMatcher();
-  bool RemoteTypePrefixMatches(const nsDependentCSubstring& aRemoteType);
+  bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
   bool MessageManagerGroupMatches(BrowsingContext* aBrowsingContext);
   ~JSWindowActorProtocol() = default;
 
@@ -83,7 +85,7 @@ class JSWindowActorProtocol final : public JSActorProtocol,
   bool mAllFrames = false;
   bool mIncludeChrome = false;
   nsTArray<nsString> mMatches;
-  nsTArray<nsCString> mRemoteTypes;
+  nsTArray<nsString> mRemoteTypes;
   nsTArray<nsString> mMessageManagerGroups;
 
   ParentSide mParent;

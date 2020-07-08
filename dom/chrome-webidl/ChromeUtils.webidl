@@ -555,7 +555,7 @@ dictionary ChildProcInfoDictionary {
   sequence<ThreadInfoDictionary> threads = [];
   // Firefox info
   unsigned long long ChildID = 0;
-  UTF8String origin = "";
+  DOMString origin = "";
   WebIDLProcType type = "web";
 };
 

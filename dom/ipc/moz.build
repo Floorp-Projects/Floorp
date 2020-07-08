@@ -7,8 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
-DIRS += ['jsactor']
-
 XPIDL_SOURCES += [
     'nsIDOMProcessChild.idl',
     'nsIDOMProcessParent.idl',
@@ -52,6 +50,14 @@ EXPORTS.mozilla.dom += [
     'FilePickerParent.h',
     'InProcessChild.h',
     'InProcessParent.h',
+    'JSActor.h',
+    'JSActorService.h',
+    'JSProcessActorChild.h',
+    'JSProcessActorParent.h',
+    'JSProcessActorProtocol.h',
+    'JSWindowActorChild.h',
+    'JSWindowActorParent.h',
+    'JSWindowActorProtocol.h',
     'MaybeDiscarded.h',
     'MemoryReportRequest.h',
     'PermissionMessageUtils.h',
@@ -60,7 +66,6 @@ EXPORTS.mozilla.dom += [
     'ReferrerInfoUtils.h',
     'RefMessageBodyService.h',
     'RemoteBrowser.h',
-    'RemoteType.h',
     'RemoteWebProgress.h',
     'RemoteWebProgressRequest.h',
     'SharedMessageBody.h',
@@ -103,6 +108,14 @@ UNIFIED_SOURCES += [
     'DocShellMessageUtils.cpp',
     'FilePickerParent.cpp',
     'InProcessImpl.cpp',
+    'JSActor.cpp',
+    'JSActorService.cpp',
+    'JSProcessActorChild.cpp',
+    'JSProcessActorParent.cpp',
+    'JSProcessActorProtocol.cpp',
+    'JSWindowActorChild.cpp',
+    'JSWindowActorParent.cpp',
+    'JSWindowActorProtocol.cpp',
     'MemMapSnapshot.cpp',
     'MemoryReportRequest.cpp',
     'MMPrinter.cpp',

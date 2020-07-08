@@ -16,6 +16,10 @@ namespace dom {
 
 JSWindowActorParent::~JSWindowActorParent() { MOZ_ASSERT(!mManager); }
 
+nsIGlobalObject* JSWindowActorParent::GetParentObject() const {
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
 JSObject* JSWindowActorParent::WrapObject(JSContext* aCx,
                                           JS::Handle<JSObject*> aGivenProto) {
   return JSWindowActorParent_Binding::Wrap(aCx, this, aGivenProto);
@@ -68,15 +72,15 @@ void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ipc::StructuredCloneData&& aStack,
                                          ErrorResult& aRv) {
-  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->CanSend())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   if (mManager->IsInProcess()) {
-    SendRawMessageInProcess(
-        aMeta, std::move(aData), std::move(aStack),
-        [manager{mManager}]() { return manager->GetChildActor(); });
+    nsCOMPtr<nsIRunnable> runnable = new AsyncMessageToChild(
+        aMeta, std::move(aData), std::move(aStack), mManager);
+    NS_DispatchToMainThread(runnable.forget());
     return;
   }
 
@@ -113,7 +117,15 @@ CanonicalBrowsingContext* JSWindowActorParent::GetBrowsingContext(
   return mManager->BrowsingContext();
 }
 
-void JSWindowActorParent::ClearManager() { mManager = nullptr; }
+void JSWindowActorParent::StartDestroy() {
+  JSActor::StartDestroy();
+  mCanSend = false;
+}
+
+void JSWindowActorParent::AfterDestroy() {
+  JSActor::AfterDestroy();
+  mManager = nullptr;
+}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(JSWindowActorParent, JSActor, mManager)
 

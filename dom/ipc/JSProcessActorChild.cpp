@@ -7,7 +7,6 @@
 #include "mozilla/dom/JSProcessActorBinding.h"
 #include "mozilla/dom/JSProcessActorChild.h"
 #include "mozilla/dom/InProcessChild.h"
-#include "mozilla/dom/InProcessParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,11 +27,44 @@ JSObject* JSProcessActorChild::WrapObject(JSContext* aCx,
   return JSProcessActorChild_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+namespace {
+
+class AsyncMessageToProcessParent : public Runnable {
+ public:
+  AsyncMessageToProcessParent(const JSActorMessageMeta& aMetadata,
+                              ipc::StructuredCloneData&& aData,
+                              ipc::StructuredCloneData&& aStack)
+      : mozilla::Runnable("InProcessParent::HandleAsyncMessage"),
+        mMetadata(aMetadata),
+        mData(std::move(aData)),
+        mStack(std::move(aStack)) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
+    if (auto* parent = InProcessParent::Singleton()) {
+      RefPtr<JSProcessActorParent> actor;
+      parent->GetActor(mMetadata.actorName(), getter_AddRefs(actor));
+      if (actor) {
+        actor->ReceiveRawMessage(mMetadata, std::move(mData),
+                                 std::move(mStack));
+      }
+    }
+    return NS_OK;
+  }
+
+ private:
+  JSActorMessageMeta mMetadata;
+  ipc::StructuredCloneData mData;
+  ipc::StructuredCloneData mStack;
+};
+
+}  // namespace
+
 void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ipc::StructuredCloneData&& aStack,
                                          ErrorResult& aRv) {
-  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->GetCanSend())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError("JSProcessActorChild cannot send at the moment");
     return;
   }
@@ -50,9 +82,9 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
   // and can dispatch the message directly to the event loop.
   ContentChild* contentChild = mManager->AsContentChild();
   if (!contentChild) {
-    SendRawMessageInProcess(aMeta, std::move(aData), std::move(aStack), []() {
-      return do_AddRef(InProcessParent::Singleton());
-    });
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+    NS_DispatchToMainThread(MakeAndAddRef<AsyncMessageToProcessParent>(
+        aMeta, std::move(aData), std::move(aStack)));
     return;
   }
 
@@ -85,7 +117,10 @@ void JSProcessActorChild::Init(const nsACString& aName,
   InvokeCallback(CallbackFunction::ActorCreated);
 }
 
-void JSProcessActorChild::ClearManager() { mManager = nullptr; }
+void JSProcessActorChild::AfterDestroy() {
+  JSActor::AfterDestroy();
+  mManager = nullptr;
+}
 
 }  // namespace dom
 }  // namespace mozilla

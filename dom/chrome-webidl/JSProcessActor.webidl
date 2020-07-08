@@ -46,7 +46,7 @@ dictionary ProcessActorOptions {
    * can prefix match remote type either `web` or `webIsolated`. If not passed,
    * all content processes are allowed to instantiate the actor.
    */
-  sequence<UTF8String> remoteTypes;
+  sequence<DOMString> remoteTypes;
 
   /** This fields are used for configuring individual sides of the actor. */
   ProcessActorSidedOptions parent;

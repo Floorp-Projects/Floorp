@@ -179,9 +179,16 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
   }
 
   // Ensure our actor is present.
-  RefPtr<JSActor> actor = wgc->GetActor(mName, IgnoreErrors());
-  if (!actor) {
-    return NS_OK;
+  ErrorResult error;
+  RefPtr<JSWindowActorChild> actor = wgc->GetActor(mName, error);
+  if (error.Failed()) {
+    nsresult rv = error.StealNSResult();
+
+    // Don't raise an error if creation of our actor was vetoed.
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return NS_OK;
+    }
+    return rv;
   }
 
   // Build our event listener & call it.
@@ -216,9 +223,16 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
   }
 
   // Ensure our actor is present.
-  RefPtr<JSActor> actor = wgc->GetActor(mName, IgnoreErrors());
-  if (!actor) {
-    return NS_OK;
+  ErrorResult error;
+  RefPtr<JSWindowActorChild> actor = wgc->GetActor(mName, error);
+  if (NS_WARN_IF(error.Failed())) {
+    nsresult rv = error.StealNSResult();
+
+    // Don't raise an error if creation of our actor was vetoed.
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return NS_OK;
+    }
+    return rv;
   }
 
   // Build a observer callback.
@@ -295,7 +309,7 @@ extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
 }
 
 bool JSWindowActorProtocol::RemoteTypePrefixMatches(
-    const nsDependentCSubstring& aRemoteType) {
+    const nsDependentSubstring& aRemoteType) {
   for (auto& remoteType : mRemoteTypes) {
     if (StringBeginsWith(aRemoteType, remoteType)) {
       return true;
@@ -317,7 +331,7 @@ bool JSWindowActorProtocol::MessageManagerGroupMatches(
 
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
                                     nsIURI* aURI,
-                                    const nsACString& aRemoteType) {
+                                    const nsAString& aRemoteType) {
   MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
   MOZ_ASSERT(aURI, "Must have URI!");
 

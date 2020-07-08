@@ -5,7 +5,7 @@
  */
 
 dictionary RemotenessOptions {
-  required UTF8String? remoteType;
+  required DOMString? remoteType;
 
   // Used to resume a given channel load within the target process. If present,
   // it will be used rather than the `src` & `srcdoc` attributes on the

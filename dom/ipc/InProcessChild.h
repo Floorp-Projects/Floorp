@@ -10,7 +10,6 @@
 #include "mozilla/dom/PInProcessChild.h"
 #include "mozilla/dom/JSProcessActorChild.h"
 #include "mozilla/dom/ProcessActor.h"
-#include "mozilla/dom/RemoteType.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDOMProcessChild.h"
 
@@ -46,13 +45,8 @@ class InProcessChild final : public nsIDOMProcessChild,
   // |nullptr|.
   static IProtocol* ParentActorFor(IProtocol* aActor);
 
-  const nsACString& GetRemoteType() const override { return NOT_REMOTE_TYPE; }
-
- protected:
-  already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
-                                        const nsACString& aName,
-                                        ErrorResult& aRv) override;
-  mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
+  const nsAString& GetRemoteType() const override { return VoidString(); }
+  JSActor::Type GetSide() override { return JSActor::Type::Child; }
 
  private:
   // NOTE: PInProcess lifecycle management is declared as staic methods and
