@@ -129,7 +129,7 @@ this.TopSitesFeed = class TopSitesFeed {
       this.store.getState().Prefs.values[DEFAULT_SITES_PREF]
     );
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
-    this.refresh({ broadcast: true, isStartup: true });
+    this.refresh({ broadcast: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
     for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
       Services.prefs.addObserver(pref, this);
@@ -293,7 +293,7 @@ this.TopSitesFeed = class TopSitesFeed {
     return false;
   }
 
-  async getLinksWithDefaults(isStartup = false) {
+  async getLinksWithDefaults() {
     const numItems =
       this.store.getState().Prefs.values[ROWS_PREF] *
       TOP_SITES_MAX_SITES_PER_ROW;
@@ -437,11 +437,11 @@ this.TopSitesFeed = class TopSitesFeed {
       if (link) {
         // If there is a custom screenshot this is the only image we display
         if (link.customScreenshotURL) {
-          this._fetchScreenshot(link, link.customScreenshotURL, isStartup);
+          this._fetchScreenshot(link, link.customScreenshotURL);
         } else if (link.searchTopSite && !link.isDefault) {
           this._attachTippyTopIconForSearchShortcut(link, link.label);
         } else {
-          this._fetchIcon(link, isStartup);
+          this._fetchIcon(link);
         }
 
         // Remove internal properties that might be updated after dispatch
@@ -496,16 +496,13 @@ this.TopSitesFeed = class TopSitesFeed {
   /**
    * Refresh the top sites data for content.
    * @param {bool} options.broadcast Should the update be broadcasted.
-   * @param {bool} options.isStartup Being called while TopSitesFeed is initting.
    */
   async refresh(options = {}) {
     if (!this._tippyTopProvider.initialized) {
       await this._tippyTopProvider.init();
     }
 
-    const links = await this.getLinksWithDefaults({
-      isStartup: options.isStartup,
-    });
+    const links = await this.getLinksWithDefaults();
     const newAction = { type: at.TOP_SITES_UPDATED, data: { links } };
     let storedPrefs;
     try {
@@ -516,12 +513,6 @@ this.TopSitesFeed = class TopSitesFeed {
     }
     newAction.data.pref = getDefaultOptions(storedPrefs);
 
-    if (options.isStartup) {
-      newAction.meta = {
-        isStartup: true,
-      };
-    }
-
     if (options.broadcast) {
       // Broadcast an update to all open content pages
       this.store.dispatch(ac.BroadcastToContent(newAction));
@@ -531,7 +522,7 @@ this.TopSitesFeed = class TopSitesFeed {
     }
   }
 
-  async updateCustomSearchShortcuts(isStartup = false) {
+  async updateCustomSearchShortcuts() {
     if (!this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
       return;
     }
@@ -559,9 +550,6 @@ this.TopSitesFeed = class TopSitesFeed {
       ac.BroadcastToContent({
         type: at.UPDATE_SEARCH_SHORTCUTS,
         data: { searchShortcuts },
-        meta: {
-          isStartup,
-        },
       })
     );
   }
@@ -584,7 +572,7 @@ this.TopSitesFeed = class TopSitesFeed {
   /**
    * Get an image for the link preferring tippy top, rich favicon, screenshots.
    */
-  async _fetchIcon(link, isStartup = false) {
+  async _fetchIcon(link) {
     // Nothing to do if we already have a rich icon from the page
     if (link.favicon && link.faviconSize >= MIN_FAVICON_SIZE) {
       return;
@@ -600,16 +588,15 @@ this.TopSitesFeed = class TopSitesFeed {
     this._requestRichIcon(link.url);
 
     // Also request a screenshot if we don't have one yet
-    await this._fetchScreenshot(link, link.url, isStartup);
+    await this._fetchScreenshot(link, link.url);
   }
 
   /**
    * Fetch, cache and broadcast a screenshot for a specific topsite.
    * @param link cached topsite object
    * @param url where to fetch the image from
-   * @param isStartup Whether the screenshot is fetched while initting TopSitesFeed.
    */
-  async _fetchScreenshot(link, url, isStartup = false) {
+  async _fetchScreenshot(link, url) {
     // We shouldn't bother caching screenshots if they won't be shown.
     if (
       link.screenshot ||
@@ -626,9 +613,6 @@ this.TopSitesFeed = class TopSitesFeed {
           ac.BroadcastToContent({
             data: { screenshot, url: link.url },
             type: at.SCREENSHOT_UPDATED,
-            meta: {
-              isStartup,
-            },
           })
         )
     );
@@ -861,7 +845,7 @@ this.TopSitesFeed = class TopSitesFeed {
     switch (action.type) {
       case at.INIT:
         this.init();
-        this.updateCustomSearchShortcuts(true /* isStartup */);
+        this.updateCustomSearchShortcuts();
         break;
       case at.SYSTEM_TICK:
         this.refresh({ broadcast: false });

@@ -90,7 +90,6 @@ describe("RecommendationProviderSwitcher", () => {
         ac.BroadcastToContent({
           type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
           data: { version: 1 },
-          meta: { isStartup: false },
         })
       );
       assert.equal(feed.affinityProviderV2, null);
@@ -110,7 +109,6 @@ describe("RecommendationProviderSwitcher", () => {
         ac.BroadcastToContent({
           type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
           data: { version: 2 },
-          meta: { isStartup: false },
         })
       );
       assert.deepEqual(feed.affinityProviderV2.modelKeys, ["1", "2", "3", "4"]);
