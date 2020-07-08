@@ -167,7 +167,7 @@ enum class BailoutKind : uint8_t {
   // by the baseline IC.)
   ShapeGuard,
 
-  // Bailout triggered by MGuardProto.
+  // Bailout triggered by MGuardProto or MGuardNullProto.
   ProtoGuard,
 
   // Bailout triggered by MGuardValue.

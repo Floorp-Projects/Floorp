@@ -225,7 +225,7 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   MDefinition* def = getOperand(objId);
 
-  auto* ins = MGuardProto::New(alloc(), def, /* maybeProto = */ nullptr);
+  auto* ins = MGuardNullProto::New(alloc(), def);
   add(ins);
 
   setOperand(objId, ins);
@@ -237,7 +237,9 @@ bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
   MDefinition* def = getOperand(objId);
   JSObject* proto = objectStubField(protoOffset);
 
-  auto* ins = MGuardProto::New(alloc(), def, proto);
+  MConstant* protoConst = constant(ObjectValue(*proto));
+
+  auto* ins = MGuardProto::New(alloc(), def, protoConst);
   add(ins);
 
   setOperand(objId, ins);
