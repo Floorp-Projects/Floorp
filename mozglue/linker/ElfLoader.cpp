@@ -141,14 +141,15 @@ int __wrap_dlclose(void* handle) {
   return 0;
 }
 
-int __wrap_dladdr(void* addr, Dl_info* info) {
+int __wrap_dladdr(const void* addr, Dl_info* info) {
 #if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dladdr(addr, info);
   }
 #endif
 
-  RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
+  RefPtr<LibHandle> handle =
+      ElfLoader::Singleton.GetHandleByPtr(const_cast<void*>(addr));
   if (!handle) {
     return dladdr(addr, info);
   }

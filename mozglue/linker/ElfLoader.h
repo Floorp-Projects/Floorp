@@ -33,7 +33,7 @@ typedef struct {
   void* dli_saddr;
 } Dl_info;
 #endif
-int __wrap_dladdr(void* addr, Dl_info* info);
+int __wrap_dladdr(const void* addr, Dl_info* info);
 
 struct dl_phdr_info {
   Elf::Addr dlpi_addr;
