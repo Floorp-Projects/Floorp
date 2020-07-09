@@ -591,15 +591,14 @@ function addAutofillTasks(origins) {
     }
 
     // Enable actions.  In the `origins` case, the failure to make an autofill
-    // match should not interrupt creating another type of heuristic match, in
-    // this case a search (for "ex").  In the `!origins` case, autofill should
-    // still happen since there's no threshold comparison.
+    // match means UnifiedComplete should not create a heuristic result. In the
+    // `!origins` case, autofill should still happen since there's no threshold
+    // comparison.
     if (origins) {
       await check_autocomplete({
         search,
         searchParam: "enable-actions",
         matches: [
-          makeSearchMatch(search, { style: ["heuristic"] }),
           {
             value: "https://not-" + url,
             comment: "test visit for https://not-" + url,
