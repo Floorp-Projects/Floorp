@@ -18,9 +18,6 @@ from taskgraph.util.parameterization import (
 )
 
 
-@pytest.mark.xfail(
-    sys.version_info >= (3, 0), reason="python3 migration is not complete"
-)
 class TestTimestamps(unittest.TestCase):
 
     def test_no_change(self):
@@ -32,6 +29,9 @@ class TestTimestamps(unittest.TestCase):
         }
         self.assertEqual(resolve_timestamps(now, input), input)
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_buried_replacement(self):
         now = datetime.datetime(2018, 1, 1)
         input = {"key": [{"key2": [{'relative-datestamp': '1 day'}]}]}
@@ -45,9 +45,6 @@ class TestTimestamps(unittest.TestCase):
                          [{'relative-datestamp': '1 day', 'another-key': True}])
 
 
-@pytest.mark.xfail(
-    sys.version_info >= (3, 0), reason="python3 migration is not complete"
-)
 class TestTaskRefs(unittest.TestCase):
 
     def do(self, input, output):
@@ -64,26 +61,41 @@ class TestTaskRefs(unittest.TestCase):
         self.do({'in-a-list': ['stuff', {'property': '<edge1>'}]},
                 {'in-a-list': ['stuff', {'property': '<edge1>'}]})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_in_list(self):
         "resolve_task_references resolves task references in a list"
         self.do({'in-a-list': ['stuff', {'task-reference': '<edge1>'}]},
                 {'in-a-list': ['stuff', 'tid1']})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_in_dict(self):
         "resolve_task_references resolves task references in a dict"
         self.do({'in-a-dict': {'stuff': {'task-reference': '<edge2>'}}},
                 {'in-a-dict': {'stuff': 'tid2'}})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_multiple(self):
         "resolve_task_references resolves multiple references in the same string"
         self.do({'multiple': {'task-reference': 'stuff <edge1> stuff <edge2> after'}},
                 {'multiple': 'stuff tid1 stuff tid2 after'})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_embedded(self):
         "resolve_task_references resolves ebmedded references"
         self.do({'embedded': {'task-reference': 'stuff before <edge3> stuff after'}},
                 {'embedded': 'stuff before tid3 stuff after'})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_escaping(self):
         "resolve_task_references resolves escapes in task references"
         self.do({'escape': {'task-reference': '<<><edge3>>'}},
@@ -94,16 +106,25 @@ class TestTaskRefs(unittest.TestCase):
         self.do({'escape': {'task-reference': '<edge3>', 'another-key': True}},
                 {'escape': {'task-reference': '<edge3>', 'another-key': True}})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_self(self):
         "resolve_task_references resolves `self` to the provided task id"
         self.do({'escape': {'task-reference': '<self>'}},
                 {'escape': 'tid-self'})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_decision(self):
         "resolve_task_references resolves `decision` to the provided decision task id"
         self.do({'escape': {'task-reference': '<decision>'}},
                 {'escape': 'tid-decision'})
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_invalid(self):
         "resolve_task_references raises a KeyError on reference to an invalid task"
         self.assertRaisesRegexp(

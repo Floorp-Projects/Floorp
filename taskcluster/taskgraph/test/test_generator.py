@@ -171,9 +171,6 @@ class TestGenerator(unittest.TestCase):
         self.assertEqual(sorted(self.tgg.target_task_graph.tasks.keys()),
                          sorted(['_fake-t-0', '_fake-t-1']))
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_always_target_tasks(self):
         "The target_task_graph includes tasks with 'always_target'"
         tgg_args = {
