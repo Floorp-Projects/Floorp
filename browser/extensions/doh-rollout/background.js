@@ -366,8 +366,8 @@ const rollout = {
 
     // Listen to the captive portal when it unlocks
     try {
-      browser.captivePortal.onStateChange.addListener(
-        rollout.onCaptiveStateChanged
+      browser.captivePortal.onConnectivityAvailable.addListener(
+        rollout.onConnectivityAvailable
       );
     } catch (e) {
       // Captive Portal Service is disabled.
@@ -414,13 +414,9 @@ const rollout = {
     await rollout.heuristics("netchange");
   },
 
-  async onCaptiveStateChanged({ state }) {
-    log("onCaptiveStateChanged", state);
-    // unlocked_portal means we were previously in a locked portal and then
-    // network access was granted. not_captive means we know there's no portal.
-    if (state == "unlocked_portal" || state == "not_captive") {
-      await rollout.heuristics("captivechanged");
-    }
+  async onConnectivityAvailable() {
+    log("onConnectivityAvailable");
+    await rollout.heuristics("connectivity");
   },
 };
 
@@ -473,8 +469,8 @@ const setup = {
     );
 
     try {
-      browser.captivePortal.onStateChange.removeListener(
-        rollout.onCaptiveStateChanged
+      browser.captivePortal.onConnectivityAvailable.removeListener(
+        rollout.onConnectivityAvailable
       );
     } catch (e) {
       // Captive Portal Service is disabled.
