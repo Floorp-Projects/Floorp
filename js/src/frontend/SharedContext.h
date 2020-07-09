@@ -341,6 +341,8 @@ class FunctionBox : public SharedContext {
 
   // The explicit or implicit name of the function. The FunctionFlags indicate
   // the kind of name.
+  // This is copied to ScriptStencil.
+  // Any update after the copy should be synced to the ScriptStencil.
   JSAtom* atom_ = nullptr;
 
   // Index into CompilationInfo::funcData, which contains the function
@@ -565,14 +567,14 @@ class FunctionBox : public SharedContext {
     atom_ = atom;
     flags_.setInferredName();
     if (isFunctionFieldCopiedToStencil) {
-      copyUpdatedFlags();
+      copyUpdatedAtomAndFlags();
     }
   }
   void setGuessedAtom(JSAtom* atom) {
     atom_ = atom;
     flags_.setGuessedAtom();
     if (isFunctionFieldCopiedToStencil) {
-      copyUpdatedFlags();
+      copyUpdatedAtomAndFlags();
     }
   }
 
@@ -709,7 +711,7 @@ class FunctionBox : public SharedContext {
   //   enclosing script
   // * setGuessedAtom can be called to both lazy/non-lazy functions,
   //   while running NameFunctions
-  void copyUpdatedFlags();
+  void copyUpdatedAtomAndFlags();
 };
 
 #undef FLAG_GETTER_SETTER
