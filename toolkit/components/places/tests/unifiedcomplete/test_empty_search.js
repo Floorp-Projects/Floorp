@@ -40,7 +40,6 @@ add_task(async function test_javascript_match() {
     search: "foo",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("foo", { heuristic: true }),
       { uri: uri1, title: "title" },
       { uri: uri2, title: "title", style: ["bookmark"] },
       { uri: uri3, title: "title" },
