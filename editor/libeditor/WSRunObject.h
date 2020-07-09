@@ -774,8 +774,7 @@ class MOZ_STACK_CLASS WSRunScanner {
      * Note that if there are only invisible white-spaces in a hard line,
      * this returns all of the white-spaces.
      */
-    template <typename EditorDOMRangeType>
-    EditorDOMRangeType GetInvisibleLeadingWhiteSpaceRange() const;
+    EditorDOMRange GetInvisibleLeadingWhiteSpaceRange() const;
 
     /**
      * GetInvisibleTrailingWhiteSpaceRange() returns two DOM points,
@@ -785,8 +784,105 @@ class MOZ_STACK_CLASS WSRunScanner {
      * Note that if there are only invisible white-spaces in a hard line,
      * this returns all of the white-spaces.
      */
-    template <typename EditorDOMRangeType>
-    EditorDOMRangeType GetInvisibleTrailingWhiteSpaceRange() const;
+    EditorDOMRange GetInvisibleTrailingWhiteSpaceRange() const;
+
+    /**
+     * GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt() returns new
+     * invisible leading white-space range which should be removed if
+     * splitting invisible white-space sequence at aPointToSplit creates
+     * new invisible leading white-spaces in the new line.
+     * Note that the result may be collapsed range if the point is around
+     * invisible white-spaces.
+     */
+    template <typename EditorDOMPointType>
+    EditorDOMRange GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
+        const EditorDOMPointType& aPointToSplit) const {
+      // If there are invisible trailing white-spaces and some or all of them
+      // become invisible leading white-spaces in the new line, although we
+      // don't need to delete them, but for aesthetically and backward
+      // compatibility, we should remove them.
+      EditorDOMRange trailingWhiteSpaceRange =
+          GetInvisibleTrailingWhiteSpaceRange();
+      // XXX Why don't we check leading white-spaces too?
+      if (!trailingWhiteSpaceRange.IsPositioned()) {
+        return trailingWhiteSpaceRange;
+      }
+      // XXX Why don't we need to treat new trailing white-spaces are invisible
+      //     when the trailing white-spaces are only the content in current
+      //     line?
+      if (trailingWhiteSpaceRange != GetInvisibleLeadingWhiteSpaceRange()) {
+        return EditorDOMRange();
+      }
+      // If the point is before the trailing white-spaces, the new line won't
+      // start with leading white-spaces.
+      if (aPointToSplit.IsBefore(trailingWhiteSpaceRange.StartRef())) {
+        return EditorDOMRange();
+      }
+      // If the point is in the trailing white-spaces, the new line may
+      // start with some leading white-spaces.  Returning collapsed range
+      // is intentional because the caller may want to know whether the
+      // point is in trailing white-spaces or not.
+      if (aPointToSplit.EqualsOrIsBefore(trailingWhiteSpaceRange.EndRef())) {
+        return EditorDOMRange(trailingWhiteSpaceRange.StartRef(),
+                              aPointToSplit);
+      }
+      // Otherwise, if the point is after the trailing white-spaces, it may
+      // be just outside of the text node.  E.g., end of parent element.
+      // This is possible case but the validation cost is not worthwhile
+      // due to the runtime cost in the worst case.  Therefore, we should just
+      // return collapsed range at the end of trailing white-spaces.  Then,
+      // callers can know the point is immediately after the trailing
+      // white-spaces.
+      return EditorDOMRange(trailingWhiteSpaceRange.EndRef());
+    }
+
+    /**
+     * GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt() returns new
+     * invisible trailing white-space range which should be removed if
+     * splitting invisible white-space sequence at aPointToSplit creates
+     * new invisible trailing white-spaces in the new line.
+     * Note that the result may be collapsed range if the point is around
+     * invisible white-spaces.
+     */
+    template <typename EditorDOMPointType>
+    EditorDOMRange GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
+        const EditorDOMPointType& aPointToSplit) const {
+      // If there are invisible leading white-spaces and some or all of them
+      // become end of current line, they will become visible.  Therefore, we
+      // need to delete the invisible leading white-spaces before insertion
+      // point.
+      EditorDOMRange leadingWhiteSpaceRange =
+          GetInvisibleLeadingWhiteSpaceRange();
+      if (!leadingWhiteSpaceRange.IsPositioned()) {
+        return leadingWhiteSpaceRange;
+      }
+      // XXX Why don't we need to treat new leading white-spaces are invisible
+      //     when the leading white-spaces are only the content in current
+      //     line?
+      if (leadingWhiteSpaceRange != GetInvisibleTrailingWhiteSpaceRange()) {
+        return EditorDOMRange();
+      }
+      // If the point equals or is after the leading white-spaces, the line
+      // will end without trailing white-spaces.
+      if (leadingWhiteSpaceRange.EndRef().IsBefore(aPointToSplit)) {
+        return EditorDOMRange();
+      }
+      // If the point is in the leading white-spaces, the line may
+      // end with some trailing white-spaces.  Returning collapsed range
+      // is intentional because the caller may want to know whether the
+      // point is in leading white-spaces or not.
+      if (leadingWhiteSpaceRange.StartRef().EqualsOrIsBefore(aPointToSplit)) {
+        return EditorDOMRange(aPointToSplit, leadingWhiteSpaceRange.EndRef());
+      }
+      // Otherwise, if the point is before the leading white-spaces, it may
+      // be just outside of the text node.  E.g., start of parent element.
+      // This is possible case but the validation cost is not worthwhile
+      // due to the runtime cost in the worst case.  Therefore, we should
+      // just return collapsed range at start of the leading white-spaces.
+      // Then, callers can know the point is immediately before the leading
+      // white-spaces.
+      return EditorDOMRange(leadingWhiteSpaceRange.StartRef());
+    }
 
     /**
      * CreateWSFragmentForVisibleAndMiddleOfLine() creates WSFragment whose
@@ -798,6 +894,8 @@ class MOZ_STACK_CLASS WSRunScanner {
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;
+    mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
+    mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     // XXX Currently we set mIsPreformatted to `WSRunScanner::mPRE` value
     //     even if some text nodes between mStart and mEnd are different styled
     //     nodes.  This caused some bugs actually, but we now keep traditional
