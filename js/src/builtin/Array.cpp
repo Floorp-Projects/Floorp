@@ -547,8 +547,7 @@ static bool DeleteArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
         if (idx + 1 == aobj->getDenseInitializedLength()) {
           aobj->setDenseInitializedLengthMaybeNonExtensible(cx, idx);
         } else {
-          aobj->markDenseElementsNotPacked(cx);
-          aobj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
+          aobj->setDenseElementHole(cx, idx);
         }
         if (!SuppressDeletedElement(cx, obj, idx)) {
           return false;
