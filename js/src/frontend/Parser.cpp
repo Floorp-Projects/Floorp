@@ -2092,12 +2092,14 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo,
 
     if (funbox->emitBytecode || stencil.isAsmJSModule) {
       // Non-lazy inner functions don't use the enclosingScope_ field.
-      MOZ_ASSERT(!funbox->hasEnclosingScope());
+      MOZ_ASSERT(!funbox->hasEnclosingScopeIndex());
     } else {
       // Apply updates from FunctionEmitter::emitLazy().
       BaseScript* script = fun->baseScript();
 
-      script->setEnclosingScope(funbox->getExistingEnclosingScope());
+      ScopeIndex index = funbox->getEnclosingScopeIndex();
+      Scope* scope = compilationInfo.scopeCreationData[index].get().getScope();
+      script->setEnclosingScope(scope);
       script->initTreatAsRunOnce(stencil.immutableFlags.hasFlag(
           ImmutableScriptFlagsEnum::TreatAsRunOnce));
 
@@ -2253,10 +2255,9 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
 
 template <typename Unit>
 FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
-    HandleScope enclosingScope, const Maybe<uint32_t>& parameterListEnd,
-    FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, Directives inheritedDirectives,
-    Directives* newDirectives) {
+    const Maybe<uint32_t>& parameterListEnd, FunctionSyntaxKind syntaxKind,
+    GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+    Directives inheritedDirectives, Directives* newDirectives) {
   MOZ_ASSERT(checkOptionsCalled_);
   // Skip prelude.
   TokenKind tt;
@@ -2313,13 +2314,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Function is not syntactically part of another script.
   funbox->isStandalone = true;
 
-  // Standalone functions are always scoped to the global. Note: HTML form event
-  // handlers are standalone functions, but have a non-syntactic global scope
-  // chain here.
-  MOZ_ASSERT(enclosingScope->is<GlobalScope>());
-
-  funbox->initWithEnclosingScope(this->compilationInfo_.scopeContext,
-                                 enclosingScope, flags, syntaxKind);
+  funbox->initStandalone(this->compilationInfo_.scopeContext, flags,
+                         syntaxKind);
 
   SourceParseContext funpc(this, funbox, newDirectives);
   if (!funpc.init()) {
@@ -3386,9 +3382,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     return null();
   }
   funbox->initFromLazyFunction(fun);
-  funbox->initWithEnclosingScope(this->getCompilationInfo().scopeContext,
-                                 fun->enclosingScope(), fun->flags(),
-                                 syntaxKind);
+  funbox->initStandalone(this->getCompilationInfo().scopeContext, fun->flags(),
+                         syntaxKind);
   if (fun->isClassConstructor()) {
     funbox->setFieldInitializers(fun->baseScript()->getFieldInitializers());
   }

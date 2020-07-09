@@ -132,6 +132,7 @@ class EmitterScope : public Nestable<EmitterScope> {
   uint32_t noteIndex() const { return noteIndex_; }
 
   AbstractScopePtr scope(const BytecodeEmitter* bce) const;
+  ScopeIndex scopeIndex(const BytecodeEmitter* bce) const;
 
   bool hasEnvironment() const { return hasEnvironment_; }
 

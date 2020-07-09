@@ -7,6 +7,7 @@
 #ifndef frontend_AbstractScopePtr_h
 #define frontend_AbstractScopePtr_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
 
 #include "frontend/TypedIndex.h"
