@@ -606,34 +606,27 @@ nsresult WSRunObject::DeleteWSForward() {
 template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
-  // Find first visible thing before the point.  Position
-  // outVisNode/outVisOffset just _after_ that thing.  If we don't find
-  // anything return start of ws.
   MOZ_ASSERT(aPoint.IsSet());
 
-  WSFragmentArray::index_type index = FindNearestFragmentIndex(aPoint, false);
-  if (index != WSFragmentArray::NoIndex) {
-    // Is there a visible run there or earlier?
-    for (WSFragmentArray::index_type i = index + 1; i; i--) {
-      const WSFragment& fragment = WSFragmentArrayRef()[i - 1];
-      if (!fragment.IsVisibleAndMiddleOfHardLine()) {
-        continue;
-      }
-      EditorDOMPointInText atPreviousChar =
-          GetPreviousEditableCharPoint(aPoint);
-      // When it's a non-empty text node, return it.
-      if (atPreviousChar.IsSet() && !atPreviousChar.IsContainerEmpty()) {
-        MOZ_ASSERT(!atPreviousChar.IsEndOfContainer());
-        return WSScanResult(
-            atPreviousChar.NextPoint(),
-            atPreviousChar.IsCharASCIISpace() || atPreviousChar.IsCharNBSP()
-                ? WSType::NormalWhiteSpaces
-                : WSType::NormalText);
-      }
-      // If no text node, keep looking.  We should eventually fall out of loop
+  // If the range has visible text and start of the visible text is before
+  // aPoint, return previous character in the text.
+  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+      TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  if (visibleWSFragmentInMiddleOfLine.isSome() &&
+      visibleWSFragmentInMiddleOfLine.ref().RawStartPoint().IsBefore(aPoint)) {
+    EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
+    // When it's a non-empty text node, return it.
+    if (atPreviousChar.IsSet() && !atPreviousChar.IsContainerEmpty()) {
+      MOZ_ASSERT(!atPreviousChar.IsEndOfContainer());
+      return WSScanResult(atPreviousChar.NextPoint(),
+                          atPreviousChar.IsCharASCIISpaceOrNBSP()
+                              ? WSType::NormalWhiteSpaces
+                              : WSType::NormalText);
     }
   }
 
+  // Otherwise, return the start of the range.
   if (mStart.GetReasonContent() != mStart.PointRef().GetContainer()) {
     // In this case, mStart.PointRef().Offset() is not meaningful.
     return WSScanResult(mStart.GetReasonContent(), mStart.RawReason());
@@ -644,34 +637,28 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
 template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
-  // Find first visible thing after the point.  Position
-  // outVisNode/outVisOffset just _before_ that thing.  If we don't find
-  // anything return end of ws.
   MOZ_ASSERT(aPoint.IsSet());
 
-  WSFragmentArray::index_type index = FindNearestFragmentIndex(aPoint, true);
-  if (index != WSFragmentArray::NoIndex) {
-    // Is there a visible run there or later?
-    for (size_t i = index; i < WSFragmentArrayRef().Length(); i++) {
-      const WSFragment& fragment = WSFragmentArrayRef()[i];
-      if (!fragment.IsVisibleAndMiddleOfHardLine()) {
-        continue;
-      }
-      EditorDOMPointInText atNextChar =
-          GetInclusiveNextEditableCharPoint(aPoint);
-      // When it's a non-empty text node, return it.
-      if (atNextChar.IsSet() && !atNextChar.IsContainerEmpty()) {
-        return WSScanResult(
-            atNextChar,
-            !atNextChar.IsEndOfContainer() &&
-                    (atNextChar.IsCharASCIISpace() || atNextChar.IsCharNBSP())
-                ? WSType::NormalWhiteSpaces
-                : WSType::NormalText);
-      }
-      // If no text node, keep looking.  We should eventually fall out of loop
+  // If the range has visible text and aPoint equals or is before the end of the
+  // visible text, return inclusive next character in the text.
+  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+      TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  if (visibleWSFragmentInMiddleOfLine.isSome() &&
+      aPoint.EqualsOrIsBefore(
+          visibleWSFragmentInMiddleOfLine.ref().RawEndPoint())) {
+    EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
+    // When it's a non-empty text node, return it.
+    if (atNextChar.IsSet() && !atNextChar.IsContainerEmpty()) {
+      return WSScanResult(
+          atNextChar,
+          !atNextChar.IsEndOfContainer() && atNextChar.IsCharASCIISpaceOrNBSP()
+              ? WSType::NormalWhiteSpaces
+              : WSType::NormalText);
     }
   }
 
+  // Otherwise, return the end of the range.
   if (mEnd.GetReasonContent() != mEnd.PointRef().GetContainer()) {
     // In this case, mEnd.PointRef().Offset() is not meaningful.
     return WSScanResult(mEnd.GetReasonContent(), mEnd.RawReason());
