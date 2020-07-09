@@ -22,6 +22,19 @@ add_task(async () => {
     hosts: ["foo.com", "bar.com", "third.com"],
   });
 
+  function createChannel(uri, principal = null) {
+    const channel = NetUtil.newChannel({
+      uri,
+      loadingPrincipal:
+        principal ||
+        Services.scriptSecurityManager.createContentPrincipal(uri, {}),
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    });
+
+    return channel.QueryInterface(Ci.nsIHttpChannelInternal);
+  }
+
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
   let spec1 = "http://foo.com/foo.html";
@@ -36,14 +49,8 @@ add_task(async () => {
       Ci.nsICookieService.BEHAVIOR_ACCEPT
     );
 
-    let channel1 = NetUtil.newChannel({
-      uri: uri1,
-      loadUsingSystemPrincipal: true,
-    });
-    let channel2 = NetUtil.newChannel({
-      uri: uri2,
-      loadUsingSystemPrincipal: true,
-    });
+    let channel1 = createChannel(uri1);
+    let channel2 = createChannel(uri2);
 
     await do_set_cookies(uri1, channel1, true, [1, 2]);
     Services.cookies.removeAll();
@@ -58,16 +65,32 @@ add_task(async () => {
       Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN
     );
 
-    let channel1 = NetUtil.newChannel({
-      uri: uri1,
-      loadUsingSystemPrincipal: true,
-    });
-    let channel2 = NetUtil.newChannel({
-      uri: uri2,
-      loadUsingSystemPrincipal: true,
-    });
+    let channel1 = createChannel(uri1);
+    let channel2 = createChannel(uri2);
 
-    await do_set_cookies(uri1, channel1, true, [0, 0]);
+    await do_set_cookies(uri1, channel1, true, [0, 1]);
+    Services.cookies.removeAll();
+    await do_set_cookies(uri1, channel2, true, [0, 0]);
+    Services.cookies.removeAll();
+  }
+
+  // test with third party cookies blocked using system principal
+  {
+    Services.prefs.setIntPref(
+      "network.cookie.cookieBehavior",
+      Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN
+    );
+
+    let channel1 = createChannel(
+      uri1,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+    let channel2 = createChannel(
+      uri2,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+
+    await do_set_cookies(uri1, channel1, true, [0, 1]);
     Services.cookies.removeAll();
     await do_set_cookies(uri1, channel2, true, [0, 0]);
     Services.cookies.removeAll();
@@ -84,19 +107,11 @@ add_task(async () => {
       Ci.nsICookieService.BEHAVIOR_ACCEPT
     );
 
-    let channel1 = NetUtil.newChannel({
-      uri: uri1,
-      loadUsingSystemPrincipal: true,
-    });
-    let httpchannel1 = channel1.QueryInterface(Ci.nsIHttpChannelInternal);
-    httpchannel1.forceAllowThirdPartyCookie = true;
+    let channel1 = createChannel(uri1);
+    channel1.forceAllowThirdPartyCookie = true;
 
-    let channel2 = NetUtil.newChannel({
-      uri: uri2,
-      loadUsingSystemPrincipal: true,
-    });
-    let httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
-    httpchannel2.forceAllowThirdPartyCookie = true;
+    let channel2 = createChannel(uri2);
+    channel2.forceAllowThirdPartyCookie = true;
 
     await do_set_cookies(uri1, channel1, true, [1, 2]);
     Services.cookies.removeAll();
@@ -111,19 +126,11 @@ add_task(async () => {
       Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN
     );
 
-    let channel1 = NetUtil.newChannel({
-      uri: uri1,
-      loadUsingSystemPrincipal: true,
-    });
-    let httpchannel1 = channel1.QueryInterface(Ci.nsIHttpChannelInternal);
-    httpchannel1.forceAllowThirdPartyCookie = true;
+    let channel1 = createChannel(uri1);
+    channel1.forceAllowThirdPartyCookie = true;
 
-    let channel2 = NetUtil.newChannel({
-      uri: uri2,
-      loadUsingSystemPrincipal: true,
-    });
-    let httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
-    httpchannel2.forceAllowThirdPartyCookie = true;
+    let channel2 = createChannel(uri2);
+    channel2.forceAllowThirdPartyCookie = true;
 
     await do_set_cookies(uri1, channel1, true, [0, 1]);
     Services.cookies.removeAll();
@@ -138,19 +145,11 @@ add_task(async () => {
       Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
     );
 
-    let channel1 = NetUtil.newChannel({
-      uri: uri1,
-      loadUsingSystemPrincipal: true,
-    });
-    let httpchannel1 = channel1.QueryInterface(Ci.nsIHttpChannelInternal);
-    httpchannel1.forceAllowThirdPartyCookie = true;
+    let channel1 = createChannel(uri1);
+    channel1.forceAllowThirdPartyCookie = true;
 
-    let channel2 = NetUtil.newChannel({
-      uri: uri2,
-      loadUsingSystemPrincipal: true,
-    });
-    let httpchannel2 = channel2.QueryInterface(Ci.nsIHttpChannelInternal);
-    httpchannel2.forceAllowThirdPartyCookie = true;
+    let channel2 = createChannel(uri2);
+    channel2.forceAllowThirdPartyCookie = true;
 
     await do_set_cookies(uri1, channel1, true, [0, 1]);
     Services.cookies.removeAll();
