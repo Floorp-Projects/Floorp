@@ -25,6 +25,15 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
+/**
+ * Recursively checks if any atom in the parameter pack is equal to |aString|.
+ */
+template <typename... Atoms>
+bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs) {
+  return aFirst->Equals(aString) || IsAnyAtomEqual(aString, aArgs...);
+}
+bool IsAnyAtomEqual(const nsAString& aString) { return false; }
+
 namespace mozilla {
 
 //----------------------------------------------------------------------
@@ -905,7 +914,7 @@ bool SVGOuterSVGFrame::IsContainingWindowElementOfType(
       RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
       const Maybe<nsString>& type = bc->GetEmbedderElementType();
 
-      if (type && IsAnyAtomEqual(*type, aArgs...)) {
+      if (type && ::IsAnyAtomEqual(*type, aArgs...)) {
         if (aContainingWindowFrame) {
           if (const Element* const element = bc->GetEmbedderElement()) {
             *aContainingWindowFrame = element->GetPrimaryFrame();
@@ -1047,11 +1056,5 @@ bool SVGOuterSVGAnonChildFrame::IsSVGTransformed(
 
   return true;
 }
-
-template <typename... Atoms>
-bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs) {
-  return aFirst->Equals(aString) || IsAnyAtomEqual(aString, aArgs...);
-}
-bool IsAnyAtomEqual(const nsAString& aString) { return false; }
 
 }  // namespace mozilla
