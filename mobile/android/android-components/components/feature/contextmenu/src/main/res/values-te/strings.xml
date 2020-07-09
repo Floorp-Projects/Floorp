@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">లంకెను కాపీచేయి</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">ఫైలును పరికరంలో భద్రపరచు</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">కొత్త ట్యాబు తెరుచుకుంది</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">కొత్త అంతరంగిక ట్యాబు తెరుచుకుంది</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">లంకె క్లిప్‌బోర్డుకి కాపీ అయ్యింది</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">మారు</string>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">లంకెని బయటి అనువర్తనంలో తెరువు</string>
+    </resources>

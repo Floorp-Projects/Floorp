@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">സ്വകാര്യതാ ക്രമീകരണങ്ങൾ വായിക്കുക പരിഷ്കരിക്കുക</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">എല്ലാ വെബ്സൈറ്റുകൾക്കുമായുള്ള നിങ്ങളുടെ ഡാറ്റ ലഭ്യമാക്കുക</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">ബ്രൌസര്‍ ടാബുകള്‍ പരിശോധിക്കുക</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">പരിധിയില്ലാതെ ക്ലൈന്റ്-സൈഡ് ഡാറ്റ സൂക്ഷിക്കുക</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">നാവിഗേഷൻ ചെയ്യുമ്പോൾ ബ്രൗസർ പ്രവർത്തനം ആക്സസ്സുചെയ്യുക</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">അടയാളക്കുറിപ്പുകൾ വായിക്കുക പരിഷ്കരിക്കുക</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">ബ്രൗസർ ക്രമീകരണങ്ങൾ വായിക്കുക പരിഷ്കരിക്കുക</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">സമീപകാല ബ്രൗസിംഗ് ചരിത്രം, കുക്കികൾ, അതുമായി ബന്ധപ്പെട്ട ഡാറ്റ എന്നിവ നീക്കം ചെയ്യുക</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">ക്ലിപ്ബോര്‍ഡില്‍ നിന്നും ‍ഡാറ്റ എടുക്കുക</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">ക്ലിപ്പ്ബോർഡിലേക്ക് ഡാറ്റ നൽകുക</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">ഫയലുകൾ ഡൗൺലോഡ്‌ ചെയ്യുകയും ബ്രൗസറിന്റെ ഡൌൺലോഡ് ചരിത്രം വായിക്കുകയും പരിഷ്ക്കരിക്കുകയും ചെയ്യുക</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">നിങ്ങളുടെ ഉപകരണത്തിലേക്ക് ഡൗൺലോഡുചെയ്‌ത ഫയലുകൾ തുറക്കുക</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">തുറന്നിരിക്കുന്ന എല്ലാ ടാബുകളിലേയും കുറിപ്പ്‌ വായിക്കുക</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">നിങ്ങളുടെ സ്ഥലവിവരം ലഭ്യമാക്കുക</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ബ്രൌസിങ്ങ് ചരിത്രം പരിശോധിക്കുക</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">എക്സ്റ്റന്‍ഷന്‍ ഉപയോഗം നിരീക്ഷിക്കുകയും തീമുകള്‍ കൈകാര്യം ചെയ്യുകയും ചെയ്യുക</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">മറ്റ് ആപ്ലിക്കേഷനുകളുമായി സന്ദേശങ്ങള്‍ കൈമാറുക</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">അറിയിപ്പുകൾ പ്രദർശിപ്പിക്കുക</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">ക്രിപ്റ്റോഗ്രാഫിക് പ്രമാണീകരണ സേവനങ്ങൾ നൽകുക</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">ബ്രൌസറിന്റെ പ്രോക്സി ക്രമീകരണങ്ങള്‍ നിയന്ത്രിക്കുക</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">സമീപകാലത്ത് അടച്ച ടാബുകള്‍ പരിശോധിക്കുക</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ബ്രൗസർ ടാബുകൾ മറയ്ക്കുകയും കാണിക്കുകയും ചെയ്യുക</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">ബ്രൌസിങ് നാള്‍വഴി പരിശോധിക്കുക</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">ഡെവെലപ്പര്‍ ടൂളുകള്‍ക്ക് തുറന്ന ടാബുകളിലെ ഡാറ്റ എടുക്കാന്‍ അനുമതി നല്‍കുക</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">പതിപ്പു്</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">രചയിതാക്കൾ</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">ഏറ്റവും ഒടുവില്‍ പരിഷ്കരിച്ചതു്</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">പൂമുഖം</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">അനുമതികളെക്കുറിച്ച് കൂടുതലറിയുക</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">റേറ്റിങ്</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">ക്രമീകരണങ്ങള്‍</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">ഓണ്‍</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">ഓഫ്</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">സ്വകാര്യ ബ്രൗസിംഗിൽ ലഭ്യമാക്കുക</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">സ്വകാര്യ ബ്രൗസിംഗിൽ തുറക്കുക</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">പ്രാപ്തമാക്കി</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">അപ്രാപ്തമാക്കി</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">ഇൻസ്റ്റാൾ ചെയ്തു</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">ശുപാർശിതം</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">ഇതുവരെ പിന്തുണയ്‌ക്കുന്നില്ല</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">ഇതുവരെ ലഭ്യമല്ല</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">പ്രവര്‍ത്തനരഹിതമാക്കി</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">വിശദാംശങ്ങള്‍</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">അനുമതികൾ</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">നീക്കം ചെയ്യുക</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s ചേര്‍ക്കണോ?</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">നിങ്ങളുടെ അനുമതി ആവശ്യമാണ്:</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">കൂട്ടിച്ചേര്‍ക്കുക</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">റദ്ദാക്കുക</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">ആഡ്-ഓണ്‍ ഇന്‍സ്റ്റോള്‍ ചെയ്യുക</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">റദ്ദാക്കുക</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">ഉപയോക്താക്കൾ: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">ആഡ്-ഓണുകള്‍</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">അനുവദിക്കുക</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">നിരസിക്കുക</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s ന് ഒരു പുതുക്കൽ ലഭ്യമാണ്</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d പുതിയ അനുമതികൾ ആവശ്യമാണ്</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">ഒരു പുതിയ അനുമതി ആവശ്യമാണ്</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">ആഡ്-ഓൺ പുതുക്കലുകൾ</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">പിന്തുണയുള്ള ആഡ്-ഓണുകൾക്കായുള്ള പരിശോധകർ</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">പുതിയ ആഡ്-ഓൺ ലഭ്യമാണ്</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">പുതിയ ആഡ്-ഓണുകൾ ലഭ്യമാണ്</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s ലേക്ക് %1$s ചേർക്കുക</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%3$s ലേക്ക് %1$s ഉം %2$s ഉം ചേർക്കുക</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">ഇവയെ %1$s ലേക്ക് ചേർക്കുക</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">ഫയർഫോക്സ് ആഡ്-ഓൺ സാങ്കേതികവിദ്യ നവീകരിക്കപ്പെടുന്നു. ഈ ആഡ്-ഓണുകൾ ഫയർഫോക്സ് 75-ും അതിനു മുകളിലും ഉള്ള പതിപ്പുകളുമായി പൊരുത്തപ്പെടാത്ത ഫ്രെയിംവർക്കുകൾ ഉപയോഗിക്കുന്നു.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">ശുപാർശ ചെയ്യപ്പെട്ട വിപുലീകരണങ്ങളുടെ പ്രാരംഭ തിരഞ്ഞെടുപ്പിനായി ഞങ്ങൾ നിലവിൽ പിന്തുണ സജ്ജീകരിക്കുകയാണ്.</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">ആഡ്-ഓൺ ഡൗൺലോഡ് ചെയ്യുകയും പരിശോധിക്കുകയും ചെയ്യുന്നു…</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">ആഡ്-ഓണുകൾ അന്വേഷിക്കുന്നതിൽ പരാജയപ്പെട്ടു!</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s വിജയകരമായി ഇൻസ്റ്റാൾ ചെയ്തു</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">%1$s ഇൻസ്റ്റാൾ ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s വിജയകരമായി പ്രവർത്തനസജ്ജമാക്കി</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">%1$s  പ്രവർത്തനസജ്ജമാക്കുന്നതിൽ പരാജയപ്പെട്ടു</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s വിജയകരമായി പ്രവർത്തനരഹിതമാക്കി</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s പ്രവർത്തനരഹിതമാക്കുന്നതിൽ പരാജയപ്പെട്ടു</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s വിജയകരമായി നീക്കം ചെയ്തു</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s വിജയകരമായി നീക്കം ചെയ്‌തു</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">%1$s ന്റെ മുമ്പത്തെ പതിപ്പിൽ നിന്ന് ഈ ആഡ്-ഓൺ മൈഗ്രേറ്റ് ചെയ്തതാണ്</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 ആഡ്-ഓൺ</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s ആഡ്-ഓണുകൾ</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">കൂടുതല്‍ അറിയുക</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">വിജയകരമായി പുതുക്കി</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">പുതുക്കലുകൾ ലഭ്യമല്ല</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">പിശക്</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">അപ്‌ഡേറ്റർ‌ വിവരങ്ങൾ‌</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">അവസാന ശ്രമം:</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">സ്ഥിതി:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s %2$s ലേക്ക് ചേർത്തു</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">മെനുവിൽ ഇത് തുറക്കുക</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ശരി, മനസ്സിലായി</string>
+</resources>

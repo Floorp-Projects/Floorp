@@ -120,11 +120,17 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">الملف غير موجود</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul><li>ربما حُذف العنصر أو تغيّر اسمه أو مكانه؟</li><li>هل هناك خطأ إملائي أو مطبعي في العنوان؟</li><li>هل لديك صلاحيات كافية للنفاذ إلى العنصر المطلوب؟</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">مُنِع الوصول للملف</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul> <li>قد يكون حُذف أو نُقل أو أن صلاحيّات الملف تمنع الوصول إليه.</li> </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">رفض الخادوم الوسيط الاتصال</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>ضُبط المتصفّح ليستخدم خادوما وسيطا، لكن الوسيط رفض الاتصال.</p><ul><li>هل إعدادات الوسيط سليمة؟ تأكد من الإعدادات وأعد المحاولة.</li><li>هل يسمح الخادوم الوسيط بالاتصالات من هذه الشبكة؟</li><li>أما زلت تواجه المشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">لم يُعثر على خادوم وسيط</string>

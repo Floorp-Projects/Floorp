@@ -36,6 +36,12 @@
       </ul>
     ]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">மேம்பட்டது…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>தளத்தை ஆள்மாறாட்டம் செய்ய யாரோ ஒருவர் முயற்சிக்கலாம் எனவே நீங்கள் தொடர வேண்டாம்.</label>
+        <br><br>
+        <label>வலைத்தளங்கள் சான்றிதழ்கள் வழியாகத் தங்கள் அடையாளத்தை நிரூபிக்கின்றன. அறியப்படா சான்றிதழ் வழங்குநர், சான்றிதழ் சுய ஒப்பமிடல், அல்லது சேவையகம் சரியான இடைநிலைச் சான்றிதழ்களை அனுப்பாதது போன்ற காரணங்களால் %1$s <b>%2$s</b> வலைத்தளத்தை நம்பவில்லை.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">பின் செல்க (பரிந்துரைக்கப்படுகிறது)</string>
 
@@ -72,14 +78,44 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">சேவையகத்திலிருந்து எதிர்பாராத பதில் வந்துள்ளது</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>இந்த வலைத்தளம் வலைப்பின்னலின் கோரிக்கைக்கு எதிர்பாரா வழியில் பதிலளித்தது எனவே உலாவியால் தொடர இயலாது.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">பக்கம் ஒழுங்காகத் திருப்பிவிடவில்லை</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>உலாவி கோரப்பட்ட உருப்படியைப் பெறுவதற்கான முயற்சியை நிறுத்தியது. தளம் நிறைவடையாத வழியில் கோரிக்கையைத் திருப்பி விடுகிறது.</p>
+      <ul>
+        <li>நீங்கள் இத்தளத்திற்குத் தேவையான நினைவிகளைச் செயல்நீக்கி அல்லது முடக்கியுள்ளீர்களா?</li>
+        <li>தளத்தின் நினைவிகளை ஏற்பது பிரச்சினையைச் சரிசெய்யவில்லையெனில், இது சேவையகக் கட்டமைப்புப் பிழையாக இருக்க வாய்ப்புள்ளது, உங்கள் சாதனத்தில் பிரச்சனையில்லை.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">இணையமற்ற முறை</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>உலாவி இணையமிலா முறைமையில் செயல்படுகிறது கோரிய உருப்படியுடன் இணைக்க இயலாது.</p>
+      <ul>
+        <li>சாதனம் செயல்படும் இணைய வலைப்பின்னலுடன் இணைக்கப்பட்டுள்ளதா?</li>
+        <li>பக்கத்தை மீளேற்றி இணைய முறைமைக்கு மாற “மீண்டும் முயற்சிக்க” என்பதை அழுத்துங்கள்.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">பாதுகாப்புக் காரணங்களுக்காக முனையம் தடைசெய்யப்பட்டுள்ளது</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>கோரப்பட்ட முகவரியானது பொதுவாக வலை உலாவல் <em>அல்லாத</em> பிற நோக்கங்களுக்காகப் பயன்படுத்தப்படும் முனையத்தைக் (எ.கா., <q>mozilla.org:80</q> mozilla.org இன் முனையம் 80 காக) குறிப்பிட்டது. உங்கள் பாதுகாப்பிற்காக உலாவி கோரிக்கையை இரத்து செய்தது.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">இணைப்பு மீட்டமைக்கப்பட்டது</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>இணைக்க முயற்சிக்கும்போது வலைப்பின்னல் இணைப்பு தடைபட்டது. மீண்டும் முயற்சியுங்கள்.</p>
+      <ul>
+        <li>தளம் தற்காலிகமாகக் கிடைக்கவில்லை அல்லது பளுவான வேலையில் உள்ளது. சிறிது நேரத்திற்குப் பின் முயற்சியுங்கள்.</li>
+        <li>உங்கள் எந்தப் பக்கத்தையும் ஏற்ற முடியவில்லையெனில், உங்கள் சாதனத்தின் தரவு அல்லது அருகலை இணைப்பைச் சரிபாருங்கள்.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">பாதுகாப்பற்ற கோப்பு வகை</string>
@@ -105,6 +141,11 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">உள்ளடக்கம் செயலிழந்தது</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>தரவுப் பரிமாற்றத்தில் ஒரு பிழை கண்டறியப்பட்டுள்ளதால், நீங்கள் காண முயற்சிக்கும் பக்கத்தைக் காண்பிக்க முடியாது.</p>
+      <ul>
+        <li>இணைய உரிமையாளர்களைத் தொடர்பு கொண்டு இந்தப் பிரச்சனைகுறித்து தெரிவிக்கவும்.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">உள்ளடக்க குறிமுறை பிழை</string>
 
@@ -117,6 +158,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">முகவரி கிடைக்கவில்லை</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>உலாவியால் கொடுக்கப்பட்ட முகவரியின் வழங்கல் சேவையகத்தைக் கண்டறிய இயலவில்லை.</p>
+      <ul>
+        <li>முகவரியில் தட்டச்சுப் பிழைகள் உள்ளனவா என சரிபாருங்கள் எ.கா
+          <strong>ww</strong>.example.com என்பதற்குப் பதிலாக
+          <strong>www</strong>.example.com.</li>
+        <li>உங்கள் எந்தப் பக்கங்களையும் ஏற்ற இயலவில்லையெனில், உங்கள் சாதனத்தின் தரவு அல்லது அருகலை இணைப்பைச் சரிபாருங்கள்.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">இணையத் தொடர்பு இல்லை</string>
@@ -144,8 +194,20 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">நெறிமுறை தெரியவில்லை</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>முகவரி உலாவியால் புரிந்துகொள்ள முடியாத நெறிமுறையைக் (எ.கா, <q>wxyz://</q>) குறிப்பிடுகிறது, எனவே உலாவியால் தளத்துடன் சரியாக இணைக்க முடியவில்லை.</p>
+      <ul>
+        <li>நீங்கள் பல்லூடகம் அல்லது பிற உரையல்லாச் சேவைகளை அணுக முயற்சிக்கிறீர்களா? கூடுதல் தேவைகளுள்ளதா எனத் தளத்தைப் பாருங்கள்.</li>
+        <li>உலாவியால் அடையாளம் காணப்படுவதற்குச் சில நெறிமுறைகளுக்கு மூன்றாம் தரப்பு மென்பொருள் அல்லது செருகுநிரல்கள் தேவைப்படலாம்.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">கோப்பைக் காணவில்லை</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>உருப்படி பெயர்மாற்ற, நீக்க, இடம்மாற்றப்பட்டிருக்கலாமா?</li>
+        <li>முகவரியில் உச்சரிப்பு, எழுத்துப்பிழை, அல்லது பிற தட்டச்சுப் பிழைகள் உள்ளனவா?</li>
+        <li>கோரப்பட்ட உருப்படிக்கான போதுமான அணுகல் அனுமதிகள் உங்களிடம் உள்ளனவா?</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">கோப்பு அணுகல் மறுக்கப்பட்டது</string>
@@ -159,8 +221,22 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">பதிலாளி சேவையகம் இணைப்பை மறுத்துவிட்டது</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>உலாவி பதிலாள் சேவையகத்தைப் பயன்படுத்துமாறு அமைவாக்கம் செய்யப்பட்டுள்ளது, ஆனால் பதிலாள் இணைப்பை மறுத்தது.</p>
+      <ul>
+        <li>உலாவியின் பதிலாள் அமைவுகள் சரியாக உள்ளனவா? அமைவுகளைச் சரிபார்த்து மீண்டும் முயற்சியுங்கள்.</li>
+        <li>பதிலாள் சேவைகள் இந்த வலைப்பின்னலிலிருந்து வரும் இணைப்புகளை அனுமதிக்கின்றனவா?</li>
+        <li>இன்னும் சிக்கல் உள்ளதா? உதவிக்கு உங்கள் வலைப்பின்னல் நிர்வாகி அல்லது இணைய சேவை வழங்குநரைத் தொடர்பு கொள்ளுங்கள்.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">பதிலாளி சேவையகம் கிடைக்கவில்லை</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>உலாவி பதிலாள் சேவையகத்தைப் பயன்படுத்துமாறு அமைவாக்கம் செய்யப்பட்டுள்ளது, ஆனால் பதிலாளைக் கண்டுபிடிக்க இயலவில்லை.</p>
+      <ul>
+        <li>உலாவியின் பதிலாள் அமைவுகள் சரியாக உள்ளனவா? அமைவுகளைச் சரிபார்த்து மீண்டும் முயற்சியுங்கள்.</li>
+        <li>இச்சாதனம் செயல்பாட்டிலுள்ள வலைப்பின்னலுடன் இணைக்கப்பட்டுள்ளதா?</li>
+        <li>இன்னும் சிக்கல் உள்ளதா? உதவிக்கு உங்கள் வலைப்பின்னல் நிர்வாகி அல்லது இணைய சேவை வழங்குநரைத் தொடர்பு கொள்ளுங்கள்.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">தீம்பொருள் தள சிக்கல்</string>

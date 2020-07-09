@@ -22,4 +22,8 @@
     <string name="mozac_feature_readerview_sephia">செபியா</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_sepia_color_scheme_desc">செபியா வண்ணத் திட்டம்</string>
-    </resources>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">வெளிர்</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">வெளிர் வண்ணத் திட்டம்</string>
+</resources>

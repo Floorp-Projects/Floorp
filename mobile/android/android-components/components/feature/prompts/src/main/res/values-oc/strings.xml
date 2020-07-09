@@ -24,6 +24,8 @@
     <string name="mozac_feature_prompts_allow">Autorizar</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Refusar</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">O confirmatz ?</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Causir un mes</string>
     <!-- January (short description), used on the month chooser dialog. -->

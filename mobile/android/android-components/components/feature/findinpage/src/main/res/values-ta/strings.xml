@@ -18,4 +18,7 @@
     <!-- String to be read by the accessibility service when focusing the previous result button. -->
     <string name="mozac_feature_findindpage_previous_result">முந்தைய முடிவைக் கண்டறியவும்</string>
 
-    </resources>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
+    <string name="mozac_feature_findindpage_dismiss">பக்கத்தில் கண்டுபிடியை இரத்து செய்</string>
+
+</resources>

@@ -93,7 +93,7 @@
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Thêm %1$s?</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-    <string name="mozac_feature_addons_permissions_dialog_subtitle">Nó yêu cầu sự cho phép của bạn để:</string>
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Nó yêu cầu bạn cho phép để:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Thêm</string>
     <!-- This is a button to cancel the add-on installation . -->

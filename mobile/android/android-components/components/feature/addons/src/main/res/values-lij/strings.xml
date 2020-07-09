@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Atîva</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Asmòrtou</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permetti in Navegaçion Privâ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Xeua in Navegaçion Privâ</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Ativou</string>
     <!-- Indicates the add-on is disabled. -->
@@ -96,6 +100,8 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Scancella</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Installa conponente azonto</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">Anulla</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">Utenti: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
@@ -108,12 +114,32 @@
     <string name="mozac_feature_addons_updater_notification_deny_button">No permette</string>
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">%1$s o l\'à un agiornamento</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d neuvi permissi domandæ</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">Serve un neuvo permisso</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">Agiornamenti conponenti azonti</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Verifica conponenti azonti soportæ</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">Gh\'é un nuovo conponente azonto</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Gh\'é di nuovi conponenti azonti</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Azonzi %1$s a %2$s</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_two">Azonzi %1$s e %2$s a %3$s</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Azonzili a %1$s</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">A tecnologia di conponenti azonti de Firefox s\'agiorna de longo. Sti conponenti azonti deuvian di framework che no en conpatibili co-o Firefox 75 e-e verscioin dòppo.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Semmo apreuvo a svilupâ o sopòrto pe \'na seleçion iniçiâ de estenscioin consegiæ.</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">Descaregamento e verifica do conponente azonto…</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">No ariescio a fâ a query di conponenti azonti!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s instalou ben</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
@@ -134,6 +160,8 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s scancelou</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Inposcibile scancelâ %1$s</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Sto conponente azonto o vegne da-a migraçion de \'na verscion ciù vegia de %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 conponente azonto</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->

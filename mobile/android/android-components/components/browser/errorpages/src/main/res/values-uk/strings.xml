@@ -163,12 +163,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Помилка кодування вмісту</string>
-    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
-      <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що вона використовує неправильну чи непідтримувану форму стискання даних.</p>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Не вдається показати сторінку, яку ви намагаєтеся переглянути, оскільки вона використовує неправильну чи непідтримувану форму  стиснення даних.</p>
       <ul>
-        <li>Будь ласка, зв’яжіться з власниками вебсайту та повідомте їх про цю проблему.</li>
-      </ul>
-    ]]></string>
+        <li>Будь ласка, повідомте власника сайту про цю проблему.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Адресу не знайдено</string>
