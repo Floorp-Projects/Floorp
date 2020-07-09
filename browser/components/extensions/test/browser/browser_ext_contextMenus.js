@@ -602,7 +602,7 @@ add_task(async function testRemoveAllWithTwoExtensions() {
       const expected = items.includes(id);
       const found = menu.getElementsByAttribute("label", id);
       is(
-        found.length,
+        !!found.length,
         expected,
         `menu item ${id} ${expected ? "" : "not "}found`
       );
