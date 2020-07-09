@@ -58,7 +58,13 @@ bool frontend::EnvironmentShapeCreationData::createShape(
   return data_.match(m);
 }
 
-Scope* ScopeCreationData::createScope(JSContext* cx) {
+JSFunction* ScopeCreationData::function(
+    frontend::CompilationInfo& compilationInfo) {
+  return compilationInfo.functions[*functionIndex_];
+}
+
+Scope* ScopeCreationData::createScope(JSContext* cx,
+                                      CompilationInfo& compilationInfo) {
   // If we've already created a scope, best just return it.
   if (scope_) {
     return scope_;
@@ -67,7 +73,7 @@ Scope* ScopeCreationData::createScope(JSContext* cx) {
   Scope* scope = nullptr;
   switch (kind()) {
     case ScopeKind::Function: {
-      scope = createSpecificScope<FunctionScope>(cx);
+      scope = createSpecificScope<FunctionScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::Lexical:
@@ -77,29 +83,29 @@ Scope* ScopeCreationData::createScope(JSContext* cx) {
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      scope = createSpecificScope<LexicalScope>(cx);
+      scope = createSpecificScope<LexicalScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::FunctionBodyVar: {
-      scope = createSpecificScope<VarScope>(cx);
+      scope = createSpecificScope<VarScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      scope = createSpecificScope<GlobalScope>(cx);
+      scope = createSpecificScope<GlobalScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      scope = createSpecificScope<EvalScope>(cx);
+      scope = createSpecificScope<EvalScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::Module: {
-      scope = createSpecificScope<ModuleScope>(cx);
+      scope = createSpecificScope<ModuleScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::With: {
-      scope = createSpecificScope<WithScope>(cx);
+      scope = createSpecificScope<WithScope>(cx, compilationInfo);
       break;
     }
     case ScopeKind::WasmFunction:
@@ -119,9 +125,6 @@ void ScopeCreationData::trace(JSTracer* trc) {
 
   if (scope_) {
     TraceEdge(trc, &scope_, "ScopeCreationData Scope");
-  }
-  if (funbox_) {
-    funbox_->trace(trc);
   }
 
   // Trace Datas
@@ -200,8 +203,6 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
   }
   MOZ_CRASH("Not an enclosing intra-frame scope");
 }
-
-bool ScopeCreationData::isArrow() const { return funbox_->isArrow(); }
 
 void ScriptStencil::trace(JSTracer* trc) {
   for (ScriptThingVariant& thing : gcThings) {

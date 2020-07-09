@@ -90,6 +90,7 @@ class AbstractScopePtr {
 
   // Note: this handle is rooted in the CompilationInfo.
   MutableHandle<frontend::ScopeCreationData> scopeCreationData() const;
+  frontend::CompilationInfo& compilationInfo() const;
 
   Scope* scope() const { return scope_.as<HeapPtrScope>(); }
 
