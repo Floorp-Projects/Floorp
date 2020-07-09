@@ -327,6 +327,25 @@ inline void AssignJSLinearString(nsAString& dest, JSLinearString* s) {
   js::CopyLinearStringChars(dest.BeginWriting(), s, len);
 }
 
+inline void AssignJSLinearString(nsACString& dest, JSLinearString* s) {
+  size_t len = js::GetLinearStringLength(s);
+  static_assert(js::MaxStringLength < (1 << 30),
+                "Shouldn't overflow here or in SetCapacity");
+  dest.SetLength(len);
+  js::CopyLinearStringChars(dest.BeginWriting(), s, len);
+}
+
+template <typename T>
+class nsTAutoJSLinearString : public nsTAutoString<T> {
+ public:
+  explicit nsTAutoJSLinearString(JSLinearString* str) {
+    AssignJSLinearString(*this, str);
+  }
+};
+
+using nsAutoJSLinearString = nsTAutoJSLinearString<char16_t>;
+using nsAutoJSLinearCString = nsTAutoJSLinearString<char>;
+
 template <typename T>
 class nsTAutoJSString : public nsTAutoString<T> {
  public:
