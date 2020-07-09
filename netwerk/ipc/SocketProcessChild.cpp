@@ -221,6 +221,17 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvSetOffline(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessChild::RecvSetConnectivity(
+    const bool& aConnectivity) {
+  nsCOMPtr<nsIIOService> io(do_GetIOService());
+  nsCOMPtr<nsIIOServiceInternal> ioInternal(do_QueryInterface(io));
+  NS_ASSERTION(ioInternal, "IO Service can not be null");
+
+  ioInternal->SetConnectivity(aConnectivity);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult SocketProcessChild::RecvInitLinuxSandbox(
     const Maybe<ipc::FileDescriptor>& aBrokerFd) {
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
