@@ -140,9 +140,8 @@ already_AddRefed<nsHyphenator> nsHyphenationManager::GetHyphenator(
         localeStr.ReplaceLiteral(i, localeStr.Length() - i, "-*");
         RefPtr<nsAtom> fuzzyLocale = NS_Atomize(localeStr);
         return GetHyphenator(fuzzyLocale);
-      } else {
-        return nullptr;
       }
+      return nullptr;
     }
   }
   nsAutoCString hyphCapPref("intl.hyphenate-capitalized.");
