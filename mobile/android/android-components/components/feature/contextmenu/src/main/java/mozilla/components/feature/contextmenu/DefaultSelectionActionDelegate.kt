@@ -24,7 +24,8 @@ private val customActions = arrayOf(SEARCH, SEARCH_PRIVATELY, SHARE)
 class DefaultSelectionActionDelegate(
     private val searchAdapter: SearchAdapter,
     resources: Resources,
-    private val shareTextClicked: ((String) -> Unit)? = null
+    private val shareTextClicked: ((String) -> Unit)? = null,
+    private val actionSorter: ((Array<String>) -> Array<String>)? = null
 ) : SelectionActionDelegate {
 
     private val normalSearchText =
@@ -63,5 +64,17 @@ class DefaultSelectionActionDelegate(
             true
         }
         else -> false
+    }
+
+    /**
+     * Takes in a list of actions and sorts them.
+     * @returns the sorted list.
+     */
+    override fun sortedActions(actions: Array<String>): Array<String> {
+        return if (actionSorter != null) {
+            actionSorter.invoke(actions)
+        } else {
+            actions
+        }
     }
 }

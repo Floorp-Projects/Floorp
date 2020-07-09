@@ -37,7 +37,7 @@ open class GeckoSelectionActionDelegate(
     }
 
     override fun getAllActions(): Array<String> {
-        return super.getAllActions() + customDelegate.getAllActions()
+        return customDelegate.sortedActions(super.getAllActions() + customDelegate.getAllActions())
     }
 
     override fun isActionAvailable(id: String): Boolean {
