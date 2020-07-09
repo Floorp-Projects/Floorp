@@ -179,6 +179,21 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun goToHistoryIndex() {
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+
+        whenever(webView.copyBackForwardList()).thenReturn(mock())
+        engineSession.goToHistoryIndex(0)
+        verify(webView, never()).goBackOrForward(0)
+
+        engineSession.webView = webView
+
+        engineSession.goToHistoryIndex(0)
+        verify(webView).goBackOrForward(0)
+    }
+
+    @Test
     fun saveState() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()

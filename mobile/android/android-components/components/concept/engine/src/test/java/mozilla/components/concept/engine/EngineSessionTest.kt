@@ -833,6 +833,8 @@ open class DummyEngineSession : EngineSession() {
 
     override fun goForward() {}
 
+    override fun goToHistoryIndex(index: Int) {}
+
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
 
     override fun disableTrackingProtection() {}

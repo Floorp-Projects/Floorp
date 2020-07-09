@@ -14,10 +14,14 @@ permalink: /changelog/
 
 * **feature-session**
   * Added `SessionFeature.release()`: Calling this method stops the feature from rendering sessions on the `EngineView` (until explicitly started again) and releases an already rendering session from the `EngineView`.
+  * Added `SessionUseCases.goToHistoryIndex` to allow consumers to jump to a specific index in a session's history.
 
 * **support-ktx**
   * Adds `Bundle.contentEquals` function to check if two bundles are equal.
 
+* **concept-engine**
+  * Added `EngineSession.goToHistoryIndex` to jump to a specific index in a session's history.
+  
 # 49.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v48.0.0...v49.0.0)

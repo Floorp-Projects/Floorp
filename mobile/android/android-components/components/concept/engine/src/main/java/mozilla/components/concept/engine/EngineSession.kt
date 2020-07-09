@@ -466,6 +466,15 @@ abstract class EngineSession(
     abstract fun goForward()
 
     /**
+     * Navigates to the specified index in the [HistoryState] of this session. The current index of
+     * this session's [HistoryState] will be updated but the items within it will be unchanged.
+     * Invalid index values are ignored.
+     *
+     * @param index the index of the session's [HistoryState] to navigate to
+     */
+    abstract fun goToHistoryIndex(index: Int)
+
+    /**
      * Saves and returns the engine state. Engine implementations are not required
      * to persist the state anywhere else than in the returned map. Engines that
      * already provide a serialized state can use a single entry in this map to

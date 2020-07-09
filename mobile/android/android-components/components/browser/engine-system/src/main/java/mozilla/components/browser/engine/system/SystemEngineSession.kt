@@ -38,7 +38,7 @@ internal val xRequestHeader = mapOf(
 /**
  * WebView-based EngineSession implementation.
  */
-@Suppress("TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions")
 class SystemEngineSession(
     context: Context,
     private val defaultSettings: Settings? = null
@@ -123,6 +123,14 @@ class SystemEngineSession(
      */
     override fun goForward() {
         webView.goForward()
+    }
+
+    /**
+     * See [EngineSession.goToHistoryIndex]
+     */
+    override fun goToHistoryIndex(index: Int) {
+        val historyList = webView.copyBackForwardList()
+        webView.goBackOrForward(index - historyList.currentIndex)
     }
 
     /**

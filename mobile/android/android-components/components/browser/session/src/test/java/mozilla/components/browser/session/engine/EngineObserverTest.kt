@@ -54,6 +54,7 @@ class EngineObserverTest {
 
             override fun goBack() {}
             override fun goForward() {}
+            override fun goToHistoryIndex(index: Int) {}
             override fun reload() {}
             override fun stopLoading() {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
@@ -109,6 +110,7 @@ class EngineObserverTest {
 
             override fun goBack() {}
             override fun goForward() {}
+            override fun goToHistoryIndex(index: Int) {}
             override fun stopLoading() {}
             override fun reload() {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
@@ -153,6 +155,7 @@ class EngineObserverTest {
 
             override fun goBack() {}
             override fun goForward() {}
+            override fun goToHistoryIndex(index: Int) {}
             override fun stopLoading() {}
             override fun reload() {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
