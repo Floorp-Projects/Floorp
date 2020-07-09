@@ -331,6 +331,10 @@ CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
 
   nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
 
+  if (!CookieCommons::IsSchemeSupported(principal)) {
+    return NS_OK;
+  }
+
   nsICookie::schemeType schemeType =
       CookieCommons::PrincipalToSchemeType(principal);
 
