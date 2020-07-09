@@ -21,7 +21,6 @@
 #include "js/Value.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "xptdata.h"
 
 // Forward Declarations
 namespace mozilla {
@@ -68,10 +67,6 @@ struct nsXPTInterfaceInfo {
   }
   static const nsXPTInterfaceInfo* ByName(const char* aName) {
     return xpt::detail::InterfaceByName(aName);
-  }
-
-  static const nsXPTInterfaceInfo* Get(nsXPTInterface aID) {
-    return ByIndex(uint16_t(aID));
   }
 
   // These are only needed for Components_interfaces's enumerator.
