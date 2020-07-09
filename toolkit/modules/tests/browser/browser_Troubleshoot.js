@@ -42,6 +42,7 @@ var tests = [
         set: [
           ["network.cookie.sameSite.laxByDefault", false],
           ["network.cookie.sameSite.noneRequiresSecure", false],
+          ["network.cookie.sameSite.schemeful", false],
         ],
       },
       done
