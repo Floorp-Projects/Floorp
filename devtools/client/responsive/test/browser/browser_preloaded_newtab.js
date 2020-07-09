@@ -32,5 +32,5 @@ addRDMTask(
     await closeRDM(tab);
     await removeTab(tab);
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );

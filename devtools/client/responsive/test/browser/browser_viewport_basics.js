@@ -6,28 +6,24 @@
 // Test viewports basics after opening, like size and location
 
 const TEST_URL = "http://example.org/";
-addRDMTask(
-  TEST_URL,
-  async function({ ui }) {
-    const browser = ui.getViewportBrowser();
+addRDMTask(TEST_URL, async function({ ui }) {
+  const browser = ui.getViewportBrowser();
 
-    is(
-      ui.toolWindow.getComputedStyle(browser).getPropertyValue("width"),
-      "320px",
-      "Viewport has default width"
-    );
-    is(
-      ui.toolWindow.getComputedStyle(browser).getPropertyValue("height"),
-      "480px",
-      "Viewport has default height"
-    );
+  is(
+    ui.toolWindow.getComputedStyle(browser).getPropertyValue("width"),
+    "320px",
+    "Viewport has default width"
+  );
+  is(
+    ui.toolWindow.getComputedStyle(browser).getPropertyValue("height"),
+    "480px",
+    "Viewport has default height"
+  );
 
-    // Browser's location should match original tab
-    await load(browser, TEST_URL);
-    const location = await spawnViewportTask(ui, {}, function() {
-      return content.location.href; // eslint-disable-line
-    });
-    is(location, TEST_URL, "Viewport location matches");
-  },
-  { usingBrowserUI: true }
-);
+  // Browser's location should match original tab
+  await load(browser, TEST_URL);
+  const location = await spawnViewportTask(ui, {}, function() {
+    return content.location.href; // eslint-disable-line
+  });
+  is(location, TEST_URL, "Viewport location matches");
+});

@@ -65,7 +65,7 @@ addRDMTask(
       ok(menuItem, "Custom device menu item added to device selector");
     });
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -126,7 +126,7 @@ addRDMTask(
     info("Ensure device properties like UA have been reset");
     await testUserAgent(ui, navigator.userAgent);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -163,7 +163,7 @@ addRDMTask(
       ok(menuItem, "Custom unicode device option added to device selector");
     });
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -182,7 +182,7 @@ addRDMTask(
       ok(menuItem, "Custom unicode device option present in device selector");
     });
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 function testDeviceAdder(ui, expected) {

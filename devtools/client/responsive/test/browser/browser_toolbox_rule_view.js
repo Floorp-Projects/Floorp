@@ -7,31 +7,25 @@
 
 const TEST_URI = `${URL_ROOT}doc_toolbox_rule_view.html`;
 
-addRDMTask(
-  TEST_URI,
-  async function({ ui, manager }) {
-    info(
-      "Open the responsive design mode and set its size to 500x500 to start"
-    );
-    await setViewportSize(ui, manager, 500, 500);
+addRDMTask(TEST_URI, async function({ ui, manager }) {
+  info("Open the responsive design mode and set its size to 500x500 to start");
+  await setViewportSize(ui, manager, 500, 500);
 
-    info("Open the inspector, rule-view and select the test node");
-    const { inspector, view } = await openRuleView();
-    await selectNode("div", inspector);
+  info("Open the inspector, rule-view and select the test node");
+  const { inspector, view } = await openRuleView();
+  await selectNode("div", inspector);
 
-    info("Try shrinking the viewport and checking the applied styles");
-    await testShrink(view, ui, manager);
+  info("Try shrinking the viewport and checking the applied styles");
+  await testShrink(view, ui, manager);
 
-    info("Try growing the viewport and checking the applied styles");
-    await testGrow(view, ui, manager);
+  info("Try growing the viewport and checking the applied styles");
+  await testGrow(view, ui, manager);
 
-    info("Check that ESC still opens the split console");
-    await testEscapeOpensSplitConsole(inspector);
+  info("Check that ESC still opens the split console");
+  await testEscapeOpensSplitConsole(inspector);
 
-    await closeToolbox();
-  },
-  { usingBrowserUI: true }
-);
+  await closeToolbox();
+});
 
 async function testShrink(ruleView, ui, manager) {
   is(numberOfRules(ruleView), 2, "Should have two rules initially.");
