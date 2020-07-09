@@ -13,9 +13,9 @@
 #include "nsSVGUtils.h"
 
 class gfxContext;
-class nsSVGDisplayableFrame;
 
 namespace mozilla {
+class ISVGDisplayableFrame;
 class PresShell;
 }  // namespace mozilla
 
@@ -114,7 +114,7 @@ class SVGClipPathFrame final : public SVGContainerFrame {
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use
   // mask based clipping.
-  bool IsTrivial(nsSVGDisplayableFrame** aSingleChild = nullptr);
+  bool IsTrivial(ISVGDisplayableFrame** aSingleChild = nullptr);
 
   bool IsValid();
 

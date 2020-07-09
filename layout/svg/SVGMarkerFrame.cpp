@@ -129,9 +129,9 @@ void SVGMarkerFrame::PaintMark(gfxContext& aContext,
   }
 
   nsIFrame* kid = GetAnonymousChildFrame(this);
-  nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+  ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
   // The CTM of each frame referencing us may be different.
-  SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
+  SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
   nsSVGUtils::PaintFrameWithEffects(kid, aContext, markTM, aImgParams);
 
   if (StyleDisplay()->IsScrollableOverflow()) aContext.Restore();
@@ -169,7 +169,7 @@ SVGBBox SVGMarkerFrame::GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
 
   Matrix tm = viewBoxTM * mMarkerTM * aToBBoxUserspace;
 
-  nsSVGDisplayableFrame* child = do_QueryFrame(GetAnonymousChildFrame(this));
+  ISVGDisplayableFrame* child = do_QueryFrame(GetAnonymousChildFrame(this));
   // When we're being called to obtain the invalidation area, we need to
   // pass down all the flags so that stroke is included. However, once DOM
   // getBBox() accepts flags, maybe we should strip some of those here?

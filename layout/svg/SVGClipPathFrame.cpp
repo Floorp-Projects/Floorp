@@ -51,7 +51,7 @@ void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
 
   RefPtr<Path> clipPath;
 
-  nsSVGDisplayableFrame* singleClipPathChild = nullptr;
+  ISVGDisplayableFrame* singleClipPathChild = nullptr;
   IsTrivial(&singleClipPathChild);
 
   if (singleClipPathChild) {
@@ -164,13 +164,13 @@ void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
 void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
                                           nsIFrame* aClippedFrame,
                                           gfxContext& aTarget) {
-  nsSVGDisplayableFrame* frame = do_QueryFrame(aFrame);
+  ISVGDisplayableFrame* frame = do_QueryFrame(aFrame);
   if (!frame) {
     return;
   }
 
   // The CTM of each frame referencing us can be different.
-  frame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
+  frame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
 
   // Children of this clipPath may themselves be clipped.
   SVGClipPathFrame* clipPathThatClipsChild;
@@ -282,7 +282,7 @@ bool SVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
   }
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+    ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       gfxPoint pointForChild = point;
 
@@ -302,7 +302,7 @@ bool SVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
   return false;
 }
 
-bool SVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame** aSingleChild) {
+bool SVGClipPathFrame::IsTrivial(ISVGDisplayableFrame** aSingleChild) {
   // If the clip path is clipped then it's non-trivial
   if (SVGObserverUtils::GetAndObserveClipPath(this, nullptr) ==
       SVGObserverUtils::eHasRefsAllValid) {
@@ -313,10 +313,10 @@ bool SVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame** aSingleChild) {
     *aSingleChild = nullptr;
   }
 
-  nsSVGDisplayableFrame* foundChild = nullptr;
+  ISVGDisplayableFrame* foundChild = nullptr;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    nsSVGDisplayableFrame* svgChild = do_QueryFrame(kid);
+    ISVGDisplayableFrame* svgChild = do_QueryFrame(kid);
     if (svgChild) {
       // We consider a non-trivial clipPath to be one containing
       // either more than one svg child and/or a svg container
@@ -387,7 +387,7 @@ nsresult SVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
     if (aAttribute == nsGkAtoms::transform) {
       SVGObserverUtils::InvalidateDirectRenderingObservers(this);
       nsSVGUtils::NotifyChildrenOfSVGChange(
-          this, nsSVGDisplayableFrame::TRANSFORM_CHANGED);
+          this, ISVGDisplayableFrame::TRANSFORM_CHANGED);
     }
     if (aAttribute == nsGkAtoms::clipPathUnits) {
       SVGObserverUtils::InvalidateDirectRenderingObservers(this);
@@ -444,7 +444,7 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
     SVGElement* svgNode = static_cast<SVGElement*>(node);
     nsIFrame* frame = svgNode->GetPrimaryFrame();
     if (frame) {
-      nsSVGDisplayableFrame* svg = do_QueryFrame(frame);
+      ISVGDisplayableFrame* svg = do_QueryFrame(frame);
       if (svg) {
         gfxMatrix matrix =
             nsSVGUtils::GetTransformMatrixInUserSpace(frame) * aMatrix;

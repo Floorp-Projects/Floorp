@@ -8,10 +8,10 @@
 #define NSSVGFOREIGNOBJECTFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
-#include "nsSVGDisplayableFrame.h"
 #include "nsRegion.h"
 #include "nsSVGUtils.h"
 
@@ -23,7 +23,7 @@ nsContainerFrame* NS_NewSVGForeignObjectFrame(mozilla::PresShell* aPresShell,
 namespace mozilla {
 
 class SVGForeignObjectFrame final : public nsContainerFrame,
-                                    public nsSVGDisplayableFrame {
+                                    public ISVGDisplayableFrame {
   friend nsContainerFrame* ::NS_NewSVGForeignObjectFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
@@ -71,7 +71,7 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
   }
 #endif
 
-  // nsSVGDisplayableFrame interface:
+  // ISVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                         imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;

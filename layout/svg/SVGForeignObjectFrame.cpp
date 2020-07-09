@@ -53,7 +53,7 @@ SVGForeignObjectFrame::SVGForeignObjectFrame(ComputedStyle* aStyle,
 // nsIFrame methods
 
 NS_QUERYFRAME_HEAD(SVGForeignObjectFrame)
-  NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
+  NS_QUERYFRAME_ENTRY(ISVGDisplayableFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void SVGForeignObjectFrame::Init(nsIContent* aContent,

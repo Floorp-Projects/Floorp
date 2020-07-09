@@ -172,10 +172,10 @@ FRAME_CLASSES = [
     AbstractFrame("nsIScrollableFrame"),
     AbstractFrame("nsIScrollbarMediator"),
     AbstractFrame("nsISelectControlFrame"),
-    AbstractFrame("nsISVGSVGFrame"),
     AbstractFrame("nsIStatefulFrame"),
+    AbstractFrame("ISVGDisplayableFrame"),
+    AbstractFrame("ISVGSVGFrame"),
     AbstractFrame("nsITableCellLayout"),
     AbstractFrame("nsITableLayout"),
     AbstractFrame("nsITextControlFrame"),
-    AbstractFrame("nsSVGDisplayableFrame"),
 ]

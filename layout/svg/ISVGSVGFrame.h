@@ -9,18 +9,22 @@
 
 #include "nsQueryFrame.h"
 
-class nsISVGSVGFrame {
+namespace mozilla {
+
+class ISVGSVGFrame {
  public:
-  NS_DECL_QUERYFRAME_TARGET(nsISVGSVGFrame)
+  NS_DECL_QUERYFRAME_TARGET(ISVGSVGFrame)
 
   /**
    * Called when non-attribute changes have caused the element's width/height
    * or its for-children transform to change, and to get the element to notify
    * its children appropriately. aFlags must be set to
-   * nsSVGDisplayableFrame::COORD_CONTEXT_CHANGED and/or
-   * nsSVGDisplayableFrame::TRANSFORM_CHANGED.
+   * ISVGDisplayableFrame::COORD_CONTEXT_CHANGED and/or
+   * ISVGDisplayableFrame::TRANSFORM_CHANGED.
    */
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) = 0;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_ISVGSVGFRAME_H__

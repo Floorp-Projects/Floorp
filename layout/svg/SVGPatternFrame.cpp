@@ -15,6 +15,7 @@
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGGeometryFrame.h"
@@ -24,7 +25,6 @@
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
-#include "nsSVGDisplayableFrame.h"
 #include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
 
@@ -359,9 +359,9 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
       gfxMatrix tm = *(patternWithChildren->mCTM);
 
       // The CTM of each frame referencing us can be different
-      nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+      ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
-        SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
+        SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
         tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
       }
 

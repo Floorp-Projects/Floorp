@@ -223,7 +223,7 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   virtual void FindCloserFrameForSelection(
       const nsPoint& aPoint, FrameWithDistance* aCurrentBestFrame) override;
 
-  // nsSVGDisplayableFrame interface:
+  // ISVGDisplayableFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) override;
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                         imgDrawingParams& aImgParams,
