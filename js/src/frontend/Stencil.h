@@ -34,7 +34,6 @@
 #include "vm/BigIntType.h"             // ParseBigIntLiteral
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
-#include "vm/JSFunction.h"             // FunctionFlags
 #include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, FieldInitializers
 #include "vm/Runtime.h"   // ReportOutOfMemory
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
@@ -355,9 +354,18 @@ class ScriptStencil {
   // See `BaseScript::sharedData_`.
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
+  // See: `FunctionFlags`.
+  FunctionFlags functionFlags = {};
+
+  // See `JSFunction::nargs_`.
+  uint16_t nargs = 0;
+
+  // True if this is successfully validated "use asm" function.
+  bool isAsmJSModule : 1;
+
   // End of fields.
 
-  explicit ScriptStencil(JSContext* cx) : gcThings(cx) {}
+  explicit ScriptStencil(JSContext* cx) : gcThings(cx), isAsmJSModule(false) {}
 
   // This traces any JSAtoms in the gcThings array. This will be removed once
   // atoms are deferred from parsing.
