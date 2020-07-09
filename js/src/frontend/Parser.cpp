@@ -1920,8 +1920,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
 
 static JSFunction* CreateFunction(JSContext* cx,
                                   CompilationInfo& compilationInfo,
-                                  ScriptStencil& stencil,
-                                  HandleAtom displayAtom) {
+                                  ScriptStencil& stencil) {
   GeneratorKind generatorKind =
       stencil.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
           ? GeneratorKind::Generator
@@ -1944,6 +1943,7 @@ static JSFunction* CreateFunction(JSContext* cx,
 
   JSNative maybeNative = stencil.isAsmJSModule ? InstantiateAsmJS : nullptr;
 
+  RootedAtom displayAtom(cx, stencil.functionAtom);
   RootedFunction fun(
       cx, NewFunctionWithProto(cx, maybeNative, stencil.nargs,
                                stencil.functionFlags, nullptr, displayAtom,
@@ -1977,10 +1977,9 @@ static bool InstantiateFunctions(JSContext* cx,
       continue;
     }
 
-    RootedAtom atom(cx, funbox->displayAtom());
     ScriptStencil& stencil = funbox->functionStencil().get();
 
-    RootedFunction fun(cx, CreateFunction(cx, compilationInfo, stencil, atom));
+    RootedFunction fun(cx, CreateFunction(cx, compilationInfo, stencil));
     if (!fun) {
       return false;
     }
