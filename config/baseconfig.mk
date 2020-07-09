@@ -10,11 +10,6 @@ DIST = $(DEPTH)/dist
 endif
 ABS_DIST = $(topobjdir)/dist
 
-# We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
-# manually use it before config.mk inclusion
-_OBJ_SUFFIX := $(OBJ_SUFFIX)
-OBJ_SUFFIX = $(error config/config.mk needs to be included before using OBJ_SUFFIX)
-
 ifeq ($(HOST_OS_ARCH),WINNT)
 # We only support building with a non-msys gnu make version
 # strictly above 4.0.
