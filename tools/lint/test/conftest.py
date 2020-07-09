@@ -20,18 +20,20 @@ sys.path.insert(0, lintdir)
 logger = logging.getLogger("mozlint")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def root(request):
     """Return the root directory for the files of the linter under test.
 
     For example, with LINTER=flake8 this would be tools/lint/test/files/flake8.
     """
-    if not hasattr(request.module, 'LINTER'):
-        pytest.fail("'root' fixture used from a module that didn't set the LINTER variable")
-    return os.path.join(here, 'files', request.module.LINTER)
+    if not hasattr(request.module, "LINTER"):
+        pytest.fail(
+            "'root' fixture used from a module that didn't set the LINTER variable"
+        )
+    return os.path.join(here, "files", request.module.LINTER)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def paths(root):
     """Return a function that can resolve file paths relative to the linter
     under test.
@@ -39,10 +41,12 @@ def paths(root):
     Can be used like `paths('foo.py', 'bar/baz')`. This will return a list of
     absolute paths under the `root` files directory.
     """
+
     def _inner(*paths):
         if not paths:
             return [root]
         return [os.path.normpath(os.path.join(root, p)) for p in paths]
+
     return _inner
 
 
@@ -55,11 +59,13 @@ def config(request):
     used to test a single linter. If no LINTER variable is defined, the test
     will fail.
     """
-    if not hasattr(request.module, 'LINTER'):
-        pytest.fail("'config' fixture used from a module that didn't set the LINTER variable")
+    if not hasattr(request.module, "LINTER"):
+        pytest.fail(
+            "'config' fixture used from a module that didn't set the LINTER variable"
+        )
 
     name = request.module.LINTER
-    config_path = os.path.join(lintdir, '{}.yml'.format(name))
+    config_path = os.path.join(lintdir, "{}.yml".format(name))
     parser = Parser(build.topsrcdir)
     # TODO Don't assume one linter per yaml file
     return parser.parse(config_path)[0]
@@ -70,10 +76,10 @@ def run_setup(config):
     """Make sure that if the linter named in the LINTER global variable has a
     setup function, it gets called before running the tests.
     """
-    if 'setup' not in config:
+    if "setup" not in config:
         return
 
-    func = findobject(config['setup'])
+    func = findobject(config["setup"])
     func(build.topsrcdir)
 
 
@@ -86,18 +92,19 @@ def lint(config, root):
     specified.
     """
     try:
-        func = findobject(config['payload'])
+        func = findobject(config["payload"])
     except (ImportError, ValueError):
-        pytest.fail("could not resolve a lint function from '{}'".format(config['payload']))
+        pytest.fail(
+            "could not resolve a lint function from '{}'".format(config["payload"])
+        )
 
     ResultSummary.root = root
 
     def wrapper(paths, config=config, root=root, collapse_results=False, **lintargs):
         logger.setLevel(logging.DEBUG)
-        lintargs['log'] = logging.LoggerAdapter(logger, {
-            "lintname": config.get("name"),
-            "pid": os.getpid()
-        })
+        lintargs["log"] = logging.LoggerAdapter(
+            logger, {"lintname": config.get("name"), "pid": os.getpid()}
+        )
         results = func(paths, config, root=root, **lintargs)
         if not collapse_results:
             return results
@@ -113,8 +120,9 @@ def lint(config, root):
 @pytest.fixture
 def create_temp_file(tmpdir):
     def inner(contents, name=None):
-        name = name or 'temp.py'
+        name = name or "temp.py"
         path = tmpdir.join(name)
         path.write(contents)
         return path.strpath
+
     return inner

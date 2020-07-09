@@ -6,8 +6,7 @@ black:
         - taskcluster/docker/funsize-update-generator
         - testing/condprofile/condprof
         - tools/crashreporter/system-symbols
-        - tools/lint/python/black.py
-        - tools/lint/test/test_black.py
+        - tools/lint/
         - tools/tryselect/selectors/scriptworker.py
     exclude:
         - layout/style/ServoCSSPropList.mako.py

@@ -28,8 +28,11 @@ def parse_issues(config, output, paths, log):
     for line in output:
         match = diff_line.match(line)
         file, line_no, col, diff, diff2 = match.groups()
-        log.debug("file={} line={} col={} diff={} diff2={}".format(
-            file, line_no, col, diff, diff2))
+        log.debug(
+            "file={} line={} col={} diff={} diff2={}".format(
+                file, line_no, col, diff, diff2
+            )
+        )
         d = diff + "\n" + diff2
         res = {
             "path": file,
@@ -78,34 +81,34 @@ def get_clang_format_binary():
 
     clang_tools_path = os.path.join(get_state_dir(), "clang-tools")
     bin_path = os.path.join(clang_tools_path, "clang-tidy", "bin")
-    return os.path.join(bin_path, "clang-format" + substs.get('HOST_BIN_SUFFIX', ''))
+    return os.path.join(bin_path, "clang-format" + substs.get("HOST_BIN_SUFFIX", ""))
 
 
 def is_ignored_path(ignored_dir_re, topsrcdir, f):
     # Remove up to topsrcdir in pathname and match
-    if f.startswith(topsrcdir + '/'):
-        match_f = f[len(topsrcdir + '/'):]
+    if f.startswith(topsrcdir + "/"):
+        match_f = f[len(topsrcdir + "/") :]
     else:
         match_f = f
     return re.match(ignored_dir_re, match_f)
 
 
 def remove_ignored_path(paths, topsrcdir, log):
-    path_to_third_party = os.path.join(topsrcdir, '.clang-format-ignore')
+    path_to_third_party = os.path.join(topsrcdir, ".clang-format-ignore")
 
     ignored_dir = []
-    with open(path_to_third_party, 'r') as fh:
+    with open(path_to_third_party, "r") as fh:
         for line in fh:
             # In case it starts with a space
             line = line.strip()
             # Remove comments and empty lines
-            if line.startswith('#') or len(line) == 0:
+            if line.startswith("#") or len(line) == 0:
                 continue
             # The regexp is to make sure we are managing relative paths
             ignored_dir.append(r"^[\./]*" + line.rstrip())
 
     # Generates the list of regexp
-    ignored_dir_re = '(%s)' % '|'.join(ignored_dir)
+    ignored_dir_re = "(%s)" % "|".join(ignored_dir)
 
     path_list = []
     for f in paths:
@@ -119,13 +122,13 @@ def remove_ignored_path(paths, topsrcdir, log):
 
 
 def lint(paths, config, fix=None, **lintargs):
-    log = lintargs['log']
-    paths = list(expand_exclusions(paths, config, lintargs['root']))
+    log = lintargs["log"]
+    paths = list(expand_exclusions(paths, config, lintargs["root"]))
 
     # We ignored some specific files for a bunch of reasons.
     # Not using excluding to avoid duplication
-    if lintargs.get('use_filters', True):
-        paths = remove_ignored_path(paths, lintargs['root'], log)
+    if lintargs.get("use_filters", True):
+        paths = remove_ignored_path(paths, lintargs["root"], log)
 
     # An empty path array can occur when the user passes in `-n`. If we don't
     # return early in this case, rustfmt will attempt to read stdin and hang.
@@ -146,18 +149,20 @@ def lint(paths, config, fix=None, **lintargs):
     else:
         cmd_args.append("--dry-run")
     base_command = cmd_args + paths
-    log.debug("Command: {}".format(' '.join(cmd_args)))
+    log.debug("Command: {}".format(" ".join(cmd_args)))
     output = run_process(config, base_command)
     output_list = []
 
     if len(output) % 3 != 0:
-        raise Exception("clang-format output should be a multiple of 3. Output: %s" % output)
+        raise Exception(
+            "clang-format output should be a multiple of 3. Output: %s" % output
+        )
 
     for i in range(0, len(output), 3):
         # Merge the element 3 by 3 (clang-format output)
         line = output[i]
-        line += ";" + output[i+1]
-        line += ";" + output[i+2]
+        line += ";" + output[i + 1]
+        line += ";" + output[i + 2]
         output_list.append(line)
 
     if fix:

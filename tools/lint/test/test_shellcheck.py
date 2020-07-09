@@ -2,8 +2,10 @@ import pytest
 import mozunit
 from mozfile import which
 
-LINTER = 'shellcheck'
-pytestmark = pytest.mark.skipif(not which('shellcheck'), reason="shellcheck is not installed")
+LINTER = "shellcheck"
+pytestmark = pytest.mark.skipif(
+    not which("shellcheck"), reason="shellcheck is not installed"
+)
 
 
 def test_basic(lint, paths):
@@ -20,5 +22,5 @@ def test_basic(lint, paths):
     assert results[1].relpath == "bad.sh"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()
