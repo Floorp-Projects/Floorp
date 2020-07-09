@@ -2330,7 +2330,7 @@ describe("ASRouter", () => {
         let messages = [
           {
             id: "foo1",
-            forReachEvent: true,
+            forReachEvent: { sent: false },
             experimentSlug: "exp01",
             branchSlug: "branch01",
             group: "cfr",
@@ -2348,7 +2348,7 @@ describe("ASRouter", () => {
           },
           {
             id: "foo3",
-            forReachEvent: true,
+            forReachEvent: { sent: false },
             experimentSlug: "exp02",
             branchSlug: "branch02",
             group: "cfr",
@@ -2367,6 +2367,30 @@ describe("ASRouter", () => {
 
         await Router.onMessage(msg);
         assert.calledTwice(Services.telemetry.recordEvent);
+      });
+      it("should not record the Reach event if it's already sent", async () => {
+        let messages = [
+          {
+            id: "foo1",
+            forReachEvent: { sent: true },
+            experimentSlug: "exp01",
+            branchSlug: "branch01",
+            group: "cfr",
+            template: "simple_template",
+            trigger: { id: "foo" },
+            content: { title: "Foo1", body: "Foo123-1" },
+          },
+        ];
+        sandbox.stub(Router, "handleMessageRequest").resolves(messages);
+        sandbox.spy(Services.telemetry, "recordEvent");
+
+        const msg = fakeAsyncMessage({
+          type: "TRIGGER",
+          data: { trigger: { id: "foo" } },
+        });
+
+        await Router.onMessage(msg);
+        assert.notCalled(Services.telemetry.recordEvent);
       });
     });
 
@@ -4106,7 +4130,7 @@ describe("ASRouter", () => {
       assert.equal(result.messages[1].group, "cfr");
       assert.equal(result.messages[1].experimentSlug, "exp01");
       assert.equal(result.messages[1].branchSlug, "branch02");
-      assert.ok(result.messages[1].forReachEvent);
+      assert.deepEqual(result.messages[1].forReachEvent, { sent: false });
     });
     it("should fetch json from url", async () => {
       let result = await MessageLoaderUtils.loadMessagesForProvider({

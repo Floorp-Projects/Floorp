@@ -111,7 +111,7 @@ const USE_REMOTE_L10N_PREF =
 // Experiment groups that need to report the reach event in Messaging-Experiments.
 // If you're adding new groups to it, make sure they're also added in the
 // `messaging_experiments.reach.objects` defined in "toolkit/components/telemetry/Events.yaml"
-const REACH_EVENT_GROUPS = ["cfr"];
+const REACH_EVENT_GROUPS = ["cfr", "moments-page"];
 const REACH_EVENT_CATEGORY = "messaging_experiments";
 const REACH_EVENT_METHOD = "reach";
 
@@ -383,7 +383,7 @@ const MessageLoaderUtils = {
           ) {
             experiments.push({
               group,
-              forReachEvent: true,
+              forReachEvent: { sent: false },
               experimentSlug: experimentData.slug,
               branchSlug: branch.slug,
               ...branch.value,
@@ -2042,7 +2042,10 @@ class _ASRouter {
     const nonReachMessages = [];
     for (const message of messages) {
       if (message.forReachEvent) {
-        this._recordReachEvent(message);
+        if (!message.forReachEvent.sent) {
+          this._recordReachEvent(message);
+          message.forReachEvent.sent = true;
+        }
       } else {
         nonReachMessages.push(message);
       }
