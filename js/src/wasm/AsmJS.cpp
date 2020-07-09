@@ -1929,7 +1929,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     asmJSMetadata_->toStringStart =
-        moduleFunctionNode_->funbox()->extent.toStringStart;
+        moduleFunctionNode_->funbox()->extent().toStringStart;
     asmJSMetadata_->srcStart = moduleFunctionNode_->body()->pn_pos.begin;
     asmJSMetadata_->strict = parser_.pc_->sc()->strict() &&
                              !parser_.pc_->sc()->hasExplicitUseStrict();

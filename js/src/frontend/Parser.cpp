@@ -1903,7 +1903,7 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
   Rooted<BaseScript*> lazy(
       cx, BaseScript::CreateRawLazy(cx, gcthings.length(), function,
                                     compilationInfo.sourceObject,
-                                    funbox->extent, stencil.immutableFlags));
+                                    stencil.extent, stencil.immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -2022,6 +2022,8 @@ static bool InstantiateScriptStencils(JSContext* cx,
                                       CompilationInfo& compilationInfo,
                                       FunctionBox* listHead) {
   for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
+    ScriptStencil& stencil = funbox->functionStencil().get();
+
     if (funbox->emitBytecode) {
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
@@ -2030,9 +2032,7 @@ static bool InstantiateScriptStencils(JSContext* cx,
       }
 
       RootedScript script(cx,
-                          JSScript::fromStencil(cx, compilationInfo,
-                                                funbox->functionStencil().get(),
-                                                funbox->extent));
+                          JSScript::fromStencil(cx, compilationInfo, stencil));
       if (!script) {
         return false;
       }
@@ -2070,8 +2070,7 @@ static bool InstantiateTopLevel(JSContext* cx,
                                           compilationInfo.script, stencil);
   }
 
-  compilationInfo.script = JSScript::fromStencil(
-      cx, compilationInfo, stencil, compilationInfo.topLevelExtent);
+  compilationInfo.script = JSScript::fromStencil(cx, compilationInfo, stencil);
   return !!compilationInfo.script;
 }
 
@@ -2885,7 +2884,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 
-  if (!tokenStream.advance(funbox->extent.sourceEnd)) {
+  if (!tokenStream.advance(funbox->extent().sourceEnd)) {
     return false;
   }
 
@@ -7470,11 +7469,11 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
 
     // Amend the toStringEnd offset for the constructor now that we've
     // finished parsing the class.
-    ctorbox->extent.toStringEnd = classEndOffset;
+    ctorbox->setCtorToStringEnd(classEndOffset);
 
     if (numFields > 0) {
       // Field initialization need access to `this`.
-      ctorbox->setFunctionHasThisBinding();
+      ctorbox->setCtorFunctionHasThisBinding();
     }
   }
 
