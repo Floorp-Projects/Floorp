@@ -25,7 +25,6 @@ job-defaults:
                         by-pageload:
                             warm:
                                 by-test-platform:
-                                    windows10-64-ref-hw-2017/opt: ["mozilla-central"]
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     default: ["mozilla-central"]
                             cold:
@@ -72,6 +71,7 @@ job-defaults:
         by-app:
             firefox:
                 by-test-platform:
+                    windows10-64-ref-hw-2017/opt: 2
                     windows10-64-ccov/.*: 3
                     linux64-ccov/.*: 3
                     default: 2
