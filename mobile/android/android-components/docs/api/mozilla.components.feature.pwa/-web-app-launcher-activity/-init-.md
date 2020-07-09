@@ -6,6 +6,6 @@
 
 This activity is launched by Web App shortcuts on the home screen.
 
-Based on the Web App Manifest (display) it will decide whether the app is launched in the browser or in a
-standalone activity.
+Based on the Web App Manifest (display) it will decide whether the app is launched in the
+browser or in a standalone activity.
 

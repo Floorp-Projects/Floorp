@@ -12,6 +12,7 @@ An alternative response for an intercepted request.
 |---|---|
 | [AppIntent](-app-intent/index.md) | `data class AppIntent : `[`InterceptionResponse`](./index.md) |
 | [Content](-content/index.md) | `data class Content : `[`InterceptionResponse`](./index.md) |
+| [Deny](-deny.md) | `object Deny : `[`InterceptionResponse`](./index.md)<br>Deny request without further action. |
 | [Url](-url/index.md) | `data class Url : `[`InterceptionResponse`](./index.md) |
 
 ### Inheritors
@@ -20,4 +21,5 @@ An alternative response for an intercepted request.
 |---|---|
 | [AppIntent](-app-intent/index.md) | `data class AppIntent : `[`InterceptionResponse`](./index.md) |
 | [Content](-content/index.md) | `data class Content : `[`InterceptionResponse`](./index.md) |
+| [Deny](-deny.md) | `object Deny : `[`InterceptionResponse`](./index.md)<br>Deny request without further action. |
 | [Url](-url/index.md) | `data class Url : `[`InterceptionResponse`](./index.md) |

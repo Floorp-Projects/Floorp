@@ -32,3 +32,4 @@ Interface for classes that want to intercept load requests to allow custom behav
 | Name | Summary |
 |---|---|
 | [AppLinksInterceptor](../../mozilla.components.feature.app.links/-app-links-interceptor/index.md) | `class AppLinksInterceptor : `[`RequestInterceptor`](./index.md)<br>This feature implements use cases for detecting and handling redirects to external apps. The user is asked to confirm her intention before leaving the app. These include the Android Intents, custom schemes and support for [Intent.CATEGORY_BROWSABLE](#) `http(s)` URLs. |
+| [WebAppInterceptor](../../mozilla.components.feature.pwa/-web-app-interceptor/index.md) | `class WebAppInterceptor : `[`RequestInterceptor`](./index.md)<br>This feature will intercept requests and reopen them in the corresponding installed PWA, if any. |
