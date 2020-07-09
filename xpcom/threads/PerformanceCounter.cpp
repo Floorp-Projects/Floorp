@@ -53,19 +53,20 @@ void PerformanceCounter::IncrementExecutionDuration(uint32_t aMicroseconds) {
        uint64_t(mExecutionDuration)));
 }
 
-const DispatchCounter& PerformanceCounter::GetDispatchCounter() {
+const DispatchCounter& PerformanceCounter::GetDispatchCounter() const {
   return mDispatchCounter;
 }
 
-uint64_t PerformanceCounter::GetExecutionDuration() {
+uint64_t PerformanceCounter::GetExecutionDuration() const {
   return mExecutionDuration;
 }
 
-uint64_t PerformanceCounter::GetTotalDispatchCount() {
+uint64_t PerformanceCounter::GetTotalDispatchCount() const {
   return mTotalDispatchCount;
 }
 
-uint32_t PerformanceCounter::GetDispatchCount(DispatchCategory aCategory) {
+uint32_t PerformanceCounter::GetDispatchCount(
+    DispatchCategory aCategory) const {
   return mDispatchCounter[aCategory.GetValue()];
 }
 

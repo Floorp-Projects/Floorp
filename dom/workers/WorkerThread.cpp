@@ -148,11 +148,8 @@ void WorkerThread::SetWorker(const WorkerThreadFriendKey& /* aKey */,
 void WorkerThread::IncrementDispatchCounter() {
   MutexAutoLock lock(mLock);
   if (mWorkerPrivate) {
-    PerformanceCounter* performanceCounter =
-        mWorkerPrivate->GetPerformanceCounter();
-    if (performanceCounter) {
-      performanceCounter->IncrementDispatchCounter(DispatchCategory::Worker);
-    }
+    mWorkerPrivate->MutablePerformanceCounterRef().IncrementDispatchCounter(
+        DispatchCategory::Worker);
   }
 }
 
@@ -326,12 +323,9 @@ uint32_t WorkerThread::RecursionDepth(
   return mNestedEventLoopDepth;
 }
 
-PerformanceCounter* WorkerThread::GetPerformanceCounter(
-    nsIRunnable* aEvent) const {
-  if (mWorkerPrivate) {
-    return mWorkerPrivate->GetPerformanceCounter();
-  }
-  return nullptr;
+PerformanceCounter* WorkerThread::GetPerformanceCounter(nsIRunnable*) const {
+  return mWorkerPrivate ? &mWorkerPrivate->MutablePerformanceCounterRef()
+                        : nullptr;
 }
 
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
