@@ -158,6 +158,23 @@ class ECDH():
 
         return result
 
+class ECDSA():
+    """Class that provides the generator function for a single ECDSA test case."""
+    
+    def format_testcase(self, testcase, key, hash_oid, keySize):
+        result = '\n// Comment: {}'.format(testcase['comment'])
+        result += '\n// tcID: {}\n'.format(testcase['tcId'])
+        result += '{{{}, {},\n'.format(hash_oid, testcase['tcId'])
+        result += '{},\n'.format(string_to_hex_array(testcase['sig']))
+        result += '{},\n'.format(string_to_hex_array(key))
+        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
+        valid = testcase['result'] == 'valid'
+        if not valid and testcase['result'] == 'acceptable':
+            valid = 'MissingZero' in testcase['flags']
+        result += '{}}},\n'.format(str(valid).lower())
+
+        return result
+
 class RSA_PKCS1_SIGNATURE():
     pub_keys = {}
 
@@ -461,6 +478,39 @@ p521ecdh_params = {
     'formatter' : ECDH(),
     'crop_size_end': -2,
     'section': 'p521ecdh_vectors_h__',
+    'comment' : ''
+}
+
+p256ecdsa_sha256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'ecdsa_secp256r1_sha256_test.json',
+    'target': '../testvectors/p256ecdsa-sha256-vectors.h',
+    'array_init': 'const EcdsaTestVector kP256EcdsaSha256Vectors[] = {\n',
+    'formatter' : ECDSA(),
+    'crop_size_end': -2,
+    'section': 'p256ecdsa_sha256_vectors_h__',
+    'comment' : ''
+}
+
+p384ecdsa_sha384_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'ecdsa_secp384r1_sha384_test.json',
+    'target': '../testvectors/p384ecdsa-sha384-vectors.h',
+    'array_init': 'const EcdsaTestVector kP384EcdsaSha384Vectors[] = {\n',
+    'formatter' : ECDSA(),
+    'crop_size_end': -2,
+    'section': 'p384ecdsa_sha384_vectors_h__',
+    'comment' : ''
+}
+
+p521ecdsa_sha512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'ecdsa_secp521r1_sha512_test.json',
+    'target': '../testvectors/p521ecdsa-sha512-vectors.h',
+    'array_init': 'const EcdsaTestVector kP521EcdsaSha512Vectors[] = {\n',
+    'formatter' : ECDSA(),
+    'crop_size_end': -2,
+    'section': 'p521ecdsa_sha512_vectors_h__',
     'comment' : ''
 }
 
@@ -780,6 +830,9 @@ def generate_test_vectors():
                  aes_gcm_params,
                  chacha_poly_params,
                  curve25519_params,
+                 p256ecdsa_sha256_params,
+                 p384ecdsa_sha384_params,
+                 p521ecdsa_sha512_params,
                  p256ecdh_params,
                  p384ecdh_params,
                  p521ecdh_params,

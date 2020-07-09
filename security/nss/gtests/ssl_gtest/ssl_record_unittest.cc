@@ -191,6 +191,36 @@ class ShortHeaderChecker : public PacketFilter {
   }
 };
 
+TEST_F(TlsConnectDatagram13, AeadLimit) {
+  Connect();
+  EXPECT_EQ(SECSuccess, SSLInt_AdvanceDtls13DecryptFailures(server_->ssl_fd(),
+                                                            (1ULL << 36) - 2));
+  SendReceive(50);
+
+  // Expect this to increment the counter. We should still be able to talk.
+  client_->SetFilter(std::make_shared<TlsRecordLastByteDamager>(client_));
+  client_->SendData(10);
+  server_->ReadBytes(10);
+  client_->ClearFilter();
+  client_->ResetSentBytes(50);
+  SendReceive(60);
+
+  // Expect alert when the limit is hit.
+  client_->SetFilter(std::make_shared<TlsRecordLastByteDamager>(client_));
+  client_->SendData(10);
+  ExpectAlert(server_, kTlsAlertBadRecordMac);
+
+  // Check the error on both endpoints.
+  uint8_t buf[10];
+  PRInt32 rv = PR_Read(server_->ssl_fd(), buf, sizeof(buf));
+  EXPECT_EQ(-1, rv);
+  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, PORT_GetError());
+
+  rv = PR_Read(client_->ssl_fd(), buf, sizeof(buf));
+  EXPECT_EQ(-1, rv);
+  EXPECT_EQ(SSL_ERROR_BAD_MAC_ALERT, PORT_GetError());
+}
+
 TEST_F(TlsConnectDatagram13, ShortHeadersClient) {
   Connect();
   client_->SetOption(SSL_ENABLE_DTLS_SHORT_HEADER, PR_TRUE);

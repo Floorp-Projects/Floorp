@@ -57,6 +57,15 @@ typedef struct ChaChaTestVectorStr {
   bool invalid_iv;
 } ChaChaTestVector;
 
+typedef struct EcdsaTestVectorStr {
+  SECOidTag hash_oid;
+  uint32_t id;
+  std::vector<uint8_t> sig;
+  std::vector<uint8_t> public_key;
+  std::vector<uint8_t> msg;
+  bool valid;
+} EcdsaTestVector;
+
 typedef struct EcdhTestVectorStr {
   uint32_t id;
   std::vector<uint8_t> private_key;

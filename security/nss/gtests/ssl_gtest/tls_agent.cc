@@ -1154,7 +1154,7 @@ void TlsAgent::ReadBytes(size_t amount) {
   }
 }
 
-void TlsAgent::ResetSentBytes() { send_ctr_ = 0; }
+void TlsAgent::ResetSentBytes(size_t bytes) { send_ctr_ = bytes; }
 
 void TlsAgent::SetOption(int32_t option, int value) {
   ASSERT_TRUE(EnsureTlsSetup());

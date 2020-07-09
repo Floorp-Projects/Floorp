@@ -185,6 +185,27 @@ dtls13_SendAckCb(sslSocket *ss)
     (void)dtls13_SendAck(ss);
 }
 
+/* Limits from draft-ietf-tls-dtls13-38; section 4.5.3. */
+PRBool
+dtls13_AeadLimitReached(ssl3CipherSpec *spec)
+{
+    if (spec->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        switch (spec->cipherDef->calg) {
+            case ssl_calg_chacha20:
+            case ssl_calg_aes_gcm:
+                return spec->deprotectionFailures >= (1ULL << 36);
+#ifdef UNSAFE_FUZZER_MODE
+            case ssl_calg_null:
+                return PR_FALSE;
+#endif
+            default:
+                PORT_Assert(0);
+                break;
+        }
+    }
+    return PR_FALSE;
+}
+
 /* Zero length messages are very simple to check. */
 static PRBool
 dtls_IsEmptyMessageAcknowledged(sslSocket *ss, PRUint16 msgSeq, PRUint32 offset)
