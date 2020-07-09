@@ -26,7 +26,7 @@ interface nsIAppShellService : nsISupports
    * @param aParent the parent window.  Can be null.
    * @param aUrl the contents of the new window.
    * @param aChromeMask chrome flags affecting the kind of OS border
-   *                    given to the window. see nsIBrowserWindow for
+   *                    given to the window. see nsIWebBrowserChrome for
    *                    bit/flag definitions.
    * @param aCallbacks interface providing C++ hooks for window initialization
    *                   before the window is made visible.  Can be null.
@@ -49,8 +49,11 @@ interface nsIAppShellService : nsISupports
    * It is used to simulate DOM windows without an actual physical
    * representation.
    * @param aIsChrome Set true if you want to use it for chrome content.
+   * @param aChromeMask Used to specify chrome flags that should be set on the
+   *                    window. See nsIWebBrowserChrome for flag definitions.
    */
-  nsIWindowlessBrowser createWindowlessBrowser([optional] in bool aIsChrome);
+  nsIWindowlessBrowser createWindowlessBrowser([optional] in bool aIsChrome,
+                                               [optional] in uint32_t aChromeMask);
 
   [noscript]
   void createHiddenWindow();
