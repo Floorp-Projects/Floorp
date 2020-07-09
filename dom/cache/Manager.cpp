@@ -134,6 +134,9 @@ class SetupAction final : public SyncDBAction {
       // Clean up orphaned body objects
       AutoTArray<nsID, 64> knownBodyIdList;
       rv = db::GetKnownBodyIds(aConn, knownBodyIdList);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       rv = BodyDeleteOrphanedFiles(aQuotaInfo, aDBDir, knownBodyIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) {
