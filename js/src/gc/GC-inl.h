@@ -23,59 +23,29 @@ namespace gc {
 
 class AutoAssertEmptyNursery;
 
-class ArenaIter {
-  static constexpr size_t SourceCount = 4;
-
-  Arena* arena = nullptr;
-  Arena* sources[SourceCount] = {nullptr};
-  size_t index = 0;
-  mozilla::DebugOnly<bool> initialized = false;
+class ArenaListIter {
+  Arena* arena;
 
  public:
-  ArenaIter() = default;
-
-  ArenaIter(JS::Zone* zone, AllocKind kind) { init(zone, kind); }
-
-  void init(JS::Zone* zone, AllocKind kind) {
-    MOZ_ASSERT(!initialized);
-    MOZ_ASSERT(zone);
-    sources[0] = zone->arenas.getFirstArena(kind);
-    sources[1] = zone->arenas.getFirstArenaToSweep(kind);
-    sources[2] = zone->arenas.getFirstSweptArena(kind);
-    sources[3] = zone->arenas.getFirstNewArenaInMarkPhase(kind);
-    initialized = true;
-    settle();
-  }
-
-  bool done() const {
-    MOZ_ASSERT(initialized);
-    return index == SourceCount;
-  }
-
+  explicit ArenaListIter(Arena* head) : arena(head) {}
+  bool done() const { return !arena; }
   Arena* get() const {
     MOZ_ASSERT(!done());
     return arena;
   }
-
   void next() {
     MOZ_ASSERT(!done());
     arena = arena->next;
-    if (!arena) {
-      index++;
-      settle();
-    }
   }
+};
 
- private:
-  void settle() {
-    while (index < SourceCount) {
-      arena = sources[index];
-      if (arena) {
-        break;
-      }
-      index++;
-    }
-  }
+class ArenaIter : public ChainedIterator<ArenaListIter, 4> {
+ public:
+  ArenaIter(JS::Zone* zone, AllocKind kind)
+      : ChainedIterator(zone->arenas.getFirstArena(kind),
+                        zone->arenas.getFirstArenaToSweep(kind),
+                        zone->arenas.getFirstSweptArena(kind),
+                        zone->arenas.getFirstNewArenaInMarkPhase(kind)) {}
 };
 
 class ArenaCellIter {
