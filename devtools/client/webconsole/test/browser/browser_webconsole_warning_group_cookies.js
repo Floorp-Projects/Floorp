@@ -26,22 +26,22 @@ add_task(async function testSameSiteCookieMessage() {
     {
       pref: true,
       message1:
-        "Cookie “a” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.",
+        "Cookie “a” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.",
       typeMessage1: ".info",
       groupLabel:
-        "Some cookies are misusing the “sameSite“ attribute, so it won’t work as expected",
+        "Some cookies are misusing the “SameSite“ attribute, so it won’t work as expected",
       message2:
-        "Cookie “b” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.",
+        "Cookie “b” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.",
     },
     {
       pref: false,
       groupLabel:
-        "Some cookies are misusing the recommended “sameSite“ attribute",
+        "Some cookies are misusing the recommended “SameSite“ attribute",
       message1:
-        "Cookie “a” will be soon rejected because it has the “sameSite” attribute set to “none” or an invalid value, without the “secure” attribute.",
+        "Cookie “a” will be soon rejected because it has the “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.",
       typeMessage1: ".warn",
       message2:
-        "Cookie “b” will be soon rejected because it has the “sameSite” attribute set to “none” or an invalid value, without the “secure” attribute.",
+        "Cookie “b” will be soon rejected because it has the “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.",
     },
   ];
 
@@ -91,7 +91,7 @@ add_task(async function testSameSiteCookieMessage() {
 
     info("Open the group");
     node.querySelector(".arrow").click();
-    await waitFor(() => findMessage(hud, "sameSite"));
+    await waitFor(() => findMessage(hud, "SameSite"));
 
     checkConsoleOutputForWarningGroup(hud, [
       `▼︎⚠ ${test.groupLabel} 2`,
@@ -109,11 +109,11 @@ add_task(async function testInvalidSameSiteMessage() {
   await pushPref("network.cookie.sameSite.laxByDefault", true);
 
   const groupLabel =
-    "Some cookies are misusing the “sameSite“ attribute, so it won’t work as expected";
+    "Some cookies are misusing the “SameSite“ attribute, so it won’t work as expected";
   const message1 =
-    "Invalid “sameSite“ value for cookie “a”. The supported values are: “lax“, “strict“, “none“.";
+    "Invalid “SameSite“ value for cookie “a”. The supported values are: “Lax“, “Strict“, “None“.";
   const message2 =
-    "Cookie “a” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.";
+    "Cookie “a” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.";
 
   const { hud, tab, win } = await openNewWindowAndConsole(
     "http://example.org/" + TEST_FILE
@@ -136,7 +136,7 @@ add_task(async function testInvalidSameSiteMessage() {
 
   info("Open the group");
   node.querySelector(".arrow").click();
-  await waitFor(() => findMessage(hud, "sameSite"));
+  await waitFor(() => findMessage(hud, "SameSite"));
 
   checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${groupLabel} 2`,

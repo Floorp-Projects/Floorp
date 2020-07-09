@@ -169,7 +169,7 @@ add_test(function test_fromJSON() {
     };
     Assert.throws(
       () => cookie.fromJSON(sameSiteTest),
-      /Cookie sameSite flag must be one of None, Lax, or Strict/
+      /Cookie SameSite flag must be one of None, Lax, or Strict/
     );
   }
 

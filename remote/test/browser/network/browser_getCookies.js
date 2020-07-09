@@ -200,7 +200,7 @@ add_task(async function httpOnly({ client }) {
 add_task(async function sameSite({ client }) {
   const { Network } = client;
   for (const value of ["Lax", "Strict"]) {
-    console.log(`Test cookie with sameSite=${value}`);
+    console.log(`Test cookie with SameSite=${value}`);
     await loadURL(`${DEFAULT_URL}?name=foo&value=bar&sameSite=${value}`);
 
     const cookie = {

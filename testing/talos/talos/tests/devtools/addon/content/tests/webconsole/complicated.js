@@ -26,7 +26,7 @@ const EXPECTED_MESSAGES = [
     visibleWhenFissionEnabled: true,
   },
   {
-    text: `Some cookies are misusing the “sameSite“ attribute, so it won’t work as expected`,
+    text: `Some cookies are misusing the “SameSite“ attribute, so it won’t work as expected`,
     visibleWhenFissionEnabled: true,
     nightlyOnly: true,
   },

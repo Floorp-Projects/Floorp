@@ -2,7 +2,7 @@
 /* globals user_pref */
 /* eslint quotes: 0 */
 
-// XXX: Bug 1617611 - Fix all the tests broken by "cookies sameSite=lax by default"
+// XXX: Bug 1617611 - Fix all the tests broken by "cookies SameSite=lax by default"
 user_pref("network.cookie.sameSite.laxByDefault", false);
 
 // Enable blocking access to storage from tracking resources by default.
