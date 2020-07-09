@@ -9,7 +9,6 @@ import os
 import re
 import json
 
-from collections import deque
 import six
 from six import text_type
 import taskgraph
@@ -81,27 +80,6 @@ docker_image_schema = Schema({
 transforms.add_validate(docker_image_schema)
 
 
-def order_image_tasks(config, tasks):
-    """Iterate image tasks in an order where parent images come first."""
-    pending = deque(tasks)
-    task_names = {task['name'] for task in pending}
-    emitted = set()
-    while True:
-        try:
-            task = pending.popleft()
-        except IndexError:
-            break
-        parent = task.get('parent')
-        if parent and parent not in emitted:
-            if parent not in task_names:
-                raise Exception('Missing parent image for {}-{}: {}'.format(
-                    config.kind, task['name'], parent))
-            pending.append(task)
-            continue
-        emitted.add(task['name'])
-        yield task
-
-
 @transforms.add
 def fill_template(config, tasks):
     available_packages = set()
@@ -115,7 +93,7 @@ def fill_template(config, tasks):
         if not os.path.isdir(CONTEXTS_DIR):
             os.makedirs(CONTEXTS_DIR)
 
-    for task in order_image_tasks(config, tasks):
+    for task in tasks:
         image_name = task.pop('name')
         job_symbol = task.pop('symbol')
         args = task.pop('args', {})
