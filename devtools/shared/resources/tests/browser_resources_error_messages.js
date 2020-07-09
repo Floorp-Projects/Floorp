@@ -24,6 +24,18 @@ add_task(async function() {
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
+  info("Test error messages legacy listener");
+  await testErrorMessagesResources();
+  await testErrorMessagesResourcesWithIgnoreExistingResources();
+
+  info("Test error messages server listener");
+  await pushPref("devtools.testing.enableServerWatcherSupport", true);
+  await testErrorMessagesResources();
+  await testErrorMessagesResourcesWithIgnoreExistingResources();
+  await pushPref("devtools.testing.enableServerWatcherSupport", false);
+});
+
+async function testErrorMessagesResources() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
@@ -93,15 +105,10 @@ add_task(async function() {
   Services.console.reset();
   targetList.stopListening();
   await client.close();
-});
+}
 
-add_task(async function() {
+async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   info("Test ignoreExistingResources option for ERROR_MESSAGE");
-
-  // Disable the preloaded process as it creates processes intermittently
-  // which forces the emission of RDP requests we aren't correctly waiting for.
-  await pushPref("dom.ipc.processPrelaunch.enabled", false);
-
   const tab = await addTab(TEST_URI);
 
   const {
@@ -142,7 +149,7 @@ add_task(async function() {
   Services.console.reset();
   await targetList.stopListening();
   await client.close();
-});
+}
 
 /**
  * Triggers all the errors in the content page.
@@ -174,6 +181,31 @@ async function triggerErrors(tab) {
 }
 
 const noUncaughtException = Symbol();
+const NUMBER_REGEX = /^\d+$/;
+
+const mdnUrl = path =>
+  `https://developer.mozilla.org/${path}?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default`;
+const defaultStackFrames = [
+  {
+    filename: /resource:\/\/testing-common\/content-task.js/,
+    lineNumber: NUMBER_REGEX,
+    columnNumber: NUMBER_REGEX,
+    functionName: "frameScript",
+  },
+  {
+    filename: "resource://testing-common/content-task.js",
+    lineNumber: NUMBER_REGEX,
+    columnNumber: NUMBER_REGEX,
+    functionName: null,
+  },
+  {
+    filename: "resource://testing-common/content-task.js",
+    lineNumber: NUMBER_REGEX,
+    columnNumber: NUMBER_REGEX,
+    functionName: null,
+    asyncCause: "MessageListener.receiveMessage",
+  },
+];
 
 const expectedPageErrors = new Map([
   [
@@ -183,9 +215,33 @@ const expectedPageErrors = new Map([
       errorMessageName: undefined,
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Not_a_function"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 10,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -195,9 +251,31 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_BAD_RADIX",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Bad_radix"),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 6,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -207,9 +285,31 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_READ_ONLY",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 23,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -219,9 +319,33 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_BAD_ARRAY_LENGTH",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Invalid_array_length"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 2,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -231,9 +355,40 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_NEGATIVE_REPETITION_COUNT",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Negative_repetition_count"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: "self-hosted",
+          sourceId: null,
+          lineNumber: NUMBER_REGEX,
+          columnNumber: 1,
+          functionName: "repeat",
+        },
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 7,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -243,9 +398,40 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_RESULTING_STRING_TOO_LARGE",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Resulting_string_too_large"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: "self-hosted",
+          sourceId: null,
+          lineNumber: NUMBER_REGEX,
+          columnNumber: 1,
+          functionName: "repeat",
+        },
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 5,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -255,9 +441,33 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_PRECISION_RANGE",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Precision_range"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 9,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -267,9 +477,24 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_STMT_AFTER_RETURN",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: false,
       warning: true,
+      info: false,
+      sourceId: null,
+      lineText: "function a() { return; 1 + 1; }",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Stmt_after_return"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: null,
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -279,9 +504,23 @@ const expectedPageErrors = new Map([
       errorMessageName: "JSMSG_REDECLARED_VAR",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "{let a, a;}",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl(
+        "docs/Web/JavaScript/Reference/Errors/Redeclared_parameter"
+      ),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: defaultStackFrames,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
       notes: [
         {
           messageBody: /Previously declared at line/,
@@ -302,9 +541,31 @@ const expectedPageErrors = new Map([
       errorMessageName: "",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 13,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
@@ -314,24 +575,79 @@ const expectedPageErrors = new Map([
       errorMessageName: "MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 1,
+          columnNumber: 33,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
     },
   ],
   [
-    `var error2 = new TypeError("abc");
-      error2.name = "MyPromiseError";
-      error2.message = "here2";
-      Promise.reject(error2)`,
+    `
+      function promiseThrow() {
+        var error2 = new TypeError("abc");
+        error2.name = "MyPromiseError";
+        error2.message = "here2";
+        return Promise.reject(error2);
+      }
+      promiseThrow()`,
     {
       errorMessage: /MyPromiseError: here2/,
       errorMessageName: "",
       sourceName: /test_page_errors/,
       category: "content javascript",
-      timeStamp: /^\d+$/,
+      timeStamp: NUMBER_REGEX,
       error: true,
       warning: false,
+      info: false,
+      sourceId: null,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 6,
+          columnNumber: 24,
+          functionName: "promiseThrow",
+        },
+        {
+          filename: /test_page_errors\.html/,
+          sourceId: null,
+          lineNumber: 8,
+          columnNumber: 7,
+          functionName: null,
+        },
+        ...defaultStackFrames,
+      ],
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: true,
+      isForwardedFromContentProcess: false,
       [noUncaughtException]: true,
     },
   ],

@@ -1726,10 +1726,13 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       stacktrace: stack,
       notes: notesArray,
       chromeContext: pageError.isFromChromeContext,
-      cssSelectors: pageError.cssSelectors,
       isPromiseRejection: pageError.isPromiseRejection,
       isForwardedFromContentProcess: pageError.isForwardedFromContentProcess,
     };
+
+    if (pageError.category === "CSS Parser") {
+      result.cssSelectors = pageError.cssSelectors;
+    }
 
     // If the pageError does have an exception object, we want to return the grip for it,
     // but only if we do manage to get the grip, as we're checking the property on the
