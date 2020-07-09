@@ -41,6 +41,15 @@ function groupFromResult(result) {
   }
 }
 
+// Breaks ties among heuristic results. Providers higher up the list are higher
+// priority.
+const heuristicOrder = [
+  // Test providers are handled in sort(),
+  // Extension providers are handled in sort(),
+  "UrlbarProviderSearchTips",
+  "UnifiedComplete",
+  "HeuristicFallback",
+];
 /**
  * Class used to create a muxer.
  * The muxer receives and sorts results in a UrlbarQueryContext.
@@ -54,11 +63,19 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     return "UnifiedComplete";
   }
 
+  /* eslint-disable complexity */
   /**
    * Sorts results in the given UrlbarQueryContext.
    *
+   * sort() is not suitable to be broken up into smaller functions or to rely
+   * on more convenience functions. It exists to efficiently group many
+   * conditions into just three loops. As a result, we must disable complexity
+   * linting.
+   *
    * @param {UrlbarQueryContext} context
    *   The query context.
+   * @returns {boolean} If results were successfully sorted. This return value
+   *   is a stopgap and can be removed when bug 1648468 lands.
    */
   sort(context) {
     // This method is called multiple times per keystroke, so it should be as
@@ -70,19 +87,42 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Capture information about the heuristic result to dedupe results from the
     // heuristic more quickly.
+    let topHeuristicRank = Infinity;
+    for (let result of context.allHeuristicResults) {
+      // Determine the highest-ranking heuristic result.
+      if (!result.heuristic) {
+        continue;
+      }
+
+      // + 2 to reserve the highest-priority slots for test and extension
+      // providers.
+      let heuristicRank = heuristicOrder.indexOf(result.providerName) + 2;
+      // Extension and test provider names vary widely and aren't suitable
+      // for a static safelist like heuristicOrder.
+      if (result.providerType == UrlbarUtils.PROVIDER_TYPE.EXTENSION) {
+        heuristicRank = 1;
+      } else if (result.providerName.startsWith("TestProvider")) {
+        heuristicRank = 0;
+      } else if (heuristicRank - 2 == -1) {
+        throw new Error(
+          `Heuristic result returned by unexpected provider: ${result.providerName}`
+        );
+      }
+      // Replace in case of ties, which would occur if a provider sent two
+      // heuristic results.
+      if (heuristicRank <= topHeuristicRank) {
+        topHeuristicRank = heuristicRank;
+        context.heuristicResult = result;
+      }
+    }
+
     let heuristicResultQuery;
-    let heuristicResultOmniboxContent;
     if (context.heuristicResult) {
       if (
         context.heuristicResult.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
         context.heuristicResult.payload.query
       ) {
         heuristicResultQuery = context.heuristicResult.payload.query.toLocaleLowerCase();
-      } else if (
-        context.heuristicResult.type == UrlbarUtils.RESULT_TYPE.OMNIBOX &&
-        context.heuristicResult.payload.content
-      ) {
-        heuristicResultOmniboxContent = context.heuristicResult.payload.content.toLocaleLowerCase();
       }
     }
 
@@ -95,10 +135,17 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
       context.maxResults
     );
+    let hasUnifiedComplete = false;
 
     // Do the first pass through the results.  We only collect info for the
     // second pass here.
     for (let result of context.results) {
+      // Keep track of whether UnifiedComplete has returned results. We will
+      // quit early if it hasn't.
+      if (result.providerName == "UnifiedComplete") {
+        hasUnifiedComplete = true;
+      }
+
       // The "Search in a Private Window" result should only be shown when there
       // are other results and all of them are searches.  It should not be shown
       // if the user typed an alias because that's an explicit engine choice.
@@ -139,9 +186,24 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
+    // Quit early if we're still waiting on UnifiedComplete. If it turns out
+    // UnifiedComplete doesn't need to return any results, it will call sort()
+    // regardless to unblock showing results.
+    if (
+      !hasUnifiedComplete &&
+      context.pendingHeuristicProviders.has("UnifiedComplete")
+    ) {
+      return false;
+    }
+
     // Do the second pass through results to build the list of unsorted results.
     let unsortedResults = [];
     for (let result of context.results) {
+      // Exclude low-ranked heuristic results.
+      if (result.heuristic && result != context.heuristicResult) {
+        continue;
+      }
+
       // Exclude "Search in a Private Window" as determined in the first pass.
       if (
         result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
@@ -214,15 +276,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         }
       }
 
-      // Exclude omnibox results that dupe the heuristic.
-      if (
-        !result.heuristic &&
-        result.type == UrlbarUtils.RESULT_TYPE.OMNIBOX &&
-        result.payload.content == heuristicResultOmniboxContent
-      ) {
-        continue;
-      }
-
       // Include this result.
       unsortedResults.push(result);
     }
@@ -272,6 +325,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     context.results = sortedResults;
+    return true;
   }
 
   /**
