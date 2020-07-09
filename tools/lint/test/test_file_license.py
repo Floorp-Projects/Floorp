@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function
 
 import mozunit
 
-LINTER = 'license'
+LINTER = "license"
 
 
 def test_lint_license(lint, paths):
@@ -21,5 +21,5 @@ def test_lint_license(lint, paths):
     assert "bad.js" in results[2].relpath
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

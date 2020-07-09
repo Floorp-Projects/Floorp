@@ -2,8 +2,10 @@ import pytest
 import mozunit
 from mozfile import which
 
-LINTER = 'yaml'
-pytestmark = pytest.mark.skipif(not which('yamllint'), reason="yamllint is not installed")
+LINTER = "yaml"
+pytestmark = pytest.mark.skipif(
+    not which("yamllint"), reason="yamllint is not installed"
+)
 
 
 def test_basic(lint, paths):
@@ -27,5 +29,5 @@ def test_basic(lint, paths):
     assert results[2].lineno == 9
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

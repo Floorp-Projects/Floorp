@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function
 
 import mozunit
 
-LINTER = 'file-whitespace'
+LINTER = "file-whitespace"
 
 
 def test_lint_file_whitespace(lint, paths):
@@ -25,5 +25,5 @@ def test_lint_file_whitespace(lint, paths):
     assert results[2].lineno == 2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

@@ -2,14 +2,14 @@ from __future__ import absolute_import, print_function
 
 import mozunit
 
-LINTER = 'codespell'
+LINTER = "codespell"
 
 
 def test_lint_codespell(lint, paths):
     results = lint(paths())
     assert len(results) == 2
 
-    assert results[0].message == 'informations ==> information'
+    assert results[0].message == "informations ==> information"
     assert results[0].level == "error"
     assert results[0].lineno == 1
     assert results[0].relpath == "ignore.rst"
@@ -20,5 +20,5 @@ def test_lint_codespell(lint, paths):
     assert results[1].relpath == "ignore.rst"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

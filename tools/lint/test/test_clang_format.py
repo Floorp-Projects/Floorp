@@ -2,7 +2,7 @@ import mozunit
 
 from conftest import build
 
-LINTER = 'clang-format'
+LINTER = "clang-format"
 
 
 def test_good(lint, config, paths):
@@ -21,7 +21,7 @@ def test_basic(lint, config, paths):
     assert results[0].lineno == 1
     assert results[0].column == 4
     assert "bad.cpp" in results[0].path
-    assert 'int  main ( ) {' in results[0].diff
+    assert "int  main ( ) {" in results[0].diff
 
 
 def test_dir(lint, config, paths):
@@ -34,7 +34,7 @@ def test_dir(lint, config, paths):
     assert results[0].lineno == 1
     assert results[0].column == 4
     assert "bad.cpp" in results[0].path
-    assert 'int  main ( ) {' in results[0].diff
+    assert "int  main ( ) {" in results[0].diff
 
     assert "Reformat C/C++" in results[5].message
     assert results[5].level == "warning"
@@ -44,5 +44,5 @@ def test_dir(lint, config, paths):
     assert "#include" in results[5].diff
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

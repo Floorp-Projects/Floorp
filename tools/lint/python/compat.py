@@ -20,17 +20,19 @@ results = []
 class PyCompatProcess(ProcessHandlerMixin):
     def __init__(self, config, *args, **kwargs):
         self.config = config
-        kwargs['processOutputLine'] = [self.process_line]
+        kwargs["processOutputLine"] = [self.process_line]
         ProcessHandlerMixin.__init__(self, *args, **kwargs)
 
     def process_line(self, line):
         try:
             res = json.loads(line)
         except ValueError:
-            print('Non JSON output from {} linter: {}'.format(self.config['name'], line))
+            print(
+                "Non JSON output from {} linter: {}".format(self.config["name"], line)
+            )
             return
 
-        res['level'] = 'error'
+        res["level"] = "error"
         results.append(result.from_config(self.config, **res))
 
 
@@ -41,27 +43,27 @@ def setup(python):
     binary = find_executable(python)
     if not binary:
         # TODO Bootstrap python2/python3 if not available
-        print('warning: {} not detected, skipping py-compat check'.format(python))
+        print("warning: {} not detected, skipping py-compat check".format(python))
 
 
 def run_linter(python, paths, config, **lintargs):
-    log = lintargs['log']
+    log = lintargs["log"]
     binary = find_executable(python)
     if not binary:
         # If we're in automation, this is fatal. Otherwise, the warning in the
         # setup method was already printed.
-        if 'MOZ_AUTOMATION' in os.environ:
+        if "MOZ_AUTOMATION" in os.environ:
             return 1
         return []
 
-    files = expand_exclusions(paths, config, lintargs['root'])
+    files = expand_exclusions(paths, config, lintargs["root"])
 
-    with mozfile.NamedTemporaryFile(mode='w') as fh:
-        fh.write('\n'.join(files))
+    with mozfile.NamedTemporaryFile(mode="w") as fh:
+        fh.write("\n".join(files))
         fh.flush()
 
-        cmd = [binary, os.path.join(here, 'check_compat.py'), fh.name]
-        log.debug("Command: {}".format(' '.join(cmd)))
+        cmd = [binary, os.path.join(here, "check_compat.py"), fh.name]
+        log.debug("Command: {}".format(" ".join(cmd)))
 
         proc = PyCompatProcess(config, cmd)
         proc.run()
@@ -74,16 +76,16 @@ def run_linter(python, paths, config, **lintargs):
 
 
 def setuppy2(**lintargs):
-    return setup('python2')
+    return setup("python2")
 
 
 def lintpy2(*args, **kwargs):
-    return run_linter('python2', *args, **kwargs)
+    return run_linter("python2", *args, **kwargs)
 
 
 def setuppy3(**lintargs):
-    return setup('python3')
+    return setup("python3")
 
 
 def lintpy3(*args, **kwargs):
-    return run_linter('python3', *args, **kwargs)
+    return run_linter("python3", *args, **kwargs)

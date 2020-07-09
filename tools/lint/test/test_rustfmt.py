@@ -1,7 +1,7 @@
 import mozunit
 
 
-LINTER = 'rustfmt'
+LINTER = "rustfmt"
 
 
 def test_good(lint, config, paths):
@@ -40,5 +40,5 @@ def test_dir(lint, config, paths):
     assert "Print text to the console" in results[1].diff
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

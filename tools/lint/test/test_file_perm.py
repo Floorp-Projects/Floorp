@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function
 
 import mozunit
 
-LINTER = 'file-perm'
+LINTER = "file-perm"
 
 
 def test_lint_file_perm(lint, paths):
@@ -19,5 +19,5 @@ def test_lint_file_perm(lint, paths):
     assert results[1].relpath == "bad.js"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()
