@@ -1,5 +1,5 @@
 function localStorageFlush(cb) {
-  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+  if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     SimpleTest.executeSoon(function() {
       cb();
     });
@@ -17,7 +17,7 @@ function localStorageFlush(cb) {
 }
 
 function localStorageReload(callback) {
-  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+  if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     localStorage.close();
     let qms = SpecialPowers.Services.qms;
     let principal = SpecialPowers.wrap(document).nodePrincipal;
@@ -36,7 +36,7 @@ function localStorageReload(callback) {
 }
 
 function localStorageFlushAndReload(callback) {
-  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+  if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     localStorage.close();
     let qms = SpecialPowers.Services.qms;
     let principal = SpecialPowers.wrap(document).nodePrincipal;
@@ -54,7 +54,7 @@ function localStorageFlushAndReload(callback) {
 }
 
 function localStorageClearAll(callback) {
-  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+  if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     let qms = SpecialPowers.Services.qms;
     let ssm = SpecialPowers.Services.scriptSecurityManager;
 
@@ -92,7 +92,7 @@ function localStorageClearAll(callback) {
 }
 
 function localStorageClearDomain(domain, callback) {
-  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+  if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     let qms = SpecialPowers.Services.qms;
     let principal = SpecialPowers.wrap(document).nodePrincipal;
     let request = qms.clearStoragesForPrincipal(principal, "default", "ls");

@@ -96,7 +96,7 @@ function doStep()
 SimpleTest.waitForExplicitFinish();
 
 function startTest() {
-  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+  if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     ok(true, "Test ignored when the next gen local storage is enabled.");
     SimpleTest.finish();
     return;
