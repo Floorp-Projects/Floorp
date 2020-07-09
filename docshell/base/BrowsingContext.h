@@ -107,7 +107,8 @@ class WindowProxyHolder;
   FIELD(FeaturePolicy, RefPtr<mozilla::dom::FeaturePolicy>)                  \
   /* See nsSandboxFlags.h for the possible flags. */                         \
   FIELD(SandboxFlags, uint32_t)                                              \
-  /* A unique identifier for the browser element that is hosting this        \
+  /* A non-zero unique identifier for the browser element that is hosting    \
+   * this                                                                    \
    * BrowsingContext tree. Every BrowsingContext in the element's tree will  \
    * return the same ID in all processes and it will remain stable           \
    * regardless of process changes. When a browser element's frameloader is  \
@@ -182,6 +183,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   static already_AddRefed<BrowsingContext> Get(GlobalObject&, uint64_t aId) {
     return Get(aId);
   }
+  // Look up the top-level BrowsingContext by BrowserID.
+  static already_AddRefed<BrowsingContext> GetCurrentTopByBrowserId(
+      uint64_t aBrowserId);
 
   static already_AddRefed<BrowsingContext> GetFromWindow(
       WindowProxyHolder& aProxy);
@@ -316,6 +320,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsInSubtreeOf(BrowsingContext* aContext);
 
   bool IsContentSubframe() const { return IsContent() && IsFrame(); }
+  // non-zero
   uint64_t Id() const { return mBrowsingContextId; }
 
   BrowsingContext* GetParent() const;
