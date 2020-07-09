@@ -18,6 +18,8 @@ transforms:
 # generate tasks for every docker image in the directory, secure in the
 # knowledge that unnecessary images will be omitted from the target task graph
 jobs:
+    image_builder:
+        symbol: I(ib)
     debian10-test:
         symbol: I(deb10-test)
     ubuntu1804-test:
