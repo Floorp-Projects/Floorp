@@ -130,9 +130,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   void NoteTerminating() { StartDying(); }
 
-  const UniquePtr<ClientSource>& GetClientSource() const {
-    return mClientSource;
-  }
+  ClientSource& MutableClientSourceRef() const { return *mClientSource; }
 
   // WorkerPrivate wants to be able to forbid script when its state machine
   // demands it.
