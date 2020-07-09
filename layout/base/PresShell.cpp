@@ -6075,7 +6075,7 @@ bool PresShell::AssumeAllFramesVisible() {
   if (!mHaveShutDown && !mIsDestroying &&
       !mPresContext->IsRootContentDocumentInProcess()) {
     nsPresContext* presContext =
-        mPresContext->GetToplevelContentDocumentPresContext();
+        mPresContext->GetInProcessRootContentDocumentPresContext();
     if (presContext && presContext->PresShell()->AssumeAllFramesVisible()) {
       return true;
     }
@@ -6109,11 +6109,11 @@ void PresShell::ScheduleApproximateFrameVisibilityUpdateNow() {
 
   if (!mPresContext->IsRootContentDocument()) {
     nsPresContext* presContext =
-        mPresContext->GetToplevelContentDocumentPresContext();
+        mPresContext->GetInProcessRootContentDocumentPresContext();
     if (!presContext) return;
     MOZ_ASSERT(presContext->IsRootContentDocument(),
                "Didn't get a root prescontext from "
-               "GetToplevelContentDocumentPresContext?");
+               "GetInProcessRootContentDocumentPresContext?");
     presContext->PresShell()->ScheduleApproximateFrameVisibilityUpdateNow();
     return;
   }

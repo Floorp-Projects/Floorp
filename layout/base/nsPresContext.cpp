@@ -863,7 +863,7 @@ nsPresContext* nsPresContext::GetParentPresContext() const {
   return nullptr;
 }
 
-nsPresContext* nsPresContext::GetToplevelContentDocumentPresContext() {
+nsPresContext* nsPresContext::GetInProcessRootContentDocumentPresContext() {
   if (IsChrome()) return nullptr;
   nsPresContext* pc = this;
   for (;;) {
@@ -1270,7 +1270,7 @@ void nsPresContext::RecordInteractionTime(InteractionType aType,
   // Record the interaction time if it occurs after the first paint
   // of the top level content document.
   nsPresContext* topContentPresContext =
-      GetToplevelContentDocumentPresContext();
+      GetInProcessRootContentDocumentPresContext();
 
   if (!topContentPresContext) {
     // There is no top content pres context so we don't care
