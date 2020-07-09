@@ -279,6 +279,56 @@ class SessionFeatureTest {
     }
 
     @Test
+    fun `release() stops observing and releases session from view`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "A"),
+                createTab("https://getpocket.com", id = "B"),
+                createTab("https://www.firefox.com", id = "C")
+            ),
+            selectedTabId = "B"
+        ))
+
+        val view: EngineView = mock()
+        val useCases: EngineSessionUseCases = mock()
+        val getOrCreateUseCase: EngineSessionUseCases.GetOrCreateUseCase = mock()
+        doReturn(getOrCreateUseCase).`when`(useCases).getOrCreateEngineSession
+
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(getOrCreateUseCase).invoke(ArgumentMatchers.anyString())
+
+        val feature = SessionFeature(store, mock(), useCases, view)
+
+        verify(getOrCreateUseCase, never()).invoke(anyString())
+        verify(view, never()).render(any())
+
+        feature.start()
+
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(getOrCreateUseCase).invoke("B")
+        verify(view).render(engineSession)
+
+        reset(view)
+        reset(getOrCreateUseCase)
+
+        val newEngineSession: EngineSession = mock()
+        doReturn(newEngineSession).`when`(getOrCreateUseCase).invoke(ArgumentMatchers.anyString())
+
+        feature.release()
+
+        verify(view).release()
+
+        store.dispatch(
+            TabListAction.SelectTabAction("A")
+        ).joinBlocking()
+
+        verify(getOrCreateUseCase, never()).invoke("A")
+        verify(view, never()).render(newEngineSession)
+    }
+
+    @Test
     fun `Releases when custom tab gets removed`() {
         val store = BrowserStore(BrowserState(
             tabs = listOf(
