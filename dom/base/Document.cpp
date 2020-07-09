@@ -15886,10 +15886,6 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
   // Step 2. If the document has a null origin, reject.
   if (NodePrincipal()->GetIsNullPrincipal()) {
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    nsLiteralCString("requestStorageAccess"),
-                                    this, nsContentUtils::eDOM_PROPERTIES,
-                                    "RequestStorageAccessNullPrincipal");
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -15939,9 +15935,6 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // Step 6. If the sub frame doesn't have the token
   //         "allow-storage-access-by-user-activation", reject.
   if (StorageAccessSandboxed()) {
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
-        this, nsContentUtils::eDOM_PROPERTIES, "RequestStorageAccessSandboxed");
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -15949,19 +15942,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // Step 7. If the sub frame's parent frame is not the top frame, reject.
   RefPtr<BrowsingContext> parentBC = bc->GetParent();
   if (parentBC && !parentBC->IsTopContent()) {
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
-        this, nsContentUtils::eDOM_PROPERTIES, "RequestStorageAccessNested");
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
 
   // Step 8. If the browser is not processing a user gesture, reject.
   if (!UserActivation::IsHandlingUserInput()) {
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    nsLiteralCString("requestStorageAccess"),
-                                    this, nsContentUtils::eDOM_PROPERTIES,
-                                    "RequestStorageAccessUserGesture");
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
