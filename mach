@@ -55,7 +55,6 @@ py2commands="
     wpt-test-paths
     wpt-unittest
     wpt-update
-    xpcshell-test
 "
 
 run_py() {
