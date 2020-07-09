@@ -29,6 +29,12 @@ permalink: /changelog/
 * **browser-session**
   * ⚠️ **This is a breaking change**: `Session.Source` was moved to browser-state and is now `SessionState.Source`. No change is required other than fixing imports.
 
+* **browser-engine-beta**
+  * Added `TrackingProtectionPolicy.toContentBlockingSetting` extension methods to convert a policy to GeckoView's `ContentBlocking.Setting`.
+
+* **browser-engine-nightly**
+  * Added `TrackingProtectionPolicy.toContentBlockingSetting` extension methods to convert a policy to GeckoView's `ContentBlocking.Setting`.
+  * Added checks to not apply the same policy twice if they are the same as already on the engine.
 
 # 50.0.0
 
