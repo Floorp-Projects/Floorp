@@ -187,7 +187,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  MOZ_ASSERT(!mFlags.mSpecialBSizeReflow || !NS_SUBTREE_DIRTY(aFrame),
+  MOZ_ASSERT(!mFlags.mSpecialBSizeReflow || !aFrame->IsSubtreeDirty(),
              "frame should be clean when getting special bsize reflow");
 
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
@@ -659,7 +659,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // XXX Is this problematic for relatively positioned inlines acting
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
-    // NS_SUBTREE_DIRTY, I'd think.
+    // IsSubtreeDirty(), I'd think.
     SetBResize(mCBReflowInput->IsBResizeForWM(wm));
     mFlags.mIsBResizeForPercentages =
         mCBReflowInput->IsBResizeForPercentagesForWM(wm);
@@ -672,7 +672,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     } else {
       SetBResize(IsIResize());
     }
-    SetBResize(IsBResize() || NS_SUBTREE_DIRTY(mFrame));
+    SetBResize(IsBResize() || mFrame->IsSubtreeDirty());
   } else {
     // We have a non-'auto' block-size, i.e., a length.  Set the BResize
     // flag to whether the size is actually different.

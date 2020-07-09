@@ -218,7 +218,7 @@ bool nsSVGUtils::NeedsReflowSVG(nsIFrame* aFrame) {
 
   // The flags we test here may change, hence why we have this separate
   // function.
-  return NS_SUBTREE_DIRTY(aFrame);
+  return aFrame->IsSubtreeDirty();
 }
 
 Size nsSVGUtils::GetContextSize(const nsIFrame* aFrame) {

@@ -403,7 +403,7 @@ void nsComboboxControlFrame::ReflowDropdown(nsPresContext* aPresContext,
   // don't even need to cache mDropdownFrame's ascent or anything.  If we don't
   // need to reflow it, just bail out here.
   if (!aReflowInput.ShouldReflowAllKids() &&
-      !NS_SUBTREE_DIRTY(mDropdownFrame)) {
+      !mDropdownFrame->IsSubtreeDirty()) {
     return;
   }
 

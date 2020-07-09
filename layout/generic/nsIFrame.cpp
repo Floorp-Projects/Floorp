@@ -2160,7 +2160,7 @@ void nsIFrame::SetAdditionalComputedStyle(int32_t aIndex,
 }
 
 nscoord nsIFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
-  NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "frame must not be dirty");
+  NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
   // Baseline for inverted line content is the top (block-start) margin edge,
   // as the frame is in effect "flipped" for alignment purposes.
   if (aWritingMode.IsLineInverted()) {
@@ -10253,7 +10253,7 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
   nsReflowStatus status;
   WritingMode wm = aDesiredSize.GetWritingMode();
 
-  bool needsReflow = NS_SUBTREE_DIRTY(this);
+  bool needsReflow = IsSubtreeDirty();
 
   // if we don't need a reflow then
   // lets see if we are already that size. Yes? then don't even reflow. We are

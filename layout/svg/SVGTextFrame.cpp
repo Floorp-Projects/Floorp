@@ -346,7 +346,7 @@ static void TruncateTo(nsTArray<T>& aArrayToTruncate,
 static SVGTextFrame* FrameIfAnonymousChildReflowed(SVGTextFrame* aFrame) {
   MOZ_ASSERT(aFrame, "aFrame must not be null");
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     MOZ_ASSERT(false, "should have already reflowed the anonymous block child");
     return nullptr;
   }
@@ -2796,7 +2796,7 @@ void SVGTextFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                     const nsDisplayListSet& aLists) {
-  if (NS_SUBTREE_DIRTY(this)) {
+  if (IsSubtreeDirty()) {
     // We can sometimes be asked to paint before reflow happens and we
     // have updated mPositions, etc.  In this case, we just avoid
     // painting.
@@ -2882,7 +2882,7 @@ void SVGTextFrame::ScheduleReflowSVGNonDisplayText(IntrinsicDirty aReason) {
   nsIFrame* f = this;
   while (f) {
     if (!f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-      if (NS_SUBTREE_DIRTY(f)) {
+      if (f->IsSubtreeDirty()) {
         // This is a displayed frame, so if it is already dirty, we will be
         // reflowed soon anyway.  No need to call FrameNeedsReflow again, then.
         return;
@@ -3119,13 +3119,13 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
     // of date frames.  Just don't paint anything if they are
     // dirty.
     if (presContext->PresShell()->InDrawWindowNotFlushing() &&
-        NS_SUBTREE_DIRTY(this)) {
+        IsSubtreeDirty()) {
       return;
     }
     // Text frames inside <clipPath>, <mask>, etc. will never have had
     // ReflowSVG called on them, so call UpdateGlyphPositioning to do this now.
     UpdateGlyphPositioning();
-  } else if (NS_SUBTREE_DIRTY(this)) {
+  } else if (IsSubtreeDirty()) {
     // If we are asked to paint before reflow has recomputed mPositions etc.
     // directly via PaintSVG, rather than via a display list, then we need
     // to bail out here too.
@@ -3249,7 +3249,7 @@ nsIFrame* SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     // be hit tested.)
     UpdateGlyphPositioning();
   } else {
-    NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "reflow should have happened");
+    NS_ASSERTION(!IsSubtreeDirty(), "reflow should have happened");
   }
 
   // Hit-testing any clip-path will typically be a lot quicker than the
@@ -3411,7 +3411,7 @@ SVGBBox SVGTextFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   }
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (kid && NS_SUBTREE_DIRTY(kid)) {
+  if (kid && kid->IsSubtreeDirty()) {
     // Return an empty bbox if our kid's subtree is dirty. This may be called
     // in that situation, e.g. when we're building a display list after an
     // interrupted reflow. This can also be called during reflow before we've
@@ -3501,7 +3501,7 @@ int32_t SVGTextFrame::ConvertTextElementCharIndexToAddressableIndex(
  */
 uint32_t SVGTextFrame::GetNumberOfChars(nsIContent* aContent) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     return 0;
@@ -3526,7 +3526,7 @@ uint32_t SVGTextFrame::GetNumberOfChars(nsIContent* aContent) {
  */
 float SVGTextFrame::GetComputedTextLength(nsIContent* aContent) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     //
@@ -3558,7 +3558,7 @@ float SVGTextFrame::GetComputedTextLength(nsIContent* aContent) {
 void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
                                    uint32_t nchars, ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     // XXXbz Should this just return without throwing like the no-frame case?
@@ -3795,7 +3795,7 @@ float SVGTextFrame::GetSubStringLengthSlowFallback(nsIContent* aContent,
 int32_t SVGTextFrame::GetCharNumAtPosition(nsIContent* aContent,
                                            const DOMPointInit& aPoint) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     return -1;
@@ -3833,7 +3833,7 @@ int32_t SVGTextFrame::GetCharNumAtPosition(nsIContent* aContent,
 already_AddRefed<nsISVGPoint> SVGTextFrame::GetStartPositionOfChar(
     nsIContent* aContent, uint32_t aCharNum, ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     aRv.ThrowInvalidStateError("No layout information available for SVG text");
@@ -3917,7 +3917,7 @@ static gfxFloat GetGlyphAdvance(SVGTextFrame* aFrame, nsIContent* aContent,
 already_AddRefed<nsISVGPoint> SVGTextFrame::GetEndPositionOfChar(
     nsIContent* aContent, uint32_t aCharNum, ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     aRv.ThrowInvalidStateError("No layout information available for SVG text");
@@ -3961,7 +3961,7 @@ already_AddRefed<SVGRect> SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
                                                         uint32_t aCharNum,
                                                         ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     aRv.ThrowInvalidStateError("No layout information available for SVG text");
@@ -4029,7 +4029,7 @@ already_AddRefed<SVGRect> SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
 float SVGTextFrame::GetRotationOfChar(nsIContent* aContent, uint32_t aCharNum,
                                       ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (NS_SUBTREE_DIRTY(kid)) {
+  if (kid->IsSubtreeDirty()) {
     // We're never reflowed if we're under a non-SVG element that is
     // never reflowed (such as the HTML 'caption' element).
     aRv.ThrowInvalidStateError("No layout information available for SVG text");
@@ -4807,7 +4807,7 @@ void SVGTextFrame::DoGlyphPositioning() {
   RemoveStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (kid && NS_SUBTREE_DIRTY(kid)) {
+  if (kid && kid->IsSubtreeDirty()) {
     MOZ_ASSERT(false, "should have already reflowed the kid");
     return;
   }
@@ -5047,7 +5047,7 @@ void SVGTextFrame::MaybeReflowAnonymousBlockChild() {
   NS_ASSERTION(!kid->HasAnyStateBits(NS_FRAME_IN_REFLOW),
                "should not be in reflow when about to reflow again");
 
-  if (NS_SUBTREE_DIRTY(this)) {
+  if (IsSubtreeDirty()) {
     if (mState & NS_FRAME_IS_DIRTY) {
       // If we require a full reflow, ensure our kid is marked fully dirty.
       // (Note that our anonymous nsBlockFrame is not an nsSVGDisplayableFrame,

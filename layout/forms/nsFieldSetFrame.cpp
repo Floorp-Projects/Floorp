@@ -425,8 +425,8 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     reflowInner = inner != nullptr;
     reflowLegend = legend != nullptr;
   } else {
-    reflowInner = inner && NS_SUBTREE_DIRTY(inner);
-    reflowLegend = legend && NS_SUBTREE_DIRTY(legend);
+    reflowInner = inner && inner->IsSubtreeDirty();
+    reflowLegend = legend && legend->IsSubtreeDirty();
   }
 
   // @note |this| frame applies borders but not any padding.  Our anonymous

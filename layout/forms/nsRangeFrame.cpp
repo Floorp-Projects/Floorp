@@ -460,7 +460,7 @@ Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
 }
 
 void nsRangeFrame::UpdateForValueChange() {
-  if (NS_SUBTREE_DIRTY(this)) {
+  if (IsSubtreeDirty()) {
     return;  // we're going to be updated when we reflow
   }
   nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();

@@ -99,7 +99,7 @@ static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
     if (f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       while (f) {
         if (!f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-          if (NS_SUBTREE_DIRTY(f)) {
+          if (f->IsSubtreeDirty()) {
             // This is a displayed frame, so if it is already dirty, we
             // will be reflowed soon anyway.  No need to call
             // FrameNeedsReflow again, then.
