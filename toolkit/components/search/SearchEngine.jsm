@@ -1085,11 +1085,26 @@ class SearchEngine {
    *   An object representing the WebExtensions' manifest.
    * @param {string} locale
    *   The locale that is being used for the WebExtension.
+   * @param {object} [configuration]
+   *   The search engine configuration for application provided engines, that
+   *   may be overriding some of the WebExtension's settings.
    */
-  _updateFromManifest(extensionID, extensionBaseURI, manifest, locale) {
+  _updateFromManifest(
+    extensionID,
+    extensionBaseURI,
+    manifest,
+    locale,
+    configuration = {}
+  ) {
     this._urls = [];
     this._iconMapObj = null;
-    this._initFromManifest(extensionID, extensionBaseURI, manifest, locale);
+    this._initFromManifest(
+      extensionID,
+      extensionBaseURI,
+      manifest,
+      locale,
+      configuration
+    );
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 

@@ -23,6 +23,20 @@ const TEST_CONFIG = [
     },
     appliesTo: [{ included: { everywhere: true } }],
   },
+  {
+    webExtension: {
+      id: "plainengine@search.mozilla.org",
+    },
+    appliesTo: [{ included: { everywhere: true } }],
+    params: {
+      searchUrlGetParams: [
+        {
+          name: "config",
+          value: "applied",
+        },
+      ],
+    },
+  },
 ];
 
 async function getEngineNames() {
@@ -30,7 +44,65 @@ async function getEngineNames() {
   return engines.map(engine => engine._name);
 }
 
-function makeExtension(version) {
+function makePlainExtension(version) {
+  return {
+    useAddonManager: "permanent",
+    manifest: {
+      name: "Plain",
+      version,
+      applications: {
+        gecko: {
+          id: "plainengine@search.mozilla.org",
+        },
+      },
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "Plain",
+          search_url: "https://duckduckgo.com/",
+          params: [
+            {
+              name: "q",
+              value: "{searchTerms}",
+            },
+            {
+              name: "t",
+              condition: "purpose",
+              purpose: "contextmenu",
+              value: "ffcm",
+            },
+            {
+              name: "t",
+              condition: "purpose",
+              purpose: "keyword",
+              value: "ffab",
+            },
+            {
+              name: "t",
+              condition: "purpose",
+              purpose: "searchbar",
+              value: "ffsb",
+            },
+            {
+              name: "t",
+              condition: "purpose",
+              purpose: "homepage",
+              value: "ffhp",
+            },
+            {
+              name: "t",
+              condition: "purpose",
+              purpose: "newtab",
+              value: "ffnt",
+            },
+          ],
+          suggest_url: "https://ac.duckduckgo.com/ac/q={searchTerms}&type=list",
+        },
+      },
+    },
+  };
+}
+
+function makeMultiLocaleExtension(version) {
   return {
     useAddonManager: "permanent",
     manifest: {
@@ -88,15 +160,17 @@ add_task(async function basic_multilocale_test() {
   Assert.deepEqual(await getEngineNames(), [
     "Multilocale AF",
     "Multilocale AN",
+    "Plain",
   ]);
 
-  let ext = ExtensionTestUtils.loadExtension(makeExtension("2.0"));
+  let ext = ExtensionTestUtils.loadExtension(makeMultiLocaleExtension("2.0"));
   await ext.startup();
   await AddonTestUtils.waitForSearchProviderStartup(ext);
 
   Assert.deepEqual(await getEngineNames(), [
     "Multilocale AF",
     "Multilocale AN",
+    "Plain",
   ]);
 
   let engine = await Services.search.getEngineByName("Multilocale AF");
@@ -110,6 +184,44 @@ add_task(async function basic_multilocale_test() {
     engine.getSubmission("test").uri.spec,
     "https://example.an/?q=test&version=2.0",
     "Engine got update"
+  );
+
+  await ext.unload();
+});
+
+add_task(async function upgrade_with_configuration_change_test() {
+  Assert.deepEqual(await getEngineNames(), [
+    "Multilocale AF",
+    "Multilocale AN",
+    "Plain",
+  ]);
+
+  let engine = await Services.search.getEngineByName("Plain");
+  Assert.equal(
+    engine.getSubmission("test").uri.spec,
+    // This test engine specifies the q and t params in its search_url, therefore
+    // we get both those and the extra parameter specified in the test config.
+    "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
+    "Should have the configuration applied before update."
+  );
+
+  let ext = ExtensionTestUtils.loadExtension(makePlainExtension("2.0"));
+  await ext.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext);
+
+  Assert.deepEqual(await getEngineNames(), [
+    "Multilocale AF",
+    "Multilocale AN",
+    "Plain",
+  ]);
+
+  engine = await Services.search.getEngineByName("Plain");
+  Assert.equal(
+    engine.getSubmission("test").uri.spec,
+    // This test engine specifies the q and t params in its search_url, therefore
+    // we get both those and the extra parameter specified in the test config.
+    "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
+    "Should still have the configuration applied after update."
   );
 
   await ext.unload();
