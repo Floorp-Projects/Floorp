@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function nsSidebar() {}
 
 nsSidebar.prototype = {
@@ -12,33 +10,10 @@ nsSidebar.prototype = {
     this.window = window;
   },
 
-  // This function implements window.external.AddSearchProvider().
-  // The capitalization, although nonstandard here, is to match other browsers'
-  // APIs and is therefore important.
-  AddSearchProvider(engineURL) {
-    if (!Services.prefs.getBoolPref("dom.sidebar.enabled", false)) {
-      return;
-    }
-
-    let sidebarActor;
-    try {
-      sidebarActor = this.window.windowGlobalChild.getActor("SidebarSearch");
-    } catch (ex) {}
-
-    if (!sidebarActor) {
-      Cu.reportError(
-        `Installing a search provider from this context is not currently supported: ${
-          Error().stack
-        }.`
-      );
-      return;
-    }
-
-    sidebarActor.sendAsyncMessage("Search:AddEngine", {
-      pageURL: this.window.document.documentURIObject.spec,
-      engineURL,
-    });
-  },
+  // This function implements window.external.AddSearchProvider(),
+  // for compatibility with older browsers.  The function has been deprecated
+  // and so will not be implemented.
+  AddSearchProvider(engineURL) {},
 
   // This function exists to implement window.external.IsSearchProviderInstalled(),
   // for compatibility with other browsers.  The function has been deprecated
