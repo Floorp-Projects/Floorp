@@ -72,6 +72,10 @@ void AudioStreamTrack::SetReadyState(MediaStreamTrackState aState) {
 
 RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
     void* key, AudioDeviceInfo* aSink) {
+  MOZ_ASSERT(aSink);
+  if (Ended()) {
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }
   CrossGraphManager* manager = CrossGraphManager::Connect(this, aSink, mWindow);
   if (!manager) {
     auto entry = mCrossGraphs.Lookup(key);
