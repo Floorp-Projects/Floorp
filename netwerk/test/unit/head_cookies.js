@@ -18,7 +18,7 @@ CookieXPCShellUtils.init(this);
 
 XPCOMUtils.defineLazyServiceGetter(
   Services,
-  "cookies",
+  "cookiesvc",
   "@mozilla.org/cookieService;1",
   "nsICookieService"
 );
@@ -162,7 +162,7 @@ function do_load_profile(generator) {
 // Set a single session cookie using http and test the cookie count
 // against 'expected'
 function do_set_single_http_cookie(uri, channel, expected) {
-  Services.cookies.setCookieStringFromHttp(uri, "foo=bar", channel);
+  Services.cookiesvc.setCookieStringFromHttp(uri, "foo=bar", channel);
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected);
 }
 
@@ -198,7 +198,7 @@ async function do_set_cookies(uri, channel, session, expected) {
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[0]);
 
   // via http request
-  Services.cookies.setCookieStringFromHttp(uri, "hot=dog" + suffix, channel);
+  Services.cookiesvc.setCookieStringFromHttp(uri, "hot=dog" + suffix, channel);
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[1]);
 }
 
