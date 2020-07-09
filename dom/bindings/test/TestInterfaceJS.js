@@ -133,7 +133,7 @@ TestInterfaceJS.prototype = {
   testThrowNsresultFromNative(x) {
     // We want to throw an exception that we generate from an nsresult thrown
     // by a C++ component.
-    Services.netUtils.notImplemented();
+    Services.io.notImplemented();
   },
 
   testThrowCallbackError(callback) {
