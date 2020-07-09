@@ -360,22 +360,12 @@ function dragElementBy(selector, x, y, ui) {
   };
   const endPoint = [startPoint.clientX + x, startPoint.clientY + y];
 
-  const elem = browserWindow.document.querySelector(selector);
-
-  if (!Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
-    const { Simulate } = ui.toolWindow.require(
-      "devtools/client/shared/vendor/react-dom-test-utils"
-    );
-    // mousedown is a React listener, need to use its testing tools to avoid races
-    Simulate.mouseDown(elem, startPoint);
-  } else {
-    EventUtils.synthesizeMouseAtPoint(
-      startPoint.clientX,
-      startPoint.clientY,
-      { type: "mousedown" },
-      browserWindow
-    );
-  }
+  EventUtils.synthesizeMouseAtPoint(
+    startPoint.clientX,
+    startPoint.clientY,
+    { type: "mousedown" },
+    browserWindow
+  );
 
   // mousemove and mouseup are regular DOM listeners
   EventUtils.synthesizeMouseAtPoint(
@@ -392,21 +382,8 @@ function dragElementBy(selector, x, y, ui) {
   return rect;
 }
 
-async function testViewportResize(
-  ui,
-  selector,
-  moveBy,
-  expectedViewportSize,
-  expectedHandleMove
-) {
-  let resized;
-
-  if (!Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
-    resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
-  } else {
-    resized = ui.once("viewport-resize-dragend");
-  }
-
+async function testViewportResize(ui, selector, moveBy, expectedHandleMove) {
+  const resized = ui.once("viewport-resize-dragend");
   const startRect = dragElementBy(selector, ...moveBy, ui);
   await resized;
 
