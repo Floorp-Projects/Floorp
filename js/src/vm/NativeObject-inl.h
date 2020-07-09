@@ -121,10 +121,6 @@ inline void NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
   }
 }
 
-inline bool NativeObject::writeToIndexWouldMarkNotPacked(uint32_t index) {
-  return getElementsHeader()->initializedLength < index;
-}
-
 inline void NativeObject::markDenseElementsNotPacked(JSContext* cx) {
   MOZ_ASSERT(isNative());
   if (IsTypeInferenceEnabled()) {
@@ -328,16 +324,16 @@ inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
   MOZ_ASSERT(index + extra <= getDenseCapacity());
 
-  if (writeToIndexWouldMarkNotPacked(index)) {
-    markDenseElementsNotPacked(cx);
-  }
-
   uint32_t initlen = getDenseInitializedLength();
   if (index + extra <= initlen) {
     return;
   }
 
   MOZ_ASSERT(isExtensible());
+
+  if (index > initlen) {
+    markDenseElementsNotPacked(cx);
+  }
 
   uint32_t numShifted = getElementsHeader()->numShiftedElements();
   size_t offset = initlen;

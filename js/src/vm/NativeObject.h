@@ -1272,8 +1272,7 @@ class NativeObject : public JSObject {
   inline void addDenseElementType(JSContext* cx, uint32_t index,
                                   const Value& val);
 
-  // Packed information for this object's elements.
-  inline bool writeToIndexWouldMarkNotPacked(uint32_t index);
+  // Mark the dense elements as possibly containing holes.
   inline void markDenseElementsNotPacked(JSContext* cx);
 
  public:
