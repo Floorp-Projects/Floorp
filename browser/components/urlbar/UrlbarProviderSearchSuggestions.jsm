@@ -199,10 +199,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     // Disallow remote suggestions for strings containing tokens that look like
     // URIs, to avoid disclosing information about networks or passwords.
-    if (
-      queryContext.fixupInfo.fixedURI &&
-      !queryContext.fixupInfo.keywordAsSent
-    ) {
+    if (queryContext.fixupInfo?.href && !queryContext.fixupInfo?.isSearch) {
       return false;
     }
 
