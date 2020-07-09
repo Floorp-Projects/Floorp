@@ -2116,8 +2116,7 @@ class JSScript : public js::BaseScript {
   // allocations within the stencil.
   static JSScript* fromStencil(JSContext* cx,
                                js::frontend::CompilationInfo& compilationInfo,
-                               js::frontend::ScriptStencil& stencil,
-                               js::SourceExtent extent);
+                               js::frontend::ScriptStencil& stencil);
 
 #ifdef DEBUG
  private:
