@@ -3804,7 +3804,7 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
   // TODO(emilio, bug 1525561): In a fission world, we should have a better way
   // to find the event coordinates relative to the content area.
   nsPresContext* topLevel =
-      aPresContext->GetToplevelContentDocumentPresContext();
+      aPresContext->GetInProcessRootContentDocumentPresContext();
   if (!topLevel) {
     return false;
   }

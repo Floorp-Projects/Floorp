@@ -446,7 +446,7 @@ PresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
   if (!context) {
     return nullptr;
   }
-  context = context->GetToplevelContentDocumentPresContext();
+  context = context->GetInProcessRootContentDocumentPresContext();
   if (!context) {
     return nullptr;
   }
