@@ -495,25 +495,21 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
   }
   nsCString url = scriptURI->GetSpecOrDefault();
 
+  const auto& perf = mWorkerPrivate->PerformanceCounterRef();
+  uint64_t perfId = perf.GetID();
+  uint16_t count = perf.GetTotalDispatchCount();
+  uint64_t duration = perf.GetExecutionDuration();
+
   // Workers only produce metrics for a single category -
   // DispatchCategory::Worker. We still return an array of CategoryDispatch so
   // the PerformanceInfo struct is common to all performance counters throughout
   // Firefox.
   FallibleTArray<CategoryDispatch> items;
-  uint64_t duration = 0;
-  uint16_t count = 0;
-  uint64_t perfId = 0;
 
-  RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
-  if (perf) {
-    perfId = perf->GetID();
-    count = perf->GetTotalDispatchCount();
-    duration = perf->GetExecutionDuration();
-    CategoryDispatch item =
-        CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
-    if (!items.AppendElement(item, fallible)) {
-      NS_ERROR("Could not complete the operation");
-    }
+  CategoryDispatch item =
+      CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
+  if (!items.AppendElement(item, fallible)) {
+    NS_ERROR("Could not complete the operation");
   }
 
   if (!isTopLevel) {
