@@ -368,12 +368,39 @@ class ScriptStencil {
   // See `JSFunction::nargs_`.
   uint16_t nargs = 0;
 
+  // If this ScriptStencil refers to a lazy child of the function being
+  // compiled, this field holds the child's immediately enclosing scope's index.
+  // Once compilation succeeds, we will store the scope pointed by this in the
+  // child's BaseScript.  (Debugger may become confused if lazy scripts refer to
+  // partially initialized enclosing scopes, so we must avoid storing the
+  // scope in the BaseScript until compilation has completed
+  // successfully.)
+  mozilla::Maybe<ScopeIndex> lazyFunctionEnclosingScopeIndex_;
+
   // True if this is successfully validated "use asm" function.
   bool isAsmJSModule : 1;
 
+  // This function is a standalone function that is not syntactically part of
+  // another script. Eg. Created by `new Function("")`.
+  bool isStandaloneFunction : 1;
+
+  // This is set by the BytecodeEmitter of the enclosing script when a reference
+  // to this function is generated. This is also used to determine a hoisted
+  // function already is referenced by the bytecode.
+  bool wasFunctionEmitted : 1;
+
+  // This function should be marked as a singleton. It is expected to be defined
+  // at most once. This is a heuristic only and does not affect correctness.
+  bool isSingletonFunction : 1;
+
   // End of fields.
 
-  explicit ScriptStencil(JSContext* cx) : gcThings(cx), isAsmJSModule(false) {}
+  explicit ScriptStencil(JSContext* cx)
+      : gcThings(cx),
+        isAsmJSModule(false),
+        isStandaloneFunction(false),
+        wasFunctionEmitted(false),
+        isSingletonFunction(false) {}
 
   // This traces any JSAtoms in the gcThings array. This will be removed once
   // atoms are deferred from parsing.
