@@ -29,6 +29,7 @@ namespace js {
 namespace frontend {
 
 class ParseContext;
+class ScriptStencil;
 struct ScopeContext;
 
 enum class StatementKind : uint8_t {
@@ -154,6 +155,15 @@ class SharedContext {
   // True if "use strict"; appears in the body instead of being inherited.
   bool hasExplicitUseStrict_ : 1;
 
+  // Tracks if script-related fields are already copied to ScriptStencil.
+  //
+  // If this field is true, those fileds shouldn't be modified.
+  //
+  // For FunctionBox, some fields are allowed to be modified, but the
+  // modification should be synced with ScriptStencil by
+  // FunctionBox::copyUpdated* methods.
+  bool isScriptFieldCopiedToStencil : 1;
+
   // End of fields.
 
   enum class Kind : uint8_t { FunctionBox, Global, Eval, Module };
@@ -242,6 +252,8 @@ class SharedContext {
     localStrict = strict;
     return retVal;
   }
+
+  void copyScriptFields(ScriptStencil& stencil) const;
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -327,19 +339,30 @@ class FunctionBox : public SharedContext {
 
   // Index into CompilationInfo::funcData, which contains the function
   // information, either a JSFunction* (for a FunctionBox representing a real
-  // function) or a ScriptStencilBase.
+  // function) or a ScriptStencil.
   size_t funcDataIndex_ = (size_t)(-1);
+
+  // See: FunctionFlags
+  // This is copied to ScriptStencil.
+  // Any update after the copy should be synced to the ScriptStencil.
+  FunctionFlags flags_ = {};
+
+  // See: ImmutableScriptData::funLength
+  uint16_t length_ = 0;
+
+  // JSFunction::nargs_
+  // This field is copied to ScriptStencil, and shouldn't be modified after the
+  // copy.
+  uint16_t nargs_ = 0;
+
+  // See: PrivateScriptData::fieldInitializers_
+  // This field is copied to ScriptStencil, and shouldn't be modified after the
+  // copy.
+  mozilla::Maybe<FieldInitializers> fieldInitializers_ = {};
 
  public:
   // Back pointer used by asm.js for error messages.
   FunctionNode* functionNode = nullptr;
-
-  // See: PrivateScriptData::fieldInitializers_
-  mozilla::Maybe<FieldInitializers> fieldInitializers = {};
-
-  FunctionFlags flags_ = {};  // See: FunctionFlags
-  uint16_t length = 0;        // See: ImmutableScriptData::funLength
-  uint16_t nargs_ = 0;        // JSFunction::nargs_
 
   TopLevelFunction isTopLevel_ = TopLevelFunction::No;
 
@@ -363,8 +386,12 @@ class FunctionBox : public SharedContext {
   // Need to emit a synthesized Annex B assignment
   bool isAnnexB : 1;
 
-  // Track if we saw "use asm" and if we successfully validated.
+  // Track if we saw "use asm".
   bool useAsm : 1;
+
+  // Track if we saw "use asm" and if we successfully validated.
+  // This field is copied to ScriptStencil, and shouldn't be modified after the
+  // copy.
   bool isAsmJSModule_ : 1;
 
   // Analysis of parameter list
@@ -380,6 +407,11 @@ class FunctionBox : public SharedContext {
   bool usesThis : 1;    // Contains 'this'
   bool usesReturn : 1;  // Contains a 'return' statement
 
+  // Tracks if function-related fields are already copied to ScriptStencil.
+  // If this field is true, modification to those fields should be synced with
+  // ScriptStencil by copyUpdated* methods.
+  bool isFunctionFieldCopiedToStencil : 1;
+
   // End of fields.
 
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, SourceExtent extent,
@@ -387,8 +419,6 @@ class FunctionBox : public SharedContext {
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               JSAtom* explicitName, FunctionFlags flags, size_t index,
               TopLevelFunction isTopLevel);
-
-  JSFunction* createFunction(JSContext* cx);
 
   MutableHandle<ScriptStencil> functionStencil() const;
 
@@ -431,13 +461,8 @@ class FunctionBox : public SharedContext {
 
   JSFunction* function() const;
 
-  // Initialize FunctionBox with a deferred allocation Function
-  void initializeFunction(JSFunction* fun) { clobberFunction(fun); }
-
   MOZ_MUST_USE bool setAsmJSModule(const JS::WasmModule* module);
   bool isAsmJSModule() { return isAsmJSModule_; }
-
-  void clobberFunction(JSFunction* function);
 
   Scope* compilationEnclosingScope() const override {
     // This is used when emitting code for the current FunctionBox and therefore
@@ -516,9 +541,6 @@ class FunctionBox : public SharedContext {
   bool isClassConstructor() const { return flags_.isClassConstructor(); }
 
   bool isInterpreted() const { return flags_.hasBaseScript(); }
-  void setIsInterpreted(bool interpreted) {
-    flags_.setFlags(FunctionFlags::BASESCRIPT, interpreted);
-  }
 
   FunctionFlags::FunctionKind kind() { return flags_.kind(); }
 
@@ -536,10 +558,16 @@ class FunctionBox : public SharedContext {
   void setInferredName(JSAtom* atom) {
     atom_ = atom;
     flags_.setInferredName();
+    if (isFunctionFieldCopiedToStencil) {
+      copyUpdatedFlags();
+    }
   }
   void setGuessedAtom(JSAtom* atom) {
     atom_ = atom;
     flags_.setGuessedAtom();
+    if (isFunctionFieldCopiedToStencil) {
+      copyUpdatedFlags();
+    }
   }
 
   void setAlwaysNeedsArgsObj() {
@@ -609,9 +637,27 @@ class FunctionBox : public SharedContext {
     extent.toStringEnd = end;
   }
 
-  void setArgCount(uint16_t args) { nargs_ = args; }
+  uint16_t length() { return length_; }
+  void setLength(uint16_t length) { length_ = length; }
+
+  void setArgCount(uint16_t args) {
+    MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
+    nargs_ = args;
+  }
 
   size_t nargs() { return nargs_; }
+
+  bool hasFieldInitializers() const { return fieldInitializers_.isSome(); }
+  const FieldInitializers& fieldInitializers() const {
+    return *fieldInitializers_;
+  }
+  void setFieldInitializers(FieldInitializers fieldInitializers) {
+    MOZ_ASSERT(fieldInitializers_.isNothing());
+    fieldInitializers_ = mozilla::Some(fieldInitializers);
+    if (isScriptFieldCopiedToStencil) {
+      copyUpdatedFieldInitializers();
+    }
+  }
 
   size_t index() { return funcDataIndex_; }
 
@@ -620,6 +666,20 @@ class FunctionBox : public SharedContext {
   static void TraceList(JSTracer* trc, FunctionBox* listHead);
 
   FunctionBox* traceLink() { return traceLink_; }
+
+  void finishScriptFlags();
+  void copyScriptFields(ScriptStencil& stencil);
+  void copyFunctionFields(ScriptStencil& stencil);
+
+  // * setFieldInitializers can be called to a class constructor with a lazy
+  //   function, while emitting enclosing script
+  void copyUpdatedFieldInitializers();
+
+  // * setInferredName can be called to a lazy function, while emitting
+  //   enclosing script
+  // * setGuessedAtom can be called to both lazy/non-lazy functions,
+  //   while running NameFunctions
+  void copyUpdatedFlags();
 };
 
 #undef FLAG_GETTER_SETTER

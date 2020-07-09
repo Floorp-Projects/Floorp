@@ -2456,7 +2456,7 @@ js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
   }
 
   bool isFunction = sc->isFunctionBox();
-  uint16_t funLength = isFunction ? sc->asFunctionBox()->length : 0;
+  uint16_t funLength = isFunction ? sc->asFunctionBox()->length() : 0;
 
   return ImmutableScriptData::new_(
       cx, mainOffset(), maxFixedSlots, nslots, bodyScopeIndex,
@@ -5681,14 +5681,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // NOTE: For a lazy function, this will be applied to any existing function
     //       in FunctionBox::finish().
     if (classContentsIfConstructor) {
-      MOZ_ASSERT(funbox->fieldInitializers.isNothing(),
-                 "FieldInitializers should only be set once");
-      funbox->fieldInitializers = setupFieldInitializers(
-          classContentsIfConstructor, FieldPlacement::Instance);
-      if (!funbox->fieldInitializers) {
+      mozilla::Maybe<FieldInitializers> fieldInitializers =
+          setupFieldInitializers(classContentsIfConstructor,
+                                 FieldPlacement::Instance);
+      if (!fieldInitializers) {
         ReportAllocationOverflow(cx);
-        return false;
       }
+      funbox->setFieldInitializers(*fieldInitializers);
     }
 
     // A function is a run-once lambda if the following all hold:
@@ -9110,8 +9109,8 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
       // expect fields in the first place.
       MOZ_RELEASE_ASSERT(funbox->isClassConstructor());
 
-      MOZ_ASSERT(funbox->fieldInitializers->valid);
-      return *funbox->fieldInitializers;
+      MOZ_ASSERT(funbox->fieldInitializers().valid);
+      return funbox->fieldInitializers();
     }
   }
 
@@ -10903,15 +10902,11 @@ bool BytecodeEmitter::newSrcNoteOperand(ptrdiff_t operand) {
 }
 
 bool BytecodeEmitter::intoScriptStencil(ScriptStencil* stencil) {
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
       createImmutableScriptData(cx);
   if (!immutableScriptData) {
     return false;
   }
-
-  stencil->immutableFlags = sc->immutableFlags();
 
   MOZ_ASSERT(outermostScope().hasOnChain(ScopeKind::NonSyntactic) ==
              sc->hasNonSyntacticScope());
@@ -10925,15 +10920,10 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* stencil) {
   if (sc->isFunctionBox()) {
     FunctionBox* funbox = sc->asFunctionBox();
     MOZ_ASSERT(stencil->functionIndex.isSome());
-    stencil->fieldInitializers = funbox->fieldInitializers;
-
-    // Set flags that don't have direct flag representation within the
-    // FunctionBox.
-    stencil->immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
-                                    funbox->hasMappedArgsObj());
-    stencil->immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                                    funbox->isLikelyConstructorWrapper());
-  } /* isFunctionBox */
+    funbox->copyScriptFields(*stencil);
+  } else {
+    sc->copyScriptFields(*stencil);
+  }
 
   return true;
 }
