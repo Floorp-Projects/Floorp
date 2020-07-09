@@ -185,7 +185,11 @@ ImageObjectProcessor.prototype.process = function(
     };
     let value = extractor.extractValue(spec);
     if (value) {
-      value = Services.io.parseRequestContentType(value, charset, hadCharset);
+      value = Services.netUtils.parseRequestContentType(
+        value,
+        charset,
+        hadCharset
+      );
     }
     return value || undefined;
   }

@@ -6,7 +6,6 @@
 
 #include "StaticComponents.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/PerfectHash.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPtr.h"
@@ -21,8 +20,6 @@
 #include "nsIXPConnect.h"
 #include "nsString.h"
 #include "nsStringEnumerator.h"
-#include "nsTArray.h"
-#include "xptinfo.h"
 
 // Cleanup pollution from zipstruct.h
 #undef UNSUPPORTED
@@ -72,10 +69,6 @@ const StaticCategory gStaticCategories[kStaticCategoryCount] = {
 };
 const StaticCategoryEntry gStaticCategoryEntries[] = {
 //# @category_entries@
-};
-
-const nsXPTInterface gInterfaces[] = {
-//# @interfaces@
 };
 
 const StringOffset gComponentJSMs[] = {
@@ -137,8 +130,6 @@ static nsresult ConstructJSMComponent(const nsACString& aURI,
 //# @module_cid_table@
 
 //# @module_contract_id_table@
-
-//# @js_services_table@
 
 static inline bool CalledInit(size_t aIdx) {
   return GetBit(gInitCalled, aIdx);
@@ -234,14 +225,6 @@ nsresult StaticModule::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
   return CreateInstanceImpl(ID(), aOuter, aIID, aResult);
 }
 
-GetServiceHelper StaticModule::GetService() const {
-  return { ID(), nullptr };
-}
-
-GetServiceHelper StaticModule::GetService(nsresult* aRv) const {
-  return { ID(), aRv };
-}
-
 
 nsISupports* StaticModule::ServiceInstance() const {
   return gServiceInstances[Idx()];
@@ -267,26 +250,6 @@ nsCString StaticCategory::Name() const {
   return GetString(mName);
 }
 
-nsCString JSServiceEntry::Name() const {
-  return GetString(mName);
-}
-
-JSServiceEntry::InterfaceList JSServiceEntry::Interfaces() const {
-  InterfaceList iids;
-  iids.SetCapacity(mInterfaceCount);
-
-  for (size_t i = 0; i < mInterfaceCount; i++) {
-    nsXPTInterface ifaceID = gInterfaces[mInterfaceOffset.mOffset + i];
-    iids.AppendElement(&nsXPTInterfaceInfo::Get(ifaceID)->IID());
-  }
-  return iids;
-}
-
-
-/* static */
-const JSServiceEntry* JSServiceEntry::Lookup(const nsACString& aName) {
-  return LookupJSService(aName);
-}
 
 /* static */ const StaticModule* StaticComponents::LookupByCID(
     const nsID& aCID) {
@@ -324,10 +287,6 @@ StaticComponents::GetComponentJSMs() {
   MOZ_ALWAYS_SUCCEEDS(NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(result),
                                                          jsms.release()));
   return result.forget();
-}
-
-/* static */ Span<const JSServiceEntry> StaticComponents::GetJSServices() {
-  return { gJSServices, ArrayLength(gJSServices) };
 }
 
 /* static */ void StaticComponents::Shutdown() {

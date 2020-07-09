@@ -10,7 +10,7 @@
 // protocol.  It also implements the persist() method.  JS consumers should use
 // this module rather than accessing nsIXULStore directly.
 
-const EXPORTED_SYMBOLS = ["XULStore", "getXULStore"];
+const EXPORTED_SYMBOLS = ["XULStore"];
 
 // Services.xulStore loads this module and returns its `XULStore` symbol
 // when this implementation of XULStore is enabled, so using it here
@@ -98,10 +98,4 @@ class XULStoreEnumerator {
       yield this.enumerator.getNext();
     }
   }
-}
-
-// Only here for the sake of component registration, which requires a
-// callable function.
-function getXULStore() {
-  return XULStore;
 }

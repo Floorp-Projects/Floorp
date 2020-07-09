@@ -37,7 +37,7 @@ add_task(async function() {
   do_get_profile(true);
   await TelemetryController.testSetup();
 
-  Services.io.socketProcessTelemetryPing();
+  Services.netUtils.socketProcessTelemetryPing();
 
   // Once scalars are set by the socket process, they don't immediately get
   // sent to the parent process. Wait for the Telemetry IPC Timer to trigger

@@ -5,7 +5,18 @@
 const { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
 );
-Services.cookies.QueryInterface(Ci.nsICookieService);
+XPCOMUtils.defineLazyServiceGetter(
+  Services,
+  "cookies",
+  "@mozilla.org/cookieService;1",
+  "nsICookieService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  Services,
+  "cookiemgr",
+  "@mozilla.org/cookiemanager;1",
+  "nsICookieManager"
+);
 
 function restore_prefs() {
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
@@ -70,12 +81,12 @@ async function test_cookie_settings({
     expectedThirdPartyCookies = 0;
   }
   is(
-    Services.cookies.countCookiesFromHost(firstPartyURI.host),
+    Services.cookiemgr.countCookiesFromHost(firstPartyURI.host),
     expectedFirstPartyCookies,
     "Number of first-party cookies should match expected"
   );
   is(
-    Services.cookies.countCookiesFromHost(thirdPartyURI.host),
+    Services.cookiemgr.countCookiesFromHost(thirdPartyURI.host),
     expectedThirdPartyCookies,
     "Number of third-party cookies should match expected"
   );
