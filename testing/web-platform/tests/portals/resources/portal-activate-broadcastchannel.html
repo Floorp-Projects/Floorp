@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<script>
+onportalactivate = () => {
+  let bc = new BroadcastChannel(new URL(location).searchParams.get('bc'));
+  bc.postMessage('portalactivate');
+  bc.close();
+};
+</script>
