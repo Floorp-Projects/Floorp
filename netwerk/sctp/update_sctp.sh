@@ -28,8 +28,6 @@ if [ "$1" ] ; then
 
   echo "sctp updated to version $revision from git on $date" >> netwerk/sctp/sctp_update.log
   echo "sctp updated to version $revision from git on $date"
-  echo "reapplying local patches:"
-  patch -p1 < netwerk/sctp/android.patch
 else
   echo "usage: $0 path_to_sctp_directory"
   echo "run from the root of your m-c clone"
