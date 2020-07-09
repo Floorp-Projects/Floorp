@@ -37,6 +37,8 @@ maybe-shebang-file-perm:
     allow-shebang: true
     extensions:
         - .js
+        - .py
+        - .sh
     support-files:
         - 'tools/lint/file-perm/**'
     type: external
