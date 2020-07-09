@@ -38,7 +38,8 @@ const PerformanceController = {
    * Listen for events emitted by the current tab target and
    * main UI events.
    */
-  async initialize(targetFront, performanceFront) {
+  async initialize(toolbox, targetFront, performanceFront) {
+    this.toolbox = toolbox;
     this.target = targetFront;
     this.front = performanceFront;
 

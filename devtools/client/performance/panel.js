@@ -123,7 +123,11 @@ PerformancePanel.prototype = {
       const performanceFront = await targetFront.getFront("performance");
 
       if (!this._isPanelInitialized) {
-        await PerformanceController.initialize(targetFront, performanceFront);
+        await PerformanceController.initialize(
+          this.toolbox,
+          targetFront,
+          performanceFront
+        );
         await PerformanceView.initialize();
         PerformanceController.enableFrontEventListeners();
         this._isPanelInitialized = true;
