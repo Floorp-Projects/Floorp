@@ -473,7 +473,6 @@ class Bootstrapper(object):
             # We need to enable the loading of hgrc in case extensions are
             # required to open the repo.
             r = current_firefox_checkout(
-                check_output=self.instance.check_output,
                 env=self.instance._hg_cleanenv(load_hgrc=True),
                 hg=self.instance.which('hg'))
             (checkout_type, checkout_root) = r
@@ -502,8 +501,7 @@ class Bootstrapper(object):
 
         # We need to enable the loading of hgrc in case extensions are
         # required to open the repo.
-        r = current_firefox_checkout(check_output=self.instance.check_output,
-                                     env=self.instance._hg_cleanenv(load_hgrc=True),
+        r = current_firefox_checkout(env=self.instance._hg_cleanenv(load_hgrc=True),
                                      hg=self.instance.which('hg'))
         (checkout_type, checkout_root) = r
 
@@ -721,7 +719,7 @@ def hg_clone_firefox(hg, dest):
     return True
 
 
-def current_firefox_checkout(check_output, env, hg=None):
+def current_firefox_checkout(env, hg=None):
     """Determine whether we're in a Firefox checkout.
 
     Returns one of None, ``git``, or ``hg``.
@@ -738,10 +736,9 @@ def current_firefox_checkout(check_output, env, hg=None):
         if hg and os.path.exists(hg_dir):
             # Verify the hg repo is a Firefox repo by looking at rev 0.
             try:
-                node = check_output([hg, 'log', '-r', '0', '--template', '{node}'],
-                                    cwd=path,
-                                    env=env,
-                                    universal_newlines=True)
+                node = subprocess.check_output(
+                    [hg, 'log', '-r', '0', '--template', '{node}'],
+                    cwd=path, env=env, universal_newlines=True)
                 if node in HG_ROOT_REVISIONS:
                     _warn_if_risky_revision(path)
                     return ('hg', path)
