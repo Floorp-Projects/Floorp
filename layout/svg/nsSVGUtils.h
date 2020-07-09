@@ -34,8 +34,6 @@ class nsIContent;
 
 class nsIFrame;
 class nsPresContext;
-class nsSVGDisplayContainerFrame;
-class nsSVGOuterSVGFrame;
 class nsTextFrame;
 
 struct nsStyleSVG;
@@ -46,7 +44,9 @@ class SVGAnimatedEnumeration;
 class SVGAnimatedLength;
 class SVGContextPaint;
 struct SVGContextPaintImpl;
+class SVGDisplayContainerFrame;
 class SVGGeometryFrame;
+class SVGOuterSVGFrame;
 namespace dom {
 class Element;
 class SVGElement;
@@ -162,7 +162,9 @@ class nsSVGUtils {
   typedef mozilla::SVGAnimatedLength SVGAnimatedLength;
   typedef mozilla::SVGContextPaint SVGContextPaint;
   typedef mozilla::SVGContextPaintImpl SVGContextPaintImpl;
+  typedef mozilla::SVGDisplayContainerFrame SVGDisplayContainerFrame;
   typedef mozilla::SVGGeometryFrame SVGGeometryFrame;
+  typedef mozilla::SVGOuterSVGFrame SVGOuterSVGFrame;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ObjectBoundingBoxProperty, gfxRect)
@@ -187,12 +189,12 @@ class nsSVGUtils {
    *
    * This is very similar to PresShell::FrameNeedsReflow. The main reason that
    * we have this function instead of using FrameNeedsReflow is because we need
-   * to be able to call it under nsSVGOuterSVGFrame::NotifyViewportChange when
-   * that function is called by nsSVGOuterSVGFrame::Reflow. FrameNeedsReflow
+   * to be able to call it under SVGOuterSVGFrame::NotifyViewportChange when
+   * that function is called by SVGOuterSVGFrame::Reflow. FrameNeedsReflow
    * is not suitable for calling during reflow though, and it asserts as much.
    * The reason that we want to be callable under NotifyViewportChange is
-   * because we want to synchronously notify and dirty the nsSVGOuterSVGFrame's
-   * children so that when nsSVGOuterSVGFrame::DidReflow is called its children
+   * because we want to synchronously notify and dirty the SVGOuterSVGFrame's
+   * children so that when SVGOuterSVGFrame::DidReflow is called its children
    * will be updated for the new size as appropriate. Otherwise we'd have to
    * post an event to the event loop to mark dirty flags and request an update.
    *
@@ -238,7 +240,7 @@ class nsSVGUtils {
                          const SVGAnimatedLength* aLength);
 
   /* Find the outermost SVG frame of the passed frame */
-  static nsSVGOuterSVGFrame* GetOuterSVGFrame(nsIFrame* aFrame);
+  static SVGOuterSVGFrame* GetOuterSVGFrame(nsIFrame* aFrame);
 
   /**
    * Get the covered region for a frame. Return null if it's not an SVG frame.
@@ -264,7 +266,7 @@ class nsSVGUtils {
    * expected to be in the coordinate space established by aFrame for its
    * children (e.g. the space established by the 'viewBox' attribute on <svg>).
    */
-  static nsIFrame* HitTestChildren(nsSVGDisplayContainerFrame* aFrame,
+  static nsIFrame* HitTestChildren(SVGDisplayContainerFrame* aFrame,
                                    const gfxPoint& aPoint);
 
   /*
@@ -381,7 +383,7 @@ class nsSVGUtils {
    * @param aToBoundsSpace If not specified the returned rect is in aFrame's
    *   element's "user space". A matrix can optionally be pass to specify a
    *   transform from aFrame's user space to the bounds space of interest
-   *   (typically this will be the ancestor nsSVGOuterSVGFrame, but it could be
+   *   (typically this will be the ancestor SVGOuterSVGFrame, but it could be
    *   to any other coordinate space).
    */
   static gfxRect GetBBox(nsIFrame* aFrame,

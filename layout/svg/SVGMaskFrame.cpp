@@ -155,8 +155,8 @@ nsresult SVGMaskFrame::AttributeChanged(int32_t aNameSpaceID,
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
 
-  return nsSVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType);
+  return SVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
 }
 
 #ifdef DEBUG
@@ -165,7 +165,7 @@ void SVGMaskFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::mask),
                "Content is not an SVG mask");
 
-  nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

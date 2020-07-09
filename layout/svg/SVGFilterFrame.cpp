@@ -162,8 +162,8 @@ nsresult SVGFilterFrame::AttributeChanged(int32_t aNameSpaceID,
     // And update whoever references us
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
-  return nsSVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType);
+  return SVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
 }
 
 #ifdef DEBUG
@@ -172,7 +172,7 @@ void SVGFilterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::filter),
                "Content is not an SVG filter");
 
-  nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

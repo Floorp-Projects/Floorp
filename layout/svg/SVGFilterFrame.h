@@ -8,9 +8,9 @@
 #define __NS_SVGFILTERFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsQueryFrame.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
 class nsAtom;
@@ -34,13 +34,13 @@ nsIFrame* NS_NewSVGFilterFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGFilterFrame final : public nsSVGContainerFrame {
+class SVGFilterFrame final : public SVGContainerFrame {
   friend nsIFrame* ::NS_NewSVGFilterFrame(mozilla::PresShell* aPresShell,
                                           ComputedStyle* aStyle);
 
  protected:
   explicit SVGFilterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsSVGContainerFrame(aStyle, aPresContext, kClassID),
+      : SVGContainerFrame(aStyle, aPresContext, kClassID),
         mLoopFlag(false),
         mNoHRefURI(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

@@ -12,17 +12,17 @@
 #include "gfxContext.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGContainerFrame.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "nsLayoutUtils.h"
 #include "nsRegion.h"
-#include "nsSVGContainerFrame.h"
 #include "SVGGeometryProperty.h"
-#include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGOuterSVGFrame.h"
 #include "nsSVGUtils.h"
 
 using namespace mozilla::dom;
@@ -172,7 +172,7 @@ bool SVGForeignObjectFrame::IsSVGTransformed(
   if (parent &&
       parent->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
     foundTransform =
-        static_cast<nsSVGContainerFrame*>(parent)->HasChildrenOnlyTransform(
+        static_cast<SVGContainerFrame*>(parent)->HasChildrenOnlyTransform(
             aFromParentTransform);
   }
 
@@ -424,10 +424,10 @@ void SVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags) {
 
   // If we're called while the PresShell is handling reflow events then we
   // must have been called as a result of the NotifyViewportChange() call in
-  // our nsSVGOuterSVGFrame's Reflow() method. We must not call RequestReflow
+  // our SVGOuterSVGFrame's Reflow() method. We must not call RequestReflow
   // at this point (i.e. during reflow) because it could confuse the
   // PresShell and prevent it from reflowing us properly in future. Besides
-  // that, nsSVGOuterSVGFrame::DidReflow will take care of reflowing us
+  // that, SVGOuterSVGFrame::DidReflow will take care of reflowing us
   // synchronously, so there's no need.
   if (needReflow && !PresShell()->IsReflowLocked()) {
     RequestReflow(IntrinsicDirty::Resize);
@@ -465,10 +465,8 @@ gfxMatrix SVGForeignObjectFrame::GetCanvasTM() {
   if (!mCanvasTM) {
     NS_ASSERTION(GetParent(), "null parent");
 
-    nsSVGContainerFrame* parent =
-        static_cast<nsSVGContainerFrame*>(GetParent());
-    SVGForeignObjectElement* content =
-        static_cast<SVGForeignObjectElement*>(GetContent());
+    auto* parent = static_cast<SVGContainerFrame*>(GetParent());
+    auto* content = static_cast<SVGForeignObjectElement*>(GetContent());
 
     gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 

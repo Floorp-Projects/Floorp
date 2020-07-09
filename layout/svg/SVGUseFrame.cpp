@@ -88,7 +88,7 @@ void SVGUseFrame::HrefChanged() {
 
 void SVGUseFrame::ReflowSVG() {
   // We only handle x/y offset here, since any width/height that is in force is
-  // handled by the nsSVGOuterSVGFrame for the anonymous <svg> that will be
+  // handled by the SVGOuterSVGFrame for the anonymous <svg> that will be
   // created for that purpose.
   float x, y;
   static_cast<SVGUseElement*>(GetContent())

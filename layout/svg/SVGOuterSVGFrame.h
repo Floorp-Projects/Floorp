@@ -8,9 +8,9 @@
 #define __NS_SVGOUTERSVGFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "mozilla/UniquePtr.h"
 #include "nsISVGSVGFrame.h"
-#include "nsSVGContainerFrame.h"
 #include "nsRegion.h"
 
 class gfxContext;
@@ -20,26 +20,32 @@ class SVGForeignObjectFrame;
 class PresShell;
 }  // namespace mozilla
 
+nsContainerFrame* NS_NewSVGOuterSVGFrame(mozilla::PresShell* aPresShell,
+                                         mozilla::ComputedStyle* aStyle);
+nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(
+    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
 ////////////////////////////////////////////////////////////////////////
-// nsSVGOuterSVGFrame class
+// SVGOuterSVGFrame class
 
-class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
-                                 public nsISVGSVGFrame {
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
+                               public nsISVGSVGFrame {
+  typedef image::imgDrawingParams imgDrawingParams;
 
-  friend nsContainerFrame* NS_NewSVGOuterSVGFrame(
+  friend nsContainerFrame* ::NS_NewSVGOuterSVGFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGOuterSVGFrame(ComputedStyle* aStyle,
-                              nsPresContext* aPresContext);
+  explicit SVGOuterSVGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGOuterSVGFrame)
 
 #ifdef DEBUG
-  ~nsSVGOuterSVGFrame() {
+  ~SVGOuterSVGFrame() {
     NS_ASSERTION(!mForeignObjectHash || mForeignObjectHash->Count() == 0,
                  "foreignObject(s) still registered!");
   }
@@ -49,14 +55,14 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  virtual mozilla::IntrinsicSize GetIntrinsicSize() override;
-  virtual mozilla::AspectRatio GetIntrinsicRatio() override;
+  virtual IntrinsicSize GetIntrinsicSize() override;
+  virtual AspectRatio GetIntrinsicRatio() override;
 
-  virtual mozilla::LogicalSize ComputeSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
-      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
+  virtual LogicalSize ComputeSize(
+      gfxContext* aRenderingContext, WritingMode aWritingMode,
+      const LogicalSize& aCBSize, nscoord aAvailableISize,
+      const LogicalSize& aMargin, const LogicalSize& aBorder,
+      const LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
@@ -74,7 +80,7 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
                     nsIFrame* aPrevInFlow) override;
 
   bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsSVGDisplayContainerFrame::IsFrameOfType(
+    return SVGDisplayContainerFrame::IsFrameOfType(
         aFlags &
         ~(eSupportsContainLayoutAndPaint | eReplaced | eReplacedSizing));
   }
@@ -113,11 +119,11 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
   virtual SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
                                       uint32_t aFlags) override;
 
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 
   /* Methods to allow descendant SVGForeignObjectFrame frames to register and
-   * unregister themselves with their nearest nsSVGOuterSVGFrame ancestor. This
+   * unregister themselves with their nearest SVGOuterSVGFrame ancestor. This
    * is temporary until display list based invalidation is impleented for SVG.
    * Maintaining a list of our foreignObject descendants allows us to search
    * them for areas that need to be invalidated, without having to also search
@@ -125,8 +131,8 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
    * does not slow down SVG in general (only foreignObjects, until bug 614732 is
    * fixed).
    */
-  void RegisterForeignObject(mozilla::SVGForeignObjectFrame* aFrame);
-  void UnregisterForeignObject(mozilla::SVGForeignObjectFrame* aFrame);
+  void RegisterForeignObject(SVGForeignObjectFrame* aFrame);
+  void UnregisterForeignObject(SVGForeignObjectFrame* aFrame);
 
   virtual bool HasChildrenOnlyTransform(Matrix* aTransform) const override {
     // Our anonymous wrapper child must claim our children-only transforms as
@@ -182,7 +188,7 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
   // A hash-set containing our SVGForeignObjectFrame descendants. Note we use
   // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
   // subtree if we were to use a list (see bug 381285 comment 20).
-  mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<mozilla::SVGForeignObjectFrame>>>
+  UniquePtr<nsTHashtable<nsPtrHashKey<SVGForeignObjectFrame>>>
       mForeignObjectHash;
 
   nsRegion mInvalidRegion;
@@ -199,41 +205,41 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
 };
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGOuterSVGAnonChildFrame class
+// SVGOuterSVGAnonChildFrame class
 
 /**
- * nsSVGOuterSVGFrames have a single direct child that is an instance of this
+ * SVGOuterSVGFrames have a single direct child that is an instance of this
  * class, and which is used to wrap their real child frames. Such anonymous
  * wrapper frames created from this class exist because SVG frames need their
  * GetPosition() offset to be their offset relative to "user space" (in app
  * units) so that they can play nicely with nsDisplayTransform. This is fine
- * for all SVG frames except for direct children of an nsSVGOuterSVGFrame,
- * since an nsSVGOuterSVGFrame can have CSS border and padding (unlike other
+ * for all SVG frames except for direct children of an SVGOuterSVGFrame,
+ * since an SVGOuterSVGFrame can have CSS border and padding (unlike other
  * SVG frames). The direct children can't include the offsets due to any such
  * border/padding in their mRects since that would break nsDisplayTransform,
  * but not including these offsets would break other parts of the Mozilla code
  * that assume a frame's mRect contains its border-box-to-parent-border-box
  * offset, in particular nsIFrame::GetOffsetTo and the functions that depend on
- * it. Wrapping an nsSVGOuterSVGFrame's children in an instance of this class
- * with its GetPosition() set to its nsSVGOuterSVGFrame's border/padding offset
+ * it. Wrapping an SVGOuterSVGFrame's children in an instance of this class
+ * with its GetPosition() set to its SVGOuterSVGFrame's border/padding offset
  * keeps both nsDisplayTransform and nsIFrame::GetOffsetTo happy.
  *
- * The reason that this class inherit from nsSVGDisplayContainerFrame rather
+ * The reason that this class inherit from SVGDisplayContainerFrame rather
  * than simply from nsContainerFrame is so that we can avoid having special
  * handling for these inner wrappers in multiple parts of the SVG code. For
  * example, the implementations of IsSVGTransformed and GetCanvasTM assume
- * nsSVGContainerFrame instances all the way up to the nsSVGOuterSVGFrame.
+ * SVGContainerFrame instances all the way up to the SVGOuterSVGFrame.
  */
-class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
-  friend nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(
+class SVGOuterSVGAnonChildFrame final : public SVGDisplayContainerFrame {
+  friend nsContainerFrame* ::NS_NewSVGOuterSVGAnonChildFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
-  explicit nsSVGOuterSVGAnonChildFrame(ComputedStyle* aStyle,
-                                       nsPresContext* aPresContext)
-      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
+  explicit SVGOuterSVGAnonChildFrame(ComputedStyle* aStyle,
+                                     nsPresContext* aPresContext)
+      : SVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGOuterSVGAnonChildFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGOuterSVGAnonChildFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -252,12 +258,12 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
   bool IsSVGTransformed(Matrix* aOwnTransform,
                         Matrix* aFromParentTransform) const override;
 
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override {
     // GetCanvasTM returns the transform from an SVG frame to the frame's
-    // nsSVGOuterSVGFrame's content box, so we do not include any x/y offset
-    // set on us for any CSS border or padding on our nsSVGOuterSVGFrame.
-    return static_cast<nsSVGOuterSVGFrame*>(GetParent())->GetCanvasTM();
+    // SVGOuterSVGFrame's content box, so we do not include any x/y offset
+    // set on us for any CSS border or padding on our SVGOuterSVGFrame.
+    return static_cast<SVGOuterSVGFrame*>(GetParent())->GetCanvasTM();
   }
 };
 
@@ -267,5 +273,7 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
 template <typename... Atoms>
 bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs);
 bool IsAnyAtomEqual(const nsAString& aString);
+
+}  // namespace mozilla
 
 #endif

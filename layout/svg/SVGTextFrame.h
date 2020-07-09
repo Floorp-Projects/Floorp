@@ -10,13 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "gfxTextRun.h"
 #include "nsIContent.h"  // for GetContent
 #include "nsStubMutationObserver.h"
-#include "nsSVGContainerFrame.h"
 #include "nsTextFrame.h"
 
 class gfxContext;
@@ -162,7 +162,7 @@ class GlyphMetricsUpdater : public Runnable {
  * itself do the painting.  Otherwise, a DrawPathCallback is passed to
  * PaintText so that we can fill the text geometry with SVG paint servers.
  */
-class SVGTextFrame final : public nsSVGDisplayContainerFrame {
+class SVGTextFrame final : public SVGDisplayContainerFrame {
   friend nsIFrame* ::NS_NewSVGTextFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
@@ -182,7 +182,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
 
  protected:
   explicit SVGTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID),
+      : SVGDisplayContainerFrame(aStyle, aPresContext, kClassID),
         mTrailingUndisplayedCharacters(0),
         mFontSizeScaleFactor(1.0f),
         mLastContextScale(1.0f),
@@ -280,7 +280,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
   /**
    * Reflows the anonymous block frame of this non-display SVGTextFrame.
    *
-   * When we are under nsSVGDisplayContainerFrame::ReflowSVG, we need to
+   * When we are under SVGDisplayContainerFrame::ReflowSVG, we need to
    * reflow any SVGTextFrame frames in the subtree in case they are
    * being observed (by being for example in a <mask>) and the change
    * that caused the reflow would not already have caused a reflow.
@@ -293,10 +293,10 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
   /**
    * This is a function that behaves similarly to nsSVGUtils::ScheduleReflowSVG,
    * but which will skip over any ancestor non-display container frames on the
-   * way to the nsSVGOuterSVGFrame.  It exists for the situation where a
+   * way to the SVGOuterSVGFrame.  It exists for the situation where a
    * non-display <text> element has changed and needs to ensure ReflowSVG will
    * be called on its closest display container frame, so that
-   * nsSVGDisplayContainerFrame::ReflowSVG will call ReflowSVGNonDisplayText on
+   * SVGDisplayContainerFrame::ReflowSVG will call ReflowSVGNonDisplayText on
    * it.
    *
    * We have to do this in two cases: in response to a style change on a

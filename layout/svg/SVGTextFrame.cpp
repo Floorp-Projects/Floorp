@@ -23,8 +23,6 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsQuickSort.h"
-#include "SVGObserverUtils.h"
-#include "nsSVGOuterSVGFrame.h"
 #include "SVGPaintServerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
@@ -35,17 +33,19 @@
 #include "SVGContextPaint.h"
 #include "SVGLengthList.h"
 #include "SVGNumberList.h"
-#include "SVGGeometryElement.h"
-#include "SVGTextPathElement.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameSelection.h"
 #include "nsStyleStructInlines.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGTextContentElementBinding.h"
+#include "mozilla/dom/SVGTextPathElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
@@ -2756,7 +2756,7 @@ void DisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 
 NS_QUERYFRAME_HEAD(SVGTextFrame)
   NS_QUERYFRAME_ENTRY(SVGTextFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGDisplayContainerFrame)
 
 }  // namespace mozilla
 
@@ -2781,7 +2781,7 @@ void SVGTextFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::text),
                "Content is not an SVG text");
 
-  nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
   AddStateBits((aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) |
                NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_SVG_TEXT);
 
@@ -2875,9 +2875,9 @@ void SVGTextFrame::ScheduleReflowSVGNonDisplayText(IntrinsicDirty aReason) {
   // a root to reflow.  We choose the closest ancestor frame that is not
   // NS_FRAME_IS_NONDISPLAY and which is either an outer SVG frame or a
   // non-SVG frame.  (We don't consider displayed SVG frame ancestors toerh
-  // than nsSVGOuterSVGFrame, since calling FrameNeedsReflow on those other
+  // than SVGOuterSVGFrame, since calling FrameNeedsReflow on those other
   // SVG frames would do a bunch of unnecessary work on the SVG frames up to
-  // the nsSVGOuterSVGFrame.)
+  // the SVGOuterSVGFrame.)
 
   nsIFrame* f = this;
   while (f) {
@@ -3371,10 +3371,10 @@ void SVGTextFrame::ReflowSVG() {
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
 
-  // XXX nsSVGContainerFrame::ReflowSVG only looks at its nsSVGDisplayableFrame
+  // XXX SVGContainerFrame::ReflowSVG only looks at its nsSVGDisplayableFrame
   // children, and calls ConsiderChildOverflow on them.  Does it matter
   // that ConsiderChildOverflow won't be called on our children?
-  nsSVGDisplayContainerFrame::ReflowSVG();
+  SVGDisplayContainerFrame::ReflowSVG();
 }
 
 /**
@@ -5052,7 +5052,7 @@ void SVGTextFrame::MaybeReflowAnonymousBlockChild() {
       // If we require a full reflow, ensure our kid is marked fully dirty.
       // (Note that our anonymous nsBlockFrame is not an nsSVGDisplayableFrame,
       // so even when we are called via our ReflowSVG this will not be done for
-      // us by nsSVGDisplayContainerFrame::ReflowSVG.)
+      // us by SVGDisplayContainerFrame::ReflowSVG.)
       kid->MarkSubtreeDirty();
     }
 

@@ -8,7 +8,7 @@
 #define __NS_SVGVIEWPORTFRAME_H__
 
 #include "mozilla/Attributes.h"
-#include "nsSVGContainerFrame.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
 
 class gfxContext;
@@ -18,12 +18,12 @@ namespace mozilla {
 /**
  * Superclass for inner SVG frames and symbol frames.
  */
-class SVGViewportFrame : public nsSVGDisplayContainerFrame,
+class SVGViewportFrame : public SVGDisplayContainerFrame,
                          public nsISVGSVGFrame {
  protected:
   SVGViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                    nsIFrame::ClassID aID)
-      : nsSVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
+      : SVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
 
  public:
   NS_DECL_ABSTRACT_FRAME(SVGViewportFrame)
@@ -41,7 +41,7 @@ class SVGViewportFrame : public nsSVGDisplayContainerFrame,
                               uint32_t aFlags) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
 
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual bool HasChildrenOnlyTransform(Matrix* aTransform) const override;
 
   // nsISVGSVGFrame interface:

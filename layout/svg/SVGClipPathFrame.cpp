@@ -394,8 +394,8 @@ nsresult SVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
     }
   }
 
-  return nsSVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType);
+  return SVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
 }
 
 void SVGClipPathFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -404,7 +404,7 @@ void SVGClipPathFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                "Content is not an SVG clipPath!");
 
   AddStateBits(NS_STATE_SVG_CLIPPATH_CHILD);
-  nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 gfxMatrix SVGClipPathFrame::GetCanvasTM() { return mMatrixForChildren; }

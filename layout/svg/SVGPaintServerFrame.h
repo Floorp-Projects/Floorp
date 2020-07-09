@@ -9,11 +9,11 @@
 
 #include "gfxRect.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
 #include "nsIFrame.h"
 #include "nsQueryFrame.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
 class gfxContext;
@@ -46,13 +46,13 @@ class MOZ_RAII AutoSetRestorePaintServerState {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class SVGPaintServerFrame : public nsSVGContainerFrame {
+class SVGPaintServerFrame : public SVGContainerFrame {
  protected:
   typedef gfx::DrawTarget DrawTarget;
 
   SVGPaintServerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                       ClassID aID)
-      : nsSVGContainerFrame(aStyle, aPresContext, aID) {
+      : SVGContainerFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -80,8 +80,8 @@ class SVGPaintServerFrame : public nsSVGContainerFrame {
                                 const nsDisplayListSet& aLists) override {}
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsSVGContainerFrame::IsFrameOfType(aFlags &
-                                              ~nsIFrame::eSVGPaintServer);
+    return SVGContainerFrame::IsFrameOfType(aFlags &
+                                            ~nsIFrame::eSVGPaintServer);
   }
 };
 

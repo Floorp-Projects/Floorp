@@ -72,8 +72,8 @@ class DOMSVGTranslatePoint final : public nsISVGPoint {
 typedef SVGViewportElement SVGSVGElementBase;
 
 class SVGSVGElement final : public SVGSVGElementBase {
-  friend class ::nsSVGOuterSVGFrame;
   friend class mozilla::SVGFragmentIdentifier;
+  friend class mozilla::SVGOuterSVGFrame;
   friend class mozilla::AutoSVGViewHandler;
   friend class mozilla::AutoPreserveAspectRatioOverride;
   friend class mozilla::dom::SVGView;

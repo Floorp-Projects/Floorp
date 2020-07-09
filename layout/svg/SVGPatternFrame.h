@@ -49,7 +49,7 @@ class SVGPatternFrame final : public SVGPaintServerFrame {
       const gfxRect* aOverrideBounds) override;
 
  public:
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 
   // nsIFrame interface:

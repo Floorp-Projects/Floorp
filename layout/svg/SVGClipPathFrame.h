@@ -9,7 +9,7 @@
 
 #include "gfxMatrix.h"
 #include "mozilla/Attributes.h"
-#include "nsSVGContainerFrame.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
 class gfxContext;
@@ -24,7 +24,7 @@ nsIFrame* NS_NewSVGClipPathFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGClipPathFrame final : public nsSVGContainerFrame {
+class SVGClipPathFrame final : public SVGContainerFrame {
   friend nsIFrame* ::NS_NewSVGClipPathFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
@@ -34,7 +34,7 @@ class SVGClipPathFrame final : public nsSVGContainerFrame {
 
  protected:
   explicit SVGClipPathFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsSVGContainerFrame(aStyle, aPresContext, kClassID),
+      : SVGContainerFrame(aStyle, aPresContext, kClassID),
         mIsBeingProcessed(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -143,7 +143,7 @@ class SVGClipPathFrame final : public nsSVGContainerFrame {
   gfxMatrix GetClipPathTransform(nsIFrame* aClippedFrame);
 
  private:
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 
   already_AddRefed<DrawTarget> CreateClipMask(gfxContext& aReferenceContext,

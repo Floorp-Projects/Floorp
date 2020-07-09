@@ -6,29 +6,33 @@
 
 // Keep in (case-insensitive) order:
 #include "gfxRect.h"
-#include "SVGObserverUtils.h"
 #include "SVGGFrame.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGContainerFrame.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGTextFrame.h"
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
-#include "SVGTextFrame.h"
-#include "nsSVGContainerFrame.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class nsSVGSwitchFrame final : public SVGGFrame {
-  friend nsIFrame* NS_NewSVGSwitchFrame(mozilla::PresShell* aPresShell,
-                                        ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSwitchFrame(mozilla::PresShell* aPresShell,
+                               mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
+class SVGSwitchFrame final : public SVGGFrame {
+  friend nsIFrame* ::NS_NewSVGSwitchFrame(mozilla::PresShell* aPresShell,
+                                          ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGSwitchFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit SVGSwitchFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : SVGGFrame(aStyle, aPresContext, kClassID) {}
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGSwitchFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -59,19 +63,23 @@ class nsSVGSwitchFrame final : public SVGGFrame {
   static void AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid);
 };
 
+}  // namespace mozilla
+
 //----------------------------------------------------------------------
 // Implementation
 
 nsIFrame* NS_NewSVGSwitchFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGSwitchFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGSwitchFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)
+namespace mozilla {
+
+NS_IMPL_FRAMEARENA_HELPERS(SVGSwitchFrame)
 
 #ifdef DEBUG
-void nsSVGSwitchFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                            nsIFrame* aPrevInFlow) {
+void SVGSwitchFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                          nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::svgSwitch),
                "Content is not an SVG switch");
 
@@ -79,18 +87,17 @@ void nsSVGSwitchFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 #endif /* DEBUG */
 
-void nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                        const nsDisplayListSet& aLists) {
+void SVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                      const nsDisplayListSet& aLists) {
   nsIFrame* kid = GetActiveChildFrame();
   if (kid) {
     BuildDisplayListForChild(aBuilder, kid, aLists);
   }
 }
 
-void nsSVGSwitchFrame::PaintSVG(gfxContext& aContext,
-                                const gfxMatrix& aTransform,
-                                imgDrawingParams& aImgParams,
-                                const nsIntRect* aDirtyRect) {
+void SVGSwitchFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
+                              imgDrawingParams& aImgParams,
+                              const nsIntRect* aDirtyRect) {
   NS_ASSERTION(
       !NS_SVGDisplayListPaintingEnabled() || (mState & NS_FRAME_IS_NONDISPLAY),
       "If display lists are enabled, only painting of non-display "
@@ -111,7 +118,7 @@ void nsSVGSwitchFrame::PaintSVG(gfxContext& aContext,
   }
 }
 
-nsIFrame* nsSVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint) {
+nsIFrame* SVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
                    (mState & NS_FRAME_IS_NONDISPLAY),
                "If display lists are enabled, only hit-testing of non-display "
@@ -145,7 +152,7 @@ static bool shouldReflowSVGTextFrameInside(nsIFrame* aFrame) {
          !aFrame->IsFrameOfType(nsIFrame::eSVG);
 }
 
-void nsSVGSwitchFrame::AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid) {
+void SVGSwitchFrame::AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid) {
   if (!NS_SUBTREE_DIRTY(aKid)) {
     return;
   }
@@ -167,12 +174,12 @@ void nsSVGSwitchFrame::AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid) {
       //   <g><mask><text></text></mask></g>
       // </switch>
       // We should not call ReflowSVG on it.
-      nsSVGContainerFrame::ReflowSVGNonDisplayText(aKid);
+      SVGContainerFrame::ReflowSVGNonDisplayText(aKid);
     }
   }
 }
 
-void nsSVGSwitchFrame::ReflowAllSVGTextFramesInsideNonActiveChildren(
+void SVGSwitchFrame::ReflowAllSVGTextFramesInsideNonActiveChildren(
     nsIFrame* aActiveChild) {
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
     if (aActiveChild == kid) {
@@ -183,7 +190,7 @@ void nsSVGSwitchFrame::ReflowAllSVGTextFramesInsideNonActiveChildren(
   }
 }
 
-void nsSVGSwitchFrame::ReflowSVG() {
+void SVGSwitchFrame::ReflowSVG() {
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
@@ -246,8 +253,8 @@ void nsSVGSwitchFrame::ReflowSVG() {
                   NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-SVGBBox nsSVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                                              uint32_t aFlags) {
+SVGBBox SVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                                            uint32_t aFlags) {
   nsIFrame* kid = GetActiveChildFrame();
   nsSVGDisplayableFrame* svgKid = do_QueryFrame(kid);
   if (svgKid) {
@@ -263,10 +270,9 @@ SVGBBox nsSVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   return SVGBBox();
 }
 
-nsIFrame* nsSVGSwitchFrame::GetActiveChildFrame() {
+nsIFrame* SVGSwitchFrame::GetActiveChildFrame() {
   nsIContent* activeChild =
-      static_cast<mozilla::dom::SVGSwitchElement*>(GetContent())
-          ->GetActiveChild();
+      static_cast<dom::SVGSwitchElement*>(GetContent())->GetActiveChild();
 
   if (activeChild) {
     for (nsIFrame* kid = mFrames.FirstChild(); kid;
@@ -278,3 +284,5 @@ nsIFrame* nsSVGSwitchFrame::GetActiveChildFrame() {
   }
   return nullptr;
 }
+
+}  // namespace mozilla

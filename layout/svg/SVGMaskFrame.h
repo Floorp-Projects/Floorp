@@ -8,11 +8,11 @@
 #define __NS_SVGMASKFRAME_H__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGContainerFrame.h"
+#include "mozilla/gfx/2D.h"
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
 class gfxContext;
@@ -26,7 +26,7 @@ nsIFrame* NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGMaskFrame final : public nsSVGContainerFrame {
+class SVGMaskFrame final : public SVGContainerFrame {
   friend nsIFrame* ::NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
@@ -36,7 +36,7 @@ class SVGMaskFrame final : public nsSVGContainerFrame {
 
  protected:
   explicit SVGMaskFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsSVGContainerFrame(aStyle, aPresContext, kClassID), mInUse(false) {
+      : SVGContainerFrame(aStyle, aPresContext, kClassID), mInUse(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -103,7 +103,7 @@ class SVGMaskFrame final : public nsSVGContainerFrame {
   // recursion prevention flag
   bool mInUse;
 
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 };
 

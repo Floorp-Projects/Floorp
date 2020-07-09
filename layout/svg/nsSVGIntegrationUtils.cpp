@@ -193,7 +193,7 @@ bool nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(
 nsPoint nsSVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {
   if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // Do NOT call GetAllInFlowRectsUnion for SVG - it will get the
-    // covered region relative to the nsSVGOuterSVGFrame, which is absolutely
+    // covered region relative to the SVGOuterSVGFrame, which is absolutely
     // not what we want. SVG frames are always in user space, so they have
     // no offset adjustment to make.
     return nsPoint();
@@ -227,7 +227,7 @@ nsSize nsSVGIntegrationUtils::GetContinuationUnionSize(nsIFrame* aNonSVGFrame) {
 
 gfxRect nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
     nsIFrame* aNonSVGFrame, bool aUnionContinuations) {
-  // Except for nsSVGOuterSVGFrame, we shouldn't be getting here with SVG
+  // Except for SVGOuterSVGFrame, we shouldn't be getting here with SVG
   // frames at all. This function is for elements that are laid out using the
   // CSS box model rules.
   NS_ASSERTION(!aNonSVGFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT),
