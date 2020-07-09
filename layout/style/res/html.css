@@ -844,7 +844,7 @@ dialog:-moz-modal-dialog {
   max-height: 100vh;
   max-width: 100vw;
   top: 50%;
-  translate: 0 -50%;
+  transform: translateY(-50%);
   overflow: auto;
 }
 
