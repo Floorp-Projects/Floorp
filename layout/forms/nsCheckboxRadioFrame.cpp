@@ -83,7 +83,7 @@ LogicalSize nsCheckboxRadioFrame::ComputeAutoSize(
 
 nscoord nsCheckboxRadioFrame::GetLogicalBaseline(
     WritingMode aWritingMode) const {
-  NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "frame must not be dirty");
+  NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
 
   // For appearance:none we use a standard CSS baseline, i.e. synthesized from
   // our margin-box.

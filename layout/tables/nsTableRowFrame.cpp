@@ -729,7 +729,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
     // See if we should only reflow the dirty child frames
     bool doReflowChild = true;
     if (!aReflowInput.ShouldReflowAllKids() && !aTableFrame.IsGeometryDirty() &&
-        !NS_SUBTREE_DIRTY(kidFrame)) {
+        !kidFrame->IsSubtreeDirty()) {
       if (!aReflowInput.mFlags.mSpecialBSizeReflow) doReflowChild = false;
     } else if ((NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize())) {
       // We don't reflow a rowspan >1 cell here with a constrained bsize.
@@ -795,7 +795,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
       if ((availCellISize != cellFrame->GetPriorAvailISize()) ||
           (cellDesiredSize.ISize(wm) > cellFrame->GetPriorAvailISize()) ||
           HasAnyStateBits(NS_FRAME_IS_DIRTY) || isPaginated ||
-          NS_SUBTREE_DIRTY(cellFrame) ||
+          cellFrame->IsSubtreeDirty() ||
           // See if it needs a special reflow, or if it had one that we need to
           // undo.
           cellFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||

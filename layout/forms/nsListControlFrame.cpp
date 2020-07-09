@@ -390,8 +390,8 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
 
   bool autoBSize = (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE);
 
-  mMightNeedSecondPass = autoBSize && (NS_SUBTREE_DIRTY(this) ||
-                                       aReflowInput.ShouldReflowAllKids());
+  mMightNeedSecondPass =
+      autoBSize && (IsSubtreeDirty() || aReflowInput.ShouldReflowAllKids());
 
   ReflowInput state(aReflowInput);
   int32_t length = GetNumberOfRows();
@@ -473,8 +473,7 @@ void nsListControlFrame::ReflowAsDropdown(nsPresContext* aPresContext,
   MOZ_ASSERT(aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE,
              "We should not have a computed block size here!");
 
-  mMightNeedSecondPass =
-      NS_SUBTREE_DIRTY(this) || aReflowInput.ShouldReflowAllKids();
+  mMightNeedSecondPass = IsSubtreeDirty() || aReflowInput.ShouldReflowAllKids();
 
   WritingMode wm = aReflowInput.GetWritingMode();
 #ifdef DEBUG

@@ -153,7 +153,7 @@ static bool shouldReflowSVGTextFrameInside(nsIFrame* aFrame) {
 }
 
 void SVGSwitchFrame::AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid) {
-  if (!NS_SUBTREE_DIRTY(aKid)) {
+  if (!aKid->IsSubtreeDirty()) {
     return;
   }
 

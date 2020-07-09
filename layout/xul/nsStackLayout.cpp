@@ -265,7 +265,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
       bool sizeChanged = !oldRect.IsEqualEdges(childRect);
 
       // only lay out dirty children or children whose sizes have changed
-      if (sizeChanged || NS_SUBTREE_DIRTY(child)) {
+      if (sizeChanged || child->IsSubtreeDirty()) {
         // add in the child's margin
         nsMargin margin;
         child->GetXULMargin(margin);

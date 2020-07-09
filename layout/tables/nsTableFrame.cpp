@@ -1765,7 +1765,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   // require either a strategy init or balance. This isn't done during an
   // unconstrained reflow, because it will occur later when the parent reflows
   // with a constrained isize.
-  if (NS_SUBTREE_DIRTY(this) || aReflowInput.ShouldReflowAllKids() ||
+  if (IsSubtreeDirty() || aReflowInput.ShouldReflowAllKids() ||
       IsGeometryDirty() || isPaginated || aReflowInput.IsBResize() ||
       NeedToCollapse()) {
     if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE ||
@@ -2900,7 +2900,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                                          rowGroupFrame->GetRowCount());
     // Get the frame state bits
     // See if we should only reflow the dirty child frames
-    if (reflowAllKids || NS_SUBTREE_DIRTY(kidFrame) ||
+    if (reflowAllKids || kidFrame->IsSubtreeDirty() ||
         (aReflowInput.reflowInput.mFlags.mSpecialBSizeReflow &&
          (isPaginated ||
           kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
@@ -3132,7 +3132,7 @@ void nsTableFrame::ReflowColGroups(gfxContext* aRenderingContext) {
     ReflowOutput kidMet(GetWritingMode());
     nsPresContext* presContext = PresContext();
     for (nsIFrame* kidFrame : mColGroups) {
-      if (NS_SUBTREE_DIRTY(kidFrame)) {
+      if (kidFrame->IsSubtreeDirty()) {
         // The column groups don't care about dimensions or reflow inputs.
         ReflowInput kidReflowInput(presContext, kidFrame, aRenderingContext,
                                    LogicalSize(kidFrame->GetWritingMode()));
