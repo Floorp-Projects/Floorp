@@ -185,7 +185,8 @@ inline MOZ_MUST_USE T* UnwrapAndTypeCheckValue(JSContext* cx, HandleValue value,
  * or isn't an instance of the expected type.
  */
 template <class T>
-inline MOZ_MUST_USE T* UnwrapAndTypeCheckThis(JSContext* cx, CallArgs& args,
+inline MOZ_MUST_USE T* UnwrapAndTypeCheckThis(JSContext* cx,
+                                              const CallArgs& args,
                                               const char* methodName) {
   HandleValue thisv = args.thisv();
   return UnwrapAndTypeCheckValue<T>(cx, thisv, [cx, methodName, thisv] {
