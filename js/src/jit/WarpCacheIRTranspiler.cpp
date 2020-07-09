@@ -1643,15 +1643,26 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
   WrappedFunction* wrappedTarget = nullptr;
   if (callee->isGuardSpecificFunction()) {
     auto* guard = callee->toGuardSpecificFunction();
-    JSFunction* target =
-        &guard->expected()->toConstant()->toObject().as<JSFunction>();
 
-    wrappedTarget =
-        new (alloc()) WrappedFunction(target, guard->nargs(), guard->flags());
+    MDefinition* expectedDef = guard->expected();
+    MOZ_ASSERT(expectedDef->isConstant() || expectedDef->isNurseryObject());
 
-    MOZ_ASSERT_IF(kind == CallKind::Native,
-                  wrappedTarget->isNativeWithoutJitEntry());
-    MOZ_ASSERT_IF(kind == CallKind::Scripted, wrappedTarget->hasJitEntry());
+    // If this is a native without a JitEntry, WrappedFunction needs to know the
+    // target JSFunction.
+    // TODO: support nursery-allocated natives with WrappedFunction, maybe by
+    // storing the JSNative in the Baseline stub like flags/nargs.
+    bool isNative = guard->flags().isNativeWithoutJitEntry();
+    if (!isNative || expectedDef->isConstant()) {
+      JSFunction* nativeTarget = nullptr;
+      if (isNative) {
+        nativeTarget = &expectedDef->toConstant()->toObject().as<JSFunction>();
+      }
+      wrappedTarget = new (alloc())
+          WrappedFunction(nativeTarget, guard->nargs(), guard->flags());
+      MOZ_ASSERT_IF(kind == CallKind::Native,
+                    wrappedTarget->isNativeWithoutJitEntry());
+      MOZ_ASSERT_IF(kind == CallKind::Scripted, wrappedTarget->hasJitEntry());
+    }
   }
 
   bool needsThisCheck = false;

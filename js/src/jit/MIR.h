@@ -2606,18 +2606,19 @@ class MInitElemGetterSetter
   NAMED_OPERANDS((0, object), (1, idValue), (2, value))
 };
 
-// WrappedFunction wraps a JSFunction so it can safely be used off-thread.
-// In particular, a function's flags can be modified on the main thread as
-// functions are relazified and delazified, so we must be careful not to access
-// these flags off-thread.
+// WrappedFunction stores information about a function that can safely be used
+// off-thread. In particular, a function's flags can be modified on the main
+// thread as functions are relazified and delazified, so we must be careful not
+// to access these flags off-thread.
 class WrappedFunction : public TempObject {
-  CompilerFunction fun_;
+  // If this is a native function without a JitEntry, the JSFunction*.
+  CompilerFunction nativeFun_;
   uint16_t nargs_;
   js::FunctionFlags flags_;
 
  public:
   explicit WrappedFunction(JSFunction* fun);
-  WrappedFunction(JSFunction* fun, uint16_t nargs, FunctionFlags flags);
+  WrappedFunction(JSFunction* nativeFun, uint16_t nargs, FunctionFlags flags);
 
   // Note: When adding new accessors be sure to add consistency asserts
   // to the constructor.
@@ -2634,19 +2635,24 @@ class WrappedFunction : public TempObject {
   // These fields never change, they can be accessed off-main thread.
   JSNative native() const {
     MOZ_ASSERT(isNativeWithoutJitEntry());
-    return fun_->nativeUnchecked();
+    return nativeFun_->nativeUnchecked();
   }
   bool hasJitInfo() const {
-    return flags_.isBuiltinNative() && fun_->jitInfoUnchecked();
+    return flags_.isBuiltinNative() && nativeFun_->jitInfoUnchecked();
   }
   const JSJitInfo* jitInfo() const {
     MOZ_ASSERT(hasJitInfo());
-    return fun_->jitInfoUnchecked();
+    return nativeFun_->jitInfoUnchecked();
   }
 
-  JSFunction* rawJSFunction() const { return fun_; }
+  JSFunction* rawNativeJSFunction() const { return nativeFun_; }
 
-  bool appendRoots(MRootList& roots) const { return roots.append(fun_); }
+  bool appendRoots(MRootList& roots) const {
+    if (nativeFun_) {
+      return roots.append(nativeFun_);
+    }
+    return true;
+  }
 };
 
 class MCall : public MVariadicInstruction, public CallPolicy::Data {
@@ -9238,7 +9244,7 @@ class MGuardObjectIdentity : public MBinaryInstruction,
                        bool bailOnEquality)
       : MBinaryInstruction(classOpcode, obj, expected),
         bailOnEquality_(bailOnEquality) {
-    MOZ_ASSERT(expected->isConstant());
+    MOZ_ASSERT(expected->isConstant() || expected->isNurseryObject());
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
@@ -9275,7 +9281,7 @@ class MGuardSpecificFunction : public MBinaryInstruction,
       : MBinaryInstruction(classOpcode, obj, expected),
         nargs_(nargs),
         flags_(flags) {
-    MOZ_ASSERT(expected->isConstant());
+    MOZ_ASSERT(expected->isConstant() || expected->isNurseryObject());
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
