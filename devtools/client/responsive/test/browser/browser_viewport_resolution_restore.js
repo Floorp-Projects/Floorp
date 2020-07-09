@@ -32,10 +32,7 @@ for (const { content, res_restore } of TESTS) {
 
   addRDMTaskWithPreAndPost(
     TEST_URL,
-    async function rdmPreTask({ browser, usingBrowserUI }) {
-      info(
-        `Using meta viewport content "${content}" with new RDM UI ${usingBrowserUI}.`
-      );
+    async function rdmPreTask({ browser }) {
       if (res_restore) {
         info(`Setting resolution to ${res_restore}.`);
         browser.ownerGlobal.windowUtils.setResolutionAndScaleTo(res_restore);
@@ -43,12 +40,12 @@ for (const { content, res_restore } of TESTS) {
         info(`Not setting resolution.`);
       }
     },
-    async function rdmTask({ ui, manager, browser, usingBrowserUI }) {
+    async function rdmTask({ ui, manager }) {
       info(`Resizing viewport and ensuring that meta viewport is on.`);
       await setViewportSize(ui, manager, WIDTH, HEIGHT);
       await setTouchAndMetaViewportSupport(ui, true);
     },
-    async function rdmPostTask({ browser, usingBrowserUI }) {
+    async function rdmPostTask({ browser }) {
       const resolution = browser.ownerGlobal.windowUtils.getResolution();
       const res_target = res_restore ? res_restore : 1.0;
 
@@ -58,7 +55,6 @@ for (const { content, res_restore } of TESTS) {
         res_min <= resolution && res_max >= resolution,
         `${content} resolution should be near ${res_target}, and we got ${resolution}.`
       );
-    },
-    { usingBrowserUI: true }
+    }
   );
 }

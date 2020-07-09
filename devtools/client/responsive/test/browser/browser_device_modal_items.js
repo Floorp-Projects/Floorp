@@ -58,7 +58,7 @@ addRDMTask(
       }
     }
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 function findDeviceLabel(deviceName, document) {

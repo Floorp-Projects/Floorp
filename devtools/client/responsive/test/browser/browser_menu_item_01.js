@@ -57,8 +57,7 @@ addRDMTaskWithPreAndPost(
   },
   function post_task() {
     ok(!isMenuChecked(), "RDM menu item is unchecked after RDM is closed");
-  },
-  { usingBrowserUI: true }
+  }
 );
 
 add_task(async function() {

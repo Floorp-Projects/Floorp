@@ -7,34 +7,30 @@
 
 const TEST_URL = "http://example.com/";
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui }) {
-    info("Toggling on touch simulation.");
-    reloadOnTouchChange(true);
-    await toggleTouchSimulation(ui);
+addRDMTask(TEST_URL, async function({ ui }) {
+  info("Toggling on touch simulation.");
+  reloadOnTouchChange(true);
+  await toggleTouchSimulation(ui);
 
-    info(
-      "Test value maxTouchPoints is non-zero when touch simulation is enabled."
+  info(
+    "Test value maxTouchPoints is non-zero when touch simulation is enabled."
+  );
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+    is(
+      content.navigator.maxTouchPoints,
+      1,
+      "navigator.maxTouchPoints should be 1"
     );
-    await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
-      is(
-        content.navigator.maxTouchPoints,
-        1,
-        "navigator.maxTouchPoints should be 1"
-      );
-    });
+  });
 
-    info("Toggling off touch simulation.");
-    await toggleTouchSimulation(ui);
-    await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
-      is(
-        content.navigator.maxTouchPoints,
-        0,
-        "navigator.maxTouchPoints should be 0"
-      );
-    });
-    reloadOnTouchChange(false);
-  },
-  { usingBrowserUI: true }
-);
+  info("Toggling off touch simulation.");
+  await toggleTouchSimulation(ui);
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+    is(
+      content.navigator.maxTouchPoints,
+      0,
+      "navigator.maxTouchPoints should be 0"
+    );
+  });
+  reloadOnTouchChange(false);
+});

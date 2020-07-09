@@ -77,7 +77,7 @@ addRDMTask(
 
     reloadOnUAChange(false);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -120,5 +120,5 @@ addRDMTask(
 
     reloadOnUAChange(false);
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );

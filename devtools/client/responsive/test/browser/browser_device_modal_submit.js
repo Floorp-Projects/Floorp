@@ -140,7 +140,7 @@ addRDMTask(
     // Let's add a dummy device to simulate featured flag changes for next test
     addDeviceForTest(addedDevice);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -188,5 +188,5 @@ addRDMTask(
       }
     });
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );

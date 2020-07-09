@@ -89,8 +89,7 @@ addRDMTaskWithPreAndPost(
       "ping-pong",
       "Got the expected message back from the content script"
     );
-  },
-  { usingBrowserUI: true }
+  }
 );
 
 add_task(async function cleanup_first_test() {
@@ -99,138 +98,134 @@ add_task(async function cleanup_first_test() {
   await extension.unload();
 });
 
-addRDMTask(
-  TEST_URL,
-  async function test_tab_sender() {
-    const extension2 = ExtensionTestUtils.loadExtension({
-      manifest: {
-        permissions: ["tabs"],
+addRDMTask(TEST_URL, async function test_tab_sender() {
+  const extension2 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
 
-        content_scripts: [
-          {
-            matches: [TEST_URL],
-            js: ["content-script.js"],
-            run_at: "document_start",
-          },
-        ],
-      },
+      content_scripts: [
+        {
+          matches: [TEST_URL],
+          js: ["content-script.js"],
+          run_at: "document_start",
+        },
+      ],
+    },
 
-      async background() {
-        const TEST_URL = "http://example.com/"; // eslint-disable-line no-shadow
+    async background() {
+      const TEST_URL = "http://example.com/"; // eslint-disable-line no-shadow
 
-        browser.test.log("Background script init");
+      browser.test.log("Background script init");
 
-        let extTab;
-        const contentMessage = new Promise(resolve => {
-          browser.test.log("Listen to content");
-          const listener = async (msg, sender, respond) => {
-            browser.test.assertEq(
-              msg,
-              "hello-from-content",
-              "Background script got hello-from-content message"
-            );
+      let extTab;
+      const contentMessage = new Promise(resolve => {
+        browser.test.log("Listen to content");
+        const listener = async (msg, sender, respond) => {
+          browser.test.assertEq(
+            msg,
+            "hello-from-content",
+            "Background script got hello-from-content message"
+          );
 
-            const tabs = await browser.tabs.query({
-              currentWindow: true,
-              active: true,
-            });
-            browser.test.assertEq(
-              tabs.length,
-              1,
-              "One tab is active in the current window"
-            );
-            extTab = tabs[0];
-            browser.test.log(`Tab: id ${extTab.id}, url ${extTab.url}`);
-            browser.test.assertEq(extTab.url, TEST_URL, "Tab has the test URL");
+          const tabs = await browser.tabs.query({
+            currentWindow: true,
+            active: true,
+          });
+          browser.test.assertEq(
+            tabs.length,
+            1,
+            "One tab is active in the current window"
+          );
+          extTab = tabs[0];
+          browser.test.log(`Tab: id ${extTab.id}, url ${extTab.url}`);
+          browser.test.assertEq(extTab.url, TEST_URL, "Tab has the test URL");
 
-            browser.test.assertTrue(!!sender, "Message has a sender");
-            browser.test.assertTrue(!!sender.tab, "Message has a sender.tab");
-            browser.test.assertEq(
-              sender.tab.id,
-              extTab.id,
-              "Sender's tab ID matches the RDM tab ID"
-            );
-            browser.test.assertEq(
-              sender.tab.url,
-              extTab.url,
-              "Sender's tab URL matches the RDM tab URL"
-            );
+          browser.test.assertTrue(!!sender, "Message has a sender");
+          browser.test.assertTrue(!!sender.tab, "Message has a sender.tab");
+          browser.test.assertEq(
+            sender.tab.id,
+            extTab.id,
+            "Sender's tab ID matches the RDM tab ID"
+          );
+          browser.test.assertEq(
+            sender.tab.url,
+            extTab.url,
+            "Sender's tab URL matches the RDM tab URL"
+          );
 
-            browser.runtime.onMessage.removeListener(listener);
-            resolve();
-          };
-          browser.runtime.onMessage.addListener(listener);
+          browser.runtime.onMessage.removeListener(listener);
+          resolve();
+        };
+        browser.runtime.onMessage.addListener(listener);
+      });
+
+      // Wait for "resume" message so we know the content script is also ready.
+      await new Promise(resolve => {
+        browser.test.onMessage.addListener(resolve);
+        browser.test.sendMessage("background-script-ready");
+      });
+
+      await contentMessage;
+
+      browser.test.log("Send message from background to content");
+      const contentSender = await browser.tabs.sendMessage(
+        extTab.id,
+        "hello-from-background"
+      );
+      browser.test.assertEq(
+        contentSender.id,
+        browser.runtime.id,
+        "The sender ID in content matches this extension"
+      );
+
+      browser.test.notifyPass("rdm-messaging");
+    },
+
+    files: {
+      "content-script.js": async function() {
+        browser.test.log("Content script init");
+
+        browser.test.log("Listen to background");
+        browser.runtime.onMessage.addListener((msg, sender, respond) => {
+          browser.test.assertEq(
+            msg,
+            "hello-from-background",
+            "Content script got hello-from-background message"
+          );
+
+          browser.test.assertTrue(!!sender, "Message has a sender");
+          browser.test.assertTrue(!!sender.id, "Message has a sender.id");
+
+          const { id } = sender;
+          respond({ id });
         });
 
-        // Wait for "resume" message so we know the content script is also ready.
+        // Wait for "resume" message so we know the background script is also ready.
         await new Promise(resolve => {
           browser.test.onMessage.addListener(resolve);
-          browser.test.sendMessage("background-script-ready");
+          browser.test.sendMessage("content-script-ready");
         });
 
-        await contentMessage;
-
-        browser.test.log("Send message from background to content");
-        const contentSender = await browser.tabs.sendMessage(
-          extTab.id,
-          "hello-from-background"
-        );
-        browser.test.assertEq(
-          contentSender.id,
-          browser.runtime.id,
-          "The sender ID in content matches this extension"
-        );
-
-        browser.test.notifyPass("rdm-messaging");
+        browser.test.log("Send message from content to background");
+        browser.runtime.sendMessage("hello-from-content");
       },
+    },
+  });
 
-      files: {
-        "content-script.js": async function() {
-          browser.test.log("Content script init");
+  const contentScriptReady = extension2.awaitMessage("content-script-ready");
+  const backgroundScriptReady = extension2.awaitMessage(
+    "background-script-ready"
+  );
+  const finish = extension2.awaitFinish("rdm-messaging");
 
-          browser.test.log("Listen to background");
-          browser.runtime.onMessage.addListener((msg, sender, respond) => {
-            browser.test.assertEq(
-              msg,
-              "hello-from-background",
-              "Content script got hello-from-background message"
-            );
+  await extension2.startup();
 
-            browser.test.assertTrue(!!sender, "Message has a sender");
-            browser.test.assertTrue(!!sender.id, "Message has a sender.id");
+  // It appears the background script and content script can loaded in either order, so
+  // we'll wait for the both to listen before proceeding.
+  await backgroundScriptReady;
+  await contentScriptReady;
+  extension2.sendMessage("resume");
 
-            const { id } = sender;
-            respond({ id });
-          });
-
-          // Wait for "resume" message so we know the background script is also ready.
-          await new Promise(resolve => {
-            browser.test.onMessage.addListener(resolve);
-            browser.test.sendMessage("content-script-ready");
-          });
-
-          browser.test.log("Send message from content to background");
-          browser.runtime.sendMessage("hello-from-content");
-        },
-      },
-    });
-
-    const contentScriptReady = extension2.awaitMessage("content-script-ready");
-    const backgroundScriptReady = extension2.awaitMessage(
-      "background-script-ready"
-    );
-    const finish = extension2.awaitFinish("rdm-messaging");
-
-    await extension2.startup();
-
-    // It appears the background script and content script can loaded in either order, so
-    // we'll wait for the both to listen before proceeding.
-    await backgroundScriptReady;
-    await contentScriptReady;
-    extension2.sendMessage("resume");
-
-    await finish;
-    await extension2.unload();
-  },
-  { usingBrowserUI: true }
-);
+  await finish;
+  await extension2.unload();
+});

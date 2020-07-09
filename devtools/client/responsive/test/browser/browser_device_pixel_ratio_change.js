@@ -35,7 +35,7 @@ addRDMTask(
     await testResetWhenResizingViewport(ui);
     await testChangingDevicePixelRatio(ui);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 async function waitStartup(ui) {
