@@ -9,13 +9,14 @@
 #  include <objbase.h>
 #endif
 
-#include "ImageContainer.h"
 #include "RemoteAudioDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
-#include "mozilla/SyncRunnable.h"
-#include "mozilla/layers/ImageDataSerializer.h"
+
+#include "ImageContainer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
+#include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
 
@@ -28,7 +29,7 @@ using namespace ipc;
 using namespace layers;
 using namespace gfx;
 
-StaticRefPtr<TaskQueue> sRemoteDecoderManagerParentThread;
+StaticRefPtr<nsISerialEventTarget> sRemoteDecoderManagerParentThread;
 
 SurfaceDescriptorGPUVideo RemoteDecoderManagerParent::StoreImage(
     Image* aImage, TextureClient* aTexture) {
@@ -71,13 +72,19 @@ bool RemoteDecoderManagerParent::StartupThreads() {
     return false;
   }
 
-  sRemoteDecoderManagerParentThread = new TaskQueue(
-      GetMediaThreadPool(MediaThreadType::PLAYBACK), "RemVidParent");
+  nsCOMPtr<nsISerialEventTarget> managerThread;
+  nsresult rv = NS_CreateBackgroundTaskQueue("RemVidParent",
+                                             getter_AddRefs(managerThread));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  sRemoteDecoderManagerParentThread = managerThread;
   if (XRE_IsGPUProcess()) {
-    MOZ_ALWAYS_SUCCEEDS(
-        sRemoteDecoderManagerParentThread->Dispatch(NS_NewRunnableFunction(
+    sRemoteDecoderManagerParentThread->Dispatch(
+        NS_NewRunnableFunction(
             "RemoteDecoderManagerParent::StartupThreads",
-            []() { layers::VideoBridgeChild::StartupForGPUProcess(); })));
+            []() { layers::VideoBridgeChild::StartupForGPUProcess(); }),
+        NS_DISPATCH_NORMAL);
   }
 
   auto* obs = new RemoteDecoderManagerThreadShutdownObserver();
@@ -86,14 +93,16 @@ bool RemoteDecoderManagerParent::StartupThreads() {
 }
 
 void RemoteDecoderManagerParent::ShutdownThreads() {
-  sRemoteDecoderManagerParentThread->BeginShutdown();
-  sRemoteDecoderManagerParentThread->AwaitShutdownAndIdle();
   sRemoteDecoderManagerParentThread = nullptr;
 }
 
-/* static */
 void RemoteDecoderManagerParent::ShutdownVideoBridge() {
   if (sRemoteDecoderManagerParentThread) {
+    if (sRemoteDecoderManagerParentThread->IsOnCurrentThread()) {
+      VideoBridgeChild::Shutdown();
+      return;
+    }
+
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "RemoteDecoderManagerParent::ShutdownVideoBridge",
         []() { VideoBridgeChild::Shutdown(); });
@@ -122,8 +131,8 @@ bool RemoteDecoderManagerParent::CreateForContent(
       NewRunnableMethod<Endpoint<PRemoteDecoderManagerParent>&&>(
           "dom::RemoteDecoderManagerParent::Open", parent,
           &RemoteDecoderManagerParent::Open, std::move(aEndpoint));
-  MOZ_ALWAYS_SUCCEEDS(
-      sRemoteDecoderManagerParentThread->Dispatch(task.forget()));
+  sRemoteDecoderManagerParentThread->Dispatch(task.forget(),
+                                              NS_DISPATCH_NORMAL);
   return true;
 }
 
@@ -141,8 +150,8 @@ bool RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
   RefPtr<Runnable> task =
       NewRunnableFunction("gfx::VideoBridgeChild::Open",
                           &VideoBridgeChild::Open, std::move(aEndpoint));
-  MOZ_ALWAYS_SUCCEEDS(
-      sRemoteDecoderManagerParentThread->Dispatch(task.forget()));
+  sRemoteDecoderManagerParentThread->Dispatch(task.forget(),
+                                              NS_DISPATCH_NORMAL);
   return true;
 }
 
