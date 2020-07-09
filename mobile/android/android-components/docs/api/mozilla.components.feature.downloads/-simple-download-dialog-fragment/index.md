@@ -7,9 +7,9 @@
 A confirmation dialog to be called before a download is triggered.
 Meant to be used in collaboration with [DownloadsFeature](../-downloads-feature/index.md)
 
-[SimpleDownloadDialogFragment](./index.md) is the default dialog use by DownloadsFeature if you don't provide a value.
+[SimpleDownloadDialogFragment](./index.md) is the default dialog used by DownloadsFeature if you don't provide a value.
 It is composed by a title, a negative and a positive bottoms. When the positive button is clicked
-the download it triggered.
+the download is triggered.
 
 ### Constructors
 

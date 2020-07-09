@@ -117,10 +117,11 @@ downloadsFeature.start()
 ```
 
 ### SimpleDownloadDialogFragment
- A confirmation dialog to be called before a download is trigger.
+
+A confirmation dialog to be called before a download is triggered.
 
 SimpleDownloadDialogFragment is the default dialog if you don't provide a value to DownloadsFeature.
- It is composed by a title, a negative and a positive bottoms. When the positive button is clicked the download it triggered.
+It is composed by a title, a negative and a positive bottoms. When the positive button is clicked the download is triggered.
 
 ```kotlin
 //To use the default behavior, just provide a fragmentManager/childFragmentManager.

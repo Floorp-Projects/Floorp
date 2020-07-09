@@ -27,9 +27,9 @@ import android.graphics.drawable.GradientDrawable
  * A confirmation dialog to be called before a download is triggered.
  * Meant to be used in collaboration with [DownloadsFeature]
  *
- * [SimpleDownloadDialogFragment] is the default dialog use by DownloadsFeature if you don't provide a value.
+ * [SimpleDownloadDialogFragment] is the default dialog used by DownloadsFeature if you don't provide a value.
  * It is composed by a title, a negative and a positive bottoms. When the positive button is clicked
- * the download it triggered.
+ * the download is triggered.
  *
  */
 class SimpleDownloadDialogFragment : DownloadDialogFragment() {
