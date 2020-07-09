@@ -193,7 +193,7 @@ const clearLocalStorage = async function(options) {
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
   }
 
-  if (Services.lsm.nextGenLocalStorageEnabled) {
+  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
     // Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
     // but this API exposes an ability to wipe data at a much finger granularity
     // than those APIs.  So custom logic is used here to wipe only the QM

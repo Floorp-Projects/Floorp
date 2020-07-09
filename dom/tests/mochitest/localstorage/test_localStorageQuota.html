@@ -18,7 +18,7 @@ function doNextTest()
   switch (currentTest)
   {
     case 1:
-      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         slaveOrigin = "http://test1.example.com";
       } else {
         slaveOrigin = "http://example.com";
@@ -50,7 +50,7 @@ function doNextTest()
     // Try to set a new 500 bytes key and check we fail because we are over the
     // quota.
     case 5:
-      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         slaveOrigin = "http://test1.example.com";
       } else {
         slaveOrigin = "https://test2.example.com";
@@ -67,7 +67,7 @@ function doNextTest()
 
     // Now try again to set 500 bytes key, it must succeed.
     case 7:
-      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         slaveOrigin = "http://test1.example.com";
       } else {
         slaveOrigin = "https://test2.example.com";
@@ -76,7 +76,7 @@ function doNextTest()
       break;
 
     case 8:
-      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         SimpleTest.executeSoon(doNextTest);
       } else {
         // Do a clean up...
@@ -92,7 +92,7 @@ function doNextTest()
       break;
 
     case 10:
-      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
         SimpleTest.executeSoon(doNextTest);
       } else {
         // Do a clean up...

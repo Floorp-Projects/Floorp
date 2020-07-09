@@ -56,7 +56,10 @@ add_task(async function testLocalStorage() {
     await browser.tabs.sendMessage(tabs[0].id, "checkLocalStorageCleared");
     await browser.tabs.sendMessage(tabs[1].id, "checkLocalStorageSet");
 
-    if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled === false) {
+    if (
+      SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled ===
+      false
+    ) {
       // This assertion fails when localStorage is using the legacy
       // implementation (See Bug 1595431).
       browser.test.log("Skipped assertion on nextGenLocalStorageEnabled=false");

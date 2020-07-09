@@ -18,7 +18,7 @@ const { TelemetryController } = ChromeUtils.import(
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-var EXPORTED_SYMBOLS = ["CrashManager"];
+var EXPORTED_SYMBOLS = ["CrashManager", "getCrashManager"];
 
 /**
  * How long to wait after application startup before crash event files are
@@ -1545,3 +1545,7 @@ XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function() {
 
   return gCrashManager;
 });
+
+function getCrashManager() {
+  return CrashManager.Singleton;
+}
