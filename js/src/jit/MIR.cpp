@@ -1481,21 +1481,28 @@ bool MParameter::congruentTo(const MDefinition* ins) const {
 }
 
 WrappedFunction::WrappedFunction(JSFunction* fun)
-    : fun_(fun), nargs_(fun->nargs()), flags_(fun->flags()) {}
+    : nativeFun_(fun->isNativeWithoutJitEntry() ? fun : nullptr),
+      nargs_(fun->nargs()),
+      flags_(fun->flags()) {
+  MOZ_ASSERT(!JitOptions.warpBuilder);
+}
 
-WrappedFunction::WrappedFunction(JSFunction* fun, uint16_t nargs,
+WrappedFunction::WrappedFunction(JSFunction* nativeFun, uint16_t nargs,
                                  FunctionFlags flags)
-    : fun_(fun), nargs_(nargs), flags_(flags) {
+    : nativeFun_(nativeFun), nargs_(nargs), flags_(flags) {
+  MOZ_ASSERT_IF(nativeFun, isNativeWithoutJitEntry());
+
 #ifdef DEBUG
   // If we are not running off-main thread we can assert that the
   // metadata is consistent.
-  if (!CanUseExtraThreads()) {
-    MOZ_ASSERT(fun->nargs() == nargs);
+  if (!CanUseExtraThreads() && nativeFun) {
+    MOZ_ASSERT(nativeFun->nargs() == nargs);
 
-    MOZ_ASSERT(fun->isNativeWithoutJitEntry() == isNativeWithoutJitEntry());
-    MOZ_ASSERT(fun->hasJitEntry() == hasJitEntry());
-    MOZ_ASSERT(fun->isConstructor() == isConstructor());
-    MOZ_ASSERT(fun->isClassConstructor() == isClassConstructor());
+    MOZ_ASSERT(nativeFun->isNativeWithoutJitEntry() ==
+               isNativeWithoutJitEntry());
+    MOZ_ASSERT(nativeFun->hasJitEntry() == hasJitEntry());
+    MOZ_ASSERT(nativeFun->isConstructor() == isConstructor());
+    MOZ_ASSERT(nativeFun->isClassConstructor() == isClassConstructor());
   }
 #endif
 }
@@ -5847,18 +5854,25 @@ MDefinition* MGuardNullOrUndefined::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MGuardObjectIdentity::foldsTo(TempAllocator& alloc) {
-  if (!object()->isConstant()) {
-    return this;
+  if (object()->isConstant() && expected()->isConstant()) {
+    JSObject* obj = &object()->toConstant()->toObject();
+    JSObject* other = &expected()->toConstant()->toObject();
+    if (!bailOnEquality()) {
+      if (obj == other) {
+        return object();
+      }
+    } else {
+      if (obj != other) {
+        return object();
+      }
+    }
   }
 
-  JSObject* obj = &object()->toConstant()->toObject();
-  JSObject* other = &expected()->toConstant()->toObject();
-  if (!bailOnEquality()) {
-    if (obj == other) {
-      return object();
-    }
-  } else {
-    if (obj != other) {
+  if (!bailOnEquality() && object()->isNurseryObject() &&
+      expected()->isNurseryObject()) {
+    uint32_t objIndex = object()->toNurseryObject()->nurseryIndex();
+    uint32_t otherIndex = expected()->toNurseryObject()->nurseryIndex();
+    if (objIndex == otherIndex) {
       return object();
     }
   }
@@ -5867,10 +5881,18 @@ MDefinition* MGuardObjectIdentity::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MGuardSpecificFunction::foldsTo(TempAllocator& alloc) {
-  if (function()->isConstant()) {
+  if (function()->isConstant() && expected()->isConstant()) {
     JSObject* fun = &function()->toConstant()->toObject();
     JSObject* other = &expected()->toConstant()->toObject();
     if (fun == other) {
+      return function();
+    }
+  }
+
+  if (function()->isNurseryObject() && expected()->isNurseryObject()) {
+    uint32_t funIndex = function()->toNurseryObject()->nurseryIndex();
+    uint32_t otherIndex = expected()->toNurseryObject()->nurseryIndex();
+    if (funIndex == otherIndex) {
       return function();
     }
   }

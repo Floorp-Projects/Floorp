@@ -6263,7 +6263,7 @@ AbortReasonOr<Ok> IonBuilder::makeCall(const Maybe<CallTargets>& targets,
 
   if (call->isCallDOMNative()) {
     return pushDOMTypeBarrier(call, types,
-                              call->getSingleTarget()->rawJSFunction());
+                              call->getSingleTarget()->rawNativeJSFunction());
   }
 
   return pushTypeBarrier(call, types, BarrierKind::TypeSet);
