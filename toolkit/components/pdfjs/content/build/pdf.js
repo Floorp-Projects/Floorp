@@ -325,18 +325,18 @@ var _api = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(2);
 
-var _annotation_layer = __w_pdfjs_require__(16);
+var _annotation_layer = __w_pdfjs_require__(17);
 
-var _api_compatibility = __w_pdfjs_require__(7);
+var _api_compatibility = __w_pdfjs_require__(8);
 
-var _worker_options = __w_pdfjs_require__(10);
+var _worker_options = __w_pdfjs_require__(11);
 
-var _text_layer = __w_pdfjs_require__(17);
+var _text_layer = __w_pdfjs_require__(18);
 
-var _svg = __w_pdfjs_require__(18);
+var _svg = __w_pdfjs_require__(19);
 
-const pdfjsVersion = '2.6.87';
-const pdfjsBuild = 'fe3df495c';
+const pdfjsVersion = '2.6.103';
+const pdfjsBuild = '72d71ba6a';
 ;
 
 /***/ }),
@@ -355,7 +355,7 @@ exports.isFetchSupported = isFetchSupported;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.deprecated = deprecated;
-exports.PDFDateString = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
+exports.PDFDateString = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.BaseCMapReaderFactory = exports.DOMCanvasFactory = exports.BaseCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -363,20 +363,15 @@ const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-class DOMCanvasFactory {
-  create(width, height) {
-    if (width <= 0 || height <= 0) {
-      throw new Error("Invalid canvas size");
+class BaseCanvasFactory {
+  constructor() {
+    if (this.constructor === BaseCanvasFactory) {
+      (0, _util.unreachable)("Cannot initialize BaseCanvasFactory.");
     }
+  }
 
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    canvas.width = width;
-    canvas.height = height;
-    return {
-      canvas,
-      context
-    };
+  create(width, height) {
+    (0, _util.unreachable)("Abstract method `create` called.");
   }
 
   reset(canvasAndContext, width, height) {
@@ -405,13 +400,37 @@ class DOMCanvasFactory {
 
 }
 
+exports.BaseCanvasFactory = BaseCanvasFactory;
+
+class DOMCanvasFactory extends BaseCanvasFactory {
+  create(width, height) {
+    if (width <= 0 || height <= 0) {
+      throw new Error("Invalid canvas size");
+    }
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+    return {
+      canvas,
+      context
+    };
+  }
+
+}
+
 exports.DOMCanvasFactory = DOMCanvasFactory;
 
-class DOMCMapReaderFactory {
+class BaseCMapReaderFactory {
   constructor({
     baseUrl = null,
     isCompressed = false
   }) {
+    if (this.constructor === BaseCMapReaderFactory) {
+      (0, _util.unreachable)("Cannot initialize BaseCMapReaderFactory.");
+    }
+
     this.baseUrl = baseUrl;
     this.isCompressed = isCompressed;
   }
@@ -429,6 +448,21 @@ class DOMCMapReaderFactory {
 
     const url = this.baseUrl + name + (this.isCompressed ? ".bcmap" : "");
     const compressionType = this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE;
+    return this._fetchData(url, compressionType).catch(reason => {
+      throw new Error(`Unable to load ${this.isCompressed ? "binary " : ""}CMap at: ${url}`);
+    });
+  }
+
+  _fetchData(url, compressionType) {
+    (0, _util.unreachable)("Abstract method `_fetchData` called.");
+  }
+
+}
+
+exports.BaseCMapReaderFactory = BaseCMapReaderFactory;
+
+class DOMCMapReaderFactory extends BaseCMapReaderFactory {
+  _fetchData(url, compressionType) {
     return fetch(url).then(async response => {
       if (!response.ok) {
         throw new Error(response.statusText);
@@ -446,8 +480,6 @@ class DOMCMapReaderFactory {
         cMapData,
         compressionType
       };
-    }).catch(reason => {
-      throw new Error(`Unable to load ${this.isCompressed ? "binary " : ""}` + `CMap at: ${url}`);
     });
   }
 
@@ -1661,24 +1693,28 @@ var _display_utils = __w_pdfjs_require__(1);
 
 var _font_loader = __w_pdfjs_require__(6);
 
-var _api_compatibility = __w_pdfjs_require__(7);
+var _node_utils = __w_pdfjs_require__(7);
 
-var _canvas = __w_pdfjs_require__(8);
+var _api_compatibility = __w_pdfjs_require__(8);
 
-var _worker_options = __w_pdfjs_require__(10);
+var _canvas = __w_pdfjs_require__(9);
+
+var _worker_options = __w_pdfjs_require__(11);
 
 var _is_node = __w_pdfjs_require__(4);
 
-var _message_handler = __w_pdfjs_require__(11);
+var _message_handler = __w_pdfjs_require__(12);
 
-var _metadata = __w_pdfjs_require__(12);
+var _metadata = __w_pdfjs_require__(13);
 
-var _transport_stream = __w_pdfjs_require__(14);
+var _transport_stream = __w_pdfjs_require__(15);
 
-var _webgl = __w_pdfjs_require__(15);
+var _webgl = __w_pdfjs_require__(16);
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536;
 const RENDERING_CANCELLED_TIMEOUT = 100;
+const DefaultCanvasFactory = _display_utils.DOMCanvasFactory;
+const DefaultCMapReaderFactory = _display_utils.DOMCMapReaderFactory;
 let createPDFNetworkStream;
 
 function setPDFNetworkStreamFactory(pdfNetworkStreamFactory) {
@@ -1747,7 +1783,7 @@ function getDocument(src) {
   }
 
   params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
-  params.CMapReaderFactory = params.CMapReaderFactory || _display_utils.DOMCMapReaderFactory;
+  params.CMapReaderFactory = params.CMapReaderFactory || DefaultCMapReaderFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
   params.fontExtraProperties = params.fontExtraProperties === true;
   params.pdfBug = params.pdfBug === true;
@@ -1848,7 +1884,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.87',
+    apiVersion: '2.6.103',
     source: {
       data: source.data,
       url: source.url,
@@ -2179,7 +2215,7 @@ class PDFPageProxy {
       intentState.streamReaderCancelTimeout = null;
     }
 
-    const canvasFactoryInstance = canvasFactory || new _display_utils.DOMCanvasFactory();
+    const canvasFactoryInstance = canvasFactory || new DefaultCanvasFactory();
     const webGLContext = new _webgl.WebGLContext({
       enable: enableWebGL
     });
@@ -3707,9 +3743,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.87';
+const version = '2.6.103';
 exports.version = version;
-const build = 'fe3df495c';
+const build = '72d71ba6a';
 exports.build = build;
 
 /***/ }),
@@ -3972,6 +4008,40 @@ exports.FontFaceObject = FontFaceObject;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.NodeCMapReaderFactory = exports.NodeCanvasFactory = void 0;
+
+var _display_utils = __w_pdfjs_require__(1);
+
+var _is_node = __w_pdfjs_require__(4);
+
+var _util = __w_pdfjs_require__(2);
+
+let NodeCanvasFactory = class {
+  constructor() {
+    (0, _util.unreachable)("Not implemented: NodeCanvasFactory");
+  }
+
+};
+exports.NodeCanvasFactory = NodeCanvasFactory;
+let NodeCMapReaderFactory = class {
+  constructor() {
+    (0, _util.unreachable)("Not implemented: NodeCMapReaderFactory");
+  }
+
+};
+exports.NodeCMapReaderFactory = NodeCMapReaderFactory;
+;
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.apiCompatibilityParams = void 0;
 
 var _is_node = __w_pdfjs_require__(4);
@@ -3982,7 +4052,7 @@ const apiCompatibilityParams = Object.freeze(compatibilityParams);
 exports.apiCompatibilityParams = apiCompatibilityParams;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -3995,7 +4065,7 @@ exports.CanvasGraphics = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _pattern_helper = __w_pdfjs_require__(9);
+var _pattern_helper = __w_pdfjs_require__(10);
 
 var MIN_FONT_SIZE = 16;
 var MAX_FONT_SIZE = 100;
@@ -6030,7 +6100,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
 exports.CanvasGraphics = CanvasGraphics;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -6511,7 +6581,7 @@ var TilingPattern = function TilingPatternClosure() {
 exports.TilingPattern = TilingPattern;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -6527,7 +6597,7 @@ GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? 
 GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? "" : GlobalWorkerOptions.workerSrc;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7028,7 +7098,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7041,7 +7111,7 @@ exports.Metadata = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _xml_parser = __w_pdfjs_require__(13);
+var _xml_parser = __w_pdfjs_require__(14);
 
 class Metadata {
   constructor(data) {
@@ -7156,7 +7226,7 @@ class Metadata {
 exports.Metadata = Metadata;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7599,7 +7669,7 @@ class SimpleXMLParser extends XMLParserBase {
 exports.SimpleXMLParser = SimpleXMLParser;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7954,7 +8024,7 @@ class PDFDataTransportStreamRangeReader {
 }
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8401,7 +8471,7 @@ var WebGLUtils = function WebGLUtilsClosure() {
 }();
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9437,7 +9507,7 @@ class AnnotationLayer {
 exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10132,7 +10202,7 @@ var renderTextLayer = function renderTextLayerClosure() {
 exports.renderTextLayer = renderTextLayer;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
