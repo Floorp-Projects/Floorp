@@ -34,8 +34,8 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
-import java.util.Date
 import java.util.Calendar
+import java.util.Date
 
 /**
  * Implementation of Robot Pattern for the settings search sub menu.
@@ -250,7 +250,9 @@ class BuildDateAssertion {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
                 val simpleDateFormat = SimpleDateFormat(DATE_PATTERN)
                 val date = simpleDateFormat.parse(dateText)
-                if (!date.isWithinRangeOf(hours)) throw AssertionError("The build date is not within Range.")
+                if (date == null || !date.isWithinRangeOf(hours)) {
+                    throw AssertionError("The build date is not within Range.")
+                }
             } else {
                 val textviewDate = getLocalDateTimeFromString(dateText)
                 val buildConfigDate = getLocalDateTimeFromString(BuildConfig.BUILD_DATE)

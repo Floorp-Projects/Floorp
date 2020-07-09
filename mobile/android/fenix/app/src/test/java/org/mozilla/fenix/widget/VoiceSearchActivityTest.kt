@@ -23,11 +23,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity.Companion.OPEN_TO_BROWSER_AND_LOAD
 import org.mozilla.fenix.IntentReceiverActivity
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.PREVIOUS_INTENT
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_REQUEST_CODE
 import org.robolectric.Robolectric
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.shadows.ShadowActivity
@@ -96,7 +96,7 @@ class VoiceSearchActivityTest {
         controller.create(savedInstanceState)
         controller.saveInstanceState(outState)
 
-        assertEquals(previousIntent, outState.getParcelable(PREVIOUS_INTENT) as Intent)
+        assertEquals(previousIntent, outState.getParcelable<Intent>(PREVIOUS_INTENT))
     }
 
     @Test

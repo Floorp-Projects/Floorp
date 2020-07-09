@@ -6,9 +6,7 @@ package org.mozilla.fenix.library.bookmarks
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Context
 import android.content.res.Resources
-import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import kotlinx.coroutines.CoroutineScope
@@ -51,8 +49,9 @@ interface BookmarkController {
 
 @SuppressWarnings("TooManyFunctions")
 class DefaultBookmarkController(
-    private val context: Context,
+    private val activity: HomeActivity,
     private val navController: NavController,
+    private val clipboardManager: ClipboardManager?,
     private val scope: CoroutineScope,
     private val store: BookmarkFragmentStore,
     private val sharedViewModel: BookmarksSharedViewModel,
@@ -63,8 +62,7 @@ class DefaultBookmarkController(
     private val invokePendingDeletion: () -> Unit
 ) : BookmarkController {
 
-    private val activity: HomeActivity = context as HomeActivity
-    private val resources: Resources = context.resources
+    private val resources: Resources = activity.resources
 
     override fun handleBookmarkChanged(item: BookmarkNode) {
         sharedViewModel.selectedFolder = item
@@ -115,7 +113,7 @@ class DefaultBookmarkController(
 
     override fun handleCopyUrl(item: BookmarkNode) {
         val urlClipData = ClipData.newPlainText(item.url, item.url)
-        context.getSystemService<ClipboardManager>()?.primaryClip = urlClipData
+        clipboardManager?.setPrimaryClip(urlClipData)
         showSnackbar(resources.getString(R.string.url_copied))
     }
 
@@ -143,14 +141,14 @@ class DefaultBookmarkController(
         scope.launch {
             store.dispatch(BookmarkFragmentAction.StartSync)
             invokePendingDeletion()
-            context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.User).await()
+            activity.components.backgroundServices.accountManager.syncNowAsync(SyncReason.User).await()
             // The current bookmark node we are viewing may be made invalid after syncing so we
             // check if the current node is valid and if it isn't we find the nearest valid ancestor
             // and open it
             val validAncestorGuid = store.state.guidBackstack.findLast { guid ->
-                context.bookmarkStorage.getBookmark(guid) != null
+                activity.bookmarkStorage.getBookmark(guid) != null
             } ?: BookmarkRoot.Mobile.id
-            val node = context.bookmarkStorage.getBookmark(validAncestorGuid)!!
+            val node = activity.bookmarkStorage.getBookmark(validAncestorGuid)!!
             handleBookmarkExpand(node)
             store.dispatch(BookmarkFragmentAction.FinishSync)
         }
@@ -160,12 +158,12 @@ class DefaultBookmarkController(
         invokePendingDeletion.invoke()
         scope.launch {
             val parentGuid = store.state.guidBackstack.findLast { guid ->
-                store.state.tree?.guid != guid && context.bookmarkStorage.getBookmark(guid) != null
+                store.state.tree?.guid != guid && activity.bookmarkStorage.getBookmark(guid) != null
             }
             if (parentGuid == null) {
                 navController.popBackStack()
             } else {
-                val parent = context.bookmarkStorage.getBookmark(parentGuid)!!
+                val parent = activity.bookmarkStorage.getBookmark(parentGuid)!!
                 handleBookmarkExpand(parent)
             }
         }

@@ -6,7 +6,7 @@ package org.mozilla.fenix.whatsnew
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import java.util.concurrent.TimeUnit
 
 // This file is a modified port from Focus Android

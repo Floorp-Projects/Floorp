@@ -7,6 +7,7 @@ package org.mozilla.fenix.utils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.core.content.getSystemService
 import mozilla.components.support.utils.WebURLFinder
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
@@ -16,7 +17,7 @@ private const val MIME_TYPE_TEXT_HTML = "text/html"
  * A clipboard utility class that allows copying and pasting links/text to & from the clipboard
  */
 class ClipboardHandler(context: Context) {
-    private val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    private val clipboard = context.getSystemService<ClipboardManager>()!!
 
     var text: String?
         get() {
@@ -29,7 +30,7 @@ class ClipboardHandler(context: Context) {
             return null
         }
         set(value) {
-            clipboard.primaryClip = ClipData.newPlainText("Text", value)
+            clipboard.setPrimaryClip(ClipData.newPlainText("Text", value))
         }
 
     val url: String?

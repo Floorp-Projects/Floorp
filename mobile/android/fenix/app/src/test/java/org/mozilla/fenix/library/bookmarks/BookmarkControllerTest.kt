@@ -7,7 +7,6 @@ package org.mozilla.fenix.library.bookmarks
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -18,7 +17,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.spyk
@@ -42,7 +40,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 
-@SuppressWarnings("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass")
 @ExperimentalCoroutinesApi
 class BookmarkControllerTest {
 
@@ -51,6 +49,7 @@ class BookmarkControllerTest {
     private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))
     private val context: Context = mockk(relaxed = true)
     private val scope = TestCoroutineScope()
+    private val clipboardManager: ClipboardManager = mockk(relaxUnitFun = true)
     private val navController: NavController = mockk(relaxed = true)
     private val sharedViewModel: BookmarksSharedViewModel = mockk()
     private val loadBookmarkNode: suspend (String) -> BookmarkNode? = mockk(relaxed = true)
@@ -90,13 +89,6 @@ class BookmarkControllerTest {
 
     @Before
     fun setup() {
-        // needed for mocking 'getSystemService<ClipboardManager>()'
-        mockkStatic(
-            "androidx.core.content.ContextCompat",
-            "android.content.ClipData",
-            "org.mozilla.fenix.ext.ContextKt"
-        )
-
         every { homeActivity.components.services } returns services
         every { navController.currentDestination } returns NavDestination("").apply {
             id = R.id.bookmarkFragment
@@ -105,8 +97,9 @@ class BookmarkControllerTest {
         every { sharedViewModel.selectedFolder = any() } just runs
 
         controller = DefaultBookmarkController(
-            context = homeActivity,
+            activity = homeActivity,
             navController = navController,
+            clipboardManager = clipboardManager,
             scope = scope,
             store = bookmarkStore,
             sharedViewModel = sharedViewModel,
@@ -247,10 +240,7 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleCopyUrl should copy bookmark url to clipboard and show a toast`() {
-        val clipboardManager: ClipboardManager = mockk(relaxed = true)
         val urlCopiedMessage = context.getString(R.string.url_copied)
-        every { any<Context>().getSystemService<ClipboardManager>() } returns clipboardManager
-        every { ClipData.newPlainText(any(), any()) } returns mockk(relaxed = true)
 
         controller.handleCopyUrl(item)
 

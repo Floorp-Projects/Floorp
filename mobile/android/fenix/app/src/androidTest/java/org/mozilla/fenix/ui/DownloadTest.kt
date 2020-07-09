@@ -55,6 +55,7 @@ class DownloadTest {
         }
     }
 
+    @Suppress("Deprecation")
     @After
     fun tearDown() {
         mockWebServer.shutdown()

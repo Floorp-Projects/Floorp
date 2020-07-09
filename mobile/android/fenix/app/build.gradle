@@ -20,7 +20,7 @@ import org.mozilla.fenix.gradle.tasks.LintUnitTestRunner
 import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion Config.compileSdkVersion
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion Config.minSdkVersion

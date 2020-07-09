@@ -178,7 +178,7 @@ class HistoryControllerTest {
         controller.handleCopyUrl(historyItem)
 
         verify {
-            clipboardManager.primaryClip = capture(clipdata)
+            clipboardManager.setPrimaryClip(capture(clipdata))
             snackbar.show()
         }
         assertEquals(1, clipdata.captured.itemCount)

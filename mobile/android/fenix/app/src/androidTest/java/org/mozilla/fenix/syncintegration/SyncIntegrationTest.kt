@@ -6,35 +6,32 @@ package org.mozilla.fenix.syncintegration
 
 import android.os.SystemClock.sleep
 import android.widget.EditText
-
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-
-import org.junit.Rule
-import org.junit.Test
-import org.mozilla.fenix.helpers.HomeActivityTestRule
-
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockWebServer
 import org.hamcrest.Matchers.allOf
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.ext.toUri
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.accountSettings
-import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
-import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class SyncIntegrationTest {
@@ -185,7 +182,7 @@ class SyncIntegrationTest {
                 .className(EditText::class.java))
         emailInput.waitForExists(TestAssetHelper.waitingTime)
 
-        val emailAddress = javaClass.classLoader.getResource("email.txt").readText()
+        val emailAddress = javaClass.classLoader!!.getResource("email.txt").readText()
         emailInput.setText(emailAddress)
     }
 
@@ -199,7 +196,7 @@ class SyncIntegrationTest {
                 .instance(0)
                 .className(EditText::class.java))
 
-        val passwordValue = javaClass.classLoader.getResource("password.txt").readText()
+        val passwordValue = javaClass.classLoader!!.getResource("password.txt").readText()
         passwordInput.setText(passwordValue)
     }
 

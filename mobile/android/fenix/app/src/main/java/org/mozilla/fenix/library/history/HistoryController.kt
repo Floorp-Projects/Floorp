@@ -81,7 +81,7 @@ class DefaultHistoryController(
 
     override fun handleCopyUrl(item: HistoryItem) {
         val urlClipData = ClipData.newPlainText(item.url, item.url)
-        clipboardManager.primaryClip = urlClipData
+        clipboardManager.setPrimaryClip(urlClipData)
         with(snackbar) {
             setText(resources.getString(R.string.url_copied))
             show()

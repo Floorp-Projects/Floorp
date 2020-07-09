@@ -7,12 +7,12 @@ package org.mozilla.fenix.utils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class ClipboardHandlerTest {
@@ -32,7 +32,7 @@ class ClipboardHandlerTest {
     fun getText() {
         assertEquals(null, clipboardHandler.text)
 
-        clipboard.primaryClip = ClipData.newPlainText("Text", clipboardText)
+        clipboard.setPrimaryClip(ClipData.newPlainText("Text", clipboardText))
         assertEquals(clipboardText, clipboardHandler.text)
     }
 
@@ -48,7 +48,7 @@ class ClipboardHandlerTest {
     fun getUrl() {
         assertEquals(null, clipboardHandler.url)
 
-        clipboard.primaryClip = ClipData.newPlainText("Text", clipboardUrl)
+        clipboard.setPrimaryClip(ClipData.newPlainText("Text", clipboardUrl))
         assertEquals(clipboardUrl, clipboardHandler.url)
     }
 
@@ -56,7 +56,7 @@ class ClipboardHandlerTest {
     fun getUrlfromTextUrlMIME() {
         assertEquals(null, clipboardHandler.url)
 
-        clipboard.primaryClip = ClipData.newHtmlText("Html", clipboardUrl, clipboardUrl)
+        clipboard.setPrimaryClip(ClipData.newHtmlText("Html", clipboardUrl, clipboardUrl))
         assertEquals(clipboardUrl, clipboardHandler.url)
     }
 }

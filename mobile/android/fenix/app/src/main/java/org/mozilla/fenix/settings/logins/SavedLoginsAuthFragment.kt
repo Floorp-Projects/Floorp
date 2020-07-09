@@ -18,6 +18,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
@@ -270,8 +271,9 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
         }
     }
 
+    @Suppress("Deprecation")
     private fun showPinVerification() {
-        val manager = activity?.getSystemService(KEYGUARD_SERVICE) as KeyguardManager
+        val manager = activity?.getSystemService<KeyguardManager>()!!
         val intent = manager.createConfirmDeviceCredentialIntent(
             getString(R.string.logins_biometric_prompt_message_pin),
             getString(R.string.logins_biometric_prompt_message)
