@@ -254,7 +254,7 @@ MediaDataDecoder::ConversionRequired RemoteDecoderChild::NeedsConversion()
 }
 
 void RemoteDecoderChild::AssertOnManagerThread() const {
-  MOZ_ASSERT(NS_GetCurrentThread() == mThread);
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 }
 
 RemoteDecoderManagerChild* RemoteDecoderChild::GetManager() {
