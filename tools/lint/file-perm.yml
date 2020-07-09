@@ -9,7 +9,6 @@ file-perm:
         - .cpp
         - .h
         - .html
-        - .js
         - .jsm
         - .jsx
         - .m
@@ -18,6 +17,18 @@ file-perm:
         - .xhtml
         - .xml
         - .xul
+    support-files:
+        - 'tools/lint/file-perm/**'
+    type: external
+    payload: file-perm:lint
+
+maybe-shebang-file-perm:
+    description: "File permission check for files that might have `#!` header."
+    include:
+        - .
+    allow-shebang: true
+    extensions:
+        - .js
     support-files:
         - 'tools/lint/file-perm/**'
     type: external
