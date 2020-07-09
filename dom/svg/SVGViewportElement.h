@@ -20,10 +20,9 @@
 #include "nsISVGPoint.h"
 #include "SVGPreserveAspectRatio.h"
 
-class nsSVGOuterSVGFrame;
-
 namespace mozilla {
 class AutoPreserveAspectRatioOverride;
+class SVGOuterSVGFrame;
 class SVGViewportFrame;
 
 namespace dom {
@@ -43,7 +42,7 @@ class svgFloatSize {
 };
 
 class SVGViewportElement : public SVGGraphicsElement {
-  friend class ::nsSVGOuterSVGFrame;
+  friend class mozilla::SVGOuterSVGFrame;
   friend class mozilla::SVGViewportFrame;
 
  protected:

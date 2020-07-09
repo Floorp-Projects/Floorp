@@ -11,7 +11,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
-#include "nsIFrame.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsQueryFrame.h"
 #include "nsRect.h"
@@ -27,6 +26,11 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
+nsIFrame* NS_NewSVGContainerFrame(mozilla::PresShell* aPresShell,
+                                  mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
 /**
  * Base class for SVG container frames. Frame sub-classes that do not
  * display their contents directly (such as the frames for <marker> or
@@ -37,22 +41,22 @@ class PresShell;
  *                               *** WARNING ***
  *
  * Do *not* blindly cast to SVG element types in this class's methods (see the
- * warning comment for nsSVGDisplayContainerFrame below).
+ * warning comment for SVGDisplayContainerFrame below).
  */
-class nsSVGContainerFrame : public nsContainerFrame {
-  friend nsIFrame* NS_NewSVGContainerFrame(mozilla::PresShell* aPresShell,
-                                           ComputedStyle* aStyle);
+class SVGContainerFrame : public nsContainerFrame {
+  friend nsIFrame* ::NS_NewSVGContainerFrame(mozilla::PresShell* aPresShell,
+                                             ComputedStyle* aStyle);
 
  protected:
-  nsSVGContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                      ClassID aID)
+  SVGContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                    ClassID aID)
       : nsContainerFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT);
   }
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGContainerFrame)
 
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
   virtual gfxMatrix GetCanvasTM() { return gfxMatrix(); }
@@ -109,19 +113,19 @@ class nsSVGContainerFrame : public nsContainerFrame {
  * nsSVGGenericContainerFrame which is used for unrecognized elements in the
  * SVG namespace. Do *not* blindly cast to SVG element types.
  */
-class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
-                                   public nsSVGDisplayableFrame {
+class SVGDisplayContainerFrame : public SVGContainerFrame,
+                                 public nsSVGDisplayableFrame {
  protected:
-  nsSVGDisplayContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                             nsIFrame::ClassID aID)
-      : nsSVGContainerFrame(aStyle, aPresContext, aID) {
+  SVGDisplayContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                           nsIFrame::ClassID aID)
+      : SVGContainerFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayContainerFrame)
-  NS_DECL_ABSTRACT_FRAME(nsSVGDisplayContainerFrame)
+  NS_DECL_QUERYFRAME_TARGET(SVGDisplayContainerFrame)
+  NS_DECL_ABSTRACT_FRAME(SVGDisplayContainerFrame)
 
   // nsIFrame:
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
@@ -154,7 +158,9 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
   /**
    * Cached canvasTM value.
    */
-  mozilla::UniquePtr<gfxMatrix> mCanvasTM;
+  UniquePtr<gfxMatrix> mCanvasTM;
 };
+
+}  // namespace mozilla
 
 #endif

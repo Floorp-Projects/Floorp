@@ -38,7 +38,7 @@ void SVGGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                    static_cast<SVGElement*>(aContent)->IsTransformable(),
                "The element is not transformable");
 
-  nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

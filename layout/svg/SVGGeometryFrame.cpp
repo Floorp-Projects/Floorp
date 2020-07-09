@@ -180,7 +180,7 @@ bool SVGGeometryFrame::IsSVGTransformed(
   if (parent &&
       parent->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
     foundTransform =
-        static_cast<nsSVGContainerFrame*>(parent)->HasChildrenOnlyTransform(
+        static_cast<SVGContainerFrame*>(parent)->HasChildrenOnlyTransform(
             aFromParentTransform);
   }
 
@@ -601,8 +601,8 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
 gfxMatrix SVGGeometryFrame::GetCanvasTM() {
   NS_ASSERTION(GetParent(), "null parent");
 
-  nsSVGContainerFrame* parent = static_cast<nsSVGContainerFrame*>(GetParent());
-  SVGGraphicsElement* content = static_cast<SVGGraphicsElement*>(GetContent());
+  auto* parent = static_cast<SVGContainerFrame*>(GetParent());
+  auto* content = static_cast<SVGGraphicsElement*>(GetContent());
 
   return content->PrependLocalTransformsTo(parent->GetCanvasTM());
 }
