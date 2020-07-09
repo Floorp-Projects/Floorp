@@ -2174,7 +2174,6 @@ WorkerPrivate::WorkerPrivate(
       mDebuggerRegistered(false),
       mDebuggerReady(true),
       mIsInAutomation(false),
-      mPerformanceCounter(nullptr),
       mId(std::move(aId)),
       mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy) {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
@@ -5153,19 +5152,6 @@ void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
       aString.Append(workerRef->Name());
     }
   }
-}
-
-void WorkerPrivate::EnsurePerformanceCounter() {
-  AssertIsOnWorkerThread();
-  if (!mPerformanceCounter) {
-    nsPrintfCString workerName("Worker:%s",
-                               NS_ConvertUTF16toUTF8(mWorkerName).get());
-    mPerformanceCounter = new PerformanceCounter(workerName);
-  }
-}
-
-PerformanceCounter* WorkerPrivate::GetPerformanceCounter() {
-  return mPerformanceCounter;
 }
 
 PerformanceStorage* WorkerPrivate::GetPerformanceStorage() {
