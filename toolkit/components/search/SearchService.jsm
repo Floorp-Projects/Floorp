@@ -1634,9 +1634,7 @@ SearchService.prototype = {
     return engines;
   },
 
-  async _findEngineSelectorEngines() {
-    logConsole.debug("Finding engine configuration from the selector");
-
+  async _fetchEngineSelectorEngines() {
     let locale = Services.locale.appLocaleAsBCP47;
     let region = Region.home || "default";
 
@@ -1653,26 +1651,36 @@ SearchService.prototype = {
       SearchUtils.distroID
     );
 
-    const defaultEngine = engines[0];
-    function getLocale(engineInfo) {
-      return "webExtension" in engineInfo && "locale" in engineInfo.webExtension
-        ? engineInfo.webExtension.locale
-        : SearchUtils.DEFAULT_TAG;
+    for (let e of engines) {
+      if (!e.webExtension) {
+        e.webExtension = {};
+      }
+      e.webExtension.locale = e.webExtension?.locale ?? SearchUtils.DEFAULT_TAG;
     }
+
+    return { engines, privateDefault };
+  },
+
+  async _findEngineSelectorEngines() {
+    logConsole.debug("Finding engine configuration from the selector");
+
+    let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
+
+    const defaultEngine = engines[0];
     this._searchDefault = {
       id: defaultEngine.webExtension.id,
-      locale: getLocale(defaultEngine),
+      locale: defaultEngine.webExtension.locale,
     };
     this._searchOrder = engines.map(e => {
       return {
         id: e.webExtension.id,
-        locale: getLocale(e),
+        locale: e.webExtension.locale,
       };
     });
     if (privateDefault) {
       this._searchPrivateDefault = {
         id: privateDefault.webExtension.id,
-        locale: getLocale(privateDefault),
+        locale: privateDefault.webExtension.locale,
       };
     }
     return engines;
@@ -2399,7 +2407,13 @@ SearchService.prototype = {
    */
   async addEnginesFromExtension(extension) {
     logConsole.debug("addEnginesFromExtension: " + extension.id);
-    if (extension.startupReason == "ADDON_UPGRADE") {
+    // Treat add-on upgrade and downgrades the same - either way, the search
+    // engine gets updated, not added. Generally, we don't expect a downgrade,
+    // but just in case...
+    if (
+      extension.startupReason == "ADDON_UPGRADE" ||
+      extension.startupReason == "ADDON_DOWNGRADE"
+    ) {
       return this._upgradeExtensionEngine(extension);
     }
 
@@ -2432,21 +2446,48 @@ SearchService.prototype = {
    *   An Extension object containing data about the extension.
    */
   async _upgradeExtensionEngine(extension) {
-    let engines = await this.getEnginesByExtensionID(extension.id);
-    for (let engine of engines) {
+    if (!gModernConfig) {
+      let extensionEngines = await this.getEnginesByExtensionID(extension.id);
+
+      for (let engine of extensionEngines) {
+        let manifest = extension.manifest;
+        let locale = engine._locale || SearchUtils.DEFAULT_TAG;
+        if (locale != SearchUtils.DEFAULT_TAG) {
+          manifest = await extension.getLocalizedManifest(locale);
+        }
+        engine._updateFromManifest(
+          extension.id,
+          extension.baseURI,
+          manifest,
+          locale
+        );
+      }
+      return extensionEngines;
+    }
+
+    let { engines } = await this._fetchEngineSelectorEngines();
+    let extensionEngines = await this.getEnginesByExtensionID(extension.id);
+
+    for (let engine of extensionEngines) {
       let manifest = extension.manifest;
       let locale = engine._locale || SearchUtils.DEFAULT_TAG;
       if (locale != SearchUtils.DEFAULT_TAG) {
         manifest = await extension.getLocalizedManifest(locale);
       }
+      let configuration =
+        engines.find(
+          e =>
+            e.webExtension.id == extension.id && e.webExtension.locale == locale
+        ) ?? {};
       engine._updateFromManifest(
         extension.id,
         extension.baseURI,
         manifest,
-        locale
+        locale,
+        configuration
       );
     }
-    return engines;
+    return extensionEngines;
   },
 
   /**
