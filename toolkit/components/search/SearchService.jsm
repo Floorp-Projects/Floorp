@@ -2474,30 +2474,6 @@ SearchService.prototype = {
     // manifest, wait for that here.
     await policy.readyPromise;
 
-    let params = {
-      extraParams: config.extraParams,
-      telemetryId: config.telemetryId,
-      orderHint: config.orderHint,
-      regionParams: config.regionParams,
-    };
-
-    // Modern Config encodes params as objects whereas they are
-    // strings in webExtensions, stringify them here.
-    if ("params" in config) {
-      for (const key of [
-        "searchUrlGetParams",
-        "searchUrlPostParams",
-        "suggestUrlGetParams",
-        "suggestUrlPostParams",
-      ]) {
-        if (key in config.params) {
-          params[key] = new URLSearchParams(
-            config.params[key].map(kv => [kv.name, kv.value])
-          ).toString();
-        }
-      }
-    }
-
     let locale =
       "locale" in config.webExtension
         ? config.webExtension.locale
@@ -2525,7 +2501,7 @@ SearchService.prototype = {
       policy.extension.baseURI,
       manifest,
       locale,
-      params
+      config
     );
     if (isReload && this._engines.has(engine.name)) {
       engine._engineToUpdate = this._engines.get(engine.name);
