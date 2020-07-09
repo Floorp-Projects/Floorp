@@ -64,6 +64,9 @@ void nsAutoOwningEventTarget ::AssertCurrentThreadOwnsMe(
 }
 
 bool nsAutoOwningEventTarget::IsCurrentThread() const {
+  // This API is only ever used for debug builds and has no JS implementation
+  // Avoid triggering the Hazard static-analyzer.
+  JS::AutoSuppressGCAnalysis suppress;
   return mTarget->IsOnCurrentThread();
 }
 
