@@ -80,10 +80,12 @@ class ScriptStencilIterable {
    public:
     ScriptStencil& stencil;
     HandleFunction function;
+    FunctionIndex functionIndex;
 
     ScriptAndFunction() = delete;
-    ScriptAndFunction(ScriptStencil& stencil, HandleFunction function)
-        : stencil(stencil), function(function) {}
+    ScriptAndFunction(ScriptStencil& stencil, HandleFunction function,
+                      FunctionIndex functionIndex)
+        : stencil(stencil), function(function), functionIndex(functionIndex) {}
   };
 
   class Iterator {
@@ -139,6 +141,8 @@ class ScriptStencilIterable {
 // compilation as well as controls the lifetime of parse nodes and other data by
 // controling the mark and reset of the LifoAlloc.
 struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
+  static const size_t TopLevelFunctionIndex = 0;
+
   JSContext* cx;
   const JS::ReadOnlyCompileOptions& options;
 
@@ -313,8 +317,11 @@ ScriptStencilIterable::Iterator::operator*() {
                                ? compilationInfo_->topLevel.get()
                                : compilationInfo_->funcData[index_].get();
 
-  return ScriptAndFunction(stencil,
-                           compilationInfo_->functions[*stencil.functionIndex]);
+  FunctionIndex functionIndex = FunctionIndex(
+      state_ == State::TopLevel ? CompilationInfo::TopLevelFunctionIndex
+                                : index_);
+  return ScriptAndFunction(stencil, compilationInfo_->functions[functionIndex],
+                           functionIndex);
 }
 
 /* static */ inline ScriptStencilIterable::Iterator

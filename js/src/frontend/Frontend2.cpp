@@ -421,7 +421,8 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   }
   stencil.extent = SourceExtent::makeGlobalExtent(length);
 
-  RootedScript script(cx, JSScript::fromStencil(cx, compilationInfo, stencil));
+  RootedScript script(
+      cx, JSScript::fromStencil(cx, compilationInfo, stencil, nullptr));
   if (!script) {
     return nullptr;
   }

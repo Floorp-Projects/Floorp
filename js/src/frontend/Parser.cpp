@@ -252,6 +252,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBoxImpl(
   MOZ_ASSERT(funNode);
 
   size_t index = compilationInfo_.funcData.length();
+  MOZ_ASSERT_IF(isTopLevel == TopLevelFunction::Yes,
+                index == CompilationInfo::TopLevelFunctionIndex);
+
   if (!compilationInfo_.functions.emplaceBack(fun)) {
     return nullptr;
   }
@@ -1917,7 +1920,8 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
 
 static JSFunction* CreateFunction(JSContext* cx,
                                   CompilationInfo& compilationInfo,
-                                  ScriptStencil& stencil) {
+                                  ScriptStencil& stencil,
+                                  FunctionIndex functionIndex) {
   GeneratorKind generatorKind =
       stencil.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
           ? GeneratorKind::Generator
@@ -1951,7 +1955,7 @@ static JSFunction* CreateFunction(JSContext* cx,
 
   if (stencil.isAsmJSModule) {
     RefPtr<const JS::WasmModule> asmJS =
-        compilationInfo.asmJS.lookup(*stencil.functionIndex)->value();
+        compilationInfo.asmJS.lookup(functionIndex)->value();
 
     JSObject* moduleObj = asmJS->createObjectForAsmJS(cx);
     if (!moduleObj) {
@@ -1970,15 +1974,17 @@ static bool InstantiateFunctions(JSContext* cx,
                                  CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
     auto& stencil = item.stencil;
+    auto functionIndex = item.functionIndex;
     if (item.function) {
       continue;
     }
 
-    RootedFunction fun(cx, CreateFunction(cx, compilationInfo, stencil));
+    RootedFunction fun(
+        cx, CreateFunction(cx, compilationInfo, stencil, functionIndex));
     if (!fun) {
       return false;
     }
-    compilationInfo.functions[*stencil.functionIndex].set(fun);
+    compilationInfo.functions[functionIndex].set(fun);
   }
 
   return true;
@@ -2027,8 +2033,8 @@ static bool InstantiateScriptStencils(JSContext* cx,
         continue;
       }
 
-      RootedScript script(cx,
-                          JSScript::fromStencil(cx, compilationInfo, stencil));
+      RootedScript script(
+          cx, JSScript::fromStencil(cx, compilationInfo, stencil, fun));
       if (!script) {
         return false;
       }
@@ -2052,6 +2058,10 @@ static bool InstantiateScriptStencils(JSContext* cx,
 static bool InstantiateTopLevel(JSContext* cx,
                                 CompilationInfo& compilationInfo) {
   ScriptStencil& stencil = compilationInfo.topLevel.get();
+  RootedFunction fun(cx);
+  if (stencil.isFunction()) {
+    fun = compilationInfo.functions[CompilationInfo::TopLevelFunctionIndex];
+  }
 
   // Top-level asm.js does not generate a JSScript.
   if (stencil.isAsmJSModule) {
@@ -2063,10 +2073,11 @@ static bool InstantiateTopLevel(JSContext* cx,
   if (compilationInfo.lazy) {
     compilationInfo.script = JSScript::CastFromLazy(compilationInfo.lazy);
     return JSScript::fullyInitFromStencil(cx, compilationInfo,
-                                          compilationInfo.script, stencil);
+                                          compilationInfo.script, stencil, fun);
   }
 
-  compilationInfo.script = JSScript::fromStencil(cx, compilationInfo, stencil);
+  compilationInfo.script =
+      JSScript::fromStencil(cx, compilationInfo, stencil, fun);
   return !!compilationInfo.script;
 }
 
