@@ -84,9 +84,7 @@ async function testResetWhenResizingViewport(ui) {
     ui,
     ".viewport-vertical-resize-handle",
     [-10, -10],
-    [testDevice.width, testDevice.height - 10],
-    [0, -10],
-    ui
+    [0, -10]
   );
   await deviceRemoved;
 

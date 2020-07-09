@@ -80,7 +80,6 @@ async function testResizingViewport(ui, device, touch) {
     ui,
     ".viewport-vertical-resize-handle",
     [-10, -10],
-    [testDevice.width, testDevice.height - 10],
     [0, -10],
     ui
   );

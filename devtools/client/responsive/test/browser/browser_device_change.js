@@ -56,7 +56,6 @@ addRDMTask(
       ui,
       ".viewport-vertical-resize-handle",
       [-10, -10],
-      [testDevice.width, testDevice.height - 10],
       [0, -10]
     );
 
