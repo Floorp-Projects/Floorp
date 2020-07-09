@@ -40,11 +40,6 @@ const PREFERENCES = [
       "url (parent process to content process). Or when navigating between " +
       "two distinct domains if `fission.autostart` is set to true",
   ],
-  [
-    "devtools.responsive.browserUI.enabled",
-    "Enable the new version of RDM that doesn't rely on tunnelling and is " +
-      "Fission compatible",
-  ],
 ];
 
 /**
