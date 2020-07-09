@@ -177,9 +177,9 @@ class NonshrinkingGCObjectVector
     : public GCVector<JSObject*, 0, SystemAllocPolicy> {
  public:
   void sweep() {
-    for (uint32_t i = 0; i < this->length(); i++) {
-      if (JS::GCPolicy<JSObject*>::needsSweep(&(*this)[i])) {
-        (*this)[i] = nullptr;
+    for (JSObject*& obj : *this) {
+      if (JS::GCPolicy<JSObject*>::needsSweep(&obj)) {
+          obj = nullptr;
       }
     }
   }
