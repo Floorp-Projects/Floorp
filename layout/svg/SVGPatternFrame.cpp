@@ -16,17 +16,17 @@
 #include "gfxPlatform.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGContentUtils.h"
+#include "mozilla/SVGGeometryFrame.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
 #include "nsSVGDisplayableFrame.h"
-#include "SVGObserverUtils.h"
-#include "SVGGeometryFrame.h"
 #include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
-#include "SVGContentUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGUnitTypes_Binding;
@@ -89,7 +89,7 @@ void SVGPatternFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 #endif /* DEBUG */
 
 //----------------------------------------------------------------------
-// nsSVGContainerFrame methods:
+// SVGContainerFrame methods:
 
 // If our GetCanvasTM is getting called, we
 // need to return *our current* transformation

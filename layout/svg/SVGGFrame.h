@@ -8,8 +8,8 @@
 #define NSSVGGFRAME_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "gfxMatrix.h"
-#include "nsSVGContainerFrame.h"
 
 namespace mozilla {
 class PresShell;
@@ -20,7 +20,7 @@ nsIFrame* NS_NewSVGGFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGGFrame : public nsSVGDisplayContainerFrame {
+class SVGGFrame : public SVGDisplayContainerFrame {
   friend nsIFrame* ::NS_NewSVGGFrame(mozilla::PresShell* aPresShell,
                                      mozilla::ComputedStyle* aStyle);
   explicit SVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -29,7 +29,7 @@ class SVGGFrame : public nsSVGDisplayContainerFrame {
  protected:
   SVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
             nsIFrame::ClassID aID)
-      : nsSVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
+      : SVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGGFrame)

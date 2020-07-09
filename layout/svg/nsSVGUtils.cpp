@@ -28,11 +28,9 @@
 #include "nsStyleStruct.h"
 #include "nsStyleTransformMatrix.h"
 #include "SVGAnimatedLength.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGDisplayableFrame.h"
 #include "SVGFilterPaintCallback.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGOuterSVGFrame.h"
 #include "SVGPaintServerFrame.h"
 #include "nsTextFrame.h"
 #include "mozilla/CSSClipPathInstance.h"
@@ -40,12 +38,14 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGClipPathFrame.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGContextPaint.h"
 #include "mozilla/SVGForeignObjectFrame.h"
 #include "mozilla/SVGGeometryFrame.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/Unused.h"
 #include "mozilla/gfx/2D.h"
@@ -137,7 +137,7 @@ bool nsSVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame* aFrame) {
 }
 
 bool nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(nsIFrame* aFrame) {
-  nsSVGOuterSVGFrame* outer = GetOuterSVGFrame(aFrame);
+  SVGOuterSVGFrame* outer = GetOuterSVGFrame(aFrame);
   do {
     if (outer->IsCallingReflowSVG()) {
       return true;
@@ -158,7 +158,7 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
 
   // We don't call SVGObserverUtils::InvalidateRenderingObservers here because
   // we should only be called under InvalidateAndScheduleReflowSVG (which
-  // calls InvalidateBounds) or nsSVGDisplayContainerFrame::InsertFrames
+  // calls InvalidateBounds) or SVGDisplayContainerFrame::InsertFrames
   // (at which point the frame has no observers).
 
   if (aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
@@ -171,12 +171,12 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
     return;
   }
 
-  nsSVGOuterSVGFrame* outerSVGFrame = nullptr;
+  SVGOuterSVGFrame* outerSVGFrame = nullptr;
 
-  // We must not add dirty bits to the nsSVGOuterSVGFrame or else
+  // We must not add dirty bits to the SVGOuterSVGFrame or else
   // PresShell::FrameNeedsReflow won't work when we pass it in below.
   if (aFrame->IsSVGOuterSVGFrame()) {
-    outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(aFrame);
+    outerSVGFrame = static_cast<SVGOuterSVGFrame*>(aFrame);
   } else {
     aFrame->MarkSubtreeDirty();
 
@@ -191,16 +191,16 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
                  "IsSVGOuterSVGFrame check above not valid!");
     }
 
-    outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(f);
+    outerSVGFrame = static_cast<SVGOuterSVGFrame*>(f);
 
     MOZ_ASSERT(outerSVGFrame && outerSVGFrame->IsSVGOuterSVGFrame(),
-               "Did not find nsSVGOuterSVGFrame!");
+               "Did not find SVGOuterSVGFrame!");
   }
 
   if (outerSVGFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
-    // We're currently under an nsSVGOuterSVGFrame::Reflow call so there is no
+    // We're currently under an SVGOuterSVGFrame::Reflow call so there is no
     // need to call PresShell::FrameNeedsReflow, since we have an
-    // nsSVGOuterSVGFrame::DidReflow call pending.
+    // SVGOuterSVGFrame::DidReflow call pending.
     return;
   }
 
@@ -278,10 +278,10 @@ float nsSVGUtils::UserSpace(const UserSpaceMetrics& aMetrics,
   return aLength->GetAnimValue(aMetrics);
 }
 
-nsSVGOuterSVGFrame* nsSVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {
+SVGOuterSVGFrame* nsSVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {
   while (aFrame) {
     if (aFrame->IsSVGOuterSVGFrame()) {
-      return static_cast<nsSVGOuterSVGFrame*>(aFrame);
+      return static_cast<SVGOuterSVGFrame*>(aFrame);
     }
     aFrame = aFrame->GetParent();
   }
@@ -295,7 +295,7 @@ nsIFrame* nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
   if (!svg) {
     return nullptr;
   }
-  nsSVGOuterSVGFrame* outer = GetOuterSVGFrame(aFrame);
+  SVGOuterSVGFrame* outer = GetOuterSVGFrame(aFrame);
   if (outer == svg) {
     return nullptr;
   }
@@ -355,7 +355,7 @@ gfxMatrix nsSVGUtils::GetCanvasTM(nsIFrame* aFrame) {
     return GetCSSPxToDevPxMatrix(aFrame);
   }
 
-  nsSVGContainerFrame* containerFrame = do_QueryFrame(aFrame);
+  SVGContainerFrame* containerFrame = do_QueryFrame(aFrame);
   if (containerFrame) {
     return containerFrame->GetCanvasTM();
   }
@@ -614,7 +614,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     gfxMatrix tm = aTransform;
     if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
       gfx::Matrix childrenOnlyTM;
-      if (static_cast<nsSVGContainerFrame*>(aFrame)->HasChildrenOnlyTransform(
+      if (static_cast<SVGContainerFrame*>(aFrame)->HasChildrenOnlyTransform(
               &childrenOnlyTM)) {
         // Undo the children-only transform:
         if (!childrenOnlyTM.Invert()) {
@@ -826,7 +826,7 @@ bool nsSVGUtils::HitTestClip(nsIFrame* aFrame, const gfxPoint& aPoint) {
   return true;
 }
 
-nsIFrame* nsSVGUtils::HitTestChildren(nsSVGDisplayContainerFrame* aFrame,
+nsIFrame* nsSVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,
                                       const gfxPoint& aPoint) {
   // First we transform aPoint into the coordinate space established by aFrame
   // for its children (e.g. take account of any 'viewBox' attribute):

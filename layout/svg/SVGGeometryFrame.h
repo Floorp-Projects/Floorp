@@ -28,6 +28,10 @@ namespace gfx {
 class DrawTarget;
 }  // namespace gfx
 
+namespace image {
+struct imgDrawingParams;
+}  // namespace image
+
 }  // namespace mozilla
 
 class gfxContext;
@@ -43,7 +47,7 @@ nsIFrame* NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
 namespace mozilla {
 
 class SVGGeometryFrame : public nsIFrame, public nsSVGDisplayableFrame {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef gfx::DrawTarget DrawTarget;
 
   friend nsIFrame* ::NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
@@ -141,7 +145,7 @@ class SVGGeometryFrame : public nsIFrame, public nsSVGDisplayableFrame {
 // Display list item:
 
 class DisplaySVGGeometry final : public nsPaintedDisplayItem {
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+  typedef image::imgDrawingParams imgDrawingParams;
 
  public:
   DisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)

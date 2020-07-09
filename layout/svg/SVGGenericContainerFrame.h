@@ -8,11 +8,11 @@
 #define __NS_SVGGENERICCONTAINERFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "gfxMatrix.h"
 #include "nsIFrame.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
-#include "nsSVGContainerFrame.h"
 
 class nsAtom;
 class nsIFrame;
@@ -26,14 +26,14 @@ nsIFrame* NS_NewSVGGenericContainerFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGGenericContainerFrame final : public nsSVGDisplayContainerFrame {
+class SVGGenericContainerFrame final : public SVGDisplayContainerFrame {
   friend nsIFrame* ::NS_NewSVGGenericContainerFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
  protected:
   explicit SVGGenericContainerFrame(ComputedStyle* aStyle,
                                     nsPresContext* aPresContext)
-      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
+      : SVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGGenericContainerFrame)
@@ -48,7 +48,7 @@ class SVGGenericContainerFrame final : public nsSVGDisplayContainerFrame {
   }
 #endif
 
-  // nsSVGContainerFrame methods:
+  // SVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 };
 

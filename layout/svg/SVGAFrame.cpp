@@ -7,9 +7,9 @@
 // Keep in (case-insensitive) order:
 #include "gfxMatrix.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "SVGLengthList.h"
@@ -19,13 +19,13 @@ nsIFrame* NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGAFrame final : public nsSVGDisplayContainerFrame {
+class SVGAFrame final : public SVGDisplayContainerFrame {
   friend nsIFrame* ::NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
  protected:
   explicit SVGAFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
+      : SVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGAFrame)
@@ -70,7 +70,7 @@ void SVGAFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                "Trying to construct an SVGAFrame for a "
                "content element that doesn't support the right interfaces");
 
-  nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

@@ -11,8 +11,8 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "nsIFrame.h"
+#include "mozilla/SVGContainerFrame.h"
 #include "nsSVGDisplayableFrame.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "mozilla/dom/SVGViewportElement.h"
 
@@ -51,8 +51,8 @@ void SVGViewportFrame::PaintSVG(gfxContext& aContext,
     nsSVGUtils::SetClipRect(&aContext, aTransform, clipRect);
   }
 
-  nsSVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aImgParams,
-                                       aDirtyRect);
+  SVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aImgParams,
+                                     aDirtyRect);
 }
 
 void SVGViewportFrame::ReflowSVG() {
@@ -70,7 +70,7 @@ void SVGViewportFrame::ReflowSVG() {
     InvalidateFrame();
   }
 
-  nsSVGDisplayContainerFrame::ReflowSVG();
+  SVGDisplayContainerFrame::ReflowSVG();
 }
 
 void SVGViewportFrame::NotifySVGChanged(uint32_t aFlags) {
@@ -119,7 +119,7 @@ void SVGViewportFrame::NotifySVGChanged(uint32_t aFlags) {
     }
   }
 
-  nsSVGDisplayContainerFrame::NotifySVGChanged(aFlags);
+  SVGDisplayContainerFrame::NotifySVGChanged(aFlags);
 }
 
 SVGBBox SVGViewportFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
@@ -152,7 +152,7 @@ SVGBBox SVGViewportFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   }
 
   SVGBBox descendantsBbox =
-      nsSVGDisplayContainerFrame::GetBBoxContribution(aToBBoxUserspace, aFlags);
+      SVGDisplayContainerFrame::GetBBoxContribution(aToBBoxUserspace, aFlags);
 
   bbox.UnionEdges(descendantsBbox);
 
@@ -240,7 +240,7 @@ nsIFrame* SVGViewportFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     }
   }
 
-  return nsSVGDisplayContainerFrame::GetFrameForPoint(aPoint);
+  return SVGDisplayContainerFrame::GetFrameForPoint(aPoint);
 }
 
 //----------------------------------------------------------------------
@@ -256,7 +256,7 @@ void SVGViewportFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
 }
 
 //----------------------------------------------------------------------
-// nsSVGContainerFrame methods:
+// SVGContainerFrame methods:
 
 bool SVGViewportFrame::HasChildrenOnlyTransform(gfx::Matrix* aTransform) const {
   SVGViewportElement* content = static_cast<SVGViewportElement*>(GetContent());

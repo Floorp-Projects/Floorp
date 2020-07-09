@@ -13,13 +13,12 @@
 #include "SVGStringList.h"
 #include "mozilla/dom/SVGElement.h"
 
-class nsSVGOuterSVGFrame;
-
 nsresult NS_NewSVGViewElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 class SVGFragmentIdentifier;
+class SVGOuterSVGFrame;
 
 namespace dom {
 class SVGViewportElement;
@@ -29,9 +28,9 @@ typedef SVGElement SVGViewElementBase;
 class SVGViewElement : public SVGViewElementBase {
  protected:
   friend class mozilla::SVGFragmentIdentifier;
+  friend class mozilla::SVGOuterSVGFrame;
   friend class SVGSVGElement;
   friend class SVGViewportElement;
-  friend class ::nsSVGOuterSVGFrame;
   explicit SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   friend nsresult(::NS_NewSVGViewElement(
       nsIContent** aResult,

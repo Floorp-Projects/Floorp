@@ -40,12 +40,12 @@ nsresult SVGGenericContainerFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
-// nsSVGContainerFrame methods:
+// SVGContainerFrame methods:
 
 gfxMatrix SVGGenericContainerFrame::GetCanvasTM() {
   NS_ASSERTION(GetParent(), "null parent");
 
-  return static_cast<nsSVGContainerFrame*>(GetParent())->GetCanvasTM();
+  return static_cast<SVGContainerFrame*>(GetParent())->GetCanvasTM();
 }
 
 }  // namespace mozilla

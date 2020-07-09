@@ -996,7 +996,7 @@ void SVGTemplateElementObserver::OnRenderingChange() {
  *
  * InvalidateAll must be called before this object is destroyed, i.e.
  * before the referenced frame is destroyed. This should normally happen
- * via nsSVGContainerFrame::RemoveFrame, since only frames in the frame
+ * via SVGContainerFrame::RemoveFrame, since only frames in the frame
  * tree should be referenced.
  */
 class SVGRenderingObserverSet {
