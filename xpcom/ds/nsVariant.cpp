@@ -78,8 +78,8 @@ nsresult nsDiscriminatedUnion::ToManageableNumber(
       // This group results in a uint32_t...
 
     case nsIDataType::VTYPE_UINT32:
-      aOutData->u.mInt32Value = u.mUint32Value;
-      aOutData->mType = nsIDataType::VTYPE_INT32;
+      aOutData->u.mUint32Value = u.mUint32Value;
+      aOutData->mType = nsIDataType::VTYPE_UINT32;
       return NS_OK;
 
       // This group results in a double...
