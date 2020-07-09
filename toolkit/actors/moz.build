@@ -55,7 +55,6 @@ FINAL_TARGET_FILES.actors += [
     'RemotePageChild.jsm',
     'SelectChild.jsm',
     'SelectParent.jsm',
-    'SidebarSearchParent.jsm',
     'ThumbnailsChild.jsm',
     'UAWidgetsChild.jsm',
     'UnselectedTabHoverChild.jsm',

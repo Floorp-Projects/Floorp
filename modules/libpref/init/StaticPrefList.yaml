@@ -1080,7 +1080,7 @@
 # from parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-controlled
   type: bool
-  value: false 
+  value: false
   mirror: always
 
 - name: browser.tabs.remote.desktopbehavior
@@ -2699,13 +2699,6 @@
 
 - name: dom.workers.serialized-sab-access
   type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# External.AddSearchProvider is deprecated and it will be removed in the next
-# cycles.
-- name: dom.sidebar.enabled
-  type: bool
   value: false
   mirror: always
 
