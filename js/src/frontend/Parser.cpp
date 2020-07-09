@@ -1783,6 +1783,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
+  ScriptStencil& stencil = funbox->functionStencil().get();
 
   if (funbox->isInterpreted()) {
     // BCE will need to generate bytecode for this.
@@ -1821,6 +1822,9 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
     funbox->namedLambdaBindings().set(*bindings);
   }
 
+  funbox->finishScriptFlags();
+  funbox->copyFunctionFields(stencil);
+
   return true;
 }
 
@@ -1839,13 +1843,9 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   FunctionBox* funbox = pc_->functionBox();
   ScriptStencil& stencil = funbox->functionStencil().get();
 
-  // Compute the flags for the BaseScript.
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-  stencil.immutableFlags = funbox->immutableFlags();
-  stencil.immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
-                                 funbox->hasMappedArgsObj());
-  stencil.immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                                 funbox->isLikelyConstructorWrapper());
+  funbox->finishScriptFlags();
+  funbox->copyFunctionFields(stencil);
+  funbox->copyScriptFields(stencil);
 
   // Elide nullptr sentinels from end of binding list. These are inserted for
   // each scope regardless of if any bindings are actually closed over.
@@ -1918,6 +1918,56 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
   return true;
 }
 
+static JSFunction* CreateFunction(JSContext* cx,
+                                  CompilationInfo& compilationInfo,
+                                  ScriptStencil& stencil,
+                                  HandleAtom displayAtom) {
+  GeneratorKind generatorKind =
+      stencil.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
+          ? GeneratorKind::Generator
+          : GeneratorKind::NotGenerator;
+  FunctionAsyncKind asyncKind =
+      stencil.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync)
+          ? FunctionAsyncKind::AsyncFunction
+          : FunctionAsyncKind::SyncFunction;
+
+  // Determine the new function's proto. This must be done for singleton
+  // functions.
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
+    return nullptr;
+  }
+
+  gc::AllocKind allocKind = stencil.functionFlags.isExtended()
+                                ? gc::AllocKind::FUNCTION_EXTENDED
+                                : gc::AllocKind::FUNCTION;
+
+  JSNative maybeNative = stencil.isAsmJSModule ? InstantiateAsmJS : nullptr;
+
+  RootedFunction fun(
+      cx, NewFunctionWithProto(cx, maybeNative, stencil.nargs,
+                               stencil.functionFlags, nullptr, displayAtom,
+                               proto, allocKind, TenuredObject));
+  if (!fun) {
+    return nullptr;
+  }
+
+  if (stencil.isAsmJSModule) {
+    RefPtr<const JS::WasmModule> asmJS =
+        compilationInfo.asmJS.lookup(*stencil.functionIndex)->value();
+
+    JSObject* moduleObj = asmJS->createObjectForAsmJS(cx);
+    if (!moduleObj) {
+      return nullptr;
+    }
+
+    fun->setExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT,
+                         ObjectValue(*moduleObj));
+  }
+
+  return fun;
+}
+
 // Instantiate JSFunctions for each FunctionBox.
 static bool InstantiateFunctions(JSContext* cx,
                                  CompilationInfo& compilationInfo,
@@ -1927,11 +1977,14 @@ static bool InstantiateFunctions(JSContext* cx,
       continue;
     }
 
-    RootedFunction fun(cx, funbox->createFunction(cx));
+    RootedAtom atom(cx, funbox->displayAtom());
+    ScriptStencil& stencil = funbox->functionStencil().get();
+
+    RootedFunction fun(cx, CreateFunction(cx, compilationInfo, stencil, atom));
     if (!fun) {
       return false;
     }
-    funbox->initializeFunction(fun);
+    compilationInfo.functions[*stencil.functionIndex].set(fun);
   }
 
   return true;
@@ -2731,7 +2784,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
           // The Function.length property is the number of formals
           // before the first default argument.
-          funbox->length = positionalFormals.length() - 1;
+          funbox->setLength(positionalFormals.length() - 1);
         }
         funbox->hasParameterExprs = true;
 
@@ -2785,7 +2838,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
     }
 
     if (!hasDefault) {
-      funbox->length = positionalFormals.length() - hasRest;
+      funbox->setLength(positionalFormals.length() - hasRest);
     }
 
     funbox->setArgCount(positionalFormals.length());
@@ -2814,7 +2867,10 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
     return false;
   }
 
+  ScriptStencil& stencil = funbox->functionStencil().get();
   funbox->initFromLazyFunction(fun);
+  funbox->copyFunctionFields(stencil);
+  funbox->copyScriptFields(stencil);
 
   // See: CompilationInfo::publishDeferredFunctions()
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
@@ -3299,8 +3355,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
                                  fun->enclosingScope(), fun->flags(),
                                  syntaxKind);
   if (fun->isClassConstructor()) {
-    funbox->fieldInitializers =
-        mozilla::Some(fun->baseScript()->getFieldInitializers());
+    funbox->setFieldInitializers(fun->baseScript()->getFieldInitializers());
   }
 
   Directives newDirectives = directives;

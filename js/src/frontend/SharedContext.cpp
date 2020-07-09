@@ -13,6 +13,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
+#include "vm/StencilEnums.h"           // ImmutableScriptFlagsEnum
 #include "wasm/AsmJS.h"
 #include "wasm/WasmModule.h"
 
@@ -35,7 +36,8 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       inWith_(false),
       inClass_(false),
       localStrict(false),
-      hasExplicitUseStrict_(false) {
+      hasExplicitUseStrict_(false),
+      isScriptFieldCopiedToStencil(false) {
   // Compute the script kind "input" flags.
   if (kind == Kind::FunctionBox) {
     setFlag(ImmutableFlags::IsFunction);
@@ -244,7 +246,8 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       hasExprBody_(false),
       usesApply(false),
       usesThis(false),
-      usesReturn(false) {
+      usesReturn(false),
+      isFunctionFieldCopiedToStencil(false) {
   if (functionStencil().get().functionIndex.isSome()) {
     // If top-level function is re-parsed, top-level stencil is already
     // initialized.
@@ -259,44 +262,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
           generatorKind == GeneratorKind::Generator);
   setFlag(ImmutableFlags::IsAsync,
           asyncKind == FunctionAsyncKind::AsyncFunction);
-}
-
-JSFunction* FunctionBox::createFunction(JSContext* cx) {
-  // Determine the new function's proto. This must be done for singleton
-  // functions.
-  RootedObject proto(cx);
-  if (!GetFunctionPrototype(cx, generatorKind(), asyncKind(), &proto)) {
-    return nullptr;
-  }
-
-  RootedAtom atom(cx, displayAtom());
-  gc::AllocKind allocKind = flags_.isExtended()
-                                ? gc::AllocKind::FUNCTION_EXTENDED
-                                : gc::AllocKind::FUNCTION;
-
-  JSNative maybeNative = isAsmJSModule() ? InstantiateAsmJS : nullptr;
-
-  RootedFunction fun(
-      cx, NewFunctionWithProto(cx, maybeNative, nargs_, flags_, nullptr, atom,
-                               proto, allocKind, TenuredObject));
-  if (!fun) {
-    return nullptr;
-  }
-
-  if (isAsmJSModule()) {
-    RefPtr<const JS::WasmModule> asmJS =
-        compilationInfo_.asmJS.lookup(FunctionIndex(index()))->value();
-
-    JSObject* moduleObj = asmJS->createObjectForAsmJS(cx);
-    if (!moduleObj) {
-      return nullptr;
-    }
-
-    fun->setExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT,
-                         ObjectValue(*moduleObj));
-  }
-
-  return fun;
 }
 
 bool FunctionBox::hasFunction() const {
@@ -417,6 +382,7 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(
 }
 
 bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
+  MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
   isAsmJSModule_ = true;
 
   MOZ_ASSERT(!hasFunction());
@@ -441,8 +407,8 @@ void FunctionBox::finish() {
     script->setEnclosingScope(enclosingScope_.getExistingScope());
     script->initTreatAsRunOnce(treatAsRunOnce());
 
-    if (fieldInitializers) {
-      script->setFieldInitializers(*fieldInitializers);
+    if (fieldInitializers_) {
+      script->setFieldInitializers(*fieldInitializers_);
     }
   }
 
@@ -479,12 +445,6 @@ JSFunction* FunctionBox::function() const {
   return compilationInfo_.functions[funcDataIndex_];
 }
 
-void FunctionBox::clobberFunction(JSFunction* function) {
-  compilationInfo_.functions[funcDataIndex_].set(function);
-  // After clobbering, these flags need to be updated
-  setIsInterpreted(function->isInterpreted());
-}
-
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
                                          CompilationInfo& compilationInfo,
                                          Scope* enclosingScope,
@@ -505,6 +465,49 @@ MutableHandle<ScriptStencil> FunctionBox::functionStencil() const {
     return &compilationInfo_.topLevel;
   }
   return compilationInfo_.funcData[funcDataIndex_];
+}
+
+void SharedContext::copyScriptFields(ScriptStencil& stencil) const {
+  stencil.immutableFlags = immutableFlags_;
+}
+
+void FunctionBox::finishScriptFlags() {
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+  immutableFlags_.setFlag(ImmutableFlags::HasMappedArgsObj, hasMappedArgsObj());
+  immutableFlags_.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                          isLikelyConstructorWrapper());
+}
+
+void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
+  MOZ_ASSERT(&stencil == &functionStencil().get());
+  MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+
+  SharedContext::copyScriptFields(stencil);
+
+  stencil.fieldInitializers = fieldInitializers_;
+
+  isScriptFieldCopiedToStencil = true;
+}
+
+void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
+  MOZ_ASSERT(&stencil == &functionStencil().get());
+  MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
+
+  stencil.functionFlags = flags_;
+  stencil.nargs = nargs_;
+  stencil.isAsmJSModule = isAsmJSModule_;
+
+  isFunctionFieldCopiedToStencil = true;
+}
+
+void FunctionBox::copyUpdatedFieldInitializers() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.fieldInitializers = fieldInitializers_;
+}
+
+void FunctionBox::copyUpdatedFlags() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.functionFlags = flags_;
 }
 
 }  // namespace frontend

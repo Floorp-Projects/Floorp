@@ -648,6 +648,7 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     MOZ_ASSERT(compilationInfo.asmJS.has(FunctionIndex(funbox->index())));
 
     compilationInfo.topLevelAsmJS = true;
+    funbox->copyScriptFields(compilationInfo.topLevel.get());
   }
 
   if (!compilationInfo.instantiateStencils()) {
