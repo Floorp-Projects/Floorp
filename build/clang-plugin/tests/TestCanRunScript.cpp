@@ -229,7 +229,7 @@ MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
   // FIXME(bz): This should not generate an error!
   mozilla::Maybe<RefPtr<RefCountedBase>> safe;
   safe.emplace(new RefCountedBase);
-  (*safe)->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '(*safe)' is neither.}}
+  (*safe)->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '(*safe){{(->)?}}' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_helper_1(RefCountedBase* arg = nullptr) {
@@ -282,7 +282,7 @@ struct RefCountedDerefTester : public RefCountedBase {
 struct DisallowMemberArgs {
   RefPtr<RefCountedBase> mRefCounted;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted' is neither.}}
+    mRefCounted->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted{{(->)?}}' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
     test2(mRefCounted); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted' is neither.}}
@@ -357,7 +357,7 @@ struct AllowConstMemberArgsWithExplicitThis {
 struct DisallowConstMemberArgsOfMembers {
   RefPtr<AllowConstMemberArgs> mMember;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mMember->mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mRefCounted' is neither.}}
+    mMember->mRefCounted->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mRefCounted{{(->)?}}' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
     test2(mMember->mRefCounted); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mRefCounted' is neither.}}
@@ -405,7 +405,7 @@ struct WeakSmartPtr {
 };
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_3() {
-  WeakSmartPtr(new RefCountedBase())->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'WeakSmartPtr(new RefCountedBase())' is neither.}}
+  WeakSmartPtr(new RefCountedBase())->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'WeakSmartPtr(new RefCountedBase()){{(->)?}}' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_4() {
@@ -439,7 +439,7 @@ struct DisallowRawTArrayElement {
 struct DisallowRefPtrTArrayElement {
   TArray<RefPtr<RefCountedBase>> mArray;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]' is neither.}}
+    mArray[0]->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]{{(->)?}}' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
     test2(mArray[0]); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]' is neither.}}
@@ -568,7 +568,7 @@ struct DisallowMemberArgsViaReferenceAlias {
   RefPtr<RefCountedBase> mRefCounted;
   MOZ_CAN_RUN_SCRIPT void foo() {
     RefPtr<RefCountedBase>& bogus = mRefCounted;
-    bogus->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'bogus' is neither.}}
+    bogus->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'bogus{{(->)?}}' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
     RefPtr<RefCountedBase>& bogus = mRefCounted;
@@ -580,12 +580,12 @@ struct DisallowMemberArgsViaReferenceAlias2 {
   RefPtr<RefCountedBase> mRefCountedArr[2];
   MOZ_CAN_RUN_SCRIPT void foo1() {
     for (RefPtr<RefCountedBase>& item : mRefCountedArr) {
-      item->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item' is neither.}}
+      item->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item{{(->)?}}' is neither.}}
     }
   }
   MOZ_CAN_RUN_SCRIPT void foo2() {
     for (auto& item : mRefCountedArr) {
-      item->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item' is neither.}}
+      item->method_test(); // expected-error-re {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'item{{(->)?}}' is neither.}}
     }
   }
   MOZ_CAN_RUN_SCRIPT void foo3() {
