@@ -16,7 +16,7 @@
 #include "frontend/AbstractScopePtr.h"    // ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
-#include "frontend/Stencil.h"
+#include "frontend/Stencil.h"          // FunctionIndex
 #include "js/WasmModule.h"             // JS::WasmModule
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
@@ -349,10 +349,8 @@ class FunctionBox : public SharedContext {
   // Any update after the copy should be synced to the ScriptStencil.
   JSAtom* atom_ = nullptr;
 
-  // Index into CompilationInfo::funcData, which contains the function
-  // information, either a JSFunction* (for a FunctionBox representing a real
-  // function) or a ScriptStencil.
-  size_t funcDataIndex_ = (size_t)(-1);
+  // Index into CompilationInfo::{funcData, functions}.
+  FunctionIndex funcDataIndex_ = FunctionIndex(-1);
 
   // See: FunctionFlags
   // This is copied to ScriptStencil.
@@ -429,7 +427,7 @@ class FunctionBox : public SharedContext {
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, SourceExtent extent,
               CompilationInfo& compilationInfo, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              JSAtom* explicitName, FunctionFlags flags, size_t index,
+              JSAtom* explicitName, FunctionFlags flags, FunctionIndex index,
               TopLevelFunction isTopLevel);
 
   MutableHandle<ScriptStencil> functionStencil() const;
@@ -711,7 +709,7 @@ class FunctionBox : public SharedContext {
     }
   }
 
-  size_t index() { return funcDataIndex_; }
+  FunctionIndex index() { return funcDataIndex_; }
 
   void trace(JSTracer* trc);
 
