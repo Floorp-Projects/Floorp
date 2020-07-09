@@ -6,6 +6,7 @@
 #ifndef include_dom_media_ipc_RemoteDecoderModule_h
 #define include_dom_media_ipc_RemoteDecoderModule_h
 #include "PlatformDecoderModule.h"
+
 #include "mozilla/StaticMutex.h"
 
 namespace mozilla {
@@ -16,8 +17,6 @@ namespace mozilla {
 // (RemoteVideoDecoderParent) on the RDD process.
 class RemoteDecoderModule : public PlatformDecoderModule {
  public:
-  static void Init();
-
   RemoteDecoderModule();
 
   bool SupportsMimeType(const nsACString& aMimeType,
@@ -30,10 +29,10 @@ class RemoteDecoderModule : public PlatformDecoderModule {
       const CreateDecoderParams& aParams) override;
 
  protected:
-  void LaunchRDDProcessIfNeeded() const;
+  void LaunchRDDProcessIfNeeded();
 
  private:
-  const nsCOMPtr<nsISerialEventTarget> mManagerThread;
+  RefPtr<nsIThread> mManagerThread;
   static StaticMutex sLaunchMonitor;
 };
 
