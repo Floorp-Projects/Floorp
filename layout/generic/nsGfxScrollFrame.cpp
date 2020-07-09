@@ -1442,8 +1442,15 @@ void ScrollFrameHelper::SetScrollableByAPZ(bool aScrollable) {
 }
 
 void ScrollFrameHelper::SetZoomableByAPZ(bool aZoomable) {
+  if (!nsLayoutUtils::UsesAsyncScrolling(mOuter)) {
+    // If APZ is disabled on this window, then we're never actually going to
+    // do any zooming. So we don't need to do any of the setup for it. Note
+    // that this function gets called from ZoomConstraintsClient even if APZ
+    // is disabled to indicate the zoomability of content.
+    aZoomable = false;
+  }
   if (mZoomableByAPZ != aZoomable) {
-    // We might be changing the result of WantAsyncScroll() so schedule a
+    // We might be changing the result of DecideScrollableLayer() so schedule a
     // paint to make sure we pick up the result of that change.
     mZoomableByAPZ = aZoomable;
     mOuter->SchedulePaint();
@@ -1455,12 +1462,6 @@ void ScrollFrameHelper::SetHasOutOfFlowContentInsideFilter() {
 }
 
 bool ScrollFrameHelper::WantAsyncScroll() const {
-  // If zooming is allowed, and this is a frame that's allowed to zoom, then
-  // we want it to be async-scrollable or zooming will not be permitted.
-  if (mZoomableByAPZ) {
-    return true;
-  }
-
   ScrollStyles styles = GetScrollStylesFromFrame();
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
@@ -4136,8 +4137,9 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   // the compositor can find the scrollable layer for async scrolling.
   // If the element is marked 'scrollgrab', also force building of a layer
   // so that APZ can implement scroll grabbing.
-  mWillBuildScrollableLayer =
-      usingDisplayPort || nsContentUtils::HasScrollgrab(content);
+  mWillBuildScrollableLayer = usingDisplayPort ||
+                              nsContentUtils::HasScrollgrab(content) ||
+                              mZoomableByAPZ;
 
   // The cached animated geometry root for the display builder is out of
   // date if we just introduced a new animated geometry root.
