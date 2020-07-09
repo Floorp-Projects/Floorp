@@ -80,7 +80,7 @@ coverity-full-analysis:
     scopes:
         - secrets:get:project/relman/coverity
     worker:
-        max-run-time: 21600
+        max-run-time: 14400
     when:
         files-changed:
             - '**/*.c'
