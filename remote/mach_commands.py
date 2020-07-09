@@ -10,11 +10,13 @@ from __future__ import (
 
 import argparse
 import json
-import sys
 import os
-import tempfile
+import re
 import shutil
 import subprocess
+import sys
+import tempfile
+
 from collections import OrderedDict
 
 from six import iteritems
@@ -192,6 +194,8 @@ def wait_proc(p, cmd=None, exit_on_fail=True, output_timeout=None):
 
 class MochaOutputHandler(object):
     def __init__(self, logger, expected):
+        self.hook_re = re.compile('"before\b?.*" hook|"after\b?.*" hook')
+
         self.logger = logger
         self.proc = None
         self.test_results = OrderedDict()
@@ -239,6 +243,10 @@ class MochaOutputHandler(object):
                     status = "TIMEOUT"
             if test_name and test_path:
                 test_name = "{} ({})".format(test_name, os.path.basename(test_path))
+            # mocha hook failures are not tracked in metadata
+            if status != "PASS" and self.hook_re.search(test_name):
+                self.logger.error("TEST-UNEXPECTED-ERROR %s" % (test_name,))
+                return
             if test_start:
                 self.logger.test_start(test_name)
                 return
