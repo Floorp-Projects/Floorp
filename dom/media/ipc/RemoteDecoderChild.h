@@ -55,7 +55,7 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   MediaDataDecoder::DecodedData mDecodedData;
 
  private:
-  const RefPtr<nsIThread> mThread;
+  const nsCOMPtr<nsISerialEventTarget> mThread;
 
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitPromise;
   MozPromiseRequestHolder<PRemoteDecoderChild::InitPromise> mInitPromiseRequest;
