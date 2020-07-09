@@ -4153,7 +4153,7 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
 nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aNode) && NS_WARN_IF(!aNode->IsContent())) {
+  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!aNode->IsContent())) {
     return NS_ERROR_INVALID_ARG;
   }
 
