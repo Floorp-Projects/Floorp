@@ -10922,8 +10922,8 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* stencil) {
   // Update flags specific to functions.
   if (sc->isFunctionBox()) {
     FunctionBox* funbox = sc->asFunctionBox();
-    MOZ_ASSERT(stencil->functionIndex.isSome());
     funbox->copyScriptFields(*stencil);
+    MOZ_ASSERT(stencil->isFunction());
   } else {
     sc->copyScriptFields(*stencil);
   }
