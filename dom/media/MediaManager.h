@@ -37,13 +37,10 @@
 #  include "mtransport/runnable_utils.h"
 #endif
 
-// Note, these suck in Windows headers, unfortunately.
-#include "base/thread.h"
-#include "base/task.h"
-
 class nsIPrefBranch;
 
 namespace mozilla {
+class TaskQueue;
 namespace dom {
 struct MediaStreamConstraints;
 struct MediaTrackConstraints;
@@ -148,7 +145,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   static MediaManager* Get();
   static MediaManager* GetIfExists();
   static void StartupInit();
-  static void PostTask(already_AddRefed<Runnable> task);
+  static void Dispatch(already_AddRefed<Runnable> task);
 
   /**
    * Posts an async operation to the media manager thread.
@@ -158,7 +155,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
    * manager thread.
    */
   template <typename MozPromiseType, typename FunctionType>
-  static RefPtr<MozPromiseType> PostTask(const char* aName,
+  static RefPtr<MozPromiseType> Dispatch(const char* aName,
                                          FunctionType&& aFunction);
 
 #ifdef DEBUG
@@ -321,7 +318,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   void GetPrefs(nsIPrefBranch* aBranch, const char* aData);
 
   // Make private because we want only one instance of this class
-  explicit MediaManager(UniquePtr<base::Thread> aMediaThread);
+  explicit MediaManager(already_AddRefed<TaskQueue> aMediaThread);
 
   ~MediaManager() = default;
   void Shutdown();
@@ -346,7 +343,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
 
   // Always exists
-  const UniquePtr<base::Thread> mMediaThread;
+  const RefPtr<TaskQueue> mMediaThread;
   nsCOMPtr<nsIAsyncShutdownBlocker> mShutdownBlocker;
 
   // ONLY accessed from MediaManagerThread

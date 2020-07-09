@@ -33,7 +33,7 @@ enum { kVideoTrack = 1, kAudioTrack = 2, kTrackCount };
 class MediaEngine {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)
-  NS_DECL_OWNINGTHREAD
+  NS_DECL_OWNINGEVENTTARGET
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(MediaEngine); }
 
