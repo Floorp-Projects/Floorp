@@ -989,91 +989,146 @@ const ContentBlockingCleaner = {
   },
 };
 
-// Here the map of Flags-Cleaner.
-const FLAGS_MAP = [
-  { flag: Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS, cleaner: CertCleaner },
+/**
+ * The about:home startup cache, if it exists, might contain information
+ * about where the user has been, or what they've downloaded.
+ */
+const AboutHomeStartupCacheCleaner = {
+  deleteAll() {
+    // This cleaner only makes sense on Firefox desktop, which is the only
+    // application that uses the about:home startup cache.
+    if (!AppConstants.MOZ_BUILD_APP == "browser") {
+      return Promise.resolve();
+    }
 
-  { flag: Ci.nsIClearDataService.CLEAR_COOKIES, cleaner: CookieCleaner },
+    return new Promise((aResolve, aReject) => {
+      let lci = Services.loadContextInfo.default;
+      let storage = Services.cache2.diskCacheStorage(lci, false);
+      let uri = Services.io.newURI("about:home");
+      try {
+        storage.asyncDoomURI(uri, "", {
+          onCacheEntryDoomed(aResult) {
+            if (
+              Components.isSuccessCode(aResult) ||
+              aResult == Cr.NS_ERROR_NOT_AVAILABLE
+            ) {
+              aResolve();
+            } else {
+              aReject({
+                message: "asyncDoomURI for about:home failed",
+              });
+            }
+          },
+        });
+      } catch (e) {
+        aReject({
+          message: "Failed to doom about:home startup cache entry",
+        });
+      }
+    });
+  },
+};
+
+// Here the map of Flags-Cleaners.
+const FLAGS_MAP = [
+  {
+    flag: Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS,
+    cleaners: [CertCleaner],
+  },
+
+  { flag: Ci.nsIClearDataService.CLEAR_COOKIES, cleaners: [CookieCleaner] },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_NETWORK_CACHE,
-    cleaner: NetworkCacheCleaner,
+    cleaners: [NetworkCacheCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_IMAGE_CACHE,
-    cleaner: ImageCacheCleaner,
+    cleaners: [ImageCacheCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
-    cleaner: PluginDataCleaner,
+    cleaners: [PluginDataCleaner],
   },
 
-  { flag: Ci.nsIClearDataService.CLEAR_DOWNLOADS, cleaner: DownloadsCleaner },
+  {
+    flag: Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+    cleaners: [DownloadsCleaner, AboutHomeStartupCacheCleaner],
+  },
 
-  { flag: Ci.nsIClearDataService.CLEAR_PASSWORDS, cleaner: PasswordsCleaner },
+  {
+    flag: Ci.nsIClearDataService.CLEAR_PASSWORDS,
+    cleaners: [PasswordsCleaner],
+  },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
-    cleaner: MediaDevicesCleaner,
+    cleaners: [MediaDevicesCleaner],
   },
 
-  { flag: Ci.nsIClearDataService.CLEAR_APPCACHE, cleaner: AppCacheCleaner },
+  { flag: Ci.nsIClearDataService.CLEAR_APPCACHE, cleaners: [AppCacheCleaner] },
 
-  { flag: Ci.nsIClearDataService.CLEAR_DOM_QUOTA, cleaner: QuotaCleaner },
+  { flag: Ci.nsIClearDataService.CLEAR_DOM_QUOTA, cleaners: [QuotaCleaner] },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA,
-    cleaner: PredictorNetworkCleaner,
+    cleaners: [PredictorNetworkCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS,
-    cleaner: PushNotificationsCleaner,
+    cleaners: [PushNotificationsCleaner],
   },
 
-  { flag: Ci.nsIClearDataService.CLEAR_HISTORY, cleaner: HistoryCleaner },
+  {
+    flag: Ci.nsIClearDataService.CLEAR_HISTORY,
+    cleaners: [HistoryCleaner, AboutHomeStartupCacheCleaner],
+  },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_SESSION_HISTORY,
-    cleaner: SessionHistoryCleaner,
+    cleaners: [SessionHistoryCleaner, AboutHomeStartupCacheCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_AUTH_TOKENS,
-    cleaner: AuthTokensCleaner,
+    cleaners: [AuthTokensCleaner],
   },
 
-  { flag: Ci.nsIClearDataService.CLEAR_AUTH_CACHE, cleaner: AuthCacheCleaner },
+  {
+    flag: Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
+    cleaners: [AuthCacheCleaner],
+  },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_PERMISSIONS,
-    cleaner: PermissionsCleaner,
+    cleaners: [PermissionsCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES,
-    cleaner: PreferencesCleaner,
+    cleaners: [PreferencesCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
-    cleaner: SecuritySettingsCleaner,
+    cleaners: [SecuritySettingsCleaner],
   },
 
-  { flag: Ci.nsIClearDataService.CLEAR_EME, cleaner: EMECleaner },
+  { flag: Ci.nsIClearDataService.CLEAR_EME, cleaners: [EMECleaner] },
 
-  { flag: Ci.nsIClearDataService.CLEAR_REPORTS, cleaner: ReportsCleaner },
+  { flag: Ci.nsIClearDataService.CLEAR_REPORTS, cleaners: [ReportsCleaner] },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
-    cleaner: StorageAccessCleaner,
+    cleaners: [StorageAccessCleaner],
   },
 
   {
     flag: Ci.nsIClearDataService.CLEAR_CONTENT_BLOCKING_RECORDS,
-    cleaner: ContentBlockingCleaner,
+    cleaners: [ContentBlockingCleaner],
   },
 ];
 
@@ -1228,11 +1283,15 @@ ClearDataService.prototype = Object.freeze({
   _deleteInternal(aFlags, aCallback, aHelper) {
     let resultFlags = 0;
     let promises = FLAGS_MAP.filter(c => aFlags & c.flag).map(c => {
+      return Promise.all(
+        c.cleaners.map(cleaner => {
+          return aHelper(cleaner).catch(e => {
+            Cu.reportError(e);
+            resultFlags |= c.flag;
+          });
+        })
+      );
       // Let's collect the failure in resultFlags.
-      return aHelper(c.cleaner).catch(e => {
-        Cu.reportError(e);
-        resultFlags |= c.flag;
-      });
     });
     Promise.all(promises).then(() => {
       aCallback.onDataDeleted(resultFlags);
