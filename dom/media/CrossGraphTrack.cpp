@@ -25,6 +25,8 @@ extern LazyLogModule gForwardedInputTrackLog;
 CrossGraphManager* CrossGraphManager::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
     nsPIDOMWindowInner* aWindow) {
+  MOZ_ASSERT(aSink);
+  MOZ_ASSERT(aStreamTrack);
   uint32_t defaultRate;
   aSink->GetDefaultRate(&defaultRate);
   LOG(LogLevel::Debug,
@@ -45,6 +47,8 @@ CrossGraphManager* CrossGraphManager::Connect(
 CrossGraphManager* CrossGraphManager::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
     MediaTrackGraph* aPartnerGraph) {
+  MOZ_ASSERT(aStreamTrack);
+  MOZ_ASSERT(aPartnerGraph);
   if (aStreamTrack->Graph() == aPartnerGraph) {
     // Primary graph the same as partner graph, just remove the existing cross
     // graph connection
