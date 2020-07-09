@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   Region: "resource://gre/modules/Region.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -924,46 +925,85 @@ class SearchEngine {
   }
 
   /**
-   * Initialize this Engine object from a collection of metadata.
+   * Initialize this Engine object from a WebExtension style manifest.
    *
-   * @param {string} engineName
-   *   The name of the search engine.
-   * @param {object} params
-   *   The URL parameters.
-   * @param {string} [params.getParams]
-   *   Any parameters for a GET method.
-   * @param {string} [params.method]
-   *   The type of method, defaults to GET.
-   * @param {string} [params.mozParams]
-   *   Any special Mozilla Parameters.
-   * @param {string} [params.postParams]
-   *   Any parameters for a POST method.
-   * @param {string} params.template
-   *   The url template.
+   * @param {string} extensionID
+   *   The WebExtension ID. For Policy engines, this is currently "set-via-policy".
+   * @param {string} extensionBaseURI
+   *   The Base URI of the WebExtension.
+   * @param {object} manifest
+   *   An object representing the WebExtensions' manifest.
+   * @param {string} locale
+   *   The locale that is being used for the WebExtension.
+   * @param {object} [configuration]
+   *   The search engine configuration for application provided engines, that
+   *   may be overriding some of the WebExtension's settings.
    */
-  _initFromMetadata(engineName, params) {
-    this._extensionID = params.extensionID;
-    this._locale = params.locale;
-    this._orderHint = params.orderHint;
-    this._telemetryId = params.telemetryId;
-    this._name = engineName;
-    this._regionParams = params.regionParams;
+  _initFromManifest(
+    extensionID,
+    extensionBaseURI,
+    manifest,
+    locale,
+    configuration = {}
+  ) {
+    let { IconDetails } = ExtensionParent;
 
-    if (params.shortName) {
-      this._shortName = params.shortName;
+    let searchProvider = manifest.chrome_settings_overrides.search_provider;
+
+    let iconURL = manifest.iconURL || searchProvider.favicon_url;
+
+    // General set of icons for an engine.
+    let icons = manifest.icons;
+    let iconList = [];
+    if (icons) {
+      iconList = Object.entries(icons).map(icon => {
+        return {
+          width: icon[0],
+          height: icon[0],
+          url: extensionBaseURI.resolve(icon[1]),
+        };
+      });
     }
-    this._definedAlias = params.alias?.trim() || null;
-    this._description = params.description;
-    if (params.iconURL) {
-      this._setIcon(params.iconURL, true);
+
+    if (!iconURL) {
+      iconURL =
+        icons &&
+        extensionBaseURI.resolve(IconDetails.getPreferredIcon(icons).icon);
+    }
+
+    let shortName = extensionID.split("@")[0];
+    if (locale != SearchUtils.DEFAULT_TAG) {
+      shortName += "-" + locale;
+    }
+    // TODO: Bug 1619656. We should no longer need to maintain the short name as
+    // the telemetry id. However, we need to check that this doesn't adversely
+    // affect settings or caches.
+    if ("telemetryId" in configuration && configuration.telemetryId) {
+      shortName = configuration.telemetryId;
+    }
+
+    this._extensionID = extensionID;
+    this._locale = locale;
+    this._orderHint = configuration.orderHint;
+    this._telemetryId = configuration.telemetryId;
+    this._name = searchProvider.name.trim();
+    this._regionParams = configuration.regionParams;
+
+    if (shortName) {
+      this._shortName = shortName;
+    }
+    this._definedAlias = searchProvider.keyword?.trim() || null;
+    this._description = manifest.description;
+    if (iconURL) {
+      this._setIcon(iconURL, true);
     }
     // Other sizes
-    if (params.icons) {
-      for (let icon of params.icons) {
+    if (iconList) {
+      for (let icon of iconList) {
         this._addIconToMap(icon.size, icon.size, icon.url);
       }
     }
-    this._setUrls(params);
+    this._setUrls(searchProvider, configuration);
   }
 
   /**
@@ -971,57 +1011,76 @@ class SearchEngine {
    * If you add anything here, please consider if it needs to be handled in the
    * overrideWithExtension / removeExtensionOverride functions as well.
    *
-   * @param {object} params
-   *   The parameters to set.
+   * @param {object} searchProvider
+   *   The WebExtension search provider object extracted from the manifest.
+   * @param {object} [configuration]
+   *   The search engine configuration for application provided engines, that
+   *   may be overriding some of the WebExtension's settings.
    */
-  _setUrls(params) {
+  _setUrls(searchProvider, configuration = {}) {
+    // Filter out any untranslated parameters, the extension has to list all
+    // possible mozParams for each engine where a 'locale' may only provide
+    // actual values for some (or none).
+    if (searchProvider.params) {
+      searchProvider.params = searchProvider.params.filter(param => {
+        return !(param.value && param.value.startsWith("__MSG_"));
+      });
+    }
+    let postParams =
+      configuration.searchUrlPostParams ||
+      searchProvider.search_url_post_params ||
+      "";
     this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SEARCH, {
-      method: (params.searchPostParams && "POST") || params.method || "GET",
-      template: params.template,
-      getParams: params.searchGetParams,
-      postParams: params.searchPostParams,
-      mozParams: params.mozParams,
+      method: (postParams && "POST") || "GET",
+      // AddonManager will sometimes encode the URL via `new URL()`. We want
+      // to ensure we're always dealing with decoded urls.
+      template: decodeURI(searchProvider.search_url),
+      getParams:
+        configuration.searchUrlGetParams ||
+        searchProvider.search_url_get_params ||
+        "",
+      postParams,
+      mozParams: configuration.extraParams || searchProvider.params || [],
     });
 
-    if (params.suggestURL) {
+    if (searchProvider.suggest_url) {
+      let suggestPostParams =
+        configuration.suggestUrlPostParams ||
+        searchProvider.suggest_url_post_params ||
+        "";
       this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SUGGEST_JSON, {
-        method: (params.suggestPostParams && "POST") || params.method || "GET",
-        template: params.suggestURL,
-        getParams: params.suggestGetParams,
-        postParams: params.suggestPostParams,
+        method: (suggestPostParams && "POST") || "GET",
+        // suggest_url doesn't currently get encoded.
+        template: searchProvider.suggest_url,
+        getParams:
+          configuration.suggestUrlGetParams ||
+          searchProvider.suggest_url_get_params ||
+          "",
+        postParams: suggestPostParams,
       });
     }
 
-    this._queryCharset = params.queryCharset || null;
-    if (params.postData) {
-      let queries = new URLSearchParams(params.postData);
-      for (let [name, value] of queries) {
-        let url = this._getURLOfType(SearchUtils.URL_TYPE.SEARCH);
-        if (!url) {
-          throw Components.Exception(
-            `Engine has no URL for response type ${SearchUtils.URL_TYPE.SEARCH}`,
-            Cr.NS_ERROR_FAILURE
-          );
-        }
-
-        url.addParam(name, value);
-      }
-    }
-
-    this.__searchForm = params.searchForm;
+    this._queryCharset = searchProvider.encoding || "UTF-8";
+    this.__searchForm = searchProvider.search_form;
   }
 
   /**
-   * Update this engine based on new metadata, used during
+   * Update this engine based on new manifest, used during
    * webextension upgrades.
    *
-   * @param {object} params
-   *   The URL parameters.
+   * @param {string} extensionID
+   *   The WebExtension ID. For Policy engines, this is currently "set-via-policy".
+   * @param {string} extensionBaseURI
+   *   The Base URI of the WebExtension.
+   * @param {object} manifest
+   *   An object representing the WebExtensions' manifest.
+   * @param {string} locale
+   *   The locale that is being used for the WebExtension.
    */
-  _updateFromMetadata(params) {
+  _updateFromManifest(extensionID, extensionBaseURI, manifest, locale) {
     this._urls = [];
     this._iconMapObj = null;
-    this._initFromMetadata(params.name, params);
+    this._initFromManifest(extensionID, extensionBaseURI, manifest, locale);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 
@@ -1032,18 +1091,20 @@ class SearchEngine {
    * third party modifications and means that we can verify the WebExtension is
    * still in the allow list.
    *
-   * @param {object} params
-   *   The extension parameters.
+   * @param {string} extensionID
+   *   The WebExtension ID. For Policy engines, this is currently "set-via-policy".
+   * @param {object} manifest
+   *   An object representing the WebExtensions' manifest.
    */
-  overrideWithExtension(params) {
+  overrideWithExtension(extensionID, manifest) {
     this._overriddenData = {
       urls: this._urls,
       queryCharset: this._queryCharset,
       searchForm: this.__searchForm,
     };
     this._urls = [];
-    this.setAttr("overriddenBy", params.extensionID);
-    this._setUrls(params);
+    this.setAttr("overriddenBy", extensionID);
+    this._setUrls(manifest.chrome_settings_overrides.search_provider);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 

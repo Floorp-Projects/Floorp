@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -688,12 +687,6 @@ SearchService.prototype = {
         canInstallEngine: !engine?.hidden,
       };
     }
-    let params = await this.getEngineParams(
-      extension.id,
-      extension.baseURI,
-      extension.manifest,
-      SearchUtils.DEFAULT_TAG
-    );
 
     if (!this._defaultOverrideAllowlist) {
       this._defaultOverrideAllowlist = new SearchDefaultOverrideAllowlistHandler();
@@ -728,7 +721,7 @@ SearchService.prototype = {
         };
       }
       // We're ok to override.
-      engine.overrideWithExtension(params);
+      engine.overrideWithExtension(extension.id, extension.manifest);
       logConsole.debug(
         "Allowing default engine to be set to app-provided and overridden.",
         extension.id
@@ -746,7 +739,7 @@ SearchService.prototype = {
         engine._extensionID
       ))
     ) {
-      engine.overrideWithExtension(params);
+      engine.overrideWithExtension(extension.id, extension.manifest);
       logConsole.debug(
         "Re-enabling overriding of core extension by",
         extension.id
@@ -2374,19 +2367,17 @@ SearchService.prototype = {
       }
     }
 
-    let params = this.getEngineParams(
-      extensionID,
-      extensionBaseURI,
-      manifest,
-      locale
-    );
-
     let newEngine = new SearchEngine({
       name,
       isAppProvided,
       loadPath: `[other]addEngineWithDetails:${extensionID}`,
     });
-    newEngine._initFromMetadata(name, params);
+    newEngine._initFromManifest(
+      extensionID,
+      extensionBaseURI,
+      manifest,
+      locale
+    );
     if (isReload && this._engines.has(newEngine.name)) {
       newEngine._engineToUpdate = this._engines.get(newEngine.name);
     }
@@ -2448,13 +2439,12 @@ SearchService.prototype = {
       if (locale != SearchUtils.DEFAULT_TAG) {
         manifest = await extension.getLocalizedManifest(locale);
       }
-      let params = this.getEngineParams(
+      engine._updateFromManifest(
         extension.id,
         extension.baseURI,
         manifest,
         locale
       );
-      engine._updateFromMetadata(params);
     }
     return engines;
   },
@@ -2518,22 +2508,25 @@ SearchService.prototype = {
       manifest = await policy.extension.getLocalizedManifest(locale);
     }
 
-    let engineParams = this.getEngineParams(
+    let engine = new SearchEngine({
+      // No need to sanitize the name, as shortName uses the WebExtension id
+      // which should already be sanitized.
+      // TODO: Setting the name here is a little incorrect, since it is
+      // setting the short name which gets overridden by _initFromManifest.
+      // When we split out WebExtensions into their own object (bug 1650761)
+      // we should look at simplifying this.
+      name: manifest.chrome_settings_overrides.search_provider.name.trim(),
+      // shortName: engineParams.shortName,
+      isAppProvided: policy.extension.isAppProvided,
+      loadPath: `[other]addEngineWithDetails:${policy.extension.id}`,
+    });
+    engine._initFromManifest(
       policy.extension.id,
       policy.extension.baseURI,
       manifest,
       locale,
       params
     );
-
-    let engine = new SearchEngine({
-      // No need to sanitize the name, as shortName uses the WebExtension id
-      // which should already be sanitized.
-      shortName: engineParams.shortName,
-      isAppProvided: policy.extension.isAppProvided,
-      loadPath: `[other]addEngineWithDetails:${policy.extension.id}`,
-    });
-    engine._initFromMetadata(engineParams.name, engineParams);
     if (isReload && this._engines.has(engine.name)) {
       engine._engineToUpdate = this._engines.get(engine.name);
     }
@@ -2608,105 +2601,6 @@ SearchService.prototype = {
       initEngine,
       isReload,
     });
-  },
-
-  getEngineParams(
-    extensionID,
-    extensionBaseURI,
-    manifest,
-    locale,
-    engineParams = {}
-  ) {
-    let { IconDetails } = ExtensionParent;
-
-    let searchProvider = manifest.chrome_settings_overrides.search_provider;
-
-    let iconURL = manifest.iconURL || searchProvider.favicon_url;
-
-    // General set of icons for an engine.
-    let icons = manifest.icons;
-    let iconList = [];
-    if (icons) {
-      iconList = Object.entries(icons).map(icon => {
-        return {
-          width: icon[0],
-          height: icon[0],
-          url: extensionBaseURI.resolve(icon[1]),
-        };
-      });
-    }
-
-    if (!iconURL) {
-      iconURL =
-        icons &&
-        extensionBaseURI.resolve(IconDetails.getPreferredIcon(icons).icon);
-    }
-
-    // Filter out any untranslated parameters, the extension has to list all
-    // possible mozParams for each engine where a 'locale' may only provide
-    // actual values for some (or none).
-    if (searchProvider.params) {
-      searchProvider.params = searchProvider.params.filter(param => {
-        return !(param.value && param.value.startsWith("__MSG_"));
-      });
-    }
-
-    let shortName = extensionID.split("@")[0];
-    if (locale != SearchUtils.DEFAULT_TAG) {
-      shortName += "-" + locale;
-    }
-    // TODO: Bug 1619656. We should no longer need to maintain the short name as
-    // the telemetry id. However, we need to check that this doesn't adversely
-    // affect settings or caches.
-    if ("telemetryId" in engineParams && engineParams.telemetryId) {
-      shortName = engineParams.telemetryId;
-    }
-
-    let searchUrlGetParams =
-      engineParams.searchUrlGetParams ||
-      searchProvider.search_url_get_params ||
-      "";
-    let searchUrlPostParams =
-      engineParams.searchUrlPostParams ||
-      searchProvider.search_url_post_params ||
-      "";
-    let suggestUrlGetParams =
-      engineParams.suggestUrlGetParams ||
-      searchProvider.suggest_url_get_params ||
-      "";
-    let suggestUrlPostParams =
-      engineParams.suggestUrlPostParams ||
-      searchProvider.suggest_url_post_params ||
-      "";
-    let mozParams = engineParams.extraParams || searchProvider.params || [];
-
-    let params = {
-      name: searchProvider.name.trim(),
-      shortName,
-      description: manifest.description,
-      searchForm: searchProvider.search_form,
-      // AddonManager will sometimes encode the URL via `new URL()`. We want
-      // to ensure we're always dealing with decoded urls.
-      template: decodeURI(searchProvider.search_url),
-      searchGetParams: searchUrlGetParams,
-      searchPostParams: searchUrlPostParams,
-      regionParams: engineParams.regionParams,
-      iconURL,
-      icons: iconList,
-      alias: searchProvider.keyword,
-      extensionID,
-      locale,
-      orderHint: engineParams.orderHint,
-      // suggest_url doesn't currently get encoded.
-      suggestURL: searchProvider.suggest_url,
-      suggestGetParams: suggestUrlGetParams,
-      suggestPostParams: suggestUrlPostParams,
-      queryCharset: searchProvider.encoding || "UTF-8",
-      mozParams,
-      telemetryId: engineParams.telemetryId,
-    };
-
-    return params;
   },
 
   async addEngine(engineURL, iconURL, confirm, extensionID) {
