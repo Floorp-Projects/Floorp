@@ -222,7 +222,8 @@ void HandlerProvider::BuildStaticIA2Data(
   }
 }
 
-void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data) {
+void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data,
+                                          bool aMarshaledByCom) {
   MOZ_ASSERT(aOutIA2Data);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsTargetInterfaceCacheable());
@@ -242,12 +243,23 @@ void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data) {
 
   auto hasFailed = [&hr]() -> bool { return FAILED(hr); };
 
-  auto cleanup = [aOutIA2Data]() -> void {
-    CleanupDynamicIA2Data(*aOutIA2Data);
+  auto cleanup = [aOutIA2Data, aMarshaledByCom]() -> void {
+    CleanupDynamicIA2Data(*aOutIA2Data, aMarshaledByCom);
   };
 
   mscom::ExecuteWhen<decltype(hasFailed), decltype(cleanup)> onFail(hasFailed,
                                                                     cleanup);
+
+  // When allocating memory to be returned to the client, you *must* use
+  // allocMem, not CoTaskMemAlloc!
+  auto allocMem = [aMarshaledByCom](size_t aSize) {
+    if (aMarshaledByCom) {
+      return ::CoTaskMemAlloc(aSize);
+    }
+    // We use midl_user_allocate rather than CoTaskMemAlloc because this
+    // struct is being marshaled by RPC, not COM.
+    return ::midl_user_allocate(aSize);
+  };
 
   const VARIANT kChildIdSelf = {VT_I4};
   VARIANT varVal;
@@ -363,10 +375,8 @@ void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data) {
       return;
     }
     if (aOutIA2Data->mNRowHeaderCells > 0) {
-      // We use midl_user_allocate rather than CoTaskMemAlloc because this
-      // struct is being marshaled by RPC, not COM.
       aOutIA2Data->mRowHeaderCellIds = static_cast<long*>(
-          ::midl_user_allocate(sizeof(long) * aOutIA2Data->mNRowHeaderCells));
+          allocMem(sizeof(long) * aOutIA2Data->mNRowHeaderCells));
       for (long i = 0; i < aOutIA2Data->mNRowHeaderCells; ++i) {
         RefPtr<IAccessible2> headerAcc;
         hr = headers[i]->QueryInterface(IID_IAccessible2,
@@ -385,11 +395,8 @@ void HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data) {
       return;
     }
     if (aOutIA2Data->mNColumnHeaderCells > 0) {
-      // We use midl_user_allocate rather than CoTaskMemAlloc because this
-      // struct is being marshaled by RPC, not COM.
-      aOutIA2Data->mColumnHeaderCellIds =
-          static_cast<long*>(::midl_user_allocate(
-              sizeof(long) * aOutIA2Data->mNColumnHeaderCells));
+      aOutIA2Data->mColumnHeaderCellIds = static_cast<long*>(
+          allocMem(sizeof(long) * aOutIA2Data->mNColumnHeaderCells));
       for (long i = 0; i < aOutIA2Data->mNColumnHeaderCells; ++i) {
         RefPtr<IAccessible2> headerAcc;
         hr = headers[i]->QueryInterface(IID_IAccessible2,
@@ -575,7 +582,8 @@ HandlerProvider::Refresh(DynamicIA2Data* aOutData) {
 
   if (!mscom::InvokeOnMainThread("HandlerProvider::BuildDynamicIA2Data", this,
                                  &HandlerProvider::BuildDynamicIA2Data,
-                                 std::forward<DynamicIA2Data*>(aOutData))) {
+                                 std::forward<DynamicIA2Data*>(aOutData),
+                                 /* aMarshaledByCom */ true)) {
     return E_FAIL;
   }
 

@@ -37,7 +37,22 @@ inline void ReleaseStaticIA2DataInterfaces(StaticIA2Data& aData) {
   }
 }
 
-inline void CleanupDynamicIA2Data(DynamicIA2Data& aData) {
+/**
+ * Pass true for aMarshaledByCom  if this struct was directly marshaled as an
+ * out parameter of a COM method, currently only IGeckoBackChannel::Refresh.
+ */
+inline void CleanupDynamicIA2Data(DynamicIA2Data& aData,
+                                  bool aMarshaledByCom = false) {
+  // If freeing generic memory returned to the client, you *must* use freeMem,
+  // not CoTaskMemFree!
+  auto freeMem = [aMarshaledByCom](void* aMem) {
+    if (aMarshaledByCom) {
+      ::CoTaskMemFree(aMem);
+    } else {
+      ::midl_user_free(aMem);
+    }
+  };
+
   ::VariantClear(&aData.mRole);
   if (aData.mKeyboardShortcut) {
     ::SysFreeString(aData.mKeyboardShortcut);
@@ -67,10 +82,10 @@ inline void CleanupDynamicIA2Data(DynamicIA2Data& aData) {
     ::SysFreeString(aData.mIA2Locale.variant);
   }
   if (aData.mRowHeaderCellIds) {
-    ::midl_user_free(aData.mRowHeaderCellIds);
+    freeMem(aData.mRowHeaderCellIds);
   }
   if (aData.mColumnHeaderCellIds) {
-    ::midl_user_free(aData.mColumnHeaderCellIds);
+    freeMem(aData.mColumnHeaderCellIds);
   }
 }
 
