@@ -66,28 +66,6 @@ function makeRemoteTabMatch(url, deviceName, extra = {}) {
   };
 }
 
-// The tests.
-add_task(async function test_nomatch() {
-  // Nothing matches.
-  configureEngine({
-    guid_desktop: {
-      id: "desktop",
-      tabs: [
-        {
-          urlHistory: ["http://foo.com/"],
-        },
-      ],
-    },
-  });
-
-  // No remote tabs match here, so we only expect search results.
-  await check_autocomplete({
-    search: "ex",
-    searchParam: "enable-actions",
-    matches: [makeSearchMatch("ex", { heuristic: true })],
-  });
-});
-
 add_task(async function test_minimal() {
   // The minimal client and tabs info we can get away with.
   configureEngine({
@@ -104,10 +82,7 @@ add_task(async function test_minimal() {
   await check_autocomplete({
     search: "ex",
     searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch("ex", { heuristic: true }),
-      makeRemoteTabMatch("http://example.com/", "My Desktop"),
-    ],
+    matches: [makeRemoteTabMatch("http://example.com/", "My Desktop")],
   });
 });
 
@@ -130,7 +105,6 @@ add_task(async function test_maximal() {
     search: "ex",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("ex", { heuristic: true }),
       makeRemoteTabMatch("http://example.com/", "My Phone", {
         title: "An Example",
         icon: "moz-anno:favicon:http://favicon/",
@@ -158,7 +132,6 @@ add_task(async function test_noShowIcons() {
     search: "ex",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("ex", { heuristic: true }),
       makeRemoteTabMatch("http://example.com/", "My Phone", {
         title: "An Example",
         // expecting the default favicon due to that pref.
@@ -187,7 +160,7 @@ add_task(async function test_dontMatchSyncedTabs() {
   await check_autocomplete({
     search: "ex",
     searchParam: "enable-actions",
-    matches: [makeSearchMatch("ex", { heuristic: true })],
+    matches: [],
   });
   Services.prefs.clearUserPref("services.sync.syncedTabs.showRemoteTabs");
 });
@@ -210,7 +183,6 @@ add_task(async function test_matches_title() {
     search: "ex",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("ex", { heuristic: true }),
       makeRemoteTabMatch("http://foo.com/", "My Phone", {
         title: "An Example",
       }),
@@ -243,10 +215,7 @@ add_task(async function test_localtab_matches_override() {
   await check_autocomplete({
     search: "ex",
     searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch("ex", { heuristic: true }),
-      makeSwitchToTabMatch("http://foo.com/", { title: "An Example" }),
-    ],
+    matches: [makeSwitchToTabMatch("http://foo.com/", { title: "An Example" })],
   });
   await removeOpenPages(uri, 1);
 });
@@ -275,7 +244,6 @@ add_task(async function test_remotetab_matches_override() {
     search: "rem",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("rem", { heuristic: true }),
       makeRemoteTabMatch("http://foo.remote.com/", "My Phone", {
         title: "An Example",
       }),
@@ -312,7 +280,6 @@ add_task(async function test_many_remotetab_matches() {
     searchParam: "enable-actions",
     checkSorting: true,
     matches: [
-      makeSearchMatch("rem", { heuristic: true }),
       makeRemoteTabMatch("http://foo.remote.com/0", "My Phone", {
         title: "A title",
       }),
@@ -361,15 +328,12 @@ add_task(async function test_maxResults() {
     },
   });
 
-  // Set maxResults to 5 in our search.  5 results total should be returned: the
-  // heuristic followed by ceil(maxResults / 2) remote tabs, then two more
-  // remote tabs to round out the number of results to 5.
+  // Set maxResults to 4 in our search.
   await check_autocomplete({
     search: "rem",
-    searchParam: "enable-actions max-results:5",
+    searchParam: "enable-actions max-results:4",
     checkSorting: true,
     matches: [
-      makeSearchMatch("rem", { heuristic: true }),
       makeRemoteTabMatch("http://foo.remote.com/0", "My Phone", {
         title: "A title",
       }),
@@ -409,15 +373,14 @@ add_task(async function test_restrictionCharacter() {
   await PlacesTestUtils.addVisits([{ uri, title: "An Example" }]);
   await addOpenPages(uri, 1);
 
-  // Set maxResults to 8 in our search.  8 results should be returned: the
-  // heuristic followed by (maxResults / 2) remote tabs, then the open tab, then
-  // 2 more remote tab results to get to 8 total.
+  // Set maxResults to 7 in our search.  7 results should be returned:
+  // ceil(maxResults / 2) remote tabs, then the open tab, then 2 more remote tab
+  // results to get to 7 total.
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE,
-    searchParam: "enable-actions max-results:8",
+    searchParam: "enable-actions max-results:7",
     checkSorting: true,
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, { heuristic: true }),
       makeRemoteTabMatch("http://foo.remote.com/0", "My Phone", {
         title: "A title",
       }),

@@ -298,20 +298,24 @@ async function check_autocomplete(test) {
     if (matches.length) {
       let firstIndexToCheck = 0;
       if (test.searchParam && test.searchParam.includes("enable-actions")) {
-        firstIndexToCheck = 1;
-        info("Checking first match is first autocomplete entry");
         let result = {
           value: controller.getValueAt(0),
           comment: controller.getCommentAt(0),
           style: controller.getStyleAt(0),
           image: controller.getImageAt(0),
         };
-        info(`First match is "${result.value}", "${result.comment}"`);
-        Assert.ok(
-          await _check_autocomplete_matches(matches[0], result),
-          "first item is correct"
-        );
-        info("Checking rest of the matches");
+        // We only care about the positioning of the first result if it is
+        // heuristic.
+        if (result.style.includes("heuristic")) {
+          info("Checking first match is first autocomplete entry");
+          info(`First match is "${result.value}", "${result.comment}"`);
+          Assert.ok(
+            await _check_autocomplete_matches(matches[0], result),
+            "first item is correct"
+          );
+          info("Checking rest of the matches");
+          firstIndexToCheck = 1;
+        }
       }
 
       for (let i = firstIndexToCheck; i < controller.matchCount; i++) {
