@@ -20,7 +20,39 @@ sys.path.insert(0, lintdir)
 logger = logging.getLogger("mozlint")
 
 
-@pytest.fixture(scope="module")
+def pytest_generate_tests(metafunc):
+    """Finds, loads and returns the config for the linter name specified by the
+    LINTER global variable in the calling module.
+
+    This implies that each test file (that uses this fixture) should only be
+    used to test a single linter. If no LINTER variable is defined, the test
+    will fail.
+    """
+    if "config" in metafunc.fixturenames:
+        if not hasattr(metafunc.module, "LINTER"):
+            pytest.fail(
+                "'config' fixture used from a module that didn't set the LINTER variable"
+            )
+
+        name = metafunc.module.LINTER
+        config_path = os.path.join(lintdir, "{}.yml".format(name))
+        parser = Parser(build.topsrcdir)
+        configs = parser.parse(config_path)
+        config_names = {config["name"] for config in configs}
+
+        marker = metafunc.definition.get_closest_marker("lint_config")
+        if marker:
+            config_name = marker.kwargs["name"]
+            if config_name not in config_names:
+                pytest.fail(f"lint config {config_name} not present in {name}.yml")
+            configs = [
+                config for config in configs if config["name"] == marker.kwargs["name"]
+            ]
+
+        ids = [config["name"] for config in configs]
+        metafunc.parametrize("config", configs, ids=ids)
+
+
 def root(request):
     """Return the root directory for the files of the linter under test.
 
@@ -48,27 +80,6 @@ def paths(root):
         return [os.path.normpath(os.path.join(root, p)) for p in paths]
 
     return _inner
-
-
-@pytest.fixture
-def config(request):
-    """Finds, loads and returns the config for the linter name specified by the
-    LINTER global variable in the calling module.
-
-    This implies that each test file (that uses this fixture) should only be
-    used to test a single linter. If no LINTER variable is defined, the test
-    will fail.
-    """
-    if not hasattr(request.module, "LINTER"):
-        pytest.fail(
-            "'config' fixture used from a module that didn't set the LINTER variable"
-        )
-
-    name = request.module.LINTER
-    config_path = os.path.join(lintdir, "{}.yml".format(name))
-    parser = Parser(build.topsrcdir)
-    # TODO Don't assume one linter per yaml file
-    return parser.parse(config_path)[0]
 
 
 @pytest.fixture(autouse=True)
@@ -111,7 +122,7 @@ def lint(config, root):
 
         ret = defaultdict(list)
         for r in results:
-            ret[r.path].append(r)
+            ret[r.relpath].append(r)
         return ret
 
     return wrapper
