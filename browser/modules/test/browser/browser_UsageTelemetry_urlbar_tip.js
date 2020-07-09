@@ -122,7 +122,7 @@ class TipProvider extends UrlbarProvider {
     this._results = results;
   }
   get name() {
-    return "TestTipProvider";
+    return "TestProviderTip";
   }
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;

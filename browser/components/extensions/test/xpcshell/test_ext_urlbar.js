@@ -188,7 +188,7 @@ add_task(async function test_registerProvider() {
 });
 
 // Adds a single active provider that returns many kinds of results.  This also
-// checks that the heuristic result from the built-in UnifiedComplete provider
+// checks that the heuristic result from the built-in HeuristicFallback provider
 // is included.
 add_task(async function test_onProviderResultsRequested() {
   let ext = ExtensionTestUtils.loadExtension({
@@ -276,7 +276,7 @@ add_task(async function test_onProviderResultsRequested() {
 
   // Check the results.
   let expectedResults = [
-    // The first result should be a search result returned by UnifiedComplete.
+    // The first result should be a search result returned by HeuristicFallback.
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
