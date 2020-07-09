@@ -41,8 +41,10 @@ open class GeckoSelectionActionDelegate(
     }
 
     override fun isActionAvailable(id: String): Boolean {
-        val customActionIsAvailable = customDelegate.isActionAvailable(id) &&
-            !mSelection?.text.isNullOrEmpty()
+        val selectedText = mSelection?.text
+
+        val customActionIsAvailable = !selectedText.isNullOrEmpty() &&
+        customDelegate.isActionAvailable(id, selectedText)
 
         return customActionIsAvailable ||
             super.isActionAvailable(id)

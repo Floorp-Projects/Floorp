@@ -8,6 +8,9 @@ import android.content.Context
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
+import mozilla.components.support.ktx.android.content.call
+import mozilla.components.support.ktx.android.content.email
+import mozilla.components.support.ktx.android.content.share
 
 /**
  * More convenient secondary constructor for creating a [DefaultSelectionActionDelegate].
@@ -16,10 +19,14 @@ import mozilla.components.feature.search.BrowserStoreSearchAdapter
 fun DefaultSelectionActionDelegate(
     store: BrowserStore,
     context: Context,
-    shareTextClicked: ((String) -> Unit)? = null
+    shareTextClicked: ((String) -> Unit)? = { context.share(it) },
+    emailTextClicked: ((String) -> Unit)? = { context.email(it) },
+    callTextClicked: ((String) -> Unit)? = { context.call(it) }
 ) =
     DefaultSelectionActionDelegate(
         BrowserStoreSearchAdapter(store),
         context.resources,
-        shareTextClicked
+        shareTextClicked,
+        emailTextClicked,
+        callTextClicked
     )

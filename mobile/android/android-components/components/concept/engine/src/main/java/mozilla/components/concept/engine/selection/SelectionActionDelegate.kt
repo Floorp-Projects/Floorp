@@ -19,9 +19,10 @@ interface SelectionActionDelegate {
     /**
      * Checks if an action can be shown on a new selection context menu.
      *
-     * @returns whether or not the the custom action with the id of [id] is currently available.
+     * @returns whether or not the the custom action with the id of [id] is currently available
+     *  which may be informed by [selectedText].
      */
-    fun isActionAvailable(id: String): Boolean
+    fun isActionAvailable(id: String, selectedText: String): Boolean
 
     /**
      * Gets a title to be shown in the selection context menu.

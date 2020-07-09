@@ -80,6 +80,32 @@ class ContextTest {
     }
 
     @Test
+    fun `email invokes startActivity`() {
+        val context = spy(testContext)
+        val argCaptor = argumentCaptor<Intent>()
+
+        val result = context.email("test@mozilla.org")
+
+        verify(context).startActivity(argCaptor.capture())
+
+        assertTrue(result)
+        assertEquals(FLAG_ACTIVITY_NEW_TASK, argCaptor.value.flags)
+    }
+
+    @Test
+    fun `call invokes startActivity`() {
+        val context = spy(testContext)
+        val argCaptor = argumentCaptor<Intent>()
+
+        val result = context.call("555-5555")
+
+        verify(context).startActivity(argCaptor.capture())
+
+        assertTrue(result)
+        assertEquals(FLAG_ACTIVITY_NEW_TASK, argCaptor.value.flags)
+    }
+
+    @Test
     fun `isMainProcess must only return true if we are in the main process`() {
         val myPid = Int.MAX_VALUE
 
