@@ -213,8 +213,9 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   // callers of this method don't know whether the load went through cached
   // image redirects.  This is handled by direct callers of the static
   // ShouldLoad.
-  nsresult rv = ShouldLoad(false,  // aHadInsecureImageRedirect
-                           aContentLocation, aLoadInfo, aMimeGuess, aDecision);
+  nsresult rv =
+      ShouldLoad(false,  // aHadInsecureImageRedirect
+                 aContentLocation, aLoadInfo, aMimeGuess, true, aDecision);
 
   if (*aDecision == nsIContentPolicy::REJECT_REQUEST) {
     NS_SetRequestBlockingReason(aLoadInfo,
@@ -380,6 +381,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
                                            nsIURI* aContentLocation,
                                            nsILoadInfo* aLoadInfo,
                                            const nsACString& aMimeGuess,
+                                           bool aReportError,
                                            int16_t* aDecision) {
   // Asserting that we are on the main thread here and hence do not have to lock
   // and unlock security.mixed_content.block_active_content and
@@ -771,10 +773,11 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
 
   // set hasMixedContentObjectSubrequest on this object if necessary
-  if (contentType == TYPE_OBJECT_SUBREQUEST) {
+  if (contentType == TYPE_OBJECT_SUBREQUEST && aReportError) {
     if (!StaticPrefs::security_mixed_content_block_object_subrequest()) {
       nsAutoCString messageLookUpKey(
           "LoadingMixedDisplayObjectSubrequestDeprecation");
+
       LogMixedContentMessage(classification, aContentLocation, topWC->Id(),
                              eUserOverride, requestingLocation,
                              messageLookUpKey);
@@ -817,7 +820,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 
   // To avoid duplicate errors on the console, we do not report blocked
   // preloads to the console.
-  if (!isPreload) {
+  if (!isPreload && aReportError) {
     LogMixedContentMessage(classification, aContentLocation, topWC->Id(),
                            (*aDecision == nsIContentPolicy::REJECT_REQUEST)
                                ? eBlocked
