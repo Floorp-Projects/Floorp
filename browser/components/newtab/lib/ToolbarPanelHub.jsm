@@ -15,6 +15,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
+ChromeUtils.defineModuleGetter(
+  this,
+  "PanelMultiView",
+  "resource:///modules/PanelMultiView.jsm"
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
@@ -176,7 +181,7 @@ class _ToolbarPanelHub {
     const messages =
       (options.force && options.messages) ||
       (await this.messages).sort(this._sortWhatsNewMessages);
-    const container = doc.getElementById(containerId);
+    const container = PanelMultiView.getViewNode(doc, containerId);
 
     if (messages) {
       // Targeting attribute state might have changed making new messages
@@ -215,9 +220,10 @@ class _ToolbarPanelHub {
 
   removeMessages(win, containerId) {
     const doc = win.document;
-    const messageNodes = doc
-      .getElementById(containerId)
-      .querySelectorAll(".whatsNew-message");
+    const messageNodes = PanelMultiView.getViewNode(
+      doc,
+      containerId
+    ).querySelectorAll(".whatsNew-message");
     for (const messageNode of messageNodes) {
       messageNode.remove();
     }

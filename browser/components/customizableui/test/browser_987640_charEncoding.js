@@ -27,11 +27,11 @@ add_task(async function() {
 
   await document.getElementById("nav-bar").overflowable.show();
   let charEncodingButton = document.getElementById("characterencoding-button");
+  charEncodingButton.click();
   let characterEncodingView = document.getElementById(
     "PanelUI-characterEncodingView"
   );
   let subviewShownPromise = subviewShown(characterEncodingView);
-  charEncodingButton.click();
   await subviewShownPromise;
 
   let checkedButtons = characterEncodingView.querySelectorAll(
