@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import subprocess
+
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
 
@@ -116,7 +118,7 @@ class DebianBootstrapper(
         have_python3 = any([self.which('python3'), self.which('python3.8'),
                             self.which('python3.7'), self.which('python3.6'),
                             self.which('python3.5')])
-        python3_packages = self.check_output(
+        python3_packages = subprocess.check_output(
             ['apt-cache', 'pkgnames', 'python3'], universal_newlines=True)
         python3_packages = python3_packages.splitlines()
 
