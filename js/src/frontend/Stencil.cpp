@@ -211,4 +211,8 @@ void ScriptStencil::trace(JSTracer* trc) {
       MOZ_ASSERT(atom == thing.as<ScriptAtom>(), "Atoms should be unmovable");
     }
   }
+
+  if (functionAtom) {
+    TraceRoot(trc, &functionAtom, "script-atom");
+  }
 }

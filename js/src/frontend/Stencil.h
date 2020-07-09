@@ -358,6 +358,10 @@ class ScriptStencil {
   // from the final BaseScript for the case of standalone functions.
   SourceExtent extent = {};
 
+  // The explicit or implicit name of the function. The FunctionFlags indicate
+  // the kind of name.
+  JSAtom* functionAtom = nullptr;
+
   // See: `FunctionFlags`.
   FunctionFlags functionFlags = {};
 

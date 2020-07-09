@@ -499,6 +499,7 @@ void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
   MOZ_ASSERT(&stencil == &functionStencil().get());
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
 
+  stencil.functionAtom = atom_;
   stencil.functionFlags = flags_;
   stencil.nargs = nargs_;
   stencil.isAsmJSModule = isAsmJSModule_;
@@ -521,8 +522,9 @@ void FunctionBox::copyUpdatedFieldInitializers() {
   stencil.fieldInitializers = fieldInitializers_;
 }
 
-void FunctionBox::copyUpdatedFlags() {
+void FunctionBox::copyUpdatedAtomAndFlags() {
   ScriptStencil& stencil = functionStencil().get();
+  stencil.functionAtom = atom_;
   stencil.functionFlags = flags_;
 }
 
