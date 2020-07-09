@@ -316,11 +316,16 @@ inline void NativeObject::reverseDenseElementsNoPreBarrier(uint32_t length) {
   elementsRangeWriteBarrierPost(0, length);
 }
 
-inline void NativeObject::ensureDenseInitializedLengthNoPackedCheck(
-    uint32_t index, uint32_t extra) {
+inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,
+                                                       uint32_t index,
+                                                       uint32_t extra) {
   MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(!denseElementsAreFrozen());
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
+
+  if (writeToIndexWouldMarkNotPacked(index)) {
+    markDenseElementsNotPacked(cx);
+  }
 
   /*
    * Ensure that the array's contents have been initialized up to index, and
@@ -341,17 +346,6 @@ inline void NativeObject::ensureDenseInitializedLengthNoPackedCheck(
     }
     initlen = index + extra;
   }
-}
-
-inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,
-                                                       uint32_t index,
-                                                       uint32_t extra) {
-  MOZ_ASSERT(isExtensible());
-
-  if (writeToIndexWouldMarkNotPacked(index)) {
-    markDenseElementsNotPacked(cx);
-  }
-  ensureDenseInitializedLengthNoPackedCheck(index, extra);
 }
 
 DenseElementResult NativeObject::extendDenseElements(JSContext* cx,
@@ -391,21 +385,15 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
   MOZ_ASSERT(isNative());
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
 
-  if (writeToIndexWouldMarkNotPacked(index)) {
-    markDenseElementsNotPacked(cx);
-  }
-
   if (!maybeCopyElementsForWrite(cx)) {
     return DenseElementResult::Failure;
   }
 
-  uint32_t currentCapacity = getDenseCapacity();
-
   uint32_t requiredCapacity;
   if (extra == 1) {
     /* Optimize for the common case. */
-    if (index < currentCapacity) {
-      ensureDenseInitializedLengthNoPackedCheck(index, 1);
+    if (index < getDenseCapacity()) {
+      ensureDenseInitializedLength(cx, index, 1);
       return DenseElementResult::Success;
     }
     requiredCapacity = index + 1;
@@ -419,8 +407,8 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
       /* Overflow. */
       return DenseElementResult::Incomplete;
     }
-    if (requiredCapacity <= currentCapacity) {
-      ensureDenseInitializedLengthNoPackedCheck(index, extra);
+    if (requiredCapacity <= getDenseCapacity()) {
+      ensureDenseInitializedLength(cx, index, extra);
       return DenseElementResult::Success;
     }
   }
@@ -430,7 +418,7 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
     return result;
   }
 
-  ensureDenseInitializedLengthNoPackedCheck(index, extra);
+  ensureDenseInitializedLength(cx, index, extra);
   return DenseElementResult::Success;
 }
 

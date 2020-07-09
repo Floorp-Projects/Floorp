@@ -1208,9 +1208,6 @@ class NativeObject : public JSObject {
   }
 
  private:
-  inline void ensureDenseInitializedLengthNoPackedCheck(uint32_t index,
-                                                        uint32_t extra);
-
   // Run a post write barrier that encompasses multiple contiguous elements in a
   // single step.
   inline void elementsRangeWriteBarrierPost(uint32_t start, uint32_t count);
