@@ -69,6 +69,13 @@ struct SocketDataArgs
   SocketInfo[] info;
 };
 
+struct SocketPorcessInitAttributes {
+  bool mOffline;
+  bool mConnectivity;
+  bool mInitSandbox;
+  FileDescriptor? mSandboxBroker;
+};
+
 sync protocol PSocketProcess
 {
   manages PDNSRequest;
@@ -125,6 +132,7 @@ parent:
     returns (bool aAccepted);
 
 child:
+  async Init(SocketPorcessInitAttributes aAttributes);
   async PreferenceUpdate(Pref pref);
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
