@@ -2536,7 +2536,10 @@ const SiteSpecificBrowserUI = {
     }
 
     XPCOMUtils.defineLazyGetter(this, "panelBody", () => {
-      return document.querySelector("#appMenu-SSBView .panel-subview-body");
+      return PanelMultiView.getViewNode(
+        document,
+        "appMenu-SSBView .panel-subview-body"
+      );
     });
 
     let initializeMenu = async () => {
@@ -2559,7 +2562,10 @@ const SiteSpecificBrowserUI = {
       "popupshowing",
       () => {
         let blocker = initializeMenu();
-        document.getElementById("appMenu-SSBView").addEventListener(
+        PanelMultiView.getViewNode(
+          document,
+          "appMenu-SSBView"
+        ).addEventListener(
           "ViewShowing",
           event => {
             event.detail.addBlocker(blocker);

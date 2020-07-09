@@ -27,6 +27,7 @@ describe("ToolbarPanelHub", () => {
   let defaultSearchStub;
   let scriptloaderStub;
   let fakeRemoteL10n;
+  let getViewNodeStub;
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
@@ -125,6 +126,7 @@ describe("ToolbarPanelHub", () => {
       new Date() - 500
     );
     getEventsByDateRangeStub = sandbox.stub().returns([]);
+    getViewNodeStub = sandbox.stub().returns(fakeElementById);
     defaultSearchStub = { defaultEngine: { name: "DDG" } };
     fakeRemoteL10n = {
       l10n: {},
@@ -158,6 +160,9 @@ describe("ToolbarPanelHub", () => {
         handleAction: sandbox.stub(),
       },
       RemoteL10n: fakeRemoteL10n,
+      PanelMultiView: {
+        getViewNode: getViewNodeStub,
+      },
     });
   });
   afterEach(() => {
