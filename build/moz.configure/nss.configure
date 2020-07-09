@@ -8,7 +8,7 @@ option('--with-system-nss', help='Use system NSS')
 
 imply_option('--with-system-nspr', True, when='--with-system-nss')
 
-nss_pkg = pkg_check_modules('NSS', 'nss >= 3.54', when='--with-system-nss', config=False)
+nss_pkg = pkg_check_modules('NSS', 'nss >= 3.55', when='--with-system-nss', config=False)
 
 set_config('MOZ_SYSTEM_NSS', True, when='--with-system-nss')
 

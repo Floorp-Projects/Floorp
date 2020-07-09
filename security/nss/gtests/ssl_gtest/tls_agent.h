@@ -182,7 +182,7 @@ class TlsAgent : public PollTarget {
               uint16_t zeroRttSuite = TLS_NULL_WITH_NULL_NULL);
   void RemovePsk(std::string label);
   void ReadBytes(size_t max = 16384U);
-  void ResetSentBytes();  // Hack to test drops.
+  void ResetSentBytes(size_t bytes = 0);  // Hack to test drops.
   void EnableExtendedMasterSecret();
   void CheckExtendedMasterSecret(bool expected);
   void CheckEarlyDataAccepted(bool expected);
