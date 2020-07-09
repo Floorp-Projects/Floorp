@@ -41,7 +41,7 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Adiciona um atalho na tela inicial para abrir abas privativas.</string>
+    <string name="cfr_message">Adicione um atalho na tela inicial para abrir abas privativas.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Adicionar atalho</string>
     <!-- Text for the negative button -->
@@ -221,7 +221,7 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Navegação privativa</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Abrir links em uma aba privativa</string>
+    <string name="preferences_open_links_in_a_private_tab">Abrir links em abas privativas</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de tela na navegação privativa</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -700,7 +700,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu de coleções</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Colete o que é importante para você</string>
+    <string name="no_collections_header1">Colecione o que é importante para você</string>
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Agrupe pesquisas, sites e abas semelhantes para acesso rápido mais tarde.</string>
     <!-- Title for the "select tabs" step of the collection creator -->

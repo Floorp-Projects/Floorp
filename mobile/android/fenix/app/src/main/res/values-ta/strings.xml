@@ -21,17 +21,35 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">உங்களின் ககுக்க கீற்றுகள் இங்கே காண்பிக்கப்படும்.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 கீற்றைத் திற. கீற்றுகளிடையே மாறத் தட்டவும்.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">திறந்த %1$s கீற்றுகள். கீற்றுகளிடையே மாறத் தட்டவும்.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s மொசில்லாவால் தயாரிக்கப்படுகிறது.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">நீங்கள் ஒரு தனிப்பட்ட அமர்வில் இருக்கிறீர்கள்</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">நீங்கள் பயன்பாட்டை விட்டு வெளியேறும்போது அல்லது அனைத்து கமுக் உலாவல் தாவல்களை மூடும்போது உங்கள் தேடல் மற்றும் உலாவல் வரலாற்றை  %1$s துடைக்கிறது. இது வலைத்தளங்களுக்கோ அல்லது இணைய சேவை வழங்குனர்களுக்கோ தெரியாதபோது, இந்தக் கணினியைப் பயன்படுத்தும் மற்றவர்களிடமிருந்தும் இயங்கலையில் உங்களைக் கமுக்கமா வைத்திருப்பதையும் எளிதாக்குகிறது.</string>
+    <string name="private_browsing_common_myths">கமுக்க உலாவல் பற்றிய பொதுவான தொன்மங்கள்</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">அமர்வை நீக்கு</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">உங்கள் முகப்புத் திரையிலிருந்து கமுக்க தாவல்களைத் திறக்கக் குறுக்குவழியைச் சேர்க்கவும்.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">குறுக்குவழியைச் சேர்க்கவும்</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">பரவாயில்லை நன்றி</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">பயர்பாக்சை வேகமாக அடைய. உங்கள் முகப்புத் திரையில் ஒரு சட்டகத்தைச் சேர்.</string>
     <!-- Text for the positive button -->
     <string name="search_widget_cfr_pos_button_text">சட்டகத்தைச் சேர்க்கவும்</string>
     <!-- Text for the negative button -->
@@ -326,23 +344,49 @@
     <string name="preferences_tracking_protection_settings">தடமறியல் பாதுகாப்பு</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">தடமறியல் பாதுகாப்பு</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">உங்களை இயங்கலையில் பின்தொடரும் உள்ளடக்கம் மற்றும் நிரல்களைத் தடு</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">விதிவிலக்குகள்</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">இத்தளங்களில் தடமறியல் பாதுகாப்பு முடக்கப்பட்டுள்ளது</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">எல்லா தளங்களுக்கும் இயக்கு</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">தேர்ந்த தளங்களுக்கான தடமறி பாதுகாப்பை முடக்க விதிவிலக்குகள் உங்களை அனுமதிக்கின்றன.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">மேலும் அறிய</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">மொத்தமாக அணைக்கப்பட்டது, அதை இயக்க அமைப்புகளுக்குச் செல்லவும்.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">தொலைத்தகவல்</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">பயனளவு மற்றும் தொழில்நுட்ப தரவு</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">%1$s உலாவியைச் சிறந்ததாக்க உங்களுடைய உலாவிப் பற்றிய செயல்திறன், பயனளவு, வன்பொருள் மற்றும் தனிப்பயனாக்க தரவுகளை மொசில்லாவுடன் பகிர்கிறது</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">சந்தைப்படுத்தல் தரவு</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">நீங்கள் %1$s உலாவில் பயன்படுத்தும் அம்சங்களைப் பற்றிய தரவை, எங்களின் கைப்பேசிக்கான சந்தைப்படுத்தல் விற்பனையாளரான லீன்ப்ளமுடன் பகிர்ந்து கொள்கிறது.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">சோதனைகள்</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">சோதனை அம்சங்களுக்காக மொசில்லாவை நிறுவித் தகவலைத் திரட்ட அனுமதி</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">செயலிழப்பு அறிக்கையாளர்</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">மொசில்லா புவியிடச்சேவை</string>
 
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s நிலவர அறிக்கை</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">ஒத்திசைவை இயக்கு</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">மேசைத்தள பயர்பாக்சில் பிணைவதற்குறிய குறியீட்டை வருடிச் சேர்க்கவும்</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">புகுபதிகை</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -350,6 +394,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">கணக்கை அகற்று</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> தளத்தில் குறியீட்டை வருடிச் சேர்]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">படக்கருவியைத் திற</string>
     <!-- Button to cancel pairing -->
@@ -390,6 +437,8 @@
     <string name="library_desktop_bookmarks_unfiled">பிற புத்தகக்குறிகள்</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">வரலாறு</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">ஒத்திசைத் கீற்றுகள்</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">வாசிப்புப் பட்டியல்</string>
     <!-- Menu Item Label for Search in Library -->
@@ -410,6 +459,26 @@
     <string name="tabs_header_private_tabs_title">கமுக்கக் கீற்றுகள்</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">கீற்றைச் சேர்</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">கமுக்க கீற்றைச் சேர்</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">கமுக்க</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">திறந்த கீற்றுகள்</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">திரட்டில் சேமி</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">கீற்றுகளைப் பகிர்</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">எல்லாக் கீற்றுகளையும் மூடு</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">புதிய கீற்று</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">முகப்பிற்கு செல்</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">கீற்று முறையை நிலைமாற்று</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">திரட்டிலிருந்து கீற்றை நீக்கு</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">கீற்றை மூடு</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -846,6 +915,150 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">முன்னோட்ட பயர்பாக்சு இப்போது இராக்கால பயர்பாக்சு</string>
 
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">%s செயலிக்கு வருக!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">ஏற்கனவே கணக்கு வைத்திருக்கிறீர்களா?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s செயலியை அறிந்துக்கொள்ளுங்கள்</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">புதிய வரவுகள்</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">மறுவடிவமைக்கப்பட்ட %s பற்றி கேள்விகள் உள்ளனவா? மாற்றங்களை அறிய விரும்புகிறீர்களா?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">பதில்களை இங்கு பெறுங்கள்</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s இலிருந்து ஆக அதிகமானதைப் பெறுங்கள்.</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">ஆம், புகுபதி</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">புகுபதிகிறது…</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">விடுபதிந்தே இரு</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">ஒத்திசைவு இயக்கத்தில்</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">புகுபதிகை தோல்வி</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">தானியங்கு தனியுரிமை</string>
+
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">தனியுரிமை மற்றும் பாதுகாப்பு அமைவுகள் உங்களைப் பின்தொடரும் தடமறிவான்கள், தீம்பொருள், நிறுவனங்களைத் தடுக்கிறது.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">நிலையான (இயல்புநிலை)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">குறைந்த தடமறிவான்களைத் தடுக்கிறது. பக்கங்கள் சாதாரணமாக ஏற்றப்படும்.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">கண்டிப்பான (பரிந்துரைத்தது)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">கண்டிப்பான</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">கூடுதல் தடமறிவான்கள், விளம்பரங்கள், துள்ளல்களைத் தடுக்கிறது. பக்கங்கள் வேகமாக ஏற்றப்படும், ஆனால் சில செயல்பாடுகள் வேலை செய்யாமல் போகலாம்.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">ஒரு நிலையை எடுங்கள்</string>
+
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">கீழ் கருவிப்பட்டையுடன் ஒரு-கை உலாவலை முயற்சியுங்கள் அல்லது அதை மேல்புறம் நகர்த்துங்கள்.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">கமுக்கமாக உலாவுங்கள்</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">கமுக்கக் கீற்றை ஒருமுறை திறக்க: %s சின்னத்தைத் தட்டுங்கள்.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">ஒவ்வொரு முறையும் கமுக்கக் கீற்றுகளைத் திறக்க: உங்கள் கமுக்க உலாவல் அமைவுகளைப் புதுப்பியுங்கள்.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">அமைவுகளைத் திற</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">உங்கள் தனியுரிமை</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">நீங்கள் பகிர்பவற்றின் மீதான கட்டுப்பாட்டை உங்களுக்கு வழங்க %s ஐ வடிவமைத்துள்ளோம்
+        இயங்கலையிலும் எங்களுடனும்.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">எங்கள் தனியுரிமை அறிவிக்கையைப் படிக்க</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">மூடு</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">உலாவத் தொடங்குக</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">உங்கள் கருப்பொருளைத் தேர்க</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">கருமை முறையைச் செயற்படுத்தி மின்கலனையும் உங்கள் விழியொளியையும் சேமியுங்கள்.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">தானியக்கம்</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">உங்கள் சாதன அமைவுகளுக்கு தகவமைக்கும்</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">கருமை</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">வெளிர்</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">கீற்றுகள் அனுப்பப்பட்டன!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">கீற்று அனுப்பப்பட்டது!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">அனுப்ப முடியவில்லை</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">மறுமுயற்சி</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">குறியீட்டை வருடு</string>
+
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">வருடத் தயார்</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">உங்கள் படக்கருவியால் புகுபதிக</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">பதிலாக மின்னஞ்சல் பயன்படுத்துக</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s உங்கள் கணக்குடன் ஒத்திசைவை நிறுத்தும், ஆனால் இச்சாதனத்திலுள்ள உங்கள் உலாவல் தரவை அழிக்காது.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">இணைப்பைநீக்கு</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">இரத்துசெய்</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">இயல்நிலை கோப்புறைகளைத் திருத்த முடியாது</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">பாதுகாப்பு அமைவுகள்</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">மேம்படுத்தப்பட்ட தடமறியல் பாதுகாப்பு</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">பின்தொடரப்படாமல் உலாவுக</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">உங்கள் தரவை உங்களிடமே வைத்திருங்கள். இயங்கலையில் உங்களைப் பின்தொடரும் மிகப்பொதுவான தடமறிவான்களிடமிருந்து %s உங்களைப் பாதுகாக்கிறது.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">மேலும் அறிய</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">நிலையான (இயல்புநிலை)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">குறைந்த தடமறிவான்களைத் தடுக்கிறது. பக்கங்கள் சாதாரணமாக ஏற்றப்படும்.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">நிலையான தடமறியல் பாதுகாப்பால் தடுக்கப்படுபவை</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">கண்டிப்பான</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">கூடுதல் தடமறிவான்கள், விளம்பரங்கள், துள்ளல்களைத் தடுக்கிறது. பக்கங்கள் வேகமாக ஏற்றப்படும், ஆனால் சில செயல்பாடுகள் வேலை செய்யாமல் போகலாம்.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">கண்டிப்பான தடமறியல் பாதுகாப்பால் தடுக்கப்படுபவை</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">தனிப்பயன்</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">எந்தெந்த தடமறிவான்களையும் சிறுநிரல்களையும் தடுக்க வேண்டுமெனத் தேர்வுசெய்க.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">தனிப்பயன் தடமறியல் பாதுகாப்பால் தடுக்கப்படுபவை</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">நினைவிகள்</string>
@@ -1045,4 +1258,163 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">உங்கள் உள்நுழைவுகளையும் கடவுச்சொற்களையும் பாதுகாக்கவும்</string>
 
-    </resources>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">உங்கள் சாதனம் பிறரிடம் இருக்கும்போது சேமித்த புகுபதிகைகளையும் கடவுச்சொற்களையும் அணுகுவதிலிருந்து பாதுகாக்க சாதனப் பூட்டு வடிவம், பின், அல்லது கடவுச்சொல்லை அமையுங்கள்.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">பிறகு</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">இப்போதே அமை</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">உங்கள் சாதனத்தைத் திறக்க</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">எல்லாத் தளங்களிலும் பெரிதாக்கம்</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">இச்சைகையைத் தடுக்கும் தளங்களில் கூட நுள்ளிப் பெரிதாக்குவதை அனுமதிக்க செயற்படுத்துங்கள்.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">பெயர் (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">கடைசி பயன்பாடு</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">புகுபதிகைகள் வரிசைப்படுத்தல் பட்டி</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">தேடுபொறியைச் சேர்</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">தேடுபொறியைத் திருத்து</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">சேர்</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">சேமி</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">திருத்து</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">நீக்கு</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">மற்றவை</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">பெயர்</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">பயன்படுத்த வேண்டிய தேடல் தொடர்</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">வினவலை “%s” ஆக மாற்றுக. எ.கா:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">மேலும் அறிய</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">தனிப்பயன் தேடுபொறி விவரங்கள்</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">மேலும் அறிய தொடுப்பு</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">தேடுபொறி பெயரை உள்ளிடுக</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” பெயருடன் தேடுபொறி ஏற்கனவே உள்ளது.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ஒரு தேடல் தொடரை உள்ளிடுக</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">தேடல் தொடர் எ.கா வடிவத்தை ஒத்துள்ளதா எனப் பாருங்கள்</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” உடன் இணைப்பதில் பிழை</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s உருவாக்கப்பட்டது</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s சேமிக்கப்பட்டது</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s நீக்கப்பட்டது</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">புத்தம் புதிய %s க்கு வருக</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">இயங்கலையில் சிறப்பாகச் செயல்பட உங்களுக்கு உதவும் மேம்பட்ட செயல்திறன், அம்சங்களுடன் முற்றிலும் மறுவடிவமைக்கப்பட்ட உலாவி உங்களுக்காகக் காத்திருக்கிறது.\n\n நாங்கள் %s புதுப்பிக்கும் வரை காத்திருங்கள்</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s புதுப்பிக்கிறது…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s தொடங்குக</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">பெயர்வு முடிந்தது</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">கடவுச்சொற்கள்</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">அனுமதிக்க:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. ஆண்ட்ராய்டு அமைவுகளுக்குச் செல்க</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>அனுமதிகளைத்</b> தட்டுக]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ஐ இயக்கத்திற்கு மாற்றுக]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">பாதுகாப்பான இணைப்பு</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">பாதுகாப்பற்ற இணைப்பு</string>
+
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">அனைத்து தளங்களிலும் எல்லா அனுமதிகளையும் நீக்க விரும்புகிறீர்களா?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">இந்தத் தளத்திற்கான எல்லா அனுமதிகளையும் நீக்க விரும்புகிறீர்களா?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">இந்தத் தளத்திற்கான இந்த அனுமதியை நீக்க விரும்புகிறீர்களா?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">தள விதிவிலக்குகள் இல்லை</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">முதன்மை கட்டுரைகள்</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">இந்தப் புத்தகக்குறியை அழிக்க விரும்புகிறீர்களா?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">முதன்மைத் தளங்களில் சேர்</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">சரிபார்த்தது: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">நீக்கு</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">திருத்து</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">இந்தப் புகுபதிகையை நீக்க விரும்புகிறீர்களா?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">நீக்கு</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">புகுபதிகை விருப்பங்கள்</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">திருத்தக்கூடிய உரை களம் புகுபதிகைக்கான வலை முகவரிக்கானது.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">திருத்தக்கூடிய உரை களம் புகுபதிகைக்கான பயனர் பெயருக்கானது.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">திருத்தக்கூடிய உரை களம் புகுபதிகைக்கான கடவுச்சொல்லுக்கானது.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">புகுபதிகையில் மாற்றங்களைச் சேமி.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">மாற்றங்களைக் கைவிடு</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">திருத்து</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">கடவுச்சொல் தேவை</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">குரல் தேடல்</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">இப்போது பேசுக</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">அந்தப் பயனர்பெயருடன் ஒரு புகுபதிகை ஏற்கனவே உள்ளது</string>
+
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">மற்றொரு சாதனத்தை இணைக்க.</string>
+
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">மறு-அங்கீகரியுங்கள்.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">கீற்று ஒத்திசைவைச் செயற்படுத்துங்கள்.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">உங்கள் மற்ற கருவிகளிலிருந்து கீற்றுகளின் பட்டியலைப் பார்க்க.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">ஒத்திசைக்க புகுபதிக</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">முதன்மை தள வரம்பை அடைந்தது</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">புதிய முதன்மை தளத்தைச் சேர்க்க, ஒன்றை அகற்றுங்கள். தளத்தை நெடுநேரம் அழுத்தி அகற்று என்பதைத் தேர்ந்தெடுங்கள்.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">சரி, புரிந்தது</string>
+
+</resources>

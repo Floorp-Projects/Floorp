@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s nyamuni</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Nyamuni)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Pilihan séjén</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Paluruh atawa asupkeun alamat</string>
 
@@ -103,18 +110,46 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Paluruh raramat</string>
 
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Setélan</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Dasar</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Umum</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Ngeunaan</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Mesin pamaluruh baku</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Paluruh</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Palang alamat</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Pitulung</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Peunteun dina Google Play</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Béré pangdeudeul</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Ngeunaan %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Hak Anjeun</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Kecap sandi</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Jadikeun panyungsi baku</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Terusan</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Nyungsi nyamuni</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Buka tutumbu di tab nyamuni</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tambahan tarabas nyungsi nyamuni</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Aksésibilitas</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">Serper Firefox Account biasa</string>
     <!-- Preference category for account information -->
@@ -144,11 +179,29 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Setélan akun</string>
 
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Émbohan</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Singkronkeun ayeuna</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Pilih nu rék disingkronkeun</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Jujutan</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Markah</string>
+
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Asup log</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Buka tab</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Kaluar</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Ngaran parangkat</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Nyingkronkeun…</string>
 
     <!-- Preference description for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions_description">Kilung Palacakan pikeun ieu loka ayeuna pareum</string>
