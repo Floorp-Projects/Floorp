@@ -271,6 +271,9 @@ class MessagingSystemListItem extends React.Component {
 
   render() {
     const { study, translations } = this.props;
+    const userFacingName = study.userFacingName || study.slug;
+    const userFacingDescription =
+      study.userFacingDescription || "Messaging System experiment.";
     return r(
       "li",
       {
@@ -279,14 +282,14 @@ class MessagingSystemListItem extends React.Component {
         }),
         "data-study-slug": study.slug, // used to identify this row in tests
       },
-      r("div", { className: "study-icon" }, study.userFacingName.slice(0, 1)),
+      r("div", { className: "study-icon" }, userFacingName.slice(0, 1)),
       r(
         "div",
         { className: "study-details" },
         r(
           "div",
           { className: "study-header" },
-          r("span", { className: "study-name" }, study.userFacingName),
+          r("span", { className: "study-name" }, userFacingName),
           r("span", {}, "\u2022"), // &bullet;
           r(
             "span",
@@ -296,11 +299,7 @@ class MessagingSystemListItem extends React.Component {
               : translations.completeStatus
           )
         ),
-        r(
-          "div",
-          { className: "study-description" },
-          study.userFacingDescription
-        )
+        r("div", { className: "study-description" }, userFacingDescription)
       ),
       r(
         "div",
