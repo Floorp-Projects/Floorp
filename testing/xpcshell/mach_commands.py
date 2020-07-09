@@ -132,19 +132,7 @@ class XPCShellRunner(MozbuildObject):
                 raise
         kwargs['tempDir'] = temp_dir
 
-        # Python through 2.7.2 has issues with unicode in some of the
-        # arguments. Work around that.
-        filtered_args = {}
-        for k, v in kwargs.iteritems():
-            if isinstance(v, unicode_type):
-                v = v.encode('utf-8')
-
-            if isinstance(k, unicode_type):
-                k = k.encode('utf-8')
-
-            filtered_args[k] = v
-
-        result = xpcshell.runTests(filtered_args)
+        result = xpcshell.runTests(kwargs)
 
         self.log_manager.disable_unstructured()
 
