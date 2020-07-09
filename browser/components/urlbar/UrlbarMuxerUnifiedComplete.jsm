@@ -47,6 +47,7 @@ const heuristicOrder = [
   // Test providers are handled in sort(),
   // Extension providers are handled in sort(),
   "UrlbarProviderSearchTips",
+  "Omnibox",
   "UnifiedComplete",
   "HeuristicFallback",
 ];
