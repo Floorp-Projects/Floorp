@@ -1376,18 +1376,28 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
 }
 
 nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
-  // used to prepare ws to be split across two blocks.  The main issue
-  // here is make sure normalWS doesn't end up becoming non-significant
-  // leading or trailing ws after the split.
+  // used to prepare white-space sequence to be split across two blocks.
+  // The main issue here is make sure white-spaces around the split point
+  // doesn't end up becoming non-significant leading or trailing ws after
+  // the split.
+  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+      TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  if (visibleWSFragmentInMiddleOfLine.isNothing()) {
+    return NS_OK;  // No visible white-space sequence.
+  }
 
-  // get the runs before and after selection
-  const WSFragment* beforeRun = FindNearestFragment(mScanStartPoint, false);
-  const WSFragment* afterRun = FindNearestFragment(mScanStartPoint, true);
+  PointPosition pointPositionWithVisibleWhiteSpaces =
+      visibleWSFragmentInMiddleOfLine.ref().ComparePoint(mScanStartPoint);
 
-  // adjust normal ws in afterRun if needed
-  if (afterRun && afterRun->IsVisibleAndMiddleOfHardLine()) {
-    // make sure leading char of following ws is an nbsp, so that it will show
-    // up
+  // XXX If we split white-space sequence, the following code modify the DOM
+  //     tree twice.  This is not reasonable and the latter change may touch
+  //     wrong position.  We should do this once.
+
+  // If we insert block boundary to start or middle of the white-space sequence,
+  // the character at the insertion point needs to be an NBSP.
+  if (pointPositionWithVisibleWhiteSpaces == PointPosition::StartOfFragment ||
+      pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment) {
     EditorDOMPointInText atNextCharOfStart =
         GetInclusiveNextEditableCharPoint(mScanStartPoint);
     if (atNextCharOfStart.IsSet() && !atNextCharOfStart.IsEndOfContainer() &&
@@ -1411,10 +1421,11 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
     }
   }
 
-  // adjust normal ws in beforeRun if needed
-  if (beforeRun && beforeRun->IsVisibleAndMiddleOfHardLine()) {
-    // make sure trailing char of starting ws is an nbsp, so that it will show
-    // up
+  // If we insert block boundary to middle of or end of the white-space
+  // sequence, the previous character at the insertion point needs to be an
+  // NBSP.
+  if (pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment ||
+      pointPositionWithVisibleWhiteSpaces == PointPosition::EndOfFragment) {
     EditorDOMPointInText atPreviousCharOfStart =
         GetPreviousEditableCharPoint(mScanStartPoint);
     if (atPreviousCharOfStart.IsSet() &&
