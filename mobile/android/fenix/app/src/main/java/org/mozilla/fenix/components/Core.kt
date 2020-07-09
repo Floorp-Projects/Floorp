@@ -86,7 +86,11 @@ class Core(private val context: Context) {
         GeckoEngine(
             context,
             defaultSettings,
-            GeckoProvider.getOrCreateRuntime(context, lazyPasswordsStorage)
+            GeckoProvider.getOrCreateRuntime(
+                context,
+                lazyPasswordsStorage,
+                trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
+            )
         ).also {
             WebCompatFeature.install(it)
 
@@ -108,7 +112,11 @@ class Core(private val context: Context) {
     val client: Client by lazy {
         GeckoViewFetchClient(
             context,
-            GeckoProvider.getOrCreateRuntime(context, lazyPasswordsStorage)
+            GeckoProvider.getOrCreateRuntime(
+                context,
+                lazyPasswordsStorage,
+                trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
+            )
         )
     }
 

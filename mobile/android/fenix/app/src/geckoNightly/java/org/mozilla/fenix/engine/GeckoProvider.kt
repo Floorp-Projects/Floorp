@@ -5,7 +5,9 @@
 import android.content.Context
 import android.os.Bundle
 import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
+import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
@@ -21,10 +23,11 @@ object GeckoProvider {
     @Synchronized
     fun getOrCreateRuntime(
         context: Context,
-        storage: Lazy<LoginsStorage>
+        storage: Lazy<LoginsStorage>,
+        trackingProtectionPolicy: TrackingProtectionPolicy
     ): GeckoRuntime {
         if (runtime == null) {
-            runtime = createRuntime(context, storage)
+            runtime = createRuntime(context, storage, trackingProtectionPolicy)
         }
 
         return runtime!!
@@ -32,7 +35,8 @@ object GeckoProvider {
 
     private fun createRuntime(
         context: Context,
-        storage: Lazy<LoginsStorage>
+        storage: Lazy<LoginsStorage>,
+        policy: TrackingProtectionPolicy
     ): GeckoRuntime {
         val builder = GeckoRuntimeSettings.Builder()
 
@@ -44,6 +48,7 @@ object GeckoProvider {
         val runtimeSettings = builder
             .crashHandler(CrashHandlerService::class.java)
             .telemetryDelegate(GeckoAdapter())
+            .contentBlocking(policy.toContentBlockingSetting())
             .debugLogging(Config.channel.isDebug)
             .aboutConfigEnabled(true)
             .build()
