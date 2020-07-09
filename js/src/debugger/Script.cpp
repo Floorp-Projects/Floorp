@@ -1431,6 +1431,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::SetAliasedVar:
     case JSOp::InitHomeObject:
     case JSOp::InitAliasedLexical:
+    case JSOp::InitPrivateElem:
     case JSOp::SetIntrinsic:
     case JSOp::InitGLexical:
     case JSOp::DefVar:
@@ -1524,7 +1525,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::NewObjectWithGroup:
     case JSOp::InitElem:
     case JSOp::InitHiddenElem:
-    case JSOp::InitPrivateElem:
     case JSOp::InitElemInc:
     case JSOp::InitElemArray:
     case JSOp::InitProp:
