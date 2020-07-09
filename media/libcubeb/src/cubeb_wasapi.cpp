@@ -1777,17 +1777,18 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
   waveformatex_update_derived_properties(mix_format.get());
 
   /* Check if wasapi will accept our channel layout request. */
-  WAVEFORMATEX * closest;
+  WAVEFORMATEX * tmp = nullptr;
   HRESULT hr = audio_client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
                                                mix_format.get(),
-                                               &closest);
+                                               &tmp);
+  com_heap_ptr<WAVEFORMATEX> closest(tmp);
   if (hr == S_FALSE) {
     /* Channel layout not supported, but WASAPI gives us a suggestion. Use it,
        and handle the eventual upmix/downmix ourselves. Ignore the subformat of
        the suggestion, since it seems to always be IEEE_FLOAT. */
     LOG("Using WASAPI suggested format: channels: %d", closest->nChannels);
     XASSERT(closest->wFormatTag == WAVE_FORMAT_EXTENSIBLE);
-    WAVEFORMATEXTENSIBLE * closest_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(closest);
+    WAVEFORMATEXTENSIBLE * closest_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(closest.get());
     format_pcm->dwChannelMask = closest_pcm->dwChannelMask;
     mix_format->nChannels = closest->nChannels;
     waveformatex_update_derived_properties(mix_format.get());
