@@ -366,6 +366,7 @@ class Query {
     let queryPromises = [];
     for (let provider of activeProviders) {
       if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+        this.context.pendingHeuristicProviders.add(provider.name);
         queryPromises.push(
           provider.tryMethod("startQuery", this.context, this.add.bind(this))
         );
@@ -436,13 +437,29 @@ class Query {
     if (!(provider instanceof UrlbarProvider)) {
       throw new Error("Invalid provider passed to the add callback");
     }
+
+    // When this set is empty, we can display heuristic results early. We remove
+    // the provider from the list without checking result.heuristic since
+    // heuristic providers don't necessarily have to return heuristic results.
+    // We expect a provider with type HEURISTIC will return its heuristic
+    // result(s) first.
+    this.context.pendingHeuristicProviders.delete(provider.name);
+
     // Stop returning results as soon as we've been canceled.
     if (this.canceled) {
       return;
     }
+
+    let addResult = true;
+
+    if (!result) {
+      addResult = false;
+    }
+
     // Check if the result source should be filtered out. Pay attention to the
     // heuristic result though, that is supposed to be added regardless.
     if (
+      addResult &&
       !this.acceptableSources.includes(result.source) &&
       !result.heuristic &&
       // Treat form history as searches for the purpose of acceptableSources.
@@ -450,35 +467,60 @@ class Query {
         result.source != UrlbarUtils.RESULT_SOURCE.HISTORY ||
         !this.acceptableSources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
     ) {
-      return;
+      addResult = false;
     }
 
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
     if (
+      addResult &&
       result.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
       result.payload.url &&
       result.payload.url.startsWith("javascript:") &&
       !this.context.searchString.startsWith("javascript:") &&
       UrlbarPrefs.get("filter.javascript")
     ) {
-      return;
+      addResult = false;
     }
 
+    // We wait on UnifiedComplete to return a heuristic result. If it has no
+    // heuristic result to return, we still need to sort and display results, so
+    // we follow the usual codepath to muxer.sort. We only offer this for
+    // UnifiedComplete, so we check the provider's name here. This is a stopgap
+    // measure until bug 1648468 lands.
+    if (!addResult) {
+      if (provider.name == "UnifiedComplete") {
+        this._notifyResultsFromProvider(provider);
+      }
+      return;
+    }
     result.providerName = provider.name;
+    result.providerType = provider.type;
     this.context.results.push(result);
     if (result.heuristic) {
-      this.context.heuristicResult = result;
+      this.context.allHeuristicResults.push(result);
     }
 
     this._notifyResultsFromProvider(provider);
   }
 
   _notifyResultsFromProvider(provider) {
-    // If the provider is not of heuristic type, chunk results, to improve the
-    // dataflow and reduce UI flicker.
+    // We create two chunking timers: one for heuristic results, and one for
+    // other results. We expect heuristic providers to return their heuristic
+    // results before other results/providers in most cases. When all heuristic
+    // providers have returned some results, we fire the heuristic timer early.
+    // If the timer fires first, we stop waiting on the remaining heuristic
+    // providers.
+    // Both timers are used to reduce UI flicker.
     if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
-      this._notifyResults();
+      if (!this._heuristicProviderTimer) {
+        this._heuristicProviderTimer = new SkippableTimer({
+          name: "Heuristic provider timer",
+          callback: () => this._notifyResults(),
+          time: CHUNK_RESULTS_DELAY_MS,
+          logger,
+        });
+      }
     } else if (!this._chunkTimer) {
       this._chunkTimer = new SkippableTimer({
         name: "Query chunk timer",
@@ -487,14 +529,31 @@ class Query {
         logger,
       });
     }
+    // If all active heuristic providers have returned results, we can skip the
+    // heuristic results timer and start showing results immediately.
+    if (
+      this._heuristicProviderTimer &&
+      !this.context.pendingHeuristicProviders.size
+    ) {
+      this._heuristicProviderTimer.fire().catch(Cu.reportError);
+    }
   }
 
   _notifyResults() {
-    this.muxer.sort(this.context);
+    let sorted = this.muxer.sort(this.context);
+
+    if (this._heuristicProviderTimer) {
+      this._heuristicProviderTimer.cancel().catch(Cu.reportError);
+      this._heuristicProviderTimer = null;
+    }
 
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);
       this._chunkTimer = null;
+    }
+
+    if (!sorted) {
+      return;
     }
 
     // Before the muxer.sort call above, this.context.results should never be
