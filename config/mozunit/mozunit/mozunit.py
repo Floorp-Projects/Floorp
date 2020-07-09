@@ -302,7 +302,9 @@ def main(*args, **kwargs):
             '-c', os.path.join(here, 'pytest.ini'),
             '-vv',
             '-p', 'mozlog.pytest_mozlog.plugin',
+            '-p', 'mozunit.pytest_plugin',
             '-p', 'no:cacheprovider',
+            '-rsx',  # show reasons for skip / xfail
             module.__file__,
         ])
         sys.exit(pytest.main(args))
