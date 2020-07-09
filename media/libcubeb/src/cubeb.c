@@ -200,11 +200,11 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #if defined(USE_ALSA)
     alsa_init,
 #endif
-#if defined(USE_AUDIOUNIT)
-    audiounit_init,
-#endif
 #if defined(USE_AUDIOUNIT_RUST)
     audiounit_rust_init,
+#endif
+#if defined(USE_AUDIOUNIT)
+    audiounit_init,
 #endif
 #if defined(USE_WASAPI)
     wasapi_init,
