@@ -18,10 +18,24 @@
     <string name="mozac_feature_prompt_update_confirmation">తాజాకరించు</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">సంకేతపదం ఖాళీగా ఉండకూడదు</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">ప్రవేశ వివరాలను భద్రపరచలేకపోతున్నాం</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">ఈ ప్రవేశాన్ని భద్రపరచాలా?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">ఈ ప్రవేశాన్ని తాజాకరించాలా?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">భద్రపరచిన సంకేతపదానికి వాడుకరి పేరును చేర్చాలా?</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">ఒక రంగును ఎంచుకోండి</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">అనుమతించు</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">తిరస్కరించు</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">ఉండు</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">వదలివెళ్ళు</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">ఒక నెల ఎంచుకోండి</string>
     <!-- January (short description), used on the month chooser dialog. -->

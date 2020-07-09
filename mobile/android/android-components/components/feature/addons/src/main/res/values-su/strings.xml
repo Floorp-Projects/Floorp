@@ -16,6 +16,8 @@
     <string name="mozac_feature_addons_permissions_browser_data_description">Beresihan jujutan langlangan, réréméh, jeung data nu tumali</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Undeur berkas sarta baca jeung ropéa jujutan undeur panyungsi</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Atur setélan proksi panyungsi</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Sumputkeun jeung témbongkeun tab panyungsi</string>
     <!-- The developer website (Homepage) of the add-on. -->

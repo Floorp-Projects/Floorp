@@ -209,7 +209,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_not_found_title">Archivo no encontrado</string>
+    <string name="mozac_browser_errorpages_file_not_found_title">No se encontró el archivo</string>
 
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
       <ul>
@@ -244,25 +244,25 @@
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>El navegador está configurado para usar un servidor proxy, pero el proxy no se encontró el servidor.</p><ul><li>¿La configuración del proxy del navegador es correcta? Verificá la configuración y probá de nuevo.</li><li>¿El dispositivo está conectado a una red activa?</li><li>¿Todavía tenés problemas? Consultá con tu administrador de red o tu proveedor de Internet para recibir asistencia.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema del sitio con contenido malicioso</string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema del sitio malicioso</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>El sitio %1$s fue informado como un sitio de ataque y fue bloqueado basado en tus preferencias de seguridad.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Se informó el sitio %1$s como un sitio de ataque y se bloqueó basado en tus preferencias de seguridad.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema de sitio no deseado</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>El sitio %1$s fue informado por instalar software no deseado y fue bloqueado basado en tus preferencias de seguridad.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Se informó el sitio %1$s por instalar software no deseado y se bloqueó basado en tus preferencias de seguridad.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema de sitio dañino</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>El sitio %1$s fue informado como un sitio potencialmente dañino y fue bloqueado basado en tus preferencias de seguridad.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Se informó el sitio %1$s como potencialmente dañino y se bloqueó basado en tus preferencias de seguridad.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_phishing_uri_title">El sitio es engañoso</string>
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sitio engañoso</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>La página web %1$s fue informada como un sitio engañoso y fue bloqueado basado en tus preferencias de seguridad.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Se informó la página web %1$s  como un sitio engañoso y se bloqueó basado en tus preferencias de seguridad.</p>]]></string>
 </resources>
