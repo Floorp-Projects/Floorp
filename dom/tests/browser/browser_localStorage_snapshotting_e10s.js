@@ -87,7 +87,7 @@ requestLongerTimeout(4);
  * Verify snapshotting of our localStorage implementation in multi-e10s setup.
  */
 add_task(async function() {
-  if (!Services.lsm.nextGenLocalStorageEnabled) {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
     ok(true, "Test ignored when the next gen local storage is not enabled.");
     return;
   }

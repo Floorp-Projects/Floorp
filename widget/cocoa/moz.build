@@ -97,6 +97,10 @@ if not CONFIG['RELEASE_OR_BETA'] or CONFIG['MOZ_DEBUG']:
         'nsSandboxViolationSink.mm',
     ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

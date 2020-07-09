@@ -19,7 +19,7 @@ Services.scriptloader.loadSubScript(
 /* import-globals-from helper_localStorage_e10s.js */
 
 function waitForLocalStorageFlush() {
-  if (Services.lsm.nextGenLocalStorageEnabled) {
+  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
     return new Promise(resolve => executeSoon(resolve));
   }
 
@@ -45,7 +45,7 @@ function waitForLocalStorageFlush() {
  * notifications, but correctness is guaranteed after the second notification.
  */
 function triggerAndWaitForLocalStorageFlush() {
-  if (Services.lsm.nextGenLocalStorageEnabled) {
+  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
     return new Promise(resolve => executeSoon(resolve));
   }
 
@@ -76,7 +76,7 @@ function clearOriginStorageEnsuringNoPreload() {
     HELPER_PAGE_ORIGIN
   );
 
-  if (Services.lsm.nextGenLocalStorageEnabled) {
+  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
     let request = Services.qms.clearStoragesForPrincipal(
       principal,
       "default",
@@ -114,8 +114,8 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
-      if (Services.lsm.nextGenLocalStorageEnabled) {
-        return Services.lsm.isPreloaded(principal);
+      if (Services.domStorageManager.nextGenLocalStorageEnabled) {
+        return Services.domStorageManager.isPreloaded(principal);
       }
       return !!Services.domStorageManager.getStorage(
         null,

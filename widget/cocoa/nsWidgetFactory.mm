@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.h"
+#include "mozilla/Components.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/WidgetUtils.h"
 
@@ -42,21 +43,15 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-static nsresult nsClipboardConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult) {
+NS_IMPL_COMPONENT_FACTORY(nsIClipboard) {
   nsCOMPtr<nsIClipboard> inst;
-
-  *aResult = nullptr;
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
   if (gfxPlatform::IsHeadless()) {
     inst = new HeadlessClipboard();
   } else {
     inst = new nsClipboard();
   }
 
-  return inst->QueryInterface(aIID, aResult);
+  return inst.forget();
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -113,7 +108,6 @@ NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
-NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
@@ -143,7 +137,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_SOUND_CID, false, NULL, nsSoundConstructor, mozilla::Module::MAIN_PROCESS_ONLY},
     {&kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor},
     {&kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor},
-    {&kNS_CLIPBOARD_CID, false, NULL, nsClipboardConstructor, mozilla::Module::MAIN_PROCESS_ONLY},
     {&kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor},
     {&kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor,
      mozilla::Module::MAIN_PROCESS_ONLY},
@@ -175,7 +168,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     {"@mozilla.org/sound;1", &kNS_SOUND_CID, mozilla::Module::MAIN_PROCESS_ONLY},
     {"@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID},
     {"@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID},
-    {"@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID, mozilla::Module::MAIN_PROCESS_ONLY},
     {"@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID},
     {"@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, mozilla::Module::MAIN_PROCESS_ONLY},
     {"@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
