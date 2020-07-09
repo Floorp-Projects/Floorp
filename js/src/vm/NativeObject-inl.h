@@ -102,9 +102,7 @@ inline void NativeObject::initDenseElementWithType(JSContext* cx,
 }
 
 inline void NativeObject::setDenseElementHole(JSContext* cx, uint32_t index) {
-  if (IsTypeInferenceEnabled()) {
-    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
-  }
+  markDenseElementsNotPacked(cx);
   setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
