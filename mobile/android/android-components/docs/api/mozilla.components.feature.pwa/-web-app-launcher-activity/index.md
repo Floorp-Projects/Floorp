@@ -2,12 +2,12 @@
 
 # WebAppLauncherActivity
 
-`class WebAppLauncherActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppLauncherActivity.kt#L27)
+`class WebAppLauncherActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppLauncherActivity.kt#L28)
 
 This activity is launched by Web App shortcuts on the home screen.
 
-Based on the Web App Manifest (display) it will decide whether the app is launched in the browser or in a
-standalone activity.
+Based on the Web App Manifest (display) it will decide whether the app is launched in the
+browser or in a standalone activity.
 
 ### Constructors
 
@@ -21,6 +21,8 @@ standalone activity.
 |---|---|
 | [onCreate](on-create.md) | `fun onCreate(savedInstanceState: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onDestroy](on-destroy.md) | `fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onPause](on-pause.md) | `fun onPause(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onResume](on-resume.md) | `fun onResume(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 

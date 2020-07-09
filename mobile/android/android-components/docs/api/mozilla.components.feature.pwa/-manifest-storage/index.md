@@ -2,7 +2,7 @@
 
 # ManifestStorage
 
-`class ManifestStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ManifestStorage.kt#L22)
+`class ManifestStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ManifestStorage.kt#L23)
 
 Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest.
 
@@ -23,6 +23,8 @@ Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manife
 
 | Name | Summary |
 |---|---|
+| [getInstalledScope](get-installed-scope.md) | `fun getInstalledScope(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Returns the cached scope for an url if the url falls into a web app scope that has been installed by the user. |
+| [getStartUrlForInstalledScope](get-start-url-for-installed-scope.md) | `fun getStartUrlForInstalledScope(scope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Returns a cached start url for an installed web app scope. |
 | [hasRecentManifest](has-recent-manifest.md) | `suspend fun hasRecentManifest(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, currentTimeMs: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = System.currentTimeMillis()): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks whether there is a currently used manifest with a scope that matches the url. |
 | [loadManifest](load-manifest.md) | `suspend fun loadManifest(startUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?`<br>Load a Web App Manifest for the given URL from disk. If no manifest is found, null is returned. |
 | [loadManifestsByScope](load-manifests-by-scope.md) | `suspend fun loadManifestsByScope(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`>`<br>Load all Web App Manifests with a matching scope for the given URL from disk. If no manifest is found, an empty list is returned. |
@@ -31,6 +33,7 @@ Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manife
 | [saveManifest](save-manifest.md) | `suspend fun saveManifest(manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): <ERROR CLASS>`<br>Save a Web App Manifest to disk. |
 | [updateManifest](update-manifest.md) | `suspend fun updateManifest(manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): <ERROR CLASS>`<br>Update an existing Web App Manifest on disk. |
 | [updateManifestUsedAt](update-manifest-used-at.md) | `suspend fun updateManifestUsedAt(manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): <ERROR CLASS>`<br>Update the last time a web app was used. |
+| [warmUpScopes](warm-up-scopes.md) | `suspend fun warmUpScopes(currentTime: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): <ERROR CLASS>`<br>Populates a cache of currently installed web app scopes and their start urls. |
 
 ### Companion Object Properties
 
