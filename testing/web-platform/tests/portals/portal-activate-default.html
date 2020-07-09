@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="resources/open-blank-host.js"></script>
+<script>
+promise_test(async t => {
+  assert_implements("HTMLPortalElement" in self);
+  const w = await openBlankPortalHost();
+  try {
+    const bc = new BroadcastChannel('click-activate');
+    const portal = w.document.createElement('portal');
+    portal.src = new URL(`resources/portal-activate-broadcastchannel.html?bc=${bc.name}`, location.href);
+    w.document.body.appendChild(portal);
+    await new Promise(resolve => portal.onload = resolve);
+    let activated = new Promise(resolve => bc.onmessage = e => resolve(e.data));
+    portal.click();
+    assert_equals(await activated, 'portalactivate');
+  } finally {
+    w.close();
+  }
+}, "Clicking should activate.");
+
+promise_test(async t => {
+  assert_implements("HTMLPortalElement" in self);
+  const w = await openBlankPortalHost();
+  try {
+    const bc = new BroadcastChannel('prevent-no-activate');
+    const portal = w.document.createElement('portal');
+    portal.src = new URL(`resources/portal-activate-broadcastchannel.html?bc=${bc.name}`, location.href);
+    portal.onclick = e => e.preventDefault();
+    w.document.body.appendChild(portal);
+    await new Promise(resolve => portal.onload = resolve);
+    let timedOut = new Promise(resolve => t.step_timeout(() => resolve('timeout'), 3000));
+    let activated = new Promise(resolve => bc.onmessage = e => resolve(e.data));
+    portal.click();
+    let result = await Promise.race([activated, timedOut]);
+    assert_equals(result, 'timeout');
+  } finally {
+    w.close();
+  }
+}, "Clicking shouldn't activate if prevented.");
+</script>
