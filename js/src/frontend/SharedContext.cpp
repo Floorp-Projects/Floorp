@@ -234,9 +234,9 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       flags_(flags),
       isTopLevel_(isTopLevel),
       emitBytecode(false),
-      isStandalone(false),
-      wasEmitted(false),
-      isSingleton(false),
+      isStandalone_(false),
+      wasEmitted_(false),
+      isSingleton_(false),
       isAnnexB(false),
       useAsm(false),
       isAsmJSModule_(false),
@@ -371,7 +371,11 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex) {
   // the incomplete scope object while compiling, and store it to the
   // BaseScript once the enclosing script successfully finishes compilation
   // in FunctionBox::finish.
+  MOZ_ASSERT(enclosingScopeIndex_.isNothing());
   enclosingScopeIndex_ = mozilla::Some(scopeIndex);
+  if (isFunctionFieldCopiedToStencil) {
+    copyUpdatedEnclosingScopeIndex();
+  }
 }
 
 bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
@@ -471,7 +475,11 @@ void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
   stencil.functionAtom = atom_;
   stencil.functionFlags = flags_;
   stencil.nargs = nargs_;
+  stencil.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
   stencil.isAsmJSModule = isAsmJSModule_;
+  stencil.isStandaloneFunction = isStandalone_;
+  stencil.wasFunctionEmitted = wasEmitted_;
+  stencil.isSingletonFunction = isSingleton_;
 
   isFunctionFieldCopiedToStencil = true;
 }
@@ -491,10 +499,25 @@ void FunctionBox::copyUpdatedFieldInitializers() {
   stencil.fieldInitializers = fieldInitializers_;
 }
 
+void FunctionBox::copyUpdatedEnclosingScopeIndex() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
+}
+
 void FunctionBox::copyUpdatedAtomAndFlags() {
   ScriptStencil& stencil = functionStencil().get();
   stencil.functionAtom = atom_;
   stencil.functionFlags = flags_;
+}
+
+void FunctionBox::copyUpdatedWasEmitted() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.wasFunctionEmitted = wasEmitted_;
+}
+
+void FunctionBox::copyUpdatedIsSingleton() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.isSingletonFunction = isSingleton_;
 }
 
 }  // namespace frontend

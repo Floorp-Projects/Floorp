@@ -5669,7 +5669,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   // Set the |wasEmitted| flag in the funbox once the function has been
   // emitted. Function definitions that need hoisting to the top of the
   // function will be seen by emitFunction in two places.
-  if (funbox->wasEmitted) {
+  if (funbox->wasEmitted()) {
     if (!fe.emitAgain()) {
       //            [stack]
       return false;
@@ -5718,7 +5718,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     //
     // NOTE: This heuristic is arbitrary, but some debugger tests rely on the
     //       current behaviour and need to be updated if the condiditons change.
-    funbox->isSingleton = checkRunOnceContext();
+    funbox->setIsSingleton(checkRunOnceContext());
 
     if (!funbox->emitBytecode) {
       return fe.emitLazy();

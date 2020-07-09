@@ -26,7 +26,6 @@ class GCMarker;
 
 namespace frontend {
 struct CompilationInfo;
-class FunctionBox;
 class ScopeCreationData;
 }  // namespace frontend
 
@@ -66,7 +65,6 @@ class AbstractScopePtr {
 
  public:
   friend class js::Scope;
-  friend class js::frontend::FunctionBox;
 
   AbstractScopePtr() = default;
 
