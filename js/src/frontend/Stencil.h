@@ -378,6 +378,8 @@ class ScriptStencil {
   // This traces any JSAtoms in the gcThings array. This will be removed once
   // atoms are deferred from parsing.
   void trace(JSTracer* trc);
+
+  bool isFunction() const { return functionIndex.isSome(); }
 };
 
 } /* namespace js::frontend */
