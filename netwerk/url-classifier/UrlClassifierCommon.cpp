@@ -336,10 +336,24 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
         auto clientPrincipalOrErr = clientInfo->GetPrincipal();
         if (clientPrincipalOrErr.isOk()) {
           nsCOMPtr<nsIPrincipal> principal = clientPrincipalOrErr.unwrap();
-          auto* basePrin = BasePrincipal::Cast(principal);
-          rv = basePrin->GetURI(getter_AddRefs(topWinURI));
-          Unused << NS_WARN_IF(NS_FAILED(rv));
+          if (principal) {
+            auto* basePrin = BasePrincipal::Cast(principal);
+            rv = basePrin->GetURI(getter_AddRefs(topWinURI));
+            Unused << NS_WARN_IF(NS_FAILED(rv));
+          }
         }
+      }
+    }
+
+    if (!topWinURI) {
+      UC_LOG(
+          ("CreatePairwiseWhiteListURI: No top-level window associated with "
+           "channel, get URI from loading principal instead"));
+      nsCOMPtr<nsIPrincipal> principal = loadInfo->GetLoadingPrincipal();
+      if (principal) {
+        auto* basePrin = BasePrincipal::Cast(principal);
+        rv = basePrin->GetURI(getter_AddRefs(topWinURI));
+        Unused << NS_WARN_IF(NS_FAILED(rv));
       }
     }
   }
@@ -354,7 +368,7 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
       uri->GetAsciiSpec(spec);
       spec.Truncate(
           std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(("CreatePairwiseEntityListURI: No window URI associated with %s",
+      UC_LOG(("CreatePairwiseEntityListURI: No top-level URI associated with %s",
               spec.get()));
     }
 
