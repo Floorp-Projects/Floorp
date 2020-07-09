@@ -667,23 +667,44 @@ SubDialog.prototype = {
   },
 };
 
+/**
+ * Manages multiple SubDialogs in a dialog stack element.
+ */
 class SubDialogManager {
+  /**
+   * @param {Object} options - Dialog manager options.
+   * @param {DOMNode} options.dialogStack - Container element for all dialogs
+   * this instance manages.
+   * @param {DOMNode} options.dialogTemplate - Element to use as template for
+   * constructing new dialogs.
+   * @param {Number} [options.orderType] - Whether dialogs should be ordered as
+   * a stack or a queue.
+   * @param {Boolean} [options.allowDuplicateDialogs] - Whether to allow opening
+   * duplicate dialogs (same URI) at the same time. If disabled, opening a
+   * dialog with the same URI as an existing dialog will be a no-op.
+   * @param {Object} options.dialogOptions - Options passed to every
+   * SubDialog instance.
+   * @see {@link SubDialog} for a list of dialog options.
+   */
   constructor({
     dialogStack,
     dialogTemplate,
+    orderType = SubDialogManager.ORDER_STACK,
     allowDuplicateDialogs = false,
     dialogOptions,
   }) {
     /**
-     * New dialogs are stacked on top of the existing ones, and they are pushed
-     * to the end of the _dialogs array.
-     * @type {Array}
+     * New dialogs are pushed to the end of the _dialogs array.
+     * Depending on the orderType either the last element (stack) or the first
+     * element (queue) in the array will be the top and visible.
+     * @type {SubDialog[]}
      */
     this._dialogs = [];
     this._dialogStack = dialogStack;
     this._dialogTemplate = dialogTemplate;
     this._nextDialogID = 0;
     this._topLevelPrevActiveElement = null;
+    this._orderType = orderType;
     this._allowDuplicateDialogs = allowDuplicateDialogs;
     this._dialogOptions = dialogOptions;
 
@@ -695,10 +716,18 @@ class SubDialogManager {
     });
   }
 
+  /**
+   * Get the dialog which is currently on top. This depends on whether the
+   * dialogs are in a stack or a queue.
+   */
   get _topDialog() {
-    return this._dialogs.length
-      ? this._dialogs[this._dialogs.length - 1]
-      : undefined;
+    if (!this._dialogs.length) {
+      return undefined;
+    }
+    if (this._orderType === SubDialogManager.ORDER_STACK) {
+      return this._dialogs[this._dialogs.length - 1];
+    }
+    return this._dialogs[0];
   }
 
   open(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
@@ -709,9 +738,16 @@ class SubDialogManager {
 
     let doc = this._dialogStack.ownerDocument;
 
-    if (this._dialogs.length) {
+    // For dialog stacks, remember the last active element before opening the
+    // next dialog. This allows us to restore focus on dialog close.
+    if (
+      this._orderType === SubDialogManager.ORDER_STACK &&
+      this._dialogs.length
+    ) {
       this._topDialog._prevActiveElement = doc.activeElement;
-    } else {
+    }
+
+    if (!this._dialogs.length) {
       // When opening the first dialog, show the dialog stack.
       this._dialogStack.hidden = false;
       this._topLevelPrevActiveElement = doc.activeElement;
@@ -749,14 +785,24 @@ class SubDialogManager {
   }
 
   _onDialogOpen() {
-    let lowerDialog =
-      this._dialogs.length > 1
-        ? this._dialogs[this._dialogs.length - 2]
-        : undefined;
-    if (lowerDialog) {
-      lowerDialog._overlay.removeAttribute("topmost");
-      lowerDialog._removeDialogEventListeners();
+    // The first dialog is on top in both QUEUE and STACK order, and since it
+    // already has the topmost attribute and the event listeners attached, we
+    // don't have to adjust anything.
+    if (this._dialogs.length === 1) {
+      return;
     }
+
+    let lowerDialog;
+    if (this._orderType === SubDialogManager.ORDER_STACK) {
+      // Stack dialog on top => hide previous top dialog.
+      lowerDialog = this._dialogs[this._dialogs.length - 2];
+    } else {
+      // Enqueue dialog => hide the new dialog.
+      lowerDialog = this._dialogs[this._dialogs.length - 1];
+    }
+
+    lowerDialog._overlay.removeAttribute("topmost");
+    lowerDialog._removeDialogEventListeners();
   }
 
   _onDialogClose(dialog) {
@@ -765,14 +811,19 @@ class SubDialogManager {
       //      remove the preloadDialog. This is a temporary solution before we
       //      rewrite all the test cases in Bug 1359023.
       this._preloadDialog._overlay.remove();
-      this._preloadDialog = this._dialogs.pop();
+      if (this._orderType === SubDialogManager.ORDER_STACK) {
+        this._preloadDialog = this._dialogs.pop();
+      } else {
+        this._preloadDialog = this._dialogs.shift();
+      }
     } else {
       dialog._overlay.remove();
       this._dialogs.splice(this._dialogs.indexOf(dialog), 1);
     }
 
     if (this._topDialog) {
-      this._topDialog._prevActiveElement.focus();
+      // The prevActiveElement is only set for stacked dialogs
+      this._topDialog._prevActiveElement?.focus();
       this._topDialog._overlay.setAttribute("topmost", true);
       this._topDialog._addDialogEventListeners();
     } else {
@@ -793,3 +844,7 @@ class SubDialogManager {
     this._dialogStack.removeEventListener("dialogclose", this);
   }
 }
+
+// Used for the SubDialogManager orderType option.
+SubDialogManager.ORDER_STACK = 0;
+SubDialogManager.ORDER_QUEUE = 1;
