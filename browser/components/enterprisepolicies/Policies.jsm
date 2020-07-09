@@ -1643,22 +1643,26 @@ var Policies = {
             JSON.stringify(engineNameList),
             async function() {
               for (let newEngine of param.Add) {
-                let newEngineParameters = {
-                  template: newEngine.URLTemplate,
-                  iconURL: newEngine.IconURL ? newEngine.IconURL.href : null,
-                  alias: newEngine.Alias,
+                let manifest = {
                   description: newEngine.Description,
-                  method: newEngine.Method,
-                  postData: newEngine.PostData,
-                  suggestURL: newEngine.SuggestURLTemplate,
-                  extensionID: "set-via-policy",
-                  queryCharset: "UTF-8",
+                  iconURL: newEngine.IconURL ? newEngine.IconURL.href : null,
+                  chrome_settings_overrides: {
+                    search_provider: {
+                      name: newEngine.Name,
+                      // Policies currently only use this encoding, see bug 1649164.
+                      encoding: "windows-1252",
+                      search_url: encodeURI(newEngine.URLTemplate),
+                      keyword: newEngine.Alias,
+                      search_url_post_params:
+                        newEngine.Method == "POST"
+                          ? newEngine.PostData
+                          : undefined,
+                      suggestUrlGetParams: newEngine.SuggestURLTemplate,
+                    },
+                  },
                 };
                 try {
-                  await Services.search.addEngineWithDetails(
-                    newEngine.Name,
-                    newEngineParameters
-                  );
+                  await Services.search.addPolicyEngine(manifest);
                 } catch (ex) {
                   log.error("Unable to add search engine", ex);
                 }

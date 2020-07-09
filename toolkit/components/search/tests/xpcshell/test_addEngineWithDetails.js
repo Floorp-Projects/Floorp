@@ -22,7 +22,10 @@ add_task(async function test_addEngineWithDetails() {
   // An engine added with addEngineWithDetails should have a load path, even
   // though we can't point to a specific file.
   let engine = Services.search.getEngineByName(kSearchEngineID);
-  Assert.equal(engine.wrappedJSObject._loadPath, "[other]addEngineWithDetails");
+  Assert.equal(
+    engine.wrappedJSObject._loadPath,
+    `[other]addEngineWithDetails:${kSearchEngineID}@test.engine`
+  );
   Assert.ok(
     !engine.isAppProvided,
     "Should not be shown as an app-provided engine"

@@ -2043,7 +2043,7 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
   const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
   const EXPECTED_SEARCH_ENGINE_DATA = {
     name: "telemetry_default",
-    loadPath: "[other]addEngineWithDetails",
+    loadPath: "[other]addEngineWithDetails:telemetry_default@test.engine",
     origin: "verified",
   };
   if (privateOn) {
