@@ -82,6 +82,7 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
       mIATableCellPassThru(nullptr),
       mIAHypertextPassThru(nullptr),
       mCachedData(),
+      mCachedDynamicDataMarshaledByCom(false),
       mCacheGen(0),
       mCachedHyperlinks(nullptr),
       mCachedNHyperlinks(-1),
@@ -103,7 +104,8 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
 }
 
 AccessibleHandler::~AccessibleHandler() {
-  CleanupDynamicIA2Data(mCachedData.mDynamicData);
+  CleanupDynamicIA2Data(mCachedData.mDynamicData,
+                        mCachedDynamicDataMarshaledByCom);
   if (mCachedData.mGeckoBackChannel) {
     mCachedData.mGeckoBackChannel->Release();
   }
@@ -218,12 +220,16 @@ AccessibleHandler::MaybeUpdateCachedData() {
     return E_POINTER;
   }
 
+  // Clean up the old data.
+  CleanupDynamicIA2Data(mCachedData.mDynamicData,
+                        mCachedDynamicDataMarshaledByCom);
   HRESULT hr =
       mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
   if (SUCCEEDED(hr)) {
     // We just updated the cache, so update this object's cache generation
     // so we only update the cache again after the next change.
     mCacheGen = gen;
+    mCachedDynamicDataMarshaledByCom = true;
   }
   return hr;
 }
@@ -466,8 +472,10 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid) {
     return E_FAIL;
   }
   // Clean up the old data.
-  CleanupDynamicIA2Data(mCachedData.mDynamicData);
+  CleanupDynamicIA2Data(mCachedData.mDynamicData,
+                        mCachedDynamicDataMarshaledByCom);
   mCachedData = newData;
+  mCachedDynamicDataMarshaledByCom = false;
 
   // These interfaces have been aggregated into the proxy manager.
   // The proxy manager will resolve these interfaces now on QI,

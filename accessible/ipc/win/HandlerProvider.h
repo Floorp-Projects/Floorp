@@ -75,7 +75,16 @@ class HandlerProvider final : public IGeckoBackChannel,
                               NotNull<mscom::IInterceptor*> aInterceptor);
   void BuildStaticIA2Data(NotNull<mscom::IInterceptor*> aInterceptor,
                           StaticIA2Data* aOutData);
-  void BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data);
+  /**
+   * Pass true for aMarshaledByCom if this struct is being directly marshaled as
+   * an out parameter of a COM method, currently only
+   * IGeckoBackChannel::Refresh.
+   * When aMarshaledByCom is false, this means the struct is being marshaled
+   * by RPC encoding functions. This means we must allocate memory differently,
+   * even though we're using this as part of a COM handler payload.
+   */
+  void BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data,
+                           bool aMarshaledByCom = false);
   void BuildInitialIA2Data(NotNull<mscom::IInterceptor*> aInterceptor,
                            StaticIA2Data* aOutStaticData,
                            DynamicIA2Data* aOutDynamicData);
