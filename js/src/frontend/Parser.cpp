@@ -251,7 +251,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBoxImpl(
     TopLevelFunction isTopLevel) {
   MOZ_ASSERT(funNode);
 
-  size_t index = compilationInfo_.funcData.length();
+  FunctionIndex index = FunctionIndex(compilationInfo_.funcData.length());
   MOZ_ASSERT_IF(isTopLevel == TopLevelFunction::Yes,
                 index == CompilationInfo::TopLevelFunctionIndex);
 

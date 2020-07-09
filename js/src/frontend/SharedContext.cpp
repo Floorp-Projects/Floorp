@@ -225,7 +225,7 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          SourceExtent extent, CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* atom,
-                         FunctionFlags flags, size_t index,
+                         FunctionFlags flags, FunctionIndex index,
                          TopLevelFunction isTopLevel)
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
       traceLink_(traceListHead),
@@ -380,7 +380,7 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   flags_.setIsExtended();
   flags_.setKind(FunctionFlags::AsmJS);
 
-  return compilationInfo_.asmJS.putNew(FunctionIndex(index()), module);
+  return compilationInfo_.asmJS.putNew(index(), module);
 }
 
 /* static */
