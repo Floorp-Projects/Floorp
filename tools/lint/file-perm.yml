@@ -7,16 +7,24 @@ file-perm:
         - .c
         - .cc
         - .cpp
+        - .flac
         - .h
         - .html
         - .jsm
         - .jsx
         - .m
+        - .m4s
         - .mm
+        - .mp4
+        - .png
         - .rs
+        - .svg
+        - .ttf
+        - .wasm
         - .xhtml
         - .xml
         - .xul
+        - .yml
     support-files:
         - 'tools/lint/file-perm/**'
     type: external

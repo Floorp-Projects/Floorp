@@ -11,11 +11,11 @@ LINTER = "file-perm"
 def test_lint_file_perm(lint, paths):
     results = lint(paths("no-shebang"), collapse_results=True)
     print(results)
-    assert len(results) == 2
 
     assert results.keys() == {
         "no-shebang/bad.c",
         "no-shebang/bad-shebang.c",
+        "no-shebang/bad.png",
     }
 
     for path, issues in results.items():
