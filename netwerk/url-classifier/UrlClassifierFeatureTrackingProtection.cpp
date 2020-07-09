@@ -6,9 +6,9 @@
 
 #include "UrlClassifierFeatureTrackingProtection.h"
 
-#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "ChannelClassifierService.h"
+#include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadContext.h"
 #include "nsNetUtil.h"
@@ -93,22 +93,26 @@ UrlClassifierFeatureTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
+  nsCOMPtr<nsIURI> chanURI;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  bool isThirdParty =
+      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, chanURI);
   if (!isThirdParty) {
     if (UC_LOG_ENABLED()) {
-      nsCOMPtr<nsIURI> chanURI;
-      Unused << aChannel->GetURI(getter_AddRefs(chanURI));
-      if (chanURI) {
-        nsCString spec = chanURI->GetSpecOrDefault();
-        spec.Truncate(
-            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-        UC_LOG(
-            ("UrlClassifierFeatureTrackingProtection: Skipping tracking "
-             "protection checks for first party or top-level load channel[%p] "
-             "with uri %s",
-             aChannel, spec.get()));
-      }
+      nsCString spec = chanURI->GetSpecOrDefault();
+      spec.Truncate(
+          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
+      UC_LOG(
+          ("UrlClassifierFeatureTrackingProtection: Skipping tracking "
+           "protection checks for first party or top-level load channel[%p] "
+           "with uri %s",
+           aChannel, spec.get()));
     }
+
     return nullptr;
   }
 
