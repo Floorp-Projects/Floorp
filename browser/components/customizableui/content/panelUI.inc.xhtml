@@ -569,45 +569,6 @@
       </vbox>
     </panelview>
 
-    <panelview id="PanelUI-characterEncodingView" flex="1">
-      <vbox class="panel-subview-body">
-        <vbox id="PanelUI-characterEncodingView-pinned"
-              class="PanelUI-characterEncodingView-list"/>
-        <toolbarseparator/>
-        <vbox id="PanelUI-characterEncodingView-charsets"
-              class="PanelUI-characterEncodingView-list"/>
-      </vbox>
-    </panelview>
-
-    <panelview id="PanelUI-panicView" flex="1"
-               descriptionheightworkaround="true">
-      <!-- This is constructed in CustomizableWidgets.jsm -->
-    </panelview>
-
-    <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">
-      <vbox class="panel-subview-body">
-        <toolbarbutton id="appMenu-taskmanager-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&taskManagerCmd.label;"
-                       oncommand="switchToTabHavingURI('about:performance', true)"/>
-        <toolbarbutton id="appMenu-characterencoding-button"
-                       class="subviewbutton subviewbutton-nav"
-                       label="&charsetMenu2.label;"
-                       closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this)"/>
-        <toolbarbutton id="appMenu-workoffline-button"
-                       class="subviewbutton"
-                       data-l10n-id="menu-file-go-offline"
-                       type="checkbox"
-                       command="cmd_toggleOfflineStatus"/>
-      </vbox>
-    </panelview>
-
-    <panelview id="appMenu-SSBView" class="PanelUI-subView">
-      <vbox class="panel-subview-body">
-      </vbox>
-    </panelview>
-
     <panelview id="PanelUI-fxa" title="&fxa.menu.account.label;" class="PanelUI-subView" descriptionheightworkaround="true">
       <vbox id="PanelUI-fxa-menu" class="panel-subview-body">
         <toolbarbutton id="fxa-manage-account-button"
@@ -722,25 +683,6 @@
                        label="&appMenuRemoteTabs.connectdevice.label;"
                        oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
       </vbox>
-    </panelview>
-
-    <panelview id="PanelUI-whatsNew" class="PanelUI-subView">
-      <vbox class="panel-subview-body">
-        <box id="PanelUI-whatsNew-title" class="panel-header">
-          <label data-l10n-id="whatsnew-panel-header"/>
-        </box>
-        <toolbaritem id="PanelUI-whatsNew-content"
-                     orient="vertical"
-                     smoothscroll="false">
-          <html:div id="PanelUI-whatsNew-message-container" role="document">
-            <!-- What's New messages will be rendered here -->
-          </html:div>
-        </toolbaritem>
-      </vbox>
-      <checkbox id="panelMenu-toggleWhatsNew"
-                class="panelMenu-toggleWhatsNew-checkbox"
-                oncommand="ToolbarPanelHub.toggleWhatsNewPref(event)"
-                data-l10n-id="whatsnew-panel-footer-checkbox"/>
     </panelview>
   </panelmultiview>
 </panel>

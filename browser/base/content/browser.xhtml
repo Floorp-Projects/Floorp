@@ -906,6 +906,72 @@
       </vbox>
     </panelview>
 
+    <panelview id="PanelUI-characterEncodingView" flex="1">
+      <vbox class="panel-subview-body">
+        <vbox id="PanelUI-characterEncodingView-pinned"
+              class="PanelUI-characterEncodingView-list"/>
+        <toolbarseparator/>
+        <vbox id="PanelUI-characterEncodingView-charsets"
+              class="PanelUI-characterEncodingView-list"/>
+      </vbox>
+    </panelview>
+
+    <panelview id="PanelUI-panicView" flex="1"
+               descriptionheightworkaround="true">
+      <vbox class="panel-subview-body">
+        <hbox id="PanelUI-panic-timeframe">
+          <image id="PanelUI-panic-timeframe-icon" alt=""/>
+          <vbox flex="1">
+            <description data-l10n-id="panic-main-timeframe-desc" id="PanelUI-panic-mainDesc"></description>
+            <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc" closemenu="none">
+              <radio id="PanelUI-panic-5min" data-l10n-id="panic-button-5min" selected="true"
+                    value="5" class="subviewradio"/>
+              <radio id="PanelUI-panic-2hr" data-l10n-id="panic-button-2hr"
+                    value="2" class="subviewradio"/>
+              <radio id="PanelUI-panic-day" data-l10n-id="panic-button-day"
+                    value="6" class="subviewradio"/>
+            </radiogroup>
+          </vbox>
+        </hbox>
+        <vbox id="PanelUI-panic-explanations">
+          <label id="PanelUI-panic-actionlist-main-label" data-l10n-id="panic-button-action-desc"></label>
+
+          <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-tabs-and-windows"></label>
+          <label id="PanelUI-panic-actionlist-cookies" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-cookies"></label>
+          <label id="PanelUI-panic-actionlist-history" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-delete-history"></label>
+          <label id="PanelUI-panic-actionlist-newwindow" class="PanelUI-panic-actionlist" data-l10n-id="panic-button-open-new-window"></label>
+
+          <label id="PanelUI-panic-warning" data-l10n-id="panic-button-undo-warning"></label>
+        </vbox>
+        <button id="PanelUI-panic-view-button"
+                data-l10n-id="panic-button-forget-button"/>
+      </vbox>
+    </panelview>
+
+    <panelview id="appMenu-SSBView" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+      </vbox>
+    </panelview>
+
+    <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-taskmanager-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&taskManagerCmd.label;"
+                       oncommand="switchToTabHavingURI('about:performance', true)"/>
+        <toolbarbutton id="appMenu-characterencoding-button"
+                       class="subviewbutton subviewbutton-nav"
+                       label="&charsetMenu2.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this)"/>
+        <toolbarbutton id="appMenu-workoffline-button"
+                       class="subviewbutton"
+                       data-l10n-id="menu-file-go-offline"
+                       type="checkbox"
+                       command="cmd_toggleOfflineStatus"/>
+      </vbox>
+    </panelview>
+
     <panelview id="appMenu-libraryView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-library-bookmarks-button"
@@ -968,6 +1034,25 @@
                        label-hide="&hideBookmarksToolbar.label;"
                        oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmark-tools');"/>
       </vbox>
+    </panelview>
+
+    <panelview id="PanelUI-whatsNew" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <box id="PanelUI-whatsNew-title" class="panel-header">
+          <label data-l10n-id="whatsnew-panel-header"/>
+        </box>
+        <toolbaritem id="PanelUI-whatsNew-content"
+                     orient="vertical"
+                     smoothscroll="false">
+          <html:div id="PanelUI-whatsNew-message-container" role="document">
+            <!-- What's New messages will be rendered here -->
+          </html:div>
+        </toolbaritem>
+      </vbox>
+      <checkbox id="panelMenu-toggleWhatsNew"
+                class="panelMenu-toggleWhatsNew-checkbox"
+                oncommand="ToolbarPanelHub.toggleWhatsNewPref(event)"
+                data-l10n-id="whatsnew-panel-footer-checkbox"/>
     </panelview>
   </html:template>
 

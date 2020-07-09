@@ -50,11 +50,11 @@ add_task(async function() {
     !charEncodingButton.hasAttribute("disabled"),
     "The Character encoding button gets enabled"
   );
+  charEncodingButton.click();
   let characterEncodingView = document.getElementById(
     "PanelUI-characterEncodingView"
   );
   let subviewShownPromise = subviewShown(characterEncodingView);
-  charEncodingButton.click();
   await subviewShownPromise;
 
   ok(
