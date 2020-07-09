@@ -503,6 +503,4 @@ const LegacyListeners = {
 const ResourceTransformers = {
   [ResourceWatcher.TYPES
     .CONSOLE_MESSAGE]: require("devtools/shared/resources/transformers/console-messages"),
-  [ResourceWatcher.TYPES
-    .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
 };

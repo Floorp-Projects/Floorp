@@ -88,16 +88,13 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       false
     );
 
-    const hasBrowserElement = !!this.browserElement;
-
     return {
       actor: this.actorID,
       traits: {
         // FF77+ supports frames in Watcher actor
         frame: true,
         resources: {
-          // FF79+ supports console and platform messages, FF80+ supports error messages,
-          // but this isn't enabled yet.
+          // FF79+ supports console messages and platform messages, but this isn't enabled yet.
           // We will implement a few other resources before enabling it in bug 1642295.
           // This is to prevent having to handle backward compat if we have to change Watcher
           // Actor API while implementing other resources.
@@ -105,9 +102,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // content process targets yet. Bug 1620248 should help supporting them and enable
           // this more broadly.
           [Resources.TYPES.CONSOLE_MESSAGE]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.ERROR_MESSAGE]:
-            enableServerWatcher && hasBrowserElement,
+            enableServerWatcher && !!this.browserElement,
           [Resources.TYPES.PLATFORM_MESSAGE]: enableServerWatcher,
         },
       },

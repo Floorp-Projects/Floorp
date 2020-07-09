@@ -36,10 +36,7 @@ add_task(async function() {
 });
 
 async function waitForMessageAndViewSource(hud, message) {
-  const msg = await waitFor(
-    () => findMessage(hud, message),
-    `Message "${message}" wasn't found`
-  );
+  const msg = await waitFor(() => findMessage(hud, message));
   ok(msg, `Message found: "${message}"`);
 
   const locationNode = msg.querySelector(
