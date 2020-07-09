@@ -1318,6 +1318,11 @@ class BuildDriver(MozbuildObject):
             self.notify('Build complete' if not status else 'Build failed')
 
         if status:
+            if what and what not in ('faster', 'binaries'):
+                print('Hey! Builds initiated with `mach build '
+                      '$A_SPECIFIC_TARGET` may not always work, even if the '
+                      'code being built is correct. Consider doing a bare '
+                      '`mach build` instead.')
             return status
 
         if monitor.have_resource_usage:
