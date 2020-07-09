@@ -107,14 +107,21 @@ class GlobalSharedContext;
 class EvalSharedContext;
 class ModuleSharedContext;
 
-#define FLAG_GETTER_SETTER(enumName, enumEntry, lowerName, name)  \
- public:                                                          \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); } \
-  void set##name() { setFlag(enumName::enumEntry); }              \
+#define FLAG_GETTER(enumName, enumEntry, lowerName, name) \
+ public:                                                  \
+  bool lowerName() const { return hasFlag(enumName::enumEntry); }
+
+#define FLAG_SETTER(enumName, enumEntry, lowerName, name) \
+ public:                                                  \
+  void set##name() { setFlag(enumName::enumEntry); }      \
   void set##name(bool b) { setFlag(enumName::enumEntry, b); }
 
 #define IMMUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
-  FLAG_GETTER_SETTER(ImmutableFlags, name, lowerName, name)
+  FLAG_GETTER(ImmutableFlags, name, lowerName, name)  \
+  FLAG_SETTER(ImmutableFlags, name, lowerName, name)
+
+#define IMMUTABLE_FLAG_GETTER(lowerName, name) \
+  FLAG_GETTER(ImmutableFlags, name, lowerName, name)
 
 /*
  * The struct SharedContext is part of the current parser context (see
@@ -176,9 +183,7 @@ class SharedContext {
     return immutableFlags_.hasFlag(flag);
   }
   void setFlag(ImmutableFlags flag, bool b = true) {
-    // TODO: enabled in later patch
-    // MOZ_ASSERT(!isScriptFieldCopiedToStencil);
-
+    MOZ_ASSERT(!isScriptFieldCopiedToStencil);
     immutableFlags_.setFlag(flag, b);
   }
 
@@ -197,7 +202,7 @@ class SharedContext {
   IMMUTABLE_FLAG_GETTER_SETTER(forceStrict, ForceStrict)
   IMMUTABLE_FLAG_GETTER_SETTER(hasNonSyntacticScope, HasNonSyntacticScope)
   IMMUTABLE_FLAG_GETTER_SETTER(noScriptRval, NoScriptRval)
-  IMMUTABLE_FLAG_GETTER_SETTER(treatAsRunOnce, TreatAsRunOnce)
+  IMMUTABLE_FLAG_GETTER(treatAsRunOnce, TreatAsRunOnce)
   // Strict: custom logic below
   IMMUTABLE_FLAG_GETTER_SETTER(hasModuleGoal, HasModuleGoal)
   IMMUTABLE_FLAG_GETTER_SETTER(hasInnerFunctions, HasInnerFunctions)
@@ -623,6 +628,13 @@ class FunctionBox : public SharedContext {
     setFlag(ImmutableFlags::IsFieldInitializer);
   }
 
+  void setTreatAsRunOnce(bool treatAsRunOnce) {
+    immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, treatAsRunOnce);
+    if (isScriptFieldCopiedToStencil) {
+      copyUpdatedImmutableFlags();
+    }
+  }
+
   bool hasSimpleParameterList() const {
     return !hasRest() && !hasParameterExprs && !hasDestructuringArgs;
   }
@@ -711,6 +723,8 @@ class FunctionBox : public SharedContext {
   void copyScriptFields(ScriptStencil& stencil);
   void copyFunctionFields(ScriptStencil& stencil);
 
+  // * setTreatAsRunOnce can be called to a lazy function, while emitting
+  //   enclosing script
   // * setCtorFunctionHasThisBinding can be called to a class constructor
   //   with a lazy function, while parsing enclosing class
   void copyUpdatedImmutableFlags();
