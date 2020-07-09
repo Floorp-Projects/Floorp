@@ -110,11 +110,10 @@ inline void NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
                                                            uint32_t index) {
   MOZ_ASSERT(containsPure(INT_TO_JSID(index)));
   if (IsTypeInferenceEnabled()) {
-    MarkObjectGroupFlags(cx, this,
-                         OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
+    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_SPARSE_INDEXES);
   }
   if (containsDenseElement(index)) {
-    setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
+    setDenseElementHole(cx, index);
   }
 }
 
