@@ -404,10 +404,6 @@ ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif # ! WINNT
 
-# autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including
-# this file
-OBJ_SUFFIX := $(_OBJ_SUFFIX)
-
 # Enable verbose logs when not using `make -s`
 ifeq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
 BUILD_VERBOSE_LOG = 1

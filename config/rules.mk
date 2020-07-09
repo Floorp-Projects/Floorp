@@ -197,11 +197,11 @@ _OBJS = $(COBJS) $(SOBJS) $(CPPOBJS) $(CMOBJS) $(CMMOBJS) $(ASOBJS) $(CWASMOBJS)
 OBJS = $(strip $(_OBJS))
 endif
 
-HOST_COBJS = $(addprefix host_,$(notdir $(HOST_CSRCS:.c=.$(_OBJ_SUFFIX))))
+HOST_COBJS = $(addprefix host_,$(notdir $(HOST_CSRCS:.c=.$(OBJ_SUFFIX))))
 # HOST_CPPOBJS can have different extensions (eg: .cpp, .cc)
-HOST_CPPOBJS = $(addprefix host_,$(notdir $(addsuffix .$(_OBJ_SUFFIX),$(basename $(HOST_CPPSRCS)))))
-HOST_CMOBJS = $(addprefix host_,$(notdir $(HOST_CMSRCS:.m=.$(_OBJ_SUFFIX))))
-HOST_CMMOBJS = $(addprefix host_,$(notdir $(HOST_CMMSRCS:.mm=.$(_OBJ_SUFFIX))))
+HOST_CPPOBJS = $(addprefix host_,$(notdir $(addsuffix .$(OBJ_SUFFIX),$(basename $(HOST_CPPSRCS)))))
+HOST_CMOBJS = $(addprefix host_,$(notdir $(HOST_CMSRCS:.m=.$(OBJ_SUFFIX))))
+HOST_CMMOBJS = $(addprefix host_,$(notdir $(HOST_CMMSRCS:.mm=.$(OBJ_SUFFIX))))
 ifndef HOST_OBJS
 _HOST_OBJS = $(HOST_COBJS) $(HOST_CPPOBJS) $(HOST_CMOBJS) $(HOST_CMMOBJS)
 HOST_OBJS = $(strip $(_HOST_OBJS))
@@ -224,7 +224,7 @@ WASM_ARCHIVE = $(addsuffix .$(WASM_OBJ_SUFFIX),$(WASM_LIBRARY))
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
 	$(filter-out $(ASFILES),$(OBJS:.$(OBJ_SUFFIX)=.s)) $(OBJS:.$(OBJ_SUFFIX)=.ii) \
-	$(OBJS:.$(OBJ_SUFFIX)=.i) $(OBJS:.$(OBJ_SUFFIX)=.i_o) \
+	$(OBJS:.$(OBJ_SUFFIX)=.i) \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) \
 	so_locations _gen _stubs $(wildcard *.res) $(wildcard *.RES) \
 	$(wildcard *.pdb) $(CODFILE) $(IMPORT_LIBRARY) \
@@ -245,7 +245,7 @@ GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
 ifdef HOST_SIMPLE_PROGRAMS
-GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.$(_OBJ_SUFFIX))
+GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
 ifdef MACH
@@ -635,7 +635,7 @@ define src_objdep
 $(basename $3$(notdir $1)).$2: $1 $$(call mkdir_deps,$$(MDDEPDIR))
 endef
 $(foreach f,$(CSRCS) $(SSRCS) $(CPPSRCS) $(CMSRCS) $(CMMSRCS) $(ASFILES),$(eval $(call src_objdep,$(f),$(OBJ_SUFFIX))))
-$(foreach f,$(HOST_CSRCS) $(HOST_CPPSRCS) $(HOST_CMSRCS) $(HOST_CMMSRCS),$(eval $(call src_objdep,$(f),$(_OBJ_SUFFIX),host_)))
+$(foreach f,$(HOST_CSRCS) $(HOST_CPPSRCS) $(HOST_CMSRCS) $(HOST_CMMSRCS),$(eval $(call src_objdep,$(f),$(OBJ_SUFFIX),host_)))
 $(foreach f,$(WASM_CSRCS) $(WASM_CPPSRCS),$(eval $(call src_objdep,$(f),wasm)))
 
 # The Rust compiler only outputs library objects, and so we need different
