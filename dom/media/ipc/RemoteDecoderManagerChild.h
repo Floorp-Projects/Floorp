@@ -63,13 +63,11 @@ class RemoteDecoderManagerChild final
   // called from the manager thread.
   void RunWhenGPUProcessRecreated(already_AddRefed<Runnable> aTask);
 
-  bool CanSend();
   layers::VideoBridgeSource GetSource() const { return mSource; }
 
  protected:
   void InitIPDL();
 
-  void ActorDestroy(ActorDestroyReason aWhy) override;
   void ActorDealloc() override;
 
   void HandleFatalError(const char* aMsg) const override;
@@ -97,9 +95,6 @@ class RemoteDecoderManagerChild final
 
   // The associated source of this decoder manager
   layers::VideoBridgeSource mSource;
-
-  // Should only ever be accessed on the manager thread.
-  bool mCanSend = false;
 };
 
 }  // namespace mozilla
