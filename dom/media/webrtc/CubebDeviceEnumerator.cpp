@@ -6,7 +6,9 @@
 
 #include "CubebDeviceEnumerator.h"
 
-#include "mozilla/Atomics.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsThreadUtils.h"
 #ifdef XP_WIN
@@ -18,12 +20,29 @@ namespace mozilla {
 using namespace CubebUtils;
 
 /* static */
-StaticRefPtr<CubebDeviceEnumerator> CubebDeviceEnumerator::sInstance;
+static StaticRefPtr<CubebDeviceEnumerator> sInstance;
+static StaticMutex sInstanceMutex;
 
 /* static */
 CubebDeviceEnumerator* CubebDeviceEnumerator::GetInstance() {
+  StaticMutexAutoLock lock(sInstanceMutex);
   if (!sInstance) {
     sInstance = new CubebDeviceEnumerator();
+    static bool clearOnShutdownSetup = []() -> bool {
+      auto setClearOnShutdown = []() -> void {
+        ClearOnShutdown(&sInstance, ShutdownPhase::ShutdownThreads);
+      };
+      if (NS_IsMainThread()) {
+        setClearOnShutdown();
+      } else {
+        SchedulerGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("CubebDeviceEnumerator::::GetInstance()",
+                                   std::move(setClearOnShutdown)));
+      }
+      return true;
+    }();
+    Unused << clearOnShutdownSetup;
   }
   return sInstance.get();
 }
@@ -33,6 +52,10 @@ CubebDeviceEnumerator::CubebDeviceEnumerator()
       mManualInputInvalidation(false),
       mManualOutputInvalidation(false) {
 #ifdef XP_WIN
+  // Ensure the MTA thread exists and gets instantiated before the
+  // CubebDeviceEnumerator so that this instance will always gets destructed
+  // before the MTA thread gets shutdown.
+  mozilla::mscom::EnsureMTA();
   mozilla::mscom::EnsureMTA([&]() -> void {
 #endif
     int rv = cubeb_register_device_collection_changed(
@@ -60,6 +83,7 @@ CubebDeviceEnumerator::CubebDeviceEnumerator()
 
 /* static */
 void CubebDeviceEnumerator::Shutdown() {
+  StaticMutexAutoLock lock(sInstanceMutex);
   if (sInstance) {
     sInstance = nullptr;
   }
