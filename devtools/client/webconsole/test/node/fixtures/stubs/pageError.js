@@ -82,7 +82,6 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -164,7 +163,6 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       }
     ],
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -250,7 +248,6 @@ rawPackets.set(`TypeError longString message`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -336,7 +333,6 @@ rawPackets.set(`throw string with URL`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": "“https://evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is evil and “https://not-so-evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is not good either",
@@ -394,7 +390,6 @@ rawPackets.set(`throw ""`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": "",
@@ -452,7 +447,6 @@ rawPackets.set(`throw "tomato"`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": "tomato",
@@ -510,7 +504,6 @@ rawPackets.set(`throw false`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": false,
@@ -568,7 +561,6 @@ rawPackets.set(`throw 0`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": 0,
@@ -626,7 +618,6 @@ rawPackets.set(`throw null`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -686,7 +677,6 @@ rawPackets.set(`throw undefined`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -746,7 +736,6 @@ rawPackets.set(`throw Symbol`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -808,7 +797,6 @@ rawPackets.set(`throw Object`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -892,7 +880,6 @@ rawPackets.set(`throw Error Object`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -970,7 +957,6 @@ rawPackets.set(`throw Error Object with custom name`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": false,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -1048,7 +1034,6 @@ rawPackets.set(`Promise reject ""`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": "",
@@ -1106,7 +1091,6 @@ rawPackets.set(`Promise reject "tomato"`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": "tomato",
@@ -1164,7 +1148,6 @@ rawPackets.set(`Promise reject false`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": false,
@@ -1222,7 +1205,6 @@ rawPackets.set(`Promise reject 0`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": 0,
@@ -1280,7 +1262,6 @@ rawPackets.set(`Promise reject null`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -1340,7 +1321,6 @@ rawPackets.set(`Promise reject undefined`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -1400,7 +1380,6 @@ rawPackets.set(`Promise reject Symbol`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -1462,7 +1441,6 @@ rawPackets.set(`Promise reject Object`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -1546,7 +1524,6 @@ rawPackets.set(`Promise reject Error Object`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": {
@@ -1624,7 +1601,6 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     ],
     "notes": null,
     "chromeContext": false,
-    "cssSelectors": "",
     "isPromiseRejection": true,
     "isForwardedFromContentProcess": false,
     "exception": {

@@ -154,26 +154,43 @@ function logExistingMessages(browser) {
     content.console.warn("foobarBaz-warn", content.document.body);
   });
 }
+
+const NUMBER_REGEX = /^\d+$/;
+
+const defaultStackFrames = [
+  {
+    filename: "resource://testing-common/content-task.js",
+    lineNumber: NUMBER_REGEX,
+    columnNumber: NUMBER_REGEX,
+  },
+  {
+    filename: "resource://testing-common/content-task.js",
+    lineNumber: NUMBER_REGEX,
+    columnNumber: NUMBER_REGEX,
+    asyncCause: "MessageListener.receiveMessage",
+  },
+];
+
 const expectedExistingConsoleCalls = [
   {
     level: "log",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-log", { type: "undefined" }],
   },
   {
     level: "info",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-info", { type: "null" }],
   },
   {
     level: "warn",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
   },
 ];
@@ -184,7 +201,7 @@ const expectedRuntimeConsoleCalls = [
     level: "log",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-log", { type: "undefined" }],
   },
   {
@@ -203,40 +220,41 @@ const expectedRuntimeConsoleCalls = [
     level: "info",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-info", { type: "null" }],
   },
   {
     level: "warn",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
   },
   {
     level: "debug",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: [{ type: "null" }],
   },
   {
     level: "trace",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     stacktrace: [
       {
         filename: EXPECTED_FILENAME,
         functionName: EXPECTED_FUNCTION_NAME,
       },
+      ...defaultStackFrames,
     ],
   },
   {
     level: "dir",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: [
       {
         type: "object",
@@ -254,7 +272,7 @@ const expectedRuntimeConsoleCalls = [
     level: "log",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: [
       "foo",
       {
@@ -272,7 +290,7 @@ const expectedRuntimeConsoleCalls = [
     level: "log",
     filename: EXPECTED_FILENAME,
     functionName: EXPECTED_FUNCTION_NAME,
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: [
       {
         type: "object",
@@ -285,7 +303,7 @@ const expectedRuntimeConsoleCalls = [
     level: "error",
     filename: EXPECTED_FILENAME,
     functionName: "fromAsmJS",
-    timeStamp: /^\d+$/,
+    timeStamp: NUMBER_REGEX,
     arguments: ["foobarBaz-asmjs-error", { type: "undefined" }],
 
     stacktrace: [
@@ -305,6 +323,7 @@ const expectedRuntimeConsoleCalls = [
         filename: EXPECTED_FILENAME,
         functionName: EXPECTED_FUNCTION_NAME,
       },
+      ...defaultStackFrames,
     ],
   },
 ];

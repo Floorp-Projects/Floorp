@@ -69,11 +69,11 @@ function checkObject(object, expected) {
 
 function checkValue(name, value, expected) {
   if (expected === null) {
-    ok(!value, "'" + name + "' is null");
+    is(value, null, `'${name}' is null`);
   } else if (value === undefined) {
-    ok(false, "'" + name + "' is undefined");
+    is(value, undefined, `'${name}' is undefined`);
   } else if (value === null) {
-    ok(false, "'" + name + "' is null");
+    is(value, expected, `'${name}' has expected value`);
   } else if (
     typeof expected == "string" ||
     typeof expected == "number" ||
@@ -84,7 +84,14 @@ function checkValue(name, value, expected) {
     ok(expected.test(value), name + ": " + expected + " matched " + value);
   } else if (Array.isArray(expected)) {
     info("checking array for property '" + name + "'");
-    checkObject(value, expected);
+    ok(Array.isArray(value), `property '${name}' is an array`);
+
+    is(value.length, expected.length, "Array has expected length");
+    if (value.length !== expected.length) {
+      is(JSON.stringify(value, null, 2), JSON.stringify(expected, null, 2));
+    } else {
+      checkObject(value, expected);
+    }
   } else if (typeof expected == "object") {
     info("checking object for property '" + name + "'");
     checkObject(value, expected);
