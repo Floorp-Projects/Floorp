@@ -347,6 +347,24 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   const WSFragment* afterRun =
       afterRunObject.FindNearestFragment(mScanEndPoint, true);
 
+  const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLineAtStart =
+      TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  const PointPosition pointPositionWithVisibleWhiteSpacesAtStart =
+      visibleWSFragmentInMiddleOfLineAtStart.isSome()
+          ? visibleWSFragmentInMiddleOfLineAtStart.ref().ComparePoint(
+                mScanStartPoint)
+          : PointPosition::NotInSameDOMTree;
+  const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLineAtEnd =
+      TextFragmentData(afterRunObject.mStart, afterRunObject.mEnd,
+                       afterRunObject.mNBSPData, afterRunObject.mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  const PointPosition pointPositionWithVisibleWhiteSpacesAtEnd =
+      visibleWSFragmentInMiddleOfLineAtEnd.isSome()
+          ? visibleWSFragmentInMiddleOfLineAtEnd.ref().ComparePoint(
+                mScanEndPoint)
+          : PointPosition::NotInSameDOMTree;
+
   EditorDOMPoint pointToInsert(mScanStartPoint);
   nsAutoString theString(aStringToInsert);
   {
@@ -368,11 +386,19 @@ nsresult WSRunObject::InsertText(Document& aDocument,
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return rv;
       }
-    } else if (afterRun->IsVisibleAndMiddleOfHardLine()) {
-      // Try to change an nbsp to a space, if possible, just to prevent nbsp
-      // proliferation
+    }
+    // Replace an NBSP at inclusive next character of replacing range to an
+    // ASCII white-space if inserting into a visible white-space sequence.
+    // XXX With modifying the inserting string later, this creates a line break
+    //     opportunity after the inserting string, but this causes
+    //     inconsistent result with inserting order.  E.g., type white-space
+    //     n times with various order.
+    else if (pointPositionWithVisibleWhiteSpacesAtEnd ==
+                 PointPosition::StartOfFragment ||
+             pointPositionWithVisibleWhiteSpacesAtEnd ==
+                 PointPosition::MiddleOfFragment) {
       nsresult rv = MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-          *afterRun, pointToInsert);
+          visibleWSFragmentInMiddleOfLineAtEnd.ref(), pointToInsert);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() "
@@ -395,11 +421,22 @@ nsresult WSRunObject::InsertText(Document& aDocument,
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return rv;
       }
-    } else if (beforeRun->IsVisibleAndMiddleOfHardLine()) {
-      // Try to change an nbsp to a space, if possible, just to prevent nbsp
-      // proliferation
-      nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(*beforeRun,
-                                                                pointToInsert);
+    }
+    // Replace an NBSP at previous character of insertion point to an ASCII
+    // white-space if inserting into a visible white-space sequence.
+    // XXX With modifying the inserting string later, this creates a line break
+    //     opportunity before the inserting string, but this causes
+    //     inconsistent result with inserting order.  E.g., type white-space
+    //     n times with various order.
+    else if (pointPositionWithVisibleWhiteSpacesAtStart ==
+                 PointPosition::MiddleOfFragment ||
+             pointPositionWithVisibleWhiteSpacesAtStart ==
+                 PointPosition::EndOfFragment) {
+      // XXX If the DOM tree has been changed above, pointToInsert` and/or
+      //     `visibleWSFragmentInMiddleOfLine` may be invalid.  So, we may do
+      //     something wrong here.
+      nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
+          visibleWSFragmentInMiddleOfLineAtStart.ref(), pointToInsert);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace() "
