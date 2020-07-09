@@ -473,7 +473,7 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
       }
 
       // If the new cookie has the same value, expiry date, isSecure, isSession,
-      // isHttpOnly and sameSite flags then we can just keep the old one.
+      // isHttpOnly and SameSite flags then we can just keep the old one.
       // Only if any of these differ we would want to override the cookie.
       if (oldCookie->Value().Equals(aCookie->Value()) &&
           oldCookie->Expiry() == aCookie->Expiry() &&

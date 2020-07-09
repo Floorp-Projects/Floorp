@@ -564,9 +564,9 @@ function getWarningGroupLabel(firstMessage) {
 
   if (isCookieSameSiteMessage(firstMessage)) {
     if (Services.prefs.getBoolPref("network.cookie.sameSite.laxByDefault")) {
-      return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultEnabled");
+      return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultEnabled2");
     }
-    return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultDisabled");
+    return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultDisabled2");
   }
 
   return "";
