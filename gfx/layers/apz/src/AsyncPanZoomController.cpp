@@ -3900,6 +3900,17 @@ void AsyncPanZoomController::RequestContentRepaint(
     return;
   }
   if (!controller->IsRepaintThread()) {
+    // Even though we want to do the actual repaint request on the repaint
+    // thread, we want to update the expected gecko metrics synchronously.
+    // Otherwise we introduce a race condition where we might read from the
+    // expected gecko metrics on the controller thread before or after it gets
+    // updated on the repaint thread, when in fact we always want the updated
+    // version when reading.
+    {  // scope lock
+      RecursiveMutexAutoLock lock(mRecursiveMutex);
+      mExpectedGeckoMetrics.UpdateFrom(Metrics());
+    }
+
     // use the local variable to resolve the function overload.
     auto func =
         static_cast<void (AsyncPanZoomController::*)(RepaintUpdateType)>(
@@ -5012,6 +5023,9 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
       RequestContentRepaint(endZoomToMetrics, velocity,
                             RepaintUpdateType::eUserAction);
     } else {
+      // See comment on similar code in RequestContentRepaint
+      mExpectedGeckoMetrics.UpdateFrom(endZoomToMetrics);
+
       // use a local var to resolve the function overload
       auto func = static_cast<void (AsyncPanZoomController::*)(
           const FrameMetrics&, const ParentLayerPoint&, RepaintUpdateType)>(
