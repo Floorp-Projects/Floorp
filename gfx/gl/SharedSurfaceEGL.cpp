@@ -17,6 +17,7 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "AndroidNativeWindow.h"
 #  include "mozilla/java/SurfaceAllocatorWrappers.h"
+#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 namespace mozilla {
@@ -199,6 +200,17 @@ void SharedSurface_SurfaceTexture::UnlockProdImpl() {
 
   gl->SetEGLSurfaceOverride(mOrigEglSurface);
   mOrigEglSurface = nullptr;
+}
+
+void SharedSurface_SurfaceTexture::ProducerReadReleaseImpl() {
+  java::GeckoSurfaceTexture::LocalRef surfaceTexture =
+      java::GeckoSurfaceTexture::Lookup(mSurface->GetHandle());
+  if (!surfaceTexture) {
+    NS_ERROR("Didn't find GeckoSurfaceTexture in ProducerReadReleaseImpl");
+    return;
+  }
+  surfaceTexture->UpdateTexImage();
+  surfaceTexture->ReleaseTexImage();
 }
 
 void SharedSurface_SurfaceTexture::Commit() {
