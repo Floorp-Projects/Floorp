@@ -33,9 +33,11 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -93,6 +95,8 @@ class DefaultBrowserToolbarControllerTest {
     @RelaxedMockK private lateinit var tabCollectionStorage: TabCollectionStorage
     @RelaxedMockK private lateinit var topSiteStorage: TopSiteStorage
     @RelaxedMockK private lateinit var readerModeController: ReaderModeController
+    @RelaxedMockK private lateinit var sessionFeatureWrapper: ViewBoundFeatureWrapper<SessionFeature>
+    @RelaxedMockK private lateinit var sessionFeature: SessionFeature
     private val store: BrowserStore = BrowserStore(initialState = BrowserState(
         listOf(
             createTab("https://www.mozilla.org", id = "reader-inactive-tab"),
@@ -124,6 +128,7 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.components.core.sessionManager } returns sessionManager
         every { activity.components.core.store } returns store
         every { sessionManager.selectedSession } returns currentSession
+        every { sessionFeatureWrapper.get() } returns sessionFeature
 
         val onComplete = slot<() -> Unit>()
         every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
@@ -469,7 +474,7 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { engineView.release() }
+        verify { sessionFeature.release() }
         verify { currentSession.customTabConfig = null }
         verify { sessionManager.select(currentSession) }
         verify { activity.startActivity(openInFenixIntent) }
@@ -571,6 +576,7 @@ class DefaultBrowserToolbarControllerTest {
         bookmarkTapped = bookmarkTapped,
         readerModeController = readerModeController,
         sessionManager = sessionManager,
+        sessionFeature = sessionFeatureWrapper,
         onTabCounterClicked = onTabCounterClicked,
         onCloseTab = onCloseTab
     ).apply {

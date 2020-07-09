@@ -19,6 +19,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.feature.session.SessionFeature
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -61,6 +63,7 @@ class DefaultBrowserToolbarController(
     private val activity: HomeActivity,
     private val navController: NavController,
     private val readerModeController: ReaderModeController,
+    private val sessionFeature: ViewBoundFeatureWrapper<SessionFeature>,
     private val sessionManager: SessionManager,
     private val findInPageLauncher: () -> Unit,
     private val engineView: EngineView,
@@ -260,8 +263,10 @@ class DefaultBrowserToolbarController(
                 }
             }
             ToolbarMenu.Item.OpenInFenix -> {
-                // Release the session from this view so that it can immediately be rendered by a different view
-                engineView.release()
+                // Stop the SessionFeature from updating the EngineView and let it release the session
+                // from the EngineView so that it can immediately be rendered by a different view once
+                // we switch to the actual browser.
+                sessionFeature.get()?.release()
 
                 // Strip the CustomTabConfig to turn this Session into a regular tab and then select it
                 customTabSession!!.customTabConfig = null

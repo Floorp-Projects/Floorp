@@ -211,6 +211,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
                 ),
                 sessionManager = requireComponents.core.sessionManager,
+                sessionFeature = sessionFeature,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
                 engineView = engineView,
                 swipeRefresh = swipeRefresh,
