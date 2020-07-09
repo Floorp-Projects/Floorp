@@ -341,14 +341,18 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
   const bool insertionPointEqualsOrIsBeforeStartOfText =
       mScanStartPoint.EqualsOrIsBefore(textFragmentDataAtStart.StartRef());
-  // If mScanStartPoint isn't equal to mScanEndPoint, it will replace text (i.e.
-  // committing composition). And afterRun will be end point of replaced range.
-  // So we want to know this white-space type (trailing white-space etc) of
-  // this end point, not inserted (start) point, so we re-scan white-space type.
-  WSRunObject afterRunObject(MOZ_KnownLive(mHTMLEditor), mScanEndPoint);
-  TextFragmentData textFragmentDataAtEnd(
-      afterRunObject.mStart, afterRunObject.mEnd, afterRunObject.mNBSPData,
-      afterRunObject.mPRE);
+  TextFragmentData textFragmentDataAtEnd(textFragmentDataAtStart);
+  if (mScanStartPoint != mScanEndPoint) {
+    // If mScanStartPoint doesn't equal to mScanEndPoint, it will replace text
+    // (e.g., at committing composition).  We need to handle white-spaces
+    // at end of replaced range. So we want to know this white-space type
+    // (trailing white-space etc) of this end point, not inserted (start) point,
+    // so we need to re-scan white-space type.
+    WSRunObject afterRunObject(MOZ_KnownLive(mHTMLEditor), mScanEndPoint);
+    textFragmentDataAtEnd =
+        TextFragmentData(afterRunObject.mStart, afterRunObject.mEnd,
+                         afterRunObject.mNBSPData, afterRunObject.mPRE);
+  }
   const bool insertionPointAfterEndOfText =
       textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(mScanEndPoint);
 
