@@ -1003,6 +1003,9 @@ class UrlbarQueryContext {
 
   /**
    * Caches and returns fixup info from URIFixup for the current search string.
+   * Only returns a subset of the properties from URIFixup. This is both to
+   * reduce the memory footprint of UrlbarQueryContexts and to keep them
+   * serializable so they can be sent to extensions.
    */
   get fixupInfo() {
     if (this.searchString && !this._fixupInfo) {
@@ -1013,10 +1016,14 @@ class UrlbarQueryContext {
         flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
 
-      this._fixupInfo = Services.uriFixup.getFixupURIInfo(
+      let info = Services.uriFixup.getFixupURIInfo(
         this.searchString.trim(),
         flags
       );
+      this._fixupInfo = {
+        href: info.fixedURI.spec,
+        isSearch: !!info.keywordAsSent,
+      };
     }
 
     return this._fixupInfo || null;
