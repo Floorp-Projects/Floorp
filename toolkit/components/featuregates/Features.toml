@@ -58,3 +58,13 @@ type = "boolean"
 bug-numbers = [1614351]
 is-public = true
 default-value = false
+
+[cookie-samesite-schemeful]
+title = "experimental-features-cookie-samesite-schemeful"
+description = "experimental-features-cookie-samesite-schemeful-description"
+restart-required = false
+preference = "network.cookie.sameSite.schemeful"
+type = "boolean"
+bug-numbers = [1651119]
+is-public = true
+default-value = {default = false, nightly = true}
