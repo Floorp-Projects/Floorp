@@ -1035,6 +1035,7 @@ RefPtr<gfx::DataSourceSurface> WebGLContext::GetFrontBufferSnapshot() {
 
   // -
 
+  front->WaitForBufferOwnership();
   front->LockProd();
   front->ProducerReadAcquire();
   auto reset = MakeScopeExit([&] {
@@ -1061,7 +1062,8 @@ RefPtr<gfx::DataSourceSurface> WebGLContext::GetFrontBufferSnapshot() {
     fbTarget = LOCAL_GL_FRAMEBUFFER;
   }
 
-  gl->fBindFramebuffer(fbTarget, front->mFb ? front->mFb->mFB : 0);
+  gl->fBindFramebuffer(fbTarget,
+                       front->mFb ? front->mFb->mFB : mDefaultFB->mFB);
   if (pboWas) {
     BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, nullptr);
   }

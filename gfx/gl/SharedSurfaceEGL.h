@@ -99,6 +99,7 @@ class SharedSurface_SurfaceTexture final : public SharedSurface {
 
   virtual void ProducerAcquireImpl() override {}
   virtual void ProducerReleaseImpl() override {}
+  virtual void ProducerReadReleaseImpl() override;
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
 
