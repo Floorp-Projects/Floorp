@@ -218,6 +218,7 @@ class BugbugLoader(DefaultLoader):
                             if c >= self.CONFIDENCE_THRESHOLD}
 
         manifests['active'] = list(set(manifests['active']) & bugbug_manifests)
+        manifests['skipped'] = list(set(manifests['skipped']) & bugbug_manifests)
         return manifests
 
 
