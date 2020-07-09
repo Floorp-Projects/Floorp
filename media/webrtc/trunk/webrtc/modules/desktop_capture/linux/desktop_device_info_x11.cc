@@ -133,5 +133,4 @@ void DesktopDeviceInfoX11::InitializeApplicationList() {
     }
   }
 }
-
 } //namespace webrtc

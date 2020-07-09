@@ -35,7 +35,6 @@ if CONFIG['MOZ_WEBRTC']:
     EXPORTS.mozilla.dom += [ 'RTCIdentityProviderRegistrar.h' ]
     UNIFIED_SOURCES += [
         'MediaEngineRemoteVideoSource.cpp',
-        'MediaEngineTabVideoSource.cpp',
         'MediaEngineWebRTCAudio.cpp',
         'RTCCertificate.cpp',
         'RTCIdentityProviderRegistrar.cpp',
