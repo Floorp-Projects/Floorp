@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["EnterprisePoliciesManager"];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -80,15 +82,11 @@ function EnterprisePoliciesManager() {
 }
 
 EnterprisePoliciesManager.prototype = {
-  classID: Components.ID("{ea4e1414-779b-458b-9d1f-d18e8efbc145}"),
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
     Ci.nsIEnterprisePolicies,
   ]),
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(
-    EnterprisePoliciesManager
-  ),
 
   _initialize() {
     let provider = this._chooseProvider();
@@ -631,6 +629,3 @@ class macOSPoliciesProvider {
     return this._failed;
   }
 }
-
-var components = [EnterprisePoliciesManager];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
