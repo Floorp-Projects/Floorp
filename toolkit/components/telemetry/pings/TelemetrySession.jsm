@@ -321,6 +321,10 @@ var Impl = {
   // The activity state for the user. If false, don't count the next
   // active tick. Otherwise, increment the active ticks as usual.
   _isUserActive: true,
+  // The activity state for the user. Inits to false so that the initial
+  // activity doesn't cause a stopwatch error.
+  // Used to evaluate FOG user engagement.
+  _fogUserActive: false,
   _startupIO: {},
   // The previous build ID, if this is the first run with a new build.
   // Null if this is the first run, or the previous build ID is unknown.
@@ -1147,6 +1151,10 @@ var Impl = {
    */
   _onActiveTick(aUserActive) {
     const needsUpdate = aUserActive && this._isUserActive;
+    const userActivityChanged =
+      (aUserActive && !this._fogUserActive) ||
+      (!aUserActive && this._fogUserActive);
+    this._fogUserActive = aUserActive;
     this._isUserActive = aUserActive;
 
     // Don't count the first active tick after we get out of
@@ -1154,6 +1162,22 @@ var Impl = {
     if (needsUpdate) {
       this._sessionActiveTicks++;
       Telemetry.scalarAdd("browser.engagement.active_ticks", 1);
+    }
+
+    if (userActivityChanged) {
+      // FOG User Engagement Evaluation.
+      Telemetry.scalarSet("fog.eval.user_active", aUserActive);
+      let error = false;
+      if (aUserActive) {
+        error = !TelemetryStopwatch.start("FOG_EVAL_USER_ACTIVE_S", null, {
+          inSeconds: true,
+        });
+      } else {
+        error = !TelemetryStopwatch.finish("FOG_EVAL_USER_ACTIVE_S");
+      }
+      if (error) {
+        Telemetry.scalarAdd("fog.eval.user_active_error", 1);
+      }
     }
   },
 
