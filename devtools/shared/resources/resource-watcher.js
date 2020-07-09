@@ -42,6 +42,16 @@ class ResourceWatcher {
   }
 
   /**
+   * Return all specified resources cached in this watcher.
+   *
+   * @param {String} resourceType
+   * @return {Array} resources cached in this watcher
+   */
+  getAllResources(resourceType) {
+    return this._cache.filter(r => r.resourceType === resourceType);
+  }
+
+  /**
    * Request to start retrieving all already existing instances of given
    * type of resources and also start watching for the one to be created after.
    *
