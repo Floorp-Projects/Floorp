@@ -76,7 +76,17 @@ class FxAccountsCommands {
       );
     }
     try {
-      await client.invokeCommand(sessionToken, command, device.id, payload);
+      let info = await client.invokeCommand(
+        sessionToken,
+        command,
+        device.id,
+        payload
+      );
+      if (!info.enqueued || !info.notified) {
+        log.warn("Sending was only partially successful", info);
+      } else {
+        log.info("Successfully sent", info);
+      }
     } catch (err) {
       if (err.code && err.code === 429 && err.retryAfter) {
         this._invokeRateLimitExpiry = Date.now() + err.retryAfter * 1000;
