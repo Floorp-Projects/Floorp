@@ -16,9 +16,9 @@ add_task(async function() {
 
   await saveFirstInlineStyleSheet(ui);
   await testFriendlyNamesAfterSave(ui);
-  await reloadPageAndWaitForStyleSheets(ui);
+  await reloadPageAndWaitForStyleSheets(ui, 2);
   await testFriendlyNamesAfterSave(ui);
-  await navigateToAndWaitForStyleSheets(SECOND_TEST_PAGE, ui);
+  await navigateToAndWaitForStyleSheets(SECOND_TEST_PAGE, ui, 2);
   await testFriendlyNamesAfterNavigation(ui);
 });
 
