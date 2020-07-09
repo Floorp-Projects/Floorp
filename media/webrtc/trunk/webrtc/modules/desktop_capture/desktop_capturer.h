@@ -139,6 +139,10 @@ class DesktopCapturer {
   static std::unique_ptr<DesktopCapturer> CreateAppCapturer(
       const DesktopCaptureOptions& options);
 
+  // Creates a DesktopCapturer instance which targets to capture tab.
+  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
+      const DesktopCaptureOptions& options);
+
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(USE_X11)
   static bool IsRunningUnderWayland();
 #endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(USE_X11)
@@ -160,6 +164,10 @@ class DesktopCapturer {
   // Creates a platform specific DesktopCapturer instance which targets to
   // capture apps.
   static std::unique_ptr<DesktopCapturer> CreateRawAppCapturer(
+      const DesktopCaptureOptions& options);
+
+  // Creates a DesktopCapturer instance which targets to capture tabs
+  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
       const DesktopCaptureOptions& options);
 };
 
