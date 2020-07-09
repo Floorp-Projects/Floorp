@@ -318,6 +318,7 @@ avoid-blacklist-and-whitelist:
         - taskcluster/taskgraph/transforms/tests.py
         - taskcluster/taskgraph/try_option_syntax.py
         - taskcluster/taskgraph/util/schema.py
+        - taskcluster/test/test_mach_try_auto.py
         - testing/condprofile/condprof/client.py
         - testing/condprofile/condprof/tests/profile/prefs.js
         - testing/condprofile/condprof/tests/test_client.py
