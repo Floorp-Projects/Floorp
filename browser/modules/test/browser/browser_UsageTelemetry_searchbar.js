@@ -267,7 +267,7 @@ add_task(async function test_oneOff_enterSelection() {
   // for this test.
   const url =
     getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addEngine(url, "", false);
+  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 
@@ -350,7 +350,7 @@ add_task(async function test_suggestion_click() {
   // for this test.
   const url =
     getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addEngine(url, "", false);
+  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 
@@ -428,7 +428,7 @@ add_task(async function test_suggestion_enterSelection() {
   // for this test.
   const url =
     getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addEngine(url, "", false);
+  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 

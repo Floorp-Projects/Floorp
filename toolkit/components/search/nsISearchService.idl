@@ -234,10 +234,7 @@ interface nsISearchService : nsISupports
   Promise resetToOriginalDefaultEngine();
 
   /**
-   * Adds a new search engine from the file at the supplied URI, optionally
-   * asking the user for confirmation first.  If a confirmation dialog is
-   * shown, it will offer the option to begin using the newly added engine
-   * right away.
+   * Adds a new Open Search engine from the file at the supplied URI.
    *
    * @param engineURL
    *        The URL to the search engine's description file.
@@ -247,20 +244,10 @@ interface nsISearchService : nsISupports
    *        icon. This value may be overridden by an icon specified in the
    *        engine description file.
    *
-   * @param confirm
-   *        A boolean value indicating whether the user should be asked for
-   *        confirmation before this engine is added to the list.  If this
-   *        value is false, the engine will be added to the list upon successful
-   *        load, but it will not be selected as the current engine.
-   *
-   * @param extensionID [optional]
-   *        Optional: The correct extensionID if called by an add-on.
-   *
    * @throws NS_ERROR_FAILURE if the description file cannot be successfully
    *         loaded.
    */
-  Promise addEngine(in AString engineURL, in AString iconURL, in boolean confirm,
-                    [optional] in AString extensionID);
+  Promise addOpenSearchEngine(in AString engineURL, in AString iconURL);
 
   /**
    * Adds a new search engine for enterprises.

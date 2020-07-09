@@ -81,9 +81,6 @@ function ENSURE_WARN(assertion, message, resultCode) {
  * OpenSearchEngine represents an OpenSearch base search engine.
  */
 class OpenSearchEngine extends SearchEngine {
-  // Whether to obtain user confirmation before adding the engine. This is only
-  // used when the engine is first added to the list.
-  _confirm = null;
   // The data describing the engine, in the form of an XML document element.
   _data = null;
   // A function to be invoked when this engine object's addition completes (or
@@ -333,34 +330,9 @@ class OpenSearchEngine extends SearchEngine {
       // Check that when adding a new engine (e.g., not updating an
       // existing one), a duplicate engine does not already exist.
       if (Services.search.getEngineByName(engine.name)) {
-        // If we're confirming the engine load, then display a "this is a
-        // duplicate engine" prompt; otherwise, fail silently.
-        if (engine._confirm) {
-          promptError(
-            {
-              error: "error_duplicate_engine_msg",
-              title: "error_invalid_engine_title",
-            },
-            Ci.nsISearchService.ERROR_DUPLICATE_ENGINE
-          );
-        } else {
-          onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
-        }
+        onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         logConsole.debug("_onLoad: duplicate engine found, bailing");
         return;
-      }
-
-      // If requested, confirm the addition now that we have the title.
-      // This property is only ever true for engines added via
-      // nsISearchService::addEngine.
-      if (engine._confirm) {
-        var confirmation = engine._confirmAddEngine();
-        logConsole.debug("_onLoad: confirm", confirmation);
-        if (!confirmation.confirmed) {
-          onError();
-          return;
-        }
-        engine._useNow = confirmation.useNow;
       }
 
       engine._shortName = SearchUtils.sanitizeName(engine.name);
@@ -615,55 +587,6 @@ class OpenSearchEngine extends SearchEngine {
     // Whether or not the engine has an update URL
     let selfURL = this._getURLOfType(SearchUtils.URL_TYPE.OPENSEARCH, "self");
     return !!(this._updateURL || this._iconUpdateURL || selfURL);
-  }
-
-  _confirmAddEngine() {
-    var stringBundle = Services.strings.createBundle(SEARCH_BUNDLE);
-    var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
-
-    // Display only the hostname portion of the URL.
-    var dialogMessage = stringBundle.formatStringFromName(
-      "addEngineConfirmation",
-      [this._name, this._uri.host]
-    );
-    var checkboxMessage = null;
-    if (
-      !Services.prefs.getBoolPref(
-        SearchUtils.BROWSER_SEARCH_PREF + "noCurrentEngine",
-        false
-      )
-    ) {
-      checkboxMessage = stringBundle.GetStringFromName(
-        "addEngineAsCurrentText"
-      );
-    }
-
-    var addButtonLabel = stringBundle.GetStringFromName(
-      "addEngineAddButtonLabel"
-    );
-
-    var ps = Services.prompt;
-    var buttonFlags =
-      ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
-      ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1 +
-      ps.BUTTON_POS_0_DEFAULT;
-
-    var checked = { value: false };
-    // confirmEx returns the index of the button that was pressed.  Since "Add"
-    // is button 0, we want to return the negation of that value.
-    var confirm = !ps.confirmEx(
-      null,
-      titleMessage,
-      dialogMessage,
-      buttonFlags,
-      addButtonLabel,
-      null,
-      null, // button 1 & 2 names not used
-      checkboxMessage,
-      checked
-    );
-
-    return { confirmed: confirm, useNow: checked.value };
   }
 
   /**
