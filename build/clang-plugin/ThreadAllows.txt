@@ -65,7 +65,6 @@ ProxyResolution
 RemoteLzyStream
 RWLockTester
 RacingServMan
-RemVidChild
 Sandbox Testing
 SaveScripts
 Socket Thread
