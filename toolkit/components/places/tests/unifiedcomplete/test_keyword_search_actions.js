@@ -251,18 +251,6 @@ add_task(async function test_keyword_search() {
     ],
   });
 
-  info("Bug 420328: no-param keyword with a param");
-  await check_autocomplete({
-    search: "noparam foo",
-    searchParam: "enable-actions",
-    matches: [makeSearchMatch("noparam foo", { heuristic: true })],
-  });
-  await check_autocomplete({
-    search: "post_noparam foo",
-    searchParam: "enable-actions",
-    matches: [makeSearchMatch("post_noparam foo", { heuristic: true })],
-  });
-
   info("escaping with default UTF-8 charset");
   await check_autocomplete({
     search: "encoded foé",
