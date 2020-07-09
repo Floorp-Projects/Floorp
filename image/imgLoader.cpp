@@ -730,6 +730,7 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
       rv = nsMixedContentBlocker::ShouldLoad(insecureRedirect, contentLocation,
                                              secCheckLoadInfo,
                                              EmptyCString(),  // mime guess
+                                             true,            // aReportError
                                              &decision);
       if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
         return false;
