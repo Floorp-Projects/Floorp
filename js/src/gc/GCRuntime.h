@@ -15,6 +15,7 @@
 #include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
 #include "gc/GCMarker.h"
+#include "gc/IteratorUtils.h"
 #include "gc/Nursery.h"
 #include "gc/Scheduling.h"
 #include "gc/Statistics.h"
@@ -189,38 +190,6 @@ struct Callback {
 
 template <typename F>
 using CallbackVector = Vector<Callback<F>, 4, SystemAllocPolicy>;
-
-template <typename T, typename Iter0, typename Iter1>
-class ChainedIter {
-  Iter0 iter0_;
-  Iter1 iter1_;
-
- public:
-  ChainedIter(const Iter0& iter0, const Iter1& iter1)
-      : iter0_(iter0), iter1_(iter1) {}
-
-  bool done() const { return iter0_.done() && iter1_.done(); }
-  void next() {
-    MOZ_ASSERT(!done());
-    if (!iter0_.done()) {
-      iter0_.next();
-    } else {
-      MOZ_ASSERT(!iter1_.done());
-      iter1_.next();
-    }
-  }
-  T get() const {
-    MOZ_ASSERT(!done());
-    if (!iter0_.done()) {
-      return iter0_.get();
-    }
-    MOZ_ASSERT(!iter1_.done());
-    return iter1_.get();
-  }
-
-  operator T() const { return get(); }
-  T operator->() const { return get(); }
-};
 
 typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy>
     RootedValueMap;
@@ -545,11 +514,9 @@ class GCRuntime {
   const ChunkPool& emptyChunks(const AutoLockGC& lock) const {
     return emptyChunks_.ref();
   }
-  typedef ChainedIter<Chunk*, ChunkPool::Iter, ChunkPool::Iter>
-      NonEmptyChunksIter;
+  using NonEmptyChunksIter = ChainedIterator<ChunkPool::Iter, 2>;
   NonEmptyChunksIter allNonEmptyChunks(const AutoLockGC& lock) {
-    return NonEmptyChunksIter(ChunkPool::Iter(availableChunks(lock)),
-                              ChunkPool::Iter(fullChunks(lock)));
+    return NonEmptyChunksIter(availableChunks(lock), fullChunks(lock));
   }
 
   Chunk* getOrAllocChunk(AutoLockGCBgAlloc& lock);
