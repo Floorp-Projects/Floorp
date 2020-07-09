@@ -7,7 +7,7 @@ function expectedTabInfo(tab, window) {
   return {
     url: browser.currentURI.spec,
     title: browser.contentTitle,
-    favIconUrl: window.gBrowser.getIcon(tab),
+    favIconUrl: window.gBrowser.getIcon(tab) || undefined,
     // 'selected' is marked as unsupported in schema, so we've removed it.
     // For more details, see bug 1337509
     selected: undefined,
