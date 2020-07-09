@@ -263,17 +263,6 @@ function makeUrlbarResult(tokens, info) {
           })
         );
       }
-      case "extension":
-        return new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.OMNIBOX,
-          UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-            content: [action.params.content, UrlbarUtils.HIGHLIGHT.TYPED],
-            keyword: [action.params.keyword, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: [info.icon],
-          })
-        );
       case "remotetab":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.REMOTE_TAB,

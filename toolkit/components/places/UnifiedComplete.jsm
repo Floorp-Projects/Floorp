@@ -340,7 +340,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PlacesRemoteTabsAutocompleteProvider:
     "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm",
@@ -760,9 +759,9 @@ function Search(
     // actually the first thing in the search string.  If a prefix or restriction
     // character occurs first, then the heurstic token is null.  We use the
     // heuristic token to help determine the heuristic result.  It may be a Places
-    // keyword, a search engine alias, an extension keyword, or simply a URL or
-    // part of the search string the user has typed.  We won't know until we
-    // create the heuristic result.
+    // keyword, a search engine alias, or simply a URL or part of the search
+    // string the user has typed.  We won't know until we create the heuristic
+    // result.
     let firstToken = !!this._searchTokens.length && this._searchTokens[0].value;
     this._heuristicToken =
       firstToken && this._trimmedOriginalSearchString.startsWith(firstToken)
@@ -1272,16 +1271,6 @@ Search.prototype = {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
 
-    if (this._heuristicToken) {
-      // It may be a keyword registered by an extension.
-      let matched = await this._matchExtensionHeuristicResult(
-        this._heuristicToken
-      );
-      if (matched) {
-        return true;
-      }
-    }
-
     if (this.pending && this._enableActions && this._heuristicToken) {
       // It may be a search engine with an alias - which works like a keyword.
       let matched = await this._matchSearchEngineAlias(this._heuristicToken);
@@ -1367,18 +1356,6 @@ Search.prototype = {
       });
     }
     return gotResult;
-  },
-
-  _matchExtensionHeuristicResult(keyword) {
-    if (
-      ExtensionSearchHandler.isKeywordRegistered(keyword) &&
-      substringAfter(this._originalSearchString, keyword)
-    ) {
-      let description = ExtensionSearchHandler.getDescription(keyword);
-      this._addExtensionMatch(this._originalSearchString, description);
-      return true;
-    }
-    return false;
   },
 
   async _matchPlacesKeyword(keyword) {
@@ -1519,20 +1496,6 @@ Search.prototype = {
       this._keywordSubstitute = engine.getResultDomain();
     }
     return true;
-  },
-
-  _addExtensionMatch(content, comment) {
-    this._addMatch({
-      value: makeActionUrl("extension", {
-        content,
-        keyword: this._heuristicToken,
-      }),
-      comment,
-      icon: "chrome://browser/content/extension.svg",
-      style: "action extension",
-      frecency: Infinity,
-      type: UrlbarUtils.RESULT_GROUP.EXTENSION,
-    });
   },
 
   /**
