@@ -192,6 +192,57 @@ add_task(async function test_upgrade_default_position_engine() {
   ok(!engine, "Engine should not exist");
 });
 
+add_task(async function test_extension_get_params() {
+  let ext1 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: kSearchEngineURL,
+          search_url_get_params: "foo=bar&bar=foo",
+          suggest_url: kSearchSuggestURL,
+          suggest_url_get_params: "foo=bar&bar=foo",
+        },
+      },
+    },
+    useAddonManager: "temporary",
+  });
+
+  await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
+
+  let engine = Services.search.getEngineByName("MozSearch");
+  ok(engine, "Engine should exist.");
+
+  let url = engine.wrappedJSObject._getURLOfType("text/html");
+  equal(url.method, "GET", "Search URLs method is GET");
+
+  let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
+  let submission = engine.getSubmission(kSearchTerm);
+  equal(
+    submission.uri.spec,
+    `${expectedURL}&foo=bar&bar=foo`,
+    "Search URLs should match"
+  );
+
+  let expectedSuggestURL = kSearchSuggestURL.replace(
+    "{searchTerms}",
+    kSearchTerm
+  );
+  let submissionSuggest = engine.getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
+  equal(
+    submissionSuggest.uri.spec,
+    `${expectedSuggestURL}&foo=bar&bar=foo`,
+    "Suggest URLs should match"
+  );
+
+  await ext1.unload();
+});
+
 add_task(async function test_extension_post_params() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
