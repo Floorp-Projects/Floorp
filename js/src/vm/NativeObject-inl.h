@@ -319,33 +319,35 @@ inline void NativeObject::reverseDenseElementsNoPreBarrier(uint32_t length) {
 inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,
                                                        uint32_t index,
                                                        uint32_t extra) {
+  // Ensure that the array's contents have been initialized up to index, and
+  // mark the elements through 'index + extra' as initialized in preparation
+  // for a write.
+
   MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(!denseElementsAreFrozen());
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
+  MOZ_ASSERT(index + extra <= getDenseCapacity());
 
   if (writeToIndexWouldMarkNotPacked(index)) {
     markDenseElementsNotPacked(cx);
   }
 
-  /*
-   * Ensure that the array's contents have been initialized up to index, and
-   * mark the elements through 'index + extra' as initialized in preparation
-   * for a write.
-   */
-  MOZ_ASSERT(index + extra <= getDenseCapacity());
-  uint32_t& initlen = getElementsHeader()->initializedLength;
-
-  if (initlen < index + extra) {
-    MOZ_ASSERT(isExtensible());
-    uint32_t numShifted = getElementsHeader()->numShiftedElements();
-    size_t offset = initlen;
-    for (HeapSlot* sp = elements_ + initlen; sp != elements_ + (index + extra);
-         sp++, offset++) {
-      sp->init(this, HeapSlot::Element, offset + numShifted,
-               MagicValue(JS_ELEMENTS_HOLE));
-    }
-    initlen = index + extra;
+  uint32_t initlen = getDenseInitializedLength();
+  if (index + extra <= initlen) {
+    return;
   }
+
+  MOZ_ASSERT(isExtensible());
+
+  uint32_t numShifted = getElementsHeader()->numShiftedElements();
+  size_t offset = initlen;
+  for (HeapSlot* sp = elements_ + initlen; sp != elements_ + (index + extra);
+       sp++, offset++) {
+    sp->init(this, HeapSlot::Element, offset + numShifted,
+             MagicValue(JS_ELEMENTS_HOLE));
+  }
+
+  getElementsHeader()->initializedLength = index + extra;
 }
 
 DenseElementResult NativeObject::extendDenseElements(JSContext* cx,
