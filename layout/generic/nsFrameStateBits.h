@@ -402,7 +402,7 @@ FRAME_STATE_BIT(GridContainer, 29, NS_STATE_GRID_IS_ROW_MASONRY)
 // == Frame state bits that apply to SVG frames ===============================
 
 FRAME_STATE_GROUP_NAME(SVG)
-FRAME_STATE_GROUP_CLASS(SVG, nsSVGDisplayableFrame)
+FRAME_STATE_GROUP_CLASS(SVG, ISVGDisplayableFrame)
 FRAME_STATE_GROUP_CLASS(SVG, SVGContainerFrame)
 
 // If this bit is set, we are a <clipPath> element or descendant.

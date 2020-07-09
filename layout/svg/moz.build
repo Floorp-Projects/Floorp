@@ -16,7 +16,6 @@ if CONFIG['ENABLE_TESTS']:
 ]
 
 EXPORTS += [
-    'nsSVGDisplayableFrame.h',
     'nsSVGIntegrationUtils.h',
     'nsSVGUtils.h',
 ]
@@ -24,6 +23,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'CSSClipPathInstance.h',
     'FilterInstance.h',
+    'ISVGDisplayableFrame.h',
     'SVGClipPathFrame.h',
     'SVGContainerFrame.h',
     'SVGContextPaint.h',

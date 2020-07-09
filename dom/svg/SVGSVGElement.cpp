@@ -14,6 +14,7 @@
 #include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGViewElement.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILTimeContainer.h"
@@ -24,8 +25,7 @@
 #include "DOMSVGPoint.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
-#include "nsISVGSVGFrame.h"
-#include "nsSVGDisplayableFrame.h"
+#include "ISVGSVGFrame.h"
 #include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
@@ -497,7 +497,7 @@ bool SVGSVGElement::WillBeOutermostSVG(nsINode& aParent) const {
   nsINode* parent = &aParent;
   while (parent && parent->IsSVGElement()) {
     if (parent->IsSVGElement(nsGkAtoms::foreignObject)) {
-      // SVG in a foreignObject must have its own <svg> (nsSVGOuterSVGFrame).
+      // SVG in a foreignObject must have its own <svg> (SVGOuterSVGFrame).
       return false;
     }
     if (parent->IsSVGElement(nsGkAtoms::svg)) {
@@ -510,11 +510,11 @@ bool SVGSVGElement::WillBeOutermostSVG(nsINode& aParent) const {
 }
 
 void SVGSVGElement::InvalidateTransformNotifyFrame() {
-  nsISVGSVGFrame* svgframe = do_QueryFrame(GetPrimaryFrame());
+  ISVGSVGFrame* svgframe = do_QueryFrame(GetPrimaryFrame());
   // might fail this check if we've failed conditional processing
   if (svgframe) {
     svgframe->NotifyViewportOrTransformChanged(
-        nsSVGDisplayableFrame::TRANSFORM_CHANGED);
+        ISVGDisplayableFrame::TRANSFORM_CHANGED);
   }
 }
 

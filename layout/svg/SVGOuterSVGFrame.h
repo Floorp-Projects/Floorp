@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/UniquePtr.h"
-#include "nsISVGSVGFrame.h"
+#include "ISVGSVGFrame.h"
 #include "nsRegion.h"
 
 class gfxContext;
@@ -31,7 +31,7 @@ namespace mozilla {
 // SVGOuterSVGFrame class
 
 class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
-                               public nsISVGSVGFrame {
+                               public ISVGSVGFrame {
   typedef image::imgDrawingParams imgDrawingParams;
 
   friend nsContainerFrame* ::NS_NewSVGOuterSVGFrame(
@@ -109,10 +109,10 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   // Return our anonymous box child.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
-  // nsISVGSVGFrame interface:
+  // ISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 
-  // nsSVGDisplayableFrame methods:
+  // ISVGDisplayableFrame methods:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                         imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;

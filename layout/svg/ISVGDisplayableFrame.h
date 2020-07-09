@@ -8,15 +8,15 @@
 #define __NS_ISVGCHILDFRAME_H__
 
 #include "gfxMatrix.h"
+#include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsQueryFrame.h"
+#include "nsRect.h"
 #include "mozilla/gfx/MatrixFwd.h"
 
 class gfxContext;
 class nsIFrame;
 class SVGBBox;
-
-struct nsRect;
 
 namespace mozilla {
 class SVGAnimatedLengthList;
@@ -25,11 +25,13 @@ class SVGLengthList;
 class SVGNumberList;
 class SVGUserUnitList;
 
-}  // namespace mozilla
+namespace image {
+struct imgDrawingParams;
+}  // namespace image
 
 /**
  * This class is used for elements that can be part of a directly displayable
- * section of a document.  This includes SVGGeometryFrame and nsSVGGframe.
+ * section of a document.  This includes SVGGeometryFrame and SVGGFrame.
  * (Even though the latter doesn't display anything itself, if it contains
  * SVGGeometryFrame descendants it is can still be part of a displayable
  * section of a document)  This class is not used for elements that can never
@@ -38,20 +40,15 @@ class SVGUserUnitList;
  * *directly* displayed in a document.  It can only end up being displayed by
  * means of a reference from other content.)
  *
- * Note specifically that SVG frames that inherit nsSVGContainerFrame do *not*
- * implement this class (only those that inherit nsSVGDisplayContainerFrame
+ * Note specifically that SVG frames that inherit SVGContainerFrame do *not*
+ * implement this class (only those that inherit SVGDisplayContainerFrame
  * do.)
  */
-class nsSVGDisplayableFrame : public nsQueryFrame {
+class ISVGDisplayableFrame : public nsQueryFrame {
  public:
-  typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
-  typedef mozilla::SVGNumberList SVGNumberList;
-  typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
-  typedef mozilla::SVGLengthList SVGLengthList;
-  typedef mozilla::SVGUserUnitList SVGUserUnitList;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+  typedef image::imgDrawingParams imgDrawingParams;
 
-  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayableFrame)
+  NS_DECL_QUERYFRAME_TARGET(ISVGDisplayableFrame)
 
   /**
    * Paint this frame.
@@ -62,9 +59,9 @@ class nsSVGDisplayableFrame : public nsQueryFrame {
    * always painted using recursive PaintSVG calls since display list painting
    * would provide no advantages (they wouldn't be retained for invalidation).
    * Displayed SVG is normally painted via a display list tree created under
-   * nsSVGOuterSVGFrame::BuildDisplayList, unless the
+   * SVGOuterSVGFrame::BuildDisplayList, unless the
    * svg.display-lists.painting.enabled pref has been set to false by the user
-   * in which case it is done via an nsSVGOuterSVGFrame::PaintSVG() call that
+   * in which case it is done via an SVGOuterSVGFrame::PaintSVG() call that
    * recurses over the entire SVG frame tree.  In future we may use PaintSVG()
    * calls on SVG container frames to avoid display list construction when it
    * is expensive and unnecessary (see bug 934411).
@@ -97,23 +94,20 @@ class nsSVGDisplayableFrame : public nsQueryFrame {
 
   // Called on SVG child frames (except NS_FRAME_IS_NONDISPLAY frames)
   // to update and then invalidate their cached bounds. This method is not
-  // called until after the nsSVGOuterSVGFrame has had its initial reflow
+  // called until after the SVGOuterSVGFrame has had its initial reflow
   // (i.e. once the SVG viewport dimensions are known). It should also only
-  // be called by nsSVGOuterSVGFrame during its reflow.
+  // be called by SVGOuterSVGFrame during its reflow.
   virtual void ReflowSVG() = 0;
 
   // Flags to pass to NotifySVGChange:
   //
-  // DO_NOT_NOTIFY_RENDERING_OBSERVERS:
-  //   this should only be used when updating the descendant frames of a
-  //   clipPath, mask, pattern or marker frame (or other similar
-  //   NS_FRAME_IS_NONDISPLAY frame) immediately prior to painting that frame's
-  //   descendants.
   // TRANSFORM_CHANGED:
   //   the current transform matrix for this frame has changed
   // COORD_CONTEXT_CHANGED:
   //   the dimensions of this frame's coordinate context has changed (percentage
   //   lengths must be reevaluated)
+  // FULL_ZOOM_CHANGED:
+  //   the page's zoom level has changed
   enum SVGChangedFlags {
     TRANSFORM_CHANGED = 0x01,
     COORD_CONTEXT_CHANGED = 0x02,
@@ -151,11 +145,13 @@ class nsSVGDisplayableFrame : public nsQueryFrame {
    * @param aFlags Flags indicating whether, stroke, for example, should be
    *   included in the bbox calculation.
    */
-  virtual SVGBBox GetBBoxContribution(
-      const mozilla::gfx::Matrix& aToBBoxUserspace, uint32_t aFlags) = 0;
+  virtual SVGBBox GetBBoxContribution(const gfx::Matrix& aToBBoxUserspace,
+                                      uint32_t aFlags) = 0;
 
   // Are we a container frame?
   virtual bool IsDisplayContainer() = 0;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_ISVGCHILDFRAME_H__

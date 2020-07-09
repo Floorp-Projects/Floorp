@@ -58,7 +58,7 @@ class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(SVGImageFrame)
 
-  // nsSVGDisplayableFrame interface:
+  // ISVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                         imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;

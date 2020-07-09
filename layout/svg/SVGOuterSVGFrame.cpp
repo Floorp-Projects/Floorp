@@ -168,7 +168,7 @@ void SVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(SVGOuterSVGFrame)
-  NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
+  NS_QUERYFRAME_ENTRY(ISVGSVGFrame)
 NS_QUERYFRAME_TAIL_INHERITING(SVGDisplayContainerFrame)
 
 //----------------------------------------------------------------------
@@ -800,7 +800,7 @@ void SVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 //----------------------------------------------------------------------
-// nsISVGSVGFrame methods:
+// ISVGSVGFrame methods:
 
 void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
   MOZ_ASSERT(aFlags && !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED |
@@ -857,7 +857,7 @@ void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
 }
 
 //----------------------------------------------------------------------
-// nsSVGDisplayableFrame methods:
+// ISVGDisplayableFrame methods:
 
 void SVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                                 const gfxMatrix& aTransform,

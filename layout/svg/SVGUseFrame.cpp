@@ -84,7 +84,7 @@ void SVGUseFrame::HrefChanged() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGDisplayableFrame methods
+// ISVGDisplayableFrame methods
 
 void SVGUseFrame::ReflowSVG() {
   // We only handle x/y offset here, since any width/height that is in force is

@@ -11,8 +11,8 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "nsIFrame.h"
+#include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/SVGContainerFrame.h"
-#include "nsSVGDisplayableFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "mozilla/dom/SVGViewportElement.h"
 
@@ -23,7 +23,7 @@ using namespace mozilla::image;
 namespace mozilla {
 
 //----------------------------------------------------------------------
-// nsSVGDisplayableFrame methods
+// ISVGDisplayableFrame methods
 
 void SVGViewportFrame::PaintSVG(gfxContext& aContext,
                                 const gfxMatrix& aTransform,
@@ -244,7 +244,7 @@ nsIFrame* SVGViewportFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 }
 
 //----------------------------------------------------------------------
-// nsISVGSVGFrame methods:
+// ISVGSVGFrame methods:
 
 void SVGViewportFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
   // The dimensions of inner-<svg> frames are purely defined by their "width"

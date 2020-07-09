@@ -8,10 +8,10 @@
 #define NS_SVGCONTAINERFRAME_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
-#include "nsSVGDisplayableFrame.h"
 #include "nsQueryFrame.h"
 #include "nsRect.h"
 #include "nsSVGUtils.h"
@@ -114,7 +114,7 @@ class SVGContainerFrame : public nsContainerFrame {
  * SVG namespace. Do *not* blindly cast to SVG element types.
  */
 class SVGDisplayContainerFrame : public SVGContainerFrame,
-                                 public nsSVGDisplayableFrame {
+                                 public ISVGDisplayableFrame {
  protected:
   SVGDisplayContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                            nsIFrame::ClassID aID)
@@ -142,7 +142,7 @@ class SVGDisplayContainerFrame : public SVGContainerFrame,
       Matrix* aOwnTransform = nullptr,
       Matrix* aFromParentTransform = nullptr) const override;
 
-  // nsSVGDisplayableFrame interface:
+  // ISVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                         imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;

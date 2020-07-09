@@ -28,7 +28,7 @@
 #include "nsStyleStruct.h"
 #include "nsStyleTransformMatrix.h"
 #include "SVGAnimatedLength.h"
-#include "nsSVGDisplayableFrame.h"
+#include "ISVGDisplayableFrame.h"
 #include "SVGFilterPaintCallback.h"
 #include "nsSVGIntegrationUtils.h"
 #include "SVGPaintServerFrame.h"
@@ -154,7 +154,7 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
   // ReflowSVG is called. If we try to mark dirty bits on frames while we're
   // in the process of removing them, things will get messed up.
   NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
-               "Do not call under nsSVGDisplayableFrame::ReflowSVG!");
+               "Do not call under ISVGDisplayableFrame::ReflowSVG!");
 
   // We don't call SVGObserverUtils::InvalidateRenderingObservers here because
   // we should only be called under InvalidateAndScheduleReflowSVG (which
@@ -291,7 +291,7 @@ SVGOuterSVGFrame* nsSVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {
 
 nsIFrame* nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
                                                        nsRect* aRect) {
-  nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
+  ISVGDisplayableFrame* svg = do_QueryFrame(aFrame);
   if (!svg) {
     return nullptr;
   }
@@ -365,7 +365,7 @@ gfxMatrix nsSVGUtils::GetCanvasTM(nsIFrame* aFrame) {
 
 void nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
   for (nsIFrame* kid : aFrame->PrincipalChildList()) {
-    nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+    ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(aFlags);
     } else {
@@ -388,7 +388,7 @@ class SVGPaintCallback : public SVGFilterPaintCallback {
   virtual void Paint(gfxContext& aContext, nsIFrame* aTarget,
                      const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
                      imgDrawingParams& aImgParams) override {
-    nsSVGDisplayableFrame* svgFrame = do_QueryFrame(aTarget);
+    ISVGDisplayableFrame* svgFrame = do_QueryFrame(aTarget);
     NS_ASSERTION(svgFrame, "Expected SVG frame here");
 
     nsIntRect* dirtyRect = nullptr;
@@ -581,7 +581,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 
-  nsSVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
+  ISVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame) {
     return;
   }
@@ -848,7 +848,7 @@ nsIFrame* nsSVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,
   nsIFrame* result = nullptr;
   for (nsIFrame* current = aFrame->PrincipalChildList().LastChild(); current;
        current = current->GetPrevSibling()) {
-    nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(current);
+    ISVGDisplayableFrame* SVGFrame = do_QueryFrame(current);
     if (SVGFrame) {
       const nsIContent* content = current->GetContent();
       if (content->IsSVGElement() &&
@@ -987,7 +987,7 @@ gfxRect nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
     aFrame = ancestor;
   }
 
-  nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
+  ISVGDisplayableFrame* svg = do_QueryFrame(aFrame);
   const bool hasSVGLayout = aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
   if (hasSVGLayout && !svg) {
     // An SVG frame, but not one that can be displayed directly (for
@@ -1609,7 +1609,7 @@ uint16_t nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
 
 void nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext) {
   nsIFrame* frame = aElement->GetPrimaryFrame();
-  nsSVGDisplayableFrame* svgFrame = do_QueryFrame(frame);
+  ISVGDisplayableFrame* svgFrame = do_QueryFrame(frame);
   if (!svgFrame) {
     return;
   }
@@ -1630,7 +1630,7 @@ bool nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
                                     const gfxMatrix& aSVGToAppSpace,
                                     gfxRect* aResult) {
   nsIFrame* frame = aElement->GetPrimaryFrame();
-  nsSVGDisplayableFrame* svgFrame = do_QueryFrame(frame);
+  ISVGDisplayableFrame* svgFrame = do_QueryFrame(frame);
   if (!svgFrame) {
     return false;
   }

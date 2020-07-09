@@ -13,11 +13,11 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/ISVGDisplayableFrame.h"
+#include "mozilla/SVGContentUtils.h"
+#include "mozilla/SVGTextFrame.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
-#include "SVGTextFrame.h"
-#include "SVGContentUtils.h"
-#include "nsSVGDisplayableFrame.h"
 #include "nsSVGUtils.h"
 
 using namespace mozilla::gfx;
@@ -169,7 +169,7 @@ already_AddRefed<SVGRect> SVGTransformableElement::GetBBox(
   if (!frame || (frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
     return ZeroBBox(*this);
   }
-  nsSVGDisplayableFrame* svgframe = do_QueryFrame(frame);
+  ISVGDisplayableFrame* svgframe = do_QueryFrame(frame);
 
   if (!svgframe) {
     if (!nsSVGUtils::IsInSVGTextSubtree(frame)) {
