@@ -888,7 +888,26 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     );
   },
 
+  /**
+   * Check if the DOM event received when picking shold be ignored.
+   * @param {Event} event
+   */
+  _ignoreEventWhenPicking(event) {
+    return (
+      !this._isPicking ||
+      // If the DOM event is about a remote frame, only the WalkerActor for that
+      // remote frame target should emit RDP events (hovered/picked/...). And
+      // all other WalkerActor for intermediate iframe and top level document
+      // targets should stay silent.
+      isRemoteFrame(event.originalTarget || event.target)
+    );
+  },
+
   _preventContentEvent(event) {
+    if (this._ignoreEventWhenPicking(event)) {
+      return;
+    }
+
     event.stopPropagation();
     event.preventDefault();
 
@@ -918,14 +937,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         Current click event.
    */
   onPick(event) {
-    if (
-      !this._isPicking ||
-      // If the DOM event is about a remote frame, only the WalkerActor for that
-      // remote frame target should emit RDP events (hovered/picked/...). And
-      // all other WalkerActor for intermediate iframe and top level document
-      // targets should stay silent.
-      isRemoteFrame(event.originalTarget || event.target)
-    ) {
+    if (this._ignoreEventWhenPicking(event)) {
       return;
     }
 
@@ -959,14 +971,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         Current hover event.
    */
   async onHovered(event) {
-    if (
-      !this._isPicking ||
-      // If the DOM event is about a remote frame, only the WalkerActor for that
-      // remote frame target should emit RDP events (hovered/picked/...). And
-      // all other WalkerActor for intermediate iframe and top level document
-      // targets should stay silent.
-      isRemoteFrame(event.originalTarget || event.target)
-    ) {
+    if (this._ignoreEventWhenPicking(event)) {
       return;
     }
 
@@ -997,15 +1002,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         Current keyboard event.
    */
   onKey(event) {
-    if (
-      !this._currentAccessible ||
-      !this._isPicking ||
-      // If the DOM event is about a remote frame, only the WalkerActor for that
-      // remote frame target should emit RDP events (hovered/picked/...). And
-      // all other WalkerActor for intermediate iframe and top level document
-      // targets should stay silent.
-      isRemoteFrame(event.originalTarget || event.target)
-    ) {
+    if (!this._currentAccessible || this._ignoreEventWhenPicking(event)) {
       return;
     }
 
