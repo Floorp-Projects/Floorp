@@ -228,8 +228,8 @@ class OSXBootstrapper(BaseBootstrapper):
         elif self.os_version >= StrictVersion('10.7'):
             select = self.which('xcode-select')
             try:
-                output = self.check_output([select, '--print-path'],
-                                           stderr=subprocess.STDOUT)
+                output = subprocess.check_output([select, '--print-path'],
+                                                 stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 # This seems to appear on fresh OS X machines before any Xcode
                 # has been installed. It may only occur on OS X 10.9 and later.
@@ -251,14 +251,14 @@ class OSXBootstrapper(BaseBootstrapper):
         # Once Xcode is installed, you need to agree to the license before you can
         # use it.
         try:
-            output = self.check_output(['/usr/bin/xcrun', 'clang'],
-                                       stderr=subprocess.STDOUT)
+            output = subprocess.check_output(['/usr/bin/xcrun', 'clang'],
+                                             stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             if b'license' in e.output:
                 xcodebuild = self.which('xcodebuild')
                 try:
-                    self.check_output([xcodebuild, '-license'],
-                                      stderr=subprocess.STDOUT)
+                    subprocess.check_output([xcodebuild, '-license'],
+                                            stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as e:
                     if b'requires admin privileges' in e.output:
                         self.run_as_root([xcodebuild, '-license'])
@@ -272,8 +272,8 @@ class OSXBootstrapper(BaseBootstrapper):
                 print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
                 sys.exit(1)
 
-            output = self.check_output(['/usr/bin/clang', '--version'],
-                                       universal_newlines=True)
+            output = subprocess.check_output(['/usr/bin/clang', '--version'],
+                                             universal_newlines=True)
             match = RE_CLANG_VERSION.search(output)
             if match is None:
                 raise Exception('Could not determine Clang version.')
@@ -302,15 +302,15 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_package_manager_updated()
         cmd = [self.brew] + extra_brew_args
 
-        installed = set(self.check_output(cmd + ['list'],
-                                          universal_newlines=True).split())
+        installed = set(subprocess.check_output(
+            cmd + ['list'], universal_newlines=True).split())
         to_install = set(
             package for package in packages if package not in installed)
 
         # The "--quiet" tells "brew" to only list the package names, and not the
         # comparison between current and new version.
-        outdated = set(self.check_output(cmd + ['outdated', '--quiet'],
-                                         universal_newlines=True).split())
+        outdated = set(subprocess.check_output(cmd + ['outdated', '--quiet'],
+                                               universal_newlines=True).split())
         to_upgrade = set(package for package in packages if package in outdated)
 
         if to_install or to_upgrade:
@@ -332,18 +332,19 @@ class OSXBootstrapper(BaseBootstrapper):
     def _ensure_homebrew_casks(self, casks):
         self._ensure_homebrew_found()
 
-        known_taps = self.check_output([self.brew, 'tap'])
+        known_taps = subprocess.check_output([self.brew, 'tap'])
 
         # Ensure that we can access old versions of packages.
         if b'homebrew/cask-versions' not in known_taps:
-            self.check_output([self.brew, 'tap', 'homebrew/cask-versions'])
+            subprocess.check_output([self.brew, 'tap',
+                                     'homebrew/cask-versions'])
 
         # "caskroom/versions" has been renamed to "homebrew/cask-versions", so
         # it is safe to remove the old tap. Removing the old tap is necessary
         # to avoid the error "Cask [name of cask] exists in multiple taps".
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1544981
         if b'caskroom/versions' in known_taps:
-            self.check_output([self.brew, 'untap', 'caskroom/versions'])
+            subprocess.check_output([self.brew, 'untap', 'caskroom/versions'])
 
         # Change |brew install cask| into |brew cask install cask|.
         self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
@@ -415,7 +416,7 @@ class OSXBootstrapper(BaseBootstrapper):
         assert self.port is not None
 
         installed = set(
-            self.check_output(
+            subprocess.check_output(
                 [self.port, 'installed'],
                 universal_newlines=True).split())
 
@@ -440,7 +441,7 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_macports_packages(packages)
 
         pythons = set(
-            self.check_output(
+            subprocess.check_output(
                 [self.port, 'select', '--list', 'python'],
                 universal_newlines=True).split('\n'))
         active = ''

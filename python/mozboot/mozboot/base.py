@@ -442,14 +442,6 @@ class BaseBootstrapper(object):
 
         self.run_as_root(command)
 
-    def check_output(self, *args, **kwargs):
-        """Run subprocess.check_output even if Python doesn't provide it."""
-        # TODO Legacy Python 2.6 code, can be removed.
-        # We had a custom check_output() function for Python 2.6 backward
-        # compatibility.  Since py2.6 support was dropped we can remove this
-        # method.
-        return subprocess.check_output(*args, **kwargs)
-
     def prompt_int(self, prompt, low, high, limit=5):
         ''' Prompts the user with prompt and requires an integer between low and high. '''
         valid = False
@@ -517,11 +509,11 @@ class BaseBootstrapper(object):
         if name.endswith('.exe'):
             name = name[:-4]
 
-        info = self.check_output([path, version_param],
-                                 env=env,
-                                 stderr=subprocess.STDOUT,
-                                 universal_newlines=True)
+        info = subprocess.check_output(
+            [path, version_param], env=env, stderr=subprocess.STDOUT,
+            universal_newlines=True)
         match = re.search(name + ' ([a-z0-9\.]+)', info)
+
         if not match:
             print('ERROR! Unable to identify %s version.' % name)
             return None
