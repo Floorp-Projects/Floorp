@@ -41,7 +41,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_QUERYFRAME_HEAD(SVGDisplayContainerFrame)
   NS_QUERYFRAME_ENTRY(SVGDisplayContainerFrame)
-  NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
+  NS_QUERYFRAME_ENTRY(ISVGDisplayableFrame)
 NS_QUERYFRAME_TAIL_INHERITING(SVGContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGContainerFrame)
@@ -162,7 +162,7 @@ void SVGDisplayContainerFrame::InsertFrames(
                        NS_FRAME_IS_NONDISPLAY)) {
     for (nsIFrame* kid = firstNewFrame; kid != nextFrame;
          kid = kid->GetNextSibling()) {
-      nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+      ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         MOZ_ASSERT(!kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                    "Check for this explicitly in the |if|, then");
@@ -227,7 +227,7 @@ bool SVGDisplayContainerFrame::IsSVGTransformed(
 }
 
 //----------------------------------------------------------------------
-// nsSVGDisplayableFrame methods
+// ISVGDisplayableFrame methods
 
 void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                                         const gfxMatrix& aTransform,
@@ -312,7 +312,7 @@ void SVGDisplayContainerFrame::ReflowSVG() {
   nsOverflowAreas overflowRects;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+    ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       MOZ_ASSERT(!kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                  "Check for this explicitly in the |if|, then");
@@ -384,7 +384,7 @@ SVGBBox SVGDisplayContainerFrame::GetBBoxContribution(
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsIContent* content = kid->GetContent();
-    nsSVGDisplayableFrame* svgKid = do_QueryFrame(kid);
+    ISVGDisplayableFrame* svgKid = do_QueryFrame(kid);
     // content could be a XUL element so check for an SVG element before casting
     if (svgKid &&
         (!content->IsSVGElement() ||

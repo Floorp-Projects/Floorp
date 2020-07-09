@@ -53,7 +53,7 @@ class SVGUseFrame final : public SVGGFrame {
   }
 #endif
 
-  // nsSVGDisplayableFrame interface:
+  // ISVGDisplayableFrame interface:
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;
 
