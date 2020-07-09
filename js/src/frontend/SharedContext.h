@@ -131,10 +131,11 @@ class SharedContext {
   // See: BaseScript::immutableFlags_
   ImmutableScriptFlags immutableFlags_ = {};
 
- public:
   // The location of this script in the source. Note that the value here differs
   // from the final BaseScript for the case of standalone functions.
-  SourceExtent extent = {};
+  // This field is copied to ScriptStencil, and shouldn't be modified after the
+  // copy.
+  SourceExtent extent_ = {};
 
  protected:
   // See: ThisBinding
@@ -175,6 +176,9 @@ class SharedContext {
     return immutableFlags_.hasFlag(flag);
   }
   void setFlag(ImmutableFlags flag, bool b = true) {
+    // TODO: enabled in later patch
+    // MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+
     immutableFlags_.setFlag(flag, b);
   }
 
@@ -201,6 +205,8 @@ class SharedContext {
   IMMUTABLE_FLAG_GETTER_SETTER(bindingsAccessedDynamically,
                                BindingsAccessedDynamically)
   IMMUTABLE_FLAG_GETTER_SETTER(hasCallSiteObj, HasCallSiteObj)
+
+  const SourceExtent& extent() const { return extent_; }
 
   bool isFunctionBox() const { return isFunction(); }
   inline FunctionBox* asFunctionBox();
@@ -253,7 +259,7 @@ class SharedContext {
     return retVal;
   }
 
-  void copyScriptFields(ScriptStencil& stencil) const;
+  void copyScriptFields(ScriptStencil& stencil);
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -624,17 +630,33 @@ class FunctionBox : public SharedContext {
   bool useAsmOrInsideUseAsm() const { return useAsm; }
 
   void setStart(uint32_t offset, uint32_t line, uint32_t column) {
-    extent.sourceStart = offset;
-    extent.lineno = line;
-    extent.column = column;
+    MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+    extent_.sourceStart = offset;
+    extent_.lineno = line;
+    extent_.column = column;
   }
 
   void setEnd(uint32_t end) {
+    MOZ_ASSERT(!isScriptFieldCopiedToStencil);
     // For all functions except class constructors, the buffer and
     // toString ending positions are the same. Class constructors override
     // the toString ending position with the end of the class definition.
-    extent.sourceEnd = end;
-    extent.toStringEnd = end;
+    extent_.sourceEnd = end;
+    extent_.toStringEnd = end;
+  }
+
+  void setCtorToStringEnd(uint32_t end) {
+    extent_.toStringEnd = end;
+    if (isScriptFieldCopiedToStencil) {
+      copyUpdatedExtent();
+    }
+  }
+
+  void setCtorFunctionHasThisBinding() {
+    immutableFlags_.setFlag(ImmutableFlags::FunctionHasThisBinding, true);
+    if (isScriptFieldCopiedToStencil) {
+      copyUpdatedImmutableFlags();
+    }
   }
 
   uint16_t length() { return length_; }
@@ -670,6 +692,14 @@ class FunctionBox : public SharedContext {
   void finishScriptFlags();
   void copyScriptFields(ScriptStencil& stencil);
   void copyFunctionFields(ScriptStencil& stencil);
+
+  // * setCtorFunctionHasThisBinding can be called to a class constructor
+  //   with a lazy function, while parsing enclosing class
+  void copyUpdatedImmutableFlags();
+
+  // * setCtorToStringEnd bcan be called to a class constructor with a lazy
+  //   function, while parsing enclosing class
+  void copyUpdatedExtent();
 
   // * setFieldInitializers can be called to a class constructor with a lazy
   //   function, while emitting enclosing script

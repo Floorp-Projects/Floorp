@@ -104,7 +104,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
-      bytecodeSection_(cx, sc->extent.lineno),
+      bytecodeSection_(cx, sc->extent().lineno),
       perScriptData_(cx, compilationInfo),
       compilationInfo(compilationInfo),
       emitterMode(emitterMode) {
@@ -2444,7 +2444,6 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   // Create a Stencil and convert it into a JSScript.
-  compilationInfo.topLevelExtent = sc->extent;
   return intoScriptStencil(compilationInfo.topLevel.address());
 }
 

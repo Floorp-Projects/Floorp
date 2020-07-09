@@ -28,7 +28,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
                              Directives directives, SourceExtent extent)
     : cx_(cx),
       compilationInfo_(compilationInfo),
-      extent(extent),
+      extent_(extent),
       allowNewTarget_(false),
       allowSuperProperty_(false),
       allowSuperCall_(false),
@@ -271,7 +271,7 @@ bool FunctionBox::hasFunction() const {
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
   immutableFlags_ = lazy->immutableFlags();
-  extent = lazy->extent();
+  extent_ = lazy->extent();
 }
 
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
@@ -467,11 +467,18 @@ MutableHandle<ScriptStencil> FunctionBox::functionStencil() const {
   return compilationInfo_.funcData[funcDataIndex_];
 }
 
-void SharedContext::copyScriptFields(ScriptStencil& stencil) const {
+void SharedContext::copyScriptFields(ScriptStencil& stencil) {
+  MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+
   stencil.immutableFlags = immutableFlags_;
+  stencil.extent = extent_;
+
+  isScriptFieldCopiedToStencil = true;
 }
 
 void FunctionBox::finishScriptFlags() {
+  MOZ_ASSERT(!isScriptFieldCopiedToStencil);
+
   using ImmutableFlags = ImmutableScriptFlagsEnum;
   immutableFlags_.setFlag(ImmutableFlags::HasMappedArgsObj, hasMappedArgsObj());
   immutableFlags_.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
@@ -480,7 +487,6 @@ void FunctionBox::finishScriptFlags() {
 
 void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
   MOZ_ASSERT(&stencil == &functionStencil().get());
-  MOZ_ASSERT(!isScriptFieldCopiedToStencil);
 
   SharedContext::copyScriptFields(stencil);
 
@@ -498,6 +504,16 @@ void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
   stencil.isAsmJSModule = isAsmJSModule_;
 
   isFunctionFieldCopiedToStencil = true;
+}
+
+void FunctionBox::copyUpdatedImmutableFlags() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.immutableFlags = immutableFlags_;
+}
+
+void FunctionBox::copyUpdatedExtent() {
+  ScriptStencil& stencil = functionStencil().get();
+  stencil.extent = extent_;
 }
 
 void FunctionBox::copyUpdatedFieldInitializers() {
