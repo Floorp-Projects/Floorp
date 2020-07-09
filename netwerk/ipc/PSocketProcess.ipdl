@@ -131,6 +131,7 @@ child:
                             bool minimizeMemoryUsage,
                             FileDescriptor? DMDFile);
   async SetOffline(bool offline);
+  async SetConnectivity(bool connectivity);
   async InitLinuxSandbox(FileDescriptor? sandboxBroker);
   async InitSocketProcessBridgeParent(ProcessId processId, Endpoint<PSocketProcessBridgeParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
