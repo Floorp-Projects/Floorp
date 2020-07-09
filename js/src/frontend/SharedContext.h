@@ -324,6 +324,8 @@ class FunctionBox : public SharedContext {
   // partially initialized enclosing scopes, so we must avoid storing the
   // scope in the BaseScript until compilation has completed
   // successfully.)
+  // This is copied to ScriptStencil.
+  // Any update after the copy should be synced to the ScriptStencil.
   mozilla::Maybe<ScopeIndex> enclosingScopeIndex_;
 
   // Names from the named lambda scope, if a named lambda.
@@ -377,16 +379,16 @@ class FunctionBox : public SharedContext {
 
   // This function is a standalone function that is not syntactically part of
   // another script. Eg. Created by `new Function("")`.
-  bool isStandalone : 1;
+  bool isStandalone_ : 1;
 
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated. This is also used to determine a hoisted
   // function already is referenced by the bytecode.
-  bool wasEmitted : 1;
+  bool wasEmitted_ : 1;
 
   // This function should be marked as a singleton. It is expected to be defined
   // at most once. This is a heuristic only and does not affect correctness.
-  bool isSingleton : 1;
+  bool isSingleton_ : 1;
 
   // Need to emit a synthesized Annex B assignment
   bool isAnnexB : 1;
@@ -464,8 +466,30 @@ class FunctionBox : public SharedContext {
 
   JSFunction* function() const;
 
+  bool isStandalone() const { return isStandalone_; }
+  void setIsStandalone(bool isStandalone) {
+    MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
+    isStandalone_ = isStandalone;
+  }
+
+  bool wasEmitted() const { return wasEmitted_; }
+  void setWasEmitted(bool wasEmitted) {
+    wasEmitted_ = wasEmitted;
+    if (isFunctionFieldCopiedToStencil) {
+      copyUpdatedWasEmitted();
+    }
+  }
+
+  bool isSingleton() const { return isSingleton_; }
+  void setIsSingleton(bool isSingleton) {
+    isSingleton_ = isSingleton;
+    if (isFunctionFieldCopiedToStencil) {
+      copyUpdatedIsSingleton();
+    }
+  }
+
   MOZ_MUST_USE bool setAsmJSModule(const JS::WasmModule* module);
-  bool isAsmJSModule() { return isAsmJSModule_; }
+  bool isAsmJSModule() const { return isAsmJSModule_; }
 
   Scope* compilationEnclosingScope() const override;
 
@@ -699,11 +723,23 @@ class FunctionBox : public SharedContext {
   //   function, while emitting enclosing script
   void copyUpdatedFieldInitializers();
 
+  // * setEnclosingScopeForInnerLazyFunction can be called to a lazy function,
+  //   while emitting enclosing script
+  void copyUpdatedEnclosingScopeIndex();
+
   // * setInferredName can be called to a lazy function, while emitting
   //   enclosing script
   // * setGuessedAtom can be called to both lazy/non-lazy functions,
   //   while running NameFunctions
   void copyUpdatedAtomAndFlags();
+
+  // * setWasEmitted can be called to a lazy function, while emitting
+  //   enclosing script
+  void copyUpdatedWasEmitted();
+
+  // * setIsSingleton can be called to a lazy function, while emitting
+  //   enclosing script
+  void copyUpdatedIsSingleton();
 };
 
 #undef FLAG_GETTER_SETTER
