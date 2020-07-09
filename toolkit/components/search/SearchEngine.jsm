@@ -879,14 +879,16 @@ class SearchEngine {
    *   The url type.
    * @param {object} params
    *   The URL parameters.
-   * @param {string} [params.getParams]
-   *   Any parameters for a GET method.
+   * @param {string|array} [params.getParams]
+   *   Any parameters for a GET method. This is either a query string, or
+   *   an array of objects which have name/value pairs.
    * @param {string} [params.method]
    *   The type of method, defaults to GET.
    * @param {string} [params.mozParams]
    *   Any special Mozilla Parameters.
-   * @param {string} [params.postParams]
-   *   Any parameters for a POST method.
+   * @param {string|array} [params.postParams]
+   *   Any parameters for a POST method. This is either a query string, or
+   *   an array of objects which have name/value pairs.
    * @param {string} params.template
    *   The url template.
    */
@@ -903,18 +905,27 @@ class SearchEngine {
         url._addMozParam(p);
       }
     }
-
     if (params.postParams) {
-      let queries = new URLSearchParams(params.postParams);
-      for (let [name, value] of queries) {
-        url.addParam(name, value);
+      if (Array.isArray(params.postParams)) {
+        for (let { name, value } of params.postParams) {
+          url.addParam(name, value);
+        }
+      } else {
+        for (let [name, value] of new URLSearchParams(params.postParams)) {
+          url.addParam(name, value);
+        }
       }
     }
 
     if (params.getParams) {
-      let queries = new URLSearchParams(params.getParams);
-      for (let [name, value] of queries) {
-        url.addParam(name, value);
+      if (Array.isArray(params.getParams)) {
+        for (let { name, value } of params.getParams) {
+          url.addParam(name, value);
+        }
+      } else {
+        for (let [name, value] of new URLSearchParams(params.getParams)) {
+          url.addParam(name, value);
+        }
       }
     }
 
@@ -1023,8 +1034,9 @@ class SearchEngine {
         return !(param.value && param.value.startsWith("__MSG_"));
       });
     }
+
     let postParams =
-      configuration.searchUrlPostParams ||
+      configuration.params?.searchUrlPostParams ||
       searchProvider.search_url_post_params ||
       "";
     this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SEARCH, {
@@ -1033,7 +1045,7 @@ class SearchEngine {
       // to ensure we're always dealing with decoded urls.
       template: decodeURI(searchProvider.search_url),
       getParams:
-        configuration.searchUrlGetParams ||
+        configuration.params?.searchUrlGetParams ||
         searchProvider.search_url_get_params ||
         "",
       postParams,
@@ -1042,7 +1054,7 @@ class SearchEngine {
 
     if (searchProvider.suggest_url) {
       let suggestPostParams =
-        configuration.suggestUrlPostParams ||
+        configuration.params?.suggestUrlPostParams ||
         searchProvider.suggest_url_post_params ||
         "";
       this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SUGGEST_JSON, {
@@ -1050,7 +1062,7 @@ class SearchEngine {
         // suggest_url doesn't currently get encoded.
         template: searchProvider.suggest_url,
         getParams:
-          configuration.suggestUrlGetParams ||
+          configuration.params?.suggestUrlGetParams ||
           searchProvider.suggest_url_get_params ||
           "",
         postParams: suggestPostParams,
