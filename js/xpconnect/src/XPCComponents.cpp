@@ -8,6 +8,7 @@
 
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
+#include "JSServices.h"
 #include "XPCJSWeakReference.h"
 #include "WrapperFactory.h"
 #include "nsJSUtils.h"
@@ -1316,6 +1317,16 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox** aSandbox) {
   nsCOMPtr<nsIXPCComponents_utils_Sandbox> rval = mSandbox;
   rval.forget(aSandbox);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateServicesCache(JSContext* aCx,
+                                           MutableHandleValue aServices) {
+  if (JSObject* services = NewJSServices(aCx)) {
+    aServices.setObject(*services);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
