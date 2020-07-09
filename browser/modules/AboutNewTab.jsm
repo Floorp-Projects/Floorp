@@ -242,6 +242,7 @@ const AboutNewTab = {
     let processStartTs = startupInfo.process.getTime();
     let delta = Math.round(timestamp - processStartTs);
     Services.telemetry.scalarSet(SCALAR_KEY, delta);
+    ChromeUtils.addProfilerMarker("aboutHomeTopsitesFirstPaint");
     this._alreadyRecordedTopsitesPainted = true;
   },
 
