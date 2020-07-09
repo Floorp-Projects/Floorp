@@ -51,6 +51,7 @@ async function initAccessibilityService() {
 
 add_task(async function switchToTab() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
