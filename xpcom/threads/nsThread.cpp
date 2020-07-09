@@ -1233,7 +1233,9 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       event->Run();
 
-      if (!usingTaskController) {
+      if (usingTaskController) {
+        *aResult = TaskController::Get()->MTTaskRunnableProcessedTask();
+      } else {
         mEvents->DidRunEvent();
         mPerformanceCounterState.RunnableDidRun(std::move(snapshot.ref()));
       }
