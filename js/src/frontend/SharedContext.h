@@ -465,7 +465,6 @@ class FunctionBox : public SharedContext {
 
   void setEnclosingScopeForInnerLazyFunction(
       const AbstractScopePtr& enclosingScope);
-  void finish();
 
   JSFunction* function() const;
 
@@ -478,6 +477,11 @@ class FunctionBox : public SharedContext {
 
     MOZ_ASSERT(enclosingScope_);
     return enclosingScope_.scope();
+  }
+
+  bool hasEnclosingScope() const { return !!enclosingScope_; }
+  Scope* getExistingEnclosingScope() const {
+    return enclosingScope_.getExistingScope();
   }
 
   IMMUTABLE_FLAG_GETTER_SETTER(isAsync, IsAsync)

@@ -5678,7 +5678,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // Compute the field initializers data and update the funbox.
     //
     // NOTE: For a lazy function, this will be applied to any existing function
-    //       in FunctionBox::finish().
+    //       in UpdateEmittedInnerFunctions().
     if (classContentsIfConstructor) {
       mozilla::Maybe<FieldInitializers> fieldInitializers =
           setupFieldInitializers(classContentsIfConstructor,
@@ -5701,7 +5701,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // NOTE: This is a heuristic and through trick such as `fun.caller` it may
     //       still be run more than once. The VM must accomodate this.
     // NOTE: For a lazy function, this will be applied to any existing function
-    //       in FunctionBox::finish().
+    //       in UpdateEmittedInnerFunctions().
     bool isRunOnceLambda =
         emittingRunOnceLambda && !funbox->shouldSuppressRunOnce();
     funbox->setTreatAsRunOnce(isRunOnceLambda);

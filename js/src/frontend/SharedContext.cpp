@@ -396,35 +396,6 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   return compilationInfo_.asmJS.putNew(FunctionIndex(index()), module);
 }
 
-void FunctionBox::finish() {
-  if (emitBytecode || isAsmJSModule()) {
-    // Non-lazy inner functions don't use the enclosingScope_ field.
-    MOZ_ASSERT(!enclosingScope_);
-  } else {
-    // Apply updates from FunctionEmitter::emitLazy().
-    BaseScript* script = function()->baseScript();
-
-    script->setEnclosingScope(enclosingScope_.getExistingScope());
-    script->initTreatAsRunOnce(treatAsRunOnce());
-
-    if (fieldInitializers_) {
-      script->setFieldInitializers(*fieldInitializers_);
-    }
-  }
-
-  // Inferred and Guessed names are computed by BytecodeEmitter and so may need
-  // to be applied to existing JSFunctions during delazification.
-  if (function()->displayAtom() == nullptr) {
-    if (hasInferredName()) {
-      function()->setInferredName(atom_);
-    }
-
-    if (hasGuessedAtom()) {
-      function()->setGuessedAtom(atom_);
-    }
-  }
-}
-
 /* static */
 void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
   for (FunctionBox* node = listHead; node; node = node->traceLink_) {

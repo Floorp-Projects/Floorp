@@ -83,7 +83,7 @@ bool FunctionEmitter::emitLazy() {
   funbox_->wasEmitted = true;
 
   // Prepare to update the inner lazy script now that it's parent is fully
-  // compiled. These updates will be applied in FunctionBox::finish().
+  // compiled. These updates will be applied in UpdateEmittedInnerFunctions().
   funbox_->setEnclosingScopeForInnerLazyFunction(bce_->innermostScope());
 
   if (!emitFunction()) {
