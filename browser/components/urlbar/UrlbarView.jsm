@@ -1061,7 +1061,7 @@ class UrlbarView {
       result.titleHighlights
     );
 
-    if (result.payload.tail && result.payload.tailOffsetIndex >= 0) {
+    if (result.payload.tail && result.payload.tailOffsetIndex > 0) {
       this._fillTailSuggestionPrefix(item, result);
       title.setAttribute("aria-label", result.payload.suggestion);
       item.toggleAttribute("tail-suggestion", true);
