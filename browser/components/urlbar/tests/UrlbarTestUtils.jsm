@@ -598,7 +598,7 @@ class TestProvider extends UrlbarProvider {
    */
   constructor({
     results,
-    name = "TestProvider" + Math.floor(Math.random() * 100000),
+    name = Math.floor(Math.random() * 100000),
     type = UrlbarUtils.PROVIDER_TYPE.PROFILE,
     priority = 0,
     addTimeout = 0,
@@ -613,7 +613,7 @@ class TestProvider extends UrlbarProvider {
     this._onCancel = onCancel;
   }
   get name() {
-    return this._name;
+    return "TestProvider" + this._name;
   }
   get type() {
     return this._type;

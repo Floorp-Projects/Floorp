@@ -359,30 +359,16 @@ add_task(async function test_filter_priority() {
   /**
    * A test provider.
    */
-  class TestProvider extends UrlbarProvider {
+  class TestProvider extends UrlbarTestUtils.TestProvider {
     constructor(priority, shouldBeInvoked, namePart = "") {
       super();
       this._priority = priority;
-      this._name = `Provider-${priority}` + namePart;
+      this._name = `${priority}` + namePart;
       this._shouldBeInvoked = shouldBeInvoked;
-    }
-    get name() {
-      return this._name;
-    }
-    get type() {
-      return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-    }
-    isActive(context) {
-      return true;
-    }
-    getPriority(context) {
-      return this._priority;
     }
     async startQuery(context, add) {
       Assert.ok(this._shouldBeInvoked, `${this.name} was invoked`);
     }
-    cancelQuery(context) {}
-    pickResult(result) {}
   }
 
   // Test all possible orderings of the providers to make sure the logic that
