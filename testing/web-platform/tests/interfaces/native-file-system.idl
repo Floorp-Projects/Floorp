@@ -45,8 +45,8 @@ dictionary FileSystemRemoveOptions {
 interface FileSystemDirectoryHandle : FileSystemHandle {
   async iterable<USVString, FileSystemHandle>;
 
-  Promise<FileSystemFileHandle> getFile(USVString name, optional FileSystemGetFileOptions options = {});
-  Promise<FileSystemDirectoryHandle> getDirectory(USVString name, optional FileSystemGetDirectoryOptions options = {});
+  Promise<FileSystemFileHandle> getFileHandle(USVString name, optional FileSystemGetFileOptions options = {});
+  Promise<FileSystemDirectoryHandle> getDirectoryHandle(USVString name, optional FileSystemGetDirectoryOptions options = {});
 
   Promise<void> removeEntry(USVString name, optional FileSystemRemoveOptions options = {});
 
