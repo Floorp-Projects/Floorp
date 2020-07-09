@@ -263,42 +263,22 @@ interface nsISearchService : nsISupports
                     [optional] in AString extensionID);
 
   /**
-   * Adds a new search engine, without asking the user for confirmation and
-   * without starting to use it right away.
+   * Adds a new search engine for enterprises.
    *
-   * @param name
-   *        The search engine's name. Must be unique. Must not be null.
+   * @param details
+   *        An object that simulates the WebExtension manifest structure:
    *
-   * @param  details
-   *         An object that can contain the following fields:
-   *
-   *         {iconURL} Optional: A URL string pointing to the icon to be used to
-   *                   represent the engine.
-   *
-   *         {alias} Optional: A unique shortcut that can be used to retrieve the
-   *                 search engine.
-   *
-   *         {description} Optional: A description of the search engine.
-   *
-   *         {method} Optional: The HTTP request method used when submitting a
-   *                  search query. Case insensitive value of either "get" or "post".
-   *                  Defaults to "get".
-   *
-   *         {template} The template for the URL to which search queries should be
-   *                    sent. The template will be subjected to OpenSearch parameter
-   *                    substitution.
-   *                    See http://www.opensearch.org/Specifications/OpenSearch
-   *                    Must not be null.
-   *
-   *         {extensionID} Optional: The correct extensionID if called by an add-on.
-   *
-   *         {suggestURL} Optional: The URL to which search suggestion requests should
-   *                      be sent.
-   *
-   *         {postData} Optional: For POST requests, a string of URL parameters to send,
-   *                    seperated by '&'. The string will be subjected to OpenSearch
-   *                    parameter substitution.
-   *
+   *        {iconURL} Optional
+   *        {description} Optional
+   *        {chrome_settings_overrides} This should contain a {search_provider}
+   *                                    structure that mimics the WebExtension
+   *                                    manifest structure.
+   */
+  Promise addPolicyEngine(in jsval details);
+
+  /**
+   * Test-only function for adding an engine. This should be considered obsolete,
+   * and will be replaced soon (bug 1649186).
    */
   Promise addEngineWithDetails(in AString name, in jsval details);
 
