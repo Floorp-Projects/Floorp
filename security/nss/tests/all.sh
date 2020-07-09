@@ -142,7 +142,7 @@ run_cycle_standard()
     TEST_MODE=STANDARD
 
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix sdr ocsp pkits"
+    TESTS_SKIP="libpkix pkits"
 
     NSS_DEFAULT_DB_TYPE=${NSS_DEFAULT_DB_TYPE:-"sql"}
     export NSS_DEFAULT_DB_TYPE

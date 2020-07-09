@@ -3661,10 +3661,12 @@ NSC_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
     PORT_Memcpy(pInfo->model, "NSS 3           ", 16);
     PORT_Memcpy(pInfo->serialNumber, "0000000000000000", 16);
     PORT_Memcpy(pInfo->utcTime, "0000000000000000", 16);
-    pInfo->ulMaxSessionCount = 0; /* arbitrarily large */
-    pInfo->ulSessionCount = slot->sessionCount;
+    pInfo->ulMaxSessionCount = 0;   /* arbitrarily large */
     pInfo->ulMaxRwSessionCount = 0; /* arbitarily large */
+    PZ_Lock(slot->slotLock);        /* Protect sessionCount / rwSessioncount */
+    pInfo->ulSessionCount = slot->sessionCount;
     pInfo->ulRwSessionCount = slot->rwSessionCount;
+    PZ_Unlock(slot->slotLock); /* Unlock before sftk_getKeyDB */
     pInfo->firmwareVersion.major = 0;
     pInfo->firmwareVersion.minor = 0;
     PORT_Memcpy(pInfo->label, slot->tokDescription, sizeof(pInfo->label));

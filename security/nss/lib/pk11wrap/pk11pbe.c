@@ -1243,7 +1243,9 @@ PK11_CreatePBEParams(SECItem *salt, SECItem *pwd, unsigned int iterations)
     if (!pbe_params->pPassword) {
         goto loser;
     }
-    PORT_Memcpy(pbe_params->pPassword, pwd->data, pwd->len);
+    if (pwd->data) {
+        PORT_Memcpy(pbe_params->pPassword, pwd->data, pwd->len);
+    }
     pbe_params->ulPasswordLen = pwd->len;
 
     pbe_params->pSalt = (CK_CHAR_PTR)PORT_ZAlloc(salt->len);

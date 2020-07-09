@@ -997,10 +997,13 @@ tls13_ClientSendPostHandshakeAuthXtn(const sslSocket *ss,
                                      TLSExtensionData *xtnData,
                                      sslBuffer *buf, PRBool *added)
 {
-    SSL_TRC(3, ("%d: TLS13[%d]: send post_handshake_auth extension",
-                SSL_GETPID(), ss->fd));
-
-    *added = ss->opt.enablePostHandshakeAuth;
+    /* Only one post-handshake message is supported: a single
+     * NST immediately following the client Finished. */
+    if (!IS_DTLS(ss)) {
+        SSL_TRC(3, ("%d: TLS13[%d]: send post_handshake_auth extension",
+                    SSL_GETPID(), ss->fd));
+        *added = ss->opt.enablePostHandshakeAuth;
+    }
     return SECSuccess;
 }
 
@@ -1017,8 +1020,12 @@ tls13_ServerHandlePostHandshakeAuthXtn(const sslSocket *ss,
         return SECFailure;
     }
 
-    /* Keep track of negotiated extensions. */
-    xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_post_handshake_auth_xtn;
+    /* Only one post-handshake message is supported: a single
+     * NST immediately following the client Finished. */
+    if (!IS_DTLS(ss)) {
+        /* Keep track of negotiated extensions. */
+        xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_post_handshake_auth_xtn;
+    }
 
     return SECSuccess;
 }

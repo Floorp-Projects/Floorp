@@ -1181,3 +1181,9 @@ SECMOD_GetSystemFIPSEnabled;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.55 { 	# NSS 3.55 release
+;+    global:
+PK11_FindEncodedCertInSlot;
+;+    local:
+;+       *;
+;+};

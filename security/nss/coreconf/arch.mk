@@ -116,6 +116,7 @@ ifeq ($(OS_ARCH),Linux)
 	OS_RELEASE := $(word 1,$(OS_RELEASE)).$(word 2,$(OS_RELEASE))
     endif
     KERNEL = Linux
+    include $(CORE_DEPTH)/coreconf/Linux.mk
 endif
 
 # Since all uses of OS_ARCH that follow affect only userland, we can

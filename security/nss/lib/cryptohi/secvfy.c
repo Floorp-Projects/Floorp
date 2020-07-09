@@ -688,10 +688,10 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
                                                 &cx->pkcs1RSADigestInfoLen,
                                                 cx->key,
                                                 sig, cx->wincx);
-                    PORT_Assert(cx->hashAlg == hashid);
                     if (rv != SECSuccess) {
                         return SECFailure;
                     }
+                    PORT_Assert(cx->hashAlg == hashid);
                 }
                 return verifyPKCS1DigestInfo(cx, &digest);
             }

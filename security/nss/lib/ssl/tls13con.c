@@ -5704,6 +5704,10 @@ tls13_UnprotectRecord(sslSocket *ss,
                     cText->buf->buf,  /* in */
                     cText->buf->len); /* inlen */
     if (rv != SECSuccess) {
+        if (IS_DTLS(ss)) {
+            spec->deprotectionFailures++;
+        }
+
         SSL_TRC(3,
                 ("%d: TLS13[%d]: record has bogus MAC",
                  SSL_GETPID(), ss->fd));

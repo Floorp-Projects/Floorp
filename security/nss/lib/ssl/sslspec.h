@@ -169,8 +169,11 @@ struct ssl3CipherSpecStr {
      * content type octet. */
     PRUint16 recordSizeLimit;
 
-    /* Masking context used for DTLS 1.3 */
+    /* DTLS 1.3: Sequence number masking context. */
     SSLMaskingContext *maskContext;
+
+    /* DTLS 1.3: Count of decryption failures for the given key. */
+    PRUint64 deprotectionFailures;
 };
 
 typedef void (*sslCipherSpecChangedFunc)(void *arg,

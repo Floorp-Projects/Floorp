@@ -41,7 +41,7 @@ typedef enum {
     ssl_ct_alert = 21,
     ssl_ct_handshake = 22,
     ssl_ct_application_data = 23,
-    ssl_ct_ack = 25
+    ssl_ct_ack = 26
 } SSLContentType;
 
 typedef enum {

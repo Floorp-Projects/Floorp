@@ -31,6 +31,7 @@ void dtls13_HolddownTimerCb(sslSocket *ss);
 void dtls_ReceivedFirstMessageInFlight(sslSocket *ss);
 SECStatus dtls13_MaskSequenceNumber(sslSocket *ss, ssl3CipherSpec *spec,
                                     PRUint8 *hdr, PRUint8 *cipherText, PRUint32 cipherTextLen);
+PRBool dtls13_AeadLimitReached(ssl3CipherSpec *spec);
 
 CK_MECHANISM_TYPE tls13_SequenceNumberEncryptionMechanism(SSLCipherAlgorithm bulkAlgorithm);
 

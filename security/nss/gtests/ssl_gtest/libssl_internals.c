@@ -422,6 +422,24 @@ SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra) {
   return SSLInt_AdvanceWriteSeqNum(fd, to);
 }
 
+SECStatus SSLInt_AdvanceDtls13DecryptFailures(PRFileDesc *fd, PRUint64 to) {
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  ssl_GetSpecWriteLock(ss);
+  ssl3CipherSpec *spec = ss->ssl3.crSpec;
+  if (spec->cipherDef->type != type_aead) {
+    ssl_ReleaseSpecWriteLock(ss);
+    return SECFailure;
+  }
+
+  spec->deprotectionFailures = to;
+  ssl_ReleaseSpecWriteLock(ss);
+  return SECSuccess;
+}
+
 SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group) {
   const sslNamedGroupDef *groupDef = ssl_LookupNamedGroup(group);
   if (!groupDef) return ssl_kea_null;

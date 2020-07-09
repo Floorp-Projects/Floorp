@@ -519,7 +519,7 @@ ssl3_DecodeContentType(int msgType)
             rv = "application_data (23)";
             break;
         case ssl_ct_ack:
-            rv = "ack (25)";
+            rv = "ack (26)";
             break;
         default:
             sprintf(line, "*UNKNOWN* record type! (%d)", msgType);
@@ -6618,7 +6618,7 @@ ssl_CheckServerSessionIdCorrectness(sslSocket *ss, SECItem *sidBytes)
      * fake. Check for the real value. */
     if (sentRealSid) {
         sidMatch = (sidBytes->len == sid->u.ssl3.sessionIDLength) &&
-                   PORT_Memcmp(sid->u.ssl3.sessionID, sidBytes->data, sidBytes->len) == 0;
+                   (!sidBytes->len || PORT_Memcmp(sid->u.ssl3.sessionID, sidBytes->data, sidBytes->len) == 0);
     } else {
         /* Otherwise, the session ID was a fake if TLS 1.3 compat mode is
          * enabled.  If so, check for the fake value. */
@@ -13024,8 +13024,8 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
             return SECSuccess;
         }
 
-        if (IS_DTLS(ss) ||
-            (ss->sec.isServer &&
+        if ((IS_DTLS(ss) && !dtls13_AeadLimitReached(spec)) ||
+            (!IS_DTLS(ss) && ss->sec.isServer &&
              ss->ssl3.hs.zeroRttIgnore == ssl_0rtt_ignore_trial)) {
             /* Silently drop the packet unless we sent a fatal alert. */
             if (ss->ssl3.fatalAlertSent) {
