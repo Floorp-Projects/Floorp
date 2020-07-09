@@ -4936,11 +4936,45 @@ fog.eval:
     record_in_processes:
       - 'main'
 
+  window_raised:
+    bug_numbers:
+      - 1647876
+    description: >
+      Whether a Firefox window is presently raised.
+      For use in evaluating baseline engagement for Project FOG.
+    expires: '85'
+    kind: 'boolean'
+    notification_emails:
+      - 'chutten@mozilla.com'
+    release_channel_collection: 'opt-out'
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   user_active_error:
     bug_numbers:
       - 1647876
     description: >
       How many Telemetry stopwatch errors did we have while trying to measure user activity?
+      These could be attempts to start a started timer or finish an unstarted timer or so forth.
+      See Stopwatch::Start and Stopwatch::Finish for details.
+      For use in evaluating baseline engagement for Project FOG.
+    expires: '85'
+    kind: 'uint'
+    notification_emails:
+      - 'chutten@mozilla.com'
+    release_channel_collection: 'opt-out'
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  window_raised_error:
+    bug_numbers:
+      - 1647876
+    description: >
+      How many Telemetry stopwatch errors did we have while trying to measure window raising?
       These could be attempts to start a started timer or finish an unstarted timer or so forth.
       See Stopwatch::Start and Stopwatch::Finish for details.
       For use in evaluating baseline engagement for Project FOG.
