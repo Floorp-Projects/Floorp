@@ -120,6 +120,9 @@ interface nsIXPCComponents_Utils : nsISupports
 
     readonly attribute nsIXPCComponents_utils_Sandbox Sandbox;
 
+    [implicit_jscontext]
+    jsval createServicesCache();
+
     /*
      * evalInSandbox is designed to be called from JavaScript only.
      *
