@@ -490,7 +490,7 @@ const PanelUI = {
       multiView.setAttribute("mainViewId", viewNode.id);
       multiView.appendChild(viewNode);
       tempPanel.appendChild(multiView);
-      viewNode.classList.add("cui-widget-panelview");
+      viewNode.classList.add("cui-widget-panelview", "PanelUI-subView");
 
       let viewShown = false;
       let panelRemover = () => {
