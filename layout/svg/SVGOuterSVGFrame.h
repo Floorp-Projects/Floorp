@@ -267,13 +267,6 @@ class SVGOuterSVGAnonChildFrame final : public SVGDisplayContainerFrame {
   }
 };
 
-/**
- * Recursively checks if any atom in the parameter pack is equal to |aString|.
- */
-template <typename... Atoms>
-bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs);
-bool IsAnyAtomEqual(const nsAString& aString);
-
 }  // namespace mozilla
 
 #endif
