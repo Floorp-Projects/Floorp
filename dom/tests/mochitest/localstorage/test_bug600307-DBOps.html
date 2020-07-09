@@ -89,7 +89,7 @@ function startTest()
   localStorageReload(function() {
   is(localStorage.length, 0, "localStorage clean in case 4");
 
-  if (!SpecialPowers.Services.lsm.nextGenLocalStorageEnabled &&
+  if (!SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled &&
       SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(
       SpecialPowers.Ci.nsIXULRuntime).processType != SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
     // Following tests cannot be run in a child/plugin process type
