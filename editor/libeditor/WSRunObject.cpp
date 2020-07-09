@@ -338,18 +338,19 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     return NS_OK;
   }
 
-  const WSFragment* beforeRun = FindNearestFragment(mScanStartPoint, false);
   TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
+  const bool insertionPointEqualsOrIsBeforeStartOfText =
+      mScanStartPoint.EqualsOrIsBefore(textFragmentDataAtStart.StartRef());
   // If mScanStartPoint isn't equal to mScanEndPoint, it will replace text (i.e.
   // committing composition). And afterRun will be end point of replaced range.
   // So we want to know this white-space type (trailing white-space etc) of
   // this end point, not inserted (start) point, so we re-scan white-space type.
   WSRunObject afterRunObject(MOZ_KnownLive(mHTMLEditor), mScanEndPoint);
-  const WSFragment* afterRun =
-      afterRunObject.FindNearestFragment(mScanEndPoint, true);
   TextFragmentData textFragmentDataAtEnd(
       afterRunObject.mStart, afterRunObject.mEnd, afterRunObject.mNBSPData,
       afterRunObject.mPRE);
+  const bool insertionPointAfterEndOfText =
+      textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(mScanEndPoint);
 
   const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
       textFragmentDataAtStart
@@ -469,19 +470,29 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   // ws char into an nbsp:
 
   if (nsCRT::IsAsciiSpace(theString[0])) {
-    // We have a leading space
-    if (beforeRun) {
-      if (beforeRun->IsStartOfHardLine()) {
+    // If inserting string will follow some invisible leading white-spaces, the
+    // string needs to start with an NBSP.
+    if (invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()) {
+      theString.SetCharAt(kNBSP, 0);
+    }
+    // If inserting around visible white-spaces, check whether the previous
+    // character of insertion point is an NBSP or an ASCII white-space.
+    else if (pointPositionWithVisibleWhiteSpacesAtStart ==
+                 PointPosition::MiddleOfFragment ||
+             pointPositionWithVisibleWhiteSpacesAtStart ==
+                 PointPosition::EndOfFragment) {
+      EditorDOMPointInText atPreviousChar =
+          GetPreviousEditableCharPoint(pointToInsert);
+      if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
+          atPreviousChar.IsCharASCIISpace()) {
         theString.SetCharAt(kNBSP, 0);
-      } else if (beforeRun->IsVisible()) {
-        EditorDOMPointInText atPreviousChar =
-            GetPreviousEditableCharPoint(pointToInsert);
-        if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
-            atPreviousChar.IsCharASCIISpace()) {
-          theString.SetCharAt(kNBSP, 0);
-        }
       }
-    } else if (StartsFromHardLineBreak()) {
+    }
+    // If the insertion point is (was) before the start of text and it's
+    // immediately after a hard line break, the first ASCII white-space should
+    // be replaced with an NBSP for making it visible.
+    else if (textFragmentDataAtStart.StartsFromHardLineBreak() &&
+             insertionPointEqualsOrIsBeforeStartOfText) {
       theString.SetCharAt(kNBSP, 0);
     }
   }
@@ -490,24 +501,30 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   uint32_t lastCharIndex = theString.Length() - 1;
 
   if (nsCRT::IsAsciiSpace(theString[lastCharIndex])) {
-    // We have a leading space
-    if (afterRun) {
-      if (afterRun->IsEndOfHardLine()) {
+    // If inserting string will be followed by some invisible trailing
+    // white-spaces, the string needs to end with an NBSP.
+    if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
+      theString.SetCharAt(kNBSP, lastCharIndex);
+    }
+    // If inserting around visible white-spaces, check whether the inclusive
+    // next character of end of replaced range is an NBSP or an ASCII
+    // white-space.
+    if (pointPositionWithVisibleWhiteSpacesAtStart ==
+            PointPosition::StartOfFragment ||
+        pointPositionWithVisibleWhiteSpacesAtStart ==
+            PointPosition::MiddleOfFragment) {
+      EditorDOMPointInText atNextChar =
+          GetInclusiveNextEditableCharPoint(pointToInsert);
+      if (atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
+          atNextChar.IsCharASCIISpace()) {
         theString.SetCharAt(kNBSP, lastCharIndex);
-      } else if (afterRun->IsVisible()) {
-        EditorDOMPointInText atNextChar =
-            GetInclusiveNextEditableCharPoint(pointToInsert);
-        if (atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
-            atNextChar.IsCharASCIISpace()) {
-          theString.SetCharAt(kNBSP, lastCharIndex);
-        }
       }
-    } else if (afterRunObject.EndsByBlockBoundary()) {
-      // When afterRun is null, it means that mScanEndPoint is last point in
-      // editing host or editing block.
-      // If this text insertion replaces composition, this.mEnd.mReason is
-      // start position of composition. So we have to use afterRunObject's
-      // reason instead.
+    }
+    // If the end of replacing range is (was) after the end of text and it's
+    // immediately before block boundary, the last ASCII white-space should
+    // be replaced with an NBSP for making it visible.
+    else if (textFragmentDataAtEnd.EndsByBlockBoundary() &&
+             insertionPointAfterEndOfText) {
       theString.SetCharAt(kNBSP, lastCharIndex);
     }
   }
@@ -1126,9 +1143,7 @@ Maybe<WSRunScanner::WSFragment>
 WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleAndMiddleOfLine()
     const {
   WSFragment fragment;
-  if (mIsPreformatted ||
-      ((StartsFromNormalText() || StartsFromSpecialContent()) &&
-       (EndsByNormalText() || EndsBySpecialContent() || EndsByBRElement()))) {
+  if (IsPreformattedOrSurrondedByVisibleContent()) {
     fragment.MarkAsVisible();
     if (mStart.PointRef().IsSet()) {
       fragment.mStartNode = mStart.PointRef().GetContainer();
@@ -1239,9 +1254,7 @@ void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
 
   // if it's preformatedd, or if we are surrounded by text or special, it's all
   // one big normal ws run
-  if (mIsPreformatted ||
-      ((StartsFromNormalText() || StartsFromSpecialContent()) &&
-       (EndsByNormalText() || EndsBySpecialContent() || EndsByBRElement()))) {
+  if (IsPreformattedOrSurrondedByVisibleContent()) {
     aFragments.AppendElement(CreateWSFragmentForVisibleAndMiddleOfLine().ref());
     return;
   }

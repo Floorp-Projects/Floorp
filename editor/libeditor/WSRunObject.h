@@ -766,6 +766,9 @@ class MOZ_STACK_CLASS WSRunScanner {
     bool EndsByBRElement() const { return mEnd.IsBRElement(); }
     bool EndsByBlockBoundary() const { return mEnd.IsBlockBoundary(); }
 
+    const EditorDOMPoint& StartRef() const { return mStart.PointRef(); }
+    const EditorDOMPoint& EndRef() const { return mEnd.PointRef(); }
+
     /**
      * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
      * of the line and first visible point or end of the hard line.  When
@@ -891,6 +894,18 @@ class MOZ_STACK_CLASS WSRunScanner {
     Maybe<WSFragment> CreateWSFragmentForVisibleAndMiddleOfLine() const;
 
    private:
+    /**
+     * IsPreformattedOrSurrondedByVisibleContent() returns true if the text is
+     * preformatted or the text fragment is surrounded by visible content.
+     * When this returns true, all of the text is visible.
+     */
+    bool IsPreformattedOrSurrondedByVisibleContent() const {
+      return mIsPreformatted ||
+             ((StartsFromNormalText() || StartsFromSpecialContent()) &&
+              (EndsByNormalText() || EndsBySpecialContent() ||
+               EndsByBRElement()));
+    }
+
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;
