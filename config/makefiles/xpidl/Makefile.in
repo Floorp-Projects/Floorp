@@ -29,8 +29,11 @@ idl_deps_dir := .deps
 dist_idl_dir := $(DIST)/idl
 dist_include_dir := $(DIST)/include
 dist_xpcrs_dir := $(DIST)/xpcrs
+stub_file := xptdata.stub
 process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
-generated_file := $(topobjdir)/xpcom/reflect/xptinfo/xptdata.cpp
+target_file := $(topobjdir)/xpcom/reflect/xptinfo/xptdata.cpp
+xptdata_h := $(dist_include_dir)/xptdata.h
+generated_files := $(target_file) $(xptdata_h)
 code_gen_py := $(topsrcdir)/xpcom/reflect/xptinfo/xptcodegen.py
 code_gen_deps := $(topsrcdir)/xpcom/ds/tools/perfecthash.py
 
@@ -59,17 +62,21 @@ xpt_files := $(addsuffix .xpt,$(xpidl_modules))
 
 depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
 
-GARBAGE += $(xpt_files) $(depends_files) $(generated_file)
+GARBAGE += $(stub_file) $(xpt_files) $(depends_files) $(target_file)
 
 ifdef COMPILE_ENVIRONMENT
-xpidl:: $(generated_file)
+xpidl:: $(generated_files)
 endif
+
+# See bug 1420119 for why we need the semicolon.
+$(target_file) $(xptdata_h) : $(stub_file) ;
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(dist_xpcrs_dir))
 
-$(generated_file): $(xpt_files) $(code_gen_py) $(code_gen_deps)
+$(stub_file) : $(xpt_files) $(code_gen_py) $(code_gen_deps)
 	$(REPORT_BUILD)
-	$(PYTHON3) $(code_gen_py) $(generated_file) $(xpt_files)
+	$(PYTHON3) $(code_gen_py) $(generated_files) $(xpt_files)
+	@touch $@
 
 -include $(depends_files)
 
