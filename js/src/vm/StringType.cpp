@@ -1680,6 +1680,8 @@ JSLinearString* js::NewStringDontDeflate(
   }
 
   if (JSInlineString::lengthFits<CharT>(length)) {
+    // |chars.get()| is safe because 1) |NewInlineString| necessarily *copies*,
+    // and 2) |chars| frees its contents only when this function returns.
     return NewInlineString<allowGC>(
         cx, mozilla::Range<const CharT>(chars.get(), length), heap);
   }
@@ -1710,6 +1712,8 @@ JSLinearString* js::NewString(JSContext* cx,
                               size_t length, gc::InitialHeap heap) {
   if constexpr (std::is_same_v<CharT, char16_t>) {
     if (CanStoreCharsAsLatin1(chars.get(), length)) {
+      // Deflating copies from |chars.get()| and lets |chars| be freed on
+      // return.
       return NewStringDeflated<allowGC>(cx, chars.get(), length, heap);
     }
   }
