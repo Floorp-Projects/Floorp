@@ -161,9 +161,6 @@ class Selection;
 
 //----------------------------------------------------------------------
 
-#define NS_SUBTREE_DIRTY(_frame) \
-  (_frame)->HasAnyStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)
-
 // 1 million CSS pixels less than our max app unit measure.
 // For reflowing with an "infinite" available inline space per [css-sizing].
 // (reflowing with an NS_UNCONSTRAINEDSIZE available inline size isn't allowed
@@ -4564,6 +4561,13 @@ class nsIFrame : public nsQueryFrame {
    */
   bool IsContainerForFontSizeInflation() const {
     return HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER);
+  }
+
+  /**
+   * Return whether this frame or any of its children is dirty.
+   */
+  bool IsSubtreeDirty() const {
+    return HasAnyStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
   /**

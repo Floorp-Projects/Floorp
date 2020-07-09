@@ -409,7 +409,9 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
         layout = false;
       } else {
         // Always perform layout if we are dirty or have dirty children
-        if (!NS_SUBTREE_DIRTY(child)) layout = false;
+        if (!child->IsSubtreeDirty()) {
+          layout = false;
+        }
       }
 
       nsRect oldRect(child->GetRect());

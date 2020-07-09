@@ -165,12 +165,12 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
     bool kidNeedsReflow =
-        reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
+        reflowAll || kidFrame->IsSubtreeDirty() ||
         FrameDependsOnContainer(
             kidFrame, !!(aFlags & AbsPosReflowFlags::CBWidthChanged),
             !!(aFlags & AbsPosReflowFlags::CBHeightChanged));
 
-    if (NS_SUBTREE_DIRTY(kidFrame)) {
+    if (kidFrame->IsSubtreeDirty()) {
       MaybeMarkAncestorsAsHavingDescendantDependentOnItsStaticPos(
           kidFrame, aDelegatingFrame);
     }

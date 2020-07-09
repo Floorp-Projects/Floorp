@@ -572,9 +572,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // column, but not be the last child because the desired number of columns
     // has changed.)
     bool skipIncremental =
-        !aReflowInput.ShouldReflowAllKids() && !NS_SUBTREE_DIRTY(child) &&
+        !aReflowInput.ShouldReflowAllKids() && !child->IsSubtreeDirty() &&
         child->GetNextSibling() && !isMeasuringFeasibleContentBSize &&
-        !NS_SUBTREE_DIRTY(child->GetNextSibling());
+        !child->GetNextSibling()->IsSubtreeDirty();
 
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.

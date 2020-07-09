@@ -2703,7 +2703,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
 
     // Grab |wasDirty| now so we can go ahead and update the bits on
     // subtreeRoot.
-    bool wasDirty = NS_SUBTREE_DIRTY(subtreeRoot);
+    bool wasDirty = subtreeRoot->IsSubtreeDirty();
     subtreeRoot->AddStateBits(aBitToAdd);
 
     // Determine whether we need to keep looking for the next ancestor
@@ -2811,7 +2811,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
 
       nsIFrame* child = f;
       f = f->GetParent();
-      wasDirty = NS_SUBTREE_DIRTY(f);
+      wasDirty = f->IsSubtreeDirty();
       f->ChildIsDirty(child);
       NS_ASSERTION(f->HasAnyStateBits(NS_FRAME_HAS_DIRTY_CHILDREN),
                    "ChildIsDirty didn't do its job");
@@ -9663,7 +9663,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     for (auto iter = mFramesToDirty.Iter(); !iter.Done(); iter.Next()) {
       // Mark frames dirty until target frame.
       nsPtrHashKey<nsIFrame>* p = iter.Get();
-      for (nsIFrame* f = p->GetKey(); f && !NS_SUBTREE_DIRTY(f);
+      for (nsIFrame* f = p->GetKey(); f && !f->IsSubtreeDirty();
            f = f->GetParent()) {
         f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
         if (f->IsFlexItem()) {
@@ -9676,11 +9676,11 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
       }
     }
 
-    NS_ASSERTION(NS_SUBTREE_DIRTY(target), "Why is the target not dirty?");
+    NS_ASSERTION(target->IsSubtreeDirty(), "Why is the target not dirty?");
     mDirtyRoots.Add(target);
     SetNeedLayoutFlush();
 
-    // Clear mFramesToDirty after we've done the NS_SUBTREE_DIRTY(target)
+    // Clear mFramesToDirty after we've done the target->IsSubtreeDirty()
     // assertion so that if it fails it's easier to see what's going on.
 #ifdef NOISY_INTERRUPTIBLE_REFLOW
     printf("mFramesToDirty.Count() == %u\n", mFramesToDirty.Count());
@@ -9771,7 +9771,7 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
         // Send an incremental reflow notification to the target frame.
         nsIFrame* target = mDirtyRoots.PopShallowestRoot();
 
-        if (!NS_SUBTREE_DIRTY(target)) {
+        if (!target->IsSubtreeDirty()) {
           // It's not dirty anymore, which probably means the notification
           // was posted in the middle of a reflow (perhaps with a reflow
           // root in the middle).  Don't do anything.

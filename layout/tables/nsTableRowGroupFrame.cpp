@@ -371,7 +371,7 @@ void nsTableRowGroupFrame::ReflowChildren(
     haveRow = true;
 
     // Reflow the row frame
-    if (reflowAllKids || NS_SUBTREE_DIRTY(kidFrame) ||
+    if (reflowAllKids || kidFrame->IsSubtreeDirty() ||
         (aReflowInput.reflowInput.mFlags.mSpecialBSizeReflow &&
          (isPaginated ||
           kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
