@@ -5,6 +5,7 @@
 //! generated_parser::reduce, and stack bookkeeping, omitted.
 
 use crate::parser::Parser;
+use arrayvec::ArrayVec;
 use ast::SourceLocation;
 use generated_parser::{
     noop_actions, ParseError, ParserTrait, Result, StackValue, TermValue, TerminalId, Token, TABLES,
@@ -22,12 +23,22 @@ pub struct Simulator<'alloc, 'parser> {
     node_stack: &'parser [TermValue<StackValue<'alloc>>],
     /// Mutable state stack used by the simulator on top of the immutable
     /// parser's state stack.
-    sim_state_stack: Vec<usize>,
+    ///
+    /// Uses a fixed-size array as the number of lookahead is bounded to a lower
+    /// value, panics otherwise.
+    sim_state_stack: ArrayVec<[usize; 4]>,
     /// Mutable term stack used by the simulator on top of the immutable
     /// parser's term stack.
-    sim_node_stack: Vec<TermValue<()>>,
-    /// Mutable term stack used by the simulator for replaying terms when reducing non-terminals are replaying lookahead terminals.
-    replay_stack: Vec<TermValue<()>>,
+    ///
+    /// Uses a fixed-size array as the number of lookahead is bounded to a lower
+    /// value, panics otherwise.
+    sim_node_stack: ArrayVec<[TermValue<()>; 4]>,
+    /// Mutable term stack used by the simulator for replaying terms when
+    /// reducing non-terminals are replaying lookahead terminals.
+    ///
+    /// Uses a fixed-size array as the number of lookahead is bounded to a lower
+    /// value, panics otherwise.
+    replay_stack: ArrayVec<[TermValue<()>; 4]>,
 }
 
 impl<'alloc, 'parser> ParserTrait<'alloc, ()> for Simulator<'alloc, 'parser> {
@@ -119,9 +130,9 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
             sp,
             state_stack,
             node_stack,
-            sim_state_stack: vec![],
-            sim_node_stack: vec![],
-            replay_stack: vec![],
+            sim_state_stack: ArrayVec::new(),
+            sim_node_stack: ArrayVec::new(),
+            replay_stack: ArrayVec::new(),
         }
     }
 

@@ -11,6 +11,7 @@ mod unicode_data;
 #[cfg(test)]
 mod tests;
 
+extern crate arrayvec;
 extern crate jsparagus_ast as ast;
 extern crate jsparagus_generated_parser as generated_parser;
 extern crate jsparagus_json_log as json_log;
