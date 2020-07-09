@@ -6,7 +6,6 @@ import json
 import os
 
 import signal
-import re
 
 from mozprocess import ProcessHandler
 
@@ -67,9 +66,6 @@ def run_process(config, cmd):
         proc.kill()
 
     return proc.output
-
-
-PYLINT_FORMAT_REGEX = re.compile(r"(.*):(.*): [(.*)] (.*)$")
 
 
 def parse_issues(log, config, issues_json, path):
