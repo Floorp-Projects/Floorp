@@ -73,33 +73,3 @@ addRDMTask(
   },
   { usingBrowserUI: true, onlyPrefAndTask: true }
 );
-
-// Remove this test when the new RDM is enabled in Firefox stable release. In the
-// meantime, we should still test that old-RDM will close if needed when there is
-// remoteness change in the tab.
-addRDMTask(
-  null,
-  async function() {
-    const tab = await addTab(TEST_URL);
-
-    const { ui } = await openRDM(tab);
-    const { store } = ui.toolWindow;
-    await waitUntilState(
-      store,
-      state =>
-        state.viewports.length == 1 &&
-        state.devices.listState == Types.loadableState.LOADED
-    );
-    const clientClosed = waitForClientClose(ui);
-
-    // Load URL that requires the main process, forcing a remoteness flip
-    await load(tab.linkedBrowser, "about:robots");
-
-    // RDM will close if using the old version.
-    is(ui.destroyed, true, "RDM closed synchronously");
-
-    await clientClosed;
-    await removeTab(tab);
-  },
-  { usingBrowserUI: false, onlyPrefAndTask: true }
-);
