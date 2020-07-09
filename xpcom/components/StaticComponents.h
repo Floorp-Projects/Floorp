@@ -9,6 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Module.h"
+#include "mozilla/Span.h"
 #include "nsID.h"
 #include "nsStringFwd.h"
 #include "nscore.h"
@@ -19,6 +20,8 @@
 class nsIFactory;
 class nsIUTF8StringEnumerator;
 class nsISupports;
+template <typename T, size_t N>
+class AutoTArray;
 
 namespace mozilla {
 namespace xpcom {
@@ -73,6 +76,13 @@ struct StringOffset final {
 };
 
 /**
+ * Represents an offset into the interfaces table.
+ */
+struct InterfaceOffset final {
+  uint32_t mOffset;
+};
+
+/**
  * Represents a static component entry defined in a `Classes` list in an XPCOM
  * manifest. Handles creating instances of and caching service instances for
  * that class.
@@ -117,6 +127,9 @@ struct StaticModule {
 
   nsresult CreateInstance(nsISupports* aOuter, const nsIID& aIID,
                           void** aResult) const;
+
+  GetServiceHelper GetService() const;
+  GetServiceHelper GetService(nsresult*) const;
 
   nsISupports* ServiceInstance() const;
   void SetServiceInstance(already_AddRefed<nsISupports> aInst) const;
@@ -196,6 +209,26 @@ struct StaticCategory final {
   }
 };
 
+struct JSServiceEntry final {
+  using InterfaceList = AutoTArray<const nsIID*, 4>;
+
+  static const JSServiceEntry* Lookup(const nsACString& aName);
+
+  StringOffset mName;
+  ModuleID mModuleID;
+
+  InterfaceOffset mInterfaceOffset;
+  uint8_t mInterfaceCount;
+
+  nsCString Name() const;
+
+  const StaticModule& Module() const {
+    return gStaticModules[size_t(mModuleID)];
+  }
+
+  InterfaceList Interfaces() const;
+};
+
 class StaticComponents final {
  public:
   static const StaticModule* LookupByCID(const nsID& aCID);
@@ -210,6 +243,8 @@ class StaticComponents final {
                                    bool aInvalid = true);
 
   static already_AddRefed<nsIUTF8StringEnumerator> GetComponentJSMs();
+
+  static Span<const JSServiceEntry> GetJSServices();
 
   /**
    * Calls any module unload from manifests whose components have been loaded.
