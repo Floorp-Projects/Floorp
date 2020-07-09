@@ -339,6 +339,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   }
 
   const WSFragment* beforeRun = FindNearestFragment(mScanStartPoint, false);
+  TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
   // If mScanStartPoint isn't equal to mScanEndPoint, it will replace text (i.e.
   // committing composition). And afterRun will be end point of replaced range.
   // So we want to know this white-space type (trailing white-space etc) of
@@ -346,19 +347,29 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   WSRunObject afterRunObject(MOZ_KnownLive(mHTMLEditor), mScanEndPoint);
   const WSFragment* afterRun =
       afterRunObject.FindNearestFragment(mScanEndPoint, true);
+  TextFragmentData textFragmentDataAtEnd(
+      afterRunObject.mStart, afterRunObject.mEnd, afterRunObject.mNBSPData,
+      afterRunObject.mPRE);
 
+  const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
+      textFragmentDataAtStart
+          .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(mScanStartPoint);
+  const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
+      textFragmentDataAtEnd.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
+          mScanEndPoint);
   const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLineAtStart =
-      TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleAndMiddleOfLine();
+      !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
+          ? textFragmentDataAtStart.CreateWSFragmentForVisibleAndMiddleOfLine()
+          : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpacesAtStart =
       visibleWSFragmentInMiddleOfLineAtStart.isSome()
           ? visibleWSFragmentInMiddleOfLineAtStart.ref().ComparePoint(
                 mScanStartPoint)
           : PointPosition::NotInSameDOMTree;
   const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLineAtEnd =
-      TextFragmentData(afterRunObject.mStart, afterRunObject.mEnd,
-                       afterRunObject.mNBSPData, afterRunObject.mPRE)
-          .CreateWSFragmentForVisibleAndMiddleOfLine();
+      !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
+          ? textFragmentDataAtEnd.CreateWSFragmentForVisibleAndMiddleOfLine()
+          : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpacesAtEnd =
       visibleWSFragmentInMiddleOfLineAtEnd.isSome()
           ? visibleWSFragmentInMiddleOfLineAtEnd.ref().ComparePoint(
@@ -372,19 +383,20 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     // point while we tweak any surrounding white-space
     AutoTrackDOMPoint tracker(mHTMLEditor.RangeUpdaterRef(), &pointToInsert);
 
-    // Handle any changes needed to ws run after inserted text
-    if (!afterRun || afterRun->IsEndOfHardLine()) {
-      // Don't need to do anything.  Just insert text.  ws won't change.
-    } else if (afterRun->IsStartOfHardLine()) {
-      // Delete the leading ws that is after insertion point, because it
-      // would become significant after text inserted.
-      nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                        .DeleteTextAndTextNodesWithTransaction(
-                            pointToInsert, afterRun->EndPoint());
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return rv;
+    if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
+      if (!invisibleTrailingWhiteSpaceRangeAtEnd.Collapsed()) {
+        // XXX Why don't we remove all of the invisible white-spaces?
+        MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeAtEnd.StartRef() ==
+                   pointToInsert);
+        nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                          .DeleteTextAndTextNodesWithTransaction(
+                              invisibleTrailingWhiteSpaceRangeAtEnd.StartRef(),
+                              invisibleTrailingWhiteSpaceRangeAtEnd.EndRef());
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+          return rv;
+        }
       }
     }
     // Replace an NBSP at inclusive next character of replacing range to an
@@ -407,19 +419,23 @@ nsresult WSRunObject::InsertText(Document& aDocument,
       }
     }
 
-    // Handle any changes needed to ws run before inserted text
-    if (!beforeRun || beforeRun->IsStartOfHardLine()) {
-      // Don't need to do anything.  Just insert text.  ws won't change.
-    } else if (beforeRun->IsEndOfHardLine()) {
-      // Need to delete the trailing ws that is before insertion point, because
-      // it would become significant after text inserted.
-      nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                        .DeleteTextAndTextNodesWithTransaction(
-                            beforeRun->StartPoint(), pointToInsert);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return rv;
+    if (invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()) {
+      if (!invisibleLeadingWhiteSpaceRangeAtStart.Collapsed()) {
+        // XXX Why don't we remove all of the invisible white-spaces?
+        MOZ_ASSERT(invisibleLeadingWhiteSpaceRangeAtStart.EndRef() ==
+                   pointToInsert);
+        // XXX If the DOM tree has been changed above,
+        //     invisibleLeadingWhiteSpaceRangeAtStart may be invalid now.
+        //     So, we may do something wrong here.
+        nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                          .DeleteTextAndTextNodesWithTransaction(
+                              invisibleLeadingWhiteSpaceRangeAtStart.StartRef(),
+                              invisibleLeadingWhiteSpaceRangeAtStart.EndRef());
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+          return rv;
+        }
       }
     }
     // Replace an NBSP at previous character of insertion point to an ASCII
