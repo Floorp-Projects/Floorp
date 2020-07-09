@@ -455,9 +455,6 @@ class ResponsiveUI {
       case "change-user-agent":
         this.onChangeUserAgent(event);
         break;
-      case "content-resize":
-        this.onContentResize(event);
-        break;
       case "exit":
         this.onExit();
         break;
@@ -542,14 +539,6 @@ class ResponsiveUI {
       this.reloadBrowser();
     }
     this.emit("user-agent-changed");
-  }
-
-  onContentResize(event) {
-    const { width, height } = event.data;
-    this.emit("content-resize", {
-      width,
-      height,
-    });
   }
 
   onExit() {
