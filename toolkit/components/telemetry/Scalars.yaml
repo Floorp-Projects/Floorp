@@ -4919,6 +4919,40 @@ migration:
     operating_systems:
       - windows
 
+fog.eval:
+  user_active:
+    bug_numbers:
+      - 1647876
+    description: >
+      Whether the user is presently actively interacting with Firefox.
+      For use in evaluating baseline engagement for Project FOG.
+    expires: '85'
+    kind: 'boolean'
+    notification_emails:
+      - 'chutten@mozilla.com'
+    release_channel_collection: 'opt-out'
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  user_active_error:
+    bug_numbers:
+      - 1647876
+    description: >
+      How many Telemetry stopwatch errors did we have while trying to measure user activity?
+      These could be attempts to start a started timer or finish an unstarted timer or so forth.
+      See Stopwatch::Start and Stopwatch::Finish for details.
+      For use in evaluating baseline engagement for Project FOG.
+    expires: '85'
+    kind: 'uint'
+    notification_emails:
+      - 'chutten@mozilla.com'
+    release_channel_collection: 'opt-out'
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
