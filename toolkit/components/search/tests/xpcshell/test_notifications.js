@@ -83,7 +83,7 @@ add_task(async function test_addingEngine_opensearch() {
     true
   );
 
-  await Services.search.addEngine(gDataUrl + "engine.xml", null, false);
+  await Services.search.addOpenSearchEngine(gDataUrl + "engine.xml", null);
 
   engine = await addEngineObserver.promise;
 

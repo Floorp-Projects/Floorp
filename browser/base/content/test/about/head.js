@@ -218,7 +218,7 @@ async function promiseNewEngine(basename) {
   let url = getRootDirectory(gTestPath) + basename;
   let engine;
   try {
-    engine = await Services.search.addEngine(url, "", false);
+    engine = await Services.search.addOpenSearchEngine(url, "");
   } catch (errCode) {
     ok(false, "addEngine failed with error code " + errCode);
     throw errCode;

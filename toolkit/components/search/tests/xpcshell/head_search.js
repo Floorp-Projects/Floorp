@@ -520,7 +520,7 @@ var addTestEngines = async function(aItems) {
       }, "browser-search-engine-modified");
 
       if (item.xmlFileName) {
-        Services.search.addEngine(gDataUrl + item.xmlFileName, null, false);
+        Services.search.addOpenSearchEngine(gDataUrl + item.xmlFileName, null);
       } else {
         Services.search.addEngineWithDetails(item.name, item.details);
       }

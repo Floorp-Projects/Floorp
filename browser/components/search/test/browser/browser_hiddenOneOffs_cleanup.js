@@ -6,7 +6,7 @@ const testPref = "Foo,FooDupe";
 async function promiseNewEngine(basename) {
   info("Waiting for engine to be added: " + basename);
   let url = getRootDirectory(gTestPath) + basename;
-  let engine = await Services.search.addEngine(url, "", false);
+  let engine = await Services.search.addOpenSearchEngine(url, "");
   info("Search engine added: " + basename);
   return engine;
 }
