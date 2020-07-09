@@ -205,6 +205,14 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
   const WSFragment* beforeRun = FindNearestFragment(aPointToInsert, false);
   const WSFragment* afterRun = FindNearestFragment(aPointToInsert, true);
 
+  const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLine =
+      TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
+          .CreateWSFragmentForVisibleAndMiddleOfLine();
+  const PointPosition pointPositionWithVisibleWhiteSpaces =
+      visibleWSFragmentInMiddleOfLine.isSome()
+          ? visibleWSFragmentInMiddleOfLine.ref().ComparePoint(aPointToInsert)
+          : PointPosition::NotInSameDOMTree;
+
   EditorDOMPoint pointToInsert(aPointToInsert);
   {
     // Some scoping for AutoTrackDOMPoint.  This will track our insertion
@@ -226,9 +234,13 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
         return nullptr;
       }
-    } else if (afterRun->IsVisibleAndMiddleOfHardLine()) {
-      // Need to determine if break at front of non-nbsp run.  If so, convert
-      // run to nbsp.
+    }
+    // If new line will start with visible white-spaces, it needs to be start
+    // with an NBSP.
+    else if (pointPositionWithVisibleWhiteSpaces ==
+                 PointPosition::StartOfFragment ||
+             pointPositionWithVisibleWhiteSpaces ==
+                 PointPosition::MiddleOfFragment) {
       EditorDOMPointInText atNextCharOfInsertionPoint =
           GetInclusiveNextEditableCharPoint(pointToInsert);
       if (atNextCharOfInsertionPoint.IsSet() &&
@@ -267,10 +279,18 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
             "WSRunObject::DeleteTextAndTextNodesWithTransaction() failed");
         return nullptr;
       }
-    } else if (beforeRun->IsVisibleAndMiddleOfHardLine()) {
-      // Try to change an nbsp to a space, just to prevent nbsp proliferation
-      nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(*beforeRun,
-                                                                pointToInsert);
+    }
+    // If the `<br>` element is put immediately after an NBSP, it should be
+    // replaced with an ASCII white-space.
+    else if (pointPositionWithVisibleWhiteSpaces ==
+                 PointPosition::MiddleOfFragment ||
+             pointPositionWithVisibleWhiteSpaces ==
+                 PointPosition::EndOfFragment) {
+      // XXX If the DOM tree has been changed above, pointToInsert` and/or
+      //     `visibleWSFragmentInMiddleOfLine` may be invalid.  So, we may do
+      //     something wrong here.
+      nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
+          visibleWSFragmentInMiddleOfLine.ref(), pointToInsert);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace() "
