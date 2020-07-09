@@ -25,7 +25,7 @@ class RemoteDecoderManagerChild final
   static RemoteDecoderManagerChild* GetGPUProcessSingleton();
 
   // Can be called from any thread.
-  static nsIThread* GetManagerThread();
+  static nsISerialEventTarget* GetManagerThread();
 
   // Can be called from any thread, dispatches the request to the IPDL thread
   // internally and will be ignored if the IPDL actor has been destroyed.
