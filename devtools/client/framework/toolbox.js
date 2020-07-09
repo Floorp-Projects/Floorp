@@ -727,6 +727,8 @@ Toolbox.prototype = {
       // expect the target to be attached.
       await this._listFrames();
       await this.initPerformance();
+
+      this.emit("switched-target", targetFront);
     }
   },
 
