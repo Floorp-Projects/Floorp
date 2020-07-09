@@ -113,6 +113,7 @@ def create_release(manifest_path, owner, repo, sha, tag, body):
                    "name": tag,
                    "body": body,
                    "draft": True}
+    logger.info("Creating a release for tag=%s, target_commitish=%s" % (tag, sha))
     create_resp = request(create_url, "Release creation", json_data=create_data)
     if not create_resp:
         return False
