@@ -17,7 +17,7 @@ const { LongStringActor } = require("devtools/server/actors/string");
 
 class PlatformMessageWatcher {
   /**
-   * Start watching for all console messages related to a given Target Actor.
+   * Start watching for all platform messages related to a given Target Actor.
    * This will notify about existing console messages, but also the one created in future.
    *
    * @param TargetActor targetActor
