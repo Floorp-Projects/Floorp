@@ -1265,6 +1265,10 @@ class NativeObject : public JSObject {
   inline void addDenseElementType(JSContext* cx, uint32_t index,
                                   const Value& val);
 
+  // Packed information for this object's elements.
+  inline bool writeToIndexWouldMarkNotPacked(uint32_t index);
+  inline void markDenseElementsNotPacked(JSContext* cx);
+
  public:
   inline void setDenseElementWithType(JSContext* cx, uint32_t index,
                                       const Value& val);
@@ -1310,10 +1314,6 @@ class NativeObject : public JSObject {
   bool denseElementsAreFrozen() const {
     return hasAllFlags(js::BaseShape::FROZEN_ELEMENTS);
   }
-
-  /* Packed information for this object's elements. */
-  inline bool writeToIndexWouldMarkNotPacked(uint32_t index);
-  inline void markDenseElementsNotPacked(JSContext* cx);
 
   // Ensures that the object can hold at least index + extra elements. This
   // returns DenseElement_Success on success, DenseElement_Failed on failure
