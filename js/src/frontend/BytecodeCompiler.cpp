@@ -294,7 +294,7 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
   using Base::createSourceAndParser;
 
   FunctionNode* parse(CompilationInfo& compilationInfo,
-                      HandleScope enclosingScope, FunctionSyntaxKind syntaxKind,
+                      FunctionSyntaxKind syntaxKind,
                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                       const Maybe<uint32_t>& parameterListEnd);
 
@@ -577,9 +577,9 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
 // constructor.
 template <typename Unit>
 FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
-    CompilationInfo& compilationInfo, HandleScope enclosingScope,
-    FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd) {
+    CompilationInfo& compilationInfo, FunctionSyntaxKind syntaxKind,
+    GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+    const Maybe<uint32_t>& parameterListEnd) {
   assertSourceAndParserCreated(compilationInfo);
 
   TokenStreamPosition startPosition(compilationInfo.keepAtoms,
@@ -594,9 +594,9 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
   FunctionNode* fn;
   for (;;) {
     Directives newDirectives = compilationInfo.directives;
-    fn = parser->standaloneFunction(enclosingScope, parameterListEnd,
-                                    syntaxKind, generatorKind, asyncKind,
-                                    compilationInfo.directives, &newDirectives);
+    fn = parser->standaloneFunction(parameterListEnd, syntaxKind, generatorKind,
+                                    asyncKind, compilationInfo.directives,
+                                    &newDirectives);
     if (fn) {
       break;
     }
@@ -897,9 +897,14 @@ static JSFunction* CompileStandaloneFunction(
     FunctionAsyncKind asyncKind, HandleScope enclosingScope = nullptr) {
   AutoAssertReportedException assertException(cx);
 
+  RootedScope scope(cx, enclosingScope);
+  if (!scope) {
+    scope = &cx->global()->emptyGlobalScope();
+  }
+
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options, enclosingScope);
-  if (!compilationInfo.init(cx)) {
+  if (!compilationInfo.initForStandaloneFunction(cx, scope)) {
     return nullptr;
   }
 
@@ -908,14 +913,8 @@ static JSFunction* CompileStandaloneFunction(
     return nullptr;
   }
 
-  RootedScope scope(cx, enclosingScope);
-  if (!scope) {
-    scope = &cx->global()->emptyGlobalScope();
-  }
-
-  FunctionNode* parsedFunction =
-      compiler.parse(compilationInfo, scope, syntaxKind, generatorKind,
-                     asyncKind, parameterListEnd);
+  FunctionNode* parsedFunction = compiler.parse(
+      compilationInfo, syntaxKind, generatorKind, asyncKind, parameterListEnd);
   if (!parsedFunction) {
     return nullptr;
   }

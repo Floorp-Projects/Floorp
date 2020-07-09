@@ -13,7 +13,7 @@
 
 #include "jstypes.h"
 
-#include "frontend/AbstractScopePtr.h"
+#include "frontend/AbstractScopePtr.h"    // ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/Stencil.h"
@@ -317,17 +317,14 @@ class FunctionBox : public SharedContext {
   // list represented by |traceLink_|.
   FunctionBox* traceLink_ = nullptr;
 
-  // This field is used for two purposes:
-  //   * If this FunctionBox refers to the function being compiled, this field
-  //     holds its enclosing scope, used for compilation.
-  //   * If this FunctionBox refers to a lazy child of the function being
-  //     compiled, this field holds the child's immediately enclosing scope.
-  //     Once compilation succeeds, we will store it in the child's
-  //     BaseScript.  (Debugger may become confused if lazy scripts refer to
-  //     partially initialized enclosing scopes, so we must avoid storing the
-  //     scope in the BaseScript until compilation has completed
-  //     successfully.)
-  AbstractScopePtr enclosingScope_ = {};
+  // If this FunctionBox refers to a lazy child of the function being
+  // compiled, this field holds the child's immediately enclosing scope's index.
+  // Once compilation succeeds, we will store the scope pointed by this in the
+  // child's BaseScript.  (Debugger may become confused if lazy scripts refer to
+  // partially initialized enclosing scopes, so we must avoid storing the
+  // scope in the BaseScript until compilation has completed
+  // successfully.)
+  mozilla::Maybe<ScopeIndex> enclosingScopeIndex_;
 
   // Names from the named lambda scope, if a named lambda.
   LexicalScope::Data* namedLambdaBindings_ = nullptr;
@@ -456,33 +453,24 @@ class FunctionBox : public SharedContext {
 
   void initFromLazyFunction(JSFunction* fun);
 
-  void initWithEnclosingScope(ScopeContext& scopeContext, Scope* enclosingScope,
-                              FunctionFlags flags, FunctionSyntaxKind kind);
+  void initStandalone(ScopeContext& scopeContext, FunctionFlags flags,
+                      FunctionSyntaxKind kind);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionFlags flags,
                                      FunctionSyntaxKind kind);
 
-  void setEnclosingScopeForInnerLazyFunction(
-      const AbstractScopePtr& enclosingScope);
+  void setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex);
 
   JSFunction* function() const;
 
   MOZ_MUST_USE bool setAsmJSModule(const JS::WasmModule* module);
   bool isAsmJSModule() { return isAsmJSModule_; }
 
-  Scope* compilationEnclosingScope() const override {
-    // This is used when emitting code for the current FunctionBox and therefore
-    // the enclosingScope_ must have be set correctly during initalization.
+  Scope* compilationEnclosingScope() const override;
 
-    MOZ_ASSERT(enclosingScope_);
-    return enclosingScope_.scope();
-  }
-
-  bool hasEnclosingScope() const { return !!enclosingScope_; }
-  Scope* getExistingEnclosingScope() const {
-    return enclosingScope_.getExistingScope();
-  }
+  bool hasEnclosingScopeIndex() const { return enclosingScopeIndex_.isSome(); }
+  ScopeIndex getEnclosingScopeIndex() const { return *enclosingScopeIndex_; }
 
   IMMUTABLE_FLAG_GETTER_SETTER(isAsync, IsAsync)
   IMMUTABLE_FLAG_GETTER_SETTER(isGenerator, IsGenerator)

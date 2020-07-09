@@ -1050,6 +1050,10 @@ AbstractScopePtr EmitterScope::scope(const BytecodeEmitter* bce) const {
   return bce->perScriptData().gcThingList().getScope(index());
 }
 
+ScopeIndex EmitterScope::scopeIndex(const BytecodeEmitter* bce) const {
+  return bce->perScriptData().gcThingList().getScopeIndex(index());
+}
+
 NameLocation EmitterScope::lookup(BytecodeEmitter* bce, JSAtom* name) {
   if (Maybe<NameLocation> loc = lookupInCache(bce, name)) {
     return *loc;

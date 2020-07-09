@@ -336,13 +336,8 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   }
 }
 
-void FunctionBox::initWithEnclosingScope(ScopeContext& scopeContext,
-                                         Scope* enclosingScope,
-                                         FunctionFlags flags,
-                                         FunctionSyntaxKind kind) {
-  MOZ_ASSERT(enclosingScope);
-  enclosingScope_ = AbstractScopePtr(enclosingScope);
-
+void FunctionBox::initStandalone(ScopeContext& scopeContext,
+                                 FunctionFlags flags, FunctionSyntaxKind kind) {
   if (flags.isArrow()) {
     allowNewTarget_ = scopeContext.allowNewTarget;
     allowSuperProperty_ = scopeContext.allowSuperProperty;
@@ -371,14 +366,12 @@ void FunctionBox::initWithEnclosingScope(ScopeContext& scopeContext,
   inClass_ = scopeContext.inClass;
 }
 
-void FunctionBox::setEnclosingScopeForInnerLazyFunction(
-    const AbstractScopePtr& enclosingScope) {
+void FunctionBox::setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex) {
   // For lazy functions inside a function which is being compiled, we cache
   // the incomplete scope object while compiling, and store it to the
   // BaseScript once the enclosing script successfully finishes compilation
   // in FunctionBox::finish.
-  MOZ_ASSERT(!enclosingScope_);
-  enclosingScope_ = enclosingScope;
+  enclosingScopeIndex_ = mozilla::Some(scopeIndex);
 }
 
 bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
@@ -404,9 +397,6 @@ void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
 }
 
 void FunctionBox::trace(JSTracer* trc) {
-  if (enclosingScope_) {
-    enclosingScope_.trace(trc);
-  }
   if (atom_) {
     TraceRoot(trc, &atom_, "funbox-atom");
   }
@@ -414,6 +404,14 @@ void FunctionBox::trace(JSTracer* trc) {
 
 JSFunction* FunctionBox::function() const {
   return compilationInfo_.functions[funcDataIndex_];
+}
+
+Scope* FunctionBox::compilationEnclosingScope() const {
+  // This is used when emitting code for the current FunctionBox and therefore
+  // the topLevelFunctionEnclosingScope must have be set correctly during
+  // initalization.
+  MOZ_ASSERT(compilationInfo_.topLevelFunctionEnclosingScope);
+  return compilationInfo_.topLevelFunctionEnclosingScope;
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,

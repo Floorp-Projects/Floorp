@@ -17,7 +17,7 @@
 #include "jstypes.h"           // JS_PUBLIC_API
 #include "NamespaceImports.h"  // ValueVector
 
-#include "frontend/AbstractScopePtr.h"  // AbstractScopePtr
+#include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
 #include "frontend/CompilationInfo.h"   // CompilationInfo
 #include "frontend/JumpList.h"          // JumpTarget
@@ -100,6 +100,7 @@ struct MOZ_STACK_CLASS GCThingList {
   const ScriptThingsVector& objects() { return vector; }
 
   AbstractScopePtr getScope(size_t index) const;
+  ScopeIndex getScopeIndex(size_t index) const;
 
   AbstractScopePtr firstScope() const {
     MOZ_ASSERT(firstScopeIndex.isSome());
