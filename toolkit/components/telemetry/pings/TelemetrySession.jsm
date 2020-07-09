@@ -856,6 +856,9 @@ var Impl = {
     // Attach the active-ticks related observers.
     this.addObserver("user-interaction-active");
     this.addObserver("user-interaction-inactive");
+    // For FOG Engagement Evaluation, attach window observers.
+    this.addObserver("window-raised");
+    this.addObserver("window-lowered");
   },
 
   /**
@@ -1147,6 +1150,24 @@ var Impl = {
   },
 
   /**
+   * Instruments window raises and lowers during a Telemetry Session.
+   */
+  _onWindowChange(aWindow, aRaised) {
+    Telemetry.scalarSet("fog.eval.window_raised", aRaised);
+    let error = false;
+    if (aRaised) {
+      error = !TelemetryStopwatch.start("FOG_EVAL_WINDOW_RAISED_S", aWindow, {
+        inSeconds: true,
+      });
+    } else {
+      error = !TelemetryStopwatch.finish("FOG_EVAL_WINDOW_RAISED_S", aWindow);
+    }
+    if (error) {
+      Telemetry.scalarAdd("fog.eval.window_raised_error", 1);
+    }
+  },
+
+  /**
    * Tracks the number of "ticks" the user was active in.
    */
   _onActiveTick(aUserActive) {
@@ -1254,6 +1275,12 @@ var Impl = {
         break;
       case "user-interaction-inactive":
         this._onActiveTick(false);
+        break;
+      case "window-raised":
+        this._onWindowChange(aSubject, true);
+        break;
+      case "window-lowered":
+        this._onWindowChange(aSubject, false);
         break;
     }
     return undefined;
