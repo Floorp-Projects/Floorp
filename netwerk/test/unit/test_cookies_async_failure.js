@@ -213,7 +213,7 @@ async function run_test_2() {
   // Load the profile and populate it.
   do_load_profile();
 
-  Services.cookies.runInTransaction(_ => {
+  Services.cookiesvc.runInTransaction(_ => {
     let uri = NetUtil.newURI("http://foo.com/");
     const channel = NetUtil.newChannel({
       uri,
@@ -223,7 +223,7 @@ async function run_test_2() {
 
     for (let i = 0; i < 3000; ++i) {
       let uri = NetUtil.newURI("http://" + i + ".com/");
-      Services.cookies.setCookieStringFromHttp(
+      Services.cookiesvc.setCookieStringFromHttp(
         uri,
         "oh=hai; max-age=1000",
         channel
@@ -278,7 +278,7 @@ async function run_test_3() {
 
   // Load the profile and populate it.
   do_load_profile();
-  Services.cookies.runInTransaction(_ => {
+  Services.cookiesvc.runInTransaction(_ => {
     let uri = NetUtil.newURI("http://hither.com/");
     let channel = NetUtil.newChannel({
       uri,
@@ -286,7 +286,7 @@ async function run_test_3() {
       contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
     });
     for (let i = 0; i < 10; ++i) {
-      Services.cookies.setCookieStringFromHttp(
+      Services.cookiesvc.setCookieStringFromHttp(
         uri,
         "oh" + i + "=hai; max-age=1000",
         channel
@@ -299,7 +299,7 @@ async function run_test_3() {
       contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
     });
     for (let i = 10; i < 3000; ++i) {
-      Services.cookies.setCookieStringFromHttp(
+      Services.cookiesvc.setCookieStringFromHttp(
         uri,
         "oh" + i + "=hai; max-age=1000",
         channel
@@ -368,7 +368,7 @@ async function run_test_3() {
 async function run_test_4() {
   // Load the profile and populate it.
   do_load_profile();
-  Services.cookies.runInTransaction(_ => {
+  Services.cookiesvc.runInTransaction(_ => {
     let uri = NetUtil.newURI("http://foo.com/");
     let channel = NetUtil.newChannel({
       uri,
@@ -377,7 +377,7 @@ async function run_test_4() {
     });
     for (let i = 0; i < 3000; ++i) {
       let uri = NetUtil.newURI("http://" + i + ".com/");
-      Services.cookies.setCookieStringFromHttp(
+      Services.cookiesvc.setCookieStringFromHttp(
         uri,
         "oh=hai; max-age=1000",
         channel
@@ -437,21 +437,21 @@ async function run_test_4() {
 async function run_test_5() {
   // Load the profile and populate it.
   do_load_profile();
-  Services.cookies.runInTransaction(_ => {
+  Services.cookiesvc.runInTransaction(_ => {
     let uri = NetUtil.newURI("http://bar.com/");
     const channel = NetUtil.newChannel({
       uri,
       loadUsingSystemPrincipal: true,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
     });
-    Services.cookies.setCookieStringFromHttp(
+    Services.cookiesvc.setCookieStringFromHttp(
       uri,
       "oh=hai; path=/; max-age=1000",
       channel
     );
     for (let i = 0; i < 3000; ++i) {
       let uri = NetUtil.newURI("http://" + i + ".com/");
-      Services.cookies.setCookieStringFromHttp(
+      Services.cookiesvc.setCookieStringFromHttp(
         uri,
         "oh=hai; max-age=1000",
         channel

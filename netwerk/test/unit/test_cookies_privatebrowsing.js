@@ -45,7 +45,7 @@ add_task(async () => {
   let uri2 = NetUtil.newURI("http://bar.com/bar.html");
 
   // Set a cookie for host 1.
-  Services.cookies.setCookieStringFromHttp(
+  Services.cookiesvc.setCookieStringFromHttp(
     uri1,
     "oh=hai; max-age=1000",
     make_channel(uri1.spec)
@@ -61,7 +61,11 @@ add_task(async () => {
   chan2.QueryInterface(Ci.nsIPrivateBrowsingChannel);
   chan2.setPrivate(true);
 
-  Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
+  Services.cookiesvc.setCookieStringFromHttp(
+    uri2,
+    "oh=hai; max-age=1000",
+    chan2
+  );
   Assert.equal(await getCookieStringFromPrivateDocument(uri1.spec), "");
   Assert.equal(await getCookieStringFromPrivateDocument(uri2.spec), "oh=hai");
 
@@ -70,7 +74,11 @@ add_task(async () => {
   Assert.equal(await getCookieStringFromPrivateDocument(uri1.spec), "");
   Assert.equal(await getCookieStringFromPrivateDocument(uri2.spec), "");
 
-  Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
+  Services.cookiesvc.setCookieStringFromHttp(
+    uri2,
+    "oh=hai; max-age=1000",
+    chan2
+  );
   Assert.equal(await getCookieStringFromPrivateDocument(uri2.spec), "oh=hai");
 
   // Leave private browsing mode and check counts.
@@ -89,7 +97,11 @@ add_task(async () => {
   // Enter private browsing mode, set a cookie for host 2, and check the counts.
   Assert.equal(await getCookieStringFromPrivateDocument(uri1.spec), "");
   Assert.equal(await getCookieStringFromPrivateDocument(uri2.spec), "");
-  Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
+  Services.cookiesvc.setCookieStringFromHttp(
+    uri2,
+    "oh=hai; max-age=1000",
+    chan2
+  );
   Assert.equal(await getCookieStringFromPrivateDocument(uri2.spec), "oh=hai");
 
   // Fake a profile change.
