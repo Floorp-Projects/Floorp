@@ -2,8 +2,10 @@ import pytest
 import mozunit
 from mozfile import which
 
-LINTER = 'rst'
-pytestmark = pytest.mark.skipif(not which('rstcheck'), reason="rstcheck is not installed")
+LINTER = "rst"
+pytestmark = pytest.mark.skipif(
+    not which("rstcheck"), reason="rstcheck is not installed"
+)
 
 
 def test_basic(lint, paths):
@@ -19,5 +21,5 @@ def test_basic(lint, paths):
     assert results[1].relpath == "bad2.rst"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

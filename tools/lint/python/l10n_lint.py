@@ -16,7 +16,7 @@ from compare_locales import parser
 from compare_locales.paths import TOMLParser, ProjectFiles
 
 
-LOCALE = 'gecko-strings'
+LOCALE = "gecko-strings"
 
 
 PULL_AFTER = timedelta(days=2)
@@ -24,9 +24,9 @@ PULL_AFTER = timedelta(days=2)
 
 def lint(paths, lintconfig, **lintargs):
     l10n_base = mb_util.get_state_dir()
-    root = lintargs['root']
-    exclude = lintconfig.get('exclude')
-    extensions = lintconfig.get('extensions')
+    root = lintargs["root"]
+    exclude = lintconfig.get("exclude")
+    extensions = lintconfig.get("extensions")
 
     # Load l10n.toml configs
     l10nconfigs = load_configs(lintconfig, root, l10n_base)
@@ -35,9 +35,9 @@ def lint(paths, lintconfig, **lintargs):
     # Only the l10n.yml will show up here, but if the l10n.toml files
     # change, we also get the l10n.yml as the toml files are listed as
     # support files.
-    if lintconfig['path'] in paths:
+    if lintconfig["path"] in paths:
         results = validate_linter_includes(lintconfig, l10nconfigs, lintargs)
-        paths.remove(lintconfig['path'])
+        paths.remove(lintconfig["path"])
     else:
         results = []
 
@@ -53,18 +53,21 @@ def lint(paths, lintconfig, **lintargs):
     # explicitly excluded in the l10n.yml configuration.
     # `browser/locales/en-US/firefox-l10n.js` is a good example.
     all_files, _ = pathutils.filterpaths(
-        lintargs['root'], all_files, lintconfig['include'],
-        exclude=exclude, extensions=extensions
+        lintargs["root"],
+        all_files,
+        lintconfig["include"],
+        exclude=exclude,
+        extensions=extensions,
     )
     # These should be excluded in l10n.yml
     skips = {p for p in all_files if not parser.hasParser(p)}
     results.extend(
         result.from_config(
             lintconfig,
-            level='warning',
+            level="warning",
             path=path,
-            message="file format not supported in compare-locales"
-            )
+            message="file format not supported in compare-locales",
+        )
         for path in skips
     )
     all_files = [p for p in all_files if p not in skips]
@@ -79,7 +82,7 @@ def lint(paths, lintconfig, **lintargs):
 
 def gecko_strings_setup(**lint_args):
     gs = mozpath.join(mb_util.get_state_dir(), LOCALE)
-    marker = mozpath.join(gs, '.hg', 'l10n_pull_marker')
+    marker = mozpath.join(gs, ".hg", "l10n_pull_marker")
     try:
         last_pull = datetime.fromtimestamp(os.stat(marker).st_mtime)
         skip_clone = datetime.now() < last_pull + PULL_AFTER
@@ -87,27 +90,21 @@ def gecko_strings_setup(**lint_args):
         skip_clone = False
     if skip_clone:
         return
-    hg = mozversioncontrol.get_tool_path('hg')
+    hg = mozversioncontrol.get_tool_path("hg")
     mozversioncontrol.repoupdate.update_mercurial_repo(
-        hg,
-        'https://hg.mozilla.org/l10n/gecko-strings',
-        gs
+        hg, "https://hg.mozilla.org/l10n/gecko-strings", gs
     )
-    with open(marker, 'w') as fh:
+    with open(marker, "w") as fh:
         fh.flush()
 
 
 def load_configs(lintconfig, root, l10n_base):
-    '''Load l10n configuration files specified in the linter configuration.'''
+    """Load l10n configuration files specified in the linter configuration."""
     configs = []
-    env = {
-        'l10n_base': l10n_base
-    }
-    for toml in lintconfig['l10n_configs']:
+    env = {"l10n_base": l10n_base}
+    for toml in lintconfig["l10n_configs"]:
         cfg = TOMLParser().parse(
-            mozpath.join(root, toml),
-            env=env,
-            ignore_missing_includes=True
+            mozpath.join(root, toml), env=env, ignore_missing_includes=True
         )
         cfg.set_locales([LOCALE], deep=True)
         configs.append(cfg)
@@ -115,9 +112,9 @@ def load_configs(lintconfig, root, l10n_base):
 
 
 def validate_linter_includes(lintconfig, l10nconfigs, lintargs):
-    '''Check l10n.yml config against l10n.toml configs.'''
+    """Check l10n.yml config against l10n.toml configs."""
     reference_paths = set(
-        mozpath.relpath(p['reference'].prefix, lintargs['root'])
+        mozpath.relpath(p["reference"].prefix, lintargs["root"])
         for project in l10nconfigs
         for config in project.configs
         for p in config.paths
@@ -125,24 +122,29 @@ def validate_linter_includes(lintconfig, l10nconfigs, lintargs):
     # Just check for directories
     reference_dirs = sorted(p for p in reference_paths if os.path.isdir(p))
     missing_in_yml = [
-        refd for refd in reference_dirs if refd not in lintconfig['include']
+        refd for refd in reference_dirs if refd not in lintconfig["include"]
     ]
     # These might be subdirectories in the config, though
     missing_in_yml = [
-        d for d in missing_in_yml
-        if not any(d.startswith(parent + '/') for parent in lintconfig['include'])
+        d
+        for d in missing_in_yml
+        if not any(d.startswith(parent + "/") for parent in lintconfig["include"])
     ]
     if missing_in_yml:
-        dirs = ', '.join(missing_in_yml)
-        return [result.from_config(
-            lintconfig, path=lintconfig['path'],
-            message='l10n.yml out of sync with l10n.toml, add: ' + dirs
-        )]
+        dirs = ", ".join(missing_in_yml)
+        return [
+            result.from_config(
+                lintconfig,
+                path=lintconfig["path"],
+                message="l10n.yml out of sync with l10n.toml, add: " + dirs,
+            )
+        ]
     return []
 
 
 class MozL10nLinter(L10nLinter):
-    '''Subclass linter to generate the right result type.'''
+    """Subclass linter to generate the right result type."""
+
     def __init__(self, lintconfig):
         super(MozL10nLinter, self).__init__()
         self.lintconfig = lintconfig
