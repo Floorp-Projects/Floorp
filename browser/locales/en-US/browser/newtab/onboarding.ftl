@@ -45,6 +45,17 @@ onboarding-cards-dismiss =
     .title = Dismiss
     .aria-label = Dismiss
 
+# Tooltip displayed on hover of top sites in import settings screen during onboarding flow.
+# This support welcome screen showing top sites imported from the user's default browser.
+# Title text is kept multiline to ensure tooltip container width is not more than 40 characters.
+onboarding-import-sites-info =
+  .title =
+    These sites were found on this device.
+    { -brand-short-name } does not save or sync data from
+    another browser unless you choose to
+    import it.
+  .aria-label = { onboarding-import-sites-info.title }
+
 ## Welcome full page string
 
 onboarding-fullpage-welcome-subheader = Let’s start exploring everything you can do.
