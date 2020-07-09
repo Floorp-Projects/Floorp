@@ -174,7 +174,7 @@ var SysInfo = {
       return this.overrides[name];
     }
 
-    return this._genuine.QueryInterface(Ci.nsIPropertyBag).getProperty(name);
+    return this._genuine.getProperty(name);
   },
 
   getPropertyAsUint32(name) {
@@ -182,7 +182,7 @@ var SysInfo = {
   },
 
   get(name) {
-    return this._genuine.QueryInterface(Ci.nsIPropertyBag2).get(name);
+    return this._genuine.get(name);
   },
 
   get diskInfo() {

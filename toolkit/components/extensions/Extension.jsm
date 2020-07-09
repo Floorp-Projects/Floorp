@@ -382,7 +382,7 @@ var ExtensionAddonObserver = {
 
       // If LSNG is not enabled, we need to clear localStorage explicitly using
       // the old API.
-      if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+      if (!Services.lsm.nextGenLocalStorageEnabled) {
         // Clear localStorage created by the extension
         let storage = Services.domStorageManager.getStorage(
           null,

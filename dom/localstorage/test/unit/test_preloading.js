@@ -10,7 +10,7 @@ async function testSteps() {
   ];
 
   async function isPreloaded(principal) {
-    return Services.domStorageManager.isPreloaded(principal);
+    return Services.lsm.isPreloaded(principal);
   }
 
   info("Setting prefs");
