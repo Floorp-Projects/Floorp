@@ -1,0 +1,21 @@
+{
+  "name": "Post Engine",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "Get engine to test ost params",
+  "applications": {
+    "gecko": {
+      "id": "post@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Post Engine",
+      "search_url": "https://example.com",
+      "search_url_post_params": "webExtension=1&search={searchTerms}",
+      "suggest_url": "https://example.com",
+      "suggest_url_post_params": "webExtension=1&suggest={searchTerms}"
+    }
+  }
+}
