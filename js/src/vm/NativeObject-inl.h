@@ -84,7 +84,11 @@ inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
 inline void NativeObject::setDenseElementWithType(JSContext* cx, uint32_t index,
                                                   const Value& val) {
   addDenseElementType(cx, index, val);
-  setDenseElementMaybeConvertDouble(index, val);
+  if (val.isInt32() && shouldConvertDoubleElements()) {
+    setDenseElement(index, DoubleValue(val.toInt32()));
+  } else {
+    setDenseElement(index, val);
+  }
 }
 
 inline void NativeObject::initDenseElementWithType(JSContext* cx,
