@@ -6,10 +6,10 @@
 
 #include "UrlClassifierFeatureFingerprintingProtection.h"
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "ChannelClassifierService.h"
 #include "mozilla/StaticPrefs_privacy.h"
-#include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -90,25 +90,22 @@ UrlClassifierFeatureFingerprintingProtection::MaybeCreate(
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> chanURI;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  bool isThirdParty =
-      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, chanURI);
+  bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
   if (!isThirdParty) {
     if (UC_LOG_ENABLED()) {
-      nsCString spec = chanURI->GetSpecOrDefault();
-      spec.Truncate(
-          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(
-          ("UrlClassifierFeatureFingerprintingProtection: Skipping "
-           "fingerprinting checks "
-           "for first party or top-level load channel[%p] "
-           "with uri %s",
-           aChannel, spec.get()));
+      nsCOMPtr<nsIURI> chanURI;
+      Unused << aChannel->GetURI(getter_AddRefs(chanURI));
+      if (chanURI) {
+        nsCString spec = chanURI->GetSpecOrDefault();
+        spec.Truncate(
+            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
+        UC_LOG(
+            ("UrlClassifierFeatureFingerprintingProtection: Skipping "
+             "fingerprinting checks "
+             "for first party or top-level load channel[%p] "
+             "with uri %s",
+             aChannel, spec.get()));
+      }
     }
     return nullptr;
   }
