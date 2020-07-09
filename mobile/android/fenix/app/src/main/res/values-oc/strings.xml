@@ -13,8 +13,6 @@
     <string name="content_description_disable_private_browsing_button">Desactivar la navigacion privada.</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Recèrca o adreça</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Cap d’onglet pas dobèrt</string>
 
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Suprimir la session</string>
@@ -278,10 +276,22 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Suprimir</string>
 
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Escafar l’istoric</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Volètz vertadièrament netejar l’istoric ?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Istoric escafat</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s suprimit</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Escafar</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Suprimir</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Suprimir %1$d elements</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Las darrièras 24 oras</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -297,6 +307,8 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Restablir l’onglet</string>
 
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Volètz vertadièrament suprimir aqueste dorsièr ?</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Copiar</string>
     <!-- Bookmark overflow menu share button -->
@@ -312,6 +324,9 @@
     <string name="bookmark_name_label">NOM</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">URL invalida</string>
+
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Marcapagina suprimit</string>
 
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Anar als paramètres</string>
@@ -346,5 +361,70 @@
     <string name="sync_add_new_device_title">Enviar al periferic</string>
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Cap de periferic pas connectat</string>
+
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Onglet suprimit</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Onglets suprimits</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Confirmar</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Volètz vertadièrament suprimir %1$s ?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Suprimir</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Anullar</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Onglets dobèrts</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d onglets</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adreças</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Istoric</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d paginas</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Imatges e fichièrs en cache</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Sortir</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Anullar</string>
+
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Suprimir</string>
+
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Anullar</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Anullar</string>
+
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Suprimir</string>
+
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s : supression realizada</string>
+
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Volètz vertadièrament suprimir totas las autorizacions per totes los sites ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Volètz vertadièrament suprimir totas las autorizacions per aqueste site ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Volètz vertadièrament suprimir aquesta autorizacion per aqueste site ?</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Sètz segur que volètz suprimir aqueste marcapagina ?</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Suprimir</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Sètz segur que volètz suprimir aqueste identificant ?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Suprimir</string>
 
     </resources>

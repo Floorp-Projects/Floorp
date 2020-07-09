@@ -28,6 +28,7 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Nalazite se u privatnoj sesiji</string>
+    <string name="private_browsing_common_myths">Uobičajeni mitovi o privatnom surfanju</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Obriši sesiju</string>
 
@@ -210,6 +211,8 @@
     <string name="preferences_allow_screenshots_in_private_mode">Dozvoli screenshote u privatnom surfanju</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dodaj prečicu za privatno surfanje</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Pristupačnost</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">Zaseban Firefox Account server</string>
     <!-- Preference to override the Sync token server -->
@@ -230,6 +233,8 @@
     <string name="preferences_sign_in_description">Sinhronizujte zabilješke, historiju i više od toga s vašim Firefox računom</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox račun</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Ponovo se povežite za nastavak sinhronizacije</string>
     <!-- Preference for language -->
     <string name="preferences_language">Jezik</string>
     <!-- Preference for data choices -->
@@ -358,6 +363,8 @@
     <string name="preferences_sync_pair">Skenirajte kod za uparivanje u desktop Firefoxu</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prijava</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Prijavite se radi ponovnog povezivanja</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Ukloni račun</string>
 
@@ -439,18 +446,24 @@
     <string name="tab_tray_menu_open_new_tab">Novi tab</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">Početni</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Promijeni režim taba</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Ukloni tab iz kolekcije</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zatvori tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Zatvori tab %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Meni otvorenih tabova</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Zatvori sve tabove</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Podijeli tabove</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Spasi tabove u kolekciju</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Meni tabova</string>
     <!-- Tab menu item to share the tab -->
     <string name="tab_share">Podijeli tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
@@ -804,8 +817,6 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Obriši podatke surfanja pri izlazu</string>
 
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Historija surfanja</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ugasi</string>
 

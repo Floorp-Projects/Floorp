@@ -940,9 +940,7 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Nightly 已接手原 Firefox Preview 功能</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。\n\n
-
-若想要有較穩定的使用體驗，請下載我們的 Beta 測試版。</string>
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。\n\n若想要有較穩定的使用體驗，請下載我們的 Beta 測試版。</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">下載 Firefox for Android Beta 測試版</string>

@@ -49,8 +49,6 @@
 
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Simpen kana koléksi</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Laporkeun masalah loka</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bagikeun</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
@@ -62,7 +60,7 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Dijalankeun ku %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Pidangan baca</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Buka di aplikasi</string>
@@ -329,8 +327,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Otomatis mupus data nyungsi nalika anjeun milih tombol &quot;Kaluar&quot; ti menu utama</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Otomatis mupus data nyungsi nalika anjeun milih  \&quot;Kaluar\&quot; ti menu utama</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Jujutan nyungsi</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Kaluar</string>
 
@@ -372,6 +368,9 @@
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Bolay</string>
 
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Setélan Kilung</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lenyepan</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
