@@ -263,7 +263,6 @@ body {
 .multistageContainer {
   text-align: center;
   overflow-x: auto;
-  width: 100vw;
   height: 100vh;
   background-color: var(--newtab-background-color-1); }
   .multistageContainer .screen {
