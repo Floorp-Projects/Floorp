@@ -483,12 +483,12 @@ def test_ignore_glob(caplog):
 def test_all_filesystem_paths():
     with mock.patch(
             'tools.lint.lint.walk',
-            return_value=[('',
-                           [('dir_a', None), ('dir_b', None)],
-                           [('file_a', None), ('file_b', None)]),
-                          ('dir_a',
+            return_value=[(b'',
+                           [(b'dir_a', None), (b'dir_b', None)],
+                           [(b'file_a', None), (b'file_b', None)]),
+                          (b'dir_a',
                            [],
-                           [('file_c', None), ('file_d', None)])]
+                           [(b'file_c', None), (b'file_d', None)])]
     ):
         got = list(lint_mod.all_filesystem_paths('.'))
         assert got == ['file_a',
@@ -500,12 +500,12 @@ def test_all_filesystem_paths():
 def test_filesystem_paths_subdir():
     with mock.patch(
             'tools.lint.lint.walk',
-            return_value=[('',
-                           [('dir_a', None), ('dir_b', None)],
-                           [('file_a', None), ('file_b', None)]),
-                          ('dir_a',
+            return_value=[(b'',
+                           [(b'dir_a', None), (b'dir_b', None)],
+                           [(b'file_a', None), (b'file_b', None)]),
+                          (b'dir_a',
                            [],
-                           [('file_c', None), ('file_d', None)])]
+                           [(b'file_c', None), (b'file_d', None)])]
     ):
         got = list(lint_mod.all_filesystem_paths('.', 'dir'))
         assert got == [os.path.join('dir', 'file_a'),
