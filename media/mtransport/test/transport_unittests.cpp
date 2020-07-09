@@ -442,7 +442,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         lossy_(new TransportLayerLossy()),
         dtls_(new TransportLayerDtls()),
         identity_(DtlsIdentity::Generate()),
-        ice_ctx_(NrIceCtx::Create(name)),
+        ice_ctx_(),
         streams_(),
         peer_(nullptr),
         gathering_complete_(false),
@@ -450,6 +450,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
         enabled_cipersuites_(),
         disabled_cipersuites_(),
         test_utils_(utils) {
+    NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
+    ice_ctx_ = NrIceCtx::Create(name, NrIceCtx::Config());
     std::vector<NrIceStunServer> stun_servers;
     UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
         std::string((char*)"stun.services.mozilla.com"), 3478));
