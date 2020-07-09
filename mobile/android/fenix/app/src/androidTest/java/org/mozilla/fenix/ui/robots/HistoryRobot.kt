@@ -90,6 +90,13 @@ class HistoryRobot {
             return Transition()
         }
 
+        fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            closeButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openThreeDotMenu(interact: ThreeDotMenuHistoryItemRobot.() -> Unit):
             ThreeDotMenuHistoryItemRobot.Transition {
 

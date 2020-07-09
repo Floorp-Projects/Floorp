@@ -96,6 +96,13 @@ class SettingsRobot {
             return HomeScreenRobot.Transition()
         }
 
+        fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            goBackButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit):
                 SettingsSubMenuAboutRobot.Transition {
 

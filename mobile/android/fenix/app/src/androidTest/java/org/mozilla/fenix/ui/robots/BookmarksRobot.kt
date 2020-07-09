@@ -132,6 +132,8 @@ class BookmarksRobot {
         addFolderButton().click()
     }
 
+    fun clickdeleteBookmarkButton() = deleteBookmarkButton().click()
+
     fun addNewFolderName(name: String) {
         addFolderTitleField()
             .click()
@@ -186,6 +188,23 @@ class BookmarksRobot {
 
             HomeScreenRobot().interact()
             return Transition()
+        }
+
+        fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            closeButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun confirmBookmarkFolderDeletionAndGoBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            onView(withText(R.string.delete_browsing_data_prompt_allow))
+                .inRoot(RootMatchers.isDialog())
+                .check(matches(isDisplayed()))
+                .click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {
@@ -247,6 +266,8 @@ private fun addFolderButton() = onView(withId(R.id.add_bookmark_folder))
 private fun addFolderTitleField() = onView(withId(R.id.bookmarkNameEdit))
 
 private fun saveFolderButton() = onView(withId(R.id.confirm_add_folder_button))
+
+private fun deleteBookmarkButton() = onView(withId(R.id.delete_bookmark_button))
 
 private fun threeDotMenu(bookmarkUrl: Uri) = onView(
     allOf(

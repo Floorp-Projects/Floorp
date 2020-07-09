@@ -29,9 +29,17 @@ class FindInPageRobot {
 
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
 
+    fun verifyFindInPageQuery() = assertFindInPageQuery()!!
     fun verifyFindInPageNextButton() = assertFindInPageNextButton()!!
     fun verifyFindInPagePrevButton() = assertFindInPagePrevButton()!!
     fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()!!
+
+    fun verifyFindInPageSearchBarItems() {
+        verifyFindInPageQuery()
+        verifyFindInPageNextButton()
+        verifyFindInPagePrevButton()
+        verifyFindInPageCloseButton()
+    }
 
     fun enterFindInPageQuery(expectedText: String) {
         mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime)
@@ -72,6 +80,9 @@ private fun findInPageResult() = onView(withId(R.id.find_in_page_result_text))
 private fun findInPageNextButton() = onView(withId(R.id.find_in_page_next_btn))
 private fun findInPagePrevButton() = onView(withId(R.id.find_in_page_prev_btn))
 private fun findInPageCloseButton() = onView(withId(R.id.find_in_page_close_btn))
+
+private fun assertFindInPageQuery() = findInPageQuery()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertFindInPageNextButton() = findInPageNextButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
