@@ -223,7 +223,6 @@ static const char* gCallbackPrefsForSocketProcess[] = {
     "network.trr.",
     "network.dns.disableIPv6",
     "network.dns.skipTRR-when-parental-control-enabled",
-    "network.offline-mirrors-connectivity",
     nullptr,
 };
 
@@ -1370,9 +1369,6 @@ nsresult nsIOService::SetConnectivityInternal(bool aConnectivity) {
     observerService->NotifyObservers(nullptr,
                                      NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
                                      aConnectivity ? u"true" : u"false");
-    if (SocketProcessReady()) {
-      Unused << mSocketProcess->GetActor()->SendSetConnectivity(aConnectivity);
-    }
   }
 
   if (mOffline) {

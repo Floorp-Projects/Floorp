@@ -134,52 +134,48 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(NS_IsMainThread());
 
   mLaunchPhase = LaunchPhase::Complete;
-  if (!aSucceeded) {
-    if (mListener) {
-      mListener->OnProcessLaunchComplete(this, false);
-    }
-    return;
-  }
 
-  mSocketProcessParent = MakeUnique<SocketProcessParent>(this);
-  DebugOnly<bool> rv = mSocketProcessParent->Open(
-      TakeChannel(), base::GetProcId(GetChildProcessHandle()));
-  MOZ_ASSERT(rv);
+  if (aSucceeded) {
+    mSocketProcessParent = MakeUnique<SocketProcessParent>(this);
+    DebugOnly<bool> rv = mSocketProcessParent->Open(
+        TakeChannel(), base::GetProcId(GetChildProcessHandle()));
+    MOZ_ASSERT(rv);
 
-  SocketPorcessInitAttributes attributes;
-  nsCOMPtr<nsIIOService> ioService(do_GetIOService());
-  MOZ_ASSERT(ioService, "No IO service?");
-  DebugOnly<nsresult> result = ioService->GetOffline(&attributes.mOffline());
-  MOZ_ASSERT(NS_SUCCEEDED(result), "Failed getting offline?");
-  result = ioService->GetConnectivity(&attributes.mConnectivity());
-  MOZ_ASSERT(NS_SUCCEEDED(result), "Failed getting connectivity?");
+    nsCOMPtr<nsIIOService> ioService(do_GetIOService());
+    MOZ_ASSERT(ioService, "No IO service?");
+    bool offline = false;
+    DebugOnly<nsresult> result = ioService->GetOffline(&offline);
+    MOZ_ASSERT(NS_SUCCEEDED(result), "Failed getting offline?");
+
+    Maybe<FileDescriptor> brokerFd;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  if (GetEffectiveSocketProcessSandboxLevel() > 0) {
-    auto policy = SandboxBrokerPolicyFactory::GetSocketProcessPolicy(
-        GetActor()->OtherPid());
-    if (policy != nullptr) {
-      attributes.mSandboxBroker() = Some(FileDescriptor());
-      mSandboxBroker =
-          SandboxBroker::Create(std::move(policy), GetActor()->OtherPid(),
-                                attributes.mSandboxBroker().ref());
-      // This is unlikely to fail and probably indicates OS resource
-      // exhaustion.
-      Unused << NS_WARN_IF(mSandboxBroker == nullptr);
-      MOZ_ASSERT(attributes.mSandboxBroker().ref().IsValid());
+    if (GetEffectiveSocketProcessSandboxLevel() > 0) {
+      auto policy = SandboxBrokerPolicyFactory::GetSocketProcessPolicy(
+          GetActor()->OtherPid());
+      if (policy != nullptr) {
+        brokerFd = Some(FileDescriptor());
+        mSandboxBroker = SandboxBroker::Create(
+            std::move(policy), GetActor()->OtherPid(), brokerFd.ref());
+        // This is unlikely to fail and probably indicates OS resource
+        // exhaustion.
+        Unused << NS_WARN_IF(mSandboxBroker == nullptr);
+        MOZ_ASSERT(brokerFd.ref().IsValid());
+      }
+      Unused << GetActor()->SendInitLinuxSandbox(brokerFd);
     }
-  }
 #endif  // XP_LINUX && MOZ_SANDBOX
 
-  Unused << GetActor()->SendInit(attributes);
-
 #ifdef MOZ_GECKO_PROFILER
-  Unused << GetActor()->SendInitProfiler(
-      ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
+    Unused << GetActor()->SendInitProfiler(
+        ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
 #endif
 
+    Unused << GetActor()->SendSetOffline(offline);
+  }
+
   if (mListener) {
-    mListener->OnProcessLaunchComplete(this, true);
+    mListener->OnProcessLaunchComplete(this, aSucceeded);
   }
 }
 

@@ -69,12 +69,6 @@ struct SocketDataArgs
   SocketInfo[] info;
 };
 
-struct SocketPorcessInitAttributes {
-  bool mOffline;
-  bool mConnectivity;
-  FileDescriptor? mSandboxBroker;
-};
-
 sync protocol PSocketProcess
 {
   manages PDNSRequest;
@@ -131,14 +125,12 @@ parent:
     returns (bool aAccepted);
 
 child:
-  async Init(SocketPorcessInitAttributes aAttributes);
   async PreferenceUpdate(Pref pref);
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
                             bool minimizeMemoryUsage,
                             FileDescriptor? DMDFile);
   async SetOffline(bool offline);
-  async SetConnectivity(bool connectivity);
   async InitLinuxSandbox(FileDescriptor? sandboxBroker);
   async InitSocketProcessBridgeParent(ProcessId processId, Endpoint<PSocketProcessBridgeParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
