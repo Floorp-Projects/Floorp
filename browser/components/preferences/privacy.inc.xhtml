@@ -1001,4 +1001,36 @@
     </vbox>
   </hbox>
 </groupbox>
+
+<!-- HTTPS-ONLY Mode -->
+<groupbox id="httpsOnlyBox" data-category="panePrivacy" hidden="true" hidehttpsonly="true">
+  <label><html:h2 data-l10n-id="httpsonly-header"/></label>
+  <vbox data-subcategory="httpsonly">
+    <hbox align="start">
+      <image id="httpsOnlyShield"/>
+      <vbox flex="1">
+        <label id="httpsOnlyDescription" data-l10n-id="httpsonly-description"/>
+        <label id="httpsOnlyLearnMore" data-l10n-id="httpsonly-learn-more" class="learnMore" is="text-link"/>
+      </vbox>
+    </hbox>
+  </vbox>
+  <vbox>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <radiogroup id="httpsOnlyRadioGroup"
+                  preference="dom.security.https_only_mode">
+        <radio id="httpsOnlyRadioEnabled"
+               data-l10n-id="httpsonly-radio-enabled"
+               value="enabled"/>
+        <radio id="httpsOnlyRadioEnabledPBM"
+               data-l10n-id="httpsonly-radio-enabled-pbm"
+               value="privateOnly"/>
+        <radio id="httpsOnlyRadioDisabled"
+               data-l10n-id="httpsonly-radio-disabled"
+               value="disabled"/>
+      </radiogroup>
+    </hbox>
+  </vbox>
+</groupbox>
+
 </html:template>

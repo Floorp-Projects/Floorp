@@ -766,8 +766,18 @@ pref("browser.preferences.experimental", false);
 pref("browser.preferences.experimental.hidden", false);
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
+#if defined(NIGHTLY_BUILD)
+pref("browser.preferences.exposeHTTPSOnly", true);
+#else
+pref("browser.preferences.exposeHTTPSOnly", false);
+#endif
+
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
+
+// URL for "Learn More" for HttpsOnly
+pref("domsecurity.httpsonly.infoURL",
+     "https://developer.mozilla.org/en-US/docs/Glossary/https");
 
 // Backspace and Shift+Backspace behavior
 // 0 goes Back/Forward
