@@ -44,7 +44,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Cookie “a” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.",
+          "Cookie “a” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.",
       });
     }),
 
@@ -52,7 +52,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Cookie “b” rejected because it has the “sameSite=none” attribute but is missing the “secure” attribute.",
+          "Cookie “b” rejected because it has the “SameSite=None” attribute but is missing the “secure” attribute.",
       });
     }),
 
@@ -60,7 +60,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Invalid “sameSite“ value for cookie “c”. The supported values are: “lax“, “strict“, “none“.",
+          "Invalid “SameSite“ value for cookie “c”. The supported values are: “Lax“, “Strict“, “None“.",
       });
     }),
 
@@ -68,7 +68,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Cookie “c” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.",
+          "Cookie “c” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.",
       });
     }),
   ];
@@ -89,7 +89,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Cookie “d” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.",
+          "Cookie “d” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.",
       });
     }),
 
@@ -97,7 +97,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Cookie “e” rejected because it has the “sameSite=none” attribute but is missing the “secure” attribute.",
+          "Cookie “e” rejected because it has the “SameSite=None” attribute but is missing the “secure” attribute.",
       });
     }),
 
@@ -105,7 +105,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Invalid “sameSite“ value for cookie “f”. The supported values are: “lax“, “strict“, “none“.",
+          "Invalid “SameSite“ value for cookie “f”. The supported values are: “Lax“, “Strict“, “None“.",
       });
     }),
 
@@ -113,7 +113,7 @@ add_task(async _ => {
       expected.push({
         resolve,
         match:
-          "Cookie “f” has “sameSite” policy set to “lax” because it is missing a “sameSite” attribute, and “sameSite=lax” is the default value for this attribute.",
+          "Cookie “f” has “SameSite” policy set to “Lax” because it is missing a “SameSite” attribute, and “SameSite=Lax” is the default value for this attribute.",
       });
     }),
   ];

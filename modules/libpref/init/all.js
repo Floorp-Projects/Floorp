@@ -1927,7 +1927,7 @@ pref("network.cookie.move.interval_sec",    10);
 
 // This pref contains the list of hostnames (such as
 // "mozilla.org,example.net"). For these hosts, firefox will treat
-// sameSite=none if nothing else is specified, even if
+// SameSite=None if nothing else is specified, even if
 // network.cookie.sameSite.laxByDefault if set to true.
 // To know the correct syntax, see nsContentUtils::IsURIInList()
 pref("network.cookie.sameSite.laxByDefault.disabledHosts", "");

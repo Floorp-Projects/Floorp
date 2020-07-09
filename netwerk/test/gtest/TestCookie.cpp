@@ -193,8 +193,8 @@ void InitPrefs(nsIPrefBranch* aPrefBranch) {
   // Set the base domain limit to 50 so we have a known value.
   aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
 
-  // SameSite=none by default. We have other tests for lax-by-default.
-  // XXX: Bug 1617611 - Fix all the tests broken by "cookies sameSite=lax by
+  // SameSite=None by default. We have other tests for lax-by-default.
+  // XXX: Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by
   // default"
   Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
   Preferences::SetBool("network.cookieJarSettings.unblocked_for_testing", true);

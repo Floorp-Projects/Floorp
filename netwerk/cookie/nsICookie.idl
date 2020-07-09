@@ -109,7 +109,7 @@ interface nsICookie : nsISupports {
     readonly attribute int64_t lastAccessed;
 
     /**
-     * the sameSite attribute; this controls the cookie behavior for cross-site
+     * the SameSite attribute; this controls the cookie behavior for cross-site
      * requests as per
      * https://tools.ietf.org/html/draft-west-first-party-cookies-07
      *

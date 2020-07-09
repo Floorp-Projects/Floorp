@@ -30,8 +30,8 @@ is-public = {default = false, nightly = true}
 default-value = false
 
 [cookie-samesite-lax-by-default]
-title = "experimental-features-cookie-samesite-lax-by-default"
-description = "experimental-features-cookie-samesite-lax-by-default-description"
+title = "experimental-features-cookie-samesite-lax-by-default2"
+description = "experimental-features-cookie-samesite-lax-by-default2-description"
 restart-required = false
 preference = "network.cookie.sameSite.laxByDefault"
 type = "boolean"
@@ -40,8 +40,8 @@ default-value = {default = false, nightly = true}
 is-public = true
 
 [cookie-samesite-none-requires-secure]
-title = "experimental-features-cookie-samesite-none-requires-secure"
-description = "experimental-features-cookie-samesite-none-requires-secure-description"
+title = "experimental-features-cookie-samesite-none-requires-secure2"
+description = "experimental-features-cookie-samesite-none-requires-secure2-description"
 restart-required = false
 preference = "network.cookie.sameSite.noneRequiresSecure"
 type = "boolean"

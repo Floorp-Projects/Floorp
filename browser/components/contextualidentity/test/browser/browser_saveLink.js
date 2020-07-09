@@ -16,7 +16,7 @@ add_task(async function setup() {
     set: [
       ["privacy.userContext.enabled", true],
       // This test does a redirect from https to http and it checks the
-      // cookies. This is incompatible with the cookie sameSite schemeful
+      // cookies. This is incompatible with the cookie SameSite schemeful
       // feature and we need to disable it.
       ["network.cookie.sameSite.schemeful", false],
       // This Test trys to download mixed content

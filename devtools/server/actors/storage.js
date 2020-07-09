@@ -41,7 +41,7 @@ loader.lazyRequireGetter(
   true
 );
 
-// "Lax", "Strict" and "None" are special values of the sameSite property
+// "Lax", "Strict" and "None" are special values of the SameSite property
 // that should not be translated.
 const COOKIE_SAMESITE = {
   LAX: "Lax",

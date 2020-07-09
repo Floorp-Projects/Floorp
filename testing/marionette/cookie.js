@@ -93,7 +93,7 @@ cookie.fromJSON = function(json) {
     newCookie.sameSite = assert.in(
       json.sameSite,
       Array.from(SAMESITE_MAP.keys()),
-      "Cookie sameSite flag must be one of None, Lax, or Strict"
+      "Cookie SameSite flag must be one of None, Lax, or Strict"
     );
   }
 
