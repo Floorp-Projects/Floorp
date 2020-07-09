@@ -113,7 +113,6 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   // Stencil for top-level script. This includes standalone functions and
   // functions being delazified.
   JS::Rooted<ScriptStencil> topLevel;
-  bool topLevelAsmJS = false;
 
   // A rooted list of scopes created during this parse.
   //
