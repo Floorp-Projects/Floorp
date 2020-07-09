@@ -96,7 +96,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     bool operator()(const ScopeIndex& index) {
       MutableHandle<ScopeCreationData> data =
           compilationInfo.scopeCreationData[index];
-      Scope* scope = data.get().createScope(cx);
+      Scope* scope = data.get().createScope(cx, compilationInfo);
       if (!scope) {
         return false;
       }

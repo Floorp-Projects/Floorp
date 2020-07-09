@@ -21,6 +21,11 @@ MutableHandle<ScopeCreationData> AbstractScopePtr::scopeCreationData() const {
   return data.compilationInfo.scopeCreationData[data.index.index];
 }
 
+CompilationInfo& AbstractScopePtr::compilationInfo() const {
+  const Deferred& data = scope_.as<Deferred>();
+  return data.compilationInfo;
+}
+
 // This is used during allocation of the scopes to ensure that we only
 // allocate GC scopes with GC-enclosing scopes. This can recurse through
 // the scope chain.
@@ -39,7 +44,7 @@ bool AbstractScopePtr::getOrCreateScope(JSContext* cx,
       return true;
     }
 
-    scope.set(scd.get().createScope(cx));
+    scope.set(scd.get().createScope(cx, compilationInfo()));
     return scope;
   }
 
@@ -90,6 +95,7 @@ bool AbstractScopePtr::isArrow() const {
   if (isScopeCreationData()) {
     return scopeCreationData().get().isArrow();
   }
+  MOZ_ASSERT(scope()->as<FunctionScope>().canonicalFunction());
   return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
 }
 

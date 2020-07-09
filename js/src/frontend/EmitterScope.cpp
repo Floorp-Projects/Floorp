@@ -635,8 +635,8 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
     return ScopeCreationData::create(
         cx, bce->compilationInfo, funbox->functionScopeBindings(),
         funbox->hasParameterExprs,
-        funbox->needsCallObjectRegardlessOfBindings(), funbox, enclosing,
-        index);
+        funbox->needsCallObjectRegardlessOfBindings(), funbox->index(),
+        funbox->isArrow(), enclosing, index);
   };
   if (!internBodyScopeCreationData(bce, createScope)) {
     return false;

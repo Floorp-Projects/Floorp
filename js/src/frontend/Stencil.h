@@ -46,7 +46,6 @@ class JS_PUBLIC_API JSTracer;
 namespace js::frontend {
 
 struct CompilationInfo;
-class FunctionBox;
 
 // [SMDOC] Script Stencil (Frontend Representation)
 //
@@ -213,8 +212,11 @@ class ScopeCreationData {
   // ownership of the data on reification.
   HeapPtr<Scope*> scope_ = {};
 
-  // For FunctionScopes we need the funbox; nullptr otherwise.
-  frontend::FunctionBox* funbox_ = nullptr;
+  // Canonical function if this is a FunctionScope.
+  mozilla::Maybe<FunctionIndex> functionIndex_;
+
+  // True if this is a FunctionScope for an arrow function.
+  bool isArrow_;
 
   UniquePtr<BaseScopeData> data_;
 
@@ -223,11 +225,13 @@ class ScopeCreationData {
       JSContext* cx, ScopeKind kind, Handle<AbstractScopePtr> enclosing,
       Handle<frontend::EnvironmentShapeCreationData> environmentShape,
       UniquePtr<BaseScopeData> data = {},
-      frontend::FunctionBox* funbox = nullptr)
+      mozilla::Maybe<FunctionIndex> functionIndex = mozilla::Nothing(),
+      bool isArrow = false)
       : enclosing_(enclosing),
         kind_(kind),
         environmentShape_(environmentShape),  // Copied
-        funbox_(funbox),
+        functionIndex_(functionIndex),
+        isArrow_(isArrow),
         data_(std::move(data)) {}
 
   ScopeKind kind() const { return kind_; }
@@ -240,7 +244,7 @@ class ScopeCreationData {
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<FunctionScope::Data*> dataArg,
                      bool hasParameterExprs, bool needsEnvironment,
-                     frontend::FunctionBox* funbox,
+                     FunctionIndex functionIndex, bool isArrow,
                      Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   // LexicalScope
@@ -281,7 +285,9 @@ class ScopeCreationData {
   }
 
   // Valid for functions;
-  bool isArrow() const;
+  JSFunction* function(frontend::CompilationInfo& compilationInfo);
+
+  bool isArrow() const { return isArrow_; }
 
   bool hasScope() const { return scope_ != nullptr; }
 
@@ -290,7 +296,7 @@ class ScopeCreationData {
     return scope_;
   }
 
-  Scope* createScope(JSContext* cx);
+  Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo);
 
   void trace(JSTracer* trc);
 
@@ -306,10 +312,11 @@ class ScopeCreationData {
 
   // Transfer ownership into a new UniquePtr.
   template <typename SpecificScopeType>
-  UniquePtr<typename SpecificScopeType::Data> releaseData();
+  UniquePtr<typename SpecificScopeType::Data> releaseData(
+      CompilationInfo& compilationInfo);
 
   template <typename SpecificScopeType>
-  Scope* createSpecificScope(JSContext* cx);
+  Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo);
 
   template <typename SpecificScopeType>
   uint32_t nextFrameSlot() const {
