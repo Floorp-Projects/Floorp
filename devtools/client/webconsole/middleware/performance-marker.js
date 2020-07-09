@@ -13,7 +13,7 @@ const { Cu } = require("chrome");
  * Performance marker middleware is responsible for recording markers visible
  * performance profiles.
  */
-function performanceMarkerMiddleware(store) {
+function performanceMarkerMiddleware(sessionId, store) {
   return next => action => {
     const shouldAddProfileMarker = action.type === MESSAGES_ADD;
 
@@ -25,7 +25,7 @@ function performanceMarkerMiddleware(store) {
       const { messages } = action;
       const totalMessageCount = store.getState().messages.messagesById.size;
       ChromeUtils.addProfilerMarker(
-        "WebconsoleAddMessages",
+        `WebconsoleAddMessages (${sessionId})`,
         startTime,
         `${messages.length} messages handled, store now has ${totalMessageCount} messages`
       );
