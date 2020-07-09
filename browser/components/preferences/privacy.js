@@ -195,6 +195,10 @@ Preferences.addAll([
 
   // First-Party Isolation
   { id: "privacy.firstparty.isolate", type: "bool" },
+
+  // HTTPS-Only
+  { id: "dom.security.https_only_mode", type: "bool" },
+  { id: "dom.security.https_only_mode_pbm", type: "bool" },
 ]);
 
 // Study opt out
@@ -393,6 +397,70 @@ var gPrivacyPane = {
   _initAutocomplete() {
     Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].getService(
       Ci.mozIPlacesAutoComplete
+    );
+  },
+
+  syncFromHttpsOnlyPref() {
+    let httpsOnlyOnPref = Services.prefs.getBoolPref(
+      "dom.security.https_only_mode"
+    );
+    let httpsOnlyOnPBMPref = Services.prefs.getBoolPref(
+      "dom.security.https_only_mode_pbm"
+    );
+    let httpsOnlyRadioGroup = document.getElementById("httpsOnlyRadioGroup");
+
+    if (httpsOnlyOnPref) {
+      httpsOnlyRadioGroup.value = "enabled";
+    } else if (httpsOnlyOnPBMPref) {
+      httpsOnlyRadioGroup.value = "privateOnly";
+    } else {
+      httpsOnlyRadioGroup.value = "disabled";
+    }
+  },
+
+  syncToHttpsOnlyPref() {
+    let value = document.getElementById("httpsOnlyRadioGroup").value;
+    Services.prefs.setBoolPref(
+      "dom.security.https_only_mode_pbm",
+      value == "privateOnly"
+    );
+    Services.prefs.setBoolPref(
+      "dom.security.https_only_mode",
+      value == "enabled"
+    );
+  },
+
+  /**
+   * Init HTTPS-Only mode and corresponding prefs
+   */
+  initHttpsOnly() {
+    let exposeHttpsOnly = Services.prefs.getBoolPref(
+      "browser.preferences.exposeHTTPSOnly"
+    );
+    let httpsOnlyBox = document.getElementById("httpsOnlyBox");
+
+    if (!exposeHttpsOnly) {
+      httpsOnlyBox.setAttribute("hidehttpsonly", "true");
+      return;
+    }
+
+    httpsOnlyBox.removeAttribute("hidehttpsonly");
+
+    let link = document.getElementById("httpsOnlyLearnMore");
+    let httpsOnlyURL = Services.urlFormatter.formatURLPref(
+      "domsecurity.httpsonly.infoURL"
+    );
+    link.setAttribute("href", httpsOnlyURL);
+
+    setSyncFromPrefListener("httpsOnlyRadioGroup", () =>
+      this.syncFromHttpsOnlyPref()
+    );
+    setSyncToPrefListener("httpsOnlyRadioGroup", () =>
+      this.syncToHttpsOnlyPref()
+    );
+
+    Preferences.get("dom.security.https_only_mode_pbm").on("change", () =>
+      this.syncFromHttpsOnlyPref()
     );
   },
 
@@ -687,6 +755,9 @@ var gPrivacyPane = {
       document.getElementById("privateBrowsingAutoStart").hidden = true;
       document.querySelector("menuitem[value='dontremember']").hidden = true;
     }
+
+    /* init HTTPS-Only mode */
+    this.initHttpsOnly();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
