@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  title: "Test changing sink and muting before the MediaStream is set",
+  bug: "1651049",
+  visible: true
+});
+
+let getOutputDeviceId = async () => {
+  let devices = await navigator.mediaDevices.enumerateDevices();
+  is(devices.length, 3, "Three fake devices found (mic, video, speaker).");
+  let audios = devices.filter(d => d.kind == "audiooutput");
+  is(audios.length, 1, "One output device found.");
+
+  return audios[0].deviceId;
+}
+
+let verifyAudioTone = async (ac, stream, freq) => {
+  const toneAnalyser = new AudioStreamAnalyser(ac, stream);
+  return toneAnalyser.waitForAnalysisSuccess(array => {
+    const lowerFreq = freq / 2;
+    const upperFreq = freq + 1000;
+    const lowerMag = array[toneAnalyser.binIndexForFrequency(lowerFreq)];
+    const freqMag = array[toneAnalyser.binIndexForFrequency(freq)];
+    const upperMag = array[toneAnalyser.binIndexForFrequency(upperFreq)];
+    info("Audio tone expected. "
+         + lowerFreq + ": " + lowerMag + ", "
+         + freq + ": " + freqMag + ", "
+         + upperFreq + ": " + upperMag);
+    return lowerMag < 50 && freqMag > 200 && upperMag < 50;
+  });
+}
+
+let verifyNoAudioTone = async (ac, stream, freq) => {
+  const toneAnalyser = new AudioStreamAnalyser(ac, stream);
+  // repeat check 100 times to make sure that it is muted.
+  let retryCnt = 0;
+  return toneAnalyser.waitForAnalysisSuccess(array => {
+    const lowerFreq = freq / 2;
+    const upperFreq = freq + 1000;
+    const lowerMag = array[toneAnalyser.binIndexForFrequency(lowerFreq)];
+    const freqMag = array[toneAnalyser.binIndexForFrequency(freq)];
+    const upperMag = array[toneAnalyser.binIndexForFrequency(upperFreq)];
+    info("No audio tone expected. "
+         + lowerFreq + ": " + lowerMag + ", "
+         + freq + ": " + freqMag + ", "
+         + upperFreq + ": " + upperMag);
+    return lowerMag == 0 && freqMag == 0 && upperMag == 0 && ++retryCnt == 100;
+  });
+}
+
+runTest(async () => {
+  let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!audioDevice) {
+    todo(false, "No loopback device set by framework. Try --use-test-media-devices");
+    return;
+  }
+
+  await pushPrefs(["media.setsinkid.enabled", true]);
+
+  let sinkId = await getOutputDeviceId();
+  isnot(sinkId, "", "SinkId is not null");
+
+  let audioElement = createMediaElement('audio', 'audioElement');
+  audioElement.muted = true;
+  await audioElement.setSinkId(sinkId);
+  isnot(audioElement.sinkId, "", "sinkId property of the element is not null");
+
+  // The test stream is a sine tone of 1000 Hz
+  let ac = new AudioContext();
+  const frequency = 2000;
+  let stream = createOscillatorStream(ac, frequency);
+  await verifyAudioTone(ac, stream, frequency);
+
+  audioElement.srcObject = stream;
+  audioElement.play();
+
+  // Verify the stream by calling a gUM and using the loopack devices.
+  let verifyStream = await getUserMedia({audio: true});
+  // We gonna test our tone, stop the auto created one.
+  DefaultLoopbackTone.stop();
+  await verifyNoAudioTone(ac, verifyStream, frequency);
+  info("output is muted");
+
+  // Clean up
+  audioElement.pause();
+  audioElement.srcObject = null;
+  verifyStream.getTracks()[0].stop();
+});
+</script>
+</pre>
+</body>
+</html>
