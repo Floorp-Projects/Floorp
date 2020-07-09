@@ -76,7 +76,7 @@ async function clickURLBarSuggestion(resultTitle, button = 1) {
 async function withNewSearchEngine(taskFn) {
   const url =
     getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addEngine(url, "", false);
+  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 

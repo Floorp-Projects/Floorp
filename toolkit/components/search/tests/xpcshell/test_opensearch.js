@@ -71,10 +71,9 @@ for (const test of tests) {
       SearchUtils.MODIFIED_TYPE.ADDED,
       SearchUtils.TOPIC_ENGINE_MODIFIED
     );
-    let engine = await Services.search.addEngine(
+    let engine = await Services.search.addOpenSearchEngine(
       gDataUrl + test.file,
-      null,
-      false
+      null
     );
     await promiseEngineAdded;
     Assert.ok(engine, "Should have installed the engine.");

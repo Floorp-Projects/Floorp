@@ -37,10 +37,9 @@ add_task(async function init_search_service() {
 
 // Simple test of the search callback
 add_task(async function simple_callback_test() {
-  let engine = await Services.search.addEngine(
+  let engine = await Services.search.addOpenSearchEngine(
     gDataUrl + "engine.xml",
-    null,
-    false
+    null
   );
   Assert.ok(!!engine);
   Assert.notEqual(engine.name, (await Services.search.getDefault()).name);
@@ -59,10 +58,9 @@ add_task(async function duplicate_failure_test() {
   // Re-add the same engine added in the previous test
   let engine;
   try {
-    engine = await Services.search.addEngine(
+    engine = await Services.search.addOpenSearchEngine(
       gDataUrl + "engine.xml",
-      null,
-      false
+      null
     );
   } catch (ex) {
     let errorCode = ex.result;
@@ -78,10 +76,9 @@ add_task(async function load_failure_test() {
   // Try adding an engine that doesn't exist.
   let engine;
   try {
-    engine = await Services.search.addEngine(
+    engine = await Services.search.addOpenSearchEngine(
       "http://invalid/data/engine.xml",
-      null,
-      false
+      null
     );
   } catch (ex) {
     let errorCode = ex.result;

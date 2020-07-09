@@ -2102,10 +2102,9 @@ add_task(async function test_defaultSearchEngine() {
         reject(ex);
       }
     }, "browser-search-engine-modified");
-    Services.search.addEngine(
+    Services.search.addOpenSearchEngine(
       "file://" + do_get_cwd().path + "/engine.xml",
-      null,
-      false
+      null
     );
   });
   await Services.search.setDefault(engine);

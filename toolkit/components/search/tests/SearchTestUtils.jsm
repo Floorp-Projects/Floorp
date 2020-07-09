@@ -44,7 +44,7 @@ var SearchTestUtils = Object.freeze({
    *                    or rejected if it fails.
    */
   async promiseNewSearchEngine(url) {
-    let engine = await Services.search.addEngine(url, "", false);
+    let engine = await Services.search.addOpenSearchEngine(url, "");
     gTestGlobals.registerCleanupFunction(async () =>
       Services.search.removeEngine(engine)
     );

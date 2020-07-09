@@ -2603,7 +2603,7 @@ SearchService.prototype = {
     });
   },
 
-  async addEngine(engineURL, iconURL, confirm, extensionID) {
+  async addOpenSearchEngine(engineURL, iconURL) {
     logConsole.debug("addEngine: Adding", engineURL);
     await this.init();
     let errCode;
@@ -2613,10 +2613,6 @@ SearchService.prototype = {
         isAppProvided: false,
       });
       engine._setIcon(iconURL, false);
-      engine._confirm = confirm;
-      if (extensionID) {
-        engine._extensionID = extensionID;
-      }
       errCode = await new Promise(resolve => {
         engine._installCallback = function(errorCode) {
           resolve(errorCode);
@@ -3326,10 +3322,6 @@ SearchService.prototype = {
             engine = engine.QueryInterface(Ci.nsISearchEngine);
             logConsole.debug("observe: Done installation of ", engine.name);
             this._addEngineToStore(engine.wrappedJSObject);
-            if (engine.wrappedJSObject._useNow) {
-              logConsole.debug("observe: setting current");
-              this.defaultEngine = engine;
-            }
             // The addition of the engine to the store always triggers an ADDED
             // or a CHANGED notification, that will trigger the task below.
             break;

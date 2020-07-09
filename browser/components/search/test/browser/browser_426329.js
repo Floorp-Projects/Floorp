@@ -110,10 +110,9 @@ function promiseSetEngine() {
     }
 
     Services.obs.addObserver(observer, "browser-search-engine-modified");
-    ss.addEngine(
+    ss.addOpenSearchEngine(
       "http://mochi.test:8888/browser/browser/components/search/test/browser/426329.xml",
-      "data:image/x-icon,%00",
-      false
+      "data:image/x-icon,%00"
     );
   });
 }

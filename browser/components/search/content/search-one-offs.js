@@ -1141,10 +1141,9 @@ class SearchOneOffs {
       // On success, hide the panel and tell event listeners to reshow it to
       // show the new engine.
       Services.search
-        .addEngine(
+        .addOpenSearchEngine(
           target.getAttribute("uri"),
-          target.getAttribute("image"),
-          false
+          target.getAttribute("image")
         )
         .then(engine => {
           this._rebuild();

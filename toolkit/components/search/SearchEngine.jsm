@@ -613,9 +613,6 @@ class SearchEngine {
   _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
   __searchForm = null;
-  // Whether to set this as the current engine as soon as it is loaded.  This
-  // is only used when the engine is first added to the list.
-  _useNow = null;
   // The number of days between update checks for new versions
   _updateInterval = null;
   // The url to check at for a new update

@@ -1322,7 +1322,7 @@ BrowserPageActions.addSearchEngine = {
   },
 
   _installEngine(uri, image) {
-    Services.search.addEngine(uri, image, false).then(
+    Services.search.addOpenSearchEngine(uri, image).then(
       engine => {
         showBrowserPageActionFeedback(this.action);
       },

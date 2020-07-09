@@ -94,10 +94,9 @@ function test() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
   gCUITestUtils.addSearchBar().then(function() {
-    Services.search.addEngine(
+    Services.search.addOpenSearchEngine(
       "http://mochi.test:8888/browser/browser/components/search/test/browser/testEngine.xml",
-      "data:image/x-icon,%00",
-      false
+      "data:image/x-icon,%00"
     );
   });
 }
