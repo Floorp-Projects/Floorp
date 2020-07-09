@@ -58,6 +58,7 @@ for patch in \
  bug-1636984-alias-append-items-sink.diff \
  bug-1636984-display-name-fractional-seconds.diff \
  bug-1636984-append-item-dayperiod-fractional-seconds.diff \
+ bug-1534160-android-timezone.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
