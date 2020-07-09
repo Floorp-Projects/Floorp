@@ -198,10 +198,10 @@ class nsIOService final : public nsIIOService,
   void DestroySocketProcess();
 
  private:
-  mozilla::Atomic<bool, mozilla::Relaxed> mOffline;
+  bool mOffline;
   mozilla::Atomic<bool, mozilla::Relaxed> mOfflineForProfileChange;
   bool mManageLinkStatus;
-  mozilla::Atomic<bool, mozilla::Relaxed> mConnectivity;
+  bool mConnectivity;
 
   // Used to handle SetOffline() reentrancy.  See the comment in
   // SetOffline() for more details.
