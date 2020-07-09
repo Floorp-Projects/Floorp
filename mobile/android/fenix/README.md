@@ -123,27 +123,10 @@ If you want to run **performance tests/benchmarks** in automation or locally:
 
 For additional context on these recommendations, see [the perf build variant analysis](https://docs.google.com/document/d/1aW-m0HYncTDDiRz_2x6EjcYkjBpL9SHhhYix13Vil30/edit#).
 
-You will **need to sign `forPerformanceTest` variants.** For local development, our recommendation is to add the following configuration to `app/build.gradle`:
-
-```groovy
-android { // this line already exists
-    // ...
-
-    buildTypes { // this line already exists
-        // ...
-
-        forPerformanceTest releaseTemplate >> { // this line already exists.
-            // ...
-
-            signingConfig signingConfigs.debug
-        }
-    }
-}
+Before you can install any release variants including `forPerformanceTest`, **you will need to sign them.** To do this automatically in local development, you can add the following to `<proj-root>/local.properties`:
+```sh
+autosignReleaseWithDebugKey
 ```
-
-This recommendation will let you use AS just like you do with debug builds but **please do not check in these changes.**
-
-See [perf-frontend-issues#44](https://github.com/mozilla-mobile/perf-frontend-issues/issues/44) for efforts to make performance signing easier.
 
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
