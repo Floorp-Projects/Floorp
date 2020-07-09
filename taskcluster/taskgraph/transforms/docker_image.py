@@ -111,8 +111,6 @@ def fill_template(config, tasks):
         name = task.label.replace('packages-', '')
         available_packages.add(name)
 
-    context_hashes = {}
-
     if not taskgraph.fast and config.write_artifacts:
         if not os.path.isdir(CONTEXTS_DIR):
             os.makedirs(CONTEXTS_DIR)
@@ -149,7 +147,6 @@ def fill_template(config, tasks):
             context_hash = '0'*40
         digest_data = [context_hash]
         digest_data += [json.dumps(args, sort_keys=True)]
-        context_hashes[image_name] = context_hash
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
@@ -211,8 +208,13 @@ def fill_template(config, tasks):
 
         worker = taskdesc['worker']
 
-        worker['docker-image'] = IMAGE_BUILDER_IMAGE
-        digest_data.append("image-builder-image:{}".format(IMAGE_BUILDER_IMAGE))
+        if image_name == 'image_builder':
+            worker['docker-image'] = IMAGE_BUILDER_IMAGE
+            digest_data.append("image-builder-image:{}".format(IMAGE_BUILDER_IMAGE))
+        else:
+            worker['docker-image'] = {'in-tree': 'image_builder'}
+            deps = taskdesc.setdefault('dependencies', {})
+            deps['docker-image'] = 'build-docker-image-image_builder'
 
         if packages:
             deps = taskdesc.setdefault('dependencies', {})

@@ -5,9 +5,11 @@
 #![forbid(unsafe_code)]
 
 use std::collections::HashMap;
+use std::path::Path;
 use std::process::Command;
 
 use anyhow::{ensure, Context, Result};
+use fs_extra::dir::{CopyOptions, move_dir};
 use serde::Deserialize;
 
 mod config;
@@ -100,6 +102,16 @@ fn repack_image(source: &str, dest: &str, image_name: &str) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    // Kaniko expects everything to be in /kaniko, so if not running from there, move
+    // everything there.
+    if let Some(path) = std::env::current_exe()?.parent() {
+        if path != Path::new("/kaniko") {
+            let mut options = CopyOptions::new();
+            options.copy_inside = true;
+            move_dir(path, "/kaniko", &options)?;
+        }
+    }
+
     let config = Config::from_env().context("Could not parse environment variables.")?;
 
     let cluster = taskcluster::TaskCluster::from_env()?;
@@ -121,6 +133,7 @@ fn main() -> Result<()> {
         let digest = download_parent_image(&cluster, &parent_task_id, "/workspace/parent.tar")?;
 
         log_step(&format!("Parent image digest {}", &digest));
+        std::fs::create_dir_all("/workspace/cache")?;
         std::fs::rename(
             "/workspace/parent.tar",
             format!("/workspace/cache/{}", digest),

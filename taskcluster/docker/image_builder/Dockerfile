@@ -5,10 +5,10 @@
 FROM golang:1.14 as skopeo
 
 WORKDIR /go/src/
-RUN ["git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.0", "https://github.com/containers/skopeo", "."]
-RUN ["git", "checkout", "63085f5bef1131aa9ec0907a5c8d66b67de7c4b2"]
+RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.0", "https://github.com/containers/skopeo", "."]
+RUN ["/usr/bin/git", "checkout", "63085f5bef1131aa9ec0907a5c8d66b67de7c4b2"]
 ENV GO111MODULE=on CGO_ENABLED=0
-RUN ["go", "build", \
+RUN ["/usr/local/go/bin/go", "build", \
 	"-mod=vendor", "-o", "out/skopeo", \
 	"-tags", "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp", \
 	# Set unixTempDirForBigFiles so skopeo will extract in a directory hidden by kaniko
@@ -18,9 +18,9 @@ RUN ["go", "build", \
 
 FROM golang:1.14 as kaniko
 WORKDIR /go/src/
-RUN ["git", "clone", "--no-checkout", "--depth=1", "--branch=v0.24.0", "https://github.com/GoogleContainerTools/kaniko", "."]
-RUN ["git", "checkout", "cdbd8af0578c56e2801b57461e9f417f9479d303"]
-RUN ["make"]
+RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v0.24.0", "https://github.com/GoogleContainerTools/kaniko", "."]
+RUN ["/usr/bin/git", "checkout", "cdbd8af0578c56e2801b57461e9f417f9479d303"]
+RUN ["/usr/bin/make"]
 
 # Build the `build-image` command as a static binary using musl
 # The setup is loosely based on a stripped down version of
@@ -72,22 +72,22 @@ ADD --chown=rust:rust build-image/ ./
 # --out-dir is not yet stable
 ENV RUSTC_BOOTSTRAP=1
 # Build our application.
-RUN ["cargo", "build", "--target", "x86_64-unknown-linux-musl", "--out-dir=bin", "--release", "-Zunstable-options"]
+RUN ["/home/rust/.cargo/bin/cargo", "build", "--target", "x86_64-unknown-linux-musl", "--out-dir=bin", "--release", "-Zunstable-options"]
 
 FROM scratch as empty
 
 FROM scratch
 
-COPY --from=skopeo /go/src/out/skopeo /kaniko/skopeo
-COPY --from=kaniko /go/src/out/executor /kaniko/executor
+COPY --from=skopeo /go/src/out/skopeo /kaniko-bootstrap/skopeo
+COPY --from=kaniko /go/src/out/executor /kaniko-bootstrap/executor
 COPY --from=build-image \
     /home/rust/src/bin/build-image \
-    /kaniko/build-image
+    /kaniko-bootstrap/build-image
 
-ADD https://mkcert.org/generate/ /kaniko/ssl/certs/ca-certificats.crt
+ADD https://mkcert.org/generate/ /kaniko-bootstrap/ssl/certs/ca-certificats.crt
 ENV SSL_CERT_DIR=/kaniko/ssl/certs
 
-ADD policy.json /kaniko/containers/policy.json
+ADD policy.json /kaniko-bootstrap/containers/policy.json
 
 ENV HOME /root
 ENV USER /root
@@ -96,7 +96,4 @@ WORKDIR /workspace
 ENV PATH /usr/local/bin:/kaniko
 
 VOLUME /workspace
-# Create an empty temporary directory for skopeo
-COPY --from=empty / /workspace/tmp
-COPY --from=empty / /workspace/cache
-ENTRYPOINT ["/kaniko/build-image"]
+ENTRYPOINT ["/kaniko-bootstrap/build-image"]
