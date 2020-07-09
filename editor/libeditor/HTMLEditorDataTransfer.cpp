@@ -217,6 +217,12 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                   bool aClearStyle);
 
  private:
+  /**
+   * @return nullptr, if there's no invisible `<br>`.
+   */
+  HTMLBRElement* GetInvisibleBRElementAtPoint(
+      const EditorDOMPoint& aPointToInsert) const;
+
   EditorDOMPoint GetNewCaretPointAfterInsertingHTML(
       const EditorDOMPoint& aLastInsertedPoint) const;
 
@@ -248,6 +254,20 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
 
   HTMLEditor& mHTMLEditor;
 };
+
+HTMLBRElement*
+HTMLEditor::HTMLWithContextInserter::GetInvisibleBRElementAtPoint(
+    const EditorDOMPoint& aPointToInsert) const {
+  WSRunScanner wsRunScannerAtInsertionPoint(&mHTMLEditor, aPointToInsert);
+  if (wsRunScannerAtInsertionPoint.GetEndReasonContent() &&
+      wsRunScannerAtInsertionPoint.GetEndReasonContent()->IsHTMLElement(
+          nsGkAtoms::br) &&
+      !mHTMLEditor.IsVisibleBRElement(
+          wsRunScannerAtInsertionPoint.EndReasonBRElementPtr())) {
+    return wsRunScannerAtInsertionPoint.EndReasonBRElementPtr();
+  }
+  return nullptr;
+}
 
 EditorDOMPoint
 HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
@@ -551,18 +571,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   // Remove invisible `<br>` element at the point because if there is a `<br>`
   // element at end of what we paste, it will make the existing invisible
   // `<br>` element visible.
-  WSRunScanner wsRunScannerAtInsertionPoint(&mHTMLEditor, pointToInsert);
-  if (wsRunScannerAtInsertionPoint.GetEndReasonContent() &&
-      wsRunScannerAtInsertionPoint.GetEndReasonContent()->IsHTMLElement(
-          nsGkAtoms::br) &&
-      !mHTMLEditor.IsVisibleBRElement(
-          wsRunScannerAtInsertionPoint.GetEndReasonContent())) {
+  if (HTMLBRElement* invisibleBRElement =
+          GetInvisibleBRElementAtPoint(pointToInsert)) {
     AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-    nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                      .DeleteNodeWithTransaction(MOZ_KnownLive(
-                          *wsRunScannerAtInsertionPoint.GetEndReasonContent()));
+    nsresult rv =
+        MOZ_KnownLive(mHTMLEditor)
+            .DeleteNodeWithTransaction(MOZ_KnownLive(*invisibleBRElement));
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed.");
       return rv;
     }
   }
