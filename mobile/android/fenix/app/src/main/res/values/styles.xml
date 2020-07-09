@@ -20,8 +20,8 @@
         <item name="alertDialogStyle">@style/DialogStyleNormal</item>
         <item name="alertDialogTheme">@style/DialogStyleNormal</item>
         <item name="android:windowEnableSplitTouch">false</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:splitMotionEvents">false</item>
+        <item name="bottomSheetDialogTheme">@style/BottomSheet</item>
 
         <item name="mozacInputLayoutErrorTextColor"
             tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
@@ -153,6 +153,7 @@
         <item name="alertDialogTheme">@style/DialogStyleDark</item>
         <item name="android:windowEnableSplitTouch">false</item>
         <item name="android:splitMotionEvents">false</item>
+        <item name="bottomSheetDialogTheme">@style/BottomSheetPrivate</item>
 
         <item name="mozacInputLayoutErrorTextColor"
             tools:ignore="UnusedResources">@color/destructive_private_theme</item>
@@ -542,17 +543,29 @@
         <item name="android:textColorHint">@color/search_view_hint_color</item>
     </style>
 
-    <style name="TabTrayDialogStyle" parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/BottomSheetModal</item>
-<!--        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>-->
-<!--        <item name="android:colorBackground">?foundation</item>-->
+    <style name="BottomSheetPrivate" parent="@style/BottomSheetBasePrivate" />
 
-<!--        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>-->
+    <style name="BottomSheet" parent="@style/BottomSheetBase" />
+
+    <style name="BottomSheetBasePrivate" parent="Theme.MaterialComponents.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:navigationBarColor">@color/foundation_normal_theme</item>
+        <item name="android:colorBackground">?foundation</item>
     </style>
+
+    <style name="BottomSheetBase" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:colorBackground">?foundation</item>
+    </style>
+
+    <!-- Tab Tray does not present a private theme, so it needs to be separate from other bottom sheet styles -->
+    <style name="TabTrayDialogStyleBase" parent="BottomSheetBase">
+        <item name="bottomSheetStyle">@style/BottomSheetModal</item>
+        <item name="android:colorBackground">@color/foundation_normal_theme</item>
+    </style>
+
+    <style name="TabTrayDialogStyle" parent="TabTrayDialogStyleBase" />
 
     <!-- Stuff to make the bottom sheet with round top borders -->
     <style name="BottomSheetShapeAppearance" parent="ShapeAppearance.MaterialComponents.LargeComponent">
