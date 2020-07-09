@@ -1114,14 +1114,8 @@ void nsContentSecurityUtils::LogMessageToConsole(nsIHttpChannel* aChannel,
 bool nsContentSecurityUtils::IsDownloadAllowed(
     nsIChannel* aChannel, const nsAutoCString& aMimeTypeGuess) {
   MOZ_ASSERT(aChannel, "IsDownloadAllowed without channel?");
-  if (!StaticPrefs::dom_block_download_insecure()) {
-    return true;
-  }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
-    return true;
-  }
 
   nsCOMPtr<nsIURI> contentLocation;
   aChannel->GetURI(getter_AddRefs(contentLocation));
@@ -1141,11 +1135,21 @@ bool nsContentSecurityUtils::IsDownloadAllowed(
                                     contentLocation,   //  aContentLocation,
                                     secCheckLoadInfo,  //  aLoadinfo
                                     aMimeTypeGuess,    //  aMimeGuess,
+                                    false,             //  aReportError
                                     &decission         // aDecision
   );
-  if (decission == nsIContentPolicy::ACCEPT) {
+  Telemetry::Accumulate(mozilla::Telemetry::MIXED_CONTENT_DOWNLOADS,
+                        decission != nsIContentPolicy::ACCEPT);
+
+  if (!StaticPrefs::dom_block_download_insecure() ||
+      decission == nsIContentPolicy::ACCEPT) {
     return true;
   }
+
+  if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+    return true;
+  }
+
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     LogMessageToConsole(httpChannel, "MixedContentBlockedDownload");

@@ -62,11 +62,15 @@ class nsMixedContentBlocker : public nsIContentPolicy,
    * @param aHadInsecureImageRedirect
    *        boolean flag indicating that an insecure redirect through http
    *        occured when this image was initially loaded and cached.
+   * @param aReportError
+   *        boolean flag indicating if a rejection should automaticly be
+   *        logged into the Console.
    * Remaining parameters are from nsIContentPolicy::ShouldLoad().
    */
   static nsresult ShouldLoad(bool aHadInsecureImageRedirect,
                              nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                             const nsACString& aMimeGuess, int16_t* aDecision);
+                             const nsACString& aMimeGuess, bool aReportError,
+                             int16_t* aDecision);
   static void AccumulateMixedContentHSTS(
       nsIURI* aURI, bool aActive, const OriginAttributes& aOriginAttributes);
 
