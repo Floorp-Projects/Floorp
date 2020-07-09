@@ -1261,14 +1261,6 @@ class NativeObject : public JSObject {
     elements_[index].init(this, HeapSlot::Element, unshiftedIndex(index), val);
   }
 
-  void setDenseElementMaybeConvertDouble(uint32_t index, const Value& val) {
-    if (val.isInt32() && shouldConvertDoubleElements()) {
-      setDenseElement(index, DoubleValue(val.toInt32()));
-    } else {
-      setDenseElement(index, val);
-    }
-  }
-
  private:
   inline void addDenseElementType(JSContext* cx, uint32_t index,
                                   const Value& val);
