@@ -47,5 +47,5 @@ addRDMTask(
       value + " was not added to removed device list."
     );
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );

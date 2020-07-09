@@ -69,7 +69,7 @@ addRDMTask(
     await openCloseRDM(tab);
     await checkResults();
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );
 
 async function openCloseRDM(tab) {

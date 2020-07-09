@@ -28,5 +28,5 @@ addRDMTask(
     await BrowserTestUtils.closeWindow(newWindow);
     await offPromise;
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );

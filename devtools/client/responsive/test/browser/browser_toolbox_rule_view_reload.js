@@ -48,8 +48,7 @@ addRDMTaskWithPreAndPost(
       "Rule view still has two rules and is not empty."
     );
   },
-  null,
-  { usingBrowserUI: true }
+  null
 );
 
 function numberOfRules(ruleView) {

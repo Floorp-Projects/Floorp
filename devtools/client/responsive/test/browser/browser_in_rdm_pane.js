@@ -8,28 +8,24 @@
 
 const TEST_URL = "http://example.com/";
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui }) {
-    const viewportBrowser = ui.getViewportBrowser();
+addRDMTask(TEST_URL, async function({ ui }) {
+  const viewportBrowser = ui.getViewportBrowser();
 
-    const contentURL = await SpecialPowers.spawn(
-      viewportBrowser,
-      [],
-      () => content.document.URL
-    );
-    info("content URL is " + contentURL);
+  const contentURL = await SpecialPowers.spawn(
+    viewportBrowser,
+    [],
+    () => content.document.URL
+  );
+  info("content URL is " + contentURL);
 
-    const contentInRDMPane = await SpecialPowers.spawn(
-      viewportBrowser,
-      [],
-      () => docShell.browsingContext.inRDMPane
-    );
+  const contentInRDMPane = await SpecialPowers.spawn(
+    viewportBrowser,
+    [],
+    () => docShell.browsingContext.inRDMPane
+  );
 
-    ok(
-      contentInRDMPane,
-      "After RDM is opened, document should have inRDMPane set to true."
-    );
-  },
-  { usingBrowserUI: true }
-);
+  ok(
+    contentInRDMPane,
+    "After RDM is opened, document should have inRDMPane set to true."
+  );
+});

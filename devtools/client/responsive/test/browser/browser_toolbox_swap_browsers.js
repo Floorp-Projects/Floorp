@@ -169,5 +169,5 @@ addRDMTask(
 
     await removeTab(tab);
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );

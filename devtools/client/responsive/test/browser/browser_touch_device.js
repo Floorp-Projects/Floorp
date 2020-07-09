@@ -38,7 +38,7 @@ addRDMTask(
 
     reloadOnTouchChange(false);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 async function waitStartup(ui) {

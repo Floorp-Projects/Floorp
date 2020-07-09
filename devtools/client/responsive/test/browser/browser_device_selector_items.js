@@ -67,5 +67,5 @@ addRDMTask(
       is(backgroundImage, icon, "The icon is correct");
     }
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );

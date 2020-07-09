@@ -37,7 +37,7 @@ addRDMTask(
     reloadOnTouchChange(false);
     reloadOnUAChange(false);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -63,7 +63,7 @@ addRDMTask(
     reloadOnTouchChange(false);
     reloadOnUAChange(false);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -86,5 +86,5 @@ addRDMTask(
     reloadOnTouchChange(false);
     reloadOnUAChange(false);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );

@@ -31,7 +31,7 @@ addRDMTask(
       await checkWindowScreenSize(ui, ZOOM_LEVELS[i]);
     }
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );
 
 async function checkWindowOuterSize(ui, zoom_level) {

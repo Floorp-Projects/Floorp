@@ -97,7 +97,7 @@ addRDMTask(
       ok(!deviceItem2, "Test device 2 menu item removed");
     });
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
 
 addRDMTask(
@@ -135,5 +135,5 @@ addRDMTask(
     const deviceCb2 = deviceCbs.find(cb => cb.value == device2.name);
     ok(!deviceCb2, "Test device 2 checkbox does not exist");
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );

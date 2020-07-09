@@ -12,24 +12,20 @@ const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 // is allowed.
 const DELAY = 300;
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui }) {
-    reloadOnTouchChange(true);
+addRDMTask(TEST_URL, async function({ ui }) {
+  reloadOnTouchChange(true);
 
-    await waitBootstrap(ui);
-    await testWithNoTouch(ui);
-    await toggleTouchSimulation(ui);
-    await promiseContentReflow(ui);
-    await testWithTouch(ui);
-    await testWithMetaViewportEnabled(ui);
-    await testWithMetaViewportDisabled(ui);
-    testTouchButton(ui);
+  await waitBootstrap(ui);
+  await testWithNoTouch(ui);
+  await toggleTouchSimulation(ui);
+  await promiseContentReflow(ui);
+  await testWithTouch(ui);
+  await testWithMetaViewportEnabled(ui);
+  await testWithMetaViewportDisabled(ui);
+  testTouchButton(ui);
 
-    reloadOnTouchChange(false);
-  },
-  { usingBrowserUI: true }
-);
+  reloadOnTouchChange(false);
+});
 
 async function testWithNoTouch(ui) {
   await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {

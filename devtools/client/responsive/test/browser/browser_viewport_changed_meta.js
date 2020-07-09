@@ -70,60 +70,56 @@ const TEST_URL =
   `<div id="box" style="width:400px;height:400px;background-color:green">` +
   `Initial</div></body></html>`;
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui, manager, browser }) {
-    await setViewportSize(ui, manager, WIDTH, HEIGHT);
-    await setTouchAndMetaViewportSupport(ui, true);
+addRDMTask(TEST_URL, async function({ ui, manager, browser }) {
+  await setViewportSize(ui, manager, WIDTH, HEIGHT);
+  await setTouchAndMetaViewportSupport(ui, true);
 
-    // Check initial resolution value.
-    const initial_resolution = await spawnViewportTask(ui, {}, () => {
+  // Check initial resolution value.
+  const initial_resolution = await spawnViewportTask(ui, {}, () => {
+    return content.windowUtils.getResolution();
+  });
+
+  is(
+    initial_resolution.toFixed(2),
+    INITIAL_RES_TARGET.toFixed(2),
+    `Initial resolution is as expected.`
+  );
+
+  for (const test of TESTS) {
+    const { content: content, res_target, res_chrome } = test;
+
+    await spawnViewportTask(ui, { content }, args => {
+      const box = content.document.getElementById("box");
+      box.textContent = args.content;
+
+      const meta = content.document.getElementsByTagName("meta")[0];
+      info(`Changing meta viewport content to "${args.content}".`);
+      meta.content = args.content;
+    });
+
+    await promiseContentReflow(ui);
+
+    const resolution = await spawnViewportTask(ui, {}, () => {
       return content.windowUtils.getResolution();
     });
 
     is(
-      initial_resolution.toFixed(2),
-      INITIAL_RES_TARGET.toFixed(2),
-      `Initial resolution is as expected.`
+      resolution.toFixed(2),
+      res_target.toFixed(2),
+      `Replaced meta viewport content "${content}" resolution is as expected.`
     );
 
-    for (const test of TESTS) {
-      const { content: content, res_target, res_chrome } = test;
-
-      await spawnViewportTask(ui, { content }, args => {
-        const box = content.document.getElementById("box");
-        box.textContent = args.content;
-
-        const meta = content.document.getElementsByTagName("meta")[0];
-        info(`Changing meta viewport content to "${args.content}".`);
-        meta.content = args.content;
-      });
-
-      await promiseContentReflow(ui);
-
-      const resolution = await spawnViewportTask(ui, {}, () => {
-        return content.windowUtils.getResolution();
-      });
-
-      is(
+    if (typeof res_chrome !== "undefined") {
+      todo_is(
         resolution.toFixed(2),
-        res_target.toFixed(2),
-        `Replaced meta viewport content "${content}" resolution is as expected.`
+        res_chrome.toFixed(2),
+        `Replaced meta viewport content "${content}" resolution matches Chrome resolution.`
       );
-
-      if (typeof res_chrome !== "undefined") {
-        todo_is(
-          resolution.toFixed(2),
-          res_chrome.toFixed(2),
-          `Replaced meta viewport content "${content}" resolution matches Chrome resolution.`
-        );
-      }
-
-      // Reload to prepare for next test.
-      const reload = waitForViewportLoad(ui);
-      browser.reload();
-      await reload;
     }
-  },
-  { usingBrowserUI: true }
-);
+
+    // Reload to prepare for next test.
+    const reload = waitForViewportLoad(ui);
+    browser.reload();
+    await reload;
+  }
+});

@@ -45,7 +45,7 @@ addRDMTask(
     await testExitButton(await openRDM(tab));
     await BrowserTestUtils.closeWindow(newWindow);
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );
 
 async function waitBootstrap(ui) {

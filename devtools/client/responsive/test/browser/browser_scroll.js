@@ -13,33 +13,29 @@ const TEST_URL =
   '<head><meta name="viewport" content="width=100, height=100"/></head>' +
   '<div style="background:blue; width:200px; height:200px"></div>';
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui, manager }) {
-    await setViewportSize(ui, manager, 50, 50);
-    const browser = ui.getViewportBrowser();
+addRDMTask(TEST_URL, async function({ ui, manager }) {
+  await setViewportSize(ui, manager, 50, 50);
+  const browser = ui.getViewportBrowser();
 
-    for (const mv in [true, false]) {
-      const reloadNeeded = await ui.updateTouchSimulation(mv);
-      if (reloadNeeded) {
-        info("Reload is needed -- waiting for it.");
-        const reload = waitForViewportLoad(ui);
-        browser.reload();
-        await reload;
-      }
-      info("Setting focus on the browser.");
-      browser.focus();
-
-      await SpecialPowers.spawn(browser, [], () => {
-        content.scrollTo(0, 0);
-      });
-
-      info("Testing scroll behavior with touch simulation " + mv + ".");
-      await testScrollingOfContent(ui);
+  for (const mv in [true, false]) {
+    const reloadNeeded = await ui.updateTouchSimulation(mv);
+    if (reloadNeeded) {
+      info("Reload is needed -- waiting for it.");
+      const reload = waitForViewportLoad(ui);
+      browser.reload();
+      await reload;
     }
-  },
-  { usingBrowserUI: true }
-);
+    info("Setting focus on the browser.");
+    browser.focus();
+
+    await SpecialPowers.spawn(browser, [], () => {
+      content.scrollTo(0, 0);
+    });
+
+    info("Testing scroll behavior with touch simulation " + mv + ".");
+    await testScrollingOfContent(ui);
+  }
+});
 
 async function testScrollingOfContent(ui) {
   let scroll;

@@ -11,9 +11,6 @@ const PAGE_ON_MAIN = "about:robots";
 const TEST_DPPX = 2;
 
 add_task(async function() {
-  // The target-switching only works with the new browserUI RDM.
-  await pushPref("devtools.responsive.browserUI.enabled", true);
-
   // Set a pref for DPPX in order to assert whether the RDM is working correctly or not.
   await pushPref("devtools.responsive.viewport.pixelRatio", TEST_DPPX);
 

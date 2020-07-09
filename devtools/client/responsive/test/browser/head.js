@@ -135,8 +135,6 @@ var closeRDM = async function(tab, options) {
  * removes the tab. The final argument is an options object, with these
  * optional properties:
  *
- * usingBrowserUI: the devtools.responsive.browserUI.enabled pref is set
- *   to the truthiness of this value (default false).
  * onlyPrefAndTask: if truthy, only the pref will be set and the task
  *   will be called, with none of the tab creation/teardown or open/close
  *   of RDM (default false).
@@ -147,36 +145,27 @@ var closeRDM = async function(tab, options) {
  *
  *   addRDMTaskWithPreAndPost(
  *     TEST_URL,
- *     async function preTask({ message, browser, usingBrowserUI }) {
+ *     async function preTask({ message, browser }) {
  *       // Your pre-task goes here...
  *     },
- *     async function task({ ui, manager, message, browser, usingBrowserUI,
- *                           preTaskValue }) {
+ *     async function task({ ui, manager, message, browser, preTaskValue }) {
  *       // Your task goes here...
  *     },
- *     async function postTask({ message, browser, usingBrowserUI,
- *                               preTaskValue, taskValue }) {
+ *     async function postTask({ message, browser, preTaskValue, taskValue }) {
  *       // Your post-task goes here...
  *     },
- *     { usingBrowserUI: true, waitForDeviceList: true }
+ *     { waitForDeviceList: true }
  *   );
  */
 function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
-  // Interpret our options.
-  let usingBrowserUI = false;
   let onlyPrefAndTask = false;
   let waitForDeviceList = false;
   if (typeof options == "object") {
-    usingBrowserUI = !!options.usingBrowserUI;
     onlyPrefAndTask = !!options.onlyPrefAndTask;
     waitForDeviceList = !!options.waitForDeviceList;
   }
 
   add_task(async function() {
-    await SpecialPowers.pushPrefEnv({
-      set: [["devtools.responsive.browserUI.enabled", usingBrowserUI]],
-    });
-
     let tab;
     let browser;
     let preTaskValue = null;
@@ -189,7 +178,7 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
       browser = tab.linkedBrowser;
 
       if (preTask) {
-        preTaskValue = await preTask({ message, browser, usingBrowserUI });
+        preTaskValue = await preTask({ message, browser });
       }
 
       const rdmValues = await openRDM(tab);
@@ -218,17 +207,10 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
         manager,
         message,
         browser,
-        usingBrowserUI,
         preTaskValue,
       });
     } catch (err) {
-      ok(
-        false,
-        "Got an error with usingBrowserUI " +
-          usingBrowserUI +
-          ": " +
-          DevToolsUtils.safeErrorString(err)
-      );
+      ok(false, "Got an error: " + DevToolsUtils.safeErrorString(err));
     }
 
     if (!onlyPrefAndTask) {
@@ -237,7 +219,6 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
         await postTask({
           message,
           browser,
-          usingBrowserUI,
           preTaskValue,
           taskValue,
         });
@@ -254,18 +235,16 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
 /**
  * This is a simplified version of addRDMTaskWithPreAndPost. Adds a new test
  * task that adds a tab with the given URL, opens responsive design mode,
- * closes responsive design mode, and removes the tab. If
- * includeBrowserEmbeddedUI is truthy, the sequence will be repeated with the
- * devtools.responsive.browserUI.enabled pref set.
+ * closes responsive design mode, and removes the tab.
  *
  * Example usage:
  *
  *   addRDMTask(
  *     TEST_URL,
- *     async function task({ ui, manager, message, browser, usingBrowserUI }) {
+ *     async function task({ ui, manager, message, browser }) {
  *       // Your task goes here...
  *     },
- *     { usingBrowserUI: true, waitForDeviceList: true }
+ *     { waitForDeviceList: true }
  *   );
  */
 function addRDMTask(rdmURL, rdmTask, options) {

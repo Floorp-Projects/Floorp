@@ -27,41 +27,37 @@ async function waitUntilScreenshot() {
   });
 }
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui }) {
-    const { toolWindow } = ui;
-    const { store, document } = toolWindow;
+addRDMTask(TEST_URL, async function({ ui }) {
+  const { toolWindow } = ui;
+  const { store, document } = toolWindow;
 
-    info("Click the screenshot button");
-    const screenshotButton = document.getElementById("screenshot-button");
-    screenshotButton.click();
+  info("Click the screenshot button");
+  const screenshotButton = document.getElementById("screenshot-button");
+  screenshotButton.click();
 
-    const whenScreenshotSucceeded = waitUntilScreenshot();
+  const whenScreenshotSucceeded = waitUntilScreenshot();
 
-    const filePath = await whenScreenshotSucceeded;
-    const image = new Image();
-    image.src = OS.Path.toFileURI(filePath);
+  const filePath = await whenScreenshotSucceeded;
+  const image = new Image();
+  image.src = OS.Path.toFileURI(filePath);
 
-    await once(image, "load");
+  await once(image, "load");
 
-    // We have only one viewport at the moment
-    const viewport = store.getState().viewports[0];
-    const ratio = window.devicePixelRatio;
+  // We have only one viewport at the moment
+  const viewport = store.getState().viewports[0];
+  const ratio = window.devicePixelRatio;
 
-    is(
-      image.width,
-      viewport.width * ratio,
-      "screenshot width has the expected width"
-    );
+  is(
+    image.width,
+    viewport.width * ratio,
+    "screenshot width has the expected width"
+  );
 
-    is(
-      image.height,
-      viewport.height * ratio,
-      "screenshot width has the expected height"
-    );
+  is(
+    image.height,
+    viewport.height * ratio,
+    "screenshot width has the expected height"
+  );
 
-    await OS.File.remove(filePath);
-  },
-  { usingBrowserUI: true }
-);
+  await OS.File.remove(filePath);
+});

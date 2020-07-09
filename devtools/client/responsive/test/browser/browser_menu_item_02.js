@@ -55,5 +55,5 @@ addRDMTask(
 
     ok(!isMenuCheckedFor(window), "RDM menu item is unchecked");
   },
-  { usingBrowserUI: true, onlyPrefAndTask: true }
+  { onlyPrefAndTask: true }
 );

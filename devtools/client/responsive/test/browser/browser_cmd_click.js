@@ -29,5 +29,5 @@ addRDMTask(
     ok(newTab, "New tab opened from link");
     await removeTab(newTab);
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );

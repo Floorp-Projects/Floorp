@@ -113,5 +113,5 @@ addRDMTask(
       ok(editedDevice, "Edited Custom Device menu item exists");
     });
   },
-  { usingBrowserUI: true, waitForDeviceList: true }
+  { waitForDeviceList: true }
 );
