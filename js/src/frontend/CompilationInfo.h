@@ -72,6 +72,69 @@ struct ScopeContext {
   void computeInClass(Scope* scope);
 };
 
+struct CompilationInfo;
+
+class ScriptStencilIterable {
+ public:
+  class ScriptAndFunction {
+   public:
+    ScriptStencil& stencil;
+    HandleFunction function;
+
+    ScriptAndFunction() = delete;
+    ScriptAndFunction(ScriptStencil& stencil, HandleFunction function)
+        : stencil(stencil), function(function) {}
+  };
+
+  class Iterator {
+    enum class State {
+      TopLevel,
+      Functions,
+    };
+    State state_ = State::TopLevel;
+    size_t index_ = 0;
+    CompilationInfo* compilationInfo_;
+
+    Iterator(CompilationInfo* compilationInfo, State state, size_t index)
+        : state_(state), index_(index), compilationInfo_(compilationInfo) {
+      skipNonFunctions();
+    }
+
+   public:
+    explicit Iterator(CompilationInfo* compilationInfo)
+        : compilationInfo_(compilationInfo) {
+      skipNonFunctions();
+    }
+
+    Iterator operator++() {
+      next();
+      skipNonFunctions();
+      return *this;
+    }
+
+    inline void next();
+
+    inline void skipNonFunctions();
+
+    bool operator!=(const Iterator& other) const {
+      return state_ != other.state_ || index_ != other.index_;
+    }
+
+    inline ScriptAndFunction operator*();
+
+    static inline Iterator end(CompilationInfo* compilationInfo);
+  };
+
+  CompilationInfo* compilationInfo_;
+
+  explicit ScriptStencilIterable(CompilationInfo* compilationInfo)
+      : compilationInfo_(compilationInfo) {}
+
+  Iterator begin() const { return Iterator(compilationInfo_); }
+
+  Iterator end() const { return Iterator::end(compilationInfo_); }
+};
+
 // CompilationInfo owns a number of pieces of information about script
 // compilation as well as controls the lifetime of parse nodes and other data by
 // controling the mark and reset of the LifoAlloc.
@@ -208,7 +271,57 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   CompilationInfo(CompilationInfo&&) = delete;
   CompilationInfo& operator=(const CompilationInfo&) = delete;
   CompilationInfo& operator=(CompilationInfo&&) = delete;
+
+  ScriptStencilIterable functionScriptStencils() {
+    return ScriptStencilIterable(this);
+  }
 };
+
+inline void ScriptStencilIterable::Iterator::next() {
+  if (state_ == State::TopLevel) {
+    state_ = State::Functions;
+  } else {
+    MOZ_ASSERT(index_ < compilationInfo_->funcData.length());
+    index_++;
+  }
+}
+
+inline void ScriptStencilIterable::Iterator::skipNonFunctions() {
+  if (state_ == State::TopLevel) {
+    if (compilationInfo_->topLevel.get().isFunction()) {
+      return;
+    }
+
+    next();
+  }
+
+  size_t length = compilationInfo_->funcData.length();
+  while (index_ < length) {
+    // NOTE: If topLevel is a function, funcData can contain unused item,
+    //       and the item isn't marked as a function.
+    if (compilationInfo_->funcData[index_].get().isFunction()) {
+      return;
+    }
+
+    index_++;
+  }
+}
+
+inline ScriptStencilIterable::ScriptAndFunction
+ScriptStencilIterable::Iterator::operator*() {
+  ScriptStencil& stencil = state_ == State::TopLevel
+                               ? compilationInfo_->topLevel.get()
+                               : compilationInfo_->funcData[index_].get();
+
+  return ScriptAndFunction(stencil,
+                           compilationInfo_->functions[*stencil.functionIndex]);
+}
+
+/* static */ inline ScriptStencilIterable::Iterator
+ScriptStencilIterable::Iterator::end(CompilationInfo* compilationInfo) {
+  return Iterator(compilationInfo, State::Functions,
+                  compilationInfo->funcData.length());
+}
 
 }  // namespace frontend
 }  // namespace js
