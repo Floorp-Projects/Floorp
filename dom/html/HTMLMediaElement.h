@@ -1826,9 +1826,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    */
   void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName, bool aNotify);
 
-  RefPtr<GenericPromise::AllPromiseType> SetSrcMediaStreamSink(
-      AudioDeviceInfo* aSink);
-
   // Total time a video has spent playing.
   TimeDurationAccumulator mPlayTime;
 
