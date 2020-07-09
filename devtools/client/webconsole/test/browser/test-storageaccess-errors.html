@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <meta charset="utf8">
+    <title>requestStorageAccess test</title>
+    <!--
+      Any copyright is dedicated to the Public Domain.
+      http://creativecommons.org/publicdomain/zero/1.0/
+    -->
+  </head>
+  <body>
+    <iframe id="testNested"></iframe>
+    <iframe id="testNullPrincipal" sandbox="allow-scripts"></iframe>
+    <iframe id="testSandboxed" sandbox="allow-same-origin allow-scripts"></iframe>
+    <iframe id="testUserGesture"></iframe>
+    <script>
+      'use strict';
+      if (window.location.host != "itisatracker.org") {
+        document.getElementById("testNested").setAttribute("src", "https://itisatracker.org/browser/devtools/client/webconsole/test/browser/test-nested-iframe-storageaccess-errors.html");
+        document.getElementById("testNullPrincipal").setAttribute("src", "https://itisatracker.org/browser/devtools/client/webconsole/test/browser/test-storageaccess-errors.html");
+        document.getElementById("testSandboxed").setAttribute("src", "https://itisatracker.org/browser/devtools/client/webconsole/test/browser/test-storageaccess-errors.html");
+        document.getElementById("testUserGesture").setAttribute("src", "https://itisatracker.org/browser/devtools/client/webconsole/test/browser/test-storageaccess-errors.html");
+      } else {
+        document.requestStorageAccess();
+      }
+    </script>
+  </body>
+</html>
