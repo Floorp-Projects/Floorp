@@ -32,9 +32,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.h 310590 2016-12-26 11:06:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.h 326672 2017-12-07 22:19:08Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_INPUT_H_
@@ -45,11 +45,9 @@ void
 sctp_common_input_processing(struct mbuf **, int, int, int,
                              struct sockaddr *, struct sockaddr *,
                              struct sctphdr *, struct sctp_chunkhdr *,
-#if !defined(SCTP_WITH_NO_CSUM)
                              uint8_t,
-#endif
                              uint8_t,
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(__Userspace__)
                              uint8_t, uint32_t, uint16_t,
 #endif
                              uint32_t, uint16_t);
