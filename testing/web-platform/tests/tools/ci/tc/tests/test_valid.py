@@ -131,7 +131,8 @@ def test_verify_payload():
       'wpt-chrome-dev-crashtest-1',
       'wpt-firefox-nightly-print-reftest-1',
       'wpt-chrome-dev-print-reftest-1',
-      'lint'}),
+      'lint',
+      'sink-task'}),
     ("pr_event.json", True, {".taskcluster.yml",".travis.yml","tools/ci/start.sh"},
      {'download-firefox-nightly',
       'lint',
@@ -143,7 +144,8 @@ def test_verify_payload():
       'tools/ integration tests (Python 3.8)',
       'resources/ tests',
       'infrastructure/ tests',
-      'infrastructure/ tests (Python 3)'}),
+      'infrastructure/ tests (Python 3)',
+      'sink-task'}),
     # More tests are affected in the actual PR but it shouldn't affect the scheduled tasks
     ("pr_event_tests_affected.json", True, {"layout-instability/clip-negative-bottom-margin.html",
                                             "layout-instability/composited-element-movement.html"},
@@ -154,7 +156,8 @@ def test_verify_payload():
       'wpt-chrome-dev-stability',
       'wpt-chrome-dev-results',
       'wpt-chrome-dev-results-without-changes',
-      'lint'}),
+      'lint',
+      'sink-task'}),
     ("epochs_daily_push_event.json", False, None,
      {'download-firefox-stable',
       'wpt-chrome-stable-reftest-1',
@@ -256,7 +259,8 @@ def test_verify_payload():
       'wpt-servo-nightly-testharness-9',
       'wpt-servo-nightly-wdspec-1',
       'wpt-servo-nightly-wdspec-2',
-      'wpt-servo-nightly-crashtest-1',})
+      'wpt-servo-nightly-crashtest-1',
+      'sink-task',})
 ])
 def test_schedule_tasks(event_path, is_pr, files_changed, expected):
     with mock.patch("tools.ci.tc.decision.get_fetch_rev", return_value=(None, None, None)):
