@@ -1338,50 +1338,7 @@ Search.prototype = {
       }
     }
 
-    if (this.pending && this._searchTokens.length && this._enableActions) {
-      // If we don't have a result that matches what we know about, then
-      // we use a fallback for things we don't know about.
-
-      // We may not have auto-filled, but this may still look like a URL.
-      // However, even if the input is a valid URL, we may not want to use
-      // it as such. This can happen if the host isn't using a known TLD
-      // and hasn't been added to a user-controlled list of known domains,
-      // and/or if it looks like an email address.
-      let matched = await this._matchUnknownUrl();
-      if (matched) {
-        // Since we can't tell if this is a real URL and whether the user wants
-        // to visit or search for it, we provide an alternative searchengine
-        // match if the string looks like an alphanumeric origin or an e-mail.
-        let str = this._originalSearchString;
-        try {
-          new URL(str);
-        } catch (ex) {
-          if (
-            UrlbarPrefs.get("keyword.enabled") &&
-            (UrlbarTokenizer.looksLikeOrigin(str, {
-              noIp: true,
-              noPort: true,
-            }) ||
-              UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
-          ) {
-            this._addingHeuristicResult = false;
-            await this._matchCurrentSearchEngine();
-            this._addingHeuristicResult = true;
-          }
-        }
-        return true;
-      }
-    }
-
-    if (this.pending && this._enableActions && this._originalSearchString) {
-      // When all else fails, and the search string is non-empty, we search
-      // using the current search engine.
-      let matched = await this._matchCurrentSearchEngine();
-      if (matched) {
-        return true;
-      }
-    }
-
+    // Fall back to UrlbarProviderHeuristicFallback.
     return false;
   },
 
@@ -1564,32 +1521,6 @@ Search.prototype = {
     return true;
   },
 
-  async _matchCurrentSearchEngine() {
-    let engine;
-    if (this._engineName) {
-      engine = Services.search.getEngineByName(this._engineName);
-    } else if (this._inPrivateWindow) {
-      engine = Services.search.defaultPrivateEngine;
-    } else {
-      engine = Services.search.defaultEngine;
-    }
-
-    if (!engine || !this.pending) {
-      return false;
-    }
-
-    // Strip a leading search restriction char, because we prepend it to text
-    // when the search shortcut is used and it's not user typed. Don't strip
-    // other restriction chars, so that it's possible to search for things
-    // including one of those (e.g. "c#").
-    let query = this._trimmedOriginalSearchString;
-    if (this._leadingRestrictionToken === UrlbarTokenizer.RESTRICT.SEARCH) {
-      query = substringAfter(query, this._leadingRestrictionToken).trim();
-    }
-    this._addSearchEngineMatch({ engine, query });
-    return true;
-  },
-
   _addExtensionMatch(content, comment) {
     this._addMatch({
       value: makeActionUrl("extension", {
@@ -1701,106 +1632,6 @@ Search.prototype = {
         this._extraRemoteTabRows.push(match);
       }
     }
-  },
-
-  // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
-  // scheme isn't specificed.
-  _matchUnknownUrl() {
-    if (!this._searchString && this._strippedPrefix) {
-      // The user just typed a stripped protocol, don't build a non-sense url
-      // like http://http/ for it.
-      return false;
-    }
-    // The user may have typed something like "word?" to run a search, we should
-    // not convert that to a url.
-    if (this.hasBehavior("search") && this.hasBehavior("restrict")) {
-      return false;
-    }
-    let flags =
-      Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-      Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-    if (this._inPrivateWindow) {
-      flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
-    }
-    let fixupInfo = null;
-    let searchUrl = this._trimmedOriginalSearchString;
-    try {
-      fixupInfo = Services.uriFixup.getFixupURIInfo(searchUrl, flags);
-    } catch (e) {
-      if (
-        e.result == Cr.NS_ERROR_MALFORMED_URI &&
-        !UrlbarPrefs.get("keyword.enabled")
-      ) {
-        let value = makeActionUrl("visiturl", {
-          url: searchUrl,
-          input: searchUrl,
-        });
-        this._addMatch({
-          value,
-          comment: searchUrl,
-          style: "action visiturl",
-          frecency: Infinity,
-        });
-
-        return true;
-      }
-      return false;
-    }
-
-    // If the URI cannot be fixed or the preferred URI would do a keyword search,
-    // that basically means this isn't useful to us. Note that
-    // fixupInfo.keywordAsSent will never be true if the keyword.enabled pref
-    // is false or there are no engines, so in that case we will always return
-    // a "visit".
-    if (!fixupInfo.fixedURI || fixupInfo.keywordAsSent) {
-      return false;
-    }
-
-    let uri = fixupInfo.fixedURI;
-    // Check the host, as "http:///" is a valid nsIURI, but not useful to us.
-    // But, some schemes are expected to have no host. So we check just against
-    // schemes we know should have a host. This allows new schemes to be
-    // implemented without us accidentally blocking access to them.
-    let hostExpected = ["http", "https", "ftp", "chrome"].includes(uri.scheme);
-    if (hostExpected && !uri.host) {
-      return false;
-    }
-
-    // getFixupURIInfo() escaped the URI, so it may not be pretty.  Embed the
-    // escaped URL in the action URI since that URL should be "canonical".  But
-    // pass the pretty, unescaped URL as the match comment, since it's likely
-    // to be displayed to the user, and in any case the front-end should not
-    // rely on it being canonical.
-    let escapedURL = uri.displaySpec;
-    let displayURL = Services.textToSubURI.unEscapeURIForUI(escapedURL);
-
-    let value = makeActionUrl("visiturl", {
-      url: escapedURL,
-      input: searchUrl,
-    });
-
-    let match = {
-      value,
-      comment: displayURL,
-      style: "action visiturl",
-      frecency: Infinity,
-    };
-
-    // We don't know if this url is in Places or not, and checking that would
-    // be expensive. Thus we also don't know if we may have an icon.
-    // If we'd just try to fetch the icon for the typed string, we'd cause icon
-    // flicker, since the url keeps changing while the user types.
-    // By default we won't provide an icon, but for the subset of urls with a
-    // host we'll check for a typed slash and set favicon for the host part.
-    if (
-      hostExpected &&
-      (searchUrl.endsWith("/") || uri.pathQueryRef.length > 1)
-    ) {
-      match.icon = `page-icon:${uri.prePath}/`;
-    }
-
-    this._addMatch(match);
-    return true;
   },
 
   _onResultRow(row, cancel) {
