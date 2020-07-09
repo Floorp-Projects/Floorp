@@ -32,15 +32,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 324615 2017-10-14 10:02:59Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 362107 2020-06-12 16:40:10Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_CONSTANTS_H_
 #define _NETINET_SCTP_CONSTANTS_H_
 
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32) && defined(__Userspace__)
 extern void getwintimeofday(struct timeval *tv);
 #endif
 
@@ -398,7 +398,7 @@ extern void getwintimeofday(struct timeval *tv);
 /*************0x0000 series*************/
 #define SCTP_HEARTBEAT_INFO		0x0001
 #if defined(__Userspace__)
-#define SCTP_CONN_ADDRESS               0x0004
+#define SCTP_CONN_ADDRESS		0x0004
 #endif
 #define SCTP_IPV4_ADDRESS		0x0005
 #define SCTP_IPV6_ADDRESS		0x0006
@@ -408,43 +408,34 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_HOSTNAME_ADDRESS		0x000b
 #define SCTP_SUPPORTED_ADDRTYPE		0x000c
 
-/* draft-ietf-stewart-tsvwg-strreset-xxx */
+/* RFC 6525 */
 #define SCTP_STR_RESET_OUT_REQUEST	0x000d
 #define SCTP_STR_RESET_IN_REQUEST	0x000e
 #define SCTP_STR_RESET_TSN_REQUEST	0x000f
 #define SCTP_STR_RESET_RESPONSE		0x0010
 #define SCTP_STR_RESET_ADD_OUT_STREAMS	0x0011
-#define SCTP_STR_RESET_ADD_IN_STREAMS   0x0012
+#define SCTP_STR_RESET_ADD_IN_STREAMS	0x0012
 
 #define SCTP_MAX_RESET_PARAMS 2
-#define SCTP_STREAM_RESET_TSN_DELTA    0x1000
+#define SCTP_STREAM_RESET_TSN_DELTA	0x1000
 
 /*************0x4000 series*************/
 
 /*************0x8000 series*************/
 #define SCTP_ECN_CAPABLE		0x8000
 
-/* draft-ietf-tsvwg-auth-xxx */
+/* RFC 4895 */
 #define SCTP_RANDOM			0x8002
 #define SCTP_CHUNK_LIST			0x8003
 #define SCTP_HMAC_LIST			0x8004
-/*
- * draft-ietf-tsvwg-addip-sctp-xx param=0x8008  len=0xNNNN Byte | Byte | Byte
- * | Byte Byte | Byte ...
- *
- * Where each byte is a chunk type extension supported. For example, to support
- * all chunks one would have (in hex):
- *
- * 80 01 00 09 C0 C1 80 81 82 00 00 00
- *
- * Has the parameter. C0 = PR-SCTP    (RFC3758) C1, 80 = ASCONF (addip draft) 81
- * = Packet Drop 82 = Stream Reset 83 = Authentication
- */
-#define SCTP_SUPPORTED_CHUNK_EXT    0x8008
+/* RFC 4820 */
+#define SCTP_PAD			0x8005
+/* RFC 5061 */
+#define SCTP_SUPPORTED_CHUNK_EXT	0x8008
 
 /*************0xC000 series*************/
 #define SCTP_PRSCTP_SUPPORTED		0xc000
-/* draft-ietf-tsvwg-addip-sctp */
+/* RFC 5061 */
 #define SCTP_ADD_IP_ADDRESS		0xc001
 #define SCTP_DEL_IP_ADDRESS		0xc002
 #define SCTP_ERROR_CAUSE_IND		0xc003
@@ -452,8 +443,8 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_SUCCESS_REPORT		0xc005
 #define SCTP_ULP_ADAPTATION		0xc006
 /* behave-nat-draft */
-#define SCTP_HAS_NAT_SUPPORT            0xc007
-#define SCTP_NAT_VTAGS                  0xc008
+#define SCTP_HAS_NAT_SUPPORT		0xc007
+#define SCTP_NAT_VTAGS			0xc008
 
 /* bits for TOS field */
 #define SCTP_ECT0_BIT		0x02
@@ -487,10 +478,14 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_STATE_IN_ACCEPT_QUEUE      0x1000
 #define SCTP_STATE_MASK			0x007f
 
-#define SCTP_GET_STATE(asoc)	((asoc)->state & SCTP_STATE_MASK)
-#define SCTP_SET_STATE(asoc, newstate)  ((asoc)->state = ((asoc)->state & ~SCTP_STATE_MASK) |  newstate)
-#define SCTP_CLEAR_SUBSTATE(asoc, substate) ((asoc)->state &= ~substate)
-#define SCTP_ADD_SUBSTATE(asoc, substate) ((asoc)->state |= substate)
+#define SCTP_GET_STATE(_stcb) \
+	((_stcb)->asoc.state & SCTP_STATE_MASK)
+#define SCTP_SET_STATE(_stcb, _state) \
+	sctp_set_state(_stcb, _state)
+#define SCTP_CLEAR_SUBSTATE(_stcb, _substate) \
+	(_stcb)->asoc.state &= ~(_substate)
+#define SCTP_ADD_SUBSTATE(_stcb, _substate) \
+	sctp_add_substate(_stcb, _substate)
 
 /* SCTP reachability state for each address */
 #define SCTP_ADDR_REACHABLE		0x001
@@ -556,20 +551,19 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_TIMER_TYPE_ASCONF		10
 #define SCTP_TIMER_TYPE_SHUTDOWNGUARD	11
 #define SCTP_TIMER_TYPE_AUTOCLOSE	12
-#define SCTP_TIMER_TYPE_EVENTWAKE	13
-#define SCTP_TIMER_TYPE_STRRESET        14
-#define SCTP_TIMER_TYPE_INPKILL         15
-#define SCTP_TIMER_TYPE_ASOCKILL        16
-#define SCTP_TIMER_TYPE_ADDR_WQ         17
-#define SCTP_TIMER_TYPE_PRIM_DELETED    18
+#define SCTP_TIMER_TYPE_STRRESET	13
+#define SCTP_TIMER_TYPE_INPKILL		14
+#define SCTP_TIMER_TYPE_ASOCKILL	15
+#define SCTP_TIMER_TYPE_ADDR_WQ		16
+#define SCTP_TIMER_TYPE_PRIM_DELETED	17
 /* add new timers here - and increment LAST */
-#define SCTP_TIMER_TYPE_LAST            19
+#define SCTP_TIMER_TYPE_LAST		18
 
 #define SCTP_IS_TIMER_TYPE_VALID(t)	(((t) > SCTP_TIMER_TYPE_NONE) && \
 					 ((t) < SCTP_TIMER_TYPE_LAST))
 
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__Userspace__)
 /* Number of ticks to run the main timer at in msec */
 #define SCTP_MAIN_TIMER_DEFAULT		10
 #endif
@@ -592,22 +586,7 @@ extern void getwintimeofday(struct timeval *tv);
  * number of clusters as a base. This way high bandwidth environments will
  * not get impacted by the lower bandwidth sending a bunch of 1 byte chunks
  */
-#ifdef __Panda__
-#define SCTP_ASOC_MAX_CHUNKS_ON_QUEUE 10240
-#else
 #define SCTP_ASOC_MAX_CHUNKS_ON_QUEUE 512
-#endif
-
-
-/* The conversion from time to ticks and vice versa is done by rounding
- * upwards. This way we can test in the code the time to be positive and
- * know that this corresponds to a positive number of ticks.
- */
-#define MSEC_TO_TICKS(x) ((hz == 1000) ? x : ((((x) * hz) + 999) / 1000))
-#define TICKS_TO_MSEC(x) ((hz == 1000) ? x : ((((x) * 1000) + (hz - 1)) / hz))
-
-#define SEC_TO_TICKS(x) ((x) * hz)
-#define TICKS_TO_SEC(x) (((x) + (hz - 1)) / hz)
 
 /*
  * Basically the minimum amount of time before I do a early FR. Making this
@@ -792,9 +771,8 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_FROM_SCTP_ASCONF       0x80000000
 #define SCTP_FROM_SCTP_OUTPUT       0x90000000
 #define SCTP_FROM_SCTP_PEELOFF      0xa0000000
-#define SCTP_FROM_SCTP_PANDA        0xb0000000
-#define SCTP_FROM_SCTP_SYSCTL       0xc0000000
-#define SCTP_FROM_SCTP_CC_FUNCTIONS 0xd0000000
+#define SCTP_FROM_SCTP_SYSCTL       0xb0000000
+#define SCTP_FROM_SCTP_CC_FUNCTIONS 0xc0000000
 
 /* Location ID's */
 #define SCTP_LOC_1  0x00000001
@@ -832,7 +810,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_LOC_33 0x00000021
 #define SCTP_LOC_34 0x00000022
 #define SCTP_LOC_35 0x00000023
-
+#define SCTP_LOC_36 0x00000024
 
 /* Free assoc codes */
 #define SCTP_NORMAL_PROC      0
@@ -879,7 +857,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_CHUNKQUEUE_SCALE 10
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__Userspace__)
 /* clock variance is 1 ms */
 #define SCTP_CLOCK_GRANULARITY	1
 #else
@@ -986,7 +964,7 @@ extern void getwintimeofday(struct timeval *tv);
 
 /*-
  * defines for socket lock states.
- * Used by __APPLE__ and SCTP_SO_LOCK_TESTING
+ * Used by __APPLE__
  */
 #define SCTP_SO_LOCKED		1
 #define SCTP_SO_NOT_LOCKED	0
@@ -1013,8 +991,11 @@ extern void getwintimeofday(struct timeval *tv);
     ((((uint8_t *)&(a)->s_addr)[0] == 169) && \
      (((uint8_t *)&(a)->s_addr)[1] == 254))
 
+/* Maximum size of optval for IPPROTO_SCTP level socket options. */
+#define SCTP_SOCKET_OPTION_LIMIT (64 * 1024)
+
 #if defined(__Userspace__)
-#if defined(__Userspace_os_Windows)
+#if defined(_WIN32)
 #define SCTP_GETTIME_TIMEVAL(x)	getwintimeofday(x)
 #define SCTP_GETPTIME_TIMEVAL(x) getwintimeofday(x) /* this doesn't seem to ever be used.. */
 #else
@@ -1038,11 +1019,11 @@ do { \
 	} \
 } while (0)
 
-#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
+#if defined(__FreeBSD__) || defined(_WIN32) || defined(__Userspace__)
 #define sctp_sowwakeup_locked(inp, so) \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
-                SOCKBUF_UNLOCK(&((so)->so_snd)); \
+		SOCKBUF_UNLOCK(&((so)->so_snd)); \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEOUTPUT; \
 	} else { \
 		sowwakeup_locked(so); \
@@ -1052,7 +1033,7 @@ do { \
 #define sctp_sowwakeup_locked(inp, so) \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
-                SOCKBUF_UNLOCK(&((so)->so_snd)); \
+		SOCKBUF_UNLOCK(&((so)->so_snd)); \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEOUTPUT; \
 	} else { \
 		sowwakeup(so); \
@@ -1069,12 +1050,12 @@ do { \
 	} \
 } while (0)
 
-#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
+#if defined(__FreeBSD__) || defined(_WIN32) || defined(__Userspace__)
 #define sctp_sorwakeup_locked(inp, so) \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEINPUT; \
-                SOCKBUF_UNLOCK(&((so)->so_rcv)); \
+		SOCKBUF_UNLOCK(&((so)->so_rcv)); \
 	} else { \
 		sorwakeup_locked(so); \
 	} \
@@ -1085,7 +1066,7 @@ do { \
 do { \
 	if (inp->sctp_flags & SCTP_PCB_FLAGS_DONT_WAKE) { \
 		inp->sctp_flags |= SCTP_PCB_FLAGS_WAKEINPUT; \
-                SOCKBUF_UNLOCK(&((so)->so_rcv)); \
+		SOCKBUF_UNLOCK(&((so)->so_rcv)); \
 	} else { \
 		sorwakeup(so); \
 	} \
