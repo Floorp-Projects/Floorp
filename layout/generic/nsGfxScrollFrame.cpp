@@ -102,6 +102,7 @@ static mozilla::LazyLogModule sRootScrollbarsLog("rootscrollbars");
   if (mHelper.mIsRoot) {                                         \
     MOZ_LOG(sRootScrollbarsLog, LogLevel::Debug, (__VA_ARGS__)); \
   }
+static mozilla::LazyLogModule sDisplayportLog("apz.displayport");
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -7312,6 +7313,16 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
     // APZC instance for it and so there won't be anything to process
     // this smooth scroll request. We should set a displayport on this
     // frame to force an APZC which can handle the request.
+    if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
+      mozilla::layers::ScrollableLayerGuid::ViewID viewID =
+          mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
+      nsLayoutUtils::FindIDFor(mOuter->GetContent(), &viewID);
+      MOZ_LOG(
+          sDisplayportLog, LogLevel::Debug,
+          ("ApzSmoothScrollTo setting displayport on scrollId=%" PRIu64 "\n",
+           viewID));
+    }
+
     nsLayoutUtils::CalculateAndSetDisplayPortMargins(
         mOuter->GetScrollTargetFrame(), nsLayoutUtils::RepaintMode::Repaint);
     nsIFrame* frame = do_QueryFrame(mOuter->GetScrollTargetFrame());
