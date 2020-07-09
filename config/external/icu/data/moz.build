@@ -17,5 +17,8 @@ if (CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86') or CONFIG['OS_
 DEFINES['ICU_DATA_FILE'] = '"%s/icudt%sl.dat"' % (SRCDIR, CONFIG['MOZ_ICU_VERSION'])
 DEFINES['ICU_DATA_SYMBOL'] = '%sicudt%s_dat' % (prefix, CONFIG['MOZ_ICU_VERSION'])
 SOURCES += [
-    'icudata.c',
+    'icu_data.S',
 ]
+
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] == 'clang-cl':
+    USE_INTEGRATED_CLANGCL_AS = True
