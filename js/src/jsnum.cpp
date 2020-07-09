@@ -41,6 +41,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
+#include "vm/Compartment-inl.h"  // For js::UnwrapAndTypeCheckThis
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringType-inl.h"
@@ -670,19 +671,51 @@ static bool Number(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool IsNumber(HandleValue v) {
-  return v.isNumber() || (v.isObject() && v.toObject().is<NumberObject>());
-}
+// ES2020 draft rev e08b018785606bc6465a0456a79604b149007932
+// 20.1.3 Properties of the Number Prototype Object, thisNumberValue.
+MOZ_ALWAYS_INLINE
+static bool ThisNumberValue(JSContext* cx, const CallArgs& args,
+                            const char* methodName, double* number) {
+  HandleValue thisv = args.thisv();
 
-static inline double Extract(const Value& v) {
-  if (v.isNumber()) {
-    return v.toNumber();
+  // Step 1.
+  if (thisv.isNumber()) {
+    *number = thisv.toNumber();
+    return true;
   }
-  return v.toObject().as<NumberObject>().unbox();
+
+  // Steps 2-3.
+  auto* obj = UnwrapAndTypeCheckThis<NumberObject>(cx, args, methodName);
+  if (!obj) {
+    return false;
+  }
+
+  *number = obj->unbox();
+  return true;
 }
 
-MOZ_ALWAYS_INLINE bool num_toSource_impl(JSContext* cx, const CallArgs& args) {
-  double d = Extract(args.thisv());
+// On-off helper function for the self-hosted Number_toLocaleString method.
+// This only exists to produce an error message with the right method name.
+bool js::ThisNumberValueForToLocaleString(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  double d;
+  if (!ThisNumberValue(cx, args, "toLocaleString", &d)) {
+    return false;
+  }
+
+  args.rval().setNumber(d);
+  return true;
+}
+
+static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  double d;
+  if (!ThisNumberValue(cx, args, "toSource", &d)) {
+    return false;
+  }
 
   JSStringBuilder sb(cx);
   if (!sb.append("(new Number(") ||
@@ -696,11 +729,6 @@ MOZ_ALWAYS_INLINE bool num_toSource_impl(JSContext* cx, const CallArgs& args) {
   }
   args.rval().setString(str);
   return true;
-}
-
-static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_toSource_impl>(cx, args);
 }
 
 ToCStringBuf::ToCStringBuf() : dbuf(nullptr) {
@@ -859,10 +887,13 @@ static char* Int32ToCString(ToCStringBuf* cbuf, int32_t i, size_t* len,
 template <AllowGC allowGC>
 static JSString* NumberToStringWithBase(JSContext* cx, double d, int base);
 
-MOZ_ALWAYS_INLINE bool num_toString_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsNumber(args.thisv()));
+static bool num_toString(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
 
-  double d = Extract(args.thisv());
+  double d;
+  if (!ThisNumberValue(cx, args, "toString", &d)) {
+    return false;
+  }
 
   int32_t base = 10;
   if (args.hasDefined(0)) {
@@ -887,17 +918,14 @@ MOZ_ALWAYS_INLINE bool num_toString_impl(JSContext* cx, const CallArgs& args) {
   return true;
 }
 
-bool js::num_toString(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
-}
-
 #if !JS_HAS_INTL_API
-MOZ_ALWAYS_INLINE bool num_toLocaleString_impl(JSContext* cx,
-                                               const CallArgs& args) {
-  MOZ_ASSERT(IsNumber(args.thisv()));
+static bool num_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
 
-  double d = Extract(args.thisv());
+  double d;
+  if (!ThisNumberValue(cx, args, "toLocaleString", &d)) {
+    return false;
+  }
 
   RootedString str(cx, NumberToStringWithBase<CanGC>(cx, d, 10));
   if (!str) {
@@ -1029,22 +1057,18 @@ MOZ_ALWAYS_INLINE bool num_toLocaleString_impl(JSContext* cx,
   args.rval().setString(str);
   return true;
 }
-
-static bool num_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_toLocaleString_impl>(cx, args);
-}
 #endif /* !JS_HAS_INTL_API */
-
-MOZ_ALWAYS_INLINE bool num_valueOf_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsNumber(args.thisv()));
-  args.rval().setNumber(Extract(args.thisv()));
-  return true;
-}
 
 bool js::num_valueOf(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_valueOf_impl>(cx, args);
+
+  double d;
+  if (!ThisNumberValue(cx, args, "valueOf", &d)) {
+    return false;
+  }
+
+  args.rval().setNumber(d);
+  return true;
 }
 
 static const unsigned MAX_PRECISION = 100;
@@ -1090,10 +1114,14 @@ static bool DToStrResult(JSContext* cx, double d, JSDToStrMode mode,
  * than ECMA requires; this is permitted by ECMA-262.
  */
 // ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.3.
-MOZ_ALWAYS_INLINE bool num_toFixed_impl(JSContext* cx, const CallArgs& args) {
+static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
   // Step 1.
-  MOZ_ASSERT(IsNumber(args.thisv()));
-  double d = Extract(args.thisv());
+  double d;
+  if (!ThisNumberValue(cx, args, "toFixed", &d)) {
+    return false;
+  }
 
   // Steps 2-3.
   int precision;
@@ -1128,20 +1156,18 @@ MOZ_ALWAYS_INLINE bool num_toFixed_impl(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 5-9.
-  return DToStrResult(cx, Extract(args.thisv()), DTOSTR_FIXED, precision, args);
-}
-
-static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_toFixed_impl>(cx, args);
+  return DToStrResult(cx, d, DTOSTR_FIXED, precision, args);
 }
 
 // ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.2.
-MOZ_ALWAYS_INLINE bool num_toExponential_impl(JSContext* cx,
-                                              const CallArgs& args) {
+static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
   // Step 1.
-  MOZ_ASSERT(IsNumber(args.thisv()));
-  double d = Extract(args.thisv());
+  double d;
+  if (!ThisNumberValue(cx, args, "toExponential", &d)) {
+    return false;
+  }
 
   // Step 2.
   double prec = 0;
@@ -1184,17 +1210,15 @@ MOZ_ALWAYS_INLINE bool num_toExponential_impl(JSContext* cx,
   return DToStrResult(cx, d, mode, precision + 1, args);
 }
 
-static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_toExponential_impl>(cx, args);
-}
-
 // ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.5.
-MOZ_ALWAYS_INLINE bool num_toPrecision_impl(JSContext* cx,
-                                            const CallArgs& args) {
+static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
   // Step 1.
-  MOZ_ASSERT(IsNumber(args.thisv()));
-  double d = Extract(args.thisv());
+  double d;
+  if (!ThisNumberValue(cx, args, "toPrecision", &d)) {
+    return false;
+  }
 
   // Step 2.
   if (!args.hasDefined(0)) {
@@ -1237,11 +1261,6 @@ MOZ_ALWAYS_INLINE bool num_toPrecision_impl(JSContext* cx,
   }
 
   return DToStrResult(cx, d, DTOSTR_PRECISION, precision, args);
-}
-
-static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsNumber, num_toPrecision_impl>(cx, args);
 }
 
 static const JSFunctionSpec number_methods[] = {

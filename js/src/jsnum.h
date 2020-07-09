@@ -263,7 +263,9 @@ extern MOZ_MUST_USE bool FullStringToDouble(JSContext* cx, const CharT* begin,
   return false;
 }
 
-extern MOZ_MUST_USE bool num_toString(JSContext* cx, unsigned argc, Value* vp);
+extern MOZ_MUST_USE bool ThisNumberValueForToLocaleString(JSContext* cx,
+                                                          unsigned argc,
+                                                          Value* vp);
 
 extern MOZ_MUST_USE bool num_valueOf(JSContext* cx, unsigned argc, Value* vp);
 

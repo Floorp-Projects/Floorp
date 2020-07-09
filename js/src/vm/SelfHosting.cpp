@@ -2143,8 +2143,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("std_Map_entries", MapObject::entries, 0, 0),
 
-    JS_FN("std_Number_valueOf", num_valueOf, 0, 0),
-
     JS_INLINABLE_FN("std_Object_create", obj_create, 2, 0, ObjectCreate),
     JS_FN("std_Object_propertyIsEnumerable", obj_propertyIsEnumerable, 1, 0),
     JS_FN("std_Object_toString", obj_toString, 0, 0),
@@ -2231,6 +2229,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("UnsafeGetBooleanFromReservedSlot",
                     intrinsic_UnsafeGetBooleanFromReservedSlot, 2, 0,
                     IntrinsicUnsafeGetBooleanFromReservedSlot),
+
+    JS_FN("ThisNumberValueForToLocaleString", ThisNumberValueForToLocaleString,
+          0, 0),
 
     JS_INLINABLE_FN("IsPackedArray", intrinsic_IsPackedArray, 1, 0,
                     IntrinsicIsPackedArray),

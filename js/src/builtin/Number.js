@@ -13,8 +13,8 @@ var numberFormatCache = new Record();
  * Spec: ECMAScript Internationalization API Specification, 13.2.1.
  */
 function Number_toLocaleString() {
-    // Steps 1-2.  Note that valueOf enforces "this Number value" restrictions.
-    var x = callFunction(std_Number_valueOf, this);
+    // Steps 1-2.
+    var x = callFunction(ThisNumberValueForToLocaleString, this);
 
     // Steps 2-3.
     var locales = arguments.length > 0 ? arguments[0] : undefined;
