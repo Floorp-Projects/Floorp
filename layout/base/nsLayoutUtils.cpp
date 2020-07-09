@@ -8770,7 +8770,7 @@ CSSSize nsLayoutUtils::CalculateRootCompositionSize(
   nsPresContext* presContext = aFrame->PresContext();
   ScreenSize rootCompositionSize;
   nsPresContext* rootPresContext =
-      presContext->GetToplevelContentDocumentPresContext();
+      presContext->GetInProcessRootContentDocumentPresContext();
   if (!rootPresContext) {
     rootPresContext = presContext->GetRootPresContext();
   }
@@ -10343,7 +10343,7 @@ ComputedStyle* nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart) {
 static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
   // We actually want the in-process top prescontext here.
   nsPresContext* topContextInProcess =
-      aFrame->PresContext()->GetToplevelContentDocumentPresContext();
+      aFrame->PresContext()->GetInProcessRootContentDocumentPresContext();
   if (!topContextInProcess) {
     // We are in chrome process.
     return Nothing();
@@ -10403,7 +10403,7 @@ bool nsLayoutUtils::FrameIsMostlyScrolledOutOfViewInCrossProcess(
   }
 
   nsPresContext* topContextInProcess =
-      aFrame->PresContext()->GetToplevelContentDocumentPresContext();
+      aFrame->PresContext()->GetInProcessRootContentDocumentPresContext();
   MOZ_ASSERT(topContextInProcess);
 
   nsIDocShell* docShell = topContextInProcess->GetDocShell();

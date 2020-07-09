@@ -3952,7 +3952,7 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
 
   nsPresContext* pc = mOuter->PresContext();
   const nsPresContext* rootPresContext =
-      pc->GetToplevelContentDocumentPresContext();
+      pc->GetInProcessRootContentDocumentPresContext();
   if (!rootPresContext) {
     rootPresContext = pc->GetRootPresContext();
   }
