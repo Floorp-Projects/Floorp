@@ -19,5 +19,4 @@ DevToolsModules(
     'Toolbar.js',
     'UserAgentInput.js',
     'ViewportDimension.js',
-    'Viewports.js',
 )
