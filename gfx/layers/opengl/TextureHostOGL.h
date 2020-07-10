@@ -497,6 +497,22 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
 
   const char* Name() override { return "AndroidHardwareBufferTextureHost"; }
 
+  void CreateRenderTexture(
+      const wr::ExternalImageId& aExternalImageId) override;
+
+  uint32_t NumSubTextures() override;
+
+  void PushResourceUpdates(wr::TransactionBuilder& aResources,
+                           ResourceUpdateOp aOp,
+                           const Range<wr::ImageKey>& aImageKeys,
+                           const wr::ExternalImageId& aExtID) override;
+
+  void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                        const wr::LayoutRect& aBounds,
+                        const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
+                        const Range<wr::ImageKey>& aImageKeys,
+                        const bool aPreferCompositorSurface) override;
+
  protected:
   void DestroyEGLImage();
 
