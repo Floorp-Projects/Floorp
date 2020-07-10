@@ -362,8 +362,7 @@ class ScriptStencil {
   // See `BaseScript::sharedData_`.
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
-  // The location of this script in the source. Note that the value here differs
-  // from the final BaseScript for the case of standalone functions.
+  // The location of this script in the source.
   SourceExtent extent = {};
 
   // The explicit or implicit name of the function. The FunctionFlags indicate
