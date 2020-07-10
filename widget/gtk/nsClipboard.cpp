@@ -522,8 +522,16 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     NS_ConvertUTF16toUTF8 utf8string(ucs2string);
 
     LOGCLIP(("  sent %d bytes of utf-8 data\n", utf8string.Length()));
-    gtk_selection_data_set_text(aSelectionData, utf8string.get(),
-                                utf8string.Length());
+    if (selectionTarget == gdk_atom_intern("text/plain;charset=utf-8", FALSE)) {
+      // Bypass gtk_selection_data_set_text, which will convert \n to \r\n
+      // in some versions of GTK.
+      gtk_selection_data_set(aSelectionData, selectionTarget, 8,
+                             reinterpret_cast<const guchar*>(utf8string.get()),
+                             utf8string.Length());
+    } else {
+      gtk_selection_data_set_text(aSelectionData, utf8string.get(),
+                                  utf8string.Length());
+    }
     return;
   }
 
