@@ -13,8 +13,9 @@ use std::ops::Deref;
 use std::slice;
 use winapi::shared::bcrypt::*;
 use winapi::shared::minwindef::{DWORD, PBYTE};
+use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::ncrypt::*;
-use winapi::um::wincrypt::*;
+use winapi::um::wincrypt::{HCRYPTHASH, HCRYPTPROV, *};
 
 use crate::util::*;
 
@@ -205,48 +206,250 @@ impl Deref for CertContext {
     }
 }
 
-struct NCryptKeyHandle(NCRYPT_KEY_HANDLE);
+enum KeyHandle {
+    NCrypt(NCRYPT_KEY_HANDLE),
+    CryptoAPI(HCRYPTPROV, DWORD),
+}
 
-impl NCryptKeyHandle {
-    fn from_cert(cert: &CertContext) -> Result<NCryptKeyHandle, ()> {
+impl KeyHandle {
+    fn from_cert(cert: &CertContext) -> Result<KeyHandle, ()> {
         let mut key_handle = 0;
         let mut key_spec = 0;
         let mut must_free = 0;
         unsafe {
             if CryptAcquireCertificatePrivateKey(
                 **cert,
-                CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG, // currently we only support CNG
+                CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG,
                 std::ptr::null_mut(),
                 &mut key_handle,
                 &mut key_spec,
                 &mut must_free,
             ) != 1
             {
+                error!(
+                    "CryptAcquireCertificatePrivateKey failed: 0x{:x}",
+                    GetLastError()
+                );
                 return Err(());
             }
-        }
-        if key_spec != CERT_NCRYPT_KEY_SPEC {
-            error!("CryptAcquireCertificatePrivateKey returned non-ncrypt handle");
-            return Err(());
         }
         if must_free == 0 {
             error!("CryptAcquireCertificatePrivateKey returned shared key handle");
             return Err(());
         }
-        Ok(NCryptKeyHandle(key_handle as NCRYPT_KEY_HANDLE))
+        if key_spec == CERT_NCRYPT_KEY_SPEC {
+            Ok(KeyHandle::NCrypt(key_handle as NCRYPT_KEY_HANDLE))
+        } else {
+            Ok(KeyHandle::CryptoAPI(key_handle as HCRYPTPROV, key_spec))
+        }
     }
-}
 
-impl Drop for NCryptKeyHandle {
-    fn drop(&mut self) {
-        unsafe {
-            NCryptFreeObject(self.0 as NCRYPT_HANDLE);
+    fn sign(
+        &self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+        do_signature: bool,
+        key_type: KeyType,
+    ) -> Result<Vec<u8>, ()> {
+        match &self {
+            KeyHandle::NCrypt(ncrypt_handle) => {
+                sign_ncrypt(ncrypt_handle, data, params, do_signature, key_type)
+            }
+            KeyHandle::CryptoAPI(hcryptprov, key_spec) => {
+                sign_cryptoapi(hcryptprov, key_spec, data, params, do_signature)
+            }
         }
     }
 }
 
-impl Deref for NCryptKeyHandle {
-    type Target = NCRYPT_KEY_HANDLE;
+impl Drop for KeyHandle {
+    fn drop(&mut self) {
+        match self {
+            KeyHandle::NCrypt(ncrypt_handle) => unsafe {
+                let _ = NCryptFreeObject(*ncrypt_handle);
+            },
+            KeyHandle::CryptoAPI(hcryptprov, _) => unsafe {
+                let _ = CryptReleaseContext(*hcryptprov, 0);
+            },
+        }
+    }
+}
+
+fn sign_ncrypt(
+    ncrypt_handle: &NCRYPT_KEY_HANDLE,
+    data: &[u8],
+    params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    do_signature: bool,
+    key_type: KeyType,
+) -> Result<Vec<u8>, ()> {
+    let mut sign_params = SignParams::new(key_type, params)?;
+    let params_ptr = sign_params.params_ptr();
+    let flags = sign_params.flags();
+    let mut data = data.to_vec();
+    let mut signature_len = 0;
+    // We call NCryptSignHash twice: the first time to get the size of the buffer we need to
+    // allocate and then again to actually sign the data, if `do_signature` is `true`.
+    let status = unsafe {
+        NCryptSignHash(
+            *ncrypt_handle,
+            params_ptr,
+            data.as_mut_ptr(),
+            data.len().try_into().map_err(|_| ())?,
+            std::ptr::null_mut(),
+            0,
+            &mut signature_len,
+            flags,
+        )
+    };
+    // 0 is "ERROR_SUCCESS" (but "ERROR_SUCCESS" is unsigned, whereas SECURITY_STATUS is signed)
+    if status != 0 {
+        error!(
+            "NCryptSignHash failed trying to get signature buffer length, {}",
+            status
+        );
+        return Err(());
+    }
+    let mut signature = vec![0; signature_len as usize];
+    if !do_signature {
+        return Ok(signature);
+    }
+    let mut final_signature_len = signature_len;
+    let status = unsafe {
+        NCryptSignHash(
+            *ncrypt_handle,
+            params_ptr,
+            data.as_mut_ptr(),
+            data.len().try_into().map_err(|_| ())?,
+            signature.as_mut_ptr(),
+            signature_len,
+            &mut final_signature_len,
+            flags,
+        )
+    };
+    if status != 0 {
+        error!("NCryptSignHash failed signing data {}", status);
+        return Err(());
+    }
+    if final_signature_len != signature_len {
+        error!(
+            "NCryptSignHash: inconsistent signature lengths? {} != {}",
+            final_signature_len, signature_len
+        );
+        return Err(());
+    }
+    Ok(signature)
+}
+
+fn sign_cryptoapi(
+    hcryptprov: &HCRYPTPROV,
+    key_spec: &DWORD,
+    data: &[u8],
+    params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    do_signature: bool,
+) -> Result<Vec<u8>, ()> {
+    if params.is_some() {
+        error!("non-None signature params cannot be used with CryptoAPI");
+        return Err(());
+    }
+    // data will be an encoded DigestInfo, which specifies the hash algorithm and bytes of the hash
+    // to sign. However, CryptoAPI requires directly specifying the bytes of the hash, so it must
+    // be extracted first.
+    let hash_bytes = read_digest(data)?;
+    let hash = HCryptHash::new(hcryptprov, hash_bytes)?;
+    let mut signature_len = 0;
+    if unsafe {
+        CryptSignHashW(
+            *hash,
+            *key_spec,
+            std::ptr::null_mut(),
+            0,
+            std::ptr::null_mut(),
+            &mut signature_len,
+        )
+    } != 1
+    {
+        error!(
+            "CryptSignHash failed trying to get signature buffer length: 0x{:x}",
+            unsafe { GetLastError() }
+        );
+        return Err(());
+    }
+    let mut signature = vec![0; signature_len as usize];
+    if !do_signature {
+        return Ok(signature);
+    }
+    let mut final_signature_len = signature_len;
+    if unsafe {
+        CryptSignHashW(
+            *hash,
+            *key_spec,
+            std::ptr::null_mut(),
+            0,
+            signature.as_mut_ptr(),
+            &mut final_signature_len,
+        )
+    } != 1
+    {
+        error!("CryptSignHash failed signing data: 0x{:x}", unsafe {
+            GetLastError()
+        });
+        return Err(());
+    }
+    if final_signature_len != signature_len {
+        error!(
+            "CryptSignHash: inconsistent signature lengths? {} != {}",
+            final_signature_len, signature_len
+        );
+        return Err(());
+    }
+    // CryptoAPI returns the signature with the most significant byte last (little-endian),
+    // whereas PKCS#11 expects the most significant byte first (big-endian).
+    signature.reverse();
+    Ok(signature)
+}
+
+struct HCryptHash(HCRYPTHASH);
+
+impl HCryptHash {
+    fn new(hcryptprov: &HCRYPTPROV, hash_bytes: &[u8]) -> Result<HCryptHash, ()> {
+        let alg = match hash_bytes.len() {
+            20 => CALG_SHA1,
+            32 => CALG_SHA_256,
+            48 => CALG_SHA_384,
+            64 => CALG_SHA_512,
+            _ => {
+                error!(
+                    "HCryptHash::new: invalid hash of length {}",
+                    hash_bytes.len()
+                );
+                return Err(());
+            }
+        };
+        let mut hash: HCRYPTHASH = 0;
+        if unsafe { CryptCreateHash(*hcryptprov, alg, 0, 0, &mut hash) } != 1 {
+            error!("CryptCreateHash failed: 0x{:x}", unsafe { GetLastError() });
+            return Err(());
+        }
+        if unsafe { CryptSetHashParam(hash, HP_HASHVAL, hash_bytes.as_ptr(), 0) } != 1 {
+            error!("CryptSetHashParam failed: 0x{:x}", unsafe {
+                GetLastError()
+            });
+            return Err(());
+        }
+        Ok(HCryptHash(hash))
+    }
+}
+
+impl Drop for HCryptHash {
+    fn drop(&mut self) {
+        unsafe {
+            CryptDestroyHash(self.0);
+        }
+    }
+}
+
+impl Deref for HCryptHash {
+    type Target = HCRYPTHASH;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -517,63 +720,8 @@ impl Key {
     ) -> Result<Vec<u8>, ()> {
         // Acquiring a handle on the key can cause the OS to show some UI to the user, so we do this
         // as late as possible (i.e. here).
-        let key = NCryptKeyHandle::from_cert(&self.cert)?;
-        let mut sign_params = SignParams::new(self.key_type_enum, params)?;
-        let params_ptr = sign_params.params_ptr();
-        let flags = sign_params.flags();
-        let mut data = data.to_vec();
-        let mut signature_len = 0;
-        // We call NCryptSignHash twice: the first time to get the size of the buffer we need to
-        // allocate and then again to actually sign the data, if `do_signature` is `true`.
-        let status = unsafe {
-            NCryptSignHash(
-                *key,
-                params_ptr,
-                data.as_mut_ptr(),
-                data.len().try_into().map_err(|_| ())?,
-                std::ptr::null_mut(),
-                0,
-                &mut signature_len,
-                flags,
-            )
-        };
-        // 0 is "ERROR_SUCCESS" (but "ERROR_SUCCESS" is unsigned, whereas SECURITY_STATUS is signed)
-        if status != 0 {
-            error!(
-                "NCryptSignHash failed trying to get signature buffer length, {}",
-                status
-            );
-            return Err(());
-        }
-        let mut signature = vec![0; signature_len as usize];
-        if !do_signature {
-            return Ok(signature);
-        }
-        let mut final_signature_len = signature_len;
-        let status = unsafe {
-            NCryptSignHash(
-                *key,
-                params_ptr,
-                data.as_mut_ptr(),
-                data.len().try_into().map_err(|_| ())?,
-                signature.as_mut_ptr(),
-                signature_len,
-                &mut final_signature_len,
-                flags,
-            )
-        };
-        if status != 0 {
-            error!("NCryptSignHash failed signing data {}", status);
-            return Err(());
-        }
-        if final_signature_len != signature_len {
-            error!(
-                "NCryptSignHash: inconsistent signature lengths? {} != {}",
-                final_signature_len, signature_len
-            );
-            return Err(());
-        }
-        Ok(signature)
+        let key = KeyHandle::from_cert(&self.cert)?;
+        key.sign(data, params, do_signature, self.key_type_enum)
     }
 }
 
