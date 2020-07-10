@@ -26,18 +26,6 @@ CompilationInfo& AbstractScopePtr::compilationInfo() const {
   return data.compilationInfo;
 }
 
-Scope* AbstractScopePtr::getExistingScope() const {
-  if (scope_.is<HeapPtrScope>()) {
-    return scope_.as<HeapPtrScope>();
-  }
-  MOZ_ASSERT(isScopeCreationData());
-  // This should only be called post-reification, as it needs to return a real
-  // Scope* unless it represents nullptr (in which case the variant should be
-  // in HeapPtrScope and handled above)
-  MOZ_ASSERT(scopeCreationData().get().getScope());
-  return scopeCreationData().get().getScope();
-}
-
 ScopeKind AbstractScopePtr::kind() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeCreationData()) {
