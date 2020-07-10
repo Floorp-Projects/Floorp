@@ -154,12 +154,35 @@ nsMapRuleToAttributesFunc HTMLIFrameElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
+bool HTMLIFrameElement::HasAllowFullscreenAttribute() const {
+  return GetBoolAttr(nsGkAtoms::allowfullscreen) ||
+         GetBoolAttr(nsGkAtoms::mozallowfullscreen);
+}
+
+bool HTMLIFrameElement::AllowFullscreen() const {
+  if (StaticPrefs::dom_security_featurePolicy_enabled()) {
+    // This already accounts for allowfullscreen / mozallowfullscreen.
+    return FeaturePolicy()->AllowsFeature(u"fullscreen"_ns, {});
+  }
+  return HasAllowFullscreenAttribute();
+}
+
 nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                          const nsAttrValue* aValue,
                                          const nsAttrValue* aOldValue,
                                          nsIPrincipal* aMaybeScriptedPrincipal,
                                          bool aNotify) {
   AfterMaybeChangeAttr(aNameSpaceID, aName, aNotify);
+
+  auto UpdateFullscreenAllowed = [&] {
+    // This could be simpler if we didn't support the prefixed attribute, then
+    // it could just use !!aValue.
+    if (mFrameLoader) {
+      if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
+        bc->SetFullscreenAllowedByOwner(AllowFullscreen());
+      }
+    }
+  };
 
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::sandbox) {
@@ -171,22 +194,18 @@ nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       }
     } else if (aName == nsGkAtoms::allowfullscreen ||
                aName == nsGkAtoms::mozallowfullscreen) {
-      if (mFrameLoader) {
-        if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
-          // This could be simpler if we didn't support the prefixed
-          // attribute, then it could just use !!aValue.
-          bc->SetFullscreenAllowedByOwner(AllowFullscreen());
-        }
+      if (StaticPrefs::dom_security_featurePolicy_enabled()) {
+        RefreshFeaturePolicy(false /* parse the feature policy attribute */);
       }
+      UpdateFullscreenAllowed();
     }
 
     if (StaticPrefs::dom_security_featurePolicy_enabled()) {
       if (aName == nsGkAtoms::allow || aName == nsGkAtoms::src ||
           aName == nsGkAtoms::srcdoc || aName == nsGkAtoms::sandbox) {
         RefreshFeaturePolicy(true /* parse the feature policy attribute */);
-      } else if (aName == nsGkAtoms::allowfullscreen ||
-                 aName == nsGkAtoms::mozallowfullscreen ||
-                 aName == nsGkAtoms::allowpaymentrequest) {
+        UpdateFullscreenAllowed();
+      } else if (aName == nsGkAtoms::allowpaymentrequest) {
         RefreshFeaturePolicy(false /* parse the feature policy attribute */);
       }
     }
@@ -316,7 +335,7 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
     mFeaturePolicy->MaybeSetAllowedPolicy(u"payment"_ns);
   }
 
-  if (AllowFullscreen()) {
+  if (HasAllowFullscreenAttribute()) {
     mFeaturePolicy->MaybeSetAllowedPolicy(u"fullscreen"_ns);
   }
 
