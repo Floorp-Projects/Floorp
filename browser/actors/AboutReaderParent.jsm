@@ -144,10 +144,6 @@ class AboutReaderParent extends JSWindowActorParent {
           return undefined;
         }
 
-        if (browser.outerBrowser) {
-          browser = browser.outerBrowser; // handle RDM mode
-        }
-
         if (message.data && message.data.isArticle !== undefined) {
           browser.isArticle = message.data.isArticle;
         }

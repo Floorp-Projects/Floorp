@@ -92,11 +92,6 @@ class EncryptedMediaParent extends JSWindowActorParent {
       return;
     }
 
-    if (browser.outerBrowser) {
-      // Responsive design mode check
-      browser = browser.outerBrowser;
-    }
-
     let parsedData;
     try {
       parsedData = JSON.parse(aMessage.data);
