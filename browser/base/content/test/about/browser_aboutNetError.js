@@ -23,6 +23,8 @@ const CIPHER_SUITE_PREFS = [
   "security.ssl3.ecdhe_rsa_chacha20_poly1305_sha256",
   "security.ssl3.rsa_aes_128_sha",
   "security.ssl3.rsa_aes_256_sha",
+  "security.ssl3.rsa_aes_128_gcm_sha256",
+  "security.ssl3.rsa_aes_256_gcm_sha384",
   "security.ssl3.rsa_des_ede3_sha",
   "security.tls13.aes_128_gcm_sha256",
   "security.tls13.aes_256_gcm_sha384",
