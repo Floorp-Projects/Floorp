@@ -140,11 +140,9 @@ void XRRigidTransform::UpdateInternal() {
     mOrientation->SetW(mRawOrientation.w);
   }
   if (mInverse) {
-    gfx::QuaternionDouble q(mRawOrientation);
-    gfx::PointDouble3D p = -mRawPosition;
-    p = q.RotatePoint(p);
-    q.Invert();
-    mInverse->Update(p, q);
+    gfx::Matrix4x4Double inverseMatrix = mRawTransformMatrix;
+    Unused << inverseMatrix.Invert();
+    mInverse->Update(inverseMatrix);
   }
 }
 
@@ -175,11 +173,9 @@ void XRRigidTransform::GetMatrix(JSContext* aCx,
 
 already_AddRefed<XRRigidTransform> XRRigidTransform::Inverse() {
   if (!mInverse) {
-    gfx::QuaternionDouble q(mRawOrientation);
-    gfx::PointDouble3D p = -mRawPosition;
-    p = q.RotatePoint(p);
-    q.Invert();
-    mInverse = new XRRigidTransform(mParent, p, q);
+    gfx::Matrix4x4Double inverseMatrix = mRawTransformMatrix;
+    Unused << inverseMatrix.Invert();
+    mInverse = new XRRigidTransform(mParent, inverseMatrix);
   }
 
   RefPtr<XRRigidTransform> inverse = mInverse;
