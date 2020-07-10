@@ -86,16 +86,6 @@ addEventListener("dblclick", event.DoubleClickTracker.resetClick);
 addEventListener("unload", event.DoubleClickTracker.resetClick, true);
 
 const seenEls = new element.Store();
-const SUPPORTED_STRATEGIES = new Set([
-  element.Strategy.ClassName,
-  element.Strategy.Selector,
-  element.Strategy.ID,
-  element.Strategy.Name,
-  element.Strategy.LinkText,
-  element.Strategy.PartialLinkText,
-  element.Strategy.TagName,
-  element.Strategy.XPath,
-]);
 
 Object.defineProperty(this, "capabilities", {
   get() {
@@ -1267,10 +1257,6 @@ function getPageSource() {
  * given search strategy.
  */
 async function findElementContent(strategy, selector, opts = {}) {
-  if (!SUPPORTED_STRATEGIES.has(strategy)) {
-    throw new InvalidSelectorError("Strategy not supported: " + strategy);
-  }
-
   opts.all = false;
   let el = await element.find(curContainer, strategy, selector, opts);
   return seenEls.add(el);
@@ -1281,10 +1267,6 @@ async function findElementContent(strategy, selector, opts = {}) {
  * given search strategy.
  */
 async function findElementsContent(strategy, selector, opts = {}) {
-  if (!SUPPORTED_STRATEGIES.has(strategy)) {
-    throw new InvalidSelectorError("Strategy not supported: " + strategy);
-  }
-
   opts.all = true;
   let els = await element.find(curContainer, strategy, selector, opts);
   let webEls = seenEls.addAll(els);
