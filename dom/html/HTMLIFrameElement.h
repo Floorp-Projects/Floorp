@@ -8,6 +8,7 @@
 #define mozilla_dom_HTMLIFrameElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/FeaturePolicy.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsDOMTokenList.h"
 
@@ -79,9 +80,12 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
     SetHTMLBoolAttr(nsGkAtoms::allowfullscreen, aAllow, aError);
   }
 
-  bool AllowFullscreen() const;
-
-  bool HasAllowFullscreenAttribute() const;
+  // This and AllowFullscreenForBindings can be merged when we remove support
+  // for mozallowfullscreen.
+  bool AllowFullscreen() const {
+    return GetBoolAttr(nsGkAtoms::allowfullscreen) ||
+           GetBoolAttr(nsGkAtoms::mozallowfullscreen);
+  }
 
   bool AllowPaymentRequest() const {
     return GetBoolAttr(nsGkAtoms::allowpaymentrequest);
