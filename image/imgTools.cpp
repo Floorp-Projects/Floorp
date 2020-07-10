@@ -259,7 +259,7 @@ class ImageDecoderHelper final : public Runnable,
 
  private:
   ~ImageDecoderHelper() {
-    NS_ReleaseOnMainThread("ImageDecoderHelper::mImage", mImage.forget());
+    SurfaceCache::ReleaseImageOnMainThread(mImage.forget());
     NS_ReleaseOnMainThread("ImageDecoderHelper::mCallback", mCallback.forget());
   }
 
