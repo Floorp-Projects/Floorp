@@ -58,7 +58,7 @@ function notFound(id) {
   return doc.getElementById(id).classList.contains("notFound");
 }
 
-function testBenignPage() {
+async function testBenignPage() {
   info("Non-tracking content must not be blocked");
   ok(!gProtectionsHandler.anyDetected, "no trackers are detected");
   ok(!gProtectionsHandler.hasException, "content shows no exception");
@@ -80,6 +80,9 @@ function testBenignPage() {
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
     "icon box is visible"
   );
+
+  let win = tabbrowser.ownerGlobal;
+  await openProtectionsPanel(false, win);
   ok(
     notFound("protections-popup-category-cookies"),
     "Cookie restrictions category is not found"
@@ -88,9 +91,10 @@ function testBenignPage() {
     notFound("protections-popup-category-tracking-protection"),
     "Trackers category is not found"
   );
+  await closeProtectionsPanel(win);
 }
 
-function testBenignPageWithException() {
+async function testBenignPageWithException() {
   info("Non-tracking content must not be blocked");
   ok(!gProtectionsHandler.anyDetected, "no trackers are detected");
   ok(gProtectionsHandler.hasException, "content shows exception");
@@ -114,6 +118,8 @@ function testBenignPageWithException() {
     "icon box is not hidden"
   );
 
+  let win = tabbrowser.ownerGlobal;
+  await openProtectionsPanel(false, win);
   ok(
     notFound("protections-popup-category-cookies"),
     "Cookie restrictions category is not found"
@@ -122,6 +128,7 @@ function testBenignPageWithException() {
     notFound("protections-popup-category-tracking-protection"),
     "Trackers category is not found"
   );
+  await closeProtectionsPanel(win);
 }
 
 function areTrackersBlocked(isPrivateBrowsing) {
@@ -135,7 +142,7 @@ function areTrackersBlocked(isPrivateBrowsing) {
   return blockedByTP || blockedByTPC;
 }
 
-function testTrackingPage(window) {
+async function testTrackingPage(window) {
   info("Tracking content must be blocked");
   ok(gProtectionsHandler.anyDetected, "trackers are detected");
   ok(!gProtectionsHandler.hasException, "content shows no exception");
@@ -161,6 +168,7 @@ function testTrackingPage(window) {
     "correct tooltip"
   );
 
+  await openProtectionsPanel(false, window);
   ok(
     !notFound("protections-popup-category-tracking-protection"),
     "Trackers category is detected"
@@ -176,10 +184,11 @@ function testTrackingPage(window) {
       "Cookie restrictions category is not found"
     );
   }
+  await closeProtectionsPanel(window);
 }
 
-function testTrackingPageUnblocked(blockedByTP, window) {
-  info("Tracking content must be white-listed and not blocked");
+async function testTrackingPageUnblocked(blockedByTP, window) {
+  info("Tracking content must be in the exception list and not blocked");
   ok(gProtectionsHandler.anyDetected, "trackers are detected");
   ok(gProtectionsHandler.hasException, "content shows exception");
 
@@ -202,6 +211,7 @@ function testTrackingPageUnblocked(blockedByTP, window) {
     "icon box is visible"
   );
 
+  await openProtectionsPanel(false, window);
   ok(
     !notFound("protections-popup-category-tracking-protection"),
     "Trackers category is detected"
@@ -217,6 +227,7 @@ function testTrackingPageUnblocked(blockedByTP, window) {
       "Cookie restrictions category is not found"
     );
   }
+  await closeProtectionsPanel(window);
 }
 
 async function testContentBlocking(tab) {
@@ -224,7 +235,7 @@ async function testContentBlocking(tab) {
 
   info("Load a test page not containing tracking elements");
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
-  testBenignPage();
+  await testBenignPage();
 
   info(
     "Load a test page not containing tracking elements which has an exception."
@@ -237,13 +248,13 @@ async function testContentBlocking(tab) {
   // notification which would trigger an oncontentblocking notification for us.
   await promiseTabLoadEvent(tab, "https://example.org/?round=2");
 
-  testBenignPageWithException();
+  await testBenignPageWithException();
 
   ContentBlockingAllowList.remove(tab.linkedBrowser);
 
   info("Load a test page containing tracking elements");
   await promiseTabLoadEvent(tab, gTrackingPageURL);
-  testTrackingPage(tab.ownerGlobal);
+  await testTrackingPage(tab.ownerGlobal);
 
   info("Disable CB for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
@@ -251,13 +262,13 @@ async function testContentBlocking(tab) {
   await tabReloadPromise;
   let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(tab.ownerGlobal);
   let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
-  testTrackingPageUnblocked(blockedByTP, tab.ownerGlobal);
+  await testTrackingPageUnblocked(blockedByTP, tab.ownerGlobal);
 
   info("Re-enable TP for the page (which reloads the page)");
   tabReloadPromise = promiseTabLoadEvent(tab);
   tab.ownerGlobal.gProtectionsHandler.enableForCurrentPage();
   await tabReloadPromise;
-  testTrackingPage(tab.ownerGlobal);
+  await testTrackingPage(tab.ownerGlobal);
 }
 
 add_task(async function testNormalBrowsing() {

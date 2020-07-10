@@ -47,6 +47,7 @@ async function testIdentityState(hasException) {
     await loaded;
   }
 
+  await openProtectionsPanel();
   let categoryItem = document.getElementById(
     "protections-popup-category-socialblock"
   );
@@ -60,10 +61,12 @@ async function testIdentityState(hasException) {
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
     "icon box is visible regardless the exception"
   );
+  await closeProtectionsPanel();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("socialtracking", "*");
   });
+  await openProtectionsPanel();
 
   await TestUtils.waitForCondition(() => {
     return !categoryItem.classList.contains("notFound");
@@ -86,6 +89,7 @@ async function testIdentityState(hasException) {
     hasException,
     "Shows an exception when appropriate"
   );
+  await closeProtectionsPanel();
 
   if (hasException) {
     let loaded = BrowserTestUtils.browserLoaded(
@@ -236,7 +240,7 @@ async function testCategoryItem(blockLoads) {
   );
   ok(
     BrowserTestUtils.is_visible(noTrackersDetectedDesc),
-    "No Trackers Detcted should be shown"
+    "No Trackers detected should be shown"
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -262,7 +266,7 @@ async function testCategoryItem(blockLoads) {
   ok(!BrowserTestUtils.is_visible(categoryItem), "Item should not be visible");
   ok(
     BrowserTestUtils.is_visible(noTrackersDetectedDesc),
-    "No Trackers Detcted should be shown"
+    "No Trackers detected should be shown"
   );
   ok(
     !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
@@ -285,7 +289,7 @@ async function testCategoryItem(blockLoads) {
   ok(BrowserTestUtils.is_visible(categoryItem), "Item should be visible");
   ok(
     !BrowserTestUtils.is_visible(noTrackersDetectedDesc),
-    "No Trackers Detcted should be hidden"
+    "No Trackers detected should be hidden"
   );
   ok(
     gProtectionsHandler._protectionsPopup.hasAttribute("detected"),

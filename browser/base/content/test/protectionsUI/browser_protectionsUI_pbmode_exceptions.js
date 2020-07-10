@@ -28,7 +28,7 @@ function hidden(sel) {
 
 function protectionsPopupState() {
   let win = browser.ownerGlobal;
-  return win.document.getElementById("protections-popup").state;
+  return win.document.getElementById("protections-popup")?.state || "closed";
 }
 
 function clickButton(sel) {
