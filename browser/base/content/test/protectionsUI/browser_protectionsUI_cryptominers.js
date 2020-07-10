@@ -200,8 +200,6 @@ async function testCategoryItem() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
-  await openProtectionsPanel();
-
   let categoryItem = document.getElementById(
     "protections-popup-category-cryptominers"
   );
@@ -229,7 +227,6 @@ async function testCategoryItem() {
     categoryItem.classList.contains("notFound"),
     "Category marked as not found"
   );
-  await closeProtectionsPanel();
 
   promise = waitForContentBlockingEvent();
 
@@ -239,7 +236,6 @@ async function testCategoryItem() {
 
   await promise;
 
-  await openProtectionsPanel();
   ok(
     !categoryItem.classList.contains("blocked"),
     "Category not marked as blocked"
@@ -263,7 +259,6 @@ async function testCategoryItem() {
     !categoryItem.classList.contains("notFound"),
     "Category not marked as not found"
   );
-  await closeProtectionsPanel();
 
   BrowserTestUtils.removeTab(tab);
 }
