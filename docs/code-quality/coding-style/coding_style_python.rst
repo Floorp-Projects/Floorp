@@ -5,15 +5,13 @@ Python Coding style
 Coding style
 ~~~~~~~~~~~~
 
-`black <https://github.com/psf/black/>`_ is the tool used to reformat the Python code.
+ :ref:`black` is the tool used to reformat the Python code.
 
 Linting
 ~~~~~~~
 
-The Python linting is done by `flake8 <https://gitlab.com/pycqa/flake8>`_.
-flake8 is executed by mozlint both at review phase and in the CI.
-See the :ref:`flake8` documentation for more information.
-
+The Python linting is done by :ref:`Flake8` and :ref:`pylint`
+They are executed by mozlint both at review phase and in the CI.
 
 Indentation
 ~~~~~~~~~~~
@@ -60,9 +58,9 @@ Other advices
 
 -  Install the
    `mozext <https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/mozext>`__
-   Mercurial extension, and address every issue reported on commit,
-   qrefresh, or the output of ``hg critic``.
--  Follow `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__.
+   Mercurial extension, and address every issue reported on commit
+   or the output of ``hg critic``.
+-  Follow `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__. Please run :ref:`black` for this.
 -  Do not place statements on the same line as ``if/elif/else``
    conditionals to form a one-liner.
 -  Global vars, please avoid them at all cost.
@@ -70,8 +68,4 @@ Other advices
    ``if x > 5:,``\ rather than ``if (x > 5):``
 -  Use string formatters, rather than var + str(val).
    ``var = 'Type %s value is %d'% ('int', 5).``
--  Utilize tools like
-   `pylint <https://pypi.python.org/pypi/pylint>`__ or
-   `pychecker <http://pychecker.sourceforge.net>`__ to screen
-   sources for common problems.
--  Testing/Unit tests, please write them.
+-  Testing/Unit tests, please write them and make sure that they are executed in the CI.
