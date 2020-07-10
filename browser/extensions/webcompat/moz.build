@@ -84,5 +84,9 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
   'lib/ua_overrides.js',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 with Files('**'):
   BUG_COMPONENT = ('Web Compatibility', 'Tooling & Investigations')
