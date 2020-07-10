@@ -1387,24 +1387,29 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  // get the runs before and after selection
-  const WSFragment* beforeRun = FindNearestFragment(mScanStartPoint, false);
-  const WSFragment* afterRun =
-      aEndObject->FindNearestFragment(aEndObject->mScanStartPoint, true);
-
-  if (!beforeRun && !afterRun) {
+  TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
+  const bool deleteStartEqualsOrIsBeforeTextStart =
+      mScanStartPoint.EqualsOrIsBefore(textFragmentDataAtStart.StartRef());
+  TextFragmentData textFragmentDataAtEnd(aEndObject->mStart, aEndObject->mEnd,
+                                         aEndObject->mNBSPData,
+                                         aEndObject->mPRE);
+  const bool deleteEndIsAfterTextEnd =
+      textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(
+          aEndObject->mScanStartPoint);
+  if (deleteStartEqualsOrIsBeforeTextStart && deleteEndIsAfterTextEnd) {
     return NS_OK;
   }
 
-  TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
   const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
-      beforeRun ? textFragmentDataAtStart
-                      .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
-                          mScanStartPoint)
-                : EditorDOMRange();
+      !deleteStartEqualsOrIsBeforeTextStart
+          ? textFragmentDataAtStart
+                .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
+                    mScanStartPoint)
+          : EditorDOMRange();
   const Maybe<const WSFragment>
       nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart =
-          beforeRun && !textFragmentDataAtStart.IsPreformatted() &&
+          !deleteStartEqualsOrIsBeforeTextStart &&
+                  !textFragmentDataAtStart.IsPreformatted() &&
                   !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
               ? textFragmentDataAtStart
                     .CreateWSFragmentForVisibleAndMiddleOfLine()
@@ -1415,17 +1420,15 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
               ? nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart.ref()
                     .ComparePoint(mScanStartPoint)
               : PointPosition::NotInSameDOMTree;
-  TextFragmentData textFragmentDataAtEnd(aEndObject->mStart, aEndObject->mEnd,
-                                         aEndObject->mNBSPData,
-                                         aEndObject->mPRE);
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
-      afterRun ? textFragmentDataAtEnd
-                     .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
-                         aEndObject->mScanEndPoint)
-               : EditorDOMRange();
+      !deleteEndIsAfterTextEnd
+          ? textFragmentDataAtEnd
+                .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
+                    aEndObject->mScanStartPoint)
+          : EditorDOMRange();
   const Maybe<const WSFragment>
       nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd =
-          afterRun && !textFragmentDataAtEnd.IsPreformatted() &&
+          !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
                   !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
               ? textFragmentDataAtEnd
                     .CreateWSFragmentForVisibleAndMiddleOfLine()
@@ -1435,8 +1438,14 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
           ? nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd.ref()
                 .ComparePoint(aEndObject->mScanStartPoint)
           : PointPosition::NotInSameDOMTree;
+  const bool followingContentMayBecomeFirstVisibleContent =
+      textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
+          mScanStartPoint);
+  const bool precedingContentMayBecomeInvisible =
+      textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
+          aEndObject->mScanStartPoint);
 
-  if (afterRun) {
+  if (!deleteEndIsAfterTextEnd) {
     // If deleting range is followed by invisible trailing white-spaces, we need
     // to remove it for making them not visible.
     if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
@@ -1465,10 +1474,10 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
                  PointPosition::StartOfFragment ||
              pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
                  PointPosition::MiddleOfFragment) {
-      if ((beforeRun && beforeRun->IsStartOfHardLine()) ||
-          (!beforeRun && StartsFromHardLineBreak())) {
-        // make sure leading char of following ws is an nbsp, so that it will
-        // show up
+      // If start of deleting range follows white-spaces or end of delete
+      // will be start of a line, the following text cannot start with an
+      // ASCII white-space for keeping it visible.
+      if (followingContentMayBecomeFirstVisibleContent) {
         EditorDOMPointInText nextCharOfStartOfEnd =
             aEndObject->GetInclusiveNextEditableCharPoint(
                 aEndObject->mScanStartPoint);
@@ -1497,7 +1506,7 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
     }
   }
 
-  if (!beforeRun) {
+  if (deleteStartEqualsOrIsBeforeTextStart) {
     return NS_OK;
   }
 
@@ -1528,10 +1537,11 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
           PointPosition::MiddleOfFragment ||
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
           PointPosition::EndOfFragment) {
-    if ((afterRun && (afterRun->IsEndOfHardLine() || afterRun->IsVisible())) ||
-        (!afterRun && aEndObject->EndsByBlockBoundary())) {
-      // make sure trailing char of starting ws is an nbsp, so that it will show
-      // up
+    // If end of the deleting range is (was) followed by white-spaces or
+    // previous character of start of deleting range will be immediately
+    // before a block boundary, the text cannot ends with an ASCII white-space
+    // for keeping it visible.
+    if (precedingContentMayBecomeInvisible) {
       EditorDOMPointInText atPreviousCharOfStart =
           GetPreviousEditableCharPoint(mScanStartPoint);
       if (atPreviousCharOfStart.IsSet() &&
