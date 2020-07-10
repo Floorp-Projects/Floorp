@@ -1561,9 +1561,14 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
 
   mDocument->NotifyMediaFeatureValuesChanged();
 
+  // https://drafts.csswg.org/cssom-view/#evaluate-media-queries-and-report-changes
+  //
   // Media query list listeners should be notified from a queued task
   // (in HTML5 terms), although we also want to notify them on certain
   // flushes.  (We're already running off an event.)
+  //
+  // TODO: This should be better integrated into the "update the rendering"
+  // steps: https://html.spec.whatwg.org/#update-the-rendering
   //
   // Note that we do this after the new style from media queries in
   // style sheets has been computed.
@@ -1574,22 +1579,20 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
 
   // We build a list of all the notifications we're going to send
   // before we send any of them.
-
-  // Copy pointers to all the lists into a new array, in case one of our
-  // notifications modifies the list.
-  nsTArray<RefPtr<mozilla::dom::MediaQueryList>> localMediaQueryLists;
+  nsTArray<RefPtr<mozilla::dom::MediaQueryList>> listsToNotify;
   for (MediaQueryList* mql = mDocument->MediaQueryLists().getFirst(); mql;
        mql = static_cast<LinkedListElement<MediaQueryList>*>(mql)->getNext()) {
-    localMediaQueryLists.AppendElement(mql);
+    if (mql->MediaFeatureValuesChanged()) {
+      listsToNotify.AppendElement(mql);
+    }
   }
 
   nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
       "nsPresContext::FlushPendingMediaFeatureValuesChanged",
-      [list = std::move(localMediaQueryLists)] {
-        // Now iterate our local array of the lists.
+      [list = std::move(listsToNotify)] {
         for (const auto& mql : list) {
           nsAutoMicroTask mt;
-          mql->MaybeNotify();
+          mql->FireChangeEvent();
         }
       }));
 }

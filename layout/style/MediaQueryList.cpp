@@ -131,21 +131,20 @@ JSObject* MediaQueryList::WrapObject(JSContext* aCx,
   return MediaQueryList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void MediaQueryList::MaybeNotify() {
+bool MediaQueryList::MediaFeatureValuesChanged() {
   mMatchesValid = false;
 
   if (!HasListeners()) {
-    return;
+    return false;  // No need to recompute or notify if we have no listeners.
   }
 
   bool oldMatches = mMatches;
   RecomputeMatches();
 
-  // No need to notify the change.
-  if (mMatches == oldMatches) {
-    return;
-  }
+  return mMatches != oldMatches;
+}
 
+void MediaQueryList::FireChangeEvent() {
   MediaQueryListEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
