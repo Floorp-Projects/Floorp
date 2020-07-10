@@ -4,6 +4,8 @@
 
 /* Portions Copyright Norbert Lindenberg 2011-2012. */
 
+#include "NumberingSystemsGenerated.h"
+
 /**
  * NumberFormat internal properties.
  *
@@ -573,72 +575,7 @@ function getNumberingSystems(locale) {
     var defaultNumberingSystem = intl_numberingSystem(locale);
     return [
         defaultNumberingSystem,
-        "adlm",
-        "ahom",
-        "arab",
-        "arabext",
-        "bali",
-        "beng",
-        "bhks",
-        "brah",
-        "cakm",
-        "cham",
-        "deva",
-        "diak",
-        "fullwide",
-        "gong",
-        "gonm",
-        "gujr",
-        "guru",
-        "hanidec",
-        "hmng",
-        "hmnp",
-        "java",
-        "kali",
-        "khmr",
-        "knda",
-        "lana",
-        "lanatham",
-        "laoo",
-        "latn",
-        "lepc",
-        "limb",
-        "mathbold",
-        "mathdbl",
-        "mathmono",
-        "mathsanb",
-        "mathsans",
-        "mlym",
-        "modi",
-        "mong",
-        "mroo",
-        "mtei",
-        "mymr",
-        "mymrshan",
-        "mymrtlng",
-        "newa",
-        "nkoo",
-        "olck",
-        "orya",
-        "osma",
-        "rohg",
-        "saur",
-        "segment",
-        "shrd",
-        "sind",
-        "sinh",
-        "sora",
-        "sund",
-        "takr",
-        "talu",
-        "tamldec",
-        "telu",
-        "thai",
-        "tibt",
-        "tirh",
-        "vaii",
-        "wara",
-        "wcho",
+        NUMBERING_SYSTEMS_WITH_SIMPLE_DIGIT_MAPPINGS
     ];
 }
 
