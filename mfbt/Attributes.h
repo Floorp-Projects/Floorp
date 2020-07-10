@@ -720,6 +720,9 @@
  * MOZ_MAY_CALL_AFTER_MUST_RETURN: Applies to function or method declarations.
  *   Calls to these methods may be made in functions after calls a
  *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG method.
+ * MOZ_LIFETIME_BOUND: Applies to method declarations.
+ *   The result of calling these functions on temporaries may not be returned as
+ * a reference or bound to a reference variable.
  */
 
 // gcc emits a nuisance warning -Wignored-attributes because attributes do not
@@ -803,6 +806,8 @@
       __attribute__((annotate("moz_must_return_from_caller_if_this_is_arg")))
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN \
       __attribute__((annotate("moz_may_call_after_must_return")))
+#    define MOZ_LIFETIME_BOUND __attribute__((annotate("moz_lifetime_bound")))
+
 /*
  * It turns out that clang doesn't like void func() __attribute__ {} without a
  * warning, so use pragmas to disable the warning.
@@ -854,6 +859,7 @@
 #    define MOZ_REQUIRED_BASE_METHOD                        /* nothing */
 #    define MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG      /* nothing */
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN                  /* nothing */
+#    define MOZ_LIFETIME_BOUND                              /* nothing */
 #  endif /* defined(MOZ_CLANG_PLUGIN) || defined(XGILL_PLUGIN) */
 
 #  define MOZ_RAII MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS
