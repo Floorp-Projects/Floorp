@@ -54,13 +54,13 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
   testCasesAndResults myTestCases[] = {
       {"chrome://firegestures/content/browser.js"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       "default"_ns,
-       {"chromeuri"_ns, "TYPE_SCRIPT"_ns, "default"_ns,
+       "web"_ns,
+       {"chromeuri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
         "chrome://firegestures/content/browser.js"_ns}},
       {"resource://firegestures/content/browser.js"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       "default"_ns,
-       {"resourceuri"_ns, "TYPE_SCRIPT"_ns, "default"_ns,
+       "web"_ns,
+       {"resourceuri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
         "resource://firegestures/content/browser.js"_ns}},
       {// test that we don't report blob details
        // ..and test that we strip of URLs from remoteTypes
@@ -72,8 +72,8 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
        // .. like malformed moz-icon URLs
        "moz-icon:blahblah"_ns,
        nsIContentPolicy::TYPE_IMAGE,
-       "default"_ns,
-       {"other"_ns, "TYPE_IMAGE"_ns, "default"_ns, "unknown"_ns}},
+       "web"_ns,
+       {"other"_ns, "TYPE_IMAGE"_ns, "web"_ns, "unknown"_ns}},
       {// we dont report data urls
        // ..and test that we strip of URLs from remoteTypes
        "data://blahblahblah"_ns,
@@ -83,14 +83,14 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
       {// we only report file URLs on windows, where we can easily sanitize
        "file://c/users/tom/file.txt"_ns,
        nsIContentPolicy::TYPE_SCRIPT,
-       "default"_ns,
+       "web"_ns,
        {
 #if defined(XP_WIN)
-           "sanitizedWindowsURL"_ns, "TYPE_SCRIPT"_ns, "default"_ns,
+           "sanitizedWindowsURL"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
            "file://.../file.txt"_ns
 
 #else
-           "other"_ns, "TYPE_SCRIPT"_ns, "default"_ns, "unknown"_ns
+           "other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns
 #endif
        }},
   };
