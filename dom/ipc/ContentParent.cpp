@@ -928,7 +928,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     p->AssertAlive();
 
     // p may be a preallocated process, or (if not PREALLOC_REMOTE_TYPE)
-    // a previously-used process that's being recycled.  Currently this is
+    // a perviously-used process that's being recycled.  Currently this is
     // only done for short-duration web (DEFAULT_REMOTE_TYPE) processes
     preallocated = p->mRemoteType == PREALLOC_REMOTE_TYPE;
     // For pre-allocated process we have not set the opener yet.

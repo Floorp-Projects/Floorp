@@ -1650,7 +1650,11 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
       CrashReporter::Annotation::ContentSandboxCapabilities,
       static_cast<int>(SandboxInfo::Get().AsInteger()));
 #  endif /* XP_LINUX && !OS_ANDROID */
-#endif   /* MOZ_SANDBOX */
+  // Use the prefix to avoid URIs from Fission isolated processes.
+  auto remoteTypePrefix = RemoteTypePrefix(GetRemoteType());
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
+                                     remoteTypePrefix);
+#endif /* MOZ_SANDBOX */
 
   return IPC_OK();
 }
@@ -2584,8 +2588,6 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
              aRemoteType.get()));
   }
 
-  auto remoteTypePrefix = RemoteTypePrefix(aRemoteType);
-
   // Update the process name so about:memory's process names are more obvious.
   if (aRemoteType == FILE_REMOTE_TYPE) {
     SetProcessName(u"file:// Content"_ns);
@@ -2595,16 +2597,12 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     SetProcessName(u"Privileged Content"_ns);
   } else if (aRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
     SetProcessName(u"Large Allocation Web Content"_ns);
-  } else if (remoteTypePrefix.EqualsLiteral(FISSION_WEB_REMOTE_TYPE)) {
+  } else if (RemoteTypePrefix(aRemoteType) == FISSION_WEB_REMOTE_TYPE) {
     SetProcessName(u"Isolated Web Content"_ns);
   }
   // else "prealloc", "web" or "webCOOP+COEP" type -> "Web Content" already set
 
   mRemoteType.Assign(aRemoteType);
-
-  // Use the prefix to avoid URIs from Fission isolated processes.
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
-                                     remoteTypePrefix);
 
   return IPC_OK();
 }
