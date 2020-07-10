@@ -1254,6 +1254,62 @@ bool WarpCacheIRTranspiler::emitCompareStringResult(JSOp op,
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_String);
 }
 
+bool WarpCacheIRTranspiler::emitMathHypot2NumberResult(
+    NumberOperandId firstId, NumberOperandId secondId) {
+  MDefinitionVector vector(alloc());
+  if (!vector.reserve(2)) {
+    return false;
+  }
+
+  vector.infallibleAppend(getOperand(firstId));
+  vector.infallibleAppend(getOperand(secondId));
+
+  auto* ins = MHypot::New(alloc(), vector);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMathHypot3NumberResult(
+    NumberOperandId firstId, NumberOperandId secondId,
+    NumberOperandId thirdId) {
+  MDefinitionVector vector(alloc());
+  if (!vector.reserve(3)) {
+    return false;
+  }
+
+  vector.infallibleAppend(getOperand(firstId));
+  vector.infallibleAppend(getOperand(secondId));
+  vector.infallibleAppend(getOperand(thirdId));
+
+  auto* ins = MHypot::New(alloc(), vector);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMathHypot4NumberResult(
+    NumberOperandId firstId, NumberOperandId secondId, NumberOperandId thirdId,
+    NumberOperandId fourthId) {
+  MDefinitionVector vector(alloc());
+  if (!vector.reserve(4)) {
+    return false;
+  }
+
+  vector.infallibleAppend(getOperand(firstId));
+  vector.infallibleAppend(getOperand(secondId));
+  vector.infallibleAppend(getOperand(thirdId));
+  vector.infallibleAppend(getOperand(fourthId));
+
+  auto* ins = MHypot::New(alloc(), vector);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathRandomResult(uint32_t rngOffset) {
 #ifdef DEBUG
   // CodeGenerator uses CompileRealm::addressOfRandomNumberGenerator. Assert it
