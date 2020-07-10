@@ -577,13 +577,6 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   nsresult GetWSNodes();
 
-  /**
-   * Return a current block element for aContent or a topmost editable inline
-   * element if aContent is not in editable block element.
-   */
-  nsIContent* GetEditableBlockParentOrTopmotEditableInlineContent(
-      nsIContent* aContent) const;
-
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
 

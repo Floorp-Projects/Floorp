@@ -24,6 +24,7 @@ function checks(msg) {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.expectAssertions(3);  // Detect odd orphan editable node in `WSRunScanner::GetWSNodes()`
 SimpleTest.waitForFocus(function() {
   // Put selection after the "y" and backspace
   reset();
