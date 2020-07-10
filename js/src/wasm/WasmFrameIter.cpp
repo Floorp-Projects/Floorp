@@ -555,7 +555,7 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 static void EnsureOffset(MacroAssembler& masm, uint32_t base,
                          uint32_t targetOffset) {
   MOZ_ASSERT(targetOffset % CodeAlignment == 0);
-  MOZ_ASSERT(masm.currentOffset() - base <= targetOffset);
+  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - base <= targetOffset);
 
   while (masm.currentOffset() - base < targetOffset) {
     masm.nopAlign(CodeAlignment);
@@ -564,7 +564,7 @@ static void EnsureOffset(MacroAssembler& masm, uint32_t base,
     }
   }
 
-  MOZ_ASSERT(masm.currentOffset() - base == targetOffset);
+  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - base == targetOffset);
 }
 
 void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
@@ -603,8 +603,8 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   // Generate checked call entry. The BytecodeOffset of the trap is fixed up to
   // be the bytecode offset of the callsite by JitActivation::startWasmTrap.
   offsets->begin = masm.currentOffset();
-  MOZ_ASSERT(masm.currentOffset() - offsets->begin ==
-             WasmCheckedCallEntryOffset);
+  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - offsets->begin ==
+                                 WasmCheckedCallEntryOffset);
   uint32_t dummy;
   GenerateCallablePrologue(masm, &dummy);
 
