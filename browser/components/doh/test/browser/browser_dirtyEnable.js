@@ -10,22 +10,22 @@ add_task(async function testDirtyEnable() {
   // Set up a failing environment, pre-set DoH to enabled, and verify that
   // when the add-on is enabled, it doesn't do anything - DoH remains turned on.
   setFailingHeuristics();
-  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_DISABLED_PREF);
+  let prefPromise = TestUtils.waitForPrefChange(prefs.DISABLED_PREF);
   Preferences.set(prefs.NETWORK_TRR_MODE_PREF, 2);
-  Preferences.set(prefs.DOH_ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await prefPromise;
   is(
-    Preferences.get(prefs.DOH_DISABLED_PREF, false),
+    Preferences.get(prefs.DISABLED_PREF, false),
     true,
     "Disabled state recorded."
   );
   is(
-    Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
+    Preferences.get(prefs.BREADCRUMB_PREF),
     undefined,
     "Breadcrumb not saved."
   );
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     undefined,
     "TRR selection not performed."
   );

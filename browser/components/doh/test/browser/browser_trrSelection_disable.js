@@ -8,21 +8,21 @@ add_task(setup);
 
 add_task(async function testTrrSelectionDisable() {
   // Set up a passing environment and enable DoH.
-  Preferences.set(prefs.DOH_TRR_SELECT_ENABLED_PREF, false);
+  Preferences.set(prefs.TRR_SELECT_ENABLED_PREF, false);
   setPassingHeuristics();
   let promise = waitForDoorhanger();
-  Preferences.set(prefs.DOH_ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
+    return Preferences.get(prefs.BREADCRUMB_PREF);
   });
-  is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    Preferences.get(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
     undefined,
     "TRR selection dry run not performed."
   );
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     undefined,
     "doh-rollout.uri remained unset."
   );
@@ -41,18 +41,14 @@ add_task(async function testTrrSelectionDisable() {
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
   await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_DOORHANGER_USER_DECISION_PREF);
+    return Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF);
   });
   is(
-    Preferences.get(prefs.DOH_DOORHANGER_USER_DECISION_PREF),
+    Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF),
     "UIOk",
     "Doorhanger decision saved."
   );
-  is(
-    Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
-    true,
-    "Breadcrumb not cleared."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb not cleared.");
 
   BrowserTestUtils.removeTab(tab);
 
@@ -60,12 +56,12 @@ add_task(async function testTrrSelectionDisable() {
   await restartDoHController();
   ensureNoTRRSelectionTelemetry();
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    Preferences.get(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF),
     undefined,
     "TRR selection dry run not performed."
   );
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     undefined,
     "doh-rollout.uri remained unset."
   );
