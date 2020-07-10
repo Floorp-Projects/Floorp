@@ -323,9 +323,8 @@ static bool InstantiateFunctions(JSContext* cx,
   for (auto item : compilationInfo.functionScriptStencils()) {
     auto& stencil = item.stencil;
     auto functionIndex = item.functionIndex;
-    if (item.function) {
-      continue;
-    }
+
+    MOZ_ASSERT(!item.function);
 
     RootedFunction fun(
         cx, CreateFunction(cx, compilationInfo, stencil, functionIndex));
@@ -525,9 +524,36 @@ static void LinkEnclosingLazyScript(CompilationInfo& compilationInfo) {
   }
 }
 
+// When delazifying, use the existing JSFunctions. The initial and delazifying
+// parse are required to generate the same sequence of functions for lazy
+// parsing to work at all.
+static void FunctionsFromExistingLazy(CompilationInfo& compilationInfo) {
+  MOZ_ASSERT(compilationInfo.lazy);
+
+  size_t idx = 0;
+  compilationInfo.functions[idx++].set(compilationInfo.lazy->function());
+
+  for (JS::GCCellPtr elem : compilationInfo.lazy->gcthings()) {
+    if (!elem.is<JSObject>()) {
+      continue;
+    }
+    compilationInfo.functions[idx++].set(&elem.as<JSObject>().as<JSFunction>());
+  }
+
+  MOZ_ASSERT(idx == compilationInfo.functions.length());
+}
+
 bool CompilationInfo::instantiateStencils() {
-  if (!InstantiateFunctions(cx, *this)) {
+  if (!functions.resize(funcData.length())) {
     return false;
+  }
+
+  if (lazy) {
+    FunctionsFromExistingLazy(*this);
+  } else {
+    if (!InstantiateFunctions(cx, *this)) {
+      return false;
+    }
   }
 
   if (!InstantiateScopes(cx, *this)) {

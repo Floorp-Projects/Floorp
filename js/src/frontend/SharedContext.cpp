@@ -251,10 +251,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
           asyncKind == FunctionAsyncKind::AsyncFunction);
 }
 
-bool FunctionBox::hasFunction() const {
-  return compilationInfo_.functions[funcDataIndex_] != nullptr;
-}
-
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
   immutableFlags_ = lazy->immutableFlags();
@@ -368,7 +364,6 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex) {
 bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
 
-  MOZ_ASSERT(!hasFunction());
   MOZ_ASSERT(flags_.kind() == FunctionFlags::NormalFunction);
 
   // Update flags we will use to allocate the JSFunction.

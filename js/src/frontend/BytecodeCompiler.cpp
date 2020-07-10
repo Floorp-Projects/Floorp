@@ -618,8 +618,6 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
   FunctionBox* funbox = parsedFunction->funbox();
 
   if (funbox->isInterpreted()) {
-    MOZ_ASSERT(funbox->function() == nullptr);
-
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(compilationInfo, emitter, funbox)) {
       return nullptr;
