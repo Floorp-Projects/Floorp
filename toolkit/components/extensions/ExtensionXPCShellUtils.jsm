@@ -94,11 +94,6 @@ var REMOTE_CONTENT_SCRIPTS = Services.prefs.getBoolPref(
   false
 );
 
-const REMOTE_CONTENT_SUBFRAMES = Services.prefs.getBoolPref(
-  "fission.autostart",
-  false
-);
-
 let BASE_MANIFEST = Object.freeze({
   applications: Object.freeze({
     gecko: Object.freeze({
@@ -186,13 +181,11 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
 class ContentPage {
   constructor(
     remote = REMOTE_CONTENT_SCRIPTS,
-    remoteSubframes = REMOTE_CONTENT_SUBFRAMES,
     extension = null,
     privateBrowsing = false,
     userContextId = undefined
   ) {
     this.remote = remote;
-    this.remoteSubframes = remote && remoteSubframes;
     this.extension = extension;
     this.privateBrowsing = privateBrowsing;
     this.userContextId = userContextId;
@@ -201,20 +194,14 @@ class ContentPage {
   }
 
   async _initBrowser() {
-    let chromeFlags = 0;
-    if (this.remote) {
-      chromeFlags |= Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW;
-    }
-    if (this.remoteSubframes) {
-      chromeFlags |= Ci.nsIWebBrowserChrome.CHROME_FISSION_WINDOW;
-    }
+    this.windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
+
     if (this.privateBrowsing) {
-      chromeFlags |= Ci.nsIWebBrowserChrome.CHROME_PRIVATE_WINDOW;
+      let loadContext = this.windowlessBrowser.docShell.QueryInterface(
+        Ci.nsILoadContext
+      );
+      loadContext.usePrivateBrowsing = true;
     }
-    this.windowlessBrowser = Services.appShell.createWindowlessBrowser(
-      true,
-      chromeFlags
-    );
 
     let system = Services.scriptSecurityManager.getSystemPrincipal();
 
@@ -242,7 +229,6 @@ class ContentPage {
     let browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("messagemanagergroup", "webext-browsers");
     if (this.userContextId) {
       browser.setAttribute("usercontextid", this.userContextId);
     }
@@ -258,12 +244,6 @@ class ContentPage {
     if (this.remote) {
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
       browser.setAttribute("remote", "true");
-
-      browser.setAttribute("maychangeremoteness", "true");
-      browser.addEventListener(
-        "DidChangeBrowserRemoteness",
-        this.didChangeBrowserRemoteness.bind(this)
-      );
     }
 
     chromeDoc.documentElement.appendChild(browser);
@@ -295,12 +275,6 @@ class ContentPage {
     this.browser.messageManager.loadFrameScript(frameScript, false, true);
   }
 
-  didChangeBrowserRemoteness(event) {
-    // XXX: Tests can load their own additional frame scripts, so we may need to
-    // track all scripts that have been loaded, and reload them here?
-    this.loadFrameScript(frameScript);
-  }
-
   async loadURL(url, redirectUrl = undefined) {
     await this.browserReady;
 
@@ -323,10 +297,6 @@ class ContentPage {
 
     let { messageManager } = this.browser;
 
-    this.browser.removeEventListener(
-      "DidChangeBrowserRemoteness",
-      this.didChangeBrowserRemoteness.bind(this)
-    );
     this.browser = null;
 
     this.windowlessBrowser.close();
@@ -1054,9 +1024,6 @@ var ExtensionTestUtils = {
    * @param {boolean} [options.remote]
    *        If true, load the URL in a content process. If false, load
    *        it in the parent process.
-   * @param {boolean} [options.remoteSubframes]
-   *        If true, load cross-origin frames in separate content processes.
-   *        This is ignored if |options.remote| is false.
    * @param {string} [options.redirectUrl]
    *        An optional URL that the initial page is expected to
    *        redirect to.
@@ -1068,7 +1035,6 @@ var ExtensionTestUtils = {
     {
       extension = undefined,
       remote = undefined,
-      remoteSubframes = undefined,
       redirectUrl = undefined,
       privateBrowsing = false,
       userContextId = undefined,
@@ -1078,7 +1044,6 @@ var ExtensionTestUtils = {
 
     let contentPage = new ContentPage(
       remote,
-      remoteSubframes,
       extension && extension.extension,
       privateBrowsing,
       userContextId
