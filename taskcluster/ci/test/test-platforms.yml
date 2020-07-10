@@ -41,7 +41,6 @@ linux1804-64/debug:
         - linux1804-tests
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
 
 linux1804-64-shippable/opt:
     build-platform: linux64-shippable/opt
@@ -53,7 +52,6 @@ linux1804-64-shippable/opt:
         - mochitest-headless
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
 
 linux1804-64-devedition/opt:
@@ -69,7 +67,6 @@ linux1804-64-asan/opt:
         - linux1804-tests
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
 
 linux1804-64-tsan/opt:
     build-platform: linux64-tsan/opt
@@ -82,7 +79,6 @@ linux1804-64-qr/opt:
         - awsy
         - linux1804-qr-tests
         - web-platform-tests
-        - web-platform-tests-backlog
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
@@ -91,7 +87,6 @@ linux1804-64-shippable-qr/opt:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
@@ -99,7 +94,6 @@ linux1804-64-qr/debug:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
 
 linux1804-64-asan-qr/opt:
     build-platform: linux64-asan/opt
@@ -173,7 +167,6 @@ windows7-32/debug:
         - windows-reftest-gpu
         - windows-tests
         - web-platform-tests
-        - web-platform-tests-backlog
         - mochitest-webgpu
 
 windows7-32/opt:
@@ -185,7 +178,6 @@ windows7-32/opt:
         - windows-talos
         - windows-tests
         - web-platform-tests
-        - web-platform-tests-backlog
         - raptor-firefox
         - browsertime
 
@@ -198,7 +190,6 @@ windows7-32-shippable/opt:
         - windows-talos
         - windows-tests
         - web-platform-tests
-        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - raptor-chrome
         - raptor-chromium
@@ -236,7 +227,6 @@ windows10-64/debug:
         - mochitest-webgpu
         - windows-tests
         - web-platform-tests
-        - web-platform-tests-backlog
 
 windows10-64/opt:
     build-platform: win64/opt
@@ -272,7 +262,6 @@ windows10-64-shippable/opt:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
-        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - raptor-chrome
         - raptor-chromium
@@ -304,7 +293,6 @@ windows10-64-qr/debug:
         - mochitest-webgpu
         - windows-qr-tests
         - web-platform-tests
-        - web-platform-tests-backlog
 
 windows10-64-qr/opt:
     build-platform: win64/opt
@@ -315,7 +303,6 @@ windows10-64-qr/opt:
         - raptor-firefox
         - browsertime
         - web-platform-tests
-        - web-platform-tests-backlog
 
 windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
@@ -326,7 +313,6 @@ windows10-64-shippable-qr/opt:
         - raptor-firefox
         - browsertime
         - web-platform-tests
-        - web-platform-tests-backlog
         - mochitest-webgpu
 
 windows10-64-mingwclang/debug:
@@ -375,7 +361,6 @@ macosx1014-64/debug:
     test-sets:
         - macosx1014-64-tests
         - web-platform-tests
-        - web-platform-tests-backlog
 
 macosx1014-64-devedition/opt:
     build-platform: macosx64-devedition/opt
@@ -407,6 +392,7 @@ android-em-7.0-x86_64/opt:
     build-platform: android-x86_64/opt
     test-sets:
         - android-x86_64-tests
+        - web-platform-tests-backlog
 
 android-em-7.0-x86_64-shippable/opt:
     build-platform: android-x86_64-shippable/opt

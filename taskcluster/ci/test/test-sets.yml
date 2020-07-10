@@ -457,10 +457,8 @@ android-x86_64-tests:
     - reftest
     - test-verify
     - web-platform-tests
-    - web-platform-tests-backlog
     - web-platform-tests-crashtest
     - web-platform-tests-reftest
-    - web-platform-tests-reftest-backlog
     - xpcshell
 
 android-x86_64-qr-tests:
