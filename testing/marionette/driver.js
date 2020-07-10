@@ -97,6 +97,9 @@ const SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ClassName,
   element.Strategy.Selector,
   element.Strategy.ID,
+  element.Strategy.Name,
+  element.Strategy.LinkText,
+  element.Strategy.PartialLinkText,
   element.Strategy.TagName,
   element.Strategy.XPath,
 ]);
@@ -2076,6 +2079,9 @@ GeckoDriver.prototype.findElement = async function(cmd) {
   await this._handleUserPrompts();
 
   let { using, value } = cmd.parameters;
+  if (!SUPPORTED_STRATEGIES.has(using)) {
+    throw new InvalidSelectorError(`Strategy not supported: ${using}`);
+  }
   let startNode;
   if (typeof cmd.parameters.element != "undefined") {
     startNode = WebElement.fromUUID(cmd.parameters.element, this.context);
@@ -2089,10 +2095,6 @@ GeckoDriver.prototype.findElement = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      if (!SUPPORTED_STRATEGIES.has(using)) {
-        throw new InvalidSelectorError(`Strategy not supported: ${using}`);
-      }
-
       let container = { frame: win };
       if (opts.startNode) {
         opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
@@ -2121,6 +2123,9 @@ GeckoDriver.prototype.findElements = async function(cmd) {
   await this._handleUserPrompts();
 
   let { using, value } = cmd.parameters;
+  if (!SUPPORTED_STRATEGIES.has(using)) {
+    throw new InvalidSelectorError(`Strategy not supported: ${using}`);
+  }
   let startNode;
   if (typeof cmd.parameters.element != "undefined") {
     startNode = WebElement.fromUUID(cmd.parameters.element, this.context);
@@ -2134,10 +2139,6 @@ GeckoDriver.prototype.findElements = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      if (!SUPPORTED_STRATEGIES.has(using)) {
-        throw new InvalidSelectorError(`Strategy not supported: ${using}`);
-      }
-
       let container = { frame: win };
       if (startNode) {
         opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
