@@ -5,11 +5,12 @@
 
 #include "HTMLEditUtils.h"
 
-#include "CSSEditUtils.h"        // for CSSEditUtils
-#include "mozilla/ArrayUtils.h"  // for ArrayLength
-#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
-#include "mozilla/EditAction.h"  // for EditAction
-#include "mozilla/EditorBase.h"  // for EditorBase
+#include "CSSEditUtils.h"         // for CSSEditUtils
+#include "mozilla/ArrayUtils.h"   // for ArrayLength
+#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc.
+#include "mozilla/EditAction.h"   // for EditAction
+#include "mozilla/EditorBase.h"   // for EditorBase, EditorType
+#include "mozilla/EditorUtils.h"  // for EditorUtils
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/Element.h"  // for Element, nsINode
 #include "nsAString.h"            // for nsAString::IsEmpty
@@ -26,6 +27,8 @@
 #include "nsString.h"            // for nsAutoString
 
 namespace mozilla {
+
+using EditorType = EditorBase::EditorType;
 
 bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
                                         const nsIContent& aRightContent,
@@ -652,6 +655,24 @@ bool HTMLEditUtils::IsNonListSingleLineContainer(nsINode& aNode) {
 bool HTMLEditUtils::IsSingleLineContainer(nsINode& aNode) {
   return IsNonListSingleLineContainer(aNode) ||
          aNode.IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::dt, nsGkAtoms::dd);
+}
+
+// static
+Element*
+HTMLEditUtils::GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
+    nsIContent& aContent) {
+  MOZ_ASSERT(EditorUtils::IsEditableContent(aContent, EditorType::HTML));
+  Element* maybeInlineEditingHost = nullptr;
+  for (Element* element : aContent.InclusiveAncestorsOfType<Element>()) {
+    if (!EditorUtils::IsEditableContent(*element, EditorType::HTML)) {
+      return maybeInlineEditingHost;
+    }
+    if (HTMLEditUtils::IsBlockElement(*element)) {
+      return element;
+    }
+    maybeInlineEditingHost = element;
+  }
+  return maybeInlineEditingHost;
 }
 
 // static
