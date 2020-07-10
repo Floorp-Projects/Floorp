@@ -444,6 +444,18 @@ struct SurfaceCache {
    */
   static IntSize ClampSize(const ImageKey aImageKey, const IntSize& aSize);
 
+  /**
+   * Release image on main thread.
+   * The function uses SurfaceCache to release pending releasing images quickly.
+   */
+  static void ReleaseImageOnMainThread(already_AddRefed<image::Image> aImage,
+                                       bool aAlwaysProxy = false);
+
+  /**
+   * Clear all pending releasing images.
+   */
+  static void ClearReleasingImages();
+
  private:
   virtual ~SurfaceCache() = 0;  // Forbid instantiation.
 };

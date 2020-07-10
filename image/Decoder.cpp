@@ -86,7 +86,7 @@ Decoder::~Decoder() {
   if (mImage && !NS_IsMainThread()) {
     // Dispatch mImage to main thread to prevent it from being destructed by the
     // decode thread.
-    NS_ReleaseOnMainThread(mImage.forget());
+    SurfaceCache::ReleaseImageOnMainThread(mImage.forget());
   }
 }
 
