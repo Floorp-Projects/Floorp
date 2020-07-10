@@ -66,7 +66,7 @@ class ScriptworkerParser(BaseTryParser):
     ]
 
     common_groups = ["push"]
-    task_configs = ["worker-overrides"]
+    task_configs = ["worker-overrides", "routes"]
 
 
 def get_releases(branch):
