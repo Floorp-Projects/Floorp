@@ -297,3 +297,10 @@ jobs:
           - mozilla-central
       when:
           - {hour: 4, minute: 00}
+
+    - name: scriptworker-canary
+      job:
+          type: trigger-action
+          action-name: scriptworker-canary
+          include-cron-input: true
+      when: []  # never (hook only)
