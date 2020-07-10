@@ -505,6 +505,8 @@ add_task(async function test_getType() {
     ["6011029459267962", "discover"],
     ["6278592974938779", "unionpay"],
     ["8171999927660000", "unionpay"],
+    ["30569309025904", "diners"],
+    ["38520000023237", "diners"],
   ];
   for (let [value, type] of RECOGNIZED_CARDS) {
     Assert.equal(
