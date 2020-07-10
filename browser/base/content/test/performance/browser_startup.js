@@ -31,6 +31,7 @@ const startupPhases = {
         "resource:///modules/BrowserGlue.jsm",
         "resource://gre/modules/AppConstants.jsm",
         "resource://gre/modules/ActorManagerParent.jsm",
+        "resource://gre/modules/ComponentUtils.jsm",
         "resource://gre/modules/CustomElementsListener.jsm",
         "resource://gre/modules/ExtensionUtils.jsm",
         "resource://gre/modules/MainProcessSingleton.jsm",

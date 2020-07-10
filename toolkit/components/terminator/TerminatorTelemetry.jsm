@@ -11,8 +11,8 @@
  * relevant telemetry histograms.
  */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
@@ -41,7 +41,9 @@ var HISTOGRAMS = {
 nsTerminatorTelemetry.prototype = {
   classID: Components.ID("{3f78ada1-cba2-442a-82dd-d5fb300ddea7}"),
 
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsTerminatorTelemetry),
+  _xpcom_factory: ComponentUtils.generateSingletonFactory(
+    nsTerminatorTelemetry
+  ),
 
   // nsISupports
 

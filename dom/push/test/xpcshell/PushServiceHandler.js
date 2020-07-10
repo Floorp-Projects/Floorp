@@ -2,8 +2,8 @@
 // process for handling push notifications with scope "chrome://test-scope"
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -30,4 +30,4 @@ PushServiceHandler.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PushServiceHandler]);
+this.NSGetFactory = ComponentUtils.generateNSGetFactory([PushServiceHandler]);

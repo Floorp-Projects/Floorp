@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
+
 const ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -42,7 +46,7 @@ let mockHelperAppService;
 
 add_task(async function setup() {
   // Replace the real helper app dialog with our own.
-  mockHelperAppService = XPCOMUtils._getFactory(HelperAppLauncherDialog);
+  mockHelperAppService = ComponentUtils._getFactory(HelperAppLauncherDialog);
   registrar.registerFactory(
     MOCK_HELPERAPP_DIALOG_CID,
     "",

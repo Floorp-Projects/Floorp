@@ -46,6 +46,7 @@ EXPORTS.mozilla.loader += [
 ]
 
 EXTRA_JS_MODULES += [
+    'ComponentUtils.jsm',
     'XPCOMUtils.jsm',
 ]
 

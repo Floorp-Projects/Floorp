@@ -26,6 +26,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "ComponentUtils",
+  "resource://gre/modules/ComponentUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "CreditCardResult",
   "resource://formautofill/ProfileAutoCompleteResult.jsm"
 );
@@ -101,7 +106,7 @@ AutocompleteFactory.prototype = {
     let proto = targetConstructor.prototype;
     this._classID = proto.classID;
 
-    let factory = XPCOMUtils._getFactory(targetConstructor);
+    let factory = ComponentUtils._getFactory(targetConstructor);
     this._factory = factory;
 
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);

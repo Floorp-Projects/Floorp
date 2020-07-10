@@ -13,8 +13,8 @@ const XULSTORE_CID = Components.ID("{6f46b6f4-c8b1-4bd4-a4fa-9ebbed0753ea}");
 const STOREDB_FILENAME = "xulstore.json";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
@@ -32,7 +32,7 @@ XULStore.prototype = {
     "nsIXULStore",
     "nsISupportsWeakReference",
   ]),
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(XULStore),
+  _xpcom_factory: ComponentUtils.generateSingletonFactory(XULStore),
 
   /* ---------- private members ---------- */
 

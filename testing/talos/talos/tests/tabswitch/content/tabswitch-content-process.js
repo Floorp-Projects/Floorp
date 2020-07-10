@@ -1,6 +1,6 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 
 const WEBEXTENSION_ID = "tabswitch-talos@mozilla.org";
@@ -34,7 +34,7 @@ const TPSProcessScript = {
       }
     }
 
-    let factory = XPCOMUtils._getFactory(TabSwitchAboutModule);
+    let factory = ComponentUtils._getFactory(TabSwitchAboutModule);
     this._factory = factory;
 
     Registrar.registerFactory(
