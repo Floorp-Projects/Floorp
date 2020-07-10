@@ -765,6 +765,12 @@ if __name__ == "__main__":
         extra_asmflags = []
         # Avoid libLLVM internal function calls going through the PLT.
         extra_ldflags = ['-Wl,-Bsymbolic-functions']
+        # For whatever reason, LLVM's build system will set things up to turn
+        # on -ffunction-sections and -fdata-sections, but won't turn on the
+        # corresponding option to strip unused sections.  We do it explicitly
+        # here.  LLVM's build system is also picky about turning on ICF, so
+        # we do that explicitly here, too.
+        extra_ldflags += ['-fuse-ld=gold', '-Wl,--gc-sections', '-Wl,--icf=safe']
 
         if 'LD_LIBRARY_PATH' in os.environ:
             os.environ['LD_LIBRARY_PATH'] = ('%s/lib64/:%s' %
