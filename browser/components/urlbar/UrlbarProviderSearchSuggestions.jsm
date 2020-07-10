@@ -14,6 +14,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -25,6 +26,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.repository.getLogger("Urlbar.Provider.SearchSuggestions")
+);
 
 /**
  * Returns whether the passed in string looks like a url.
@@ -210,6 +215,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
+    logger.info(`Starting query for ${queryContext.searchString}`);
     let instance = {};
     this.queries.set(queryContext, instance);
 
@@ -321,6 +327,8 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
+    logger.info(`Canceling query for ${queryContext.searchString}`);
+
     if (this._suggestionsController) {
       this._suggestionsController.stop();
       this._suggestionsController = null;
@@ -426,7 +434,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     let tailTimer = new SkippableTimer({
       name: "ProviderSearchSuggestions",
       time: 100,
-      logger: this.logger,
+      logger,
     });
 
     for (let entry of fetchData.remote) {
