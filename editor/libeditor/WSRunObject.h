@@ -890,6 +890,86 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
+     * FollowingContentMayBecomeFirstVisibleContent() returns true if some
+     * content may be first visible content after removing content after aPoint.
+     * Note that it's completely broken what this does.  Don't use this method
+     * with new code.
+     */
+    template <typename EditorDOMPointType>
+    bool FollowingContentMayBecomeFirstVisibleContent(
+        const EditorDOMPointType& aPoint) const {
+      MOZ_ASSERT(aPoint.IsSetAndValid());
+      if (!mStart.IsHardLineBreak()) {
+        return false;
+      }
+      // If the point is before start of text fragment, that means that the
+      // point may be at the block boundary or inline element boundary.
+      if (aPoint.EqualsOrIsBefore(mStart.PointRef())) {
+        return true;
+      }
+      // WSFragment is marked as start of line only when it represents leading
+      // white-spaces.
+      EditorDOMRange leadingWhiteSpaceRange =
+          GetInvisibleLeadingWhiteSpaceRange();
+      if (!leadingWhiteSpaceRange.StartRef().IsSet()) {
+        return false;
+      }
+      if (aPoint.EqualsOrIsBefore(leadingWhiteSpaceRange.StartRef())) {
+        return true;
+      }
+      if (!leadingWhiteSpaceRange.EndRef().IsSet()) {
+        return false;
+      }
+      return aPoint.EqualsOrIsBefore(leadingWhiteSpaceRange.EndRef());
+    }
+
+    /**
+     * PrecedingContentMayBecomeInvisible() returns true if end of preceding
+     * content is collapsed (when ends with an ASCII white-space).
+     * Note that it's completely broken what this does.  Don't use this method
+     * with new code.
+     */
+    template <typename EditorDOMPointType>
+    bool PrecedingContentMayBecomeInvisible(
+        const EditorDOMPointType& aPoint) const {
+      MOZ_ASSERT(aPoint.IsSetAndValid());
+      // If this fragment is ends by block boundary, always the caller needs
+      // additional check.
+      if (mEnd.IsBlockBoundary()) {
+        return true;
+      }
+
+      // If the point is in visible white-spaces and ends with an ASCII
+      // white-space, it may be collapsed even if it won't be end of line.
+      // Note that WSFragment for visible white-space is always not marked
+      // as start nor end of line.
+      Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+          CreateWSFragmentForVisibleAndMiddleOfLine();
+      if (visibleWSFragmentInMiddleOfLine.isNothing()) {
+        return false;
+      }
+      // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
+      if (!visibleWSFragmentInMiddleOfLine.ref().StartPoint().IsSet()) {
+        return true;
+      }
+      if (!visibleWSFragmentInMiddleOfLine.ref().StartPoint().EqualsOrIsBefore(
+              aPoint)) {
+        return false;
+      }
+      // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
+      if (visibleWSFragmentInMiddleOfLine.ref().EndsByTrailingWhiteSpaces()) {
+        return true;
+      }
+      // XXX Must be a bug.  This claims that the caller needs additional
+      // check even when there is no white-spaces.
+      if (visibleWSFragmentInMiddleOfLine.ref().StartPoint() ==
+          visibleWSFragmentInMiddleOfLine.ref().EndPoint()) {
+        return true;
+      }
+      return aPoint.IsBefore(visibleWSFragmentInMiddleOfLine.ref().EndPoint());
+    }
+
+    /**
      * CreateWSFragmentForVisibleAndMiddleOfLine() creates WSFragment whose
      * `IsVisibleAndMiddleOfHardLine()` returns true.
      */
