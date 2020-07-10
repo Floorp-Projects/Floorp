@@ -16,10 +16,6 @@
 #include "dev3hack.h"
 #include "secerr.h"
 
-#if defined(_MSC_VER)
-#include "windows.h"
-#endif
-
 extern const NSSError NSS_ERROR_NOT_FOUND;
 extern const NSSError NSS_ERROR_INVALID_ARGUMENT;
 extern const NSSError NSS_ERROR_PKCS11;
@@ -1428,13 +1424,6 @@ NSS_IMPLEMENT PRBool
 nssToken_IsPresent(
     NSSToken *token)
 {
-#if defined(_MSC_VER)
-    if (!token) {
-        __debugbreak();
-        *((volatile int*)NULL) = __LINE__;
-        TerminateProcess(GetCurrentProcess(), 3);
-    }
-#endif
     return nssSlot_IsTokenPresent(token->slot);
 }
 
