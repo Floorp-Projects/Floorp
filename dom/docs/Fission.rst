@@ -397,27 +397,6 @@ Your best bet for storing state is in the parent process.
 
 If you have state that you want multiple ``JSWindowActorParent``'s to have access to, consider having a "manager" of those ``JSWindowActorParent``'s inside of the same .jsm file to hold that state. See ``PermitUnloader`` inside the implementation of `BrowserElementParent.jsm`_ for example.
 
-Do not break Responsive Design Mode (RDM)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-RDM not being fully covered by unit tests makes it fragile and easy to break without anyone noticing when porting things to ``JSWindowActor``. This is because RDM currently lives in its own minimalistic browser that is embedded into the regular one and messages are proxied between the inner and the outer browser Message Managers.
-
-However, tunneling is not necessary anymore since the RDM browser will have its own instance of ``JSWindowActorParent`` that can directly access
-the outer browser from the inner browser via the ``outerBrowser`` property set only when we are in RDM mode (see `bug 1569570 <https://bugzilla.mozilla.org/show_bug.cgi?id=1569570>`_). Here's an example where a JSWindowActorParent realizes that it has been sent to the RDM inner browser, and then accesses the outer browser:
-
-.. code-block:: javascript
-
-    let browser = this.browsingContext.top.embedderElement; // Should point to the inner
-                                                            // browser if we are in RDM.
-
-    if (browser.outerBrowser) {
-      // We are in RDM mode and we probably
-      // want to work with the outer browser.
-      browser = browser.outerBrowser;
-    }
-
-.. note::
-    Message Manager tunneling is done in `tunnel.js <https://searchfox.org/mozilla-central/source/devtools/client/responsive/browser/tunnel.js>`_ and messages can be deleted from it after porting the code that uses them.
-
 Registering a new actor
 -----------------------
 
