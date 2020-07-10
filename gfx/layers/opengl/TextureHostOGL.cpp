@@ -28,6 +28,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/layers/AndroidHardwareBuffer.h"
+#  include "mozilla/webrender/RenderAndroidHardwareBufferTextureHost.h"
 #  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
 #endif
 
@@ -894,6 +895,70 @@ void AndroidHardwareBufferTextureHost::DeallocateDeviceData() {
     mTextureSource = nullptr;
   }
   DestroyEGLImage();
+}
+
+void AndroidHardwareBufferTextureHost::CreateRenderTexture(
+    const wr::ExternalImageId& aExternalImageId) {
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderAndroidHardwareBufferTextureHost(mAndroidHardwareBuffer);
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+                                                 texture.forget());
+}
+
+uint32_t AndroidHardwareBufferTextureHost::NumSubTextures() {
+  return mAndroidHardwareBuffer ? 1 : 0;
+}
+
+void AndroidHardwareBufferTextureHost::PushResourceUpdates(
+    wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+  auto method = aOp == TextureHost::ADD_IMAGE
+                    ? &wr::TransactionBuilder::AddExternalImage
+                    : &wr::TransactionBuilder::UpdateExternalImage;
+  auto imageType =
+      wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
+
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8: {
+      MOZ_ASSERT(aImageKeys.length() == 1);
+
+      // XXX Add RGBA handling. Temporary hack to avoid crash
+      // With BGRA format setting, rendering works without problem.
+      auto format = GetFormat() == gfx::SurfaceFormat::R8G8B8A8
+                        ? gfx::SurfaceFormat::B8G8R8A8
+                        : gfx::SurfaceFormat::B8G8R8X8;
+      wr::ImageDescriptor descriptor(GetSize(), format);
+      (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+  }
+}
+
+void AndroidHardwareBufferTextureHost::PushDisplayItems(
+    wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
+    const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
+    const Range<wr::ImageKey>& aImageKeys,
+    const bool aPreferCompositorSurface) {
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8: {
+      MOZ_ASSERT(aImageKeys.length() == 1);
+      aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
+                         !(mFlags & TextureFlags::NON_PREMULTIPLIED),
+                         wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                         aPreferCompositorSurface);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+  }
 }
 
 #endif  // MOZ_WIDGET_ANDROID
