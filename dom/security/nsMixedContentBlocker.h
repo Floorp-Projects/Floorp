@@ -34,6 +34,11 @@ enum MixedContentTypes {
 using mozilla::OriginAttributes;
 
 class nsILoadInfo;  // forward declaration
+namespace mozilla {
+namespace net {
+class nsProtocolProxyService;  // forward declaration
+}
+}  // namespace mozilla
 
 class nsMixedContentBlocker : public nsIContentPolicy,
                               public nsIChannelEventSink {
