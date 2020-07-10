@@ -167,7 +167,7 @@ impl RenderTaskCache {
         // this in the render task. The renderer will draw this
         // task into the appropriate layer and rect of the texture
         // cache on this frame.
-        let (texture_id, texture_layer, uv_rect, _, _) =
+        let (texture_id, texture_layer, uv_rect, _, _, _) =
             texture_cache.get_cache_location(&entry.handle);
 
         render_task.location = RenderTaskLocation::TextureCache {
