@@ -56,7 +56,16 @@ add_task(async function() {
   await checkText();
 
   // Close the connection.
-  const appReady = waitForContentMessage("Test:JsonView:AppReadyStateChange");
+
+  // When the ready state of the JSON View app changes, it triggers the
+  // custom event "AppReadyStateChange".
+  const appReady = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "AppReadyStateChange",
+    true,
+    null,
+    true
+  );
   await server("close");
   await appReady;
 
@@ -83,9 +92,16 @@ add_task(async function() {
 let data = " ";
 async function write(text) {
   data += text;
-  const dataReceived = waitForContentMessage("Test:JsonView:NewDataReceived");
+  const onJsonViewUpdated = SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [], () => {
+      return new Promise(resolve => {
+        const observer = new content.MutationObserver(() => resolve());
+        observer.observe(content.wrappedJSObject.JSONView.json, { characterData: true });
+      });
+  });
   await server("write", text);
-  await dataReceived;
+  await onJsonViewUpdated;
 }
 async function checkText(text = data) {
   is(await getElementText(".textPanelBox .data"), text, "Got the right text.");
