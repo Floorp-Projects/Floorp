@@ -258,6 +258,16 @@ class AecLogging extends Control {
     connectionLog = logDiv;
   }
   refresh();
+
+  window.setInterval(async () => {
+    const reports = await getStats();
+    reports.forEach(report => {
+      const statsDiv = document.getElementById("frame-stats: " + report.pcid);
+      if (statsDiv) {
+        statsDiv.replaceWith(renderFrameRateStats(report));
+      }
+    });
+  }, 500);
 })();
 
 function renderPeerConnection(report) {
@@ -284,7 +294,7 @@ function renderPeerConnection(report) {
       renderConfiguration(configuration),
       renderICEStats(report),
       renderSDPStats(report),
-      ...report.videoFrameHistories.map(h => renderFrameRateStats(h)),
+      renderFrameRateStats(report),
       renderRTPStats(report)
     );
     pcDiv.append(section);
@@ -333,58 +343,65 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
   return statsDiv;
 }
 
-function renderFrameRateStats({ trackIdentifier: id, entries }) {
-  const stats = entries.map(stat => {
-    stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
-    if (stat.elapsed < 1) {
-      stat.elapsed = 0;
-    }
-    stat.elapsed = stat.elapsed / 1_000;
-    if (stat.elapsed && stat.consecutiveFrames) {
-      stat.avgFramerate = stat.consecutiveFrames / stat.elapsed;
-    } else {
-      stat.avgFramerate = string("n_a");
-    }
-    return stat;
+function renderFrameRateStats(report) {
+  const statsDiv = renderElement("div", { id: "frame-stats: " + report.pcid });
+  report.videoFrameHistories.forEach(history => {
+    const stats = history.entries.map(stat => {
+      stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
+      if (stat.elapsed < 1) {
+        stat.elapsed = 0;
+      }
+      stat.elapsed = (stat.elapsed / 1_000).toFixed(3);
+      if (stat.elapsed && stat.consecutiveFrames) {
+        stat.avgFramerate = (stat.consecutiveFrames / stat.elapsed).toFixed(2);
+      } else {
+        stat.avgFramerate = string("n_a");
+      }
+      return stat;
+    });
+
+    const table = renderSimpleTable(
+      "",
+      [
+        "width_px",
+        "height_px",
+        "consecutive_frames",
+        "time_elapsed",
+        "estimated_framerate",
+        "rotation_degrees",
+        "first_frame_timestamp",
+        "last_frame_timestamp",
+        "local_receive_ssrc",
+        "remote_send_ssrc",
+      ].map(columnName => string(columnName)),
+      stats.map(stat =>
+        [
+          stat.width,
+          stat.height,
+          stat.consecutiveFrames,
+          stat.elapsed,
+          stat.avgFramerate,
+          stat.rotationAngle,
+          stat.firstFrameTimestamp,
+          stat.lastFrameTimestamp,
+          stat.localSsrc,
+          stat.remoteSsrc || "?",
+        ].map(entry => (Object.is(entry, undefined) ? "<<undefined>>" : entry))
+      )
+    );
+
+    statsDiv.append(
+      renderText(
+        "h4",
+        `${string("frame_stats_heading")} - MediaStreamTrack Id: ${
+          history.trackIdentifier
+        }`
+      ),
+      table
+    );
   });
 
-  const table = renderSimpleTable(
-    "",
-    [
-      "width_px",
-      "height_px",
-      "consecutive_frames",
-      "time_elapsed",
-      "estimated_framerate",
-      "rotation_degrees",
-      "first_frame_timestamp",
-      "last_frame_timestamp",
-      "local_receive_ssrc",
-      "remote_send_ssrc",
-    ].map(columnName => string(columnName)),
-    stats.map(stat =>
-      [
-        stat.width,
-        stat.height,
-        stat.consecutiveFrames,
-        stat.elapsed,
-        stat.avgFramerate,
-        stat.rotationAngle,
-        stat.lastFrameTimestamp,
-        stat.firstFrameTimestamp,
-        stat.localSsrc,
-        stat.remoteSsrc || "?",
-      ].map(entry => (Object.is(entry, undefined) ? "<<undefined>>" : entry))
-    )
-  );
-
-  return renderElements("div", {}, [
-    renderText(
-      "h4",
-      `${string("frame_stats_heading")} - MediaStreamTrack Id: ${id}`
-    ),
-    table,
-  ]);
+  return statsDiv;
 }
 
 function renderRTPStats(report) {

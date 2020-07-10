@@ -4,7 +4,10 @@
 
 html {
   background-color: #edeceb;
-  font: message-box;
+}
+
+table {
+  font-family: monospace;
 }
 
 .controls {
