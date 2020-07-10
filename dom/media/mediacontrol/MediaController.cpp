@@ -116,6 +116,11 @@ void MediaController::SeekForward() {
   UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Seekforward);
 }
 
+void MediaController::SkipAd() {
+  LOG("Skip Ad");
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Skipad);
+}
+
 void MediaController::Stop() {
   LOG("Stop");
   UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Stop);
