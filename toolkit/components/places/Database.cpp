@@ -1446,7 +1446,6 @@ nsresult Database::EnsureBookmarkRoots(const int32_t startPosition,
   }
 
   if (mUnfiledRootId < 1) {
-    if (NS_FAILED(rv)) return rv;
     rv = CreateRoot(mMainConn, "unfiled"_ns, "unfiled_____"_ns, "unfiled"_ns,
                     position, mUnfiledRootId);
     if (NS_FAILED(rv)) return rv;
