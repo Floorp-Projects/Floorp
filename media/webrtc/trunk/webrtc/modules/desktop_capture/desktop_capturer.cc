@@ -60,6 +60,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
   return capturer;
 }
 
+// static
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
+    const DesktopCaptureOptions& options) {
+  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
+  if (capturer && options.detect_updated_region()) {
+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+  }
+
+  return capturer;
+}
+
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(USE_X11)
 bool DesktopCapturer::IsRunningUnderWayland() {
   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");

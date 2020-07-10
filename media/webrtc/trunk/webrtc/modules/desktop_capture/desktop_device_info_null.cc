@@ -14,6 +14,7 @@ public:
 protected:
   virtual void InitializeScreenList();
   virtual void InitializeApplicationList();
+  virtual void InitializeTabList();
 };
 
 DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
