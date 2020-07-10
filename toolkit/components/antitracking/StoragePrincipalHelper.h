@@ -266,6 +266,8 @@ class StoragePrincipalHelper final {
                                                  OriginAttributes& aAttributes);
   static void GetOriginAttributesForNetworkState(dom::Document* aDocument,
                                                  OriginAttributes& aAttributes);
+  static void UpdateOriginAttributesForNetworkState(
+      nsIURI* aFirstPartyURI, OriginAttributes& aAttributes);
 };
 
 }  // namespace mozilla
