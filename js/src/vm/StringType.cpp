@@ -1309,7 +1309,7 @@ bool StaticStrings::init(JSContext* cx) {
 }
 
 inline void TraceStaticString(JSTracer* trc, JSAtom* atom, const char* name) {
-  MOZ_ASSERT(atom->isPinned());
+  MOZ_ASSERT(atom->isPermanentAtom());
   TraceProcessGlobalRoot(trc, atom, name);
 }
 
