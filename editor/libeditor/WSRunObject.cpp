@@ -1135,7 +1135,6 @@ Maybe<WSRunScanner::WSFragment>
 WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleWhiteSpaces() const {
   WSFragment fragment;
   if (IsPreformattedOrSurrondedByVisibleContent()) {
-    fragment.MarkAsVisible();
     if (mStart.PointRef().IsSet()) {
       fragment.mStartNode = mStart.PointRef().GetContainer();
       fragment.mStartOffset = mStart.PointRef().Offset();
@@ -1173,7 +1172,6 @@ WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleWhiteSpaces() const {
   }
 
   if (!StartsFromHardLineBreak()) {
-    fragment.MarkAsVisible();
     if (mStart.PointRef().IsSet()) {
       fragment.mStartNode = mStart.PointRef().GetContainer();
       fragment.mStartOffset = mStart.PointRef().Offset();
@@ -1196,7 +1194,6 @@ WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleWhiteSpaces() const {
   MOZ_ASSERT(StartsFromHardLineBreak());
   MOZ_ASSERT(maybeHaveLeadingWhiteSpaces);
 
-  fragment.MarkAsVisible();
   if (leadingWhiteSpaceRange.EndRef().IsSet()) {
     fragment.mStartNode = leadingWhiteSpaceRange.EndRef().GetContainer();
     fragment.mStartOffset = leadingWhiteSpaceRange.EndRef().Offset();
@@ -1807,8 +1804,6 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
 }
 
 nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
-  MOZ_ASSERT(aRun.IsVisible());
-
   // Remove this block if we ship Blink-compat white-space normalization.
   if (!StaticPrefs::editor_white_space_normalization_blink_compatible()) {
     // now check that what is to the left of it is compatible with replacing
