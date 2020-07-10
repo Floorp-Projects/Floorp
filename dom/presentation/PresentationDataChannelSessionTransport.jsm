@@ -28,9 +28,7 @@ function PresentationDataChannelDescription(aDataChannelSDP) {
 }
 
 PresentationDataChannelDescription.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationChannelDescription,
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationChannelDescription"]),
   get type() {
     return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
   },
@@ -54,9 +52,9 @@ PresentationTransportBuilder.prototype = {
   classID: PRESENTATIONTRANSPORTBUILDER_CID,
   contractID: PRESENTATIONTRANSPORTBUILDER_CONTRACTID,
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationSessionTransportBuilder,
-    Ci.nsIPresentationDataChannelSessionTransportBuilder,
-    Ci.nsITimerCallback,
+    "nsIPresentationSessionTransportBuilder",
+    "nsIPresentationDataChannelSessionTransportBuilder",
+    "nsITimerCallback",
   ]),
 
   buildDataChannelTransport(aRole, aWindow, aListener) {
@@ -290,7 +288,7 @@ function PresentationTransport() {
 PresentationTransport.prototype = {
   classID: PRESENTATIONTRANSPORT_CID,
   contractID: PRESENTATIONTRANSPORT_CONTRACTID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransport]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationSessionTransport"]),
 
   init(aPeerConnection, aDataChannel, aWindow) {
     log("initWithDataChannel");

@@ -571,8 +571,8 @@ class FxAccountsDevice {
 }
 
 FxAccountsDevice.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIObserver,
-  Ci.nsISupportsWeakReference,
+  "nsIObserver",
+  "nsISupportsWeakReference",
 ]);
 
 function urlsafeBase64Encode(buffer) {

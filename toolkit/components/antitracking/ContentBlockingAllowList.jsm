@@ -28,8 +28,8 @@ const ContentBlockingAllowList = {
     if (!this._observingLastPBContext) {
       this._observer = {
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIObserver,
-          Ci.nsISupportsWeakReference,
+          "nsIObserver",
+          "nsISupportsWeakReference",
         ]),
 
         observe(subject, topic, data) {

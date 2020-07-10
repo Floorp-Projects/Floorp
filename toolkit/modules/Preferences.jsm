@@ -426,8 +426,8 @@ function PrefObserver(prefName, callback, thisObject) {
 
 PrefObserver.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   observe(subject, topic, data) {

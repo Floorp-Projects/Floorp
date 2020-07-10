@@ -9,7 +9,7 @@ class AutoCompleteSimpleSearch {
   constructor() {
     this.classID = Components.ID("{dc185a77-ba88-4caa-8f16-465253f7599a}");
     this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIAutoCompleteSimpleSearch,
+      "nsIAutoCompleteSimpleSearch",
     ]);
 
     let initialState = Cc[

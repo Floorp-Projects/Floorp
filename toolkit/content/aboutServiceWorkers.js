@@ -159,7 +159,7 @@ async function display(info, pushService) {
       },
 
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIServiceWorkerUnregisterCallback,
+        "nsIServiceWorkerUnregisterCallback",
       ]),
     };
 

@@ -72,7 +72,7 @@ class WebBrowserChromeChild extends GeckoViewActorChild {
 }
 
 WebBrowserChromeChild.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIWebBrowserChrome3,
+  "nsIWebBrowserChrome3",
 ]);
 
 const { debug, warn } = WebBrowserChromeChild.initLogging("WebBrowserChrome"); // eslint-disable-line no-unused-vars

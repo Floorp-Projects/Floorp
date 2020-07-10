@@ -115,8 +115,8 @@ const gChooserTracker = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 };
 
@@ -186,7 +186,7 @@ nsContentDispatchChooser.prototype = {
 
   // nsISupports
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentDispatchChooser]),
+  QueryInterface: ChromeUtils.generateQI(["nsIContentDispatchChooser"]),
 };
 
 var EXPORTED_SYMBOLS = ["nsContentDispatchChooser"];

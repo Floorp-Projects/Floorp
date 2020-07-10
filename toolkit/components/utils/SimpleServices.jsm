@@ -51,7 +51,7 @@ const ArrayBufferInputStream = Components.Constructor(
 function AddonLocalizationConverter() {}
 
 AddonLocalizationConverter.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamConverter]),
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamConverter"]),
 
   FROM_TYPE: "application/vnd.mozilla.webext.unlocalized",
   TO_TYPE: "text/css",
@@ -142,7 +142,7 @@ AddonLocalizationConverter.prototype = {
 function HttpIndexViewer() {}
 
 HttpIndexViewer.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDocumentLoaderFactory]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDocumentLoaderFactory"]),
 
   createInstance(
     aCommand,

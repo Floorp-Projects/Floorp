@@ -33,7 +33,7 @@ MozProtocolHandler.prototype = {
     return channel;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler]),
+  QueryInterface: ChromeUtils.generateQI(["nsIProtocolHandler"]),
 };
 
 var EXPORTED_SYMBOLS = ["MozProtocolHandler"];

@@ -177,9 +177,9 @@ class PrintingChild extends ActorChild {
         },
 
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
-          Ci.nsIObserver,
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
+          "nsIObserver",
         ]),
       };
 
@@ -386,14 +386,14 @@ class PrintingChild extends ActorChild {
 }
 
 PrintingChild.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPrintingPromptService,
+  "nsIPrintingPromptService",
 ]);
 
 function PrintingListener(global) {
   this.global = global;
 }
 PrintingListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+  QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     this.global.sendAsyncMessage("Printing:Preview:StateChange", {

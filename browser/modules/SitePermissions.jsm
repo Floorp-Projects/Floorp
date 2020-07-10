@@ -186,8 +186,8 @@ const GloballyBlockedPermissions = {
     browser.addProgressListener(
       {
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
         ]),
         onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
           let hasLeftPage =

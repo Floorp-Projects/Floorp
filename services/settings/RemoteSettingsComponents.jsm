@@ -13,7 +13,7 @@ ChromeUtils.defineModuleGetter(
 
 var RemoteSettingsTimer = function() {};
 RemoteSettingsTimer.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI(["nsITimerCallback"]),
   classID: Components.ID("{5e756573-234a-49ea-bbe4-59ec7a70657d}"),
   contractID: "@mozilla.org/services/settings;1",
 

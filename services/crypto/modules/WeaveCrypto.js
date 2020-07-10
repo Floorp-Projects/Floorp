@@ -35,8 +35,8 @@ WeaveCrypto.prototype = {
     _self: null,
 
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+      "nsIObserver",
+      "nsISupportsWeakReference",
     ]),
 
     observe(subject, topic, data) {

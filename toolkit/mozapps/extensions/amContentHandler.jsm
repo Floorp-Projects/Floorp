@@ -67,7 +67,7 @@ amContentHandler.prototype = {
   },
 
   classID: Components.ID("{7beb3ba8-6ec3-41b4-b67c-da89b8518922}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentHandler]),
+  QueryInterface: ChromeUtils.generateQI(["nsIContentHandler"]),
 
   log(aMsg) {
     let msg = "amContentHandler.js: " + (aMsg.join ? aMsg.join("") : aMsg);

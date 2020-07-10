@@ -390,8 +390,8 @@ class LoginManagerParent extends JSWindowActorParent {
       let self = this;
       let observer = {
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIObserver,
-          Ci.nsISupportsWeakReference,
+          "nsIObserver",
+          "nsISupportsWeakReference",
         ]),
 
         observe(subject, topic, data) {

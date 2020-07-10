@@ -150,8 +150,8 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
   return new Promise(resolve => {
     const listener = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsISupportsWeakReference,
-        Ci.nsIWebProgressListener,
+        "nsISupportsWeakReference",
+        "nsIWebProgressListener",
       ]),
 
       onStateChange(webProgress, request, stateFlags, statusCode) {
@@ -943,7 +943,7 @@ var ExtensionTestUtils = {
         return null;
       },
 
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
+      QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
     };
     Services.dirsvc.registerProvider(dirProvider);
 

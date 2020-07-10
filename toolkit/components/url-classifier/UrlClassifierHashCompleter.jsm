@@ -162,7 +162,7 @@ function FullHashMatch(table, hash, duration) {
 }
 
 FullHashMatch.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFullHashMatch]),
+  QueryInterface: ChromeUtils.generateQI(["nsIFullHashMatch"]),
 
   tableName: null,
   fullHash: null,
@@ -198,11 +198,11 @@ function HashCompleter() {
 HashCompleter.prototype = {
   classID: Components.ID("{9111de73-9322-4bfc-8b65-2b727f3e6ec8}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIUrlClassifierHashCompleter,
-    Ci.nsIRunnable,
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
-    Ci.nsITimerCallback,
+    "nsIUrlClassifierHashCompleter",
+    "nsIRunnable",
+    "nsIObserver",
+    "nsISupportsWeakReference",
+    "nsITimerCallback",
   ]),
 
   // This is mainly how the HashCompleter interacts with other components.
@@ -372,9 +372,9 @@ function HashCompleterRequest(aCompleter, aGethashUrl) {
 }
 HashCompleterRequest.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIRequestObserver,
-    Ci.nsIStreamListener,
-    Ci.nsIObserver,
+    "nsIRequestObserver",
+    "nsIStreamListener",
+    "nsIObserver",
   ]),
 
   // This is called by the HashCompleter to add a hash and callback to the

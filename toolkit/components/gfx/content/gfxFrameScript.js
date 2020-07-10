@@ -66,9 +66,9 @@ const gfxFrameScript = {
 
   // Needed to support web progress listener
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
-    Ci.nsIObserver,
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
+    "nsIObserver",
   ]),
 };
 

@@ -47,7 +47,7 @@ const clientAuthDialogs = {
     return true;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthDialogs]),
+  QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogs"]),
 };
 
 function startServer(cert) {

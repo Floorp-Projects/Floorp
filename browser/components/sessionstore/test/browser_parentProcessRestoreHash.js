@@ -11,7 +11,7 @@ const TESTCLASSID = "78742c04-3630-448c-9be3-6c5070f062de";
 const TESTURL = "about:testpageforsessionrestore#foo";
 
 let TestAboutPage = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAboutModule"]),
   getURIFlags(aURI) {
     // No CAN_ or MUST_LOAD_IN_CHILD means this loads in the parent:
     return (

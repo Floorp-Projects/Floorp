@@ -546,8 +546,8 @@ Object.freeze(SessionStore);
 
 var SessionStoreInternal = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   _globalState: new GlobalState(),
@@ -1005,8 +1005,8 @@ var SessionStoreInternal = {
     }
     SHistoryListener.prototype = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsISHistoryListener,
-        Ci.nsISupportsWeakReference,
+        "nsISHistoryListener",
+        "nsISupportsWeakReference",
       ]),
 
       notifySHistoryChanges(index) {
@@ -1124,8 +1124,8 @@ var SessionStoreInternal = {
     }
     SHistoryListener.prototype = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsISHistoryListener,
-        Ci.nsISupportsWeakReference,
+        "nsISHistoryListener",
+        "nsISupportsWeakReference",
       ]),
 
       uninstall() {

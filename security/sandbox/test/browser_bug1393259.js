@@ -106,7 +106,7 @@ add_task(async function() {
       let getFontNotificationPromise = () =>
         new Promise(resolve => {
           let prefObserver = {
-            QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+            QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
             observe() {
               prefBranch.removeObserver("changed", prefObserver);
               resolve();

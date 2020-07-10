@@ -182,7 +182,7 @@ nsAsyncShutdownClient.prototype = {
     return this._moduleClient.removeBlocker(moduleBlocker);
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownBarrier"]),
 };
 
 /**
@@ -212,7 +212,7 @@ nsAsyncShutdownBarrier.prototype = {
     // By specification, _moduleBarrier.wait() cannot reject.
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownBarrier"]),
 };
 
 function nsAsyncShutdownService() {
@@ -257,7 +257,7 @@ nsAsyncShutdownService.prototype = {
     return new nsAsyncShutdownBarrier(new AsyncShutdown.Barrier(name));
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownService"]),
 };
 
 var EXPORTED_SYMBOLS = ["nsAsyncShutdownService"];

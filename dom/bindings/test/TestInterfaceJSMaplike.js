@@ -14,7 +14,7 @@ function TestInterfaceJSMaplike() {}
 TestInterfaceJSMaplike.prototype = {
   classID: Components.ID("{4bc6f6f3-e005-4f0a-b42d-4d1663a9013a}"),
   contractID: "@mozilla.org/dom/test-interface-js-maplike;1",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 
   init(win) {
     this._win = win;

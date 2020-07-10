@@ -21,7 +21,7 @@ function ContentPref(domain, name, value) {
 }
 
 ContentPref.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPref]),
+  QueryInterface: ChromeUtils.generateQI(["nsIContentPref"]),
 };
 
 function cbHandleResult(callback, pref) {

@@ -29,7 +29,7 @@ HelperAppLauncherDialog.prototype = {
       aLauncher.cancel(Cr.NS_ERROR_ABORT);
     });
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
+  QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog"]),
 };
 
 function promiseHelperAppDialog() {

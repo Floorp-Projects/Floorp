@@ -105,8 +105,8 @@ RESTRequest.prototype = {
   _logName: "Services.Common.RESTRequest",
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIInterfaceRequestor,
-    Ci.nsIChannelEventSink,
+    "nsIInterfaceRequestor",
+    "nsIChannelEventSink",
   ]),
 
   /** Public API: **/

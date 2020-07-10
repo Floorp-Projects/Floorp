@@ -25,7 +25,7 @@ var triggerControlChannelError = false; // For simulating error during control c
 
 // control channel of sender
 const mockControlChannelOfSender = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlChannel"]),
   set listener(listener) {
     // PresentationControllingInfo::SetControlChannel
     if (listener) {
@@ -95,7 +95,7 @@ const mockControlChannelOfSender = {
 
 // control channel of receiver
 const mockControlChannelOfReceiver = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlChannel"]),
   set listener(listener) {
     // PresentationPresentingInfo::SetControlChannel
     if (listener) {
@@ -159,7 +159,7 @@ const mockControlChannelOfReceiver = {
 };
 
 const mockDevice = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationDevice"]),
   id: "id",
   name: "name",
   type: "type",
@@ -180,8 +180,8 @@ const mockDevice = {
 
 const mockDevicePrompt = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationDevicePrompt,
-    Ci.nsIFactory,
+    "nsIPresentationDevicePrompt",
+    "nsIFactory",
   ]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
@@ -209,8 +209,8 @@ const mockDevicePrompt = {
 
 const mockRequestUIGlue = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationRequestUIGlue,
-    Ci.nsIFactory,
+    "nsIPresentationRequestUIGlue",
+    "nsIFactory",
   ]),
   set promise(aPromise) {
     this._promise = aPromise;

@@ -154,11 +154,11 @@ PushService.prototype.classID = Components.ID(
 );
 PushService.prototype.contractID = "@mozilla.org/push/Service;1";
 PushService.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIObserver,
-  Ci.nsISupportsWeakReference,
-  Ci.nsIPushService,
-  Ci.nsIPushQuotaManager,
-  Ci.nsIPushErrorReporter,
+  "nsIObserver",
+  "nsISupportsWeakReference",
+  "nsIPushService",
+  "nsIPushQuotaManager",
+  "nsIPushErrorReporter",
 ]);
 
 /** `PushSubscription` instances are passed to all subscription callbacks. */
@@ -249,5 +249,5 @@ class PushSubscription {
 }
 
 PushSubscription.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPushSubscription,
+  "nsIPushSubscription",
 ]);

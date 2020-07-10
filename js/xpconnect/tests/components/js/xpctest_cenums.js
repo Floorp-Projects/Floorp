@@ -8,7 +8,7 @@ function TestCEnums() {
 
 TestCEnums.prototype = {
   /* Boilerplate */
-  QueryInterface: ChromeUtils.generateQI([Ci["nsIXPCTestCEnums"]]),
+  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestCEnums"]),
   contractID: "@mozilla.org/js/xpc/test/js/CEnums;1",
   classID: Components.ID("{43929c74-dc70-11e8-b6f9-8fce71a2796a}"),
 

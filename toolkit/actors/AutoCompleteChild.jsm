@@ -74,7 +74,7 @@ class AutoCompletePopup {
 }
 
 AutoCompletePopup.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIAutoCompletePopup,
+  "nsIAutoCompletePopup",
 ]);
 
 class AutoCompleteChild extends JSWindowActorChild {

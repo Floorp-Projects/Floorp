@@ -222,8 +222,8 @@ FormTracker.prototype = {
   __proto__: LegacyTracker.prototype,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   onStart() {

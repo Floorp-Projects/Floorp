@@ -83,8 +83,8 @@ Services.ppmm.addMessageListener("FormAutoComplete:SelectBy", message => {
 var AutoCompleteResultView = {
   // nsISupports
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIAutoCompleteController,
-    Ci.nsIAutoCompleteInput,
+    "nsIAutoCompleteController",
+    "nsIAutoCompleteInput",
   ]),
 
   // Private variables

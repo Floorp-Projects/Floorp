@@ -18,8 +18,8 @@ const PREF_NAME = "privacy.restrict3rdpartystorage.url_decorations";
 URLDecorationAnnotationsService.prototype = {
   classID: Components.ID("{5874af6d-5719-4e1b-b155-ef4eae7fcb32}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIURLDecorationAnnotationsService,
+    "nsIObserver",
+    "nsIURLDecorationAnnotationsService",
   ]),
 
   _initialized: false,

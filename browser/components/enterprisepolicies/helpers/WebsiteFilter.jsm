@@ -87,8 +87,8 @@ function WebsiteFilter(blocklist, exceptionlist) {
 
 WebsiteFilter.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   observe(subject, topic, data) {

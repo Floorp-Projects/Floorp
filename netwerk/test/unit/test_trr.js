@@ -17,7 +17,7 @@ let h2Port = null;
 async function SetParentalControlEnabled(aEnabled) {
   let parentalControlsService = {
     parentalControlsEnabled: aEnabled,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIParentalControlsService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIParentalControlsService"]),
   };
   let cid = MockRegistrar.register(
     "@mozilla.org/parental-controls-service;1",
@@ -903,7 +903,7 @@ add_task(async function test24e() {
 function observerPromise(topic) {
   return new Promise(resolve => {
     let observer = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
       observe(aSubject, aTopic, aData) {
         dump(`observe: ${aSubject}, ${aTopic}, ${aData} \n`);
         if (aTopic == topic) {
@@ -1326,7 +1326,7 @@ add_task(async function test_dnsSuffix() {
 
     let networkLinkService = {
       dnsSuffixList: ["example.org"],
-      QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+      QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
     };
     Services.obs.notifyObservers(
       networkLinkService,
@@ -1363,7 +1363,7 @@ add_task(async function test_vpnDetection() {
 
   let networkLinkService = {
     platformDNSIndications: Ci.nsINetworkLinkService.VPN_DETECTED,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+    QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
   };
 
   Services.obs.notifyObservers(
@@ -1829,7 +1829,7 @@ add_task(async function test_detected_uri_link_change() {
 
   let networkLinkService = {
     platformDNSIndications: 0,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+    QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
   };
 
   Services.obs.notifyObservers(
@@ -1901,7 +1901,7 @@ add_task(async function test_pref_changes() {
   await doThenCheckURI(() => {
     let networkLinkService = {
       platformDNSIndications: 0,
-      QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+      QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
     };
     Services.obs.notifyObservers(
       networkLinkService,
@@ -1932,7 +1932,7 @@ add_task(async function test_pref_changes() {
     () => {
       let networkLinkService = {
         platformDNSIndications: 0,
-        QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+        QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
       };
       Services.obs.notifyObservers(
         networkLinkService,

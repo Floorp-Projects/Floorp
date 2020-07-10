@@ -344,8 +344,8 @@ var AllPages = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 };
 
@@ -810,8 +810,8 @@ var PlacesProvider = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavHistoryObserver,
-    Ci.nsISupportsWeakReference,
+    "nsINavHistoryObserver",
+    "nsISupportsWeakReference",
   ]),
 };
 
@@ -2199,8 +2199,8 @@ var Links = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 };
 

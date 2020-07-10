@@ -409,9 +409,9 @@ PresentationControlService.prototype = {
 
   classID: Components.ID("{f4079b8b-ede5-4b90-a112-5b415a931deb}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIServerSocketListener,
-    Ci.nsIPresentationControlService,
-    Ci.nsIObserver,
+    "nsIServerSocketListener",
+    "nsIPresentationControlService",
+    "nsIObserver",
   ]),
 };
 
@@ -461,9 +461,7 @@ ChannelDescription.prototype = {
   },
 
   classID: Components.ID("{82507aea-78a2-487e-904a-858a6c5bf4e1}"),
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationChannelDescription,
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationChannelDescription"]),
 };
 
 // Helper function: transfer nsIPresentationChannelDescription to json
@@ -1048,8 +1046,8 @@ TCPControlChannel.prototype = {
 
   classID: Components.ID("{fefb8286-0bdc-488b-98bf-0c11b485c955}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationControlChannel,
-    Ci.nsIStreamListener,
+    "nsIPresentationControlChannel",
+    "nsIStreamListener",
   ]),
 };
 

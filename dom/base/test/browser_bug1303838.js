@@ -300,8 +300,8 @@ function waitForLocationChange(isFrame, browser, locationChangeNum) {
         }
       },
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference,
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
       ]),
     };
     browser.addProgressListener(locationChangeListener);
@@ -322,8 +322,8 @@ function waitForFrameLocationChange(browser, locationChangeNum) {
           }
         },
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
         ]),
       };
       webprogress.addProgressListener(

@@ -24,8 +24,8 @@ class SearchUtils {
   constructor() {
     this._refreshEnginesByAliasPromise = Promise.resolve();
     this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+      "nsIObserver",
+      "nsISupportsWeakReference",
     ]);
   }
 

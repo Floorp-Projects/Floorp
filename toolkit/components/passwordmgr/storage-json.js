@@ -43,7 +43,7 @@ class LoginManagerStorage_json {
   }
 
   get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsILoginManagerStorage]);
+    return ChromeUtils.generateQI(["nsILoginManagerStorage"]);
   }
 
   get _xpcom_factory() {

@@ -5,7 +5,7 @@
 "use strict";
 
 var unsafeAboutModule = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAboutModule"]),
   newChannel(aURI, aLoadInfo) {
     var uri = Services.io.newURI("about:blank");
     let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
@@ -27,7 +27,7 @@ var factory = {
   lockFactory(aLock) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 
 function run_test() {

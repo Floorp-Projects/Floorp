@@ -160,7 +160,7 @@ async function requestPromise(errorAction, actionFn) {
     let timer = makeTimeout(reject, errorAction);
 
     let callback = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIBitsCallback]),
+      QueryInterface: ChromeUtils.generateQI(["nsIBitsCallback"]),
       success() {
         timer.cancel();
         resolve();
@@ -579,7 +579,7 @@ class BitsRequest {
     });
   }
 }
-BitsRequest.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIRequest]);
+BitsRequest.prototype.QueryInterface = ChromeUtils.generateQI(["nsIRequest"]);
 
 /**
  * This function does all of the wrapping and error handling for an async
@@ -667,14 +667,14 @@ async function servicePromise(errorAction, observer, actionFn) {
         }
       },
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIRequestObserver,
-        Ci.nsIProgressEventSink,
+        "nsIRequestObserver",
+        "nsIProgressEventSink",
       ]),
     };
 
     let timer = makeTimeout(reject, errorAction);
     let callback = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIBitsNewRequestCallback]),
+      QueryInterface: ChromeUtils.generateQI(["nsIBitsNewRequestCallback"]),
       success(request) {
         timer.cancel();
         if (!wrappedRequest) {

@@ -43,8 +43,8 @@ function ConsoleAPIStorageService() {
 ConsoleAPIStorageService.prototype = {
   classID: CONSOLEAPISTORAGE_CID,
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIConsoleAPIStorage,
-    Ci.nsIObserver,
+    "nsIConsoleAPIStorage",
+    "nsIObserver",
   ]),
 
   observe: function CS_observe(aSubject, aTopic, aData) {

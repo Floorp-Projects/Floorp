@@ -44,9 +44,9 @@ function make_channel(url, body, cb) {
   chan.notificationCallbacks = {
     numChecks: 0,
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsINetworkInterceptController,
-      Ci.nsIInterfaceRequestor,
-      Ci.nsIProgressEventSink,
+      "nsINetworkInterceptController",
+      "nsIInterfaceRequestor",
+      "nsIProgressEventSink",
     ]),
     getInterface(iid) {
       return this.QueryInterface(iid);

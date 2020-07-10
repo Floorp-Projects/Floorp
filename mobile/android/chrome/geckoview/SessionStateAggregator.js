@@ -120,8 +120,8 @@ class StateChangeNotifier extends Handler {
   }
 }
 StateChangeNotifier.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIWebProgressListener,
-  Ci.nsISupportsWeakReference,
+  "nsIWebProgressListener",
+  "nsISupportsWeakReference",
 ]);
 
 /**
@@ -245,8 +245,8 @@ class SessionHistoryListener extends Handler {
   }
 }
 SessionHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsISHistoryListener,
-  Ci.nsISupportsWeakReference,
+  "nsISHistoryListener",
+  "nsISupportsWeakReference",
 ]);
 
 /**

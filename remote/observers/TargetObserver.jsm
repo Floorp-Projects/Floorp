@@ -139,6 +139,6 @@ class TabObserver {
   // XPCOM
 
   get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsIWindowMediatorListener]);
+    return ChromeUtils.generateQI(["nsIWindowMediatorListener"]);
   }
 }

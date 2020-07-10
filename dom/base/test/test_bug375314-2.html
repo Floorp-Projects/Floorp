@@ -33,8 +33,8 @@ function createChromeScript() {
   var policy = {
     // nsISupports implementation
     QueryInterface: ChromeUtils.generateQI([
-       Ci.nsIFactory,
-       Ci.nsIContentPolicy,
+       "nsIFactory",
+       "nsIContentPolicy",
     ]),
 
     // nsIFactory implementation

@@ -34,8 +34,8 @@ ConsoleFileActivityListener.prototype = {
   _webProgress: null,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
   ]),
 
   /**

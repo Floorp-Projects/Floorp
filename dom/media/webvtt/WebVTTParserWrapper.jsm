@@ -52,7 +52,7 @@ WebVTTParserWrapper.prototype = {
   },
 
   classDescription: "Wrapper for the JS WebVTT implementation (vtt.js)",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebVTTParserWrapper]),
+  QueryInterface: ChromeUtils.generateQI(["nsIWebVTTParserWrapper"]),
 };
 
 var EXPORTED_SYMBOLS = ["WebVTTParserWrapper"];

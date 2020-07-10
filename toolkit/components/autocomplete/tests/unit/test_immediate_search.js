@@ -12,9 +12,9 @@ AutoCompleteImmediateSearch.prototype = Object.create(
 AutoCompleteImmediateSearch.prototype.searchType =
   Ci.nsIAutoCompleteSearchDescriptor.SEARCH_TYPE_IMMEDIATE;
 AutoCompleteImmediateSearch.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIFactory,
-  Ci.nsIAutoCompleteSearch,
-  Ci.nsIAutoCompleteSearchDescriptor,
+  "nsIFactory",
+  "nsIAutoCompleteSearch",
+  "nsIAutoCompleteSearchDescriptor",
 ]);
 
 function AutoCompleteDelayedSearch(aName, aResult) {

@@ -834,7 +834,7 @@ var PageThumbsHistoryObserver = {
   onDeleteVisits() {},
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavHistoryObserver,
-    Ci.nsISupportsWeakReference,
+    "nsINavHistoryObserver",
+    "nsISupportsWeakReference",
   ]),
 };

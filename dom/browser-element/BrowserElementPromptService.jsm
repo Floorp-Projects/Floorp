@@ -21,7 +21,7 @@ function BrowserElementPrompt(win, browserElementChild) {
 }
 
 BrowserElementPrompt.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
 
   alert(title, text) {
     this._browserElementChild.showModalPrompt(this._win, {
@@ -234,7 +234,7 @@ BrowserElementPrompt.prototype = {
 function BrowserElementAuthPrompt() {}
 
 BrowserElementAuthPrompt.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
 
   promptAuth: function promptAuth(channel, level, authInfo) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
@@ -273,7 +273,7 @@ BrowserElementAuthPrompt.prototype = {
     }
 
     let consumer = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
       callback,
       context,
       cancel() {
@@ -486,7 +486,7 @@ function AuthPromptWrapper(oldImpl, browserElementImpl) {
 }
 
 AuthPromptWrapper.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
   promptAuth(channel, level, authInfo) {
     if (this._canGetParentElement(channel)) {
       return this._browserElementImpl.promptAuth(channel, level, authInfo);
@@ -540,7 +540,7 @@ function BrowserElementPromptFactory(toWrap) {
 
 BrowserElementPromptFactory.prototype = {
   classID: Components.ID("{24f3d0cf-e417-4b85-9017-c9ecf8bb1299}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptFactory]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPromptFactory"]),
 
   _mayUseNativePrompt() {
     try {
@@ -634,8 +634,8 @@ BrowserElementPromptFactory.prototype = {
 
 var BrowserElementPromptService = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   _initialized: false,

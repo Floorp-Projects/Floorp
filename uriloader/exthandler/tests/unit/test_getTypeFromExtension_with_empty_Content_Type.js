@@ -89,7 +89,7 @@ function MockWindowsRegKey(aWrappedObject) {
 MockWindowsRegKey.prototype = {
   // --- Overridden nsISupports interface functions ---
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsRegKey]),
+  QueryInterface: ChromeUtils.generateQI(["nsIWindowsRegKey"]),
 
   // --- Overridden nsIWindowsRegKey interface functions ---
 

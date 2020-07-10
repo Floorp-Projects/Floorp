@@ -36,7 +36,7 @@ MockWebSocketParent.prototype = {
   _listener: null,
   _context: null,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebSocketChannel]),
+  QueryInterface: ChromeUtils.generateQI(["nsIWebSocketChannel"]),
 
   get originalURI() {
     return this._originalURI;

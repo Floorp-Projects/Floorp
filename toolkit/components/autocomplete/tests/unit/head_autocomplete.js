@@ -60,7 +60,7 @@ AutoCompleteInputBase.prototype = {
   },
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"]),
 };
 
 /**
@@ -112,7 +112,7 @@ AutoCompleteResultBase.prototype = {
   removeValueAt(aRowIndex) {},
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),
 };
 
 /**
@@ -141,8 +141,8 @@ AutoCompleteSearchBase.prototype = {
 
   // nsISupports implementation
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIFactory,
-    Ci.nsIAutoCompleteSearch,
+    "nsIFactory",
+    "nsIAutoCompleteSearch",
   ]),
 
   // nsIFactory implementation
@@ -167,7 +167,7 @@ AutocompletePopupBase.prototype = {
       }
     }
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"]),
 };
 
 /**

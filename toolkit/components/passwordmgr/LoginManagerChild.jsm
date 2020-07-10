@@ -96,9 +96,9 @@ let gKeyDownEnterForInput = null;
 
 const observer = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
   ]),
 
   // nsIWebProgressListener

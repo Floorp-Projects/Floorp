@@ -90,7 +90,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
 
   var weakMessageReceived = false;
   var weakListener = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
     receiveMessage: function(msg) {
       if (weakMessageReceived) {
@@ -106,7 +106,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   };
 
   var weakListener2 = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
     receiveMessage: function(msg) {
       ok(false, 'Should not have received a message.');

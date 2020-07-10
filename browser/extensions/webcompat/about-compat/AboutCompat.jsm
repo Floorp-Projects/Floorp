@@ -17,7 +17,7 @@ function AboutCompat() {
   );
 }
 AboutCompat.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAboutModule"]),
   getURIFlags() {
     return Ci.nsIAboutModule.URI_MUST_LOAD_IN_EXTENSION_PROCESS;
   },

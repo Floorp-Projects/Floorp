@@ -20,7 +20,7 @@ var gPrompt = {
   password: "password",
   clickOk: true,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
 
   // This intentionally does not use arrow function syntax to avoid an issue
   // where in the context of the arrow function, |this != gPrompt| due to
@@ -43,7 +43,7 @@ var gPrompt = {
 };
 
 const gPromptFactory = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptFactory]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPromptFactory"]),
   getPrompt: (aWindow, aIID) => gPrompt,
 };
 

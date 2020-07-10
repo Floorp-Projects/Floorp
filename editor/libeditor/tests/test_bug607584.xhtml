@@ -41,8 +41,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
         this.mEditor = aEditor;
       },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                            "nsISupportsWeakReference"]),
 
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {

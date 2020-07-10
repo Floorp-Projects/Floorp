@@ -17,10 +17,10 @@ function promisify(func, ...params) {
     let changes = [];
     func(...params, {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.mozIExtensionStorageListener,
-        Ci.mozIExtensionStorageCallback,
-        Ci.mozIBridgedSyncEngineCallback,
-        Ci.mozIBridgedSyncEngineApplyCallback,
+        "mozIExtensionStorageListener",
+        "mozIExtensionStorageCallback",
+        "mozIBridgedSyncEngineCallback",
+        "mozIBridgedSyncEngineApplyCallback",
       ]),
       onChanged(extId, json) {
         changes.push({ extId, changes: JSON.parse(json) });

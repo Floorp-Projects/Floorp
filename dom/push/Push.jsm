@@ -46,9 +46,9 @@ Push.prototype = {
   classID: PUSH_CID,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIDOMGlobalPropertyInitializer,
-    Ci.nsISupportsWeakReference,
-    Ci.nsIObserver,
+    "nsIDOMGlobalPropertyInitializer",
+    "nsISupportsWeakReference",
+    "nsIObserver",
   ]),
 
   init(win) {
@@ -199,7 +199,7 @@ Push.prototype = {
     let type = {
       type: "desktop-notification",
       options: [],
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionType]),
+      QueryInterface: ChromeUtils.generateQI(["nsIContentPermissionType"]),
     };
     let typeArray = Cc["@mozilla.org/array;1"].createInstance(
       Ci.nsIMutableArray
@@ -208,7 +208,7 @@ Push.prototype = {
 
     // create a nsIContentPermissionRequest
     let request = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionRequest]),
+      QueryInterface: ChromeUtils.generateQI(["nsIContentPermissionRequest"]),
       types: typeArray,
       principal: this._principal,
       isHandlingUserInput,
@@ -232,7 +232,7 @@ function PushSubscriptionCallback(pushManager, resolve, reject) {
 }
 
 PushSubscriptionCallback.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPushSubscriptionCallback]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPushSubscriptionCallback"]),
 
   onPushSubscription(ok, subscription) {
     let { pushManager } = this;

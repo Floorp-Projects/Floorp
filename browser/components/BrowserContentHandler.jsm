@@ -383,10 +383,10 @@ function nsBrowserContentHandler() {
 nsBrowserContentHandler.prototype = {
   /* nsISupports */
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsICommandLineHandler,
-    Ci.nsIBrowserHandler,
-    Ci.nsIContentHandler,
-    Ci.nsICommandLineValidator,
+    "nsICommandLineHandler",
+    "nsIBrowserHandler",
+    "nsIContentHandler",
+    "nsICommandLineValidator",
   ]),
 
   /* nsICommandLineHandler */

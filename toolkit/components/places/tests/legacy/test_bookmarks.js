@@ -78,7 +78,7 @@ var bookmarksObserver = {
     this._itemMovedNewParent = newParent;
     this._itemMovedNewIndex = newIndex;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
 // Get bookmarks menu folder id.

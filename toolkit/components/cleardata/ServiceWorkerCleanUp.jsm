@@ -30,7 +30,7 @@ function unregisterServiceWorker(aSW) {
       unregisterSucceeded: resolve,
       unregisterFailed: resolve, // We don't care about failures.
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIServiceWorkerUnregisterCallback,
+        "nsIServiceWorkerUnregisterCallback",
       ]),
     };
     serviceWorkerManager.propagateUnregister(

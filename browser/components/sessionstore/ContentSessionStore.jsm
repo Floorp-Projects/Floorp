@@ -258,9 +258,9 @@ class SessionHistoryListener extends Handler {
   }
 }
 SessionHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIWebProgressListener,
-  Ci.nsISHistoryListener,
-  Ci.nsISupportsWeakReference,
+  "nsIWebProgressListener",
+  "nsISHistoryListener",
+  "nsISupportsWeakReference",
 ]);
 
 /**

@@ -399,9 +399,9 @@ TimerManager.prototype = {
 
   classID: Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIUpdateTimerManager,
-    Ci.nsITimerCallback,
-    Ci.nsIObserver,
+    "nsIUpdateTimerManager",
+    "nsITimerCallback",
+    "nsIObserver",
   ]),
 };
 

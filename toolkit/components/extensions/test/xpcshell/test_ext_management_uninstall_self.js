@@ -37,7 +37,7 @@ const waitForUninstalled = () =>
 
 let promptService = {
   _response: null,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
   confirmEx: function(...args) {
     this._confirmExArgs = args;
     return this._response;

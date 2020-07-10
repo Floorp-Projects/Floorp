@@ -2840,11 +2840,11 @@ UnifiedComplete.prototype = {
   classID: Components.ID("f964a319-397a-4d21-8be6-5cdd1ee3e3ae"),
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIAutoCompleteSearch,
-    Ci.nsIAutoCompleteSearchDescriptor,
-    Ci.mozIPlacesAutoComplete,
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIAutoCompleteSearch",
+    "nsIAutoCompleteSearchDescriptor",
+    "mozIPlacesAutoComplete",
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 };
 

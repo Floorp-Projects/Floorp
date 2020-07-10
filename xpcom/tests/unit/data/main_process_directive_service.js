@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 function TestProcessDirective() {}
 TestProcessDirective.prototype = {
   /* Boilerplate */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIProperty]),
+  QueryInterface: ChromeUtils.generateQI(["nsIProperty"]),
   contractID: "@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1",
   classID: Components.ID("{9b6f4160-45be-11e4-916c-0800200c9a66}"),
 

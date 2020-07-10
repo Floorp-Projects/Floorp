@@ -66,7 +66,7 @@ const TestingUIService = {
     );
   },
   get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsIPaymentUIService]);
+    return ChromeUtils.generateQI(["nsIPaymentUIService"]);
   },
 };
 

@@ -17,8 +17,8 @@ TestInterfaceJS.prototype = {
   classID: Components.ID("{2ac4e026-cf25-47d5-b067-78d553c3cad8}"),
   contractID: "@mozilla.org/dom/test-interface-js;1",
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIDOMGlobalPropertyInitializer,
-    Ci.mozITestInterfaceJS,
+    "nsIDOMGlobalPropertyInitializer",
+    "mozITestInterfaceJS",
   ]),
 
   init(win) {

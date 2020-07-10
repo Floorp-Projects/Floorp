@@ -154,7 +154,7 @@ function constructOnePageCmdLine(aURL) {
       return Services.io.newURI(this._arg);
     },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsICommandLine]),
+    QueryInterface: ChromeUtils.generateQI(["nsICommandLine"]),
   };
 }
 

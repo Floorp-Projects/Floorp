@@ -35,7 +35,7 @@ class PlatformMessageWatcher {
 
     // Create the consoleListener.
     const listener = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
+      QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
       observe(message) {
         if (!shouldHandleMessage(message)) {
           return;

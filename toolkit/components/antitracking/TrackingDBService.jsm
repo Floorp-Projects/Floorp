@@ -120,7 +120,7 @@ this.TrackingDBService = function() {
 
 TrackingDBService.prototype = {
   classID: Components.ID("{3c9c43b6-09eb-4ed2-9b87-e29f4221eef0}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITrackingDBService]),
+  QueryInterface: ChromeUtils.generateQI(["nsITrackingDBService"]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TrackingDBService),
   // This is the connection to the database, opened in _initialize and closed on _shutdown.
   _db: null,

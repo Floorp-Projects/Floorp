@@ -61,7 +61,7 @@ const UIService = {
     );
   },
   closePayment(requestId) {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPaymentUIService"]),
 };
 
 function emitTestFail(message) {

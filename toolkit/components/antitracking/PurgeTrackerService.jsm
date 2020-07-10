@@ -47,7 +47,7 @@ this.PurgeTrackerService = function() {};
 
 PurgeTrackerService.prototype = {
   classID: Components.ID("{90d1fd17-2018-4e16-b73c-a04a26fa6dd4}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPurgeTrackerService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPurgeTrackerService"]),
 
   // Purging is batched for cookies to avoid clearing too much data
   // at once. This flag tells us whether this is the first daily iteration.

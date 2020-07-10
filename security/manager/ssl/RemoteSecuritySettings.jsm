@@ -108,7 +108,7 @@ class CRLiteState {
   }
 }
 CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsICRLiteState,
+  "nsICRLiteState",
 ]);
 
 class CertInfo {
@@ -118,7 +118,7 @@ class CertInfo {
     this.trust = Ci.nsICertStorage.TRUST_INHERIT;
   }
 }
-CertInfo.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsICertInfo]);
+CertInfo.prototype.QueryInterface = ChromeUtils.generateQI(["nsICertInfo"]);
 
 class RevocationState {
   constructor(state) {
@@ -134,7 +134,7 @@ class IssuerAndSerialRevocationState extends RevocationState {
   }
 }
 IssuerAndSerialRevocationState.prototype.QueryInterface = ChromeUtils.generateQI(
-  [Ci.nsIIssuerAndSerialRevocationState]
+  ["nsIIssuerAndSerialRevocationState"]
 );
 
 class SubjectAndPubKeyRevocationState extends RevocationState {
@@ -145,7 +145,7 @@ class SubjectAndPubKeyRevocationState extends RevocationState {
   }
 }
 SubjectAndPubKeyRevocationState.prototype.QueryInterface = ChromeUtils.generateQI(
-  [Ci.nsISubjectAndPubKeyRevocationState]
+  ["nsISubjectAndPubKeyRevocationState"]
 );
 
 function setRevocations(certStorage, revocations) {

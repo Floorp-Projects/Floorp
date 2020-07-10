@@ -1646,7 +1646,7 @@ UpdatePatch.prototype = {
     let ip = Cc["@mozilla.org/supports-interface-pointer;1"].createInstance(
       Ci.nsISupportsInterfacePointer
     );
-    let qi = ChromeUtils.generateQI([Ci.nsIProperty]);
+    let qi = ChromeUtils.generateQI(["nsIProperty"]);
     for (let [name, value] of Object.entries(this._properties)) {
       if (value.present && !this._attrNames.includes(name)) {
         // The nsIPropertyBag enumerator returns a nsISimpleEnumerator whose
@@ -1683,9 +1683,9 @@ UpdatePatch.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIUpdatePatch,
-    Ci.nsIPropertyBag,
-    Ci.nsIWritablePropertyBag,
+    "nsIUpdatePatch",
+    "nsIPropertyBag",
+    "nsIWritablePropertyBag",
   ]),
 };
 
@@ -2016,7 +2016,7 @@ Update.prototype = {
     let ip = Cc["@mozilla.org/supports-interface-pointer;1"].createInstance(
       Ci.nsISupportsInterfacePointer
     );
-    let qi = ChromeUtils.generateQI([Ci.nsIProperty]);
+    let qi = ChromeUtils.generateQI(["nsIProperty"]);
     for (let [name, value] of Object.entries(this._properties)) {
       if (value.present && !this._attrNames.includes(name)) {
         // The nsIPropertyBag enumerator returns a nsISimpleEnumerator whose
@@ -2052,9 +2052,9 @@ Update.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIUpdate,
-    Ci.nsIPropertyBag,
-    Ci.nsIWritablePropertyBag,
+    "nsIUpdate",
+    "nsIPropertyBag",
+    "nsIWritablePropertyBag",
   ]),
 };
 
@@ -3318,10 +3318,10 @@ UpdateService.prototype = {
 
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIApplicationUpdateService,
-    Ci.nsIUpdateCheckListener,
-    Ci.nsITimerCallback,
-    Ci.nsIObserver,
+    "nsIApplicationUpdateService",
+    "nsIUpdateCheckListener",
+    "nsITimerCallback",
+    "nsIObserver",
   ]),
 };
 
@@ -3753,7 +3753,7 @@ UpdateManager.prototype = {
   },
 
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManager, Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIUpdateManager", "nsIObserver"]),
 };
 
 /**
@@ -4129,7 +4129,7 @@ Checker.prototype = {
   },
 
   classID: Components.ID("{898CDC9B-E43F-422F-9CC4-2F6291B415A3}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateChecker]),
+  QueryInterface: ChromeUtils.generateQI(["nsIUpdateChecker"]),
 };
 
 /**
@@ -5374,9 +5374,9 @@ Downloader.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIRequestObserver,
-    Ci.nsIProgressEventSink,
-    Ci.nsIInterfaceRequestor,
+    "nsIRequestObserver",
+    "nsIProgressEventSink",
+    "nsIInterfaceRequestor",
   ]),
 };
 

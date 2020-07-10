@@ -13,7 +13,7 @@ var mockNetworkStatusService = {
 
   _originalClassId: "",
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+  QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
 
   createInstance(outer, iiD) {
     if (outer) {

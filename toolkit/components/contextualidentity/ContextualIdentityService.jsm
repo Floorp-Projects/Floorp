@@ -61,7 +61,7 @@ _TabRemovalObserver.prototype = {
   _resolver: null,
   _remoteTabIds: null,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   observe(subject, topic, data) {
     let remoteTab = subject.QueryInterface(Ci.nsIRemoteTab);

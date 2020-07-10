@@ -16,7 +16,7 @@ HelperAppLauncherDialog.prototype = {
   show(aLauncher, aWindowContext, aReason) {
     sendAsyncMessage("suggestedFileName", aLauncher.suggestedFileName);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
+  QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog"]),
 };
 
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);

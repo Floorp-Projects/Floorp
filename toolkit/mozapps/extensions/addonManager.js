@@ -340,9 +340,9 @@ amManager.prototype = {
     },
   },
   QueryInterface: ChromeUtils.generateQI([
-    Ci.amIAddonManager,
-    Ci.nsITimerCallback,
-    Ci.nsIObserver,
+    "amIAddonManager",
+    "nsITimerCallback",
+    "nsIObserver",
   ]),
 };
 
@@ -399,9 +399,9 @@ BlocklistService.prototype = {
 
   classID: Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIBlocklistService,
-    Ci.nsITimerCallback,
+    "nsIObserver",
+    "nsIBlocklistService",
+    "nsITimerCallback",
   ]),
 };
 

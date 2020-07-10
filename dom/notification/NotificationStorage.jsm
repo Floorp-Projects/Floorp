@@ -252,7 +252,7 @@ NotificationStorage.prototype = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINotificationStorage]),
+  QueryInterface: ChromeUtils.generateQI(["nsINotificationStorage"]),
 };
 
 var EXPORTED_SYMBOLS = ["NotificationStorage"];

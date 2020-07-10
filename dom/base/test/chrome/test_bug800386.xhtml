@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800386
       throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
     },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor])
+    QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"])
   };
 
   // HTTP URI so that we get progress callbacks

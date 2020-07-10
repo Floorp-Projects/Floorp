@@ -64,7 +64,7 @@ InstallerPrefs.prototype = {
   classID: Components.ID("{cd8a6995-1f19-4cdd-9ed1-d6263302f594}"),
   contractID: "@mozilla.org/installerprefs;1",
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   observe(subject, topic, data) {
     switch (topic) {

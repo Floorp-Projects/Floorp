@@ -4035,7 +4035,7 @@ function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
           }
           resolve({ request, update });
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener]),
+        QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
       },
       true
     )
@@ -4075,8 +4075,8 @@ function waitForUpdateDownload(aUpdates, aExpectedStatus) {
         resolve(request, status);
       },
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIRequestObserver,
-        Ci.nsIProgressEventSink,
+        "nsIRequestObserver",
+        "nsIProgressEventSink",
       ]),
     })
   );
@@ -4322,7 +4322,7 @@ function adjustGeneralPaths() {
       }
       return null;
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };
   let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_DIR);
@@ -4400,7 +4400,7 @@ const gAppTimerCallback = {
     }
     Assert.ok(false, "launch application timer expired");
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI(["nsITimerCallback"]),
 };
 
 /**
@@ -4603,7 +4603,7 @@ IncrementalDownload.prototype = {
   get status() {
     return this._status;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIIncrementalDownload]),
+  QueryInterface: ChromeUtils.generateQI(["nsIIncrementalDownload"]),
 };
 
 /**

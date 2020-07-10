@@ -101,8 +101,8 @@ vacuumParticipant.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.mozIStorageVacuumParticipant,
-    Ci.nsIObserver,
+    "mozIStorageVacuumParticipant",
+    "nsIObserver",
   ]),
 };
 

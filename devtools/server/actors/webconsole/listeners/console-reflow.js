@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci, components } = require("chrome");
+const { components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 
 /**
@@ -29,8 +29,8 @@ exports.ConsoleReflowListener = ConsoleReflowListener;
 
 ConsoleReflowListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIReflowObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIReflowObserver",
+    "nsISupportsWeakReference",
   ]),
   docshell: null,
   listener: null,

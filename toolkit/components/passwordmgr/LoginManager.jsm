@@ -46,9 +46,9 @@ function LoginManager() {
 LoginManager.prototype = {
   classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsILoginManager,
-    Ci.nsISupportsWeakReference,
-    Ci.nsIInterfaceRequestor,
+    "nsILoginManager",
+    "nsISupportsWeakReference",
+    "nsIInterfaceRequestor",
   ]),
   getInterface(aIID) {
     if (aIID.equals(Ci.mozIStorageConnection) && this._storage) {
@@ -116,8 +116,8 @@ LoginManager.prototype = {
     _pwmgr: null,
 
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+      "nsIObserver",
+      "nsISupportsWeakReference",
     ]),
 
     // nsIObserver

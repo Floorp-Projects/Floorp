@@ -319,8 +319,8 @@ var DownloadCache = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavHistoryObserver,
-    Ci.nsISupportsWeakReference,
+    "nsINavHistoryObserver",
+    "nsISupportsWeakReference",
   ]),
 
   // nsINavHistoryObserver

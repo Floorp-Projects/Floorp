@@ -232,7 +232,7 @@ function NetworkGeoCoordsObject(lat, lon, acc) {
 }
 
 NetworkGeoCoordsObject.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGeoPositionCoords]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDOMGeoPositionCoords"]),
 };
 
 function NetworkGeoPositionObject(lat, lng, acc) {
@@ -242,7 +242,7 @@ function NetworkGeoPositionObject(lat, lng, acc) {
 }
 
 NetworkGeoPositionObject.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGeoPosition]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDOMGeoPosition"]),
 };
 
 function NetworkGeolocationProvider() {
@@ -292,10 +292,10 @@ function NetworkGeolocationProvider() {
 NetworkGeolocationProvider.prototype = {
   classID: Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIGeolocationProvider,
-    Ci.nsIWifiListener,
-    Ci.nsITimerCallback,
-    Ci.nsIObserver,
+    "nsIGeolocationProvider",
+    "nsIWifiListener",
+    "nsITimerCallback",
+    "nsIObserver",
   ]),
   listener: null,
 

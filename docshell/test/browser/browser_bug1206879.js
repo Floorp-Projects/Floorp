@@ -19,8 +19,8 @@ add_task(async function() {
           this.resolve();
         },
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
         ]),
       };
       let locationPromise = new Promise((resolve, reject) => {

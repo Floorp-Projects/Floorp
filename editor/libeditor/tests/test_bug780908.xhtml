@@ -43,8 +43,8 @@ adapted from test_bug607584.xhtml by Kent James <kent@caspia.com>
         this.mEditor = aEditor;
       },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                            "nsISupportsWeakReference"]),
 
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {

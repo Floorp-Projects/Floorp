@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 
 function MockShellService() {}
 MockShellService.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIShellService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIShellService"]),
   isDefaultBrowser(aStartupCheck, aForAllTypes) {
     return false;
   },

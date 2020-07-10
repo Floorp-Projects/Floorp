@@ -116,9 +116,9 @@ add_task(async function test_notifyPendingChanges() {
   let error = null;
   engine._bridge = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.mozIBridgedSyncEngine,
-      Ci.mozIExtensionStorageArea,
-      Ci.mozISyncedExtensionStorageArea,
+      "mozIBridgedSyncEngine",
+      "mozIExtensionStorageArea",
+      "mozISyncedExtensionStorageArea",
     ]),
     ensureCurrentSyncId(id, callback) {
       if (syncID != id) {

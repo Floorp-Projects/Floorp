@@ -16,10 +16,7 @@ nsWebHandlerApp.prototype = {
   classDescription: "A web handler for protocols and content",
   classID: Components.ID("8b1ae382-51a9-4972-b930-56977a57919d"),
   contractID: "@mozilla.org/uriloader/web-handler-app;1",
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebHandlerApp,
-    Ci.nsIHandlerApp,
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsIWebHandlerApp", "nsIHandlerApp"]),
 
   _name: null,
   _detailedDescription: null,

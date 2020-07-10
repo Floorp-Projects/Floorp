@@ -81,5 +81,5 @@ PromptCollection.prototype.classID = Components.ID(
   "{7913837c-9623-11ea-bb37-0242ac130002}"
 );
 PromptCollection.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPromptCollection,
+  "nsIPromptCollection",
 ]);

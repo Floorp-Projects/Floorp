@@ -120,10 +120,10 @@ ProtocolHandler.prototype = {
 
   /** nsISupports */
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIProtocolHandler,
-    Ci.nsIRequest,
-    Ci.nsIChannel,
-    Ci.nsIFactory,
+    "nsIProtocolHandler",
+    "nsIRequest",
+    "nsIChannel",
+    "nsIFactory",
   ]),
   classID: Components.ID("{16d594bc-d9d8-47ae-a139-ea714dc0c35c}"),
 };

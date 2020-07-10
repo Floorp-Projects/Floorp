@@ -32,7 +32,7 @@ var newFactory = function(window) {
     lockFactory(aLock) {
       throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
+    QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
   };
 };
 
@@ -79,7 +79,7 @@ function MockColorPickerInstance(window) {
   this.showCallbackWrapped = null;
 }
 MockColorPickerInstance.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIColorPicker]),
+  QueryInterface: ChromeUtils.generateQI(["nsIColorPicker"]),
   init(aParent, aTitle, aInitialColor) {
     this.parent = aParent;
     this.initialColor = aInitialColor;

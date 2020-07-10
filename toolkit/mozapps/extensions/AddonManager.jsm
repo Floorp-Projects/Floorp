@@ -363,9 +363,9 @@ BrowserListener.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsISupportsWeakReference,
-    Ci.nsIWebProgressListener,
-    Ci.nsIObserver,
+    "nsISupportsWeakReference",
+    "nsIWebProgressListener",
+    "nsIObserver",
   ]),
 };
 

@@ -66,7 +66,7 @@ BlobComponent.prototype =
   },
 
   // nsISupports
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo])
+  QueryInterface: ChromeUtils.generateQI(["nsIClassInfo"])
 };
 
 var gComponentsArray = [BlobComponent];

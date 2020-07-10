@@ -42,8 +42,8 @@ function test_asyncFetchBadCert() {
       });
       channel.notificationCallbacks = {
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIProgressEventSink,
-          Ci.nsIInterfaceRequestor,
+          "nsIProgressEventSink",
+          "nsIInterfaceRequestor",
         ]),
         getInterface(aIID) {
           return this.QueryInterface(aIID);

@@ -51,9 +51,9 @@ PlacesTreeView.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsITreeView,
-    Ci.nsINavHistoryResultObserver,
-    Ci.nsISupportsWeakReference,
+    "nsITreeView",
+    "nsINavHistoryResultObserver",
+    "nsISupportsWeakReference",
   ]),
 
   /**

@@ -97,8 +97,8 @@ ExtensionStorageEngineBridge.prototype = {
         .QueryInterface(Ci.mozISyncedExtensionStorageArea)
         .fetchPendingSyncChanges({
           QueryInterface: ChromeUtils.generateQI([
-            Ci.mozIExtensionStorageListener,
-            Ci.mozIExtensionStorageCallback,
+            "mozIExtensionStorageListener",
+            "mozIExtensionStorageCallback",
           ]),
           onChanged: (extId, json) => {
             try {
@@ -129,7 +129,7 @@ ExtensionStorageEngineBridge.prototype = {
         .QueryInterface(Ci.mozIExtensionStorageArea)
         .takeMigrationInfo({
           QueryInterface: ChromeUtils.generateQI([
-            Ci.mozIExtensionStorageCallback,
+            "mozIExtensionStorageCallback",
           ]),
           handleSuccess: result => {
             resolve(result ? JSON.parse(result) : null);

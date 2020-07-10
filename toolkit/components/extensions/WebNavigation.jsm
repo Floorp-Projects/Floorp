@@ -130,8 +130,8 @@ var Manager = {
    * to keep track of the urlbar user interaction.
    */
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   /**

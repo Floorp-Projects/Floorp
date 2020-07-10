@@ -137,8 +137,8 @@ var paymentDialogWrapper = {
   temporaryStore: null,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   /**

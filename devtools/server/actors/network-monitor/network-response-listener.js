@@ -69,10 +69,10 @@ exports.NetworkResponseListener = NetworkResponseListener;
 
 NetworkResponseListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIStreamListener,
-    Ci.nsIInputStreamCallback,
-    Ci.nsIRequestObserver,
-    Ci.nsIInterfaceRequestor,
+    "nsIStreamListener",
+    "nsIInputStreamCallback",
+    "nsIRequestObserver",
+    "nsIInterfaceRequestor",
   ]),
 
   // nsIInterfaceRequestor implementation

@@ -335,7 +335,7 @@ ParseSubmissionResult.prototype = {
   get termsLength() {
     return this._termsLength;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISearchParseSubmissionResult]),
+  QueryInterface: ChromeUtils.generateQI(["nsISearchParseSubmissionResult"]),
 };
 
 const gEmptyParseSubmissionResult = Object.freeze(
@@ -3520,9 +3520,9 @@ SearchService.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsISearchService,
-    Ci.nsIObserver,
-    Ci.nsITimerCallback,
+    "nsISearchService",
+    "nsIObserver",
+    "nsITimerCallback",
   ]),
 };
 

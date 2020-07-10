@@ -170,7 +170,7 @@ add_task(async function test() {
 var bookmarksObserver = {
   _notifications: [],
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 
   handlePlacesEvents(events) {
     for (let { type, parentGuid, guid, index } of events) {
