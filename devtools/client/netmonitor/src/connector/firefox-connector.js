@@ -198,10 +198,6 @@ class FirefoxConnector {
       eventSourceFront.startListening();
 
       eventSourceFront.on(
-        "eventSourceConnectionOpened",
-        this.dataProvider.onEventSourceConnectionOpened
-      );
-      eventSourceFront.on(
         "eventSourceConnectionClosed",
         this.dataProvider.onEventSourceConnectionClosed
       );
@@ -237,10 +233,6 @@ class FirefoxConnector {
 
     const eventSourceFront = this.currentTarget.getCachedFront("eventSource");
     if (eventSourceFront) {
-      eventSourceFront.off(
-        "eventSourceConnectionOpened",
-        this.dataProvider.onEventSourceConnectionOpened
-      );
       eventSourceFront.off(
         "eventSourceConnectionClosed",
         this.dataProvider.onEventSourceConnectionClosed
