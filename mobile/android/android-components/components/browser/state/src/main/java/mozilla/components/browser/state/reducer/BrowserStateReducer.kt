@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.DownloadAction
@@ -31,6 +32,7 @@ import mozilla.components.lib.state.Action
 internal object BrowserStateReducer {
     fun reduce(state: BrowserState, action: BrowserAction): BrowserState {
         return when (action) {
+            is ContainerAction -> ContainerReducer.reduce(state, action)
             is ContentAction -> ContentStateReducer.reduce(state, action)
             is CustomTabListAction -> CustomTabListReducer.reduce(state, action)
             is EngineAction -> EngineStateReducer.reduce(state, action)

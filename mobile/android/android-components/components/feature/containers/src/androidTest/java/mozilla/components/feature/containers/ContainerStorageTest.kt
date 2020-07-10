@@ -12,6 +12,9 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.state.state.Container
+import mozilla.components.browser.state.state.ContainerState.Color
+import mozilla.components.browser.state.state.ContainerState.Icon
 import mozilla.components.feature.containers.db.ContainerDatabase
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -50,25 +53,27 @@ class ContainerStorageTest {
 
     @Test
     fun testAddingContainer() = runBlockingTest {
-        storage.addContainer("Personal", "red", "fingerprint")
-        storage.addContainer("Shopping", "blue", "cart")
+        storage.addContainer("1", "Personal", Color.RED, Icon.FINGERPRINT)
+        storage.addContainer("2", "Shopping", Color.BLUE, Icon.CART)
 
         val containers = getAllContainers()
 
         assertEquals(2, containers.size)
 
+        assertEquals("1", containers[0].contextId)
         assertEquals("Personal", containers[0].name)
-        assertEquals("red", containers[0].color)
-        assertEquals("fingerprint", containers[0].icon)
+        assertEquals(Color.RED, containers[0].color)
+        assertEquals(Icon.FINGERPRINT, containers[0].icon)
+        assertEquals("2", containers[1].contextId)
         assertEquals("Shopping", containers[1].name)
-        assertEquals("blue", containers[1].color)
-        assertEquals("cart", containers[1].icon)
+        assertEquals(Color.BLUE, containers[1].color)
+        assertEquals(Icon.CART, containers[1].icon)
     }
 
     @Test
     fun testRemovingContainers() = runBlockingTest {
-        storage.addContainer("Personal", "red", "fingerprint")
-        storage.addContainer("Shopping", "blue", "cart")
+        storage.addContainer("1", "Personal", Color.RED, Icon.FINGERPRINT)
+        storage.addContainer("2", "Shopping", Color.BLUE, Icon.CART)
 
         getAllContainers().let { containers ->
             assertEquals(2, containers.size)
@@ -79,16 +84,17 @@ class ContainerStorageTest {
         getAllContainers().let { containers ->
             assertEquals(1, containers.size)
 
+            assertEquals("2", containers[0].contextId)
             assertEquals("Shopping", containers[0].name)
-            assertEquals("blue", containers[0].color)
-            assertEquals("cart", containers[0].icon)
+            assertEquals(Color.BLUE, containers[0].color)
+            assertEquals(Icon.CART, containers[0].icon)
         }
     }
 
     @Test
     fun testGettingContainers() = runBlockingTest {
-        storage.addContainer("Personal", "red", "fingerprint")
-        storage.addContainer("Shopping", "blue", "cart")
+        storage.addContainer("1", "Personal", Color.RED, Icon.FINGERPRINT)
+        storage.addContainer("2", "Shopping", Color.BLUE, Icon.CART)
 
         val containers = storage.getContainers().first()
 
@@ -96,15 +102,17 @@ class ContainerStorageTest {
         assertEquals(2, containers.size)
 
         with(containers[0]) {
+            assertEquals("1", contextId)
             assertEquals("Personal", name)
-            assertEquals("red", color)
-            assertEquals("fingerprint", icon)
+            assertEquals(Color.RED, color)
+            assertEquals(Icon.FINGERPRINT, icon)
         }
 
         with(containers[1]) {
+            assertEquals("2", contextId)
             assertEquals("Shopping", name)
-            assertEquals("blue", color)
-            assertEquals("cart", icon)
+            assertEquals(Color.BLUE, color)
+            assertEquals(Icon.CART, icon)
         }
     }
 
