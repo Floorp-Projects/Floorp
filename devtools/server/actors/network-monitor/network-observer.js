@@ -1099,6 +1099,16 @@ NetworkObserver.prototype = {
     response.waitingTime = this._convertTimeToMs(
       this._getWaitTiming(httpActivity.timings)
     );
+    // Mime type needs to be sent on response start for identifying an sse channel.
+    const contentType = headers.find(header => {
+      const lowerName = header.toLowerCase();
+      return lowerName.startsWith("content-type");
+    });
+
+    if (contentType) {
+      response.mimeType = contentType.slice("Content-Type: ".length);
+    }
+
     httpActivity.responseStatus = response.status;
     httpActivity.headersSize = response.headersSize;
 

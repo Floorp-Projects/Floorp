@@ -182,7 +182,7 @@ rawPackets.set(`XHR GET request update`, {
       "bodySize": 418,
       "transferredSize": 578
     },
-    "totalTime": 27
+    "totalTime": 0
   }
 });
 
@@ -266,7 +266,7 @@ rawPackets.set(`XHR POST request update`, {
       "bodySize": 418,
       "transferredSize": 578
     },
-    "totalTime": 8
+    "totalTime": 0
   }
 });
 
