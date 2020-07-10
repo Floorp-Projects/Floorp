@@ -5,6 +5,10 @@
 #if defined(XP_WIN)
 #  include <windows.h>
 #  include <winioctl.h>  // for FSCTL_GET_REPARSE_POINT
+#  include <shlobj.h>
+#  ifndef RRF_SUBKEY_WOW6464KEY
+#    define RRF_SUBKEY_WOW6464KEY 0x00010000
+#  endif
 #endif
 
 #include <stdio.h>
@@ -17,6 +21,7 @@
 #  include "updatehelper.h"
 #  include "nsWindowsHelpers.h"
 #  include "mozilla/UniquePtr.h"
+#  include "mozilla/WinHeaderOnlyUtils.h"
 
 // This struct isn't in any SDK header, so this definition was copied from:
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
@@ -242,6 +247,125 @@ bool PathContainsInvalidLinks(wchar_t* const fullPath) {
 
     nextToken = wcstok_s(nullptr, L"\\", &remainingPath);
     PathAppendW(partialPath, nextToken);
+  }
+
+  return false;
+}
+
+/**
+ * Determine if a path is located within Program Files, either native or x86
+ *
+ * @param fullPath  The full path to check.
+ * @return true if fullPath begins with either Program Files directory,
+ *         false if it does not or if an error is encountered
+ */
+bool IsProgramFilesPath(NS_tchar* fullPath) {
+  // Make sure we don't try to compare against a short path.
+  DWORD longInstallPathChars = GetLongPathNameW(fullPath, nullptr, 0);
+  mozilla::UniquePtr<wchar_t[]> longInstallPath =
+      mozilla::MakeUnique<wchar_t[]>(longInstallPathChars);
+  if (!longInstallPath || !GetLongPathNameW(fullPath, longInstallPath.get(),
+                                            longInstallPathChars)) {
+    return false;
+  }
+
+  // First check for Program Files (x86).
+  {
+    PWSTR programFiles32PathRaw = nullptr;
+    // FOLDERID_ProgramFilesX86 gets native Program Files directory on a 32-bit
+    // OS or the (x86) directory on a 64-bit OS regardless of this binary's
+    // bitness.
+    if (FAILED(SHGetKnownFolderPath(FOLDERID_ProgramFilesX86, 0, nullptr,
+                                    &programFiles32PathRaw))) {
+      // That call should never fail on any supported OS version.
+      return false;
+    }
+    mozilla::UniquePtr<wchar_t, mozilla::CoTaskMemFreeDeleter>
+        programFiles32Path(programFiles32PathRaw);
+    // We need this path to have a trailing slash so our prefix test doesn't
+    // match on a different folder which happens to have a name beginning with
+    // the prefix we're looking for but then also more characters after that.
+    size_t length = wcslen(programFiles32Path.get());
+    if (length == 0) {
+      return false;
+    }
+    if (programFiles32Path.get()[length - 1] == L'\\') {
+      if (wcsncmp(longInstallPath.get(), programFiles32Path.get(), length) ==
+          0) {
+        return true;
+      }
+    } else {
+      // Allocate space for a copy of the string along with a terminator and one
+      // extra character for the trailing backslash.
+      length += 1;
+      mozilla::UniquePtr<wchar_t[]> programFiles32PathWithSlash =
+          mozilla::MakeUnique<wchar_t[]>(length + 1);
+      if (!programFiles32PathWithSlash) {
+        return false;
+      }
+
+      NS_tsnprintf(programFiles32PathWithSlash.get(), length + 1, NS_T("%s\\"),
+                   programFiles32Path.get());
+
+      if (wcsncmp(longInstallPath.get(), programFiles32PathWithSlash.get(),
+                  length) == 0) {
+        return true;
+      }
+    }
+  }
+
+  // If we didn't find (x86), check for the native Program Files.
+  {
+    // In case we're a 32-bit binary on 64-bit Windows, we now have a problem
+    // getting the right "native" Program Files path, which is that there is no
+    // FOLDERID_* value that returns that path. So we always read that one out
+    // of its canonical registry location instead. If we're on a 32-bit OS, this
+    // will be the same path that we just checked. First get the buffer size to
+    // allocate for the path.
+    DWORD length = 0;
+    if (RegGetValueW(HKEY_LOCAL_MACHINE,
+                     L"Software\\Microsoft\\Windows\\CurrentVersion",
+                     L"ProgramFilesDir", RRF_RT_REG_SZ | RRF_SUBKEY_WOW6464KEY,
+                     nullptr, nullptr, &length) != ERROR_SUCCESS) {
+      return false;
+    }
+    // RegGetValue returns the length including the terminator in bytes, so
+    // convert that to characters and then add one more in case we have to
+    // append a trailing slash.
+    DWORD lengthChars = (length / sizeof(wchar_t));
+    if (lengthChars <= 1) {
+      return false;
+    }
+    mozilla::UniquePtr<wchar_t[]> programFilesNativePath =
+        mozilla::MakeUnique<wchar_t[]>(lengthChars + 1);
+    if (!programFilesNativePath) {
+      return false;
+    }
+
+    // Now actually read the value.
+    if (RegGetValueW(
+            HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion",
+            L"ProgramFilesDir", RRF_RT_REG_SZ | RRF_SUBKEY_WOW6464KEY, nullptr,
+            programFilesNativePath.get(), &length) != ERROR_SUCCESS) {
+      return false;
+    }
+    if (wcslen(programFilesNativePath.get()) != lengthChars - 1) {
+      // Something is very wrong if we didn't read all the characters that the
+      // registry told us to expect.
+      return false;
+    }
+
+    // As before, append a backslash if there isn't one already, and also add
+    // that character to number we need to compare.
+    if (programFilesNativePath[lengthChars - 2] != L'\\') {
+      wcsncat_s(programFilesNativePath.get(), lengthChars, L"\\", 1);
+      lengthChars++;
+    }
+
+    if (wcsncmp(longInstallPath.get(), programFilesNativePath.get(),
+                lengthChars - 1) == 0) {
+      return true;
+    }
   }
 
   return false;
