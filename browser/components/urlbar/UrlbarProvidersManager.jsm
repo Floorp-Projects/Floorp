@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
@@ -27,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.ProvidersManager")
+  UrlbarUtils.getLogger({ prefix: "ProvidersManager" })
 );
 
 // List of available local providers, each is implemented in its own jsm module
@@ -234,7 +233,7 @@ class ProvidersManager {
    * @param {object} queryContext
    */
   cancelQuery(queryContext) {
-    logger.info(`Query cancel ${queryContext.searchString}`);
+    logger.info(`Query cancel "${queryContext.searchString}"`);
     let query = this.queries.get(queryContext);
     if (!query) {
       throw new Error("Couldn't find a matching query for the given context");
@@ -363,13 +362,21 @@ class Query {
     }
 
     // Start querying active providers.
+
     let queryPromises = [];
+    let startQuery = provider => {
+      provider.logger.info(`Starting query for "${this.context.searchString}"`);
+      return provider.tryMethod(
+        "startQuery",
+        this.context,
+        this.add.bind(this)
+      );
+    };
+
     for (let provider of activeProviders) {
       if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
         this.context.pendingHeuristicProviders.add(provider.name);
-        queryPromises.push(
-          provider.tryMethod("startQuery", this.context, this.add.bind(this))
-        );
+        queryPromises.push(startQuery(provider));
         continue;
       }
       if (!this._sleepTimer) {
@@ -379,20 +386,13 @@ class Query {
         this._sleepTimer = new SkippableTimer({
           name: "Query provider timer",
           time: UrlbarPrefs.get("delay"),
-          logger,
+          logger: provider.logger,
         });
       }
       queryPromises.push(
-        this._sleepTimer.promise.then(() => {
-          if (this.canceled) {
-            return undefined;
-          }
-          return provider.tryMethod(
-            "startQuery",
-            this.context,
-            this.add.bind(this)
-          );
-        })
+        this._sleepTimer.promise.then(() =>
+          this.canceled ? undefined : startQuery(provider)
+        )
       );
     }
 
@@ -418,6 +418,9 @@ class Query {
     }
     this.canceled = true;
     for (let provider of this.providers) {
+      provider.logger.info(
+        `Canceling query for "${this.context.searchString}"`
+      );
       provider.tryMethod("cancelQuery", this.context);
     }
     if (this._chunkTimer) {
@@ -518,7 +521,7 @@ class Query {
           name: "Heuristic provider timer",
           callback: () => this._notifyResults(),
           time: CHUNK_RESULTS_DELAY_MS,
-          logger,
+          logger: provider.logger,
         });
       }
     } else if (!this._chunkTimer) {
@@ -526,7 +529,7 @@ class Query {
         name: "Query chunk timer",
         callback: () => this._notifyResults(),
         time: CHUNK_RESULTS_DELAY_MS,
-        logger,
+        logger: provider.logger,
       });
     }
     // If all active heuristic providers have returned results, we can skip the
@@ -570,13 +573,13 @@ class Query {
 
     // Crop results to the requested number, taking their result spans into
     // account.
-    logger.debug(
-      `Cropping ${this.context.results.length} results to ${this.context.maxResults}`
-    );
     let resultCount = this.context.maxResults;
     for (let i = 0; i < this.context.results.length; i++) {
       resultCount -= UrlbarUtils.getSpanForResult(this.context.results[i]);
       if (resultCount < 0) {
+        logger.debug(
+          `Splicing results from ${i} to crop results to ${this.context.maxResults}`
+        );
         this.context.results.splice(i, this.context.results.length - i);
         break;
       }
