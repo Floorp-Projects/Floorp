@@ -54,11 +54,11 @@ class nsTLiteralString : public mozilla::detail::nsTStringRepr<T> {
    * Use sparingly. If possible, rewrite code to use const ns[C]String&
    * and the implicit cast will just work.
    */
-  const nsTString<T>& AsString() const {
+  MOZ_LIFETIME_BOUND const nsTString<T>& AsString() const {
     return *reinterpret_cast<const nsTString<T>*>(this);
   }
 
-  operator const nsTString<T>&() const { return AsString(); }
+  MOZ_LIFETIME_BOUND operator const nsTString<T>&() const { return AsString(); }
 
   template <typename N, typename Dummy>
   struct raw_type {
