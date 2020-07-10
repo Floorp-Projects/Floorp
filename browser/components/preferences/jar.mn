@@ -6,7 +6,6 @@ browser.jar:
    content/browser/preferences/preferences.js
    content/browser/preferences/extensionControlled.js
 *  content/browser/preferences/preferences.xhtml
-   content/browser/preferences/subdialogs.js
 
    content/browser/preferences/main.js
    content/browser/preferences/home.js

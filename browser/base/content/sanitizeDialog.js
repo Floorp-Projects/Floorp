@@ -65,7 +65,7 @@ var gSanitizePromptDialog = {
     }
 
     // Only apply the following if the dialog is opened outside of the Preferences.
-    if (!window.opener || !("gSubDialog" in window.opener)) {
+    if (!this._dialog.hasAttribute("subdialog")) {
       // The style attribute on the dialog may get set after the dialog has been sized.
       // Force the dialog to size again after the style attribute has been applied.
       document.l10n.translateElements([document.documentElement]).then(() => {
