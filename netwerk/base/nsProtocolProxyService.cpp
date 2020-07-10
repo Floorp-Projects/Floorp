@@ -36,9 +36,7 @@
 #include "nsISystemProxySettings.h"
 #include "nsINetworkLinkService.h"
 #include "nsIHttpChannelInternal.h"
-#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/Logging.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Unused.h"
 
@@ -773,6 +771,7 @@ nsProtocolProxyService::nsProtocolProxyService()
       mSOCKSProxyRemoteDNS(false),
       mProxyOverTLS(true),
       mWPADOverDHCPEnabled(false),
+      mAllowHijackingLocalhost(false),
       mPACMan(nullptr),
       mSessionStart(PR_Now()),
       mFailedProxyTimeout(30 * 60)  // 30 minute default
@@ -1020,6 +1019,11 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
     reloadPAC = reloadPAC || mProxyConfig == PROXYCONFIG_WPAD;
   }
 
+  if (!pref || !strcmp(pref, PROXY_PREF("allow_hijacking_localhost"))) {
+    proxy_GetBoolPref(prefBranch, PROXY_PREF("allow_hijacking_localhost"),
+                      mAllowHijackingLocalhost);
+  }
+
   if (!pref || !strcmp(pref, PROXY_PREF("failover_timeout")))
     proxy_GetIntPref(prefBranch, PROXY_PREF("failover_timeout"),
                      mFailedProxyTimeout);
@@ -1093,12 +1097,9 @@ bool nsProtocolProxyService::CanUseProxy(nsIURI* aURI, int32_t defaultPort) {
 
   // Don't use proxy for local hosts (plain hostname, no dots)
   if ((!is_ipaddr && mFilterLocalHosts && !host.Contains('.')) ||
-      // This method detects if we have network.proxy.allow_hijacking_localhost
-      // pref enabled. If it's true then this method will always return false
-      // otherwise it returns true if the host matches an address that's
-      // hardcoded to the loopback address.
-      (!StaticPrefs::network_proxy_allow_hijacking_localhost() &&
-       nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(host))) {
+      (!mAllowHijackingLocalhost &&
+       (host.EqualsLiteral("127.0.0.1") || host.EqualsLiteral("::1") ||
+        host.EqualsLiteral("localhost")))) {
     LOG(("Not using proxy for this local host [%s]!\n", host.get()));
     return false;  // don't allow proxying
   }
