@@ -126,6 +126,9 @@ with Files('ShortcutUtils.jsm'):
 with Files('Sqlite.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Storage')
 
+with Files("SubDialog.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
 with Files('UpdateUtils.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Application Update')
 
@@ -211,6 +214,7 @@ EXTRA_JS_MODULES += [
     'Services.jsm',
     'ShortcutUtils.jsm',
     'Sqlite.jsm',
+    'SubDialog.jsm',
     'Timer.jsm',
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',
