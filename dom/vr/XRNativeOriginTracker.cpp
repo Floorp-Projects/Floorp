@@ -25,10 +25,6 @@ gfx::QuaternionDouble XRNativeOriginTracker::GetOrientation() {
   gfx::QuaternionDouble orientation(
       mPose->orientation[0], mPose->orientation[1], mPose->orientation[2],
       mPose->orientation[3]);
-  // Quaternion was inverted for WebVR in XXXVRSession when handling controller
-  // poses. We need to re-invert it here again.
-  // TODO: Remove those extra inverts when WebVR support is disabled.
-  orientation.Invert();
   return orientation;
 }
 

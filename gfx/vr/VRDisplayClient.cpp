@@ -258,9 +258,7 @@ void VRDisplayClient::GamepadMappingForWebVR(
                            aControllerState.pose.orientation[1],
                            aControllerState.pose.orientation[2],
                            aControllerState.pose.orientation[3]);
-      // We need to invert its quaternion here because we did an invertion
-      // in FxR WaveVR delegate.
-      originalMtx.SetRotationFromQuaternion(quat.Invert());
+      originalMtx.SetRotationFromQuaternion(quat);
       originalMtx._41 = aControllerState.pose.position[0];
       originalMtx._42 = aControllerState.pose.position[1];
       originalMtx._43 = aControllerState.pose.position[2];
@@ -269,7 +267,6 @@ void VRDisplayClient::GamepadMappingForWebVR(
       gfx::Point3D pos, scale;
       originalMtx.Decompose(pos, quat, scale);
 
-      quat.Invert();
       aControllerState.pose.position[0] = pos.x;
       aControllerState.pose.position[1] = pos.y;
       aControllerState.pose.position[2] = pos.z;
@@ -299,9 +296,7 @@ void VRDisplayClient::GamepadMappingForWebVR(
                            aControllerState.pose.orientation[1],
                            aControllerState.pose.orientation[2],
                            aControllerState.pose.orientation[3]);
-      // We need to invert its quaternion here because we did an invertion
-      // in FxR OculusVR delegate.
-      originalMtx.SetRotationFromQuaternion(quat.Invert());
+      originalMtx.SetRotationFromQuaternion(quat);
       originalMtx._41 = aControllerState.pose.position[0];
       originalMtx._42 = aControllerState.pose.position[1];
       originalMtx._43 = aControllerState.pose.position[2];
@@ -310,7 +305,6 @@ void VRDisplayClient::GamepadMappingForWebVR(
       gfx::Point3D pos, scale;
       originalMtx.Decompose(pos, quat, scale);
 
-      quat.Invert();
       aControllerState.pose.position[0] = pos.x;
       aControllerState.pose.position[1] = pos.y;
       aControllerState.pose.position[2] = pos.z;
@@ -365,9 +359,7 @@ void VRDisplayClient::GamepadMappingForWebVR(
                            aControllerState.pose.orientation[1],
                            aControllerState.pose.orientation[2],
                            aControllerState.pose.orientation[3]);
-      // We need to invert its quaternion here because we did an invertion
-      // in FxR OculusVR delegate.
-      originalMtx.SetRotationFromQuaternion(quat.Invert());
+      originalMtx.SetRotationFromQuaternion(quat);
       originalMtx._41 = aControllerState.pose.position[0];
       originalMtx._42 = aControllerState.pose.position[1];
       originalMtx._43 = aControllerState.pose.position[2];
@@ -376,7 +368,6 @@ void VRDisplayClient::GamepadMappingForWebVR(
       gfx::Point3D pos, scale;
       originalMtx.Decompose(pos, quat, scale);
 
-      quat.Invert();
       aControllerState.pose.position[0] = pos.x;
       aControllerState.pose.position[1] = pos.y;
       aControllerState.pose.position[2] = pos.z;
