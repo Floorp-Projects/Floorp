@@ -182,10 +182,6 @@ bool NetAddrToString(const NetAddr* addr, char* buf, uint32_t bufSize);
 
 bool IsLoopBackAddress(const NetAddr* addr);
 
-bool IsLoopBackAddressWithoutIPv6Mapping(const NetAddr* addr);
-
-bool IsLoopbackHostname(const nsACString& aAsciiHost);
-
 bool IsIPAddrAny(const NetAddr* addr);
 
 bool IsIPAddrV4(const NetAddr* addr);
