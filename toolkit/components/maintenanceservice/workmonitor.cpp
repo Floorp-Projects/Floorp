@@ -633,7 +633,13 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
 
     // This check is also performed in updater.cpp and is performed here
     // as well since the maintenance service can be called directly.
-    if (argc < 5 || !IsValidFullPath(argv[5])) {
+    if (argc < 5 || !IsValidFullPath(argv[5])
+    // This build flag is used as a handy proxy to tell when we're a build made
+    // for local testing, because there isn't much other reason to set it.
+#ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
+        || !IsProgramFilesPath(argv[5])
+#endif
+    ) {
       LOG_WARN(
           ("The install directory path is not valid for this application."));
       if (!WriteStatusFailure(argv[4],
