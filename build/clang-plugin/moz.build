@@ -43,6 +43,7 @@ HOST_SOURCES += [
     'RefCountedInsideLambdaChecker.cpp',
     'ScopeChecker.cpp',
     'SprintfLiteralChecker.cpp',
+    'TemporaryLifetimeBoundChecker.cpp',
     'TrivialCtorDtorChecker.cpp',
     'TrivialDtorChecker.cpp',
     'VariableUsageHelpers.cpp',
