@@ -53,4 +53,4 @@ Mozilla build system.
    :maxdepth: 1
 
    mozbuild/index
-   mozbuild/dumbmake
+
