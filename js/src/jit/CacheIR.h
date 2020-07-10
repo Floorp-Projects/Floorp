@@ -1602,6 +1602,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachMathRound(HandleFunction callee);
   AttachDecision tryAttachMathSqrt(HandleFunction callee);
   AttachDecision tryAttachMathFRound(HandleFunction callee);
+  AttachDecision tryAttachMathHypot(HandleFunction callee);
   AttachDecision tryAttachMathATan2(HandleFunction callee);
   AttachDecision tryAttachMathFunction(HandleFunction callee,
                                        UnaryMathFunction fun);

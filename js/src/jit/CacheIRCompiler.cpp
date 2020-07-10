@@ -3884,6 +3884,108 @@ bool CacheIRCompiler::emitMathFRoundNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathHypot2NumberResult(NumberOperandId first,
+                                                 NumberOperandId second) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, first, floatScratch0);
+  allocator.ensureDoubleRegister(masm, second, floatScratch1);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
+
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ecmaHypot), MoveOp::DOUBLE);
+  masm.storeCallFloatResult(floatScratch0);
+
+  LiveRegisterSet ignore;
+  ignore.add(floatScratch0);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
+  return true;
+}
+
+bool CacheIRCompiler::emitMathHypot3NumberResult(NumberOperandId first,
+                                                 NumberOperandId second,
+                                                 NumberOperandId third) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+  AutoAvailableFloatRegister floatScratch2(*this, FloatReg2);
+
+  allocator.ensureDoubleRegister(masm, first, floatScratch0);
+  allocator.ensureDoubleRegister(masm, second, floatScratch1);
+  allocator.ensureDoubleRegister(masm, third, floatScratch2);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch2, MoveOp::DOUBLE);
+
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot3), MoveOp::DOUBLE);
+  masm.storeCallFloatResult(floatScratch0);
+
+  LiveRegisterSet ignore;
+  ignore.add(floatScratch0);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
+  return true;
+}
+
+bool CacheIRCompiler::emitMathHypot4NumberResult(NumberOperandId first,
+                                                 NumberOperandId second,
+                                                 NumberOperandId third,
+                                                 NumberOperandId fourth) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+  AutoAvailableFloatRegister floatScratch2(*this, FloatReg2);
+  AutoAvailableFloatRegister floatScratch3(*this, FloatReg3);
+
+  allocator.ensureDoubleRegister(masm, first, floatScratch0);
+  allocator.ensureDoubleRegister(masm, second, floatScratch1);
+  allocator.ensureDoubleRegister(masm, third, floatScratch2);
+  allocator.ensureDoubleRegister(masm, fourth, floatScratch3);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch2, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch3, MoveOp::DOUBLE);
+
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, hypot4), MoveOp::DOUBLE);
+  masm.storeCallFloatResult(floatScratch0);
+
+  LiveRegisterSet ignore;
+  ignore.add(floatScratch0);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAtan2NumberResult(NumberOperandId yId,
                                                 NumberOperandId xId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
