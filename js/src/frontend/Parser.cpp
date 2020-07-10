@@ -2512,7 +2512,6 @@ bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon(
 bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
   MOZ_ASSERT(pc_ != outerpc);
 
-  // See: CompilationInfo::publishDeferredFunctions()
   MOZ_ASSERT_IF(outerpc->isFunctionBox(),
                 outerpc->functionBox()->index() < pc_->functionBox()->index());
 
@@ -2906,7 +2905,6 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   funbox->copyFunctionFields(stencil);
   funbox->copyScriptFields(stencil);
 
-  // See: CompilationInfo::publishDeferredFunctions()
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
                 pc_->functionBox()->index() < funbox->index());
 
