@@ -844,16 +844,20 @@ nsresult WSRunScanner::GetWSNodes() {
     editableBlockParentOrTopmotEditableInlineContent = scanStartContent;
   }
 
-  InitializeRangeStart(mScanStartPoint,
-                       *editableBlockParentOrTopmotEditableInlineContent);
-  InitializeRangeEnd(mScanStartPoint,
-                     *editableBlockParentOrTopmotEditableInlineContent);
+  mStart = BoundaryData::ScanWhiteSpaceStartFrom(
+      mScanStartPoint, *editableBlockParentOrTopmotEditableInlineContent,
+      mEditingHost, &mNBSPData);
+  mEnd = BoundaryData::ScanWhiteSpaceEndFrom(
+      mScanStartPoint, *editableBlockParentOrTopmotEditableInlineContent,
+      mEditingHost, &mNBSPData);
   return NS_OK;
 }
 
+// static
 template <typename EditorDOMPointType>
-bool WSRunScanner::InitializeRangeStartWithTextNode(
-    const EditorDOMPointType& aPoint) {
+Maybe<WSRunScanner::BoundaryData>
+WSRunScanner::BoundaryData::ScanWhiteSpaceStartInTextNode(
+    const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
 
@@ -866,98 +870,105 @@ bool WSRunScanner::InitializeRangeStartWithTextNode(
     }
 
     if (ch == HTMLEditUtils::kNBSP) {
-      mNBSPData.NotifyNBSP(
-          EditorDOMPointInText(aPoint.ContainerAsText(), i - 1),
-          NoBreakingSpaceData::Scanning::Backward);
+      if (aNBSPData) {
+        aNBSPData->NotifyNBSP(
+            EditorDOMPointInText(aPoint.ContainerAsText(), i - 1),
+            NoBreakingSpaceData::Scanning::Backward);
+      }
       continue;
     }
 
-    mStart = BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                          *aPoint.ContainerAsText(), WSType::NormalText);
-    return true;
+    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
+                             *aPoint.ContainerAsText(), WSType::NormalText));
   }
 
-  return false;
+  return Nothing();
 }
 
+// static
 template <typename EditorDOMPointType>
-void WSRunScanner::InitializeRangeStart(
+WSRunScanner::BoundaryData WSRunScanner::BoundaryData::ScanWhiteSpaceStartFrom(
     const EditorDOMPointType& aPoint,
-    const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
+    const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
+    const Element* aEditingHost, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   // first look backwards to find preceding ws nodes
   if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer()) {
-    if (InitializeRangeStartWithTextNode(aPoint)) {
-      return;
+    Maybe<BoundaryData> startInTextNode =
+        BoundaryData::ScanWhiteSpaceStartInTextNode(aPoint, aNBSPData);
+    if (startInTextNode.isSome()) {
+      return startInTextNode.ref();
     }
     // The text node does not have visible character, let's keep scanning
     // preceding nodes.
-    InitializeRangeStart(EditorDOMPoint(aPoint.ContainerAsText(), 0),
-                         aEditableBlockParentOrTopmostEditableInlineContent);
-    return;
+    return BoundaryData::ScanWhiteSpaceStartFrom(
+        EditorDOMPoint(aPoint.ContainerAsText(), 0),
+        aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
+        aNBSPData);
   }
 
   // we haven't found the start of ws yet.  Keep looking
   nsIContent* previousLeafContentOrBlock =
       HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
           aPoint, aEditableBlockParentOrTopmostEditableInlineContent,
-          mEditingHost);
+          aEditingHost);
   if (!previousLeafContentOrBlock) {
     // no prior node means we exhausted
     // aEditableBlockParentOrTopmostEditableInlineContent
-    // mStart.mReasonContent can be either a block element or any non-editable
+    // mReasonContent can be either a block element or any non-editable
     // content in this case.
-    mStart =
-        BoundaryData(aPoint,
-                     const_cast<nsIContent&>(
-                         aEditableBlockParentOrTopmostEditableInlineContent),
-                     WSType::CurrentBlockBoundary);
-    return;
+    return BoundaryData(aPoint,
+                        const_cast<nsIContent&>(
+                            aEditableBlockParentOrTopmostEditableInlineContent),
+                        WSType::CurrentBlockBoundary);
   }
 
   if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
-    mStart = BoundaryData(aPoint, *previousLeafContentOrBlock,
-                          WSType::OtherBlockBoundary);
-    return;
+    return BoundaryData(aPoint, *previousLeafContentOrBlock,
+                        WSType::OtherBlockBoundary);
   }
 
   if (!previousLeafContentOrBlock->IsText() ||
       !previousLeafContentOrBlock->IsEditable()) {
     // it's a break or a special node, like <img>, that is not a block and
     // not a break but still serves as a terminator to ws runs.
-    mStart =
-        BoundaryData(aPoint, *previousLeafContentOrBlock,
-                     previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
-                         ? WSType::BRElement
-                         : WSType::SpecialContent);
-    return;
+    return BoundaryData(aPoint, *previousLeafContentOrBlock,
+                        previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
+                            ? WSType::BRElement
+                            : WSType::SpecialContent);
   }
 
   if (!previousLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
     // Zero length text node. Set start point to it
     // so we can get past it!
-    InitializeRangeStart(
+    return BoundaryData::ScanWhiteSpaceStartFrom(
         EditorDOMPointInText(previousLeafContentOrBlock->AsText(), 0),
-        aEditableBlockParentOrTopmostEditableInlineContent);
-    return;
+        aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
+        aNBSPData);
   }
 
-  if (InitializeRangeStartWithTextNode(EditorDOMPointInText::AtEndOf(
-          *previousLeafContentOrBlock->AsText()))) {
-    return;
+  Maybe<BoundaryData> startInTextNode =
+      BoundaryData::ScanWhiteSpaceStartInTextNode(
+          EditorDOMPointInText::AtEndOf(*previousLeafContentOrBlock->AsText()),
+          aNBSPData);
+  if (startInTextNode.isSome()) {
+    return startInTextNode.ref();
   }
 
   // The text node does not have visible character, let's keep scanning
   // preceding nodes.
-  InitializeRangeStart(
+  return BoundaryData::ScanWhiteSpaceStartFrom(
       EditorDOMPointInText(previousLeafContentOrBlock->AsText(), 0),
-      aEditableBlockParentOrTopmostEditableInlineContent);
+      aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
+      aNBSPData);
 }
 
+// static
 template <typename EditorDOMPointType>
-bool WSRunScanner::InitializeRangeEndWithTextNode(
-    const EditorDOMPointType& aPoint) {
+Maybe<WSRunScanner::BoundaryData>
+WSRunScanner::BoundaryData::ScanWhiteSpaceEndInTextNode(
+    const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
 
@@ -969,58 +980,62 @@ bool WSRunScanner::InitializeRangeEndWithTextNode(
     }
 
     if (ch == HTMLEditUtils::kNBSP) {
-      mNBSPData.NotifyNBSP(EditorDOMPointInText(aPoint.ContainerAsText(), i),
-                           NoBreakingSpaceData::Scanning::Forward);
+      if (aNBSPData) {
+        aNBSPData->NotifyNBSP(EditorDOMPointInText(aPoint.ContainerAsText(), i),
+                              NoBreakingSpaceData::Scanning::Forward);
+      }
       continue;
     }
 
-    mEnd = BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                        *aPoint.ContainerAsText(), WSType::NormalText);
-    return true;
+    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
+                             *aPoint.ContainerAsText(), WSType::NormalText));
   }
 
-  return false;
+  return Nothing();
 }
 
+// static
 template <typename EditorDOMPointType>
-void WSRunScanner::InitializeRangeEnd(
+WSRunScanner::BoundaryData WSRunScanner::BoundaryData::ScanWhiteSpaceEndFrom(
     const EditorDOMPointType& aPoint,
-    const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
+    const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
+    const Element* aEditingHost, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer()) {
-    if (InitializeRangeEndWithTextNode(aPoint)) {
-      return;
+    Maybe<BoundaryData> endInTextNode =
+        BoundaryData::ScanWhiteSpaceEndInTextNode(aPoint, aNBSPData);
+    if (endInTextNode.isSome()) {
+      return endInTextNode.ref();
     }
     // The text node does not have visible character, let's keep scanning
     // following nodes.
-    InitializeRangeEnd(EditorDOMPointInText::AtEndOf(*aPoint.ContainerAsText()),
-                       aEditableBlockParentOrTopmostEditableInlineContent);
-    return;
+    return BoundaryData::ScanWhiteSpaceEndFrom(
+        EditorDOMPointInText::AtEndOf(*aPoint.ContainerAsText()),
+        aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
+        aNBSPData);
   }
 
   // we haven't found the end of ws yet.  Keep looking
   nsIContent* nextLeafContentOrBlock =
       HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
           aPoint, aEditableBlockParentOrTopmostEditableInlineContent,
-          mEditingHost);
+          aEditingHost);
   if (!nextLeafContentOrBlock) {
     // no next node means we exhausted
     // aEditableBlockParentOrTopmostEditableInlineContent
-    // mEnd.mReasonContent can be either a block element or any non-editable
+    // mReasonContent can be either a block element or any non-editable
     // content in this case.
-    mEnd = BoundaryData(aPoint,
+    return BoundaryData(aPoint,
                         const_cast<nsIContent&>(
                             aEditableBlockParentOrTopmostEditableInlineContent),
                         WSType::CurrentBlockBoundary);
-    return;
   }
 
   if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
     // we encountered a new block.  therefore no more ws.
-    mEnd = BoundaryData(aPoint, *nextLeafContentOrBlock,
+    return BoundaryData(aPoint, *nextLeafContentOrBlock,
                         WSType::OtherBlockBoundary);
-    return;
   }
 
   if (!nextLeafContentOrBlock->IsText() ||
@@ -1028,32 +1043,33 @@ void WSRunScanner::InitializeRangeEnd(
     // we encountered a break or a special node, like <img>,
     // that is not a block and not a break but still
     // serves as a terminator to ws runs.
-    mEnd = BoundaryData(aPoint, *nextLeafContentOrBlock,
+    return BoundaryData(aPoint, *nextLeafContentOrBlock,
                         nextLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
                             ? WSType::BRElement
                             : WSType::SpecialContent);
-    return;
   }
 
   if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
     // Zero length text node. Set end point to it
     // so we can get past it!
-    InitializeRangeEnd(
+    return BoundaryData::ScanWhiteSpaceEndFrom(
         EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0),
-        aEditableBlockParentOrTopmostEditableInlineContent);
-    return;
+        aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
+        aNBSPData);
   }
 
-  if (InitializeRangeEndWithTextNode(
-          EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0))) {
-    return;
+  Maybe<BoundaryData> endInTextNode = BoundaryData::ScanWhiteSpaceEndInTextNode(
+      EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0), aNBSPData);
+  if (endInTextNode.isSome()) {
+    return endInTextNode.ref();
   }
 
   // The text node does not have visible character, let's keep scanning
   // following nodes.
-  InitializeRangeEnd(
+  return BoundaryData::ScanWhiteSpaceEndFrom(
       EditorDOMPointInText::AtEndOf(*nextLeafContentOrBlock->AsText()),
-      aEditableBlockParentOrTopmostEditableInlineContent);
+      aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
+      aNBSPData);
 }
 
 EditorDOMRange

@@ -589,8 +589,50 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
 
+  class NoBreakingSpaceData;
+
   class MOZ_STACK_CLASS BoundaryData final {
    public:
+    using NoBreakingSpaceData = WSRunScanner::NoBreakingSpaceData;
+
+    /**
+     * ScanWhiteSpaceStartFrom() returns start boundary data of white-spaces
+     * containing aPoint.  When aPoint is in a text node and points a
+     * non-white-space character, this returns the data at aPoint.
+     *
+     * @param aPoint            Scan start point.
+     * @param aEditableBlockParentOrTopmostEditableInlineContent
+     *                          Nearest editable block parent element of aPoint
+     *                          if there is.  Otherwise, inline editing host.
+     * @param aEditingHost      Active editing host.
+     * @param aNBSPData         Optional.  If set, this recodes first and last
+     *                          NBSP positions.
+     */
+    template <typename EditorDOMPointType>
+    static BoundaryData ScanWhiteSpaceStartFrom(
+        const EditorDOMPointType& aPoint,
+        const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
+        const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+
+    /**
+     * ScanWhiteSpaceEndFrom() returns end boundary data of white-spaces
+     * containing aPoint.  When aPoint is in a text node and points a
+     * non-white-space character, this returns the data at aPoint.
+     *
+     * @param aPoint            Scan start point.
+     * @param aEditableBlockParentOrTopmostEditableInlineContent
+     *                          Nearest editable block parent element of aPoint
+     *                          if there is.  Otherwise, inline editing host.
+     * @param aEditingHost      Active editing host.
+     * @param aNBSPData         Optional.  If set, this recodes first and last
+     *                          NBSP positions.
+     */
+    template <typename EditorDOMPointType>
+    static BoundaryData ScanWhiteSpaceEndFrom(
+        const EditorDOMPointType& aPoint,
+        const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
+        const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+
     BoundaryData() : mReason(WSType::NotInitialized) {}
     template <typename EditorDOMPointType>
     BoundaryData(const EditorDOMPointType& aPoint, nsIContent& aReasonContent,
@@ -630,6 +672,17 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
    private:
+    /**
+     * Helper methods of ScanWhiteSpaceStartFrom() and
+     * ScanWhiteSpaceEndFrom() when they need to scan in a text node.
+     */
+    template <typename EditorDOMPointType>
+    static Maybe<WSRunScanner::BoundaryData> ScanWhiteSpaceStartInTextNode(
+        const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
+    template <typename EditorDOMPointType>
+    static Maybe<WSRunScanner::BoundaryData> ScanWhiteSpaceEndInTextNode(
+        const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
+
     nsCOMPtr<nsIContent> mReasonContent;
     EditorDOMPoint mPoint;
     // Must be one of WSType::NotInitialized, WSType::NormalText,
@@ -919,19 +972,6 @@ class MOZ_STACK_CLASS WSRunScanner {
     //     behavior for now.
     bool mIsPreformatted;
   };
-
-  template <typename EditorDOMPointType>
-  void InitializeRangeStart(
-      const EditorDOMPointType& aPoint,
-      const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent);
-  template <typename EditorDOMPointType>
-  void InitializeRangeEnd(
-      const EditorDOMPointType& aPoint,
-      const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent);
-  template <typename EditorDOMPointType>
-  bool InitializeRangeStartWithTextNode(const EditorDOMPointType& aPoint);
-  template <typename EditorDOMPointType>
-  bool InitializeRangeEndWithTextNode(const EditorDOMPointType& aPoint);
 
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;
