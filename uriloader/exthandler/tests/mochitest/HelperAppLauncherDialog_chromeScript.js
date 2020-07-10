@@ -1,5 +1,5 @@
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 
 const HELPERAPP_DIALOG_CONTRACT = "@mozilla.org/helperapplauncherdialog;1";
@@ -24,7 +24,7 @@ registrar.registerFactory(
   FAKE_CID,
   "",
   HELPERAPP_DIALOG_CONTRACT,
-  XPCOMUtils._getFactory(HelperAppLauncherDialog)
+  ComponentUtils._getFactory(HelperAppLauncherDialog)
 );
 
 addMessageListener("unregister", function() {
