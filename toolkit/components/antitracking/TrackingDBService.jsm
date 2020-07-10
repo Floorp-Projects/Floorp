@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -121,7 +124,7 @@ this.TrackingDBService = function() {
 TrackingDBService.prototype = {
   classID: Components.ID("{3c9c43b6-09eb-4ed2-9b87-e29f4221eef0}"),
   QueryInterface: ChromeUtils.generateQI(["nsITrackingDBService"]),
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(TrackingDBService),
+  _xpcom_factory: ComponentUtils.generateSingletonFactory(TrackingDBService),
   // This is the connection to the database, opened in _initialize and closed on _shutdown.
   _db: null,
   waitingTasks: new Set(),

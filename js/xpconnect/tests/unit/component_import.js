@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
 
 function FooComponent() {
   this.wrappedJSObject = this;
 }
 FooComponent.prototype =
 {
-  // nsIClassInfo + information for XPCOM registration code in XPCOMUtils.jsm
+  // nsIClassInfo + information for XPCOM registration code in ComponentUtils.jsm
   classDescription:  "Foo Component",
   classID:           Components.ID("{6b933fe6-6eba-4622-ac86-e4f654f1b474}"),
   contractID:       "@mozilla.org/tests/module-importer;1",
@@ -51,7 +51,8 @@ function BarComponent() {
 }
 BarComponent.prototype =
 {
-  // nsIClassInfo + information for XPCOM registration code in XPCOMUtils.jsm
+  // nsIClassInfo + information for XPCOM registration code in
+  // ComponentUtils.jsm
   classDescription: "Module importer test 2",
   classID: Components.ID("{708a896a-b48d-4bff-906e-fc2fd134b296}"),
   contractID: "@mozilla.org/tests/module-importer;2",
@@ -80,4 +81,4 @@ const Assert = {
 };
 
 var gComponentsArray = [FooComponent, BarComponent];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);
+this.NSGetFactory = ComponentUtils.generateNSGetFactory(gComponentsArray);

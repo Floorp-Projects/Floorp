@@ -5,8 +5,8 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 
 function TestInterfaceJSMaplike() {}
@@ -39,4 +39,6 @@ TestInterfaceJSMaplike.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJSMaplike]);
+this.NSGetFactory = ComponentUtils.generateNSGetFactory([
+  TestInterfaceJSMaplike,
+]);

@@ -7,7 +7,7 @@ function run_test() {
   var scope = {};
   var exports = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
   Assert.equal(typeof(scope.XPCOMUtils), "object");
-  Assert.equal(typeof(scope.XPCOMUtils.generateNSGetFactory), "function");
+  Assert.equal(typeof(scope.XPCOMUtils.defineLazyGetter), "function");
 
   equal(scope.XPCOMUtils, exports.XPCOMUtils);
   deepEqual(Object.keys(scope), ["XPCOMUtils"]);
@@ -23,20 +23,20 @@ function run_test() {
   Assert.equal(typeof(XPCOMUtils), "undefined");
   Assert.equal(typeof(module), "object");
   Assert.equal(typeof(module.XPCOMUtils), "object");
-  Assert.equal(typeof(module.XPCOMUtils.generateNSGetFactory), "function");
+  Assert.equal(typeof(module.XPCOMUtils.defineLazyGetter), "function");
   Assert.ok(scope.XPCOMUtils == module.XPCOMUtils);
 
   // import symbols to our global object
   Assert.equal(typeof(Cu.import), "function");
   ({XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm"));
   Assert.equal(typeof(XPCOMUtils), "object");
-  Assert.equal(typeof(XPCOMUtils.generateNSGetFactory), "function");
+  Assert.equal(typeof(XPCOMUtils.defineLazyGetter), "function");
 
   // try on a new object
   var scope2 = {};
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
   Assert.equal(typeof(scope2.XPCOMUtils), "object");
-  Assert.equal(typeof(scope2.XPCOMUtils.generateNSGetFactory), "function");
+  Assert.equal(typeof(scope2.XPCOMUtils.defineLazyGetter), "function");
 
   Assert.ok(scope2.XPCOMUtils == scope.XPCOMUtils);
 

@@ -267,7 +267,7 @@ var BlocklistPrompt = {
   QueryInterface: ChromeUtils.generateQI([]),
 };
 
-let factory = XPCOMUtils.generateSingletonFactory(function() {
+let factory = ComponentUtils.generateSingletonFactory(function() {
   return BlocklistPrompt;
 });
 Cm.registerFactory(

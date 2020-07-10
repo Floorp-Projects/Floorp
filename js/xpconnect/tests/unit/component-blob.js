@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
 Cu.importGlobalProperties(['Blob', 'File']);
 
 const Assert = {
@@ -51,7 +51,8 @@ BlobComponent.prototype =
     return true;
   },
 
-  // nsIClassInfo + information for XPCOM registration code in XPCOMUtils.jsm
+  // nsIClassInfo + information for XPCOM registration code in
+  // ComponentUtils.jsm
   classDescription: "Blob in components scope code",
   classID: Components.ID("{06215993-a3c2-41e3-bdfd-0a3a2cc0b65c}"),
   contractID: "@mozilla.org/tests/component-blob;1",
@@ -70,4 +71,4 @@ BlobComponent.prototype =
 };
 
 var gComponentsArray = [BlobComponent];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);
+this.NSGetFactory = ComponentUtils.generateNSGetFactory(gComponentsArray);

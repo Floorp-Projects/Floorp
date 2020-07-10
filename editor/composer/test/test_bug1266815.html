@@ -13,7 +13,7 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 const Cu = SpecialPowers.Cu;
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
 
 const HELPERAPP_DIALOG_CID =
         SpecialPowers.wrap(SpecialPowers.Components)
@@ -42,7 +42,7 @@ var helperAppDlgPromise = new Promise(function(resolve) {
     QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog"]),
   };
 
-  mockHelperAppService = XPCOMUtils._getFactory(HelperAppLauncherDialog);
+  mockHelperAppService = ComponentUtils._getFactory(HelperAppLauncherDialog);
   registrar.registerFactory(MOCK_HELPERAPP_DIALOG_CID, "",
                             HELPERAPP_DIALOG_CONTRACT_ID,
                             mockHelperAppService);

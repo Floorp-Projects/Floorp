@@ -3,8 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
 );
 Cu.importGlobalProperties(["indexedDB"]);
 
@@ -39,4 +39,6 @@ GlobalObjectsComponent.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([GlobalObjectsComponent]);
+this.NSGetFactory = ComponentUtils.generateNSGetFactory([
+  GlobalObjectsComponent,
+]);

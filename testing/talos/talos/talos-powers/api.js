@@ -4,6 +4,9 @@
 
 /* globals ExtensionAPI */
 
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -40,7 +43,7 @@ function TalosPowersService() {
 }
 
 TalosPowersService.prototype = {
-  factory: XPCOMUtils._getFactory(TalosPowersService),
+  factory: ComponentUtils._getFactory(TalosPowersService),
   classDescription: "Talos Powers",
   classID: Components.ID("{f5d53443-d58d-4a2f-8df0-98525d4f91ad}"),
   contractID: "@mozilla.org/talos/talos-powers-service;1",
