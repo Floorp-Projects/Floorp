@@ -256,8 +256,8 @@ class WebAPI extends APIObject {
       // Provide the host from which the amWebAPI is being called
       // (so that we can detect if the API is being used from the disco pane,
       // AMO, testpilot or another unknown webpage).
-      sourceHost: triggeringPrincipal.URI && triggeringPrincipal.URI.host,
-      sourceURL: triggeringPrincipal.URI && triggeringPrincipal.URI.spec,
+      sourceHost: this.window.location?.host,
+      sourceURL: this.window.location?.href,
     };
     return this._apiTask("createInstall", [installOptions], installInfo => {
       if (!installInfo) {
