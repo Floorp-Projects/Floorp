@@ -922,7 +922,7 @@
 
 - name: MathHypot2NumberResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     first: NumberId
@@ -930,7 +930,7 @@
 
 - name: MathHypot3NumberResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     first: NumberId
@@ -939,7 +939,7 @@
 
 - name: MathHypot4NumberResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     first: NumberId
