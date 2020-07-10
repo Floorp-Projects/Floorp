@@ -27,6 +27,8 @@ static constexpr Register ExtractTemp1{Registers::invalid_reg};
 
 static constexpr FloatRegister FloatReg0 = {FloatRegisters::invalid_reg};
 static constexpr FloatRegister FloatReg1 = {FloatRegisters::invalid_reg};
+static constexpr FloatRegister FloatReg2 = {FloatRegisters::invalid_reg};
+static constexpr FloatRegister FloatReg3 = {FloatRegisters::invalid_reg};
 
 }  // namespace jit
 }  // namespace js

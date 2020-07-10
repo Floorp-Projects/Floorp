@@ -54,6 +54,10 @@ static constexpr FloatRegister FloatReg0 = {FloatRegisters::d0,
                                             FloatRegisters::Double};
 static constexpr FloatRegister FloatReg1 = {FloatRegisters::d1,
                                             FloatRegisters::Double};
+static constexpr FloatRegister FloatReg2 = {FloatRegisters::d2,
+                                            FloatRegisters::Double};
+static constexpr FloatRegister FloatReg3 = {FloatRegisters::d3,
+                                            FloatRegisters::Double};
 
 }  // namespace jit
 }  // namespace js
