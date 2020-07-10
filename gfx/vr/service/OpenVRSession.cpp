@@ -878,7 +878,6 @@ void OpenVRSession::UpdateHeadsetPose(VRSystemState& aState) {
 
     gfx::Quaternion rot;
     rot.SetFromRotationMatrix(m);
-    rot.Invert();
 
     aState.sensorState.flags = (VRDisplayCapabilityFlags)(
         (int)aState.sensorState.flags |
@@ -1100,7 +1099,6 @@ void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
 
         gfx::Quaternion rot;
         rot.SetFromRotationMatrix(m);
-        rot.Invert();
 
         controllerState.pose.orientation[0] = rot.x;
         controllerState.pose.orientation[1] = rot.y;
@@ -1132,7 +1130,6 @@ void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
         rayMtx.RotateX(kPointerAngleDegrees);
         gfx::Quaternion rayRot;
         rayRot.SetFromRotationMatrix(rayMtx);
-        rayRot.Invert();
 
         controllerState.targetRayPose = controllerState.pose;
         controllerState.targetRayPose.orientation[0] = rayRot.x;
