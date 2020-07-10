@@ -900,37 +900,37 @@ class MOZ_STACK_CLASS WSRunScanner {
       // white-space, it may be collapsed even if it won't be end of line.
       // Note that WSFragment for visible white-space is always not marked
       // as start nor end of line.
-      Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
-          CreateWSFragmentForVisibleAndMiddleOfLine();
-      if (visibleWSFragmentInMiddleOfLine.isNothing()) {
+      Maybe<WSFragment> visibleWhiteSpaces =
+          CreateWSFragmentForVisibleWhiteSpaces();
+      if (visibleWhiteSpaces.isNothing()) {
         return false;
       }
       // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
-      if (!visibleWSFragmentInMiddleOfLine.ref().StartPoint().IsSet()) {
+      if (!visibleWhiteSpaces.ref().StartPoint().IsSet()) {
         return true;
       }
-      if (!visibleWSFragmentInMiddleOfLine.ref().StartPoint().EqualsOrIsBefore(
-              aPoint)) {
+      if (!visibleWhiteSpaces.ref().StartPoint().EqualsOrIsBefore(aPoint)) {
         return false;
       }
       // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
-      if (visibleWSFragmentInMiddleOfLine.ref().EndsByTrailingWhiteSpaces()) {
+      if (visibleWhiteSpaces.ref().EndsByTrailingWhiteSpaces()) {
         return true;
       }
       // XXX Must be a bug.  This claims that the caller needs additional
       // check even when there is no white-spaces.
-      if (visibleWSFragmentInMiddleOfLine.ref().StartPoint() ==
-          visibleWSFragmentInMiddleOfLine.ref().EndPoint()) {
+      if (visibleWhiteSpaces.ref().StartPoint() ==
+          visibleWhiteSpaces.ref().EndPoint()) {
         return true;
       }
-      return aPoint.IsBefore(visibleWSFragmentInMiddleOfLine.ref().EndPoint());
+      return aPoint.IsBefore(visibleWhiteSpaces.ref().EndPoint());
     }
 
     /**
-     * CreateWSFragmentForVisibleAndMiddleOfLine() creates WSFragment whose
-     * `IsVisibleAndMiddleOfHardLine()` returns true.
+     * CreateWSFragmentForVisibleWhiteSpaces() creates WSFragment whose
+     * `IsVisible()` returns true.  That is one or more white-spaces which
+     * are visible.
      */
-    Maybe<WSFragment> CreateWSFragmentForVisibleAndMiddleOfLine() const;
+    Maybe<WSFragment> CreateWSFragmentForVisibleWhiteSpaces() const;
 
    private:
     /**
