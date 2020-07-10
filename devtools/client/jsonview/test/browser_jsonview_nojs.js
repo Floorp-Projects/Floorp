@@ -15,10 +15,11 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL, { appReadyState: "uninitialized" });
 
   info("Checking visible text contents.");
-  const { text } = await executeInContent(
-    "Test:JsonView:GetElementVisibleText",
-    { selector: "html" }
-  );
+
+  const text = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const element = content.document.querySelector("html");
+    return element ? element.innerText : null;
+  });
   is(text, "[1,2,3]", "The raw source should be visible.");
 
   Services.prefs.setBoolPref("javascript.enabled", oldPref);
