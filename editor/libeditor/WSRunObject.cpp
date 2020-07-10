@@ -1396,6 +1396,34 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
     return NS_OK;
   }
 
+  TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
+  const Maybe<const WSFragment>
+      nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart =
+          beforeRun && !textFragmentDataAtStart.IsPreformatted()
+              ? textFragmentDataAtStart
+                    .CreateWSFragmentForVisibleAndMiddleOfLine()
+              : Nothing();
+  const PointPosition
+      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
+          nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart.isSome()
+              ? nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart.ref()
+                    .ComparePoint(mScanStartPoint)
+              : PointPosition::NotInSameDOMTree;
+  TextFragmentData textFragmentDataAtEnd(aEndObject->mStart, aEndObject->mEnd,
+                                         aEndObject->mNBSPData,
+                                         aEndObject->mPRE);
+  const Maybe<const WSFragment>
+      nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd =
+          afterRun && !textFragmentDataAtEnd.IsPreformatted()
+              ? textFragmentDataAtEnd
+                    .CreateWSFragmentForVisibleAndMiddleOfLine()
+              : Nothing();
+  const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
+      nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd.isSome()
+          ? nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd.ref()
+                .ComparePoint(aEndObject->mScanStartPoint)
+          : PointPosition::NotInSameDOMTree;
+
   if (afterRun) {
     // trim after run of any leading ws
     if (afterRun->IsStartOfHardLine()) {
@@ -1411,8 +1439,13 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
         return rv;
       }
     }
-    // adjust normal ws in afterRun if needed
-    else if (afterRun->IsVisibleAndMiddleOfHardLine() && !aEndObject->mPRE) {
+    // If end of the deleting range is followed by visible white-spaces which
+    // is not preformatted, we might need to replace the following ASCII
+    // white-spaces with an NBSP.
+    else if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
+                 PointPosition::StartOfFragment ||
+             pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
+                 PointPosition::MiddleOfFragment) {
       if ((beforeRun && beforeRun->IsStartOfHardLine()) ||
           (!beforeRun && StartsFromHardLineBreak())) {
         // make sure leading char of following ws is an nbsp, so that it will
@@ -1460,7 +1493,13 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
     return rv;
   }
 
-  if (beforeRun->IsVisibleAndMiddleOfHardLine() && !mPRE) {
+  // If start of the deleting range follows visible white-spaces which is not
+  // preformatted, we might need to replace previous ASCII white-spaces with
+  // an NBSP.
+  if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
+          PointPosition::MiddleOfFragment ||
+      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
+          PointPosition::EndOfFragment) {
     if ((afterRun && (afterRun->IsEndOfHardLine() || afterRun->IsVisible())) ||
         (!afterRun && aEndObject->EndsByBlockBoundary())) {
       // make sure trailing char of starting ws is an nbsp, so that it will show
