@@ -60,18 +60,9 @@ class MOZ_STACK_CLASS JS_FRIEND_API AutoStableStringChars final {
   enum State { Uninitialized, Latin1, TwoByte };
   State state_;
 
-  /*
-   * The non-deduplicatable bit was set to prevent the string's chars from
-   * being duplicated to another string and the original freed. This bit will
-   * be cleared upon destruction if it was set by this instance.
-   */
-  bool preventedDeduplication_;
-
  public:
   explicit AutoStableStringChars(JSContext* cx)
-      : s_(cx), state_(Uninitialized), preventedDeduplication_(false) {}
-
-  ~AutoStableStringChars();
+      : s_(cx), state_(Uninitialized) {}
 
   MOZ_MUST_USE bool init(JSContext* cx, JSString* s);
 
