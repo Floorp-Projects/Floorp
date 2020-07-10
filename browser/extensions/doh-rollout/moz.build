@@ -9,29 +9,8 @@ DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 
 
 FINAL_TARGET_FILES.features['doh-rollout@mozilla.org'] += [
-  'background.js',
-  'heuristics.js',
   'manifest.json'
 ]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["heuristics"] += [
-  'experiments/heuristics/api.js',
-  'experiments/heuristics/schema.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["preferences"] += [
-  'experiments/preferences/api.js',
-  'experiments/preferences/schema.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["trrselect"] += [
-  'experiments/trrselect/api.js',
-  'experiments/trrselect/schema.json'
-]
-
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
-
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Security')

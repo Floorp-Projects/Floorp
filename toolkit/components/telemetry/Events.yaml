@@ -313,7 +313,7 @@ exp_import:
 downloads:
   added:
     description: >
-      Sent when downloading a new file. Possible values are in contained in DownloadsCommon::kFileExtensions. 
+      Sent when downloading a new file. Possible values are in contained in DownloadsCommon::kFileExtensions.
       All other downloads not in the listare marked as other.
     objects: ["fileExtension"]
     bug_numbers: [1627676]
@@ -2047,6 +2047,69 @@ pictureinpicture:
       - 1560590
     expiry_version: "86"
     release_channel_collection: opt-out
+
+security.doh.heuristics:
+  evaluate:
+    methods: ["evaluate"]
+    objects: ["heuristics"]
+    bug_numbers:
+      - 1573840
+      - 1631609
+      - 1603779
+    description: >
+      Results of DoH heuristics at startup and after network changes.
+    expiry_version: never
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - nhnt11@mozilla.com
+      - ddamjanovic@mozilla.com
+      - seceng-telemetry@mozilla.com
+      - necko@mozilla.com
+    products:
+      - firefox
+    extra_keys:
+      google: Google safe search result
+      youtube: YouTube safe search result
+      zscalerCanary: ZScaler canary result
+      canary: Global canary result
+      modifiedRoots: Whether enterprise roots were enabled
+      browserParent: Whether OS parental controls were detected
+      thirdPartyRoots: Whether third party roots were installed
+      policy: Enterprise policy presence - no policy/with DoH/without DoH.
+      steeredProvider: Whether we detected a steering provider
+      evaluateReason: The reason for running heuristics - startup or netchange
+  state:
+    methods: ["state"]
+    objects: [
+      "enabled",
+      "disabled",
+      "manuallyDisabled",
+      "policyDisabled",
+      "uninstalled",
+      "UIOk",
+      "UIDisabled",
+      "rollback",
+      "shutdown",
+    ]
+    bug_numbers:
+      - 1573840
+      - 1631609
+      - 1603779
+    description: >
+      Results of DoH heuristics at startup and after network changes.
+    expiry_version: never
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - nhnt11@mozilla.com
+      - ddamjanovic@mozilla.com
+      - seceng-telemetry@mozilla.com
+      - necko@mozilla.com
+    products:
+      - firefox
 
 security.doh.trrPerformance:
   resolved:

@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "DoH Roll-Out",
-  "description": "Mozilla add-on that supports the roll-out of DoH",
-  "version": "1.3.0",
+  "description": "This used to be a Mozilla add-on that supported the roll-out of DoH, but now only exists as a stub to enable migrations.",
+  "version": "2.0.0",
 
   "hidden": true,
 
@@ -10,44 +10,6 @@
     "gecko": {
       "id": "doh-rollout@mozilla.org",
       "strict_min_version": "72.0a1"
-    }
-  },
-
-  "permissions": [
-    "captivePortal",
-    "dns",
-    "networkStatus",
-    "storage"
-  ],
-
-  "background": {
-    "scripts": ["heuristics.js", "background.js"]
-  },
-
-  "experiment_apis": {
-    "preferences": {
-      "schema": "experiments/preferences/schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiments/preferences/api.js",
-        "paths": [["experiments", "preferences"]]
-      }
-    },
-    "heuristics": {
-      "schema": "experiments/heuristics/schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiments/heuristics/api.js",
-        "paths": [["experiments", "heuristics"]]
-      }
-    },
-    "trrselect": {
-      "schema": "experiments/trrselect/schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiments/trrselect/api.js",
-        "paths": [["experiments", "trrselect"]]
-      }
     }
   }
 }
