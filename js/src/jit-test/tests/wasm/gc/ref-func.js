@@ -120,15 +120,6 @@ assertErrorMessage(() => new WebAssembly.Module(
                    WebAssembly.CompileError,
                    /segments with element expressions can only contain references/);
 
-// declared element segment with elemexpr can carry type anyref, but this must be rejected.
-
-assertErrorMessage(() => new WebAssembly.Module(
-    moduleWithSections([generalElemSection([{ flag: DeclaredElemExpr,
-                                              typeCode: AnyrefCode,
-                                              elems: [] }])])),
-                   WebAssembly.CompileError,
-                   /declared segment's element type must be subtype of funcref/);
-
 // Test case for bug 1596026: when taking the ref.func of an imported function,
 // the value obtained should not be the JS function.  This would assert (even in
 // a release build), so the test is merely that the code runs.
