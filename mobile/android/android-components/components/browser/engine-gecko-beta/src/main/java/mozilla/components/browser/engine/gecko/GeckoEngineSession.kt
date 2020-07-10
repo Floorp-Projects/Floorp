@@ -153,6 +153,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.goToHistoryIndex]
+     */
+    override fun goToHistoryIndex(index: Int) {
+        geckoSession.gotoHistoryIndex(index)
+    }
+
+    /**
      * See [EngineSession.saveState]
      */
     override fun saveState(): EngineSessionState {

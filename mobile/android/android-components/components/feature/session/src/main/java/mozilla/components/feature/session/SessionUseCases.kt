@@ -176,6 +176,26 @@ class SessionUseCases(
         }
     }
 
+    /**
+     * Use case to jump to an arbitrary history index in a session's backstack.
+     */
+    class GoToHistoryIndexUseCase internal constructor(
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Navigates to a specific index in the [HistoryState] of the given session.
+         * Invalid index values will be ignored.
+         *
+         * @param index the index in the session's [HistoryState] to navigate to
+         * @param session the session whose [HistoryState] is being accessed
+         */
+        operator fun invoke(index: Int, session: Session? = sessionManager.selectedSession) {
+            if (session != null) {
+                sessionManager.getOrCreateEngineSession(session).goToHistoryIndex(index)
+            }
+        }
+    }
+
     class RequestDesktopSiteUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
@@ -267,6 +287,7 @@ class SessionUseCases(
     val stopLoading: StopLoadingUseCase by lazy { StopLoadingUseCase(sessionManager) }
     val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager) }
     val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager) }
+    val goToHistoryIndex: GoToHistoryIndexUseCase by lazy { GoToHistoryIndexUseCase(sessionManager) }
     val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(sessionManager) }
     val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(sessionManager) }
     val clearData: ClearDataUseCase by lazy { ClearDataUseCase(sessionManager) }

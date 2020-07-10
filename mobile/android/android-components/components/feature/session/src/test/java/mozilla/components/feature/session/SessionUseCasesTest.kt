@@ -134,6 +134,25 @@ class SessionUseCasesTest {
     }
 
     @Test
+    fun goToHistoryIndex() {
+        val engineSession = mock<EngineSession>()
+        val session = mock<Session>()
+
+        useCases.goToHistoryIndex(session = null, index = 0)
+        verify(engineSession, never()).goToHistoryIndex(0)
+        verify(selectedEngineSession, never()).goToHistoryIndex(0)
+
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.goToHistoryIndex(session = session, index = 0)
+        verify(engineSession).goToHistoryIndex(0)
+
+        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.goToHistoryIndex(index = 0)
+        verify(selectedEngineSession).goToHistoryIndex(0)
+    }
+
+    @Test
     fun requestDesktopSite() {
         val engineSession = mock<EngineSession>()
         val session = mock<Session>()

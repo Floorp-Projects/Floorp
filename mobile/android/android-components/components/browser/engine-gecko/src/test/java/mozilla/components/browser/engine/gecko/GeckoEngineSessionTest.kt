@@ -491,6 +491,16 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun goToHistoryIndex() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        engineSession.goToHistoryIndex(0)
+
+        verify(geckoSession).gotoHistoryIndex(0)
+    }
+
+    @Test
     fun restoreState() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
@@ -2332,6 +2342,13 @@ class GeckoEngineSessionTest {
         engineSession.toggleDesktopMode(false, reload = true)
         // This is the second time in this test, so we actually want two invocations.
         verify(geckoSession, times(2)).reload()
+        fakePageLoad(false)
+
+        fakePageLoad(true)
+
+        // goToHistoryIndex(index: Int)
+        engineSession.goToHistoryIndex(0)
+        verify(geckoSession).gotoHistoryIndex(0)
         fakePageLoad(false)
 
         fakePageLoad(true)
