@@ -57,6 +57,31 @@ pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, ()> {
     Ok(modulus_value.to_vec())
 }
 
+/// Given a slice of DER bytes representing a DigestInfo, extracts the bytes of the digest.
+///
+/// DigestInfo ::= SEQUENCE {
+///   digestAlgorithm DigestAlgorithmIdentifier,
+///   digest Digest }
+///
+/// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
+///
+/// AlgorithmIdentifier  ::=  SEQUENCE  {
+///      algorithm               OBJECT IDENTIFIER,
+///      parameters              ANY DEFINED BY algorithm OPTIONAL  }
+///
+/// Digest ::= OCTET STRING
+#[cfg(target_os = "windows")]
+pub fn read_digest<'a>(digest_info: &'a [u8]) -> Result<&'a [u8], ()> {
+    let mut sequence = Sequence::new(digest_info)?;
+    let _ = sequence.read_sequence()?;
+    let digest = sequence.read_octet_string()?;
+    if !sequence.at_end() {
+        error!("read_digest: extra input");
+        return Err(());
+    }
+    Ok(digest)
+}
+
 /// Given a slice of DER bytes representing an ECDSA signature, extracts the bytes of `r` and `s`
 /// as unsigned integers. Also verifies that this consumes the entirety of the slice.
 ///   Ecdsa-Sig-Value  ::=  SEQUENCE  {
@@ -108,6 +133,9 @@ macro_rules! try_read_bytes {
 
 /// ASN.1 tag identifying an integer.
 const INTEGER: u8 = 0x02;
+/// ASN.1 tag identifying an octet string.
+#[cfg(target_os = "windows")]
+const OCTET_STRING: u8 = 0x04;
 /// ASN.1 tag identifying a sequence.
 const SEQUENCE: u8 = 0x10;
 /// ASN.1 tag modifier identifying an item as constructed.
@@ -149,6 +177,12 @@ impl<'a> Sequence<'a> {
         } else {
             Ok(bytes)
         }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn read_octet_string(&mut self) -> Result<&'a [u8], ()> {
+        let (_, _, bytes) = self.contents.read_tlv(OCTET_STRING)?;
+        Ok(bytes)
     }
 
     fn read_sequence(&mut self) -> Result<Sequence<'a>, ()> {
@@ -362,6 +396,7 @@ mod tests {
     fn empty_input_fails() {
         let empty = Vec::new();
         assert!(read_rsa_modulus(&empty).is_err());
+        #[cfg(target_os = "macos")]
         assert!(read_ec_sig_point(&empty).is_err());
         assert!(read_encoded_serial_number(&empty).is_err());
     }
@@ -370,6 +405,7 @@ mod tests {
     fn empty_sequence_fails() {
         let empty = vec![SEQUENCE | CONSTRUCTED];
         assert!(read_rsa_modulus(&empty).is_err());
+        #[cfg(target_os = "macos")]
         assert!(read_ec_sig_point(&empty).is_err());
         assert!(read_encoded_serial_number(&empty).is_err());
     }
@@ -394,6 +430,33 @@ mod tests {
             &[
                 0x02, 0x14, 0x3f, 0xed, 0x7b, 0x43, 0x47, 0x8a, 0x53, 0x42, 0x5b, 0x0d, 0x50, 0xe1,
                 0x37, 0x88, 0x2a, 0x20, 0x3f, 0x31, 0x17, 0x20
+            ]
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_read_digest() {
+        // SEQUENCE
+        //   SEQUENCE
+        //     OBJECT IDENTIFIER 2.16.840.1.101.3.4.2.1 sha-256
+        //       NULL
+        //   OCTET STRING 1A7FCDB9A5F649F954885CFE145F3E93F0D1FA72BE980CC6EC82C70E1407C7D2
+        let digest_info = [
+            0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x1, 0x65, 0x03, 0x04, 0x02,
+            0x01, 0x05, 0x00, 0x04, 0x20, 0x1a, 0x7f, 0xcd, 0xb9, 0xa5, 0xf6, 0x49, 0xf9, 0x54,
+            0x88, 0x5c, 0xfe, 0x14, 0x5f, 0x3e, 0x93, 0xf0, 0xd1, 0xfa, 0x72, 0xbe, 0x98, 0x0c,
+            0xc6, 0xec, 0x82, 0xc7, 0x0e, 0x14, 0x07, 0xc7, 0xd2,
+        ];
+        let result = read_digest(&digest_info);
+        assert!(result.is_ok());
+        let digest = result.unwrap();
+        assert_eq!(
+            digest,
+            &[
+                0x1a, 0x7f, 0xcd, 0xb9, 0xa5, 0xf6, 0x49, 0xf9, 0x54, 0x88, 0x5c, 0xfe, 0x14, 0x5f,
+                0x3e, 0x93, 0xf0, 0xd1, 0xfa, 0x72, 0xbe, 0x98, 0x0c, 0xc6, 0xec, 0x82, 0xc7, 0x0e,
+                0x14, 0x07, 0xc7, 0xd2
             ]
         );
     }
