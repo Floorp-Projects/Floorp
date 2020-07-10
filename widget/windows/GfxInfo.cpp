@@ -1946,7 +1946,25 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         !adapterVendorID.LowerCaseEqualsLiteral("0xdcba") &&
         !adapterVendorID.LowerCaseEqualsLiteral("0xabab") &&
         !adapterVendorID.LowerCaseEqualsLiteral("0xdcdc")) {
-      aFailureId = "FEATURE_FAILURE_UNKNOWN_DEVICE_VENDOR";
+      if (adapterVendorID.Equals(
+              GfxDriverInfo::GetDeviceVendor(DeviceVendor::MicrosoftHyperV),
+              nsCaseInsensitiveStringComparator) ||
+          adapterVendorID.Equals(
+              GfxDriverInfo::GetDeviceVendor(DeviceVendor::VMWare),
+              nsCaseInsensitiveStringComparator) ||
+          adapterVendorID.Equals(
+              GfxDriverInfo::GetDeviceVendor(DeviceVendor::VirtualBox),
+              nsCaseInsensitiveStringComparator)) {
+        aFailureId = "FEATURE_FAILURE_VM_VENDOR";
+      } else if (adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(
+                                            DeviceVendor::MicrosoftBasic),
+                                        nsCaseInsensitiveStringComparator)) {
+        aFailureId = "FEATURE_FAILURE_MICROSOFT_BASIC_VENDOR";
+      } else if (adapterVendorID.IsEmpty()) {
+        aFailureId = "FEATURE_FAILURE_EMPTY_DEVICE_VENDOR";
+      } else {
+        aFailureId = "FEATURE_FAILURE_UNKNOWN_DEVICE_VENDOR";
+      }
       *aStatus = FEATURE_BLOCKED_DEVICE;
       return NS_OK;
     }
