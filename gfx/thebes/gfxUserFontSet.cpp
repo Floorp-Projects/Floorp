@@ -1104,6 +1104,8 @@ bool gfxUserFontSet::UserFontCache::Entry::KeyEquals(
     if (!mPrincipal->Equals(aKey->mPrincipal)) {
       return false;
     }
+    MOZ_DIAGNOSTIC_ASSERT(mPrivate == aKey->mPrivate,
+                          "private mode should be checked by principal");
   }
 
   if (mPrivate != aKey->mPrivate) {
@@ -1260,7 +1262,7 @@ void gfxUserFontSet::UserFontCache::Entry::ReportMemory(
     }
     if (mPrincipal) {
       nsAutoCString spec;
-      mPrincipal->get()->GetAsciiSpec(spec);
+      mPrincipal->NodePrincipal()->GetAsciiSpec(spec);
       if (!spec.IsEmpty()) {
         // Include a clue as to who loaded this resource. (Note
         // that because of font entry sharing, other pages may now
@@ -1314,13 +1316,13 @@ void gfxUserFontSet::UserFontCache::Entry::Dump() {
 
   if (mPrincipal) {
     nsCOMPtr<nsIURI> principalURI;
-    rv = mPrincipal->get()->GetURI(getter_AddRefs(principalURI));
+    rv = mPrincipal->NodePrincipal()->GetURI(getter_AddRefs(principalURI));
     if (NS_SUCCEEDED(rv)) {
       principalURI->GetSpec(principalURISpec);
     }
 
     nsCOMPtr<nsIURI> domainURI;
-    mPrincipal->get()->GetDomain(getter_AddRefs(domainURI));
+    mPrincipal->NodePrincipal()->GetDomain(getter_AddRefs(domainURI));
     if (domainURI) {
       setDomain = true;
     }
