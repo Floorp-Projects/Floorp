@@ -4162,7 +4162,7 @@ JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str) {
     return false;
   }
 
-  return str->asAtom().isPinned();
+  return AtomIsPinned(cx, &str->asAtom());
 }
 
 JS_PUBLIC_API JSString* JS_AtomizeAndPinJSString(JSContext* cx,
