@@ -4936,15 +4936,21 @@ var SessionStoreInternal = {
       }
     }
 
+    let reason =
+      aOptions.restoreContentReason ?? RESTORE_TAB_CONTENT_REASON.SET_STATE;
+
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent", {
       loadArguments,
       isRemotenessUpdate,
-      reason:
-        aOptions.restoreContentReason || RESTORE_TAB_CONTENT_REASON.SET_STATE,
+      reason,
     });
 
     // Focus the tab's content area.
-    if (aTab.selected && !window.isBlankPageURL(uri)) {
+    if (
+      aTab.selected &&
+      !window.isBlankPageURL(uri) &&
+      reason !== RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE
+    ) {
       browser.focus();
     }
   },
