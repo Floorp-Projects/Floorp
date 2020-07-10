@@ -317,7 +317,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         else -> super.onCreateView(parent, name, context, attrs)
     }
 
-    private fun actionSorter(actions: Array<String>) : Array<String> {
+    @Suppress("MagicNumber")
+    // Defining the positions as constants doesn't seem super useful here.
+    private fun actionSorter(actions: Array<String>): Array<String> {
         val order = hashMapOf<String, Int>()
 
         order["org.mozilla.geckoview.COPY"] = 0
