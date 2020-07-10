@@ -54,14 +54,15 @@
     <attr name="syncedTabsSeparator" format="reference"/>
 
     <!-- Tab tray -->
-    <attr name="tabTrayItemBackground" format="reference" />
-    <attr name="tabTrayItemSelectedBackground" format="reference" />
-    <attr name="tabTrayToolbarBackground" format="reference" />
     <attr name="tabTrayItemMediaBackground" format="reference" />
     <attr name="tabTrayHeadingIcon" format="reference" />
     <attr name="tabTrayHeadingIconInactive" format="reference" />
     <attr name="tabTrayThumbnailItemBackground" format="reference" />
     <attr name="tabTrayThumbnailIcon" format="reference" />
+    <!-- Note - these are currently unused, but they are for if/when we add private UI to tabs tray -->
+    <attr name="tabTrayItemBackground" format="reference" />
+    <attr name="tabTrayItemSelectedBackground" format="reference" />
+    <attr name="tabTrayToolbarBackground" format="reference" />
 
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />

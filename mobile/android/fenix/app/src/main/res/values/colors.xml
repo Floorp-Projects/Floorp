@@ -76,7 +76,7 @@
     <color name="tab_tray_item_text_light_theme">@color/ink_80</color>
     <color name="tab_tray_item_url_light_theme">@color/dark_grey_05</color>
     <color name="tab_tray_item_background_light_theme">@color/light_grey_10</color>
-    <color name="tab_tray_item_selected_background_light_theme">@color/violet_70_12a</color>
+    <color name="tab_tray_item_selected_background_light_theme">#E5DFF4</color>
     <color name="tab_tray_toolbar_background_light_theme">@color/light_grey_10</color>
     <color name="tab_tray_item_divider_light_theme">@color/light_grey_30</color>
     <color name="tab_tray_item_media_stroke">#ffffff</color>
@@ -136,7 +136,7 @@
     <color name="tab_tray_item_text_dark_theme">@color/light_grey_05</color>
     <color name="tab_tray_item_url_dark_theme">@color/light_grey_60</color>
     <color name="tab_tray_item_background_dark_theme">@color/dark_grey_80</color>
-    <color name="tab_tray_item_selected_background_dark_theme">@color/violet_50_32a</color>
+    <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
     <color name="tab_tray_toolbar_background_dark_theme">@color/dark_grey_50</color>
     <color name="tab_tray_item_divider_dark_theme">@color/dark_grey_10</color>
     <color name="tab_tray_item_media_background_dark_theme">#9059FF</color>
@@ -190,7 +190,7 @@
     <color name="tab_tray_item_text_private_theme">@color/light_grey_05</color>
     <color name="tab_tray_item_url_private_theme">@color/light_grey_60</color>
     <color name="tab_tray_item_background_private_theme">@color/ink_90</color>
-    <color name="tab_tray_item_selected_background_private_theme">@color/violet_50_32a</color>
+    <color name="tab_tray_item_selected_background_private_theme">#422875</color>
     <color name="tab_tray_toolbar_background_private_theme">@color/ink_50</color>
     <color name="tab_tray_item_divider_private_theme">@color/dark_grey_10</color>
     <color name="tab_tray_item_media_background_private_theme">#9059FF</color>

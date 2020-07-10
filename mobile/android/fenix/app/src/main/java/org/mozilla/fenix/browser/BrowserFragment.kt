@@ -275,9 +275,4 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         ) + ContextMenuCandidate.createOpenInExternalAppCandidate(requireContext(),
             contextMenuCandidateAppLinksUseCases)
     }
-
-    companion object {
-        private const val SHARED_TRANSITION_MS = 200L
-        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
-    }
 }
