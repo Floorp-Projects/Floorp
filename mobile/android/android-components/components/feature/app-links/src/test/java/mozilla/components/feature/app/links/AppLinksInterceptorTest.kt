@@ -61,7 +61,8 @@ class AppLinksInterceptorTest {
             context = mockContext,
             interceptLinkClicks = true,
             launchInApp = { true },
-            useCases = mockUseCases
+            useCases = mockUseCases,
+            allowRedirectUrls = setOf("soundcloud.com")
         )
     }
 
@@ -72,9 +73,15 @@ class AppLinksInterceptorTest {
     }
 
     @Test
-    fun `request is intercepted by a redirect`() {
+    fun `request is intercepted by an allowed redirect`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, false, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
+    fun `request is not intercepted by a not allowed redirect`() {
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrl, false, false, true, false)
+        assertEquals(null, response)
     }
 
     @Test
