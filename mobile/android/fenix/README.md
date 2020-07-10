@@ -123,10 +123,7 @@ If you want to run **performance tests/benchmarks** in automation or locally:
 
 For additional context on these recommendations, see [the perf build variant analysis](https://docs.google.com/document/d/1aW-m0HYncTDDiRz_2x6EjcYkjBpL9SHhhYix13Vil30/edit#).
 
-Before you can install any release variants including `forPerformanceTest`, **you will need to sign them.** To do this automatically in local development, you can add the following to `<proj-root>/local.properties`:
-```sh
-autosignReleaseWithDebugKey
-```
+Before you can install any release variants including `forPerformanceTest`, **you will need to sign them:** see [Automatically signing release builds](#automatically-sign-release-builds) for details.
 
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
@@ -164,8 +161,19 @@ Steps to downgrade Java Version on Mac with Brew:
 7. Verify java-version by running ```java -version```
 
 ## local.properties helpers
-There are multiple helper flags available via `local.properties` that will help speed up local development workflow
-when working across multiple layers of the dependency stack - specifically, with android-components, geckoview or application-services.
+You can speed up local development by setting a few helper flags available in `local.properties`. Some flags will make it easy to
+work across multiple layers of the dependency stack - specifically, with android-components, geckoview or application-services.
+
+### Automatically sign release builds
+To sign your release builds with your debug key automatically, add the following to `<proj-root>/local.properties`:
+
+```sh
+autosignReleaseWithDebugKey
+```
+
+With this line, release build variants will automatically be signed with your debug key (like debug builds), allowing them to be built and installed directly through Android Studio or the command line.
+
+This is helpful when you're building release variants frequently, for example to test feature flags and or do performance analyses.
 
 ### Auto-publication workflow for android-components and application-services
 If you're making changes to these projects and want to test them in Fenix, auto-publication workflow is the fastest, most reliable
