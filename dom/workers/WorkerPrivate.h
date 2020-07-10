@@ -966,6 +966,8 @@ class WorkerPrivate : public RelativeTimeline {
 
   nsILoadInfo::CrossOriginEmbedderPolicy GetOwnerEmbedderPolicy() const;
 
+  void SetCCCollectedAnything(bool collectedAnything);
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1259,6 +1261,7 @@ class WorkerPrivate : public RelativeTimeline {
     bool mIdleGCTimerRunning;
     bool mOnLine;
     bool mJSThreadExecutionGranted;
+    bool mCCCollectedAnything;
     FlippedOnce<false> mDeletionScheduled;
   };
   ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
