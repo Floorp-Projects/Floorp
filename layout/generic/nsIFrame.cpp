@@ -8325,10 +8325,8 @@ static bool ShouldWordSelectionEatSpace(const nsPeekOffsetStruct& aPos) {
 }
 
 nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
-  if (!aPos) return NS_ERROR_NULL_POINTER;
+  MOZ_ASSERT(aPos && !HasAnyStateBits(NS_FRAME_IS_DIRTY));
   nsresult result = NS_ERROR_FAILURE;
-
-  if (mState & NS_FRAME_IS_DIRTY) return NS_ERROR_UNEXPECTED;
 
   // Translate content offset to be relative to frame
   FrameContentRange range = GetRangeForFrame(this);
@@ -8418,7 +8416,6 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       bool wordSelectEatSpace = ShouldWordSelectionEatSpace(*aPos);
 
       PeekWordState state;
-      int32_t offsetAdjustment = 0;
       bool done = false;
       while (!done) {
         bool movingInFrameDirection =
@@ -8446,7 +8443,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
             // significant.
             if (jumpedLine && wordSelectEatSpace &&
                 current->HasSignificantTerminalNewline()) {
-              offsetAdjustment = -1;
+              offset -= 1;
             }
           } else {
             if (jumpedLine) {
@@ -8466,7 +8463,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       aPos->mResultContent = range.content;
       // Output offset is relative to content, not frame
       aPos->mContentOffset =
-          (offset < 0 ? range.end : range.start + offset) + offsetAdjustment;
+          offset < 0 ? range.end + offset + 1 : range.start + offset;
       break;
     }
     case eSelectLine: {
