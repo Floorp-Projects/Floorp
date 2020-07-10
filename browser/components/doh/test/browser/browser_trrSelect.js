@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 "use strict";
 
 add_task(setup);
@@ -33,12 +37,12 @@ add_task(async function testTRRSelect() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
-  // Reset and restart add-on for good measure.
+  // Reset and restart the controller for good measure.
   Preferences.reset(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF);
   Preferences.reset(prefs.DOH_TRR_SELECT_URI_PREF);
 
   prefPromise = TestUtils.waitForPrefChange(prefs.DOH_TRR_SELECT_URI_PREF);
-  await restartAddon();
+  await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
@@ -54,7 +58,7 @@ add_task(async function testTRRSelect() {
   // dry-run-result should persist.
   Preferences.set(prefs.DOH_TRR_SELECT_COMMIT_PREF, false);
   prefPromise = TestUtils.waitForPrefChange(prefs.DOH_TRR_SELECT_URI_PREF);
-  await restartAddon();
+  await restartDoHController();
   await prefPromise;
   ok(
     !Preferences.isSet(prefs.DOH_TRR_SELECT_URI_PREF),
@@ -78,11 +82,11 @@ add_task(async function testTRRSelect() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
-  // Reset and restart add-on again, dry-run-result should be recorded but not
+  // Reset and restart again, dry-run-result should be recorded but not
   // be committed. Committing is still disabled from above.
   Preferences.reset(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF);
   Preferences.reset(prefs.DOH_TRR_SELECT_URI_PREF);
-  await restartAddon();
+  await restartDoHController();
   try {
     await BrowserTestUtils.waitForCondition(() => {
       return Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF);
@@ -110,7 +114,7 @@ add_task(async function testTRRSelect() {
     "https://dummytrr2.com/query"
   );
   prefPromise = TestUtils.waitForPrefChange(prefs.DOH_TRR_SELECT_URI_PREF);
-  await restartAddon();
+  await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
@@ -130,7 +134,7 @@ add_task(async function testTRRSelect() {
     "https://dummytrr3.com/query"
   );
   prefPromise = TestUtils.waitForPrefChange(prefs.DOH_TRR_SELECT_URI_PREF);
-  await restartAddon();
+  await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),

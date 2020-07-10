@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 "use strict";
 
 add_task(setup);
@@ -68,8 +72,8 @@ add_task(async function testUserInterference() {
   await ensureNoTRRModeChange(undefined);
   ensureNoHeuristicsTelemetry();
 
-  // Restart the add-on for good measure.
-  await restartAddon();
+  // Restart the controller for good measure.
+  await restartDoHController();
   await ensureNoTRRModeChange(undefined);
   ensureNoTRRSelectionTelemetry();
   ensureNoHeuristicsTelemetry();
