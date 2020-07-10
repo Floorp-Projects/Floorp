@@ -1397,9 +1397,15 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
   }
 
   TextFragmentData textFragmentDataAtStart(mStart, mEnd, mNBSPData, mPRE);
+  const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
+      beforeRun ? textFragmentDataAtStart
+                      .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
+                          mScanStartPoint)
+                : EditorDOMRange();
   const Maybe<const WSFragment>
       nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart =
-          beforeRun && !textFragmentDataAtStart.IsPreformatted()
+          beforeRun && !textFragmentDataAtStart.IsPreformatted() &&
+                  !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
               ? textFragmentDataAtStart
                     .CreateWSFragmentForVisibleAndMiddleOfLine()
               : Nothing();
@@ -1412,9 +1418,15 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
   TextFragmentData textFragmentDataAtEnd(aEndObject->mStart, aEndObject->mEnd,
                                          aEndObject->mNBSPData,
                                          aEndObject->mPRE);
+  const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
+      afterRun ? textFragmentDataAtEnd
+                     .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
+                         aEndObject->mScanEndPoint)
+               : EditorDOMRange();
   const Maybe<const WSFragment>
       nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd =
-          afterRun && !textFragmentDataAtEnd.IsPreformatted()
+          afterRun && !textFragmentDataAtEnd.IsPreformatted() &&
+                  !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
               ? textFragmentDataAtEnd
                     .CreateWSFragmentForVisibleAndMiddleOfLine()
               : Nothing();
@@ -1425,18 +1437,25 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
           : PointPosition::NotInSameDOMTree;
 
   if (afterRun) {
-    // trim after run of any leading ws
-    if (afterRun->IsStartOfHardLine()) {
-      // mScanStartPoint will be referred bellow so that we need to keep
-      // it a valid point.
-      AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
-      nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                        .DeleteTextAndTextNodesWithTransaction(
-                            aEndObject->mScanStartPoint, afterRun->EndPoint());
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return rv;
+    // If deleting range is followed by invisible trailing white-spaces, we need
+    // to remove it for making them not visible.
+    if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
+      if (!invisibleTrailingWhiteSpaceRangeAtEnd.Collapsed()) {
+        // XXX Why don't we remove all invisible white-spaces?
+        MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeAtEnd.StartRef() ==
+                   aEndObject->mScanStartPoint);
+        // mScanStartPoint will be referred bellow so that we need to keep
+        // it a valid point.
+        AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
+        nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                          .DeleteTextAndTextNodesWithTransaction(
+                              invisibleTrailingWhiteSpaceRangeAtEnd.StartRef(),
+                              invisibleTrailingWhiteSpaceRangeAtEnd.EndRef());
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+          return rv;
+        }
       }
     }
     // If end of the deleting range is followed by visible white-spaces which
@@ -1482,11 +1501,20 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
     return NS_OK;
   }
 
-  // trim before run of any trailing ws
-  if (beforeRun->IsEndOfHardLine()) {
+  // If deleting range follows invisible leading white-spaces, we need to
+  // remove them for making them not visible.
+  if (invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()) {
+    if (invisibleLeadingWhiteSpaceRangeAtStart.Collapsed()) {
+      return NS_OK;
+    }
+
+    // XXX Why don't we remove all leading white-spaces?
+    // XXX Different from the other similar methods, mScanStartPoint may be
+    //     different from end of invisibleLeadingWhiteSpaceRangeAtStart.
     nsresult rv = MOZ_KnownLive(mHTMLEditor)
                       .DeleteTextAndTextNodesWithTransaction(
-                          beforeRun->StartPoint(), mScanStartPoint);
+                          invisibleLeadingWhiteSpaceRangeAtStart.StartRef(),
+                          mScanStartPoint);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
