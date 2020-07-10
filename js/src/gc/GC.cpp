@@ -6707,22 +6707,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Finalize:
-      // In incremental collections, yield here until background finalization
-      // is done and request a slice to notify us when this happens.
-      if (!budget.isUnlimited()) {
-        AutoLockHelperThreadState lock;
-        if (sweepTask.wasStarted(lock)) {
-          requestSliceAfterBackgroundTask = true;
-          break;
-        }
+      if (waitForBackgroundTask(sweepTask, budget) == NotFinished) {
+        break;
       }
 
-      {
-        gcstats::AutoPhase ap(stats(),
-                              gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-        waitBackgroundSweepEnd();
-        cancelRequestedGCAfterBackgroundTask();
-      }
+      assertBackgroundSweepingFinished();
 
       {
         // Sweep the zones list now that background finalization is finished to
@@ -6764,21 +6753,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Decommit:
-      // In incremental collections, yield until background decommit is done and
-      // request a slice to notify us when that happens.
-      if (!budget.isUnlimited()) {
-        AutoLockHelperThreadState lock;
-        if (decommitTask.wasStarted(lock)) {
-          requestSliceAfterBackgroundTask = true;
-          break;
-        }
-      }
-
-      {
-        gcstats::AutoPhase ap(stats(),
-                              gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-        decommitTask.join();
-        cancelRequestedGCAfterBackgroundTask();
+      if (waitForBackgroundTask(decommitTask, budget) == NotFinished) {
+        break;
       }
 
       incrementalState = State::Finish;
@@ -6810,6 +6786,26 @@ bool GCRuntime::hasForegroundWork() const {
       // In all other states there is still work to do.
       return true;
   }
+}
+
+IncrementalProgress GCRuntime::waitForBackgroundTask(GCParallelTask& task,
+                                                     SliceBudget& budget) {
+  // In incremental collections, yield if the task has not finished and request
+  // a slice to notify us when this happens.
+  if (!budget.isUnlimited()) {
+    AutoLockHelperThreadState lock;
+    if (task.wasStarted(lock)) {
+      requestSliceAfterBackgroundTask = true;
+      return NotFinished;
+    }
+  }
+
+  // Otherwise in non-incremental collections, wait here.
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
+  task.join();
+  cancelRequestedGCAfterBackgroundTask();
+
+  return Finished;
 }
 
 gc::AbortReason gc::IsIncrementalGCUnsafe(JSRuntime* rt) {
