@@ -875,12 +875,13 @@ impl TextureCache {
     // This function will assert in debug modes if the caller
     // tries to get a handle that was not requested this frame.
     pub fn get(&self, handle: &TextureCacheHandle) -> CacheItem {
-        let (texture_id, layer_index, uv_rect, swizzle, uv_rect_handle) = self.get_cache_location(handle);
+        let (texture_id, layer_index, uv_rect, swizzle, uv_rect_handle, user_data) = self.get_cache_location(handle);
         CacheItem {
             uv_rect_handle,
             texture_id: TextureSource::TextureCache(texture_id, swizzle),
             uv_rect,
             texture_layer: layer_index as i32,
+            user_data,
         }
     }
 
@@ -892,17 +893,20 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, LayerIndex, DeviceIntRect, Swizzle, GpuCacheHandle) {
+    ) -> (CacheTextureId, LayerIndex, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 3]) {
         let entry = self.lru_cache
             .get_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
         debug_assert_eq!(entry.last_access, self.now);
         let (layer_index, origin) = entry.details.describe();
-        (entry.texture_id,
-         layer_index as usize,
-         DeviceIntRect::new(origin, entry.size),
-         entry.swizzle,
-         entry.uv_rect_handle)
+        (
+            entry.texture_id,
+            layer_index as usize,
+            DeviceIntRect::new(origin, entry.size),
+            entry.swizzle,
+            entry.uv_rect_handle,
+            entry.user_data,
+        )
     }
 
     /// Internal helper function to evict a strong texture cache handle
