@@ -395,6 +395,11 @@ AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
          hasCustomAttribute<moz_must_return_from_caller_if_this_is_arg>(Decl);
 }
 
+AST_MATCHER(FunctionDecl, isMozTemporaryLifetimeBound) {
+  const FunctionDecl *Decl = Node.getCanonicalDecl();
+  return Decl && hasCustomAttribute<moz_lifetime_bound>(Decl);
+}
+
 /// This matcher will select default args which have nullptr as the value.
 AST_MATCHER(CXXDefaultArgExpr, isNullDefaultArg) {
   const Expr *Expr = Node.getExpr();
