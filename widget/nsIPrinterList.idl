@@ -23,12 +23,11 @@ interface nsIPrinterList : nsISupports
                                     in nsIPrintSettings aPrintSettings);
 
   /**
-   * The system default printer. This should also be
-   * present in printers below. This is not necessarily gecko's
+   * The system default printer name. This is not necessarily gecko's
    * default printer; see nsIPrintSettingsService.lastUsedPrinterName
    * for that.
    */
-  readonly attribute nsIPrinter systemDefaultPrinter;
+  readonly attribute AString systemDefaultPrinterName;
 
   /**
    * The list of printers.
