@@ -156,7 +156,7 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitDevice(
     nsCacheService::GetAppCacheDirectory(getter_AddRefs(dir));
   }
 
-  if (mLoadInfo->IsAnonymous()) {
+  if (mLoadInfo && mLoadInfo->IsAnonymous()) {
     // Anonymous visiting reports 0, 0 since we cannot count that
     // early the number of anon entries.
     mCB->OnCacheStorageInfo(0, 0, capacity, dir);
