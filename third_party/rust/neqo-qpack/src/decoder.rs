@@ -173,6 +173,12 @@ impl QPackDecoder {
         Ok(())
     }
 
+    /// # Errors
+    /// May return `DecompressionFailed` if header block is incorrect or incomplete.
+    pub fn refers_dynamic_table(&self, buf: &[u8]) -> Res<bool> {
+        HeaderDecoder::new(buf).refers_dynamic_table(self.max_entries, self.table.base())
+    }
+
     /// This function returns None if the stream is blocked waiting for table insertions.
     /// 'buf' must contain the complete header block.
     /// # Errors

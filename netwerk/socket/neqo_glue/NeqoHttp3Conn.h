@@ -48,9 +48,8 @@ class NeqoHttp3Conn final {
     return neqo_http3conn_get_data_to_send(this, &aData);
   }
 
-  nsresult GetEvent(Http3Event* aEvent, nsTArray<uint8_t>& aHeaderData,
-                    bool* aFin) {
-    return neqo_http3conn_event(this, aEvent, &aHeaderData, aFin);
+  nsresult GetEvent(Http3Event* aEvent, nsTArray<uint8_t>& aHeaderData) {
+    return neqo_http3conn_event(this, aEvent, &aHeaderData);
   }
 
   nsresult Fetch(const nsACString& aMethod, const nsACString& aScheme,

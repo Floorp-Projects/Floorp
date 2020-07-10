@@ -6,9 +6,15 @@
 
 use crate::{Error, Res};
 use neqo_common::{Decoder, Encoder};
+use neqo_crypto::{ZeroRttCheckResult, ZeroRttChecker};
+use neqo_qpack::QpackSettings;
 use std::ops::Deref;
 
 type SettingsType = u64;
+
+/// Increment this version number if a new setting is added and that might
+/// cause 0-RTT to be accepted where shouldn't be.
+const SETTINGS_ZERO_RTT_VERSION: u64 = 1;
 
 const SETTINGS_MAX_HEADER_LIST_SIZE: SettingsType = 0x6;
 const SETTINGS_QPACK_MAX_TABLE_CAPACITY: SettingsType = 0x1;
@@ -111,5 +117,60 @@ impl Deref for HSettings {
     type Target = [HSetting];
     fn deref(&self) -> &Self::Target {
         &self.settings
+    }
+}
+
+#[derive(Debug)]
+pub struct HttpZeroRttChecker {
+    settings: QpackSettings,
+}
+
+impl HttpZeroRttChecker {
+    /// Right now we only have QPACK settings, so that is all this takes.
+    pub fn new(settings: QpackSettings) -> Self {
+        Self { settings }
+    }
+
+    /// Save the settings that matter for 0-RTT.
+    pub fn save(settings: QpackSettings) -> Vec<u8> {
+        let mut enc = Encoder::new();
+        enc.encode_varint(SETTINGS_ZERO_RTT_VERSION)
+            .encode_varint(SETTINGS_QPACK_MAX_TABLE_CAPACITY)
+            .encode_varint(settings.max_table_size_decoder)
+            .encode_varint(SETTINGS_QPACK_BLOCKED_STREAMS)
+            .encode_varint(settings.max_blocked_streams);
+        enc.into()
+    }
+}
+
+impl ZeroRttChecker for HttpZeroRttChecker {
+    fn check(&self, token: &[u8]) -> ZeroRttCheckResult {
+        let mut dec = Decoder::from(token);
+
+        // Read and check the version.
+        if let Some(version) = dec.decode_varint() {
+            if version != SETTINGS_ZERO_RTT_VERSION {
+                return ZeroRttCheckResult::Reject;
+            }
+        } else {
+            return ZeroRttCheckResult::Fail;
+        }
+
+        // Now treat the rest as a settings frame.
+        let mut settings = HSettings::new(&[]);
+        if settings.decode_frame_contents(&mut dec).is_err() {
+            return ZeroRttCheckResult::Fail;
+        }
+        if settings.iter().all(|setting| match setting.setting_type {
+            HSettingType::BlockedStreams => {
+                u64::from(self.settings.max_blocked_streams) >= setting.value
+            }
+            HSettingType::MaxTableCapacity => self.settings.max_table_size_decoder >= setting.value,
+            _ => true,
+        }) {
+            ZeroRttCheckResult::Accept
+        } else {
+            ZeroRttCheckResult::Reject
+        }
     }
 }

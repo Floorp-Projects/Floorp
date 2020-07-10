@@ -171,7 +171,6 @@ fn make_server(quic_version: QuicVersion) -> Connection {
     Connection::new_server(
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
-        &test_fixture::anti_replay(),
         Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
         quic_version,
     )

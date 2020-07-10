@@ -12,13 +12,11 @@ use std::rc::Rc;
 use std::time::Instant;
 
 use neqo_common::{hex, matches, qdebug, qerror, qinfo, qtrace, Role};
-use neqo_crypto::aead::Aead;
-use neqo_crypto::hp::HpKey;
 use neqo_crypto::{
-    hkdf, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record, RecordList, SymKey,
-    TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE,
-    TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT,
-    TLS_VERSION_1_3,
+    aead::Aead, hkdf, hp::HpKey, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record,
+    RecordList, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
+    TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE, TLS_EPOCH_APPLICATION_DATA,
+    TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
 };
 
 use crate::frame::Frame;
@@ -39,13 +37,10 @@ pub struct Crypto {
     pub(crate) states: CryptoStates,
 }
 
+type TpHandler = Rc<RefCell<TransportParametersHandler>>;
+
 impl Crypto {
-    pub fn new(
-        mut agent: Agent,
-        protocols: &[impl AsRef<str>],
-        tphandler: Rc<RefCell<TransportParametersHandler>>,
-        anti_replay: Option<&AntiReplay>,
-    ) -> Res<Self> {
+    pub fn new(mut agent: Agent, protocols: &[impl AsRef<str>], tphandler: TpHandler) -> Res<Self> {
         agent.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
         agent.set_ciphers(&[
             TLS_AES_128_GCM_SHA256,
@@ -54,13 +49,10 @@ impl Crypto {
         ])?;
         agent.set_alpn(protocols)?;
         agent.disable_end_of_early_data()?;
-        match &mut agent {
-            Agent::Client(c) => c.enable_0rtt()?,
-            Agent::Server(s) => s.enable_0rtt(
-                anti_replay.unwrap(),
-                0xffff_ffff,
-                TpZeroRttChecker::wrap(tphandler.clone()),
-            )?,
+        // Always enable 0-RTT on the client, but the server needs
+        // more configuration passed to server_enable_0rtt.
+        if let Agent::Client(c) = &mut agent {
+            c.enable_0rtt()?;
         }
         agent.extension_handler(0xffa5, tphandler)?;
         Ok(Self {
@@ -68,6 +60,23 @@ impl Crypto {
             streams: Default::default(),
             states: Default::default(),
         })
+    }
+
+    pub fn server_enable_0rtt(
+        &mut self,
+        tphandler: TpHandler,
+        anti_replay: &AntiReplay,
+        zero_rtt_checker: impl ZeroRttChecker + 'static,
+    ) -> Res<()> {
+        if let Agent::Server(s) = &mut self.tls {
+            Ok(s.enable_0rtt(
+                anti_replay,
+                0xffff_ffff,
+                TpZeroRttChecker::wrap(tphandler, zero_rtt_checker),
+            )?)
+        } else {
+            panic!("not a server");
+        }
     }
 
     pub fn handshake(

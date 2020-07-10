@@ -16,7 +16,9 @@ pub mod timer;
 
 pub use self::codec::{Decoder, Encoder};
 pub use self::datagram::Datagram;
-pub use self::incrdecoder::{IncrementalDecoder, IncrementalDecoderResult};
+pub use self::incrdecoder::{
+    IncrementalDecoderBuffer, IncrementalDecoderIgnore, IncrementalDecoderUint,
+};
 
 #[macro_use]
 extern crate lazy_static;
