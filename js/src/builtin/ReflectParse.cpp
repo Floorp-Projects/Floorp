@@ -3045,7 +3045,6 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
       return builder.objectExpression(elts, &obj->pn_pos, dst);
     }
 
-    case ParseNodeKind::PrivateName:
     case ParseNodeKind::Name:
       return identifier(&pn->as<NameNode>(), dst);
 
@@ -3172,8 +3171,7 @@ bool ASTSerializer::propertyName(ParseNode* key, MutableHandleValue dst) {
   if (key->isKind(ParseNodeKind::ComputedName)) {
     return expression(key, dst);
   }
-  if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
-      key->isKind(ParseNodeKind::PrivateName)) {
+  if (key->isKind(ParseNodeKind::ObjectPropertyName)) {
     return identifier(&key->as<NameNode>(), dst);
   }
 
