@@ -4496,7 +4496,7 @@
 #ifdef XP_MACOSX
 - name: gfx.webrender.enable-client-storage
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: once
 #endif
 
