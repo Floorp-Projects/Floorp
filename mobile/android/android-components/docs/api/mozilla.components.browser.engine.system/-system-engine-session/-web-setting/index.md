@@ -2,7 +2,7 @@
 
 # WebSetting
 
-`class WebSetting<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineSession.kt#L257)
+`class WebSetting<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineSession.kt#L265)
 
 ### Constructors
 

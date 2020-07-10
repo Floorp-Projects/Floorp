@@ -2,7 +2,7 @@
 
 # CrashRecoveryUseCase
 
-`class CrashRecoveryUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L234)
+`class CrashRecoveryUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L254)
 
 Tries to recover from a crash by restoring the last know state.
 
