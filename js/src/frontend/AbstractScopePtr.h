@@ -56,13 +56,6 @@ class AbstractScopePtr {
  private:
   ScopeType scope_ = ScopeType(HeapPtrScope());
 
-  // Extract the Scope* represented by this; may be nullptr, and will
-  // forward through to the ScopeCreationData if it has a Scope*
-  //
-  // Should only be used after getOrCreate() has been used to reify this into a
-  // Scope.
-  Scope* getExistingScope() const;
-
  public:
   friend class js::Scope;
 

@@ -237,11 +237,7 @@ class ScopeCreationData {
   ScopeKind kind() const { return kind_; }
   AbstractScopePtr enclosing() { return enclosing_; }
 
-  // Get a Scope* for enclosing scope, creating it from a ScopeCreationData
-  // if required.
-  // Used to allow us to ensure that Scopes are always allocated with
-  // real GC allocated Enclosing scopes.
-  bool getOrCreateEnclosingScope(JSContext* cx, MutableHandleScope scope);
+  Scope* getEnclosingScope(JSContext* cx);
 
   // FunctionScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
