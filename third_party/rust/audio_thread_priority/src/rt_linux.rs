@@ -33,7 +33,7 @@ impl From<dbus::Error> for AudioThreadPriorityError {
 
 impl From<Box<dyn Error>> for AudioThreadPriorityError {
     fn from(error: Box<dyn Error>) -> Self {
-        AudioThreadPriorityError::new(&format!("{}", error.description()))
+        AudioThreadPriorityError::new(&format!("{}", error.to_string()))
     }
 }
 
