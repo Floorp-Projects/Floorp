@@ -364,10 +364,6 @@ class GeckoEngineSession(
             session: GeckoSession,
             request: NavigationDelegate.LoadRequest
         ): GeckoResult<AllowOrDeny> {
-            if (request.target == NavigationDelegate.TARGET_WINDOW_NEW) {
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
-            }
-
             // The process switch involved when loading extension pages will
             // trigger an initial load of about:blank which we want to
             // avoid:
@@ -377,18 +373,22 @@ class GeckoEngineSession(
                 initialLoad = true
             }
 
-            return if (maybeInterceptRequest(request) != null) {
-                GeckoResult.fromValue(AllowOrDeny.DENY)
-            } else {
-                notifyObservers {
-                    onLoadRequest(
-                        url = request.uri,
-                        triggeredByRedirect = request.isRedirect,
-                        triggeredByWebContent = request.hasUserGesture
-                    )
-                }
+            return when {
+                maybeInterceptRequest(request) != null ->
+                    GeckoResult.fromValue(AllowOrDeny.DENY)
+                request.target == NavigationDelegate.TARGET_WINDOW_NEW ->
+                    GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                else -> {
+                    notifyObservers {
+                        onLoadRequest(
+                            url = request.uri,
+                            triggeredByRedirect = request.isRedirect,
+                            triggeredByWebContent = request.hasUserGesture
+                        )
+                    }
 
-                GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                    GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                }
             }
         }
 

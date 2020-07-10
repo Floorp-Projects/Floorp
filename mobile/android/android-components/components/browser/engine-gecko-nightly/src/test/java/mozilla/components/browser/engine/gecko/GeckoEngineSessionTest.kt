@@ -1902,15 +1902,196 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `Handle new window load requests`() {
-        GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+    fun `onLoadRequest will try to intercept new window load requests`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
         captureDelegates()
 
-        val result = navigationDelegate.value.onLoadRequest(geckoSession,
-                mockLoadRequest("sample:about", null, GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+        var observedUrl: String? = null
+        var observedIntent: Intent? = null
 
-        assertNotNull(result)
+        var observedLoadUrl: String? = null
+        var observedTriggeredByRedirect: Boolean? = null
+        var observedTriggeredByWebContent: Boolean? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLaunchIntentRequest(
+                url: String,
+                appIntent: Intent?
+            ) {
+                observedUrl = url
+                observedIntent = appIntent
+            }
+
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedLoadUrl = url
+                observedTriggeredByRedirect = triggeredByRedirect
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        var result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = true)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+
+        result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = false)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+    }
+
+    @Test
+    fun `onLoadRequest allows new window requests if not intercepted`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedUrl: String? = null
+        var observedIntent: Intent? = null
+
+        var observedLoadUrl: String? = null
+        var observedTriggeredByRedirect: Boolean? = null
+        var observedTriggeredByWebContent: Boolean? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLaunchIntentRequest(
+                url: String,
+                appIntent: Intent?
+            ) {
+                observedUrl = url
+                observedIntent = appIntent
+            }
+
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedLoadUrl = url
+                observedTriggeredByRedirect = triggeredByRedirect
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        var result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("about:blank", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = true)
+        )
+
         assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
+        assertNull(observedIntent)
+        assertNull(observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+
+        result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("https://www.example.com", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = true)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
+        assertNull(observedIntent)
+        assertNull(observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+    }
+
+    @Test
+    fun `onLoadRequest not intercepted and not new window will notify observer`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedLoadUrl: String? = null
+        var observedTriggeredByRedirect: Boolean? = null
+        var observedTriggeredByWebContent: Boolean? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedLoadUrl = url
+                observedTriggeredByRedirect = triggeredByRedirect
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        val result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("https://www.example.com", null, triggeredByRedirect = true)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
+        assertEquals("https://www.example.com", observedLoadUrl)
+        assertEquals(true, observedTriggeredByRedirect)
+        assertEquals(false, observedTriggeredByWebContent)
     }
 
     @Test
