@@ -74,30 +74,13 @@ bool frontend::EnvironmentShapeCreationData::createShape(
   return data_.match(m);
 }
 
-// This is used during allocation of the scopes to ensure that we only
-// allocate GC scopes with GC-enclosing scopes. This can recurse through
-// the scope chain.
-//
-// Once all ScopeCreation for a compilation tree is centralized, this
-// will go away, to be replaced with a single top down GC scope allocation.
-//
-// This uses an outparam to disambiguate between the case where we have a
-// real nullptr scope and we failed to allocate a new scope because of OOM.
-bool ScopeCreationData::getOrCreateEnclosingScope(JSContext* cx,
-                                                  MutableHandleScope scope) {
+Scope* ScopeCreationData::getEnclosingScope(JSContext* cx) {
   if (enclosing_.isScopeCreationData()) {
     ScopeCreationData& enclosingData = enclosing_.scopeCreationData().get();
-    if (enclosingData.hasScope()) {
-      scope.set(enclosingData.getScope());
-      return true;
-    }
-
-    scope.set(enclosingData.createScope(cx, enclosing_.compilationInfo()));
-    return !!scope;
+    return enclosingData.getScope();
   }
 
-  scope.set(enclosing_.scope());
-  return true;
+  return enclosing_.scope();
 }
 
 JSFunction* ScopeCreationData::function(
@@ -355,6 +338,31 @@ static bool InstantiateFunctions(JSContext* cx,
   return true;
 }
 
+// Instantiate Scope for each ScopeCreationData.
+//
+// This should be called after InstantiateFunctions, given FunctionScope needs
+// associated JSFunction pointer, and also should be called before
+// InstantiateScriptStencils, given JSScript needs Scope pointer in gc things.
+static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo) {
+  // While allocating Scope object from ScopeCreationData, Scope object
+  // for the enclosing Scope should already be allocated.
+  //
+  // Enclosing scope of ScopeCreationData can be either ScopeCreationData or
+  // Scope* pointer, capsulated by AbstractScopePtr.
+  //
+  // If the enclosing scope is ScopeCreationData, it's guaranteed to be
+  // earlier element in compilationInfo.scopeCreationData, because
+  // AbstractScopePtr holds index into it, and newly created ScopeCreaationData
+  // is pushed back to the vector.
+  for (auto& scd : compilationInfo.scopeCreationData) {
+    if (!scd.createScope(cx, compilationInfo)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // JSFunctions have a default ObjectGroup when they are created. Once their
 // enclosing script is compiled, we have more precise heuristic information and
 // now compute their final group. These functions have not been exposed to
@@ -519,6 +527,10 @@ static void LinkEnclosingLazyScript(CompilationInfo& compilationInfo) {
 
 bool CompilationInfo::instantiateStencils() {
   if (!InstantiateFunctions(cx, *this)) {
+    return false;
+  }
+
+  if (!InstantiateScopes(cx, *this)) {
     return false;
   }
 

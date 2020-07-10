@@ -94,14 +94,8 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ScopeIndex& index) {
-      MutableHandle<ScopeCreationData> data =
-          compilationInfo.scopeCreationData[index];
-      Scope* scope = data.get().createScope(cx, compilationInfo);
-      if (!scope) {
-        return false;
-      }
-
-      output[i] = JS::GCCellPtr(scope);
+      ScopeCreationData& data = compilationInfo.scopeCreationData[index].get();
+      output[i] = JS::GCCellPtr(data.getScope());
       return true;
     }
 

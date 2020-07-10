@@ -2113,10 +2113,7 @@ bool ScopeCreationData::create(JSContext* cx,
 template <>
 Scope* ScopeCreationData::createSpecificScope<WithScope>(
     JSContext* cx, CompilationInfo& compilationInfo) {
-  RootedScope enclosingScope(cx);
-  if (!getOrCreateEnclosingScope(cx, &enclosingScope)) {
-    return nullptr;
-  }
+  RootedScope enclosingScope(cx, getEnclosingScope(cx));
 
   WithScope* scope = static_cast<WithScope*>(
       Scope::create(cx, ScopeKind::With, enclosingScope, nullptr));
@@ -2157,10 +2154,8 @@ Scope* ScopeCreationData::createSpecificScope(
   if (!environmentShape_.createShape(cx, &shape)) {
     return nullptr;
   }
-  RootedScope enclosingScope(cx);
-  if (!getOrCreateEnclosingScope(cx, &enclosingScope)) {
-    return nullptr;
-  }
+
+  RootedScope enclosingScope(cx, getEnclosingScope(cx));
 
   // Because we already baked the data here, we needn't do it again.
   SpecificScopeType* scope = Scope::create<SpecificScopeType>(
