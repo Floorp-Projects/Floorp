@@ -15,13 +15,11 @@ var EXPORTED_SYMBOLS = ["UrlbarTokenizer"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
-});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  UrlbarUtils.getLogger({ prefix: "Tokenizer" })
+  Log.repository.getLogger("Urlbar.Tokenizer")
 );
 
 var UrlbarTokenizer = {

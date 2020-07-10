@@ -16,6 +16,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
@@ -28,6 +29,10 @@ XPCOMUtils.defineLazyServiceGetter(
   "unifiedComplete",
   "@mozilla.org/autocomplete/search;1?name=unifiedcomplete",
   "nsIAutoCompleteSearch"
+);
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.repository.getLogger("Urlbar.Provider.UnifiedComplete")
 );
 
 /**
@@ -75,6 +80,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
+    logger.info(`Starting query for ${queryContext.searchString}`);
     let instance = {};
     this.queries.set(queryContext, instance);
     let urls = new Set();
@@ -84,17 +90,8 @@ class ProviderUnifiedComplete extends UrlbarProvider {
         acResult,
         urls
       );
-      // The Muxer gives UnifiedComplete special status and waits for it to
-      // return results before sorting them. We need to know that
-      // UnifiedComplete has finished even if it isn't returning results, so we
-      // call addCallback with an empty result here, which is something only
-      // UnifiedComplete is allowed to do.
-      if (!results.length) {
-        addCallback(this, null);
-      } else {
-        for (let result of results) {
-          addCallback(this, result);
-        }
+      for (let result of results) {
+        addCallback(this, result);
       }
     });
     this.queries.delete(queryContext);
@@ -105,6 +102,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
+    logger.info(`Canceling query for ${queryContext.searchString}`);
     // This doesn't properly support being used concurrently by multiple fields.
     this.queries.delete(queryContext);
     unifiedComplete.stopSearch();
@@ -256,6 +254,17 @@ function makeUrlbarResult(tokens, info) {
           })
         );
       }
+      case "extension":
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.OMNIBOX,
+          UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
+            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            content: [action.params.content, UrlbarUtils.HIGHLIGHT.TYPED],
+            keyword: [action.params.keyword, UrlbarUtils.HIGHLIGHT.TYPED],
+            icon: [info.icon],
+          })
+        );
       case "remotetab":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
