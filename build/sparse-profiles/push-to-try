@@ -1,0 +1,5 @@
+%include build/sparse-profiles/taskgraph
+
+[include]
+path:tools/tryselect/
+path:try_task_config.json

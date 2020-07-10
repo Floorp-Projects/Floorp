@@ -700,3 +700,7 @@ Generate missing macOS and windows system symbols from crash reports.
 system-symbols-upload
 ---------------------
 Upload macOS and windows system symbols to tecken.
+
+scriptworker-canary
+-------------------
+Push tasks to try to test new scriptworker deployments.
