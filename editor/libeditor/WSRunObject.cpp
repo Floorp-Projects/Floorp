@@ -1059,15 +1059,6 @@ void WSRunScanner::InitializeRangeEnd(
       aEditableBlockParentOrTopmostEditableInlineContent);
 }
 
-void WSRunScanner::EnsureWSFragments() {
-  if (!mFragments.IsEmpty()) {
-    return;
-  }
-
-  TextFragmentData textFragmentData(mStart, mEnd, mNBSPData, mPRE);
-  textFragmentData.InitializeWSFragmentArray(mFragments);
-}
-
 EditorDOMRange
 WSRunScanner::TextFragmentData::GetInvisibleLeadingWhiteSpaceRange() const {
   if (mLeadingWhiteSpaceRange.isSome()) {
@@ -1245,134 +1236,6 @@ WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleAndMiddleOfLine()
   }
   fragment.SetEndByTrailingWhiteSpaces();
   return Some(fragment);
-}
-
-void WSRunScanner::TextFragmentData::InitializeWSFragmentArray(
-    WSFragmentArray& aFragments) const {
-  MOZ_ASSERT(aFragments.IsEmpty());
-
-  // Handle preformatted case first since it's simple.  Note that if end of
-  // the scan range isn't in preformatted element, we need to check only the
-  // style at mScanStartPoint since the range would be replaced and the start
-  // style will be applied to all new string.
-
-  // if it's preformatedd, or if we are surrounded by text or special, it's all
-  // one big normal ws run
-  if (IsPreformattedOrSurrondedByVisibleContent()) {
-    aFragments.AppendElement(CreateWSFragmentForVisibleAndMiddleOfLine().ref());
-    return;
-  }
-
-  const EditorDOMRange leadingWhiteSpaceRange =
-      GetInvisibleLeadingWhiteSpaceRange();
-  const EditorDOMRange trailingWhiteSpaceRange =
-      GetInvisibleTrailingWhiteSpaceRange();
-  // XXX `IsPositioned()` is not availble here because currently it is not
-  //     guaranteed that both boundaries are set or unset at same time.
-  const bool maybeHaveLeadingWhiteSpaces =
-      leadingWhiteSpaceRange.StartRef().IsSet() ||
-      leadingWhiteSpaceRange.EndRef().IsSet();
-  const bool maybeHaveTrailingWhiteSpaces =
-      trailingWhiteSpaceRange.StartRef().IsSet() ||
-      trailingWhiteSpaceRange.EndRef().IsSet();
-
-  // If leading white-space range is all of the range, all of them are
-  // invisible.
-  if (maybeHaveLeadingWhiteSpaces &&
-      leadingWhiteSpaceRange.StartRef() == mStart.PointRef() &&
-      leadingWhiteSpaceRange.EndRef() == mEnd.PointRef()) {
-    MOZ_ASSERT(StartsFromHardLineBreak());
-    WSFragment* startRun = aFragments.AppendElement();
-    startRun->MarkAsStartOfHardLine();
-    if (EndsByBlockBoundary()) {
-      MOZ_ASSERT(leadingWhiteSpaceRange == trailingWhiteSpaceRange);
-      startRun->MarkAsEndOfHardLine();
-    }
-    if (leadingWhiteSpaceRange.StartRef().IsSet()) {
-      startRun->mStartNode = leadingWhiteSpaceRange.StartRef().GetContainer();
-      startRun->mStartOffset = leadingWhiteSpaceRange.StartRef().Offset();
-    }
-    startRun->SetStartFrom(mStart.RawReason());
-    if (leadingWhiteSpaceRange.EndRef().IsSet()) {
-      startRun->mEndNode = leadingWhiteSpaceRange.EndRef().GetContainer();
-      startRun->mEndOffset = leadingWhiteSpaceRange.EndRef().Offset();
-    }
-    startRun->SetEndBy(mEnd.RawReason());
-    return;
-  }
-
-  // If trailing white-space range is all of the range, all of them are
-  // invisible.
-  if (maybeHaveTrailingWhiteSpaces &&
-      trailingWhiteSpaceRange.StartRef() == mStart.PointRef() &&
-      trailingWhiteSpaceRange.EndRef() == mEnd.PointRef()) {
-    MOZ_ASSERT(!StartsFromHardLineBreak());
-    MOZ_ASSERT(EndsByBlockBoundary());
-    WSFragment* startRun = aFragments.AppendElement();
-    startRun->MarkAsEndOfHardLine();
-    if (trailingWhiteSpaceRange.StartRef().IsSet()) {
-      startRun->mStartNode = trailingWhiteSpaceRange.StartRef().GetContainer();
-      startRun->mStartOffset = trailingWhiteSpaceRange.StartRef().Offset();
-    }
-    startRun->SetStartFrom(mStart.RawReason());
-    if (trailingWhiteSpaceRange.EndRef().IsSet()) {
-      startRun->mEndNode = trailingWhiteSpaceRange.EndRef().GetContainer();
-      startRun->mEndOffset = trailingWhiteSpaceRange.EndRef().Offset();
-    }
-    startRun->SetEndBy(mEnd.RawReason());
-    return;
-  }
-
-  if (!StartsFromHardLineBreak()) {
-    aFragments.AppendElement(CreateWSFragmentForVisibleAndMiddleOfLine().ref());
-    if (!aFragments[0].EndsByTrailingWhiteSpaces()) {
-      return;
-    }
-
-    // set up next run
-    WSFragment* lastRun = aFragments.AppendElement();
-    lastRun->MarkAsEndOfHardLine();
-    lastRun->mStartNode = aFragments[0].mEndNode;
-    lastRun->mStartOffset = aFragments[0].mEndOffset;
-    lastRun->SetStartFromNormalWhiteSpaces();
-    // XXX Why don't we set end boundary here??
-    lastRun->SetEndBy(mEnd.RawReason());
-    return;
-  }
-
-  MOZ_ASSERT(StartsFromHardLineBreak());
-  MOZ_ASSERT(maybeHaveLeadingWhiteSpaces);
-
-  WSFragment* startRun = aFragments.AppendElement();
-  startRun->MarkAsStartOfHardLine();
-  if (leadingWhiteSpaceRange.StartRef().IsSet()) {
-    startRun->mStartNode = leadingWhiteSpaceRange.StartRef().GetContainer();
-    startRun->mStartOffset = leadingWhiteSpaceRange.StartRef().Offset();
-  }
-  startRun->SetStartFrom(mStart.RawReason());
-  if (leadingWhiteSpaceRange.EndRef().IsSet()) {
-    startRun->mEndNode = leadingWhiteSpaceRange.EndRef().GetContainer();
-    startRun->mEndOffset = leadingWhiteSpaceRange.EndRef().Offset();
-  }
-  startRun->SetEndByNormalWiteSpaces();
-
-  // set up next run
-  aFragments.AppendElement(CreateWSFragmentForVisibleAndMiddleOfLine().ref());
-  if (!aFragments[1].EndsByTrailingWhiteSpaces()) {
-    return;
-  }
-
-  // set up next run
-  WSFragment* lastRun = aFragments.AppendElement();
-  lastRun->MarkAsEndOfHardLine();
-  lastRun->mStartNode = aFragments[1].mEndNode;
-  lastRun->mStartOffset = aFragments[1].mEndOffset;
-  lastRun->SetStartFromNormalWhiteSpaces();
-  if (trailingWhiteSpaceRange.EndRef().IsSet()) {
-    lastRun->mEndNode = trailingWhiteSpaceRange.EndRef().GetContainer();
-    lastRun->mEndOffset = trailingWhiteSpaceRange.EndRef().Offset();
-  }
-  lastRun->SetEndBy(mEnd.RawReason());
 }
 
 nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
@@ -1943,55 +1806,6 @@ nsresult WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
   return rv;
-}
-
-template <typename PT, typename CT>
-WSRunScanner::WSFragmentArray::index_type
-WSRunScanner::FindNearestFragmentIndex(const EditorDOMPointBase<PT, CT>& aPoint,
-                                       bool aForward) const {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-
-  for (WSFragmentArray::index_type i = 0; i < WSFragmentArrayRef().Length();
-       i++) {
-    const WSFragment& fragment = WSFragmentArrayRef()[i];
-    int32_t comp = fragment.mStartNode
-                       ? *nsContentUtils::ComparePoints(
-                             aPoint.ToRawRangeBoundary(),
-                             fragment.StartPoint().ToRawRangeBoundary())
-                       : -1;
-    if (comp <= 0) {
-      // aPoint equals or before start of the fragment.
-      // Return it if we're scanning forward, otherwise, nullptr.
-      return aForward ? i : WSFragmentArray::NoIndex;
-    }
-
-    comp = fragment.mEndNode ? *nsContentUtils::ComparePoints(
-                                   aPoint.ToRawRangeBoundary(),
-                                   fragment.EndPoint().ToRawRangeBoundary())
-                             : -1;
-    if (comp < 0) {
-      // If aPoint is in the fragment, return it.
-      return i;
-    }
-
-    if (!comp) {
-      // If aPoint is at end of the fragment, return next fragment if we're
-      // scanning forward, otherwise, return it.
-      return aForward ? (i + 1 < WSFragmentArrayRef().Length()
-                             ? i + 1
-                             : WSFragmentArray::NoIndex)
-                      : i;
-    }
-
-    if (i == WSFragmentArrayRef().Length() - 1) {
-      // If the fragment is the last fragment and aPoint is after end of the
-      // last fragment, return nullptr if we're scanning forward, otherwise,
-      // return this last fragment.
-      return aForward ? WSFragmentArray::NoIndex : i;
-    }
-  }
-
-  return WSFragmentArray::NoIndex;
 }
 
 char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
