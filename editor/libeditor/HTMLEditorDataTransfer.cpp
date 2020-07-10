@@ -282,7 +282,7 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                 dom::DocumentFragment** aFragment,
                                 bool aTrustedInput);
 
-  static void RemoveBodyAndHead(nsINode& aNode);
+  static void RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode);
 
   enum class NodesToRemove {
     eAll,
@@ -3024,7 +3024,8 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   return NS_OK;
 }
 
-void HTMLEditor::HTMLWithContextInserter::RemoveBodyAndHead(nsINode& aNode) {
+void HTMLEditor::HTMLWithContextInserter::
+    RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode) {
   nsCOMPtr<nsIContent> body, head;
   // find the body and head nodes if any.
   // look only at immediate children of aNode.
@@ -3150,7 +3151,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
       return rv;
     }
 
-    HTMLWithContextInserter::RemoveBodyAndHead(*documentFragmentForContext);
+    HTMLWithContextInserter::RemoveHeadChildAndStealBodyChildsChildren(
+        *documentFragmentForContext);
 
     HTMLWithContextInserter::FindTargetNode(*documentFragmentForContext,
                                             targetNode);
@@ -3186,7 +3188,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     return NS_ERROR_FAILURE;
   }
 
-  HTMLWithContextInserter::RemoveBodyAndHead(*documentFragmentToInsert);
+  HTMLWithContextInserter::RemoveHeadChildAndStealBodyChildsChildren(
+      *documentFragmentToInsert);
 
   if (targetNode) {
     // unite the two trees
