@@ -46,27 +46,28 @@
         android:layout_width="0dp"
         android:layout_height="80dp"
         android:background="@color/foundation_normal_theme"
-        app:tabIndicatorColor="@color/accent_normal_theme"
-        app:tabIconTint="@color/tab_icon"
-        app:tabRippleColor="@android:color/transparent"
-        app:tabGravity="fill"
-        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/handle"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintWidth_percent="0.5"
+        app:tabGravity="fill"
+        app:tabIconTint="@color/tab_icon"
+        app:tabIndicatorColor="@color/accent_normal_theme"
+        app:tabRippleColor="@android:color/transparent">
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/default_tab_item"
-            android:layout_height="match_parent"
             android:layout_width="0dp"
-            android:icon="@drawable/ic_tabs"
-            android:contentDescription="@string/tab_header_label" />
+            android:layout_height="match_parent"
+            android:contentDescription="@string/tab_header_label"
+            android:layout="@layout/tabs_tray_tab_counter"
+            app:tabIconTint="@color/tab_icon" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/private_tab_item"
-            android:layout_height="match_parent"
             android:layout_width="0dp"
-            android:icon="@drawable/ic_private_browsing"
-            android:contentDescription="@string/tabs_header_private_tabs_title" />
+            android:layout_height="match_parent"
+            android:contentDescription="@string/tabs_header_private_tabs_title"
+            android:icon="@drawable/ic_private_browsing" />
 
     </com.google.android.material.tabs.TabLayout>
 

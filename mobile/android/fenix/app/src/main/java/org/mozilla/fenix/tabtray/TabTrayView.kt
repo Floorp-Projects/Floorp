@@ -18,6 +18,7 @@ import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
+import kotlinx.android.synthetic.main.tabs_tray_tab_counter.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -245,6 +246,8 @@ class TabTrayView(
                 View.VISIBLE
             }
             view.tab_tray_overflow.isVisible = !hasNoTabs
+
+            counter_text.text = "${state.normalTabs.size}"
         }
     }
 
