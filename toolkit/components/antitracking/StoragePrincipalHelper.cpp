@@ -310,4 +310,14 @@ void StoragePrincipalHelper::GetOriginAttributesForNetworkState(
   aAttributes = aDocument->PartitionedPrincipal()->OriginAttributesRef();
 }
 
+// static
+void StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
+    nsIURI* aFirstPartyURI, OriginAttributes& aAttributes) {
+  if (!StaticPrefs::privacy_partition_network_state()) {
+    return;
+  }
+
+  aAttributes.SetPartitionKey(aFirstPartyURI);
+}
+
 }  // namespace mozilla

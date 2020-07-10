@@ -28,6 +28,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
@@ -2508,13 +2509,15 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
 
   OriginAttributes originAttributes;
   // If the principal is given, we use the originAttributes from this
-  // principal. Otherwise, we use the originAttributes from the
-  // loadContext.
+  // principal. Otherwise, we use the originAttributes from the loadContext.
   if (aPrincipal) {
     originAttributes = aPrincipal->OriginAttributesRef();
   } else if (loadContext) {
     loadContext->GetOriginAttributes(originAttributes);
   }
+
+  StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
+      aURI, originAttributes);
 
   nsCOMPtr<nsIURI> clone;
   if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI,
