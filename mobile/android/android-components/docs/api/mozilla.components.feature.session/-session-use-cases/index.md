@@ -24,6 +24,7 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 | [ExitFullScreenUseCase](-exit-full-screen-use-case/index.md) | `class ExitFullScreenUseCase` |
 | [GoBackUseCase](-go-back-use-case/index.md) | `class GoBackUseCase` |
 | [GoForwardUseCase](-go-forward-use-case/index.md) | `class GoForwardUseCase` |
+| [GoToHistoryIndexUseCase](-go-to-history-index-use-case/index.md) | `class GoToHistoryIndexUseCase`<br>Use case to jump to an arbitrary history index in a session's backstack. |
 | [LoadDataUseCase](-load-data-use-case/index.md) | `class LoadDataUseCase` |
 | [LoadUrlUseCase](-load-url-use-case/index.md) | `interface LoadUrlUseCase`<br>Contract for use cases that load a provided URL. |
 | [ReloadUrlUseCase](-reload-url-use-case/index.md) | `class ReloadUrlUseCase` |
@@ -47,6 +48,7 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 | [exitFullscreen](exit-fullscreen.md) | `val exitFullscreen: `[`ExitFullScreenUseCase`](-exit-full-screen-use-case/index.md) |
 | [goBack](go-back.md) | `val goBack: `[`GoBackUseCase`](-go-back-use-case/index.md) |
 | [goForward](go-forward.md) | `val goForward: `[`GoForwardUseCase`](-go-forward-use-case/index.md) |
+| [goToHistoryIndex](go-to-history-index.md) | `val goToHistoryIndex: `[`GoToHistoryIndexUseCase`](-go-to-history-index-use-case/index.md) |
 | [loadData](load-data.md) | `val loadData: `[`LoadDataUseCase`](-load-data-use-case/index.md) |
 | [loadUrl](load-url.md) | `val loadUrl: `[`DefaultLoadUrlUseCase`](-default-load-url-use-case/index.md) |
 | [reload](reload.md) | `val reload: `[`ReloadUrlUseCase`](-reload-url-use-case/index.md) |
