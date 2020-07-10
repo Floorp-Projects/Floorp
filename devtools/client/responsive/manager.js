@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "ResponsiveUI", "devtools/client/responsive/ui");
@@ -112,17 +110,8 @@ class ResponsiveUIManager {
    *         complete.
    */
   async openIfNeeded(window, tab, options = {}) {
-    const newRDMEnabled = Services.prefs.getBoolPref(
-      "devtools.responsive.browserUI.enabled"
-    );
-    if (!tab.linkedBrowser.isRemoteBrowser && !newRDMEnabled) {
-      await this.showRemoteOnlyNotification(window, tab, options);
-      return promise.reject(new Error("RDM only available for remote tabs."));
-    }
     if (!this.isActiveForTab(tab)) {
-      if (newRDMEnabled) {
-        await gDevToolsBrowser.loadBrowserStyleSheet(window);
-      }
+      await gDevToolsBrowser.loadBrowserStyleSheet(window);
 
       this.initMenuCheckListenerFor(window);
 
