@@ -23,6 +23,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Log: "resource://gre/modules/Log.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -659,6 +660,30 @@ var UrlbarUtils = {
     }
     return context.heuristicResult;
   },
+
+  /**
+   * Creates a logger.
+   * Logging level can be controlled through browser.urlbar.loglevel.
+   * @param {string} [prefix] Prefix to use for the logged messages, "::" will
+   *                 be appended automatically to the prefix.
+   * @returns {object} The logger.
+   */
+  getLogger({ prefix = "" } = {}) {
+    if (!this._logger) {
+      this._logger = Log.repository.getLogger("urlbar");
+      this._logger.manageLevelFromPref("browser.urlbar.loglevel");
+      this._logger.addAppender(
+        new Log.ConsoleAppender(new Log.BasicFormatter())
+      );
+    }
+    if (prefix) {
+      // This is not an early return because it is necessary to invoke getLogger
+      // at least once before getLoggerWithMessagePrefix; it replaces a
+      // method of the original logger, rather than using an actual Proxy.
+      return Log.repository.getLoggerWithMessagePrefix("urlbar", prefix + "::");
+    }
+    return this._logger;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {
@@ -1100,6 +1125,12 @@ class UrlbarMuxer {
  * The provider scope is to query a datasource and return results from it.
  */
 class UrlbarProvider {
+  constructor() {
+    XPCOMUtils.defineLazyGetter(this, "logger", () =>
+      UrlbarUtils.getLogger({ prefix: `Provider.${this.name}` })
+    );
+  }
+
   /**
    * Unique name for the provider, used by the context to filter on providers.
    * Not using a unique name will cause the newest registration to win.
