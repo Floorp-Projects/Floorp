@@ -5145,8 +5145,7 @@ static bool FullParseTest(JSContext* cx,
     ModuleBuilder builder(cx, &parser);
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
-    ModuleSharedContext modulesc(cx, module, compilationInfo, nullptr, builder,
-                                 extent);
+    ModuleSharedContext modulesc(cx, module, compilationInfo, builder, extent);
     pn = parser.moduleBody(&modulesc);
   }
   if (!pn) {

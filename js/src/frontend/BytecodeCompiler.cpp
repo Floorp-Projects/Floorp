@@ -525,12 +525,10 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
 
   ModuleBuilder builder(cx, parser.ptr());
 
-  RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, compilationInfo.options);
-  ModuleSharedContext modulesc(cx, module, compilationInfo, enclosingScope,
-                               builder, extent);
+  ModuleSharedContext modulesc(cx, module, compilationInfo, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -722,6 +720,7 @@ static ModuleObject* InternalParseModule(
   if (!compilationInfo.init(cx)) {
     return nullptr;
   }
+  compilationInfo.setEnclosingScope(&cx->global()->emptyGlobalScope());
 
   if (sourceObjectOut) {
     *sourceObjectOut = compilationInfo.sourceObject;

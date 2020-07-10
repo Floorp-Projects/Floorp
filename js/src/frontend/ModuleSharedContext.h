@@ -23,18 +23,16 @@ namespace frontend {
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
   JS::Rooted<ModuleObject*> module_;
-  JS::Rooted<Scope*> enclosingScope_;
 
  public:
   JS::Rooted<ModuleScope::Data*> bindings;
   ModuleBuilder& builder;
 
   ModuleSharedContext(JSContext* cx, ModuleObject* module,
-                      CompilationInfo& compilationInfo, Scope* enclosingScope,
-                      ModuleBuilder& builder, SourceExtent extent);
+                      CompilationInfo& compilationInfo, ModuleBuilder& builder,
+                      SourceExtent extent);
 
   JS::Handle<ModuleObject*> module() const { return module_; }
-  Scope* compilationEnclosingScope() const override { return enclosingScope_; }
 };
 
 inline ModuleSharedContext* SharedContext::asModuleContext() {
