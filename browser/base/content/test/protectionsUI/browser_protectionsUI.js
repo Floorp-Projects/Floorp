@@ -122,7 +122,7 @@ add_task(async function testToggleSwitch() {
     "TP Switch should be enabled"
   );
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -150,11 +150,11 @@ add_task(async function testToggleSwitch() {
   // the popup shown event if we open the protections panel while the toast is
   // opening.
   let popupShownPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popupshown"
   );
   popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
 
@@ -235,7 +235,7 @@ add_task(async function testSettingsButton() {
   await openProtectionsPanel();
 
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   let newTabPromise = BrowserTestUtils.waitForNewTab(
@@ -313,7 +313,7 @@ add_task(async function testShowFullReportButton() {
   await openProtectionsPanel();
 
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   let newTabPromise = waitForAboutProtectionsTab();
@@ -349,12 +349,13 @@ add_task(async function testMiniPanel() {
   // Open the mini panel.
   await openProtectionsPanel(true);
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
 
   // Check that only the header is displayed.
-  for (let item of protectionsPopupMainView.childNodes) {
+  let mainView = document.getElementById("protections-popup-mainView");
+  for (let item of mainView.childNodes) {
     if (item.id !== "protections-popup-mainView-panel-header-section") {
       ok(
         !BrowserTestUtils.is_visible(item),
@@ -388,11 +389,11 @@ add_task(async function testToggleSwitchFlow() {
   await openProtectionsPanel();
 
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   let popupShownPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popupshown"
   );
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -418,14 +419,14 @@ add_task(async function testToggleSwitchFlow() {
 
   // Click on the mini panel and making sure the protection popup shows up.
   popupShownPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popupshown"
   );
   popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
-  protectionsPopupHeader.click();
+  document.getElementById("protections-popup-mainView-panel-header").click();
   await popuphiddenPromise;
   await popupShownPromise;
 
@@ -436,11 +437,11 @@ add_task(async function testToggleSwitchFlow() {
 
   // Click the TP switch again, from Off -> On.
   popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   popupShownPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popupshown"
   );
   browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -455,7 +456,7 @@ add_task(async function testToggleSwitchFlow() {
   // Protections popup hidden -> Page refresh -> Mini panel shows up.
   await popuphiddenPromise;
   popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
+    gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   await browserLoadedPromise;
@@ -626,8 +627,12 @@ add_task(async function testSubViewTelemetry() {
 
   for (let [item, telemetryId] of items) {
     await BrowserTestUtils.withNewTab("http://www.example.com", async () => {
-      item.classList.remove("notFound"); // Force visible for test
       await openProtectionsPanel();
+
+      item.classList.remove("notFound"); // Force visible for test
+      gProtectionsHandler._categoryItemOrderInvalidated = true;
+      gProtectionsHandler.reorderCategoryItems();
+
       let viewShownEvent = BrowserTestUtils.waitForEvent(
         gProtectionsHandler._protectionsPopupMultiView,
         "ViewShown"
