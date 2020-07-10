@@ -1469,20 +1469,6 @@ static inline UniqueChars StringToNewUTF8CharsZ(JSContext* maybecx,
 }
 
 /**
- * Allocate a string with the given contents, potentially GCing in the process.
- */
-template <typename CharT>
-extern JSLinearString* NewString(
-    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
-
-/* Like NewString, but doesn't attempt to deflate to Latin1. */
-template <typename CharT>
-extern JSLinearString* NewStringDontDeflate(
-    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
-
-/**
  * Allocate a string with the given contents.  If |allowGC == CanGC|, this may
  * trigger a GC.
  */

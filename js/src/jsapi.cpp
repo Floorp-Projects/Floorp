@@ -4203,7 +4203,7 @@ JS_PUBLIC_API JSString* JS_NewLatin1String(
     size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewString(cx, std::move(chars), length);
+  return NewString<CanGC>(cx, std::move(chars), length);
 }
 
 JS_PUBLIC_API JSString* JS_NewUCString(JSContext* cx,
@@ -4211,7 +4211,7 @@ JS_PUBLIC_API JSString* JS_NewUCString(JSContext* cx,
                                        size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewString(cx, std::move(chars), length);
+  return NewString<CanGC>(cx, std::move(chars), length);
 }
 
 JS_PUBLIC_API JSString* JS_NewUCStringDontDeflate(JSContext* cx,
@@ -4219,7 +4219,7 @@ JS_PUBLIC_API JSString* JS_NewUCStringDontDeflate(JSContext* cx,
                                                   size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewStringDontDeflate(cx, std::move(chars), length);
+  return NewStringDontDeflate<CanGC>(cx, std::move(chars), length);
 }
 
 JS_PUBLIC_API JSString* JS_NewUCStringCopyN(JSContext* cx, const char16_t* s,
