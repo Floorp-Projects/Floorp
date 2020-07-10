@@ -26,40 +26,36 @@
 class ChannelMap {
   constructor() {
     this.weakMap = new WeakMap();
-    this.refSet = new Set();
+    this.refMap = new Map();
     this.finalizationGroup = new FinalizationRegistry(ChannelMap.cleanup);
   }
 
-  static cleanup({ set, ref }) {
-    set.delete(ref);
+  static cleanup({ refMap, id }) {
+    refMap.delete(id);
   }
 
   set(channel, value) {
     const ref = new WeakRef(channel);
     this.weakMap.set(channel, { value, ref });
-    this.refSet.add(ref);
+    this.refMap.set(channel.channelId, ref);
     this.finalizationGroup.register(
       channel,
       {
-        set: this.refSet,
-        ref,
+        refMap: this.refMap,
+        id: channel.channelId,
       },
       ref
     );
   }
 
   getChannelById(channelId) {
-    for (const ref of this.refSet) {
-      const key = ref.deref();
-      if (!key) {
-        continue;
-      }
-      const { value } = this.weakMap.get(key);
-      if (value.channel.channelId === channelId) {
-        return value;
-      }
+    const ref = this.refMap.get(channelId);
+    const key = ref ? ref.deref() : null;
+    if (!key) {
+      return null;
     }
-    return null;
+    const { value } = this.weakMap.get(key);
+    return value;
   }
 
   delete(channel) {
@@ -69,7 +65,7 @@ class ChannelMap {
     }
 
     this.weakMap.delete(channel);
-    this.refSet.delete(entry.ref);
+    this.refMap.delete(channel.channelId);
     this.finalizationGroup.unregister(entry.ref);
     return true;
   }
