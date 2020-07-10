@@ -128,8 +128,9 @@ nscoord nsIFrame::SynthesizeBaselineBOffsetFromMarginBox(
 
 nscoord nsIFrame::SynthesizeBaselineBOffsetFromBorderBox(
     mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const {
-  MOZ_ASSERT(!aWM.IsOrthogonalTo(GetWritingMode()));
-  nscoord borderBoxSize = BSize(aWM);
+  nscoord borderBoxSize = MOZ_UNLIKELY(aWM.IsOrthogonalTo(GetWritingMode()))
+                              ? ISize(aWM)
+                              : BSize(aWM);
   if (aGroup == BaselineSharingGroup::First) {
     return MOZ_LIKELY(aWM.IsAlphabeticalBaseline()) ? borderBoxSize
                                                     : borderBoxSize / 2;
