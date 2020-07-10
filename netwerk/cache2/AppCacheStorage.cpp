@@ -159,9 +159,6 @@ NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(
   if (!CacheStorageService::Self()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  if (!LoadInfo()) {
-    return NS_ERROR_CACHE_KEY_NOT_FOUND;
-  }
 
   LOG(("AppCacheStorage::AsyncVisitStorage [this=%p, cb=%p]", this, aVisitor));
 
