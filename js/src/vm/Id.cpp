@@ -7,12 +7,9 @@
 #include "js/Id.h"
 #include "js/RootingAPI.h"
 
-#include "vm/JSContext.h"
 #include "vm/SymbolType.h"
 
 #include "vm/JSAtom-inl.h"
-
-using namespace js;
 
 static const jsid voidIdValue = JSID_VOID;
 static const jsid emptyIdValue = JSID_EMPTY;
@@ -30,7 +27,7 @@ bool JS::PropertyKey::isWellKnownSymbol(JS::SymbolCode code) const {
 }
 
 /* static */ JS::PropertyKey JS::PropertyKey::fromPinnedString(JSString* str) {
-  MOZ_ASSERT(AtomIsPinned(TlsContext.get(), &str->asAtom()));
+  MOZ_ASSERT(str->asAtom().isPinned());
   return js::AtomToId(&str->asAtom());
 }
 

@@ -297,7 +297,11 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static const uint32_t INDEX_VALUE_BIT = js::Bit(10);
   static const uint32_t INDEX_VALUE_SHIFT = 16;
 
+  static const uint32_t PINNED_ATOM_BIT = js::Bit(11);
+
   // NON_DEDUP_BIT is used in string deduplication during tenuring.
+  // Atoms won't be tenured, so overloading PINNED_ATOM_BIT
+  // with NON_DEDUP_BIT works correctly.
   static const uint32_t NON_DEDUP_BIT = js::Bit(11);
 
   static const uint32_t MAX_LENGTH = js::MaxStringLength;
@@ -1153,7 +1157,17 @@ class JSAtom : public JSLinearString {
   // initialization of the runtime. Permanent atoms are always pinned.
   MOZ_ALWAYS_INLINE void morphIntoPermanentAtom() {
     MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
-    setFlagBit(PERMANENT_ATOM_MASK);
+    setFlagBit(PERMANENT_ATOM_MASK | PINNED_ATOM_BIT);
+  }
+
+  MOZ_ALWAYS_INLINE
+  bool isPinned() const { return flags() & PINNED_ATOM_BIT; }
+
+  // Mark the atom as pinned. For use by atomization only.
+  MOZ_ALWAYS_INLINE void setPinned() {
+    MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
+    MOZ_ASSERT(!isPinned());
+    setFlagBit(PINNED_ATOM_BIT);
   }
 
   inline js::HashNumber hash() const;
@@ -1228,7 +1242,8 @@ MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoAtom(
 MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
     js::HashNumber hash) {
   MOZ_ASSERT(!isAtom());
-  setFlagBit(PERMANENT_ATOM_MASK);
+  setFlagBit(PERMANENT_ATOM_MASK | PINNED_ATOM_BIT);
+  setFlagBit(ATOM_BIT);
   JSAtom* atom = &asAtom();
   atom->initHash(hash);
   return atom;
