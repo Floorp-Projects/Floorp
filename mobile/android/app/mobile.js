@@ -51,13 +51,6 @@ pref("browser.tabs.useCache", false);
 
 pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
-// Mobile will use faster, less durable mode.
-pref("toolkit.storage.synchronous", 0);
-
-// Android needs concurrent access to the same database from multiple processes,
-// thus we can't use exclusive locking on it.
-pref("storage.multiProcessAccess.enabled", true);
-
 // The default fallback zoom level to render pages at. Set to -1 to fit page; otherwise
 // the value is divided by 1000 and clamped to hard-coded min/max scale values.
 pref("browser.viewport.defaultZoom", -1);

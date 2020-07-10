@@ -1216,14 +1216,7 @@ ContentPrefService2.prototype = {
     // Note: this could cause database corruption if the OS crashes or machine
     // loses power before the data gets written to disk, but this is considered
     // a reasonable risk for the not-so-critical data stored in this database.
-    //
-    // If you really don't want to take this risk, however, just set the
-    // toolkit.storage.synchronous pref to 1 (NORMAL synchronization) or 2
-    // (FULL synchronization), in which case mozStorageConnection::Initialize
-    // will use that value, and we won't override it here.
-    if (!Services.prefs.prefHasUserValue("toolkit.storage.synchronous")) {
-      await conn.execute("PRAGMA synchronous = OFF");
-    }
+    await conn.execute("PRAGMA synchronous = OFF");
 
     return conn;
   },

@@ -74,6 +74,7 @@ pref_groups = [
     'prompts',
     'security',
     'slider',
+    'storage',
     'svg',
     'telemetry',
     'test',

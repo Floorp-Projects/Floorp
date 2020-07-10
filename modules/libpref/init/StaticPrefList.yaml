@@ -8999,6 +8999,28 @@
   mirror: once
 
 #---------------------------------------------------------------------------
+# Prefs starting with "storage."
+#---------------------------------------------------------------------------
+
+# Whether to use a non-exclusive VFS.
+# By default we use the unix-excl VFS, for the following reasons:
+# 1. It improves compatibility with NFS shares, whose implementation
+#    is incompatible with SQLite's locking requirements (reliable fcntl), and
+#    in particular with WAL journaling.
+#    Bug 433129 attempted to automatically identify such file-systems,
+#    but a reliable way was not found and the fallback locking is slower than
+#    POSIX locking, so we do not want to do it by default.
+# 2. It allows wal mode to avoid the memory mapped -shm file, reducing the
+#    likelihood of SIGBUS failures when disk space is exhausted.
+# 3. It provides some protection from third party database tampering while a
+#    connection is open.
+# Note there's no win32-excl VFS, so this has no effect on Windows.
+- name: storage.sqlite.exclusiveLock.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "svg."
 #---------------------------------------------------------------------------
 

@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_storage.h"
 
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageFunction.h"
@@ -72,7 +73,7 @@ namespace mozilla::storage {
 
 using mozilla::dom::quota::QuotaObject;
 
-const char* GetVFSName();
+const char* GetVFSName(bool);
 
 namespace {
 
@@ -565,7 +566,7 @@ nsresult Connection::initialize() {
   AUTO_PROFILER_LABEL("Connection::initialize", OTHER);
 
   // in memory database requested, sqlite uses a magic file name
-  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, GetVFSName());
+  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, GetVFSName(true));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
@@ -593,6 +594,8 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
                "Initialize called on already opened database!");
   AUTO_PROFILER_LABEL("Connection::initialize", OTHER);
 
+  // Do not set mFileURL here since this is database does not have an associated
+  // URL.
   mDatabaseFile = aDatabaseFile;
 
   nsAutoString path;
@@ -604,27 +607,41 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
 #else
   static const char* sIgnoreLockingVFS = "unix-none";
 #endif
-  const char* vfs = mIgnoreLockingMode ? sIgnoreLockingVFS : GetVFSName();
 
-  int srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, vfs);
+  bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
+  int srv;
+  if (mIgnoreLockingMode) {
+    exclusive = false;
+    srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
+                            sIgnoreLockingVFS);
+  } else {
+    srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
+                            GetVFSName(exclusive));
+    if (exclusive && (srv == SQLITE_LOCKED || srv == SQLITE_BUSY)) {
+      // Retry without trying to get an exclusive lock.
+      exclusive = false;
+      srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
+                              mFlags, GetVFSName(false));
+    }
+  }
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
-#ifdef MOZ_SQLITE_FTS3_TOKENIZER
-  srv =
-      ::sqlite3_db_config(mDBConn, SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER, 1, 0);
-  MOZ_ASSERT(srv == SQLITE_OK,
-             "SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER should be enabled");
-#endif
-
-  // Do not set mFileURL here since this is database does not have an associated
-  // URL.
-  mDatabaseFile = aDatabaseFile;
-
   rv = initializeInternal();
+  if (exclusive &&
+      (rv == NS_ERROR_STORAGE_BUSY || rv == NS_ERROR_FILE_IS_LOCKED)) {
+    // Usually SQLite will fail to acquire an exclusive lock on opening, but in
+    // some cases it may successfully open the database and then lock on the
+    // first query execution. When initializeInternal fails it closes the
+    // connection, so we can try to restart it in non-exclusive mode.
+    srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
+                            GetVFSName(false));
+    if (srv == SQLITE_OK) {
+      rv = initializeInternal();
+    }
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -640,28 +657,40 @@ nsresult Connection::initialize(nsIFileURL* aFileURL) {
   nsresult rv = aFileURL->GetFile(getter_AddRefs(databaseFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Set both mDatabaseFile and mFileURL here.
+  mFileURL = aFileURL;
+  mDatabaseFile = databaseFile;
+
   nsAutoCString spec;
   rv = aFileURL->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName());
+  bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
+  int srv =
+      ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(exclusive));
+
+  if (exclusive && (srv == SQLITE_LOCKED || srv == SQLITE_BUSY)) {
+    // Retry without trying to get an exclusive lock.
+    exclusive = false;
+    srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(false));
+  }
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
-#ifdef MOZ_SQLITE_FTS3_TOKENIZER
-  srv =
-      ::sqlite3_db_config(mDBConn, SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER, 1, 0);
-  MOZ_ASSERT(srv == SQLITE_OK,
-             "SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER should be enabled");
-#endif
-
-  // Set both mDatabaseFile and mFileURL here.
-  mFileURL = aFileURL;
-  mDatabaseFile = databaseFile;
-
   rv = initializeInternal();
+  if (exclusive &&
+      (rv == NS_ERROR_STORAGE_BUSY || rv == NS_ERROR_FILE_IS_LOCKED)) {
+    // Usually SQLite will fail to acquire an exclusive lock on opening, but in
+    // some cases it may successfully open the database and then lock on the
+    // first query execution. When initializeInternal fails it closes the
+    // connection, so we can try to restart it in non-exclusive mode.
+    srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(false));
+    if (srv == SQLITE_OK) {
+      rv = initializeInternal();
+    }
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -669,8 +698,16 @@ nsresult Connection::initialize(nsIFileURL* aFileURL) {
 
 nsresult Connection::initializeInternal() {
   MOZ_ASSERT(mDBConn);
-
   auto guard = MakeScopeExit([&]() { initializeFailed(); });
+
+  mConnectionClosed = false;
+
+#ifdef MOZ_SQLITE_FTS3_TOKENIZER
+  DebugOnly<int> srv =
+      ::sqlite3_db_config(mDBConn, SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER, 1, 0);
+  MOZ_ASSERT(srv == SQLITE_OK,
+             "SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER should be enabled");
+#endif
 
   if (mFileURL) {
     const char* dbPath = ::sqlite3_db_filename(mDBConn, "main");
@@ -705,7 +742,7 @@ nsresult Connection::initializeInternal() {
         ("Opening connection to '%s' (%p)", mTelemetryFilename.get(), this));
   }
 
-  int64_t pageSize = Service::getDefaultPageSize();
+  int64_t pageSize = Service::kDefaultPageSize;
 
   // Set page_size to the preferred default value.  This is effective only if
   // the database has just been created, otherwise, if the database does not
@@ -741,19 +778,15 @@ nsresult Connection::initializeInternal() {
     return convertResultCode(srv);
   }
 
-  // Set the synchronous PRAGMA, according to the preference.
-  switch (Service::getSynchronousPref()) {
-    case 2:
-      (void)ExecuteSimpleSQL("PRAGMA synchronous = FULL;"_ns);
-      break;
-    case 0:
-      (void)ExecuteSimpleSQL("PRAGMA synchronous = OFF;"_ns);
-      break;
-    case 1:
-    default:
-      (void)ExecuteSimpleSQL("PRAGMA synchronous = NORMAL;"_ns);
-      break;
-  }
+  // Set the default synchronous value. Each consumer can switch this
+  // accordingly to their needs.
+#if defined(ANDROID)
+  // Android prefers synchronous = OFF for performance reasons.
+  Unused << ExecuteSimpleSQL("PRAGMA synchronous = OFF;"_ns);
+#else
+  // Normal is the suggested value for WAL journals.
+  Unused << ExecuteSimpleSQL("PRAGMA synchronous = NORMAL;"_ns);
+#endif
 
   // Initialization succeeded, we can stop guarding for failures.
   guard.release();
@@ -1601,7 +1634,7 @@ Connection::Interrupt() {
 
 NS_IMETHODIMP
 Connection::GetDefaultPageSize(int32_t* _defaultPageSize) {
-  *_defaultPageSize = Service::getDefaultPageSize();
+  *_defaultPageSize = Service::kDefaultPageSize;
   return NS_OK;
 }
 
