@@ -3735,6 +3735,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
+    compilationInfo.setEnclosingScope(&cx->global()->emptyGlobalScope());
+
     if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
       return false;
     }
@@ -3748,9 +3750,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
     uint32_t len = chars.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(len, options);
-    ModuleSharedContext modulesc(cx, module, compilationInfo,
-                                 &cx->global()->emptyGlobalScope(), builder,
-                                 extent);
+    ModuleSharedContext modulesc(cx, module, compilationInfo, builder, extent);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
       return false;
