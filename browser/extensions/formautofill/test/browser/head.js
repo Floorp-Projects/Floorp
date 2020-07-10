@@ -312,20 +312,16 @@ async function waitForPopupEnabled(browser) {
 async function openPopupOn(browser, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(browser, selector);
-  if (!selector.includes("cc-")) {
-    info(`openPopupOn: before VK_DOWN on ${selector}`);
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-  }
+  info("openPopupOn: before VK_DOWN");
+  await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   await expectPopupOpen(browser);
 }
 
 async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
-  if (!selector.includes("cc-")) {
-    info(`openPopupForSubframe: before VK_DOWN on ${selector}`);
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
-  }
+  info("openPopupForSubframe: before VK_DOWN");
+  await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
   await expectPopupOpen(browser);
 }
 
