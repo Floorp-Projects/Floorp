@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering, EdgeAaSegmentMask};
-use api::{YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
+use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use crate::composite::{CompositeState};
-use crate::glyph_rasterizer::GlyphFormat;
+use crate::glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
 use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance, BrushShaderKind};
@@ -1165,6 +1165,95 @@ impl BatchBuilder {
                             }
                         };
 
+                        // Calculate a tighter bounding rect of just the glyphs passed to this
+                        // callback from request_glyphs(), rather than using the bounds of the
+                        // entire text run. This improves batching when glyphs are fragmented
+                        // over multiple textures in the texture cache.
+                        // This code is taken from the ps_text_run shader.
+                        let tight_bounding_rect = {
+                            let snap_bias = match subpx_dir {
+                                SubpixelDirection::None => DeviceVector2D::new(0.5, 0.5),
+                                SubpixelDirection::Horizontal => DeviceVector2D::new(0.125, 0.5),
+                                SubpixelDirection::Vertical => DeviceVector2D::new(0.5, 0.125),
+                                SubpixelDirection::Mixed => DeviceVector2D::new(0.125, 0.125),
+                            };
+                            let text_offset = prim_header.local_rect.size.to_vector();
+
+                            let pic_bounding_rect = if run.used_font.flags.contains(FontInstanceFlags::TRANSFORM_GLYPHS) {
+                                let mut device_bounding_rect = DeviceRect::default();
+
+                                let glyph_transform = ctx.spatial_tree.get_relative_transform(
+                                    prim_spatial_node_index,
+                                    root_spatial_node_index,
+                                ).into_transform()
+                                    .with_destination::<WorldPixel>()
+                                    .post_transform(&euclid::Transform3D::from_scale(ctx.global_device_pixel_scale));
+
+                                let glyph_translation = DeviceVector2D::new(glyph_transform.m41, glyph_transform.m42);
+
+                                for glyph in glyphs {
+                                    let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.origin.to_vector();
+
+                                    let raster_glyph_offset = (glyph_transform.transform_point2d(glyph_offset).unwrap() + snap_bias).floor();
+                                    let raster_text_offset = (
+                                        glyph_transform.transform_vector2d(text_offset) +
+                                        glyph_translation +
+                                        DeviceVector2D::new(0.5, 0.5)
+                                    ).floor() - glyph_translation;
+
+                                    let device_glyph_rect = DeviceRect::new(
+                                        glyph.offset + raster_glyph_offset.to_vector() + raster_text_offset,
+                                        glyph.size.to_f32(),
+                                    );
+
+                                    device_bounding_rect = device_bounding_rect.union(&device_glyph_rect);
+                                }
+
+                                let map_device_to_surface: SpaceMapper<DevicePixel, PicturePixel> = SpaceMapper::new_with_target(
+                                    surface_spatial_node_index,
+                                    root_spatial_node_index,
+                                    *bounding_rect,
+                                    ctx.spatial_tree,
+                                );
+
+                                let pic_bounding_rect = map_device_to_surface.map(&device_bounding_rect).unwrap();
+
+                                pic_bounding_rect
+                            } else {
+                                let mut local_bounding_rect = LayoutRect::default();
+
+                                let glyph_raster_scale = raster_scale * ctx.global_device_pixel_scale.get();
+
+                                for glyph in glyphs {
+                                    let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.origin.to_vector();
+                                    let glyph_scale = LayoutToDeviceScale::new(glyph_raster_scale / glyph.scale);
+                                    let raster_glyph_offset = (glyph_offset * LayoutToDeviceScale::new(glyph_raster_scale) + snap_bias).floor() / glyph.scale;
+                                    let local_glyph_rect = LayoutRect::new(
+                                        (glyph.offset + raster_glyph_offset.to_vector()) / glyph_scale + text_offset,
+                                        glyph.size.to_f32() / glyph_scale,
+                                    );
+
+                                    local_bounding_rect = local_bounding_rect.union(&local_glyph_rect);
+                                }
+
+                                let map_prim_to_surface: SpaceMapper<LayoutPixel, PicturePixel> = SpaceMapper::new_with_target(
+                                    surface_spatial_node_index,
+                                    prim_spatial_node_index,
+                                    *bounding_rect,
+                                    ctx.spatial_tree,
+                                );
+                                let pic_bounding_rect = map_prim_to_surface.map(&local_bounding_rect).unwrap();
+
+                                pic_bounding_rect
+                            };
+
+                            // The text run may have been clipped, for example if part of it is offscreen.
+                            // So intersect our result with the original bounding rect.
+                            let intersected = pic_bounding_rect.intersection(bounding_rect).unwrap_or_else(|| PictureRect::zero());
+
+                            intersected
+                        };
+
                         let key = BatchKey::new(kind, blend_mode, textures);
 
                         for batcher in batchers.iter_mut() {
@@ -1173,7 +1262,7 @@ impl BatchBuilder {
                                 let batch = batcher.alpha_batch_list.set_params_and_get_batch(
                                     key,
                                     BatchFeatures::empty(),
-                                    bounding_rect,
+                                    &tight_bounding_rect,
                                     z_id,
                                 );
 
@@ -3034,6 +3123,7 @@ pub fn resolve_image(
                             image_properties.descriptor.size,
                         ),
                         texture_layer: 0,
+                        user_data: [0.0, 0.0, 0.0],
                     };
 
                     deferred_resolves.push(DeferredResolve {

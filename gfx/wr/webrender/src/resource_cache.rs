@@ -57,6 +57,9 @@ static NEXT_NATIVE_SURFACE_ID: AtomicUsize = AtomicUsize::new(0);
 pub struct GlyphFetchResult {
     pub index_in_text_run: i32,
     pub uv_rect_address: GpuCacheAddress,
+    pub offset: DevicePoint,
+    pub size: DeviceIntSize,
+    pub scale: f32,
 }
 
 // These coordinates are always in texels.
@@ -76,6 +79,7 @@ pub struct CacheItem {
     pub uv_rect_handle: GpuCacheHandle,
     pub uv_rect: DeviceIntRect,
     pub texture_layer: i32,
+    pub user_data: [f32; 3],
 }
 
 impl CacheItem {
@@ -85,6 +89,7 @@ impl CacheItem {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect: DeviceIntRect::zero(),
             texture_layer: 0,
+            user_data: [0.0, 0.0, 0.0],
         }
     }
 }
@@ -1031,6 +1036,9 @@ impl ResourceCache {
             fetch_buffer.push(GlyphFetchResult {
                 index_in_text_run: loop_index as i32,
                 uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+                offset: DevicePoint::new(cache_item.user_data[0], cache_item.user_data[1]),
+                size: cache_item.uv_rect.size,
+                scale: cache_item.user_data[2],
             });
         }
 
