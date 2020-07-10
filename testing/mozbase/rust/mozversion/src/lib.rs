@@ -199,7 +199,7 @@ pub fn firefox_version(binary: &Path) -> Result<AppVersion, Error> {
             }
         }
 
-        let mut platform_ini = dir.clone();
+        let mut platform_ini = dir;
         platform_ini.push("platform.ini");
 
         if Path::exists(&platform_ini) {
