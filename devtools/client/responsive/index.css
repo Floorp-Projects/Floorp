@@ -296,20 +296,6 @@ input:-moz-focusring {
 }
 
 /**
- * Viewport Browser
- */
-
-.browser {
-  display: block;
-  border: 0;
-  user-select: none;
-}
-
-.browser:-moz-focusring {
-  outline: none;
-}
-
-/**
  * Viewport Dimension Input
  */
 
