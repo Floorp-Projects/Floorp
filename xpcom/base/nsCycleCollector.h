@@ -51,7 +51,8 @@ bool nsCycleCollector_doDeferredDeletionWithBudget(js::SliceBudget& aBudget);
 already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink();
 already_AddRefed<nsICycleCollectorListener> nsCycleCollector_createLogger();
 
-void nsCycleCollector_collect(nsICycleCollectorListener* aManualListener);
+// Run a cycle collection and return whether anything was collected.
+bool nsCycleCollector_collect(nsICycleCollectorListener* aManualListener);
 
 void nsCycleCollector_collectSlice(js::SliceBudget& budget,
                                    bool aPreferShorterSlices = false);

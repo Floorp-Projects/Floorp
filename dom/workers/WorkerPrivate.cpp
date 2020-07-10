@@ -2098,7 +2098,8 @@ WorkerPrivate::WorkerThreadAccessible::WorkerThreadAccessible(
       mPeriodicGCTimerRunning(false),
       mIdleGCTimerRunning(false),
       mOnLine(aParent ? aParent->OnLine() : !NS_IsOffline()),
-      mJSThreadExecutionGranted(false) {}
+      mJSThreadExecutionGranted(false),
+      mCCCollectedAnything(false) {}
 
 namespace {
 
@@ -4860,8 +4861,15 @@ void WorkerPrivate::SetLowMemoryStateInternal(JSContext* aCx, bool aState) {
   }
 }
 
+void WorkerPrivate::SetCCCollectedAnything(bool collectedAnything) {
+  mWorkerThreadAccessible.Access()->mCCCollectedAnything = collectedAnything;
+}
+
 void WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
                                            bool aCollectChildren) {
+  // Perform GC followed by CC (the CC is triggered by
+  // WorkerJSRuntime::CustomGCCallback at the end of the collection).
+
   auto data = mWorkerThreadAccessible.Access();
 
   if (!GlobalScope()) {
@@ -4874,6 +4882,12 @@ void WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 
     if (aShrinking) {
       JS::NonIncrementalGC(aCx, GC_SHRINK, JS::GCReason::DOM_WORKER);
+
+      // Check whether the CC collected anything and if so GC again. This is
+      // necessary to collect all garbage.
+      if (data->mCCCollectedAnything) {
+        JS::NonIncrementalGC(aCx, GC_NORMAL, JS::GCReason::DOM_WORKER);
+      }
 
       if (!aCollectChildren) {
         LOG(WorkerLog(), ("Worker %p collected idle garbage\n", this));

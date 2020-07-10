@@ -821,7 +821,8 @@ class WorkerJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     if (aStatus == JSGC_END) {
-      nsCycleCollector_collect(nullptr);
+      bool collectedAnything = nsCycleCollector_collect(nullptr);
+      mWorkerPrivate->SetCCCollectedAnything(collectedAnything);
     }
   }
 
