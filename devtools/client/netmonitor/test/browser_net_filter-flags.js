@@ -170,7 +170,6 @@ add_task(async function() {
   info("Starting test... ");
 
   const waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
-  loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS);
   await waitNetwork;
 
