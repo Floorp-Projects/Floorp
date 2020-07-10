@@ -235,7 +235,8 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
-  static bool FindTargetNode(nsINode& aStart, nsCOMPtr<nsINode>& aResult);
+  static bool FindTargetNodeOfContextForPastedHTML(nsINode& aStart,
+                                                   nsCOMPtr<nsINode>& aResult);
 
   /**
    * @return nullptr, if there's no invisible `<br>`.
@@ -3063,7 +3064,7 @@ void HTMLEditor::HTMLWithContextInserter::
  * the magical comment node containing kInsertCookie or, failing that, the
  * firstChild of the firstChild (until we reach a leaf).
  */
-bool HTMLEditor::HTMLWithContextInserter::FindTargetNode(
+bool HTMLEditor::HTMLWithContextInserter::FindTargetNodeOfContextForPastedHTML(
     nsINode& aStart, nsCOMPtr<nsINode>& aResult) {
   nsIContent* firstChild = aStart.GetFirstChild();
   if (!firstChild) {
@@ -3093,7 +3094,7 @@ bool HTMLEditor::HTMLWithContextInserter::FindTargetNode(
       }
     }
 
-    if (FindTargetNode(*child, aResult)) {
+    if (FindTargetNodeOfContextForPastedHTML(*child, aResult)) {
       return true;
     }
   }
@@ -3154,8 +3155,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     HTMLWithContextInserter::RemoveHeadChildAndStealBodyChildsChildren(
         *documentFragmentForContext);
 
-    HTMLWithContextInserter::FindTargetNode(*documentFragmentForContext,
-                                            targetNode);
+    HTMLWithContextInserter::FindTargetNodeOfContextForPastedHTML(
+        *documentFragmentForContext, targetNode);
   }
 
   nsCOMPtr<nsIContent> targetContent = nsIContent::FromNodeOrNull(targetNode);
