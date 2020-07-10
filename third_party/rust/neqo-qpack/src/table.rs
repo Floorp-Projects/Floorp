@@ -246,7 +246,7 @@ impl HeaderTable {
         self.evict_to_internal(reduce, false)
     }
 
-    fn test_evict_to(&mut self, reduce: u64) -> bool {
+    pub fn can_evict_to(&mut self, reduce: u64) -> bool {
         self.evict_to_internal(reduce, true)
     }
 
@@ -276,7 +276,7 @@ impl HeaderTable {
 
     pub fn insert_possible(&mut self, size: usize) -> bool {
         u64::try_from(size).unwrap() <= self.capacity
-            && self.test_evict_to(self.capacity - u64::try_from(size).unwrap())
+            && self.can_evict_to(self.capacity - u64::try_from(size).unwrap())
     }
 
     /// Insert a new entry.

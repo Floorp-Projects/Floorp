@@ -13,7 +13,7 @@ use neqo_crypto::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
     hkdf,
     hp::HpKey,
-    AuthenticationStatus,
+    AllowZeroRtt, AuthenticationStatus,
 };
 use neqo_transport::{
     server::{ActiveConnectionRef, Server},
@@ -36,6 +36,7 @@ fn default_server() -> Server {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         test_fixture::anti_replay(),
+        Box::new(AllowZeroRtt {}),
         Rc::new(RefCell::new(FixedConnectionIdManager::new(9))),
     )
     .expect("should create a server")

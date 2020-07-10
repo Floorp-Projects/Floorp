@@ -5,7 +5,7 @@
 use neqo_common::{matches, Datagram};
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
-use neqo_http3::{Http3Client, Http3ClientEvent, Http3State};
+use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::Error as TransportError;
 use neqo_transport::{FixedConnectionIdManager, Output, QuicVersion};
@@ -63,10 +63,13 @@ impl NeqoHttp3Conn {
             Err(_) => return Err(NS_ERROR_INVALID_ARG),
         };
 
-        let qpack_settings = QpackSettings {
-            max_table_size_encoder: max_table_size,
-            max_table_size_decoder: max_table_size,
-            max_blocked_streams,
+        let http3_settings = Http3Parameters {
+            qpack_settings: QpackSettings {
+                max_table_size_encoder: max_table_size,
+                max_table_size_decoder: max_table_size,
+                max_blocked_streams,
+            },
+            max_concurrent_push_streams: 0,
         };
 
         let quic_version = match alpn_conv {
@@ -82,8 +85,8 @@ impl NeqoHttp3Conn {
             Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
             local,
             remote,
-            qpack_settings,
             quic_version,
+            &http3_settings,
         ) {
             Ok(c) => c,
             Err(_) => return Err(NS_ERROR_INVALID_ARG),
@@ -390,6 +393,7 @@ pub enum Http3Event {
     },
     HeaderReady {
         stream_id: u64,
+        fin: bool,
     },
     /// New bytes available for reading.
     DataReadable {
@@ -400,10 +404,20 @@ pub enum Http3Event {
         stream_id: u64,
         error: u64,
     },
-    /// A new push stream
-    NewPushStream {
-        stream_id: u64,
+    /// A PushPromise
+    PushPromise {
+        push_id: u64,
+        request_stream_id: u64,
     },
+    /// A push response headers are ready.
+    PushHeaderReady {
+        push_id: u64,
+        fin: bool,
+    },
+    /// New bytes are available on a push stream for reading.
+    PushDataReadable { push_id: u64 },
+    /// A push has been canceled.
+    PushCanceled { push_id: u64 },
     RequestsCreatable,
     AuthenticationNeeded,
     ZeroRttRejected,
@@ -418,12 +432,35 @@ pub enum Http3Event {
     NoEvent,
 }
 
+fn convert_h3_to_h1_headers(headers: Vec<(String, String)>, ret_headers: &mut ThinVec<u8>) -> nsresult {
+    if headers.iter().filter(|(k, _)| k == ":status").count() != 1 {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    let (_, status_val) = headers
+        .iter()
+        .find(|(k, _)| k == ":status")
+        .expect("must be one");
+
+    ret_headers.extend_from_slice(b"HTTP/3 ");
+    ret_headers.extend_from_slice(status_val.as_bytes());
+    ret_headers.extend_from_slice(b"\r\n");
+
+    for (key, value) in headers.iter().filter(|(k, _)| k != ":status") {
+        ret_headers.extend_from_slice(key.as_bytes());
+        ret_headers.extend_from_slice(b": ");
+        ret_headers.extend_from_slice(value.as_bytes());
+        ret_headers.extend_from_slice(b"\r\n");
+    }
+    ret_headers.extend_from_slice(b"\r\n");
+    return NS_OK;
+}
+
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_event(
     conn: &mut NeqoHttp3Conn,
     ret_event: &mut Http3Event,
     ret_headers: &mut ThinVec<u8>,
-    ret_fin: &mut bool,
 ) -> nsresult {
     while let Some(evt) = conn.conn.next_event() {
         let fe = match evt {
@@ -437,37 +474,33 @@ pub extern "C" fn neqo_http3conn_event(
                 fin,
             } => {
                 if let Some(headers) = headers {
-                    if headers.iter().filter(|(k, _)| k == ":status").count() != 1 {
-                        return NS_ERROR_ILLEGAL_VALUE;
+                    let res = convert_h3_to_h1_headers(headers, ret_headers);
+                    if res != NS_OK {
+                        return res;
                     }
-
-                    let (_, status_val) = headers
-                        .iter()
-                        .find(|(k, _)| k == ":status")
-                        .expect("must be one");
-
-                    ret_headers.extend_from_slice(b"HTTP/3 ");
-                    ret_headers.extend_from_slice(status_val.as_bytes());
-                    ret_headers.extend_from_slice(b"\r\n");
-
-                    for (key, value) in headers.iter().filter(|(k, _)| k != ":status") {
-                        ret_headers.extend_from_slice(key.as_bytes());
-                        ret_headers.extend_from_slice(b": ");
-                        ret_headers.extend_from_slice(value.as_bytes());
-                        ret_headers.extend_from_slice(b"\r\n");
-                    }
-                    ret_headers.extend_from_slice(b"\r\n");
                 }
-
-                *ret_fin = fin;
-
-                Http3Event::HeaderReady { stream_id }
+                Http3Event::HeaderReady { stream_id, fin }
             }
             Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable { stream_id },
             Http3ClientEvent::Reset { stream_id, error } => Http3Event::Reset { stream_id, error },
-            Http3ClientEvent::NewPushStream { stream_id } => {
-                Http3Event::NewPushStream { stream_id }
+            Http3ClientEvent::PushPromise { push_id, request_stream_id, headers } => {
+                let res = convert_h3_to_h1_headers(headers, ret_headers);
+                if res != NS_OK {
+                    return res;
+                }
+                Http3Event::PushPromise { push_id, request_stream_id }
             }
+            Http3ClientEvent::PushHeaderReady { push_id, headers, fin } => {
+                if let Some(headers) = headers {
+                    let res = convert_h3_to_h1_headers(headers, ret_headers);
+                    if res != NS_OK {
+                        return res;
+                    }
+                }
+                Http3Event::PushHeaderReady { push_id, fin }
+            }
+            Http3ClientEvent::PushDataReadable { push_id } => Http3Event::PushDataReadable { push_id },
+            Http3ClientEvent::PushCanceled { push_id } => Http3Event::PushCanceled { push_id },
             Http3ClientEvent::RequestsCreatable => Http3Event::RequestsCreatable,
             Http3ClientEvent::AuthenticationNeeded => Http3Event::AuthenticationNeeded,
             Http3ClientEvent::ZeroRttRejected => Http3Event::ZeroRttRejected,

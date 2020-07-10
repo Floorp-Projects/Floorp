@@ -25,7 +25,7 @@ use neqo_common::{
 use neqo_crypto::agent::CertificateInfo;
 use neqo_crypto::{
     Agent, AntiReplay, AuthenticationStatus, Cipher, Client, HandshakeState, SecretAgentInfo,
-    Server,
+    Server, ZeroRttChecker,
 };
 
 use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdManager, ConnectionIdRef};
@@ -457,7 +457,7 @@ pub struct Connection {
     events: ConnectionEvents,
     token: Option<Vec<u8>>,
     stats: Stats,
-    qlog: Rc<RefCell<Option<NeqoQlog>>>,
+    qlog: NeqoQlog,
 
     quic_version: QuicVersion,
 }
@@ -487,7 +487,6 @@ impl Connection {
             Role::Client,
             Client::new(server_name)?.into(),
             cid_manager,
-            None,
             protocols,
             None,
             quic_version,
@@ -502,7 +501,6 @@ impl Connection {
     pub fn new_server(
         certs: &[impl AsRef<str>],
         protocols: &[impl AsRef<str>],
-        anti_replay: &AntiReplay,
         cid_manager: CidMgr,
         quic_version: QuicVersion,
     ) -> Res<Self> {
@@ -510,11 +508,19 @@ impl Connection {
             Role::Server,
             Server::new(certs)?.into(),
             cid_manager,
-            Some(anti_replay),
             protocols,
             None,
             quic_version,
         )
+    }
+
+    pub fn server_enable_0rtt(
+        &mut self,
+        anti_replay: &AntiReplay,
+        zero_rtt_checker: impl ZeroRttChecker + 'static,
+    ) -> Res<()> {
+        self.crypto
+            .server_enable_0rtt(self.tps.clone(), anti_replay, zero_rtt_checker)
     }
 
     fn set_tp_defaults(tps: &mut TransportParameters) {
@@ -541,7 +547,6 @@ impl Connection {
         role: Role,
         agent: Agent,
         cid_manager: CidMgr,
-        anti_replay: Option<&AntiReplay>,
         protocols: &[impl AsRef<str>],
         path: Option<Path>,
         quic_version: QuicVersion,
@@ -554,7 +559,7 @@ impl Connection {
             local_initial_source_cid.to_vec(),
         );
 
-        let crypto = Crypto::new(agent, protocols, tphandler.clone(), anti_replay)?;
+        let crypto = Crypto::new(agent, protocols, tphandler.clone())?;
 
         let mut c = Self {
             role,
@@ -582,7 +587,7 @@ impl Connection {
             events: ConnectionEvents::default(),
             token: None,
             stats: Stats::default(),
-            qlog: Rc::new(RefCell::new(None)),
+            qlog: NeqoQlog::disabled(),
             quic_version,
         };
         c.stats.init(format!("{}", c));
@@ -595,15 +600,14 @@ impl Connection {
     }
 
     /// Set or clear the qlog for this connection.
-    pub fn set_qlog(&mut self, qlog: Option<NeqoQlog>) {
-        let conn_ql = Rc::new(RefCell::new(qlog));
-        self.loss_recovery.set_qlog(conn_ql.clone());
-        self.qlog = conn_ql;
+    pub fn set_qlog(&mut self, qlog: NeqoQlog) {
+        self.loss_recovery.set_qlog(qlog.clone());
+        self.qlog = qlog;
     }
 
     /// Get the qlog (if any) for this connection.
-    pub fn qlog_mut(&mut self) -> Rc<RefCell<Option<NeqoQlog>>> {
-        self.qlog.clone()
+    pub fn qlog_mut(&mut self) -> &mut NeqoQlog {
+        &mut self.qlog
     }
 
     /// Set a local transport parameter, possibly overriding a default value.
@@ -872,7 +876,7 @@ impl Connection {
 
         let lost = self.loss_recovery.timeout(now);
         self.handle_lost_packets(&lost);
-        qlog::packets_lost(&mut self.qlog.borrow_mut(), &lost);
+        qlog::packets_lost(&mut self.qlog, &lost);
     }
 
     /// Call in to process activity on the connection. Either new packets have
@@ -1246,7 +1250,7 @@ impl Connection {
                         payload.pn(),
                         &payload[..],
                     );
-                    qlog::packet_received(&mut self.qlog.borrow_mut(), &payload);
+                    qlog::packet_received(&mut self.qlog, &payload);
                     let res = self.process_packet(&payload, now);
                     if res.is_err() && self.path.is_none() {
                         // We need to make a path for sending an error message.
@@ -1270,7 +1274,7 @@ impl Connection {
                     // the rest of the datagram on the floor, but don't generate an error.
                     self.check_stateless_reset(&d, slc, now)?;
                     self.stats.pkt_dropped("Decryption failure");
-                    qlog::packet_dropped(&mut self.qlog.borrow_mut(), &packet);
+                    qlog::packet_dropped(&mut self.qlog, &packet);
                 }
             }
             slc = remainder;
@@ -1601,12 +1605,7 @@ impl Connection {
             }
 
             dump_packet(self, "TX ->", pt, pn, &builder[payload_start..]);
-            qlog::packet_sent(
-                &mut self.qlog.borrow_mut(),
-                pt,
-                pn,
-                &builder[payload_start..],
-            );
+            qlog::packet_sent(&mut self.qlog, pt, pn, &builder[payload_start..]);
 
             self.stats.packets_tx += 1;
             encoder = builder.build(self.crypto.states.tx(*space).unwrap())?;
@@ -1687,7 +1686,7 @@ impl Connection {
     fn client_start(&mut self, now: Instant) -> Res<()> {
         qinfo!([self], "client_start");
         debug_assert_eq!(self.role, Role::Client);
-        qlog::client_connection_started(&mut self.qlog.borrow_mut(), self.path.as_ref().unwrap());
+        qlog::client_connection_started(&mut self.qlog, self.path.as_ref().unwrap());
         self.loss_recovery.start_pacer(now);
 
         self.handshake(now, PNSpace::Initial, None)?;
@@ -2153,7 +2152,7 @@ impl Connection {
             }
         }
         self.handle_lost_packets(&lost_packets);
-        qlog::packets_lost(&mut self.qlog.borrow_mut(), &lost_packets);
+        qlog::packets_lost(&mut self.qlog, &lost_packets);
         Ok(())
     }
 
@@ -2187,10 +2186,7 @@ impl Connection {
             debug_assert_eq!(1, self.valid_cids.len());
             self.valid_cids.clear();
             // Generate a qlog event that the server connection started.
-            qlog::server_connection_started(
-                &mut self.qlog.borrow_mut(),
-                self.path.as_ref().unwrap(),
-            );
+            qlog::server_connection_started(&mut self.qlog, self.path.as_ref().unwrap());
         } else {
             self.zero_rtt_state = if self.crypto.tls.info().unwrap().early_data_accepted() {
                 ZeroRttState::AcceptedClient
@@ -2211,7 +2207,7 @@ impl Connection {
             self.set_state(State::Confirmed);
         }
         qinfo!([self], "Connection established");
-        qlog::connection_tparams_set(&mut self.qlog.borrow_mut(), &*self.tps.borrow());
+        qlog::connection_tparams_set(&mut self.qlog, &*self.tps.borrow());
         Ok(())
     }
 
@@ -2611,7 +2607,7 @@ mod tests {
     use std::convert::TryInto;
 
     use neqo_common::matches;
-    use neqo_crypto::constants::TLS_CHACHA20_POLY1305_SHA256;
+    use neqo_crypto::{constants::TLS_CHACHA20_POLY1305_SHA256, AllowZeroRtt};
     use std::mem;
     use test_fixture::{self, assertions, fixture_init, loopback, now};
 
@@ -2639,14 +2635,16 @@ mod tests {
     pub fn default_server() -> Connection {
         fixture_init();
 
-        Connection::new_server(
+        let mut c = Connection::new_server(
             test_fixture::DEFAULT_KEYS,
             test_fixture::DEFAULT_ALPN,
-            &test_fixture::anti_replay(),
             Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
             QuicVersion::default(),
         )
-        .expect("create a default server")
+        .expect("create a default server");
+        c.server_enable_0rtt(&test_fixture::anti_replay(), AllowZeroRtt {})
+            .expect("enable 0-RTT");
+        c
     }
 
     /// If state is AuthenticationNeeded call authenticated(). This function will
@@ -3083,8 +3081,8 @@ mod tests {
             .expect("should set token");
         let mut server = default_server();
         connect(&mut client, &mut server);
-        assert!(client.crypto.tls.info().unwrap().resumed());
-        assert!(server.crypto.tls.info().unwrap().resumed());
+        assert!(client.tls_info().unwrap().resumed());
+        assert!(server.tls_info().unwrap().resumed());
     }
 
     #[test]
@@ -3130,8 +3128,8 @@ mod tests {
             .expect("should set token");
         let mut server = default_server();
         connect(&mut client, &mut server);
-        assert!(client.crypto.tls.info().unwrap().early_data_accepted());
-        assert!(server.crypto.tls.info().unwrap().early_data_accepted());
+        assert!(client.tls_info().unwrap().early_data_accepted());
+        assert!(server.tls_info().unwrap().early_data_accepted());
     }
 
     #[test]
@@ -3226,18 +3224,20 @@ mod tests {
         client
             .set_resumption_token(now(), &token[..])
             .expect("should set token");
-        // Using a freshly initialized anti-replay context
-        // should result in the server rejecting 0-RTT.
-        let ar = AntiReplay::new(now(), test_fixture::ANTI_REPLAY_WINDOW, 1, 3)
-            .expect("setup anti-replay");
         let mut server = Connection::new_server(
             test_fixture::DEFAULT_KEYS,
             test_fixture::DEFAULT_ALPN,
-            &ar,
             Rc::new(RefCell::new(FixedConnectionIdManager::new(10))),
             QuicVersion::default(),
         )
         .unwrap();
+        // Using a freshly initialized anti-replay context
+        // should result in the server rejecting 0-RTT.
+        let ar = AntiReplay::new(now(), test_fixture::ANTI_REPLAY_WINDOW, 1, 3)
+            .expect("setup anti-replay");
+        server
+            .server_enable_0rtt(&ar, AllowZeroRtt {})
+            .expect("enable 0-RTT");
 
         // Send ClientHello.
         let client_hs = client.process(None, now());
@@ -3586,13 +3586,12 @@ mod tests {
     // Test that we split crypto data if they cannot fit into one packet.
     // To test this we will use a long server certificate.
     #[test]
-    fn test_crypto_frame_split() {
+    fn crypto_frame_split() {
         let mut client = default_client();
 
         let mut server = Connection::new_server(
             test_fixture::LONG_CERT_KEYS,
             test_fixture::DEFAULT_ALPN,
-            &test_fixture::anti_replay(),
             Rc::new(RefCell::new(FixedConnectionIdManager::new(6))),
             QuicVersion::default(),
         )

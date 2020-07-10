@@ -11,7 +11,7 @@ use crate::{Error, Res};
 
 use neqo_common::{matches, qdebug, qinfo, qtrace, Encoder};
 use neqo_qpack::encoder::QPackEncoder;
-use neqo_transport::Connection;
+use neqo_transport::{AppError, Connection};
 use std::cmp::min;
 use std::convert::TryFrom;
 use std::fmt::Debug;
@@ -25,6 +25,8 @@ const MAX_DATA_HEADER_SIZE_5_LIMIT: usize = MAX_DATA_HEADER_SIZE_5 + 9; // 10737
 
 pub(crate) trait SendMessageEvents: Debug {
     fn data_writable(&self, stream_id: u64);
+    fn remove_send_side_event(&self, stream_id: u64);
+    fn stop_sending(&self, stream_id: u64, app_err: AppError);
 }
 
 /*
@@ -177,11 +179,7 @@ impl SendMessage {
                 }
                 match conn.stream_send(self.stream_id, &buf[..to_send]) {
                     Ok(sent) => {
-                        qlog::h3_data_moved_down(
-                            &mut conn.qlog_mut().borrow_mut(),
-                            self.stream_id,
-                            buf.len(),
-                        );
+                        qlog::h3_data_moved_down(&mut conn.qlog_mut(), self.stream_id, buf.len());
                         Ok(sent)
                     }
                     Err(e) => Err(Error::TransportError(e)),
@@ -191,16 +189,14 @@ impl SendMessage {
         }
     }
 
-    pub fn is_sending_closed(&self) -> bool {
-        self.state.is_sending_closed()
-    }
-
     pub fn done(&self) -> bool {
         self.state.done()
     }
 
-    pub fn is_state_sending_data(&self) -> bool {
-        self.state.is_state_sending_data()
+    pub fn stream_writable(&self) {
+        if self.state.is_state_sending_data() {
+            self.conn_events.data_writable(self.stream_id);
+        }
     }
 
     fn ensure_encoded(&mut self, conn: &mut Connection, encoder: &mut QPackEncoder) -> Res<()> {
@@ -240,7 +236,7 @@ impl SendMessage {
 
         if let SendMessageState::SendingInitialMessage { ref mut buf, fin } = self.state {
             let sent = conn.stream_send(self.stream_id, &buf)?;
-            qlog::h3_data_moved_down(&mut conn.qlog_mut().borrow_mut(), self.stream_id, buf.len());
+            qlog::h3_data_moved_down(&mut conn.qlog_mut(), self.stream_id, buf.len());
 
             qtrace!([label], "{} bytes sent", sent);
 
@@ -280,7 +276,16 @@ impl SendMessage {
                 conn.stream_close_send(self.stream_id)?;
             }
         }
+
+        self.conn_events.remove_send_side_event(self.stream_id);
         Ok(())
+    }
+
+    pub fn stop_sending(&mut self, app_err: AppError) {
+        if !self.state.is_sending_closed() {
+            self.conn_events.remove_send_side_event(self.stream_id);
+            self.conn_events.stop_sending(self.stream_id, app_err);
+        }
     }
 }
 

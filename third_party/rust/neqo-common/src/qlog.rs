@@ -4,8 +4,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::cell::RefCell;
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::time::SystemTime;
 
 use chrono::{DateTime, Utc};
@@ -17,54 +19,93 @@ use qlog::{
 use crate::Role;
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone)]
 pub struct NeqoQlog {
+    inner: Rc<RefCell<Option<NeqoQlogShared>>>,
+}
+
+pub struct NeqoQlogShared {
     qlog_path: PathBuf,
     streamer: QlogStreamer,
 }
 
 impl NeqoQlog {
+    /// Create an enabled `NeqoQlog` configuration.
     /// # Errors
     ///
     /// Will return `qlog::Error` if cannot write to the new log.
-    pub fn new(
+    pub fn enabled(
         mut streamer: QlogStreamer,
         qlog_path: impl AsRef<Path>,
     ) -> Result<Self, qlog::Error> {
         streamer.start_log()?;
 
         Ok(Self {
-            streamer,
-            qlog_path: qlog_path.as_ref().to_owned(),
+            inner: Rc::new(RefCell::new(Some(NeqoQlogShared {
+                streamer,
+                qlog_path: qlog_path.as_ref().to_owned(),
+            }))),
         })
     }
 
-    pub fn stream(&mut self) -> &mut QlogStreamer {
-        &mut self.streamer
+    /// Create a disabled `NeqoQlog` configuration.
+    #[must_use]
+    pub fn disabled() -> Self {
+        Self {
+            inner: Rc::new(RefCell::new(None)),
+        }
+    }
+
+    /// If logging enabled, closure may generate an event to be logged.
+    pub fn add_event<F>(&mut self, f: F)
+    where
+        F: FnOnce() -> Option<qlog::event::Event>,
+    {
+        if let Some(inner) = self.inner.borrow_mut().as_mut() {
+            if let Some(evt) = f() {
+                let res = inner.streamer.add_event(evt);
+                if let Err(e) = res {
+                    crate::do_log!(
+                        ::log::Level::Error,
+                        "Qlog streaming failed with error {}; closing qlog.",
+                        e
+                    );
+                    *self.inner.borrow_mut() = None;
+                }
+            }
+        }
+    }
+
+    /// If logging enabled, closure is given the Qlog stream to write events and
+    /// frames to.
+    pub fn add_event_with_stream<F>(&mut self, f: F)
+    where
+        F: FnOnce(&mut QlogStreamer) -> Result<(), qlog::Error>,
+    {
+        if let Some(inner) = self.inner.borrow_mut().as_mut() {
+            if let Err(e) = f(&mut inner.streamer) {
+                crate::do_log!(
+                    ::log::Level::Error,
+                    "Qlog event generation failed with error {}; closing qlog.",
+                    e
+                );
+                *self.inner.borrow_mut() = None;
+            }
+        }
     }
 }
 
-impl fmt::Debug for NeqoQlog {
+impl fmt::Debug for NeqoQlogShared {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "NeqoQlog writing to {}", self.qlog_path.display())
     }
 }
 
-impl Drop for NeqoQlog {
+impl Drop for NeqoQlogShared {
     fn drop(&mut self) {
         if let Err(e) = self.streamer.finish_log() {
             crate::do_log!(::log::Level::Error, "Error dropping NeqoQlog: {}", e)
         }
-    }
-}
-
-pub fn handle_qlog_result<T>(qlog: &mut Option<NeqoQlog>, result: Result<T, qlog::Error>) {
-    if let Err(e) = result {
-        crate::do_log!(
-            ::log::Level::Error,
-            "Qlog streaming failed with error {}; closing qlog.",
-            e
-        );
-        *qlog = None;
     }
 }
 

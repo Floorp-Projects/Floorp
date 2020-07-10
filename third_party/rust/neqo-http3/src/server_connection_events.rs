@@ -5,11 +5,11 @@
 // except according to those terms.
 
 use crate::connection::Http3State;
-use crate::recv_message::RecvMessageEvents;
 use crate::send_message::SendMessageEvents;
 use crate::Header;
+use crate::RecvMessageEvents;
 use neqo_common::matches;
-
+use neqo_transport::AppError;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
@@ -50,12 +50,18 @@ impl RecvMessageEvents for Http3ServerConnEvents {
     fn data_readable(&self, stream_id: u64) {
         self.insert(Http3ServerConnEvent::DataReadable { stream_id });
     }
+
+    fn reset(&self, _stream_id: u64, _error: AppError) {}
 }
 
 impl SendMessageEvents for Http3ServerConnEvents {
     fn data_writable(&self, _stream_id: u64) {
         // Curently not used on the server side.
     }
+
+    fn remove_send_side_event(&self, _stream_id: u64) {}
+
+    fn stop_sending(&self, _stream_id: u64, _app_err: AppError) {}
 }
 
 impl Http3ServerConnEvents {

@@ -296,9 +296,8 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
   nsTArray<uint8_t> headerBytes;
   Http3Event event;
   event.tag = Http3Event::Tag::NoEvent;
-  bool fin = false;
 
-  nsresult rv = mHttp3Connection->GetEvent(&event, headerBytes, &fin);
+  nsresult rv = mHttp3Connection->GetEvent(&event, headerBytes);
   if (NS_FAILED(rv)) {
     LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
          static_cast<uint32_t>(rv)));
@@ -321,7 +320,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
           continue;
         }
 
-        stream->SetResponseHeaders(headerBytes, fin);
+        stream->SetResponseHeaders(headerBytes, event.header_ready.fin);
 
         uint32_t read = 0;
         rv = ProcessTransactionRead(stream, count, &read);
@@ -365,8 +364,17 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         LOG(("Http3Session::ProcessEvents - Reset"));
         ResetRecvd(event.reset.stream_id, event.reset.error);
         break;
-      case Http3Event::Tag::NewPushStream:
-        LOG(("Http3Session::ProcessEvents - NewPushStream"));
+      case Http3Event::Tag::PushPromise:
+        LOG(("Http3Session::ProcessEvents - PushPromise"));
+        break;
+      case Http3Event::Tag::PushHeaderReady:
+        LOG(("Http3Session::ProcessEvents - PushHeaderReady"));
+        break;
+      case Http3Event::Tag::PushDataReadable:
+        LOG(("Http3Session::ProcessEvents - PushDataReadable"));
+        break;
+      case Http3Event::Tag::PushCanceled:
+        LOG(("Http3Session::ProcessEvents - PushCanceled"));
         break;
       case Http3Event::Tag::RequestsCreatable:
         LOG(("Http3Session::ProcessEvents - StreamCreatable"));
@@ -416,7 +424,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
       default:
         break;
     }
-    rv = mHttp3Connection->GetEvent(&event, headerBytes, &fin);
+    rv = mHttp3Connection->GetEvent(&event, headerBytes);
     if (NS_FAILED(rv)) {
       LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
            static_cast<uint32_t>(rv)));

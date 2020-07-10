@@ -193,6 +193,16 @@ impl<'a> HeaderDecoder<'a> {
         }
     }
 
+    pub fn refers_dynamic_table(
+        &mut self,
+        max_entries: u64,
+        total_num_of_inserts: u64,
+    ) -> Res<bool> {
+        self.read_base(max_entries, total_num_of_inserts)
+            .map_err(|_| Error::DecompressionFailed)?;
+        Ok(self.req_insert_cnt != 0)
+    }
+
     pub fn decode_header_block(
         &mut self,
         table: &HeaderTable,

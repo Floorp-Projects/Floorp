@@ -361,17 +361,30 @@ impl ExtensionHandler for TransportParametersHandler {
 }
 
 #[derive(Debug)]
-pub(crate) struct TpZeroRttChecker {
+pub(crate) struct TpZeroRttChecker<T> {
     handler: Rc<RefCell<TransportParametersHandler>>,
+    app_checker: T,
 }
 
-impl TpZeroRttChecker {
-    pub fn wrap(handler: Rc<RefCell<TransportParametersHandler>>) -> Box<dyn ZeroRttChecker> {
-        Box::new(Self { handler })
+impl<T> TpZeroRttChecker<T>
+where
+    T: ZeroRttChecker + 'static,
+{
+    pub fn wrap(
+        handler: Rc<RefCell<TransportParametersHandler>>,
+        app_checker: T,
+    ) -> Box<dyn ZeroRttChecker> {
+        Box::new(Self {
+            handler,
+            app_checker,
+        })
     }
 }
 
-impl ZeroRttChecker for TpZeroRttChecker {
+impl<T> ZeroRttChecker for TpZeroRttChecker<T>
+where
+    T: ZeroRttChecker,
+{
     fn check(&self, token: &[u8]) -> ZeroRttCheckResult {
         // Reject 0-RTT if there is no token.
         if token.is_empty() {
@@ -393,8 +406,8 @@ impl ZeroRttChecker for TpZeroRttChecker {
             return ZeroRttCheckResult::Fail;
         };
         if self.handler.borrow().local.ok_for_0rtt(&remembered) {
-            qinfo!("0-RTT: transport parameters OK, accepting");
-            ZeroRttCheckResult::Accept
+            qinfo!("0-RTT: transport parameters OK, passing to application checker");
+            self.app_checker.check(dec.decode_remainder())
         } else {
             qinfo!("0-RTT: transport parameters bad, rejecting");
             ZeroRttCheckResult::Reject

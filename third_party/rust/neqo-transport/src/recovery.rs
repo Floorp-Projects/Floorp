@@ -8,10 +8,8 @@
 
 #![deny(clippy::pedantic)]
 
-use std::cell::RefCell;
 use std::cmp::{max, min};
 use std::collections::BTreeMap;
-use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use smallvec::{smallvec, SmallVec};
@@ -59,12 +57,7 @@ struct RttVals {
 }
 
 impl RttVals {
-    fn update_rtt(
-        &mut self,
-        qlog: &Rc<RefCell<Option<NeqoQlog>>>,
-        latest_rtt: Duration,
-        ack_delay: Duration,
-    ) {
+    fn update_rtt(&mut self, mut qlog: &mut NeqoQlog, latest_rtt: Duration, ack_delay: Duration) {
         self.latest_rtt = latest_rtt;
         // min_rtt ignores ack delay.
         self.min_rtt = min(self.min_rtt, self.latest_rtt);
@@ -92,7 +85,7 @@ impl RttVals {
             }
         }
         qlog::metrics_updated(
-            &mut qlog.borrow_mut(),
+            &mut qlog,
             &[
                 QlogMetric::LatestRtt(self.latest_rtt),
                 QlogMetric::MinRtt(self.min_rtt),
@@ -476,7 +469,7 @@ pub(crate) struct LossRecovery {
 
     spaces: LossRecoverySpaces,
 
-    qlog: Rc<RefCell<Option<NeqoQlog>>>,
+    qlog: NeqoQlog,
 }
 
 impl LossRecovery {
@@ -491,7 +484,7 @@ impl LossRecovery {
             pto_state: None,
             cc: CongestionControl::default(),
             spaces: LossRecoverySpaces::new(),
-            qlog: Rc::new(RefCell::new(None)),
+            qlog: NeqoQlog::disabled(),
         }
     }
 
@@ -526,9 +519,9 @@ impl LossRecovery {
         self.rtt_vals.pto(PNSpace::ApplicationData)
     }
 
-    pub fn set_qlog(&mut self, qlog: Rc<RefCell<Option<NeqoQlog>>>) {
-        self.qlog = qlog.clone();
-        self.cc.set_qlog(qlog)
+    pub fn set_qlog(&mut self, qlog: NeqoQlog) {
+        self.cc.set_qlog(qlog.clone());
+        self.qlog = qlog;
     }
 
     pub fn drop_0rtt(&mut self) -> Vec<SentPacket> {
@@ -602,7 +595,8 @@ impl LossRecovery {
             space.largest_acked_sent_time = Some(largest_acked_pkt.time_sent);
             if any_ack_eliciting {
                 let latest_rtt = now - largest_acked_pkt.time_sent;
-                self.rtt_vals.update_rtt(&self.qlog, latest_rtt, ack_delay);
+                self.rtt_vals
+                    .update_rtt(&mut self.qlog, latest_rtt, ack_delay);
             }
         }
         self.cc.on_packets_acked(&acked_packets);
@@ -752,7 +746,7 @@ impl LossRecovery {
                 self.pto_state = Some(PtoState::new(pn_space));
             }
             qlog::metrics_updated(
-                &mut self.qlog.borrow_mut(),
+                &mut self.qlog,
                 &[QlogMetric::PtoCount(
                     self.pto_state.as_ref().unwrap().count(),
                 )],

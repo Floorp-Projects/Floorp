@@ -6,10 +6,8 @@
 
 // Congestion control
 
-use std::cell::RefCell;
 use std::cmp::max;
 use std::fmt::{self, Display};
-use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use crate::pace::Pacer;
@@ -37,7 +35,7 @@ pub struct CongestionControl {
     ssthresh: usize,
     pacer: Option<Pacer>,
 
-    qlog: Rc<RefCell<Option<NeqoQlog>>>,
+    qlog: NeqoQlog,
     qlog_curr_cong_state: CongestionState,
 }
 
@@ -49,7 +47,7 @@ impl Default for CongestionControl {
             congestion_recovery_start_time: None,
             ssthresh: std::usize::MAX,
             pacer: None,
-            qlog: Rc::new(RefCell::new(None)),
+            qlog: NeqoQlog::disabled(),
             qlog_curr_cong_state: CongestionState::SlowStart,
         }
     }
@@ -76,7 +74,7 @@ enum PacketState {
 }
 
 impl CongestionControl {
-    pub fn set_qlog(&mut self, qlog: Rc<RefCell<Option<NeqoQlog>>>) {
+    pub fn set_qlog(&mut self, qlog: NeqoQlog) {
         self.qlog = qlog;
     }
 
@@ -112,7 +110,7 @@ impl CongestionControl {
             if self.app_limited() {
                 // Do not increase congestion_window if application limited.
                 qlog::congestion_state_updated(
-                    &mut self.qlog.borrow_mut(),
+                    &mut self.qlog,
                     &mut self.qlog_curr_cong_state,
                     CongestionState::ApplicationLimited,
                 );
@@ -123,7 +121,7 @@ impl CongestionControl {
                 self.congestion_window += pkt.size;
                 qinfo!([self], "slow start");
                 qlog::congestion_state_updated(
-                    &mut self.qlog.borrow_mut(),
+                    &mut self.qlog,
                     &mut self.qlog_curr_cong_state,
                     CongestionState::SlowStart,
                 );
@@ -131,13 +129,13 @@ impl CongestionControl {
                 self.congestion_window += (MAX_DATAGRAM_SIZE * pkt.size) / self.congestion_window;
                 qinfo!([self], "congestion avoidance");
                 qlog::congestion_state_updated(
-                    &mut self.qlog.borrow_mut(),
+                    &mut self.qlog,
                     &mut self.qlog_curr_cong_state,
                     CongestionState::CongestionAvoidance,
                 );
             }
             qlog::metrics_updated(
-                &mut self.qlog.borrow_mut(),
+                &mut self.qlog,
                 &[
                     QlogMetric::CongestionWindow(self.congestion_window),
                     QlogMetric::BytesInFlight(self.bytes_in_flight),
@@ -162,7 +160,7 @@ impl CongestionControl {
             self.bytes_in_flight -= pkt.size;
         }
         qlog::metrics_updated(
-            &mut self.qlog.borrow_mut(),
+            &mut self.qlog,
             &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
         );
 
@@ -190,7 +188,7 @@ impl CongestionControl {
             assert!(self.bytes_in_flight >= pkt.size);
             self.bytes_in_flight -= pkt.size;
             qlog::metrics_updated(
-                &mut self.qlog.borrow_mut(),
+                &mut self.qlog,
                 &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
             );
             qtrace!([self], "Ignore pkt with size {}", pkt.size);
@@ -216,7 +214,7 @@ impl CongestionControl {
             self.congestion_window
         );
         qlog::metrics_updated(
-            &mut self.qlog.borrow_mut(),
+            &mut self.qlog,
             &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
         );
 
@@ -231,10 +229,7 @@ impl CongestionControl {
                     true
                 } else {
                     if let PacketState::Acked = packet_state {
-                        qlog::metrics_updated(
-                            &mut self.qlog.borrow_mut(),
-                            &[QlogMetric::InRecovery(false)],
-                        );
+                        qlog::metrics_updated(&mut self.qlog, &[QlogMetric::InRecovery(false)]);
                         self.congestion_recovery_start_time = None;
                     }
                     false
@@ -259,14 +254,14 @@ impl CongestionControl {
                 self.ssthresh
             );
             qlog::metrics_updated(
-                &mut self.qlog.borrow_mut(),
+                &mut self.qlog,
                 &[
                     QlogMetric::SsThresh(self.ssthresh),
                     QlogMetric::InRecovery(true),
                 ],
             );
             qlog::congestion_state_updated(
-                &mut self.qlog.borrow_mut(),
+                &mut self.qlog,
                 &mut self.qlog_curr_cong_state,
                 CongestionState::Recovery,
             );
