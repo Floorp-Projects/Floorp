@@ -41,8 +41,8 @@ class DeepLinkIntentProcessor(
 
         val globalDirections = when (deepLink.host) {
             "home", "enable_private_browsing" -> GlobalDirections.Home
-            "home_bookmarks" -> GlobalDirections.Bookmarks
-            "home_history" -> GlobalDirections.History
+            "urls_bookmarks" -> GlobalDirections.Bookmarks
+            "urls_history" -> GlobalDirections.History
             "settings" -> GlobalDirections.Settings
             "turn_on_sync" -> GlobalDirections.Sync
             "settings_search_engine" -> GlobalDirections.SearchEngine

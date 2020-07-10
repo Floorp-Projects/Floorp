@@ -45,10 +45,10 @@ class DeepLinkRobot {
         openDeepLink("fenix://home").run { homeScreen(interact) }
 
     fun openBookmarks(interact: BookmarksRobot.() -> Unit) =
-        openDeepLink("fenix://home_bookmarks").run { bookmarksMenu(interact) }
+        openDeepLink("fenix://urls_bookmarks").run { bookmarksMenu(interact) }
 
     fun openHistory(interact: HistoryRobot.() -> Unit) =
-        openDeepLink("fenix://home_history").run { historyMenu(interact) }
+        openDeepLink("fenix://urls_history").run { historyMenu(interact) }
 
     fun openCollections(interact: HomeScreenRobot.() -> Unit) =
         openDeepLink("fenix://home_collections").run { homeScreen(interact) }

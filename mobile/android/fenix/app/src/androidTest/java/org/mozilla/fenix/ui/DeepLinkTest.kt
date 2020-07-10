@@ -24,8 +24,8 @@ import org.mozilla.fenix.ui.robots.DeepLinkRobot
  *  - fenix://settings_privacy — take the user to the privacy settings page.
  *  - fenix://settings_search_engine — take the user to the search engine page, to set the default search engine.
  *  - fenix://home_collections — take the user to the home screen to see the list of collections.
- *  - fenix://home_history — take the user to the history list.
- *  - fenix://home_bookmarks — take the user to the bookmarks list
+ *  - fenix://urls_history — take the user to the history list.
+ *  - fenix://urls_bookmarks — take the user to the bookmarks list
  *  - fenix://settings_logins — take the user to the settings page to do with logins (not the saved logins).
  **/
 class DeepLinkTest {

@@ -255,11 +255,11 @@ Here is the list of current deep links available, which can be found here in the
     <td>Opens to the Fenix home screen</td>
   </tr>
   <tr>
-    <td>`fenix://home_bookmarks`</td>
+    <td>`fenix://urls_bookmarks`</td>
     <td>Opens to the list of the user's bookmarks at its root</td>
   </tr>
   <tr>
-    <td>`fenix://home_history`</td>
+    <td>`fenix://urls_history`</td>
     <td>Opens to the list of pages the user has visited</td>
   </tr>
   <tr>

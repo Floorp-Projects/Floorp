@@ -78,16 +78,16 @@ class DeepLinkIntentProcessorTest {
     }
 
     @Test
-    fun `process home_bookmarks deep link`() {
-        assertTrue(processor.process(testIntent("fenix://home_bookmarks"), navController, out))
+    fun `process urls_bookmarks deep link`() {
+        assertTrue(processor.process(testIntent("fenix://urls_bookmarks"), navController, out))
 
         verify { navController.navigate(NavGraphDirections.actionGlobalBookmarkFragment(BookmarkRoot.Root.id)) }
         verify { out wasNot Called }
     }
 
     @Test
-    fun `process home_history deep link`() {
-        assertTrue(processor.process(testIntent("fenix://home_history"), navController, out))
+    fun `process urls_history deep link`() {
+        assertTrue(processor.process(testIntent("fenix://urls_history"), navController, out))
 
         verify { navController.navigate(NavGraphDirections.actionGlobalHistoryFragment()) }
         verify { out wasNot Called }
