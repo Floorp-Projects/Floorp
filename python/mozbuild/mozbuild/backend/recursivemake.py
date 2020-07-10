@@ -747,6 +747,13 @@ class RecursiveMakeBackend(MakeBackend):
         rule = root_deps_mk.create_rule(['recurse_pre-compile'])
         rule.add_dependencies('%s/pre-compile' % d for d in sorted(self._pre_compile))
 
+        targets_with_pre_compile = sorted(
+            t for t in self._compile_graph if mozpath.dirname(t) in self._pre_compile)
+        for t in targets_with_pre_compile:
+            relobjdir = mozpath.dirname(t)
+            rule = root_deps_mk.create_rule([t])
+            rule.add_dependencies(['%s/pre-compile' % relobjdir])
+
         all_compile_deps = six.moves.reduce(
             lambda x, y: x | y,
             self._compile_graph.values()) if self._compile_graph else set()
@@ -829,6 +836,8 @@ class RecursiveMakeBackend(MakeBackend):
 
         # Need a list of compile targets because we can't use pattern rules:
         # https://savannah.gnu.org/bugs/index.php?42833
+        root_mk.add_statement('pre_compile_targets := %s' % ' '.join(sorted(
+            '%s/pre-compile' % p for p in self._pre_compile)))
         root_mk.add_statement('compile_targets := %s' % ' '.join(sorted(
             set(self._compile_graph.keys()) | all_compile_deps)))
         root_mk.add_statement('syms_targets := %s' % ' '.join(sorted(
@@ -1295,7 +1304,6 @@ class RecursiveMakeBackend(MakeBackend):
         if libdef.symbols_file:
             if libdef.symbols_link_arg:
                 backend_file.write('EXTRA_DSO_LDOPTS += %s\n' % libdef.symbols_link_arg)
-                backend_file.write('EXTRA_DEPS += %s\n' % libdef.symbols_file)
         if not libdef.cxx_link:
             backend_file.write('LIB_IS_C_ONLY := 1\n')
         if libdef.output_category:
