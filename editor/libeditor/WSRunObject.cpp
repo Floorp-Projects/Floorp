@@ -1807,7 +1807,7 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
 }
 
 nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
-  MOZ_ASSERT(aRun.IsVisibleAndMiddleOfHardLine());
+  MOZ_ASSERT(aRun.IsVisible());
 
   // Remove this block if we ship Blink-compat white-space normalization.
   if (!StaticPrefs::editor_white_space_normalization_blink_compatible()) {
