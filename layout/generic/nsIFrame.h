@@ -3749,10 +3749,26 @@ class nsIFrame : public nsQueryFrame {
    * Uses frame's begin selection state to start. If no selection on this frame
    * will return NS_ERROR_FAILURE.
    *
-   * @param aPOS is defined in nsFrameSelection
+   * @param aPos is defined in nsFrameSelection
    */
   virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos);
 
+ private:
+  nsresult PeekOffsetForCharacter(nsPeekOffsetStruct* aPos, int32_t offset);
+  nsresult PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t offset);
+  nsresult PeekOffsetForLine(nsPeekOffsetStruct* aPos);
+  nsresult PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos);
+
+  /**
+   * Search for the first paragraph boundary before or after the given position
+   * @param  aPos See description in nsFrameSelection.h. The following fields
+   *              are used by this method:
+   *              Input: mDirection
+   *              Output: mResultContent, mContentOffset
+   */
+  nsresult PeekOffsetForParagraph(nsPeekOffsetStruct* aPos);
+
+ public:
   // given a frame five me the first/last leaf available
   // XXX Robert O'Callahan wants to move these elsewhere
   static void GetLastLeaf(nsIFrame** aFrame);
@@ -5215,15 +5231,6 @@ class nsIFrame : public nsQueryFrame {
                                           bool aForward, bool aPunctAfter,
                                           bool aWhitespaceAfter,
                                           bool aIsKeyboardSelect);
-
-  /**
-   * Search for the first paragraph boundary before or after the given position
-   * @param  aPos See description in nsFrameSelection.h. The following fields
-   *              are used by this method:
-   *              Input: mDirection
-   *              Output: mResultContent, mContentOffset
-   */
-  nsresult PeekOffsetParagraph(nsPeekOffsetStruct* aPos);
 
  private:
   // Get a pointer to the overflow areas property attached to the frame.
