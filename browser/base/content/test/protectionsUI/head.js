@@ -23,36 +23,39 @@ ChromeUtils.defineModuleGetter(
 var { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
 );
-var protectionsPopup = document.getElementById("protections-popup");
-var protectionsPopupMainView = document.getElementById(
-  "protections-popup-mainView"
-);
-var protectionsPopupHeader = document.getElementById(
-  "protections-popup-mainView-panel-header"
-);
 
-async function openProtectionsPanel(toast) {
+async function openProtectionsPanel(toast, win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
-    "popupshown"
+    win,
+    "popupshown",
+    true,
+    e => e.target.id == "protections-popup"
   );
-  let shieldIconContainer = document.getElementById(
+  let shieldIconContainer = win.document.getElementById(
     "tracking-protection-icon-container"
   );
 
   // Move out than move over the shield icon to trigger the hover event in
   // order to fetch tracker count.
-  EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {
-    type: "mousemove",
-  });
-  EventUtils.synthesizeMouseAtCenter(shieldIconContainer, {
-    type: "mousemove",
-  });
+  EventUtils.synthesizeMouseAtCenter(
+    win.gURLBar.textbox,
+    {
+      type: "mousemove",
+    },
+    win
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    shieldIconContainer,
+    {
+      type: "mousemove",
+    },
+    win
+  );
 
   if (!toast) {
-    EventUtils.synthesizeMouseAtCenter(shieldIconContainer, {});
+    EventUtils.synthesizeMouseAtCenter(shieldIconContainer, {}, win);
   } else {
-    gProtectionsHandler.showProtectionsPopup({ toast });
+    win.gProtectionsHandler.showProtectionsPopup({ toast });
   }
 
   await popupShownPromise;
@@ -60,8 +63,10 @@ async function openProtectionsPanel(toast) {
 
 async function openProtectionsPanelWithKeyNav() {
   let popupShownPromise = BrowserTestUtils.waitForEvent(
-    protectionsPopup,
-    "popupshown"
+    window,
+    "popupshown",
+    true,
+    e => e.target.id == "protections-popup"
   );
 
   gURLBar.focus();
@@ -74,7 +79,11 @@ async function openProtectionsPanelWithKeyNav() {
   await popupShownPromise;
 }
 
-async function closeProtectionsPanel() {
+async function closeProtectionsPanel(win = window) {
+  let protectionsPopup = win.document.getElementById("protections-popup");
+  if (!protectionsPopup) {
+    return;
+  }
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
     protectionsPopup,
     "popuphidden"
