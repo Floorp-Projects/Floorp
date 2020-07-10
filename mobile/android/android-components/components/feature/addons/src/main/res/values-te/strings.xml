@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_sessions_description">ఇటీవల మూసివేసిన ట్యాబులను చూడటం</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">విహారిణి ట్యాబులను దాచడం, చూపించడం</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">విహరణ చరిత్రను చూడటం</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">తెరిచివున్న ట్యాబులలో మీ డేటాను చూడగలిగేలా డెవలపర్ పనిముట్లను విస్తరించడం</string>
     <!-- The version on of add-on. -->
@@ -130,6 +132,10 @@
     <string name="mozac_feature_addons_successfully_disabled">%1$s విజయవంతంగా అచేతనం చేయబడింది</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">%1$s అచేతనించడం విఫలమైంది</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s విజయవంతంగా నిర్మూలించబడింది</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s‌ను నిర్మూలించడం విఫలమైంది</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s విజయవంతంగా తొలగించబడింది</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
@@ -142,14 +148,20 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s పొడగింతలు</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">ఇంకా తెలుసుకోండి</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">విజయవంతంగా తాజాకరించబడింది</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
     <string name="mozac_feature_addons_updater_status_no_update_available">తాజాకరణ అందుబాటులో లేదు</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">దోషం</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">తాజాకరి సమాచారం</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">చివరి ప్రయత్నం:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">స్థితి:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">దాన్ని మెనూలో తెరువు</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">సరే, అర్థమయ్యింది</string>
 </resources>

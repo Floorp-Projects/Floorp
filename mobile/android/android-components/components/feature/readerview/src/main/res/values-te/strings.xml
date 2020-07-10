@@ -3,4 +3,9 @@
     <!-- Name for one of the font options available to use -->
     <string name="mozac_feature_readerview_sans_serif_font">సాన్స్ సెరీఫ్</string>
 
-    </resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">సెరిఫ్</string>
+
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">లేత రంగు</string>
+</resources>
