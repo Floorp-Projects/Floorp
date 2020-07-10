@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.scriptworker_canary:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        platform: firefox-release/opt
+        tier: 1
+        kind: build
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: push-to-try}
+        max-run-time: 1800
+        env:
+            MOZBUILD_STATE_PATH: /builds/worker/workspace
+    run:
+        sparse-profile: push-to-try
+
+jobs:
+    push:
+        description: Push scriptworker canary tasks.
+        treeherder:
+            symbol: Rel(push-scriptworker-canary)
+        run-on-projects: [mozilla-central]
+        addresses: ['release+scriptworker-canary@mozilla.com']
+        ssh-key-secret: project/releng/scriptworker/scriptworker-canary-sshkey
