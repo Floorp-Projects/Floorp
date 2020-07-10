@@ -417,8 +417,6 @@ class FunctionBox : public SharedContext {
 
   MutableHandle<ScriptStencil> functionStencil() const;
 
-  bool hasFunction() const;
-
 #ifdef DEBUG
   bool atomsAreKept();
 #endif
