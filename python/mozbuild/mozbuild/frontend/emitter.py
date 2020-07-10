@@ -1139,11 +1139,6 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 path = deffile.target_basename
 
-            # We don't have any better way to indicate that the def file
-            # is a dependency to whatever we're building beyond stuffing
-            # it into EXTRA_DEPS.
-            passthru.variables['EXTRA_DEPS'] = [path]
-
             if context.config.substs.get('GNU_CC'):
                 computed_link_flags.resolve_flags('DEFFILE', [path])
             else:
