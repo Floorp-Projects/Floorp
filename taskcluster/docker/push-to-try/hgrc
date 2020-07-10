@@ -1,0 +1,2 @@
+[extensions]
+push-to-try = ~/.mozbuild/version-control-tools/hgext/push-to-try
