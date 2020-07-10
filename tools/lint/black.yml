@@ -5,6 +5,8 @@ black:
         - python/mozperftest/mozperftest
         - python/mozrelease/mozrelease/scriptworker_canary.py
         - taskcluster/docker/funsize-update-generator
+        - taskcluster/taskgraph/actions/scriptworker_canary.py
+        - taskcluster/taskgraph/transforms/scriptworker_canary.py
         - testing/condprofile/condprof
         - tools/crashreporter/system-symbols
         - tools/lint/

@@ -885,6 +885,16 @@ def target_tasks_merge_automation(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
 
+@_target_task('scriptworker_canary')
+def target_tasks_scriptworker_canary(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to run scriptworker canaries.
+    """
+    def filter(task):
+        # For now any task in the repo-update kind is ok
+        return task.kind in ['scriptworker-canary']
+    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+
+
 @_target_task('cron_bouncer_check')
 def target_tasks_bouncer_check(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform bouncer version verification.
