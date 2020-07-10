@@ -157,15 +157,9 @@ class BackgroundAllocTask : public GCParallelTask {
 // Search the provided Chunks for free arenas and decommit them.
 class BackgroundDecommitTask : public GCParallelTask {
  public:
-  using ChunkVector = mozilla::Vector<Chunk*>;
-
   explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTask(gc) {}
-  void setChunksToScan(ChunkVector& chunks);
 
   void run() override;
-
- private:
-  MainThreadOrGCTaskData<ChunkVector> toDecommit;
 };
 
 class SweepMarkTask : public GCParallelTask {
@@ -761,8 +755,9 @@ class GCRuntime {
   void endSweepPhase(bool lastGC);
   bool allCCVisibleZonesWereCollected();
   void sweepZones(JSFreeOp* fop, bool destroyingRuntime);
-  void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
   void startDecommit();
+  void decommitFreeArenas(const bool& canel, AutoLockGC& lock);
+  void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
   void queueZonesAndStartBackgroundSweep(ZoneList& zones);
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
   void startBackgroundFree();
