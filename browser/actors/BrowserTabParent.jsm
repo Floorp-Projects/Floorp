@@ -16,10 +16,6 @@ class BrowserTabParent extends JSWindowActorParent {
       return; // Can happen sometimes if browser is being destroyed
     }
 
-    if (browser.outerBrowser) {
-      browser = browser.outerBrowser; // handle RDM mode
-    }
-
     let gBrowser = browser.ownerGlobal.gBrowser;
 
     switch (message.name) {

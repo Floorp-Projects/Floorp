@@ -749,10 +749,6 @@ class FormAutofillParent extends JSWindowActorParent {
     }
 
     let browser = this.manager.browsingContext.top.embedderElement;
-    if (browser && browser.outerBrowser) {
-      // Responsive design mode check
-      browser = browser.outerBrowser;
-    }
 
     // Transmit the telemetry immediately in the meantime form submitted, and handle these pending
     // doorhangers at a later.

@@ -337,11 +337,6 @@ async function loadPageInfo(browsingContext, imageElement, browser) {
   browser = browser || window.opener.gBrowser.selectedBrowser;
   browsingContext = browsingContext || browser.browsingContext;
 
-  if (browser.outerBrowser) {
-    //We are in RDM mode
-    browser = browser.outerBrowser;
-  }
-
   let actor = browsingContext.currentWindowGlobal.getActor("PageInfo");
 
   let result = await actor.sendQuery("PageInfo:getData");
