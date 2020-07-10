@@ -43,8 +43,6 @@ add_task(async function() {
   const newres = "res=<p>" + new Array(10).join(Math.random(10)) + "</p>";
   requests[0].url = requests[0].url.replace("res=undefined", newres);
 
-  loadFrameScriptUtils();
-
   let wait = waitForNetworkEvents(monitor, 7);
   await performRequestsInContent(requests);
   await wait;

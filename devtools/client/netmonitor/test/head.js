@@ -848,6 +848,100 @@ function testFilterButtonsCustom(monitor, isChecked) {
 }
 
 /**
+ * Performs a single XMLHttpRequest and returns a promise that resolves once
+ * the request has loaded.
+ *
+ * @param Object data
+ *        { method: the request method (default: "GET"),
+ *          url: the url to request (default: content.location.href),
+ *          body: the request body to send (default: ""),
+ *          nocache: append an unique token to the query string (default: true),
+ *          requestHeaders: set request headers (default: none)
+ *        }
+ *
+ * @return Promise A promise that's resolved with object
+ *         { status: XMLHttpRequest.status,
+ *           response: XMLHttpRequest.response }
+ *
+ */
+function promiseXHR(data) {
+  return new Promise((resolve, reject) => {
+    const xhr = new content.XMLHttpRequest();
+
+    const method = data.method || "GET";
+    let url = data.url || content.location.href;
+    const body = data.body || "";
+
+    if (data.nocache) {
+      url += "?devtools-cachebust=" + Math.random();
+    }
+
+    xhr.addEventListener(
+      "loadend",
+      function(event) {
+        resolve({ status: xhr.status, response: xhr.response });
+      },
+      { once: true }
+    );
+
+    xhr.open(method, url);
+
+    // Set request headers
+    if (data.requestHeaders) {
+      data.requestHeaders.forEach(header => {
+        xhr.setRequestHeader(header.name, header.value);
+      });
+    }
+
+    xhr.send(body);
+  });
+}
+
+/**
+ * Performs a single websocket request and returns a promise that resolves once
+ * the request has loaded.
+ *
+ * @param Object data
+ *        { url: the url to request (default: content.location.href),
+ *          nocache: append an unique token to the query string (default: true),
+ *        }
+ *
+ * @return Promise A promise that's resolved with object
+ *         { status: websocket status(101),
+ *           response: empty string }
+ *
+ */
+function promiseWS(data) {
+  return new Promise((resolve, reject) => {
+    let url = data.url;
+
+    if (data.nocache) {
+      url += "?devtools-cachebust=" + Math.random();
+    }
+
+    /* Create websocket instance */
+    const socket = new content.WebSocket(url);
+
+    /* Since we only use HTTP server to mock websocket, so just ignore the error */
+    socket.onclose = e => {
+      socket.close();
+      resolve({
+        status: 101,
+        response: "",
+      });
+    };
+
+    socket.onerror = e => {
+      socket.close();
+      resolve({
+        status: 101,
+        response: "",
+      });
+    };
+  });
+}
+
+/**
  * Perform the specified requests in the context of the page content.
  *
  * @param Array requests
@@ -856,54 +950,24 @@ function testFilterButtonsCustom(monitor, isChecked) {
  *
  * @return A promise that resolves once the requests complete.
  */
-function performRequestsInContent(requests) {
-  info("Performing requests in the context of the content.");
-  return executeInContent("devtools:test:xhr", requests);
-}
-
-/**
- * Send an async message to the frame script (chrome -> content) and wait for a
- * response message with the same name (content -> chrome).
- *
- * @param String name
- *        The message name. Should be one of the messages defined
- *        shared/test/frame-script-utils.js
- * @param Object data
- *        Optional data to send along
- * @param Boolean expectResponse
- *        If set to false, don't wait for a response with the same name from the
- *        content script. Defaults to true.
- *
- * @return Promise
- *         Resolves to the response data if a response is expected, immediately
- *         resolves otherwise
- */
-function executeInContent(name, data = {}, expectResponse = true) {
-  const mm = gBrowser.selectedBrowser.messageManager;
-
-  mm.sendAsyncMessage(name, data);
-  if (expectResponse) {
-    return waitForContentMessage(name);
+async function performRequestsInContent(requests) {
+  if (!Array.isArray(requests)) {
+    requests = [requests];
   }
-  return promise.resolve();
-}
 
-/**
- * Wait for a content -> chrome message on the message manager (the window
- * messagemanager is used).
- * @param {String} name The message name
- * @return {Promise} A promise that resolves to the response data when the
- * message has been received
- */
-function waitForContentMessage(name) {
-  const mm = gBrowser.selectedBrowser.messageManager;
+  const responses = [];
 
-  return new Promise(resolve => {
-    mm.addMessageListener(name, function onMessage(msg) {
-      mm.removeMessageListener(name, onMessage);
-      resolve(msg);
-    });
-  });
+  info("Performing requests in the context of the content.");
+
+  for (const request of requests) {
+    const requestFn = request.ws ? promiseWS : promiseXHR;
+    const response = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [request],
+      requestFn
+    );
+    responses.push(response);
+  }
 }
 
 function testColumnsAlignment(headers, requestList) {

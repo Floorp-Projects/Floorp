@@ -29,7 +29,6 @@ add_task(async function() {
 
   // Loading the frame script and preparing the xhr request URLs so we can
   // generate some requests later.
-  loadFrameScriptUtils();
   const requests = [
     {
       url: "sjs_sorting-test-server.sjs?index=1&" + Math.random(),

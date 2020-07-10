@@ -111,8 +111,9 @@ function reloadTab(tabX) {
   );
 
   info("Reloading tab " + tabX.title);
-  const mm = loadFrameScriptUtils();
-  mm.sendAsyncMessage("devtools:test:reload");
+  SpecialPowers.spawn(browser, [], () => {
+    content.location.reload(false);
+  });
 
   return reloadTabPromise;
 }

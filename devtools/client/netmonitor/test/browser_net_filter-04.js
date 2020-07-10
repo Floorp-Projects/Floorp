@@ -54,7 +54,6 @@ add_task(async function() {
   );
 
   const wait = waitForNetworkEvents(monitor, 9);
-  loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 
