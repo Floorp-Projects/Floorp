@@ -228,7 +228,6 @@ add_task(async function() {
     monitor,
     REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS.length
   );
-  loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 
