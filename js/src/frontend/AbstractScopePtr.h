@@ -94,11 +94,6 @@ class AbstractScopePtr {
 
   Scope* scope() const { return scope_.as<HeapPtrScope>(); }
 
-  // Get a Scope*, creating it from a ScopeCreationData if required.
-  // Used to allow us to ensure that Scopes are always allocated with
-  // real GC allocated Enclosing scopes.
-  bool getOrCreateScope(JSContext* cx, MutableHandleScope scope);
-
   // This allows us to check whether or not this provider wraps
   // or otherwise would reify to a particular scope type.
   template <typename T>
