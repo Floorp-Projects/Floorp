@@ -299,6 +299,86 @@ int32_t WindowDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
   return 0;
 }
 
+int32_t BrowserDeviceInfoImpl::Init() {
+  desktop_device_info_ =
+      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
+  return 0;
+}
+
+int32_t BrowserDeviceInfoImpl::Refresh() {
+  desktop_device_info_->Refresh();
+  return 0;
+}
+
+uint32_t BrowserDeviceInfoImpl::NumberOfDevices() {
+  return desktop_device_info_->getTabCount();
+}
+
+int32_t BrowserDeviceInfoImpl::GetDeviceName(
+    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Size,
+    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Size,
+    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Size, pid_t* pid) {
+  DesktopTab desktopTab;
+
+  // always initialize output
+  if (deviceNameUTF8 && deviceNameUTF8Size > 0) {
+    memset(deviceNameUTF8, 0, deviceNameUTF8Size);
+  }
+  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Size > 0) {
+    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Size);
+  }
+  if (productUniqueIdUTF8 && productUniqueIdUTF8Size > 0) {
+    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Size);
+  }
+
+  if (desktop_device_info_->getTabInfo(deviceNumber, desktopTab) == 0) {
+    size_t len;
+
+    const char* deviceName = desktopTab.getTabName();
+    len = deviceName ? strlen(deviceName) : 0;
+    if (len && deviceNameUTF8 && len < deviceNameUTF8Size) {
+      memcpy(deviceNameUTF8, deviceName, len);
+    }
+
+    const char* deviceUniqueId = desktopTab.getUniqueIdName();
+    len = deviceUniqueId ? strlen(deviceUniqueId) : 0;
+    if (len && deviceUniqueIdUTF8 && len < deviceUniqueIdUTF8Size) {
+      memcpy(deviceUniqueIdUTF8, deviceUniqueId, len);
+    }
+  }
+
+  return 0;
+}
+
+int32_t BrowserDeviceInfoImpl::DisplayCaptureSettingsDialogBox(
+    const char* deviceUniqueIdUTF8, const char* dialogTitleUTF8,
+    void* parentWindow, uint32_t positionX, uint32_t positionY) {
+  // no device properties to change
+  return 0;
+}
+
+int32_t BrowserDeviceInfoImpl::NumberOfCapabilities(
+    const char* deviceUniqueIdUTF8) {
+  return 0;
+}
+
+int32_t BrowserDeviceInfoImpl::GetCapability(
+    const char* deviceUniqueIdUTF8, const uint32_t deviceCapabilityNumber,
+    VideoCaptureCapability& capability) {
+  return 0;
+}
+
+int32_t BrowserDeviceInfoImpl::GetBestMatchedCapability(
+    const char* deviceUniqueIdUTF8, const VideoCaptureCapability& requested,
+    VideoCaptureCapability& resulting) {
+  return 0;
+}
+
+int32_t BrowserDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
+                                              VideoRotation& orientation) {
+  return 0;
+}
+
 VideoCaptureModule::DeviceInfo* DesktopCaptureImpl::CreateDeviceInfo(
     const int32_t id, const CaptureDeviceType type) {
   if (type == CaptureDeviceType::Screen) {
@@ -315,6 +395,14 @@ VideoCaptureModule::DeviceInfo* DesktopCaptureImpl::CreateDeviceInfo(
       pWindowDeviceInfoImpl = NULL;
     }
     return pWindowDeviceInfoImpl;
+  } else if (type == CaptureDeviceType::Browser) {
+    BrowserDeviceInfoImpl* pBrowserDeviceInfoImpl =
+        new BrowserDeviceInfoImpl(id);
+    if (!pBrowserDeviceInfoImpl || pBrowserDeviceInfoImpl->Init()) {
+      delete pBrowserDeviceInfoImpl;
+      pBrowserDeviceInfoImpl = NULL;
+    }
+    return pBrowserDeviceInfoImpl;
   }
   return NULL;
 }
@@ -364,8 +452,18 @@ int32_t DesktopCaptureImpl::Init() {
     desktop_capturer_cursor_composer_ =
         std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
             pWindowCapturer.release(), pMouseCursorMonitor));
-  }
+  } else if (_deviceType == CaptureDeviceType::Browser) {
+    // XXX We don't capture cursors, so avoid the extra indirection layer. We
+    // could also pass null for the pMouseCursorMonitor.
+    desktop_capturer_cursor_composer_ =
+        DesktopCapturer::CreateTabCapturer(options);
+    if (!desktop_capturer_cursor_composer_) {
+      return -1;
+    }
 
+    DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
+    desktop_capturer_cursor_composer_->SelectSource(sourceId);
+  }
   return 0;
 }
 
@@ -387,6 +485,7 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
           new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
 #else
 #  if defined(WEBRTC_LINUX)
+      // We start the thread lazily for Linux
       capturer_thread_(nullptr),
 #  else
       capturer_thread_(
@@ -394,8 +493,10 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
 #  endif
 #endif
       started_(false) {
-  //-> TODO @@NG why is this crashing (seen on Linux)
-  //-> capturer_thread_->SetPriority(rtc::kHighPriority);
+#if !defined(WEBRTC_LINUX)
+  // XXX this crashes due to an immediate IsRunning() check on Linux
+  capturer_thread_->SetPriority(rtc::kHighPriority);
+#endif
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
@@ -582,6 +683,8 @@ int32_t DesktopCaptureImpl::StartCapture(
   if (!capturer_thread_) {
     capturer_thread_ = std::unique_ptr<rtc::PlatformThread>(
         new rtc::PlatformThread(Run, this, "ScreenCaptureThread"));
+    // XXX this crashes due to an immediate IsRunning() check on Linux
+    // capturer_thread_->SetPriority(rtc::kHighPriority);
   }
 #endif
 
