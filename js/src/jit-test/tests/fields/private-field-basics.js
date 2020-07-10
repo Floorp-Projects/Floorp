@@ -84,7 +84,9 @@ assertThrows(
 assertThrows(
     () => eval('class C { #x = 10; static #x = 14; }'),
     SyntaxError);  // Duplicate name declaration.
-
+assertThrows(
+    () => eval('delete this.#x'),
+    SyntaxError);  // deleting a private field in non-strict mode.
 
 class B extends class {
   constructor(o) {
