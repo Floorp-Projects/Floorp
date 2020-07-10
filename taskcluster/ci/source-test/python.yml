@@ -489,3 +489,18 @@ telemetry-integration-tests:
     when:
         files-changed:
             - 'toolkit/components/telemetry/**'
+
+xpcom:
+    description: xpcom unit tests
+    platform:
+        - linux1804-64/opt
+    python-version: [3]
+    treeherder:
+        symbol: xpcom
+    run:
+        using: python-test
+        subsuite: xpcom
+    when:
+        files-changed:
+            - 'xpcom/ds/tools/**'
+            - 'xpcom/ds/test/**'
