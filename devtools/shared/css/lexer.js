@@ -175,7 +175,13 @@ function ensureValidChar(c) {
  *         the input string.
  */
 function stringToCodes(str) {
-  return Array.prototype.map.call(str, c => c.charCodeAt(0));
+  // This is a hot path, and using a simple for loop is faster than any other mean (e.g.
+  // Array#map ).
+  const charCodes = [];
+  for (let i = 0; i < str.length; i++) {
+    charCodes.push(str.charCodeAt(i));
+  }
+  return charCodes;
 }
 
 const IS_HEX_DIGIT = 0x01;
