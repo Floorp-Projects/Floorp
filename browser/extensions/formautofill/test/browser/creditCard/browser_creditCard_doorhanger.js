@@ -194,11 +194,64 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
-  is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
+  is(creditCards[0].timesUsed, 2, "timesUsed field set to 2");
   is(
     SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
     3,
     "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
+  await removeAllRecords();
+});
+
+add_task(async function test_iframe_unload_save_card() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      let iframeBC = browser.browsingContext.children[0];
+      let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
+      await SpecialPowers.spawn(iframeBC, [], async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 1");
+
+        form.querySelector("#cc-number").setUserInput("4556194630960970");
+        form.querySelector("#cc-exp-month").setUserInput("10");
+        form.querySelector("#cc-exp-year").setUserInput("2024");
+        form.querySelector("#cc-type").value = "visa";
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
+      });
+
+      info("Removing iframe without submitting");
+      await SpecialPowers.spawn(browser, [], async function() {
+        let frame = content.document.querySelector("iframe");
+        frame.remove();
+      });
+
+      await promiseShown;
+      await clickDoorhangerButton(MAIN_BUTTON);
+      await onChanged;
+    }
+  );
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+  is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+  is(creditCards[0]["cc-type"], "visa", "Verify the cc-type field");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
   );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
@@ -685,6 +738,7 @@ add_task(async function test_update_autofill_form_exp_date() {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await osKeyStoreLoginShown;
       await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
@@ -693,13 +747,12 @@ add_task(async function test_update_autofill_form_exp_date() {
         }, "Credit card detail never fills");
         let form = content.document.getElementById("form");
         let year = form.querySelector("#cc-exp-year");
-        year.setUserInput("2020");
+        year.setUserInput("2019");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
-
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
       await osKeyStoreLoginShown;
@@ -709,7 +762,7 @@ add_task(async function test_update_autofill_form_exp_date() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
-  is(creditCards[0]["cc-exp-year"], "2020", "cc-exp-year field is updated");
+  is(creditCards[0]["cc-exp-year"], "2019", "cc-exp-year field is updated");
   is(
     creditCards[0]["cc-number"],
     "************1111",
