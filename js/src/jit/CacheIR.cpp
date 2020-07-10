@@ -5996,6 +5996,64 @@ AttachDecision CallIRGenerator::tryAttachMathPow(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMathHypot(HandleFunction callee) {
+  // Only optimize if there are 2-4 arguments.
+  if (argc_ < 2 || argc_ > 4) {
+    return AttachDecision::NoAction;
+  }
+
+  for (size_t i = 0; i < argc_; i++) {
+    if (!args_[i].isNumber()) {
+      return AttachDecision::NoAction;
+    }
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'hypot' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId firstId = writer.loadStandardCallArgument(0, argc_);
+  ValOperandId secondId = writer.loadStandardCallArgument(1, argc_);
+
+  NumberOperandId firstNumId = writer.guardIsNumber(firstId);
+  NumberOperandId secondNumId = writer.guardIsNumber(secondId);
+
+  ValOperandId thirdId;
+  ValOperandId fourthId;
+  NumberOperandId thirdNumId;
+  NumberOperandId fourthNumId;
+
+  switch (argc_) {
+    case 2:
+      writer.mathHypot2NumberResult(firstNumId, secondNumId);
+      break;
+    case 3:
+      thirdId = writer.loadStandardCallArgument(2, argc_);
+      thirdNumId = writer.guardIsNumber(thirdId);
+      writer.mathHypot3NumberResult(firstNumId, secondNumId, thirdNumId);
+      break;
+    case 4:
+      thirdId = writer.loadStandardCallArgument(2, argc_);
+      fourthId = writer.loadStandardCallArgument(3, argc_);
+      thirdNumId = writer.guardIsNumber(thirdId);
+      fourthNumId = writer.guardIsNumber(fourthId);
+      writer.mathHypot4NumberResult(firstNumId, secondNumId, thirdNumId,
+                                    fourthNumId);
+      break;
+    default:
+      MOZ_CRASH("Unexpected number of arguments to hypot function.");
+  }
+
+  // Math.hypot always returns a double so we don't need type monitoring.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("MathHypot");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachMathATan2(HandleFunction callee) {
   // Requires two numbers as arguments.
   if (argc_ != 2 || !args_[0].isNumber() || !args_[1].isNumber()) {
@@ -6363,6 +6421,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachMathSqrt(callee);
     case InlinableNative::MathFRound:
       return tryAttachMathFRound(callee);
+    case InlinableNative::MathHypot:
+      return tryAttachMathHypot(callee);
     case InlinableNative::MathATan2:
       return tryAttachMathATan2(callee);
     case InlinableNative::MathSin:

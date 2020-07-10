@@ -920,6 +920,33 @@
   args:
     rng: RawPointerField
 
+- name: MathHypot2NumberResult
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    first: NumberId
+    second: NumberId
+
+- name: MathHypot3NumberResult
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    first: NumberId
+    second: NumberId
+    third: NumberId
+
+- name: MathHypot4NumberResult
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    first: NumberId
+    second: NumberId
+    third: NumberId
+    fourth: NumberId
+
 - name: MathAtan2NumberResult
   shared: true
   transpile: true
