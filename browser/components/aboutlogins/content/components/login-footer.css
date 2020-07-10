@@ -18,14 +18,12 @@ footer {
 footer > p {
   display: inline-block;
   line-height: 1.5;
-  padding-inline-end: 70px;
   margin: 0;
   margin-inline-end: auto;
 }
 
 footer > .buttons {
   display: inline-block;
-  margin-inline-end: auto;
 }
 
 footer button {
