@@ -215,6 +215,13 @@ bool AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing) {
     return true;
   }
 
+  if constexpr (std::is_same_v<T, JSAtom>) {
+    JSRuntime* rt = zone->runtimeFromAnyThread();
+    if (rt->atoms().atomIsPinned(rt, thing)) {
+      return true;
+    }
+  }
+
   size_t bit = GetAtomBit(&thing->asTenured());
   return zone->markedAtoms().getBit(bit);
 }
