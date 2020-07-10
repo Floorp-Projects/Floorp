@@ -237,7 +237,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       isSingleton_(false),
       isAnnexB(false),
       useAsm(false),
-      isAsmJSModule_(false),
       hasParameterExprs(false),
       hasDestructuringArgs(false),
       hasDuplicateParameters(false),
@@ -368,7 +367,6 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex) {
 
 bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
-  isAsmJSModule_ = true;
 
   MOZ_ASSERT(!hasFunction());
   MOZ_ASSERT(flags_.kind() == FunctionFlags::NormalFunction);
@@ -454,7 +452,6 @@ void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
   stencil.functionFlags = flags_;
   stencil.nargs = nargs_;
   stencil.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
-  stencil.isAsmJSModule = isAsmJSModule_;
   stencil.isStandaloneFunction = isStandalone_;
   stencil.wasFunctionEmitted = wasEmitted_;
   stencil.isSingletonFunction = isSingleton_;

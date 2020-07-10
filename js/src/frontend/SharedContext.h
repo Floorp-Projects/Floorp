@@ -386,12 +386,8 @@ class FunctionBox : public SharedContext {
   bool isAnnexB : 1;
 
   // Track if we saw "use asm".
+  // If we successfully validated it, `flags_` is seto to `AsmJS` kind.
   bool useAsm : 1;
-
-  // Track if we saw "use asm" and if we successfully validated.
-  // This field is copied to ScriptStencil, and shouldn't be modified after the
-  // copy.
-  bool isAsmJSModule_ : 1;
 
   // Analysis of parameter list
   bool hasParameterExprs : 1;
@@ -481,7 +477,7 @@ class FunctionBox : public SharedContext {
   }
 
   MOZ_MUST_USE bool setAsmJSModule(const JS::WasmModule* module);
-  bool isAsmJSModule() const { return isAsmJSModule_; }
+  bool isAsmJSModule() const { return flags_.isAsmJSNative(); }
 
   bool hasEnclosingScopeIndex() const { return enclosingScopeIndex_.isSome(); }
   ScopeIndex getEnclosingScopeIndex() const { return *enclosingScopeIndex_; }
