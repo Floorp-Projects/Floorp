@@ -298,22 +298,72 @@ add_task(async function test_extension_no_query_params() {
   ok(!engine, "Engine should not exist");
 });
 
-add_task(async function test_extension_not_allow_http() {
+async function checkBadUrl(searchProviderKey, urlValue) {
   let normalized = await ExtensionTestUtils.normalizeManifest({
     chrome_settings_overrides: {
       search_provider: {
         name: "MozSearch",
         keyword: "MozSearch",
-        search_url: "http://example.com/{searchTerms}",
-        suggest_url: "http://example.com/suggest/{searchTerms}",
+        search_url: "https://example.com/",
+        [searchProviderKey]: urlValue,
       },
     },
   });
 
   ok(
-    normalized.error.includes("Error processing chrome_settings_overrides"),
-    `The manifest error ${JSON.stringify(normalized.error)} `
+    /Error processing chrome_settings_overrides\.search_provider[^:]*: .* must match/.test(
+      normalized.error
+    ),
+    `Expected error for ${searchProviderKey}:${urlValue} "${normalized.error}"`
   );
+}
+
+async function checkValidUrl(urlValue) {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
+    chrome_settings_overrides: {
+      search_provider: {
+        name: "MozSearch",
+        keyword: "MozSearch",
+        search_form: urlValue,
+        search_url: urlValue,
+        suggest_url: urlValue,
+      },
+    },
+  });
+  equal(normalized.error, undefined, `Valid search_provider url: ${urlValue}`);
+}
+
+add_task(async function test_extension_not_allow_http() {
+  await checkBadUrl("search_form", "http://example.com/{searchTerms}");
+  await checkBadUrl("search_url", "http://example.com/{searchTerms}");
+  await checkBadUrl("suggest_url", "http://example.com/{searchTerms}");
+});
+
+add_task(async function test_manifest_disallows_http_localhost_prefix() {
+  await checkBadUrl("search_url", "http://localhost.example.com");
+  await checkBadUrl("search_url", "http://localhost.example.com/");
+  await checkBadUrl("search_url", "http://127.0.0.1.example.com/");
+  await checkBadUrl("search_url", "http://localhost:1234@example.com/");
+});
+
+add_task(async function test_manifest_allow_http_for_localhost() {
+  await checkValidUrl("http://localhost");
+  await checkValidUrl("http://localhost/");
+  await checkValidUrl("http://localhost:/");
+  await checkValidUrl("http://localhost:1/");
+  await checkValidUrl("http://localhost:65535/");
+
+  await checkValidUrl("http://127.0.0.1");
+  await checkValidUrl("http://127.0.0.1:");
+  await checkValidUrl("http://127.0.0.1:/");
+  await checkValidUrl("http://127.0.0.1/");
+  await checkValidUrl("http://127.0.0.1:80/");
+
+  await checkValidUrl("http://[::1]");
+  await checkValidUrl("http://[::1]:");
+  await checkValidUrl("http://[::1]:/");
+  await checkValidUrl("http://[::1]/");
+  await checkValidUrl("http://[::1]:80/");
 });
 
 add_task(async function test_extension_allow_http_for_localhost() {
