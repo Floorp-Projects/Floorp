@@ -12,16 +12,16 @@ add_task(async function testTRRModeMigration() {
   await DoHController._uninit();
   setPassingHeuristics();
   Preferences.set(prefs.NETWORK_TRR_MODE_PREF, 2);
-  Preferences.set(prefs.DOH_PREVIOUS_TRR_MODE_PREF, 0);
+  Preferences.set(prefs.PREVIOUS_TRR_MODE_PREF, 0);
   let modePromise = TestUtils.waitForPrefChange(prefs.NETWORK_TRR_MODE_PREF);
   let previousModePromise = TestUtils.waitForPrefChange(
-    prefs.DOH_PREVIOUS_TRR_MODE_PREF
+    prefs.PREVIOUS_TRR_MODE_PREF
   );
   await DoHController.init();
   await Promise.all([modePromise, previousModePromise]);
 
   is(
-    Preferences.get(prefs.DOH_PREVIOUS_TRR_MODE_PREF),
+    Preferences.get(prefs.PREVIOUS_TRR_MODE_PREF),
     undefined,
     "Previous TRR mode pref cleared."
   );

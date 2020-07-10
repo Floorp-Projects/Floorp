@@ -26,15 +26,15 @@ add_task(async function testPolicyOverride() {
     "Policy engine is active."
   );
 
-  Preferences.set(prefs.DOH_ENABLED_PREF, true);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await waitForStateTelemetry(["policyDisabled"]);
   is(
-    Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
+    Preferences.get(prefs.BREADCRUMB_PREF),
     undefined,
     "Breadcrumb not saved."
   );
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     undefined,
     "TRR selection not performed."
   );

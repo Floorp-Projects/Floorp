@@ -15,7 +15,7 @@ const ADDON_ID = "doh-rollout@mozilla.org";
 add_task(setup);
 
 add_task(async function testLocalStorageMigration() {
-  Preferences.reset(prefs.DOH_BALROG_MIGRATION_PREF);
+  Preferences.reset(prefs.BALROG_MIGRATION_PREF);
 
   const legacyEntries = {
     doneFirstRun: true,
@@ -33,8 +33,8 @@ add_task(async function testLocalStorageMigration() {
   await idbConn.set(legacyEntries);
 
   let migrationDone = new Promise(resolve => {
-    Preferences.observe(prefs.DOH_BALROG_MIGRATION_PREF, function obs() {
-      Preferences.ignore(prefs.DOH_BALROG_MIGRATION_PREF, obs);
+    Preferences.observe(prefs.BALROG_MIGRATION_PREF, function obs() {
+      Preferences.ignore(prefs.BALROG_MIGRATION_PREF, obs);
       resolve();
     });
   });

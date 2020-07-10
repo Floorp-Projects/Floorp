@@ -10,13 +10,13 @@ add_task(async function testUserInterference() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
   let promise = waitForDoorhanger();
-  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_SELF_ENABLED_PREF);
-  Preferences.set(prefs.DOH_ENABLED_PREF, true);
+  let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
+  Preferences.set(prefs.ENABLED_PREF, true);
 
   await prefPromise;
-  is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   is(
-    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://dummytrr.com/query",
     "TRR selection complete."
   );
@@ -26,7 +26,7 @@ add_task(async function testUserInterference() {
   let panel = await promise;
 
   prefPromise = TestUtils.waitForPrefChange(
-    prefs.DOH_DOORHANGER_USER_DECISION_PREF
+    prefs.DOORHANGER_USER_DECISION_PREF
   );
 
   // Click the doorhanger's "accept" button.
@@ -37,7 +37,7 @@ add_task(async function testUserInterference() {
   await prefPromise;
 
   is(
-    Preferences.get(prefs.DOH_DOORHANGER_USER_DECISION_PREF),
+    Preferences.get(prefs.DOORHANGER_USER_DECISION_PREF),
     "UIOk",
     "Doorhanger decision saved."
   );
@@ -57,15 +57,11 @@ add_task(async function testUserInterference() {
   ensureNoHeuristicsTelemetry();
 
   is(
-    Preferences.get(prefs.DOH_DISABLED_PREF, false),
+    Preferences.get(prefs.DISABLED_PREF, false),
     true,
     "Manual disable recorded."
   );
-  is(
-    Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
-    undefined,
-    "Breadcrumb cleared."
-  );
+  is(Preferences.get(prefs.BREADCRUMB_PREF), undefined, "Breadcrumb cleared.");
 
   // Simulate another network change.
   simulateNetworkChange();

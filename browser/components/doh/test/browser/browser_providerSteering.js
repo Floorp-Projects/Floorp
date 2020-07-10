@@ -11,10 +11,10 @@ add_task(setup);
 
 add_task(async function testProviderSteering() {
   setPassingHeuristics();
-  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_SELF_ENABLED_PREF);
-  Preferences.set(prefs.DOH_ENABLED_PREF, true);
+  let prefPromise = TestUtils.waitForPrefChange(prefs.BREADCRUMB_PREF);
+  Preferences.set(prefs.ENABLED_PREF, true);
   await prefPromise;
-  is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
+  is(Preferences.get(prefs.BREADCRUMB_PREF), true, "Breadcrumb saved.");
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
   let providerTestcases = [
@@ -30,7 +30,7 @@ add_task(async function testProviderSteering() {
     },
   ];
   Preferences.set(
-    prefs.DOH_PROVIDER_STEERING_LIST_PREF,
+    prefs.PROVIDER_STEERING_LIST_PREF,
     JSON.stringify(providerTestcases)
   );
 
