@@ -86,6 +86,41 @@ class MachCommands(MachCommandBase):
         from mozrelease.buglist_creator import email_release_drivers
         email_release_drivers(**options)
 
+    @SubCommand(
+        "release",
+        "push-scriptworker-canary",
+        description="Push tasks to try, to test new scriptworker deployments.",
+    )
+    @CommandArgument(
+        "--address",
+        required=True,
+        action="append",
+        dest="addresses",
+        help="The email address to send notifications to "
+        "(may be specified more than once).",
+    )
+    @CommandArgument(
+        "--scriptworker",
+        required=True,
+        action="append",
+        dest="scriptworkers",
+        help="Scriptworker to run canary for (may be specified more than once).",
+    )
+    @CommandArgument(
+        "--ssh-key-secret",
+        required=False,
+        help="Taskcluster secret with ssh-key to use for hg.mozilla.org",
+    )
+    def push_scriptworker_canary(self, scriptworkers, addresses, ssh_key_secret):
+        self.setup_logging()
+        from mozrelease.scriptworker_canary import push_canary
+
+        push_canary(
+            scriptworkers=scriptworkers,
+            addresses=addresses,
+            ssh_key_secret=ssh_key_secret,
+        )
+
     def setup_logging(self, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so

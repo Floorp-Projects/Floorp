@@ -3,6 +3,7 @@ black:
     description: Reformat python
     include:
         - python/mozperftest/mozperftest
+        - python/mozrelease/mozrelease/scriptworker_canary.py
         - taskcluster/docker/funsize-update-generator
         - testing/condprofile/condprof
         - tools/crashreporter/system-symbols
