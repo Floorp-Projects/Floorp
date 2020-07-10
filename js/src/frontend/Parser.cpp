@@ -1941,8 +1941,9 @@ static JSFunction* CreateFunction(JSContext* cx,
   gc::AllocKind allocKind = stencil.functionFlags.isExtended()
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
+  bool isAsmJS = stencil.functionFlags.isAsmJSNative();
 
-  JSNative maybeNative = stencil.isAsmJSModule ? InstantiateAsmJS : nullptr;
+  JSNative maybeNative = isAsmJS ? InstantiateAsmJS : nullptr;
 
   RootedAtom displayAtom(cx, stencil.functionAtom);
   RootedFunction fun(
@@ -1953,7 +1954,7 @@ static JSFunction* CreateFunction(JSContext* cx,
     return nullptr;
   }
 
-  if (stencil.isAsmJSModule) {
+  if (isAsmJS) {
     RefPtr<const JS::WasmModule> asmJS =
         compilationInfo.asmJS.lookup(functionIndex)->value();
 
@@ -2038,7 +2039,7 @@ static bool InstantiateScriptStencils(JSContext* cx,
       if (!script) {
         return false;
       }
-    } else if (stencil.isAsmJSModule) {
+    } else if (stencil.functionFlags.isAsmJSNative()) {
       MOZ_ASSERT(fun->isAsmJSNative());
     } else if (fun->isIncomplete()) {
       // Lazy functions are generally only allocated in the initial parse.
@@ -2064,7 +2065,7 @@ static bool InstantiateTopLevel(JSContext* cx,
   }
 
   // Top-level asm.js does not generate a JSScript.
-  if (stencil.isAsmJSModule) {
+  if (stencil.functionFlags.isAsmJSNative()) {
     return true;
   }
 
@@ -2093,7 +2094,8 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
       continue;
     }
 
-    if (stencil.isAsmJSModule || fun->baseScript()->hasBytecode()) {
+    if (stencil.functionFlags.isAsmJSNative() ||
+        fun->baseScript()->hasBytecode()) {
       // Non-lazy inner functions don't use the enclosingScope_ field.
       MOZ_ASSERT(stencil.lazyFunctionEnclosingScopeIndex_.isNothing());
     } else {

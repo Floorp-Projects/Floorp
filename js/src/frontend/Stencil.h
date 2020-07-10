@@ -382,9 +382,6 @@ class ScriptStencil {
   // successfully.)
   mozilla::Maybe<ScopeIndex> lazyFunctionEnclosingScopeIndex_;
 
-  // True if this is successfully validated "use asm" function.
-  bool isAsmJSModule : 1;
-
   // This function is a standalone function that is not syntactically part of
   // another script. Eg. Created by `new Function("")`.
   bool isStandaloneFunction : 1;
@@ -402,7 +399,6 @@ class ScriptStencil {
 
   explicit ScriptStencil(JSContext* cx)
       : gcThings(cx),
-        isAsmJSModule(false),
         isStandaloneFunction(false),
         wasFunctionEmitted(false),
         isSingletonFunction(false) {}
@@ -412,7 +408,7 @@ class ScriptStencil {
   void trace(JSTracer* trc);
 
   bool isFunction() const {
-    return isAsmJSModule ||
+    return functionFlags.isAsmJSNative() ||
            immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsFunction);
   }
 };
