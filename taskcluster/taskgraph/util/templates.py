@@ -27,7 +27,7 @@ def merge_to(source, dest):
 
         # Override mismatching or empty types
         if type(value) != type(dest.get(key)):  # noqa
-            dest[key] = source[key]
+            dest[key] = value
             continue
 
         # Merge dict
@@ -36,10 +36,10 @@ def merge_to(source, dest):
             continue
 
         if isinstance(value, list):
-            dest[key] = dest[key] + source[key]
+            dest[key] = dest[key] + value
             continue
 
-        dest[key] = source[key]
+        dest[key] = value
 
     return dest
 
