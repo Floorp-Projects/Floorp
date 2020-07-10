@@ -33,8 +33,6 @@ var reloadsSent = 0;
 add_task(async function() {
   await addTab(TEST_URL);
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  // Load the frame-script-utils into the child.
-  loadFrameScriptUtils();
 
   info("Getting the entire list of tools supported in this tab");
   const toolIDs = gDevTools
@@ -64,9 +62,12 @@ add_task(async function() {
       "Detected the right number of reloads in the page"
     );
   };
-  gBrowser.selectedBrowser.messageManager.addMessageListener(
-    "devtools:test:load",
-    reloadCounter
+
+  const removeLoadListener = BrowserTestUtils.addContentEventListener(
+    gBrowser.selectedBrowser,
+    "load",
+    reloadCounter,
+    {}
   );
 
   info("Start testing with the toolbox docked");
@@ -85,10 +86,7 @@ add_task(async function() {
   info("Switch back to docked mode");
   await toolbox.switchHost(Toolbox.HostType.BOTTOM);
 
-  gBrowser.selectedBrowser.messageManager.removeMessageListener(
-    "devtools:test:load",
-    reloadCounter
-  );
+  removeLoadListener();
 
   await toolbox.destroy();
   gBrowser.removeCurrentTab();
@@ -107,54 +105,49 @@ async function testOneTool(toolbox, toolID) {
 async function testReload(shortcut, toolbox) {
   info(`Reload with ${shortcut}`);
 
-  const mm = gBrowser.selectedBrowser.messageManager;
   const walker = (await toolbox.target.getFront("inspector")).walker;
 
-  return new Promise(resolve => {
-    const observer = {
-      _isDocumentUnloaded: false,
-      _isNewRooted: false,
-      onMutation(mutations) {
-        for (const { type } of mutations) {
-          if (type === "documentUnload") {
-            this._isDocumentUnloaded = true;
-          }
+  const observer = {
+    _isDocumentUnloaded: false,
+    _isNewRooted: false,
+    onMutation(mutations) {
+      for (const { type } of mutations) {
+        if (type === "documentUnload") {
+          this._isDocumentUnloaded = true;
         }
-      },
-      onNewRootNode() {
-        this._isNewRooted = true;
-      },
-      isReady() {
-        return this._isDocumentUnloaded && this._isNewRooted;
-      },
-    };
+      }
+    },
+    onNewRootNode() {
+      this._isNewRooted = true;
+    },
+    isReady() {
+      return this._isDocumentUnloaded && this._isNewRooted;
+    },
+  };
 
-    observer.onMutation = observer.onMutation.bind(observer);
-    observer.onNewRootNode = observer.onNewRootNode.bind(observer);
-    walker.on("mutations", observer.onMutation);
-    walker.watchRootNode(observer.onNewRootNode);
+  observer.onMutation = observer.onMutation.bind(observer);
+  observer.onNewRootNode = observer.onNewRootNode.bind(observer);
+  walker.on("mutations", observer.onMutation);
+  walker.watchRootNode(observer.onNewRootNode);
 
-    // If we have a jsdebugger panel, wait for it to complete its reload
-    const jsdebugger = toolbox.getPanel("jsdebugger");
-    let onReloaded = Promise.resolve;
-    if (jsdebugger) {
-      onReloaded = jsdebugger.once("reloaded");
-    }
+  // If we have a jsdebugger panel, wait for it to complete its reload
+  const jsdebugger = toolbox.getPanel("jsdebugger");
+  let onReloaded = Promise.resolve;
+  if (jsdebugger) {
+    onReloaded = jsdebugger.once("reloaded");
+  }
 
-    const complete = async () => {
-      mm.removeMessageListener("devtools:test:load", complete);
-      // Wait for the documentUnload and newRoot were fired.
-      await waitUntil(() => observer.isReady());
-      walker.off("mutations", observer.onMutation);
-      walker.unwatchRootNode(observer.onNewRootNode);
-      await onReloaded;
-      resolve();
-    };
+  const loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-    mm.addMessageListener("devtools:test:load", complete);
+  toolbox.win.focus();
+  synthesizeKeyShortcut(L10N.getStr(shortcut), toolbox.win);
+  reloadsSent++;
 
-    toolbox.win.focus();
-    synthesizeKeyShortcut(L10N.getStr(shortcut), toolbox.win);
-    reloadsSent++;
-  });
+  await loadPromise;
+
+  // Wait for the documentUnload and newRoot were fired.
+  await waitUntil(() => observer.isReady());
+  walker.off("mutations", observer.onMutation);
+  walker.unwatchRootNode(observer.onNewRootNode);
+  await onReloaded;
 }
