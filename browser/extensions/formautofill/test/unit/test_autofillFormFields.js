@@ -512,6 +512,9 @@ function do_test(testcases, testFn) {
         let decryptHelper = async (cipherText, reauth) => {
           return OSKeyStore.decrypt(cipherText, false);
         };
+        // The formfill controller isn't fully wired up in this test,
+        // so we bypass it for setting the field values
+        const setUserInput = (element, value) => element.setUserInput(value);
 
         handler.collectFormFields();
 
@@ -520,6 +523,7 @@ function do_test(testcases, testFn) {
 
         for (let section of handler.sections) {
           section._decrypt = decryptHelper;
+          section._focusAndSetTextValue = setUserInput;
         }
 
         handler.activeSection.fieldDetails.forEach(field => {
