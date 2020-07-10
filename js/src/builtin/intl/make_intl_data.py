@@ -10,6 +10,7 @@
     make_intl_data.py tzdata
     make_intl_data.py currency
     make_intl_data.py units
+    make_intl_data.py numbering
 
 
     Target "langtags":
@@ -32,6 +33,11 @@
     Target "units":
     Generate source and test files using the list of so-called "sanctioned unit
     identifiers" and verifies that the ICU data filter includes these units.
+
+
+    Target "numbering":
+    Generate source and test files using the list of numbering systems with
+    simple digit mappings and verifies that it's in sync with ICU/CLDR.
 """
 
 from __future__ import print_function
@@ -1329,6 +1335,25 @@ if (typeof reportCompare === "function")
     reportCompare(0, 0);""")
 
 
+def readCLDRVersionFromICU():
+    icuDir = os.path.join(topsrcdir, "intl/icu/source")
+    if not os.path.isdir(icuDir):
+        raise RuntimeError("not a directory: {}".format(icuDir))
+
+    reVersion = re.compile(r'\s*cldrVersion\{"(\d+(?:\.\d+)?)"\}')
+
+    for line in flines(os.path.join(icuDir, "data/misc/supplementalData.txt")):
+        m = reVersion.match(line)
+        if m:
+            version = m.group(1)
+            break
+
+    if version is None:
+        raise RuntimeError("can't resolve CLDR version")
+
+    return version
+
+
 def updateCLDRLangTags(args):
     """ Update the LanguageTagGenerated.cpp file. """
     version = args.version
@@ -1338,20 +1363,7 @@ def updateCLDRLangTags(args):
 
     # Determine current CLDR version from ICU.
     if version is None:
-        icuDir = os.path.join(topsrcdir, "intl/icu/source")
-        if not os.path.isdir(icuDir):
-            raise RuntimeError("not a directory: {}".format(icuDir))
-
-        reVersion = re.compile(r'\s*cldrVersion\{"(\d+(?:\.\d+)?)"\}')
-
-        for line in flines(os.path.join(icuDir, "data/misc/supplementalData.txt")):
-            m = reVersion.match(line)
-            if m:
-                version = m.group(1)
-                break
-
-        if version is None:
-            raise RuntimeError("can't resolve CLDR version")
+        version = readCLDRVersionFromICU()
 
     url = url.replace("<VERSION>", version)
 
@@ -1390,7 +1402,8 @@ def updateCLDRLangTags(args):
         writeCLDRLanguageTagData(println, data, url)
 
     print("Writing Intl test data...")
-    test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+    js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(js_src_builtin_intl_dir,
                              "../../tests/non262/Intl/Locale/likely-subtags-generated.js")
     with io.open(test_file, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
@@ -2455,9 +2468,9 @@ def readICUUnitResourceFile(filepath):
         Returns {("length", "meter"), ("duration", "day"), ("duration", "day-person")}
     """
 
-    start_table_re = re.compile(r"^([\w\-%:\"]+){$")
-    end_table_re = re.compile(r"^}$")
-    table_entry_re = re.compile(r"^([\w\-%:\"]+){\"(.*?)\"}$")
+    start_table_re = re.compile(r"^([\w\-%:\"]+)\{$")
+    end_table_re = re.compile(r"^\}$")
+    table_entry_re = re.compile(r"^([\w\-%:\"]+)\{\"(.*?)\"\}$")
 
     # The current resource table.
     table = {}
@@ -2509,7 +2522,7 @@ def readICUUnitResourceFile(filepath):
             table[entry_key] = entry_value
             continue
 
-        raise Exception("unexpected line: '{}' in {}".format(line, file_name))
+        raise Exception("unexpected line: '{}' in {}".format(line, filepath))
 
     assert len(parents) == 0, "Not all tables closed"
     assert len(table) == 1, "More than one root table"
@@ -2576,14 +2589,15 @@ def readICUDataFilterForUnits(data_filter_file):
 
 
 def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
-    intl_dir = os.path.dirname(os.path.abspath(__file__))
+    js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
 
     def find_unit_type(unit):
         result = [unit_type for (unit_type, unit_name) in all_units if unit_name == unit]
         assert result and len(result) == 1
         return result[0]
 
-    sanctioned_js_file = os.path.join(intl_dir, "SanctionedSimpleUnitIdentifiersGenerated.js")
+    sanctioned_js_file = os.path.join(js_src_builtin_intl_dir,
+                                      "SanctionedSimpleUnitIdentifiersGenerated.js")
     with io.open(sanctioned_js_file, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
 
@@ -2601,7 +2615,7 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
 
         println(u"var sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_object))
 
-    sanctioned_cpp_file = os.path.join(intl_dir, "MeasureUnitGenerated.h")
+    sanctioned_cpp_file = os.path.join(js_src_builtin_intl_dir, "MeasureUnitGenerated.h")
     with io.open(sanctioned_cpp_file, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
 
@@ -2634,8 +2648,8 @@ inline constexpr MeasureUnit simpleMeasureUnits[] = {
 def writeUnitTestFiles(all_units, sanctioned_units):
     """ Generate test files for unit number formatters. """
 
-    test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "../../tests/non262/Intl/NumberFormat")
+    js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
+    test_dir = os.path.join(js_src_builtin_intl_dir, "../../tests/non262/Intl/NumberFormat")
 
     def write_test(file_name, test_content, indent=4):
         file_path = os.path.join(test_dir, file_name)
@@ -2773,6 +2787,188 @@ def updateUnits(topsrcdir, args):
     writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units)
 
 
+def readICUNumberingSystemsResourceFile(filepath):
+    """ Returns a dictionary of numbering systems where the key denotes the numbering system name
+        and the value a dictionary with additional numbering system data.
+
+        Example:
+
+        numberingSystems:table(nofallback){
+            numberingSystems{
+                latn{
+                    algorithmic:int{0}
+                    desc{"0123456789"}
+                    radix:int{10}
+                }
+                roman{
+                    algorithmic:int{1}
+                    desc{"%roman-upper"}
+                    radix:int{10}
+                }
+            }
+        }
+
+        Returns {"latn": {"digits": "0123456789", "algorithmic": False},
+                 "roman": {"algorithmic": True}}
+    """
+
+    start_table_re = re.compile(r"^(\w+)(?:\:[\w\(\)]+)?\{$")
+    end_table_re = re.compile(r"^\}$")
+    table_entry_re = re.compile(r"^(\w+)(?:\:[\w\(\)]+)?\{(?:(?:\"(.*?)\")|(\d+))\}$")
+
+    # The current resource table.
+    table = {}
+
+    # List of parent tables when parsing.
+    parents = []
+
+    # Track multi-line comments state.
+    in_multiline_comment = False
+
+    for line in flines(filepath, "utf-8-sig"):
+        # Remove leading and trailing whitespace.
+        line = line.strip()
+
+        # Skip over comments.
+        if in_multiline_comment:
+            if line.endswith("*/"):
+                in_multiline_comment = False
+            continue
+
+        if line.startswith("//"):
+            continue
+
+        if line.startswith("/*"):
+            in_multiline_comment = True
+            continue
+
+        # Try to match the start of a table, e.g. `latn{`.
+        match = start_table_re.match(line)
+        if match:
+            parents.append(table)
+            table_name = match.group(1)
+            new_table = {}
+            table[table_name] = new_table
+            table = new_table
+            continue
+
+        # Try to match the end of a table.
+        match = end_table_re.match(line)
+        if match:
+            table = parents.pop()
+            continue
+
+        # Try to match a table entry, e.g. `desc{"0123456789"}`.
+        match = table_entry_re.match(line)
+        if match:
+            entry_key = match.group(1)
+            entry_value = match.group(2) if match.group(2) is not None else int(match.group(3))
+            table[entry_key] = entry_value
+            continue
+
+        raise Exception("unexpected line: '{}' in {}".format(line, filepath))
+
+    assert len(parents) == 0, "Not all tables closed"
+    assert len(table) == 1, "More than one root table"
+
+    # Remove the two top-level "numberingSystems" tables.
+    (_, numbering_systems) = table.popitem()
+    (_, numbering_systems) = numbering_systems.popitem()
+
+    # Assert all numbering systems use base 10.
+    assert all(ns["radix"] == 10 for ns in numbering_systems.values())
+
+    # Return the numbering systems.
+    return {key: {"digits": value["desc"], "algorithmic": False}
+            if not bool(value["algorithmic"])
+            else {"algorithmic": True}
+            for (key, value) in numbering_systems.items()}
+
+
+def writeNumberingSystemFiles(numbering_systems):
+    js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
+
+    numbering_systems_js_file = os.path.join(js_src_builtin_intl_dir,
+                                             "NumberingSystemsGenerated.h")
+    with io.open(numbering_systems_js_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(generatedFileWarning)
+
+        println(u"""
+/**
+ * The list of numbering systems with simple digit mappings.
+ */
+
+#ifndef builtin_intl_NumberingSystemsGenerated_h
+#define builtin_intl_NumberingSystemsGenerated_h
+""")
+
+        simple_numbering_systems = sorted(name
+                                          for (name, value) in numbering_systems.items()
+                                          if not value["algorithmic"])
+
+        println(u"// clang-format off")
+        println(u"#define NUMBERING_SYSTEMS_WITH_SIMPLE_DIGIT_MAPPINGS \\")
+        println(u"{}".format(", \\\n".join(u'  "{}"'.format(name)
+                                           for name in simple_numbering_systems)))
+        println(u"// clang-format on")
+        println(u"")
+
+        println(u"#endif  // builtin_intl_NumberingSystemsGenerated_h")
+
+    js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
+    test_dir = os.path.join(js_src_builtin_intl_dir, "../../tests/non262/Intl")
+
+    intl_shell_js_file = os.path.join(test_dir, "shell.js")
+
+    with io.open(intl_shell_js_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(generatedFileWarning)
+
+        println(u"""
+// source: CLDR file common/bcp47/number.xml; version CLDR {}.
+// https://github.com/unicode-org/cldr/blob/master/common/bcp47/number.xml
+// https://github.com/unicode-org/cldr/blob/master/common/supplemental/numberingSystems.xml
+""".format(readCLDRVersionFromICU()).rstrip())
+
+        numbering_systems_object = json.dumps(numbering_systems,
+                                              indent=2,
+                                              separators=(',', ': '),
+                                              sort_keys=True,
+                                              ensure_ascii=False)
+        println(u"const numberingSystems = {};".format(numbering_systems_object))
+
+
+def updateNumberingSystems(topsrcdir, args):
+    icu_path = os.path.join(topsrcdir, "intl", "icu")
+    icu_misc_path = os.path.join(icu_path, "source", "data", "misc")
+
+    with io.open("NumberingSystems.yaml", mode="r", encoding="utf-8") as f:
+        numbering_systems = yaml.safe_load(f)
+
+    # Read all possible ICU unit identifiers from the "misc/numberingSystems.txt" resource.
+    misc_ns_file = os.path.join(icu_misc_path, "numberingSystems.txt")
+    all_numbering_systems = readICUNumberingSystemsResourceFile(misc_ns_file)
+
+    all_numbering_systems_simple_digits = {name for (name, value) in all_numbering_systems.items()
+                                           if not value["algorithmic"]}
+
+    # Assert ICU includes support for all required numbering systems. If this assertion fails,
+    # something is broken in ICU.
+    assert all_numbering_systems_simple_digits.issuperset(numbering_systems), (
+           "{}".format(numbering_systems.difference(all_numbering_systems_simple_digits)))
+
+    # Assert the spec requires support for all numbering systems with simple digit mappings. If
+    # this assertion fails, file a PR at <https://github.com/tc39/ecma402> to include any new
+    # numbering systems.
+    assert all_numbering_systems_simple_digits.issubset(numbering_systems), (
+           "{}".format(all_numbering_systems_simple_digits.difference(numbering_systems)))
+
+    writeNumberingSystemFiles(all_numbering_systems)
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -2845,6 +3041,11 @@ if __name__ == "__main__":
     parser_units = subparsers.add_parser("units",
                                          help="Update sanctioned unit identifiers mapping")
     parser_units.set_defaults(func=partial(updateUnits, topsrcdir))
+
+    parser_numbering_systems = subparsers.add_parser("numbering",
+                                                     help="Update numbering systems with simple "
+                                                          "digit mappings")
+    parser_numbering_systems.set_defaults(func=partial(updateNumberingSystems, topsrcdir))
 
     args = parser.parse_args()
     args.func(args)

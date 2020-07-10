@@ -271,3 +271,18 @@ Second, use ``make_intl_data.py``\ ’s ``units`` mode to update unit handling a
    $ # make_intl_data.py requires yaml.
    $ export PYTHONPATH="$topsrcdir/third_party/python/PyYAML/lib3/"
    $ python3 ./make_intl_data.py units
+
+Updating SpiderMonkey numbering systems support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``Intl`` API also supports formatting numbers in various numbering systems (for example, “123“ using Latin numbers or “一二三“ using Han decimal numbers). The list of numbering systems that we must support is stored in ``js/src/builtin/intl/NumberingSystems.yaml``. We verify these numbering systems are supported by ICU and generate supporting files from it.
+
+When the list of supported numbering systems needs to be updated, run ``make_intl_data.py`` with the ``numbering`` mode to update it and associated tests in SpiderMonkey:
+
+.. code:: bash
+
+   $ cd "$topsrcdir/js/src/builtin/intl"
+   $ # make_intl_data.py requires yaml.
+   $ export PYTHONPATH="$topsrcdir/third_party/python/PyYAML/lib3/"
+   $ python3 ./make_intl_data.py numbering
+

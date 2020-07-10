@@ -507,6 +507,7 @@ selfhosted_inputs = [
     'builtin/WeakMap.js',
     'builtin/WeakSet.js'
 ] + ([
+    'builtin/intl/NumberingSystemsGenerated.h',
     'builtin/intl/Collator.js',
     'builtin/intl/CommonFunctions.js',
     'builtin/intl/CurrencyDataGenerated.js',
