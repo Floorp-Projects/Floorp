@@ -26,6 +26,7 @@ linux64-clang-5.0:
         fetch:
             - clang-5.0
         toolchain:
+            - linux64-binutils
             - linux64-gcc-7
 
 linux64-clang-7:
