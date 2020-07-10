@@ -58,7 +58,7 @@ void AnimationSurfaceProvider::DropImageReference() {
   }
 
   // RasterImage objects need to be destroyed on the main thread.
-  NS_ReleaseOnMainThread("AnimationSurfaceProvider::mImage", mImage.forget());
+  SurfaceCache::ReleaseImageOnMainThread(mImage.forget());
 }
 
 void AnimationSurfaceProvider::Reset() {
