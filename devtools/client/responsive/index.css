@@ -295,28 +295,6 @@ input:-moz-focusring {
   fill: var(--theme-icon-dimmed-color);
 }
 
-#viewports-container {
-  display: flex;
-  overflow: auto;
-  height: 100%;
-  width: 100%;
-}
-
-.theme-light #viewports-container {
-  background-color: #F5F5F6;
-}
-
-#viewports {
-  /* Individual viewports are inline elements, make sure they stay on a single
-     line */
-  white-space: nowrap;
-  margin-top: 16px;
-}
-
-#viewports.left-aligned {
-  margin-left: 16px;
-}
-
 /**
  * Viewport Container
  */
