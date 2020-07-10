@@ -9,7 +9,9 @@
 #include "base/shared_memory.h"
 
 #include "base/process_util.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/ipc/SharedMemoryBasic.h"
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -260,5 +262,35 @@ TEST(IPCSharedMemory, ROCopyAndReprotect)
   EXPECT_FALSE(ipc::SharedMemory::SystemProtectFallible(
       memRO, 1, ipc::SharedMemory::RightsReadWrite));
 }
+
+TEST(IPCSharedMemory, IsZero)
+{
+  base::SharedMemory shm;
+
+  static constexpr size_t kSize = 65536;
+  ASSERT_TRUE(shm.Create(kSize));
+  ASSERT_TRUE(shm.Map(kSize));
+
+  auto* mem = reinterpret_cast<char*>(shm.memory());
+  for (size_t i = 0; i < kSize; ++i) {
+    ASSERT_EQ(mem[i], 0) << "offset " << i;
+  }
+}
+
+#ifndef FUZZING
+TEST(IPCSharedMemory, BasicIsZero)
+{
+  auto shm = MakeRefPtr<ipc::SharedMemoryBasic>();
+
+  static constexpr size_t kSize = 65536;
+  ASSERT_TRUE(shm->Create(kSize));
+  ASSERT_TRUE(shm->Map(kSize));
+
+  auto* mem = reinterpret_cast<char*>(shm->memory());
+  for (size_t i = 0; i < kSize; ++i) {
+    ASSERT_EQ(mem[i], 0) << "offset " << i;
+  }
+}
+#endif
 
 }  // namespace mozilla
