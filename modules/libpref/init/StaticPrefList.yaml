@@ -7335,6 +7335,12 @@
   value: false
   mirror: always
 
+# Enable tab sharing
+- name: media.getusermedia.browser.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # The getDisplayMedia method is always SecureContext regardless of the above two
 # prefs. But it is not implemented on android, and can be turned off elsewhere.
 - name: media.getdisplaymedia.enabled
