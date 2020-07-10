@@ -60,6 +60,7 @@ fn bpp(format: GLenum, pixel_type: GLenum) -> GLsizei {
         ffi::UNSIGNED_SHORT => 2,
         ffi::SHORT => 2,
         ffi::FLOAT => 4,
+        ffi::UNSIGNED_INT_8_8_8_8_REV => return 4,
         _ => panic!("unsupported pixel_type for read_pixels: {:?}", pixel_type),
     };
     colors * depth
