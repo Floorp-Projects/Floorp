@@ -67,6 +67,61 @@ TEST(Matrix, TransformAndClipRect)
                   .IsEqualEdges(Rect(150, 100, 50, 0)));
 }
 
+TEST(Matrix, RotateTransform)
+{
+  gfx::Matrix4x4 transformMatrix;
+  gfx::Point3D trans, scale;
+  gfx::Quaternion orient;
+
+  auto floor = [&](float aValue, int aDecimal) {
+    const int digit = pow(10, aDecimal);
+    const float result = (int)(aValue * digit);
+    return result / digit;
+  };
+
+  // Test rotate 45 degree on x-axis.
+  gfx::Quaternion expectedOrient(0.382f, 0.0f, 0.0f, 0.923f);
+  transformMatrix.RotateX(0.785f);
+  // the orient would be (x:0.3825, y:0, z:0, w: 0.9239)
+  transformMatrix.Decompose(trans, orient, scale);
+  EXPECT_EQ(floor(orient.x, 3), expectedOrient.x);
+  EXPECT_EQ(floor(orient.y, 3), expectedOrient.y);
+  EXPECT_EQ(floor(orient.z, 3), expectedOrient.z);
+  EXPECT_EQ(floor(orient.w, 3), expectedOrient.w);
+
+  // Test set rotate matrix from a quaternion and
+  // compare it with the result from decompose.
+  transformMatrix = gfx::Matrix4x4();
+  transformMatrix.SetRotationFromQuaternion(orient);
+  transformMatrix.Decompose(trans, orient, scale);
+  EXPECT_EQ(floor(orient.x, 3), expectedOrient.x);
+  EXPECT_EQ(floor(orient.y, 3), expectedOrient.y);
+  EXPECT_EQ(floor(orient.z, 3), expectedOrient.z);
+  EXPECT_EQ(floor(orient.w, 3), expectedOrient.w);
+
+  // Test rotate -45 degree on axis: (0.577f, 0.577f, 0.577f).
+  transformMatrix = gfx::Matrix4x4();
+  transformMatrix.SetRotateAxisAngle(0.577f, 0.577f, 0.577f, -0.785f);
+  // the orient would be (x:-0.2208, y:-0.2208, z:-0.2208, w: 0.9239)
+  transformMatrix.Decompose(trans, orient, scale);
+
+  expectedOrient.Set(-0.220f, -0.220f, -0.220f, 0.923f);
+  EXPECT_EQ(floor(orient.x, 3), expectedOrient.x);
+  EXPECT_EQ(floor(orient.y, 3), expectedOrient.y);
+  EXPECT_EQ(floor(orient.z, 3), expectedOrient.z);
+  EXPECT_EQ(floor(orient.w, 3), expectedOrient.w);
+
+  // Test set rotate matrix from a quaternion and
+  // compare it with the result from decompose.
+  transformMatrix = gfx::Matrix4x4();
+  transformMatrix.SetRotationFromQuaternion(orient);
+  transformMatrix.Decompose(trans, orient, scale);
+  EXPECT_EQ(floor(orient.x, 3), expectedOrient.x);
+  EXPECT_EQ(floor(orient.y, 3), expectedOrient.y);
+  EXPECT_EQ(floor(orient.z, 3), expectedOrient.z);
+  EXPECT_EQ(floor(orient.w, 3), expectedOrient.w);
+}
+
 TEST(Matrix4x4Flagged, Mult)
 {
   Matrix4x4Flagged simple =
