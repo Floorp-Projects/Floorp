@@ -8417,14 +8417,6 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
     case eSelectWord: {
       bool wordSelectEatSpace = ShouldWordSelectionEatSpace(*aPos);
 
-      // mSawBeforeType means "we already saw characters of the type
-      // before the boundary we're looking for". Examples:
-      // 1. If we're moving forward, looking for a word beginning (i.e. a
-      //    boundary between whitespace and non-whitespace), then
-      //    eatingWS==true means "we already saw some whitespace".
-      // 2. If we're moving backward, looking for a word beginning (i.e. a
-      //    boundary between non-whitespace and whitespace), then
-      //     eatingWS==true means "we already saw some non-whitespace".
       PeekWordState state;
       int32_t offsetAdjustment = 0;
       bool done = false;
@@ -8450,7 +8442,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
               (jumpedLine && !wordSelectEatSpace && state.mSawBeforeType)) {
             done = true;
             // If we've crossed the line boundary, check to make sure that we
-            // have not consumed a trailing newline as whitesapce if it's
+            // have not consumed a trailing newline as whitespace if it's
             // significant.
             if (jumpedLine && wordSelectEatSpace &&
                 current->HasSignificantTerminalNewline()) {
