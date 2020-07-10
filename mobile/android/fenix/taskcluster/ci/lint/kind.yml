@@ -47,13 +47,16 @@ jobs:
         description: 'Running detekt over all modules'
         run:
             using: gradlew
-            gradlew: [detekt]
+            gradlew: [detekt, githubLintDetektDetails]
         treeherder:
             symbol: detekt
         worker:
             artifacts:
                 - name: public/reports
                   path: /builds/worker/checkouts/src/build/reports
+                  type: directory
+                - name: public/github
+                  path: /builds/worker/github
                   type: directory
     ktlint:
         description: 'Running ktlint over all modules'
@@ -66,11 +69,14 @@ jobs:
         description: 'Running lint over all modules'
         run:
             using: gradlew
-            gradlew: ['lintGeckoNightlyDebug']
+            gradlew: ['lintGeckoNightlyDebug', 'githubLintAndroidDetails']
         treeherder:
             symbol: lint
         worker:
             artifacts:
                 - name: public/reports
                   path: /builds/worker/checkouts/src/app/build/reports
+                  type: directory
+                - name: public/github
+                  path: /builds/worker/github
                   type: directory

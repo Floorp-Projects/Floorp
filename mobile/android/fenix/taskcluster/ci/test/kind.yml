@@ -40,7 +40,11 @@ jobs:
             geckoview-engine: geckoNightly
             code-review: true
         run:
-            gradlew: ['clean', '-Pcoverage', 'jacocoGeckoNightlyDebugTestReport']
+            gradlew:
+                - 'clean'
+                - '-Pcoverage'
+                - 'jacocoGeckoNightlyDebugTestReport'
+                - 'githubTestDetails'
 #            post-gradlew:
 #                - ['automation/taskcluster/upload_coverage_report.sh']
             secrets:
@@ -58,4 +62,7 @@ jobs:
                   type: file
                 - name: public/reports/test
                   path: /builds/worker/checkouts/src/app/build/reports/tests
+                  type: directory
+                - name: public/github
+                  path: /builds/worker/github
                   type: directory

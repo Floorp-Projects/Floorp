@@ -1,5 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+import org.mozilla.fenix.gradle.tasks.GithubDetailsTask
+
 buildscript {
     // This logic is duplicated in the allprojects block: I don't know how to fix that.
     repositories {
@@ -181,9 +183,21 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt.class) {
     exclude("**/tmp/**")
 }
 
-task listRepositories {
+tasks.register("listRepositories") {
     doLast {
         println "Repositories:"
         project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
    }
+}
+
+tasks.register("githubTestDetails", GithubDetailsTask) {
+    text = "### [Unit Test Results](/reports/test/testGeckoNightlyDebugUnitTest/index.html)"
+}
+
+tasks.register("githubLintDetektDetails", GithubDetailsTask) {
+    text = "### [Detekt Results](/reports/detekt.html)"
+}
+
+tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
+    text = "### [Android Lint Results](/reports/lint-results-geckoNightlyDebug.html)"
 }
