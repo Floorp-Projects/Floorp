@@ -37,7 +37,7 @@ add_task(async function() {
 
     let setHomepagePromise = new Promise(function(resolve) {
       let observer = {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+        QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
         observe(subject, topic, data) {
           is(topic, "nsPref:changed", "observed correct topic");
           is(data, HOMEPAGE_PREF, "observed correct data");

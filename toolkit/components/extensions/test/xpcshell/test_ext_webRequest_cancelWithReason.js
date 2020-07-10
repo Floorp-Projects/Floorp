@@ -40,7 +40,7 @@ add_task(async function test_cancel_with_reason() {
     });
 
     channel.asyncOpen({
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
+      QueryInterface: ChromeUtils.generateQI(["nsIStreamListener"]),
 
       onStartRequest(request) {},
 

@@ -211,8 +211,8 @@ class Preferences {
   constructor() {
     this._map = new Map();
     this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+      "nsIObserver",
+      "nsISupportsWeakReference",
     ]);
     Services.prefs.addObserver(PREF_URLBAR_BRANCH, this, true);
     for (let pref of PREF_OTHER_DEFAULTS.keys()) {

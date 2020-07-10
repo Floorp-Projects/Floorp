@@ -144,7 +144,7 @@ class ContentPrefsChild extends JSProcessActorChild {
 }
 
 var ContentPrefServiceChild = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPrefService2]),
+  QueryInterface: ChromeUtils.generateQI(["nsIContentPrefService2"]),
 
   addObserverForName: (name, observer) => {
     ChromeUtils.domProcessChild

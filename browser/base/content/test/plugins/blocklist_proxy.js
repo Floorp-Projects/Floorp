@@ -20,9 +20,9 @@ var BlocklistProxy = {
   _uuid: null,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIBlocklistService,
-    Ci.nsITimerCallback,
+    "nsIObserver",
+    "nsIBlocklistService",
+    "nsITimerCallback",
   ]),
 
   init() {

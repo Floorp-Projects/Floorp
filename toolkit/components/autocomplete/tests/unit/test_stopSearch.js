@@ -50,9 +50,9 @@ AutoCompleteInput.prototype = {
     get selectedIndex() {
       return -1;
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
+    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"]),
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"]),
 };
 
 /**
@@ -73,8 +73,8 @@ AutoCompleteSearch.prototype = {
     this.stopSearchInvoked = true;
   },
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIFactory,
-    Ci.nsIAutoCompleteSearch,
+    "nsIFactory",
+    "nsIAutoCompleteSearch",
   ]),
   createInstance(outer, iid) {
     return this.QueryInterface(iid);

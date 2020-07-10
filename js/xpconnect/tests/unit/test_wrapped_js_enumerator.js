@@ -18,7 +18,7 @@ function wrapEnumerator1(iter) {
 function wrapEnumerator2(iter) {
   var ip = SupportsInterfacePointer();
   ip.data = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker]),
+    QueryInterface: ChromeUtils.generateQI(["nsIFilePicker"]),
     get files() {
       return iter;
     },

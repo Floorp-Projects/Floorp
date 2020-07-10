@@ -19,7 +19,7 @@ add_test(function test_generateQI_string_names()
 {
     var x = {
         QueryInterface: ChromeUtils.generateQI([
-            Ci.nsIClassInfo,
+            "nsIClassInfo",
             "nsIObserver"
         ])
     };

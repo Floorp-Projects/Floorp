@@ -100,7 +100,7 @@ class ControllersParent extends JSWindowActorParent {
 }
 
 ControllersParent.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIBrowserController,
-  Ci.nsIController,
-  Ci.nsICommandController,
+  "nsIBrowserController",
+  "nsIController",
+  "nsICommandController",
 ]);

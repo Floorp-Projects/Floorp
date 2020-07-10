@@ -1064,7 +1064,7 @@ var Impl = {
     );
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
   _attachObservers() {
     if (TelemetryControllerBase.IS_UNIFIED_TELEMETRY) {

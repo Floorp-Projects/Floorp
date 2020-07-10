@@ -76,7 +76,7 @@ class LoginManagerPrompter {
   }
 
   get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]);
+    return ChromeUtils.generateQI(["nsILoginManagerPrompter"]);
   }
 
   /**

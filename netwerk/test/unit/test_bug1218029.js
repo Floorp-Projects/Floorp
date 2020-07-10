@@ -69,7 +69,7 @@ function execute_test(test) {
 
   let channel = {
     contentLength: -1,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel]),
+    QueryInterface: ChromeUtils.generateQI(["nsIChannel"]),
   };
 
   let chunkIndex = 0;
@@ -93,7 +93,7 @@ function execute_test(test) {
       chunkIndex++;
     },
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIIncrementalStreamLoaderObserver,
+      "nsIIncrementalStreamLoaderObserver",
     ]),
   };
 

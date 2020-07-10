@@ -744,7 +744,7 @@ var TelemetrySendImpl = {
     Services.obs.addObserver(this, TOPIC_QUIT_APPLICATION_GRANTED);
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
   async setup(testing) {
     this._log.trace("setup");

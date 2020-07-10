@@ -143,8 +143,8 @@ class GeckoViewStartup {
         Services.obs.addObserver(
           {
             QueryInterface: ChromeUtils.generateQI([
-              Ci.nsIObserver,
-              Ci.nsIFormSubmitObserver,
+              "nsIObserver",
+              "nsIFormSubmitObserver",
             ]),
             notifyInvalidSubmit: (form, element) => {
               // We should show the validation message here, bug 1510450.
@@ -269,5 +269,5 @@ GeckoViewStartup.prototype.classID = Components.ID(
   "{8e993c34-fdd6-432c-967e-f995d888777f}"
 );
 GeckoViewStartup.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIObserver,
+  "nsIObserver",
 ]);

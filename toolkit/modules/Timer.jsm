@@ -26,8 +26,8 @@ var gTimerTable = new Map(); // int -> nsITimer or idleCallback
 
 // Don't generate this for every timer.
 var setTimeout_timerCallbackQI = ChromeUtils.generateQI([
-  Ci.nsITimerCallback,
-  Ci.nsINamed,
+  "nsITimerCallback",
+  "nsINamed",
 ]);
 
 function _setTimeoutOrIsInterval(

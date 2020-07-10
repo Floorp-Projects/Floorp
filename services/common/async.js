@@ -192,8 +192,8 @@ class AsyncQueueCaller {
     this._log = log;
     this._queue = Promise.resolve();
     this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+      "nsIObserver",
+      "nsISupportsWeakReference",
     ]);
   }
 

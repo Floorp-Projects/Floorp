@@ -164,7 +164,7 @@ class RemoteWebNavigation {
 }
 
 RemoteWebNavigation.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIWebNavigation,
+  "nsIWebNavigation",
 ]);
 
 var EXPORTED_SYMBOLS = ["RemoteWebNavigation"];

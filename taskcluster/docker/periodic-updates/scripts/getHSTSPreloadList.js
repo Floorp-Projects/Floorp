@@ -192,8 +192,8 @@ RedirectAndAuthStopper.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIChannelEventSink,
-    Ci.nsIAuthPrompt2,
+    "nsIChannelEventSink",
+    "nsIAuthPrompt2",
   ]),
 };
 

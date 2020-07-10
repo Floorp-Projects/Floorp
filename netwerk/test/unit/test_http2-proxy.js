@@ -42,7 +42,7 @@ class ProxyFilter {
     this._host = host;
     this._port = port;
     this._flags = flags;
-    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]);
+    this.QueryInterface = ChromeUtils.generateQI(["nsIProtocolProxyFilter"]);
   }
   applyFilter(uri, pi, cb) {
     if (
@@ -72,7 +72,7 @@ class ProxyFilter {
 class UnxpectedAuthPrompt2 {
   constructor(signal) {
     this.signal = signal;
-    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIAuthPrompt2]);
+    this.QueryInterface = ChromeUtils.generateQI(["nsIAuthPrompt2"]);
   }
   asyncPromptAuth() {
     this.signal.triggered = true;
@@ -83,7 +83,7 @@ class UnxpectedAuthPrompt2 {
 class SimpleAuthPrompt2 {
   constructor(signal) {
     this.signal = signal;
-    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIAuthPrompt2]);
+    this.QueryInterface = ChromeUtils.generateQI(["nsIAuthPrompt2"]);
   }
   asyncPromptAuth(channel, callback, context, encryptionLevel, authInfo) {
     this.signal.triggered = true;
@@ -98,7 +98,7 @@ class SimpleAuthPrompt2 {
 class AuthRequestor {
   constructor(prompt) {
     this.prompt = prompt;
-    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIInterfaceRequestor]);
+    this.QueryInterface = ChromeUtils.generateQI(["nsIInterfaceRequestor"]);
   }
   getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPrompt2)) {

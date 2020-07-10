@@ -19,7 +19,7 @@ function LoginManagerCrypto_SDR() {
 
 LoginManagerCrypto_SDR.prototype = {
   classID: Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerCrypto]),
+  QueryInterface: ChromeUtils.generateQI(["nsILoginManagerCrypto"]),
 
   __decoderRing: null, // nsSecretDecoderRing service
   get _decoderRing() {

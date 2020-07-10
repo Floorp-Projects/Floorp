@@ -27,7 +27,7 @@ const InvalidDetailsUIService = {
   completePayment(requestId) {},
   updatePayment(requestId) {},
   closePayment(requestId) {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPaymentUIService"]),
 };
 
 function checkLowerCaseCurrency() {

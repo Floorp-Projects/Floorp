@@ -23,5 +23,5 @@ class EnterprisePoliciesManagerContent {
 }
 
 EnterprisePoliciesManagerContent.prototype.QueryInterface = ChromeUtils.generateQI(
-  [Ci.nsIEnterprisePolicies]
+  ["nsIEnterprisePolicies"]
 );

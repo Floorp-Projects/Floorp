@@ -130,7 +130,7 @@ print.printToFile = async function(browser, outerWindowID, settings) {
           waitForFileWritten();
         }
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
     };
 
     browser.print(outerWindowID, printSettings, printProgressListener);

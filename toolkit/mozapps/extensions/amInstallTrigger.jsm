@@ -87,7 +87,7 @@ RemoteMediator.prototype = {
     return callbackID;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 };
 
 function InstallTrigger() {}
@@ -200,7 +200,7 @@ InstallTrigger.prototype = {
 
   classID: Components.ID("{9df8ef2b-94da-45c9-ab9f-132eb55fddf1}"),
   contractID: "@mozilla.org/addons/installtrigger;1",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 };
 
 var EXPORTED_SYMBOLS = ["InstallTrigger"];

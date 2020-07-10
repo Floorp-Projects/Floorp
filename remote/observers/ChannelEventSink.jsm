@@ -30,7 +30,7 @@ function ChannelEventSink() {
 }
 
 ChannelEventSink.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink]),
+  QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink"]),
 
   registerCollector(collector) {
     this.collectors.add(collector);

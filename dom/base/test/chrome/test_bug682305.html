@@ -90,7 +90,7 @@ CustomChannel.prototype = {
   resume() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel, Ci.nsIRequest]),
+  QueryInterface: ChromeUtils.generateQI(["nsIChannel", "nsIRequest"]),
 };
 
 
@@ -113,7 +113,7 @@ CustomProtocol.prototype = {
   newChannel: function newChannel(URI, loadInfo) {
     return new CustomChannel(URI, loadInfo);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIProtocolHandler]),
+  QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference", "nsIProtocolHandler"]),
 };
 
 var gFactory = {

@@ -16,7 +16,7 @@ function wakeLockObserved(observeTopic, checkFn) {
   return new Promise(resolve => {
     function wakeLockListener() {}
     wakeLockListener.prototype = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMMozWakeLockListener]),
+      QueryInterface: ChromeUtils.generateQI(["nsIDOMMozWakeLockListener"]),
       callback(topic, state) {
         if (topic == observeTopic && checkFn(state)) {
           powerManager.removeWakeLockListener(wakeLockListener.prototype);

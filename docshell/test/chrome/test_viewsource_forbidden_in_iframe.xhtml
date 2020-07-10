@@ -57,8 +57,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
           resolve(decodeURIComponent(errorMsg));
         },
 
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                                Ci.nsISupportsWeakReference])
+        QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                                "nsISupportsWeakReference"])
       };
 
       frame.contentWindow.docShell

@@ -15,7 +15,7 @@ var factory = {
   lockFactory() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 
 var newClassID = Cc["@mozilla.org/uuid-generator;1"]

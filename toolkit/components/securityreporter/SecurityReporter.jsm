@@ -26,7 +26,7 @@ ChromeUtils.defineModuleGetter(
 function SecurityReporter() {}
 
 SecurityReporter.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISecurityReporter]),
+  QueryInterface: ChromeUtils.generateQI(["nsISecurityReporter"]),
   reportTLSError(transportSecurityInfo, hostname, port) {
     // don't send if there's no transportSecurityInfo (since the report cannot
     // contain anything of interest)

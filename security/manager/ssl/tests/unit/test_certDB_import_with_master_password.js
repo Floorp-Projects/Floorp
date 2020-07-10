@@ -37,7 +37,7 @@ const gCertificateDialogs = {
     ok(false, "getPKCS12FilePassword() should not have been called");
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs]),
+  QueryInterface: ChromeUtils.generateQI(["nsICertificateDialogs"]),
 };
 
 var gMockPrompter = {
@@ -64,7 +64,7 @@ var gMockPrompter = {
     return true;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
 
   // Again with the arrow function issue.
   getInterface(iid) {

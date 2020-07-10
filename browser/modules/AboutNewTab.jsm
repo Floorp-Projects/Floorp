@@ -26,8 +26,8 @@ const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
 
 const AboutNewTab = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   // AboutNewTab

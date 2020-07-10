@@ -414,8 +414,8 @@ let URICountListener = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
   ]),
 };
 
@@ -463,8 +463,8 @@ let BrowserUsageTelemetry = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   uninit() {

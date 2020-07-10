@@ -223,9 +223,9 @@ const BackgroundPageThumbs = {
     let webProgress = wlBrowser.getInterface(Ci.nsIWebProgress);
     this._listener = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsIWebProgressListener2,
-        Ci.nsISupportsWeakReference,
+        "nsIWebProgressListener",
+        "nsIWebProgressListener2",
+        "nsISupportsWeakReference",
       ]),
     };
     this._listener.onStateChange = (wbp, request, stateFlags, status) => {

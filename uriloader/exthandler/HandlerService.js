@@ -42,9 +42,9 @@ function HandlerService() {
 HandlerService.prototype = {
   classID: Components.ID("{220cc253-b60f-41f6-b9cf-fdcb325f970f}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsISupportsWeakReference,
-    Ci.nsIHandlerService,
-    Ci.nsIObserver,
+    "nsISupportsWeakReference",
+    "nsIHandlerService",
+    "nsIObserver",
   ]),
 
   __store: null,
@@ -344,7 +344,7 @@ HandlerService.prototype = {
       //
       let handler = new Proxy(
         {
-          QueryInterface: ChromeUtils.generateQI([Ci.nsIHandlerInfo]),
+          QueryInterface: ChromeUtils.generateQI(["nsIHandlerInfo"]),
           type,
           get _handlerInfo() {
             delete this._handlerInfo;

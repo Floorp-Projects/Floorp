@@ -827,7 +827,7 @@ var PlacesUtils = {
   SYNC_BOOKMARK_VALIDATORS,
   SYNC_CHANGE_RECORD_VALIDATORS,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   _shutdownFunctions: [],
   registerShutdownFunction: function PU_registerShutdownFunction(aFunc) {

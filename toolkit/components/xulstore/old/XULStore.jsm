@@ -28,9 +28,9 @@ function XULStore() {
 XULStore.prototype = {
   classID: XULSTORE_CID,
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIXULStore,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsIXULStore",
+    "nsISupportsWeakReference",
   ]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(XULStore),
 
@@ -322,7 +322,7 @@ function nsStringEnumerator(items) {
 }
 
 nsStringEnumerator.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIStringEnumerator]),
+  QueryInterface: ChromeUtils.generateQI(["nsIStringEnumerator"]),
   _nextIndex: 0,
   [Symbol.iterator]() {
     return this._items.values();

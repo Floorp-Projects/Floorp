@@ -77,8 +77,8 @@ function createMockedObjects(createHandlerApp) {
     // PRTime is microseconds since epoch, Date.now() returns milliseconds:
     timeDownloadStarted: Date.now() * 1000,
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsICancelable,
-      Ci.nsIHelperAppLauncher,
+      "nsICancelable",
+      "nsIHelperAppLauncher",
     ]),
   };
 

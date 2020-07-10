@@ -18,7 +18,7 @@ const gTokenPasswordDialogs = {
     return false; // Returning false means "the user didn't cancel".
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITokenPasswordDialogs]),
+  QueryInterface: ChromeUtils.generateQI(["nsITokenPasswordDialogs"]),
 };
 
 let gMockPrompter = {
@@ -27,14 +27,14 @@ let gMockPrompter = {
     return false;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
 };
 
 // Mock nsIWindowWatcher. PSM calls getNewPrompter on this to get an nsIPrompt
 // to call promptPassword. We return the mock one, above.
 let gWindowWatcher = {
   getNewPrompter: () => gMockPrompter,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
+  QueryInterface: ChromeUtils.generateQI(["nsIWindowWatcher"]),
 };
 
 add_task(function setup() {

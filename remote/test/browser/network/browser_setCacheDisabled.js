@@ -109,8 +109,8 @@ function checkLoadFlags(flags, url) {
         },
 
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
         ]),
       };
 

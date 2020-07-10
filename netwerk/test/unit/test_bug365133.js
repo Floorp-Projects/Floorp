@@ -108,7 +108,7 @@ function storeData() {
     isPending() {
       return this.pending;
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel]),
+    QueryInterface: ChromeUtils.generateQI(["nsIChannel"]),
   };
 
   converter.onStartRequest(channel, null);

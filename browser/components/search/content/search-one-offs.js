@@ -126,8 +126,8 @@ class SearchOneOffs {
 
     // Add weak referenced observers to invalidate our cached list of engines.
     this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
+      "nsIObserver",
+      "nsISupportsWeakReference",
     ]);
     Services.prefs.addObserver("browser.search.hiddenOneOffs", this, true);
     Services.obs.addObserver(this, "browser-search-engine-modified", true);

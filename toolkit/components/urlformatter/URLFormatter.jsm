@@ -78,7 +78,7 @@ function nsURLFormatterService() {
 
 nsURLFormatterService.prototype = {
   classID: Components.ID("{e6156350-2be8-11db-a98b-0800200c9a66}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIURLFormatter]),
+  QueryInterface: ChromeUtils.generateQI(["nsIURLFormatter"]),
 
   _defaults: {
     LOCALE: () => Services.locale.appLocaleAsBCP47,

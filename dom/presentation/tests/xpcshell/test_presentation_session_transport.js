@@ -29,9 +29,7 @@ const addresses = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 addresses.appendElement(address);
 
 const serverChannelDescription = {
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationChannelDescription,
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationChannelDescription"]),
   type: 1,
   tcpAddress: addresses,
 };
@@ -43,7 +41,7 @@ var isServerClosed = false;
 
 const clientCallback = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationSessionTransportCallback,
+    "nsIPresentationSessionTransportCallback",
   ]),
   notifyTransportReady() {
     Assert.ok(true, "Client transport ready.");
@@ -69,7 +67,7 @@ const clientCallback = {
 
 const serverCallback = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationSessionTransportCallback,
+    "nsIPresentationSessionTransportCallback",
   ]),
   notifyTransportReady() {
     Assert.ok(true, "Server transport ready.");
@@ -95,7 +93,7 @@ const serverCallback = {
 
 const clientListener = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationSessionTransportBuilderListener,
+    "nsIPresentationSessionTransportBuilderListener",
   ]),
   onSessionTransport(aTransport) {
     Assert.ok(true, "Client Transport is built.");
@@ -110,7 +108,7 @@ const clientListener = {
 
 const serverListener = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationSessionTransportBuilderListener,
+    "nsIPresentationSessionTransportBuilderListener",
   ]),
   onSessionTransport(aTransport) {
     Assert.ok(true, "Server Transport is built.");

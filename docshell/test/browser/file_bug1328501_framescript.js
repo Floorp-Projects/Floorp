@@ -21,7 +21,7 @@ let requestObserver = {
       });
     }
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 };
 Services.obs.addObserver(requestObserver, "http-on-opening-request");
 addEventListener("unload", e => {

@@ -60,7 +60,7 @@ FxAccountsPushService.prototype = {
   /**
    * Register used interfaces in this service
    */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
   /**
    * Initialize the service and register all the required observers.
    *

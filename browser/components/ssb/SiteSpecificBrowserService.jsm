@@ -904,5 +904,5 @@ class SSBCommandLineHandler {
 }
 
 SSBCommandLineHandler.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsICommandLineHandler,
+  "nsICommandLineHandler",
 ]);

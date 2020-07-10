@@ -128,8 +128,8 @@ add_task(async function test_can_get_results_from_callback() {
       },
       reflowInterruptible() {},
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIReflowObserver,
-        Ci.nsISupportsWeakReference,
+        "nsIReflowObserver",
+        "nsISupportsWeakReference",
       ]),
     };
 

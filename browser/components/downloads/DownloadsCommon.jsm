@@ -196,8 +196,8 @@ const TELEMETRY_EVENT_CATEGORY = "downloads";
 
 var PrefObserver = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
   getPref(name) {
     try {

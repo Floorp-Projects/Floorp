@@ -116,5 +116,5 @@ LoginStorageDelegate.prototype.classID = Components.ID(
   "{3d765750-1c3d-11ea-aaef-0800200c9a66}"
 );
 LoginStorageDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsILoginManagerPrompter,
+  "nsILoginManagerPrompter",
 ]);

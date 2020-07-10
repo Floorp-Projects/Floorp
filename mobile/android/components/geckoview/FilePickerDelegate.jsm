@@ -193,5 +193,5 @@ FilePickerDelegate.prototype.classID = Components.ID(
   "{e4565e36-f101-4bf5-950b-4be0887785a9}"
 );
 FilePickerDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIFilePicker,
+  "nsIFilePicker",
 ]);

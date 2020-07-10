@@ -33,8 +33,8 @@ function browserLocationChanged(browser) {
         }
       },
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsIWebProgressListener2,
+        "nsIWebProgressListener",
+        "nsIWebProgressListener2",
       ]),
     };
     const filter = Cc[

@@ -23,7 +23,7 @@ add_task(async function() {
 
 function setupObserver() {
   const observer = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
     observe: function observe(subject, topic) {
       subject = subject.QueryInterface(Ci.nsISupportsString);

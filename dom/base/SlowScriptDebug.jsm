@@ -8,7 +8,7 @@ function SlowScriptDebug() {}
 
 SlowScriptDebug.prototype = {
   classDescription: "Slow script debug handler",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISlowScriptDebug]),
+  QueryInterface: ChromeUtils.generateQI(["nsISlowScriptDebug"]),
 
   get activationHandler() {
     return this._activationHandler;

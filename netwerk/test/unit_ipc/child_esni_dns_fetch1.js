@@ -29,7 +29,7 @@ class DNSListener {
 }
 
 DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIDNSListener,
+  "nsIDNSListener",
 ]);
 
 add_task(async function testEsniRequest() {

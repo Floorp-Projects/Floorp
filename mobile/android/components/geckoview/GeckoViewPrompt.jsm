@@ -449,8 +449,8 @@ PromptFactory.prototype.classID = Components.ID(
   "{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"
 );
 PromptFactory.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPromptFactory,
-  Ci.nsIPromptService,
+  "nsIPromptFactory",
+  "nsIPromptService",
 ]);
 
 class PromptDelegate {
@@ -791,7 +791,7 @@ class PromptDelegate {
       callback
     );
     return {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
       cancel() {
         if (responded) {
           return;
@@ -896,6 +896,4 @@ class PromptDelegate {
   }
 }
 
-PromptDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIPrompt,
-]);
+PromptDelegate.prototype.QueryInterface = ChromeUtils.generateQI(["nsIPrompt"]);

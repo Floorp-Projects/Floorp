@@ -75,7 +75,7 @@ function initializeDefaultPreferences() {
 // handler service get and store the Right Thing (it just goes into a JSON
 // file) and avoid the performance issues.
 const gPdfFakeHandlerInfo = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIMIMEInfo]),
+  QueryInterface: ChromeUtils.generateQI(["nsIMIMEInfo"]),
   getFileExtensions() {
     return ["pdf"];
   },
@@ -91,7 +91,7 @@ const gPdfFakeHandlerInfo = {
 };
 
 var PdfJs = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
   _initialized: false,
   _cachedIsDefault: true,
 

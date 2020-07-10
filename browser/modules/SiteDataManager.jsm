@@ -116,8 +116,8 @@ var SiteDataManager = {
         },
 
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsICacheStorageConsumptionObserver,
-          Ci.nsISupportsWeakReference,
+          "nsICacheStorageConsumptionObserver",
+          "nsISupportsWeakReference",
         ]),
       };
 

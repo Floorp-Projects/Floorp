@@ -42,7 +42,7 @@ var newFactory = function(window) {
     lockFactory(aLock) {
       throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
+    QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
   };
 };
 
@@ -181,7 +181,7 @@ function MockFilePickerInstance(window) {
   this.showCallbackWrapped = null;
 }
 MockFilePickerInstance.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker]),
+  QueryInterface: ChromeUtils.generateQI(["nsIFilePicker"]),
   init(aParent, aTitle, aMode) {
     MockFilePicker.mode = aMode;
     this.filterIndex = MockFilePicker.filterIndex;

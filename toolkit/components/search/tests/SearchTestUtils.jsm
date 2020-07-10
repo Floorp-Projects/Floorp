@@ -266,7 +266,7 @@ var SearchTestUtils = Object.freeze({
       }
     },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIIdleService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIIdleService"]),
     idleTime: 19999,
 
     addIdleObserver(observer, time) {

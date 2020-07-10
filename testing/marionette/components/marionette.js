@@ -536,9 +536,9 @@ class MarionetteParentProcess {
 
   get QueryInterface() {
     return ChromeUtils.generateQI([
-      Ci.nsICommandLineHandler,
-      Ci.nsIMarionette,
-      Ci.nsIObserver,
+      "nsICommandLineHandler",
+      "nsIMarionette",
+      "nsIObserver",
     ]);
   }
 }
@@ -554,7 +554,7 @@ class MarionetteContentProcess {
   }
 
   get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsIMarionette]);
+    return ChromeUtils.generateQI(["nsIMarionette"]);
   }
 }
 

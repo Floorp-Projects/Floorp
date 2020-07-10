@@ -530,7 +530,7 @@ class ResponseBodyListener {
     this._browser = browser;
     this._httpChannel = httpChannel;
     this._chunks = [];
-    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIStreamListener]);
+    this.QueryInterface = ChromeUtils.generateQI(["nsIStreamListener"]);
     httpChannel.QueryInterface(Ci.nsITraceableChannel);
     this.originalListener = httpChannel.setNewListener(this);
   }

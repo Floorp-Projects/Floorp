@@ -1020,7 +1020,7 @@ add_task(async function test_pref_observer() {
       let keys = new Set(["TelemetryClientId", "TelemetryServerURL"]);
 
       let crs = {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICrashReporter]),
+        QueryInterface: ChromeUtils.generateQI(["nsICrashReporter"]),
         annotateCrashReport(key, value) {
           if (!keys.delete(key)) {
             MockRegistrar.unregister(gMockCrs);

@@ -537,8 +537,8 @@ HistoryTracker.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavHistoryObserver,
-    Ci.nsISupportsWeakReference,
+    "nsINavHistoryObserver",
+    "nsISupportsWeakReference",
   ]),
 
   async onDeleteAffectsGUID(uri, guid, reason, source, increment) {

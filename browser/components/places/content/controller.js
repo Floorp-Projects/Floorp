@@ -94,7 +94,7 @@ PlacesController.prototype = {
   // actually organising the trees.
   disableUserActions: false,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIClipboardOwner]),
+  QueryInterface: ChromeUtils.generateQI(["nsIClipboardOwner"]),
 
   // nsIClipboardOwner
   LosingOwnership: function PC_LosingOwnership(aXferable) {

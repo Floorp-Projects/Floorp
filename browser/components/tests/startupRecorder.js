@@ -76,7 +76,7 @@ function startupRecorder() {
 startupRecorder.prototype = {
   classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   record(name) {
     ChromeUtils.addProfilerMarker("startupRecorder:" + name);

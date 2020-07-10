@@ -81,7 +81,7 @@ function StorageSyncService() {
 StorageSyncService._singleton = null;
 
 StorageSyncService.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
   // Returns the storage and syncing interfaces. This just hands out a
   // reference to the underlying storage area, with a quick check to make sure

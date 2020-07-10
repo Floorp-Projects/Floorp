@@ -12,7 +12,7 @@ const { EventDispatcher } = ChromeUtils.import(
 function PresentationNetworkHelper() {}
 
 PresentationNetworkHelper.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationNetworkHelper]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationNetworkHelper"]),
 
   getWifiIPAddress(aListener) {
     EventDispatcher.instance

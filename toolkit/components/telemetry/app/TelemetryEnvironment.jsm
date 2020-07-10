@@ -1297,7 +1297,7 @@ EnvironmentCache.prototype = {
     );
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
   /**
    * Start watching the preferences.

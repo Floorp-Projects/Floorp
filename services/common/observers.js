@@ -108,8 +108,8 @@ function Observer(topic, callback, thisObject) {
 
 Observer.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
   observe(subject, topic, data) {
     // Extract the wrapped object for subjects that are one of our wrappers
