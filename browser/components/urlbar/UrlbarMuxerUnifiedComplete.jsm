@@ -14,7 +14,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "resource://gre/modules/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
@@ -22,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.Muxer.UnifiedComplete")
+  UrlbarUtils.getLogger({ prefix: "MuxerUnifiedComplete" })
 );
 
 function groupFromResult(result) {

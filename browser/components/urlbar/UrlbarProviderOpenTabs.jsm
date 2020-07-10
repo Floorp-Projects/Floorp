@@ -15,17 +15,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
-
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.Provider.OpenTabs")
-);
 
 /**
  * Class used to create the provider.
@@ -156,7 +151,6 @@ class ProviderOpenTabs extends UrlbarProvider {
     // temp table to return proper frecency.
     // TODO:
     //  * properly search and handle tokens, this is just a mock for now.
-    logger.info(`Starting query for ${queryContext.searchString}`);
     let instance = {};
     this.queries.set(queryContext, instance);
     let conn = await this.promiseDb();
@@ -193,7 +187,6 @@ class ProviderOpenTabs extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
-    logger.info(`Canceling query for ${queryContext.searchString}`);
     this.queries.delete(queryContext);
   }
 }
