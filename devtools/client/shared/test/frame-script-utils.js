@@ -30,11 +30,3 @@ addMessageListener("devtools:test:eval", function({ data }) {
     id: data.id,
   });
 });
-
-addEventListener(
-  "load",
-  function() {
-    sendAsyncMessage("devtools:test:load");
-  },
-  true
-);
