@@ -1330,10 +1330,15 @@ void StaticStrings::trace(JSTracer* trc) {
   }
 }
 
-AutoStableStringChars::~AutoStableStringChars() {
-  if (preventedDeduplication_) {
-    MOZ_ASSERT(s_);
-    s_->clearNonDeduplicatable();
+static void MarkStringAndBasesNonDeduplicatable(JSLinearString* s) {
+  while (true) {
+    if (!s->isTenured()) {
+      s->setNonDeduplicatable();
+    }
+    if (!s->hasBase()) {
+      break;
+    }
+    s = s->base();
   }
 }
 
@@ -1360,12 +1365,7 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
     twoByteChars_ = linearString->rawTwoByteChars();
   }
 
-  // Mark the string non-deduplicatable. This class can be nested, but only the
-  // outermost one for a given string would do this.
-  if (!linearString->isTenured() && linearString->isDeduplicatable()) {
-    linearString->setNonDeduplicatable();
-    preventedDeduplication_ = true;
-  }
+  MarkStringAndBasesNonDeduplicatable(linearString);
 
   s_ = linearString;
   return true;
@@ -1392,12 +1392,7 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
   state_ = TwoByte;
   twoByteChars_ = linearString->rawTwoByteChars();
 
-  // Mark the string non-deduplicatable. This class can be nested, but only the
-  // outermost one for a given string would do this.
-  if (!linearString->isTenured() && linearString->isDeduplicatable()) {
-    linearString->setNonDeduplicatable();
-    preventedDeduplication_ = true;
-  }
+  MarkStringAndBasesNonDeduplicatable(linearString);
 
   s_ = linearString;
   return true;
