@@ -410,8 +410,9 @@ class ScriptStencil {
   void trace(JSTracer* trc);
 
   bool isFunction() const {
-    return functionFlags.isAsmJSNative() ||
-           immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsFunction);
+    MOZ_ASSERT_IF(!!functionFlags.toRaw(), functionFlags.isAsmJSNative() ||
+                                               functionFlags.hasBaseScript());
+    return !!functionFlags.toRaw();
   }
 };
 
