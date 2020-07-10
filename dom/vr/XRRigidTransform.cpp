@@ -60,10 +60,6 @@ XRRigidTransform::XRRigidTransform(nsISupports* aParent,
   gfx::PointDouble3D scale;
   mRawTransformMatrix = aTransform;
   mRawTransformMatrix.Decompose(mRawPosition, mRawOrientation, scale);
-  // TODO: Investigate why we need to do this invert after getting orientation
-  // from the transform matrix. It looks like we have a bug at
-  // Matrix4x4Typed.SetFromRotationMatrix() (Bug 1635363).
-  mRawOrientation.Invert();
 }
 
 XRRigidTransform::~XRRigidTransform() { mozilla::DropJSObjects(this); }
@@ -128,10 +124,6 @@ void XRRigidTransform::Update(const gfx::Matrix4x4Double& aTransform) {
   mRawTransformMatrix = aTransform;
   gfx::PointDouble3D scale;
   mRawTransformMatrix.Decompose(mRawPosition, mRawOrientation, scale);
-  // TODO: Investigate why we need to do this invert after getting orientation
-  // from the transform matrix. It looks like we have a bug at
-  // Matrix4x4Typed.SetFromRotationMatrix() (Bug 1635363).
-  mRawOrientation.Invert();
   UpdateInternal();
 }
 

@@ -48,34 +48,35 @@ class BaseQuaternion {
   // Assumes upper 3x3 of aMatrix is a pure rotation matrix (no scaling)
   void SetFromRotationMatrix(
       const Matrix4x4Typed<UnknownUnits, UnknownUnits, T>& m) {
-    // see
-    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
-    const T trace = m._11 + m._22 + m._33;
-    if (trace > 0.0) {
-      const T s = 0.5f / sqrt(trace + 1.0f);
+    const T trace = m._11 + m._22 + m._33 + 1.0f;
+
+    if (trace > 1e-4) {
+      const T s = 0.5f / sqrt(trace);
       w = 0.25f / s;
-      x = (m._32 - m._23) * s;
-      y = (m._13 - m._31) * s;
-      z = (m._21 - m._12) * s;
+      x = (m._23 - m._32) * s;
+      y = (m._31 - m._13) * s;
+      z = (m._12 - m._21) * s;
     } else if (m._11 > m._22 && m._11 > m._33) {
       const T s = 2.0f * sqrt(1.0f + m._11 - m._22 - m._33);
-      w = (m._32 - m._23) / s;
+      w = (m._23 - m._32) / s;
       x = 0.25f * s;
-      y = (m._12 + m._21) / s;
-      z = (m._13 + m._31) / s;
+      y = (m._21 + m._12) / s;
+      z = (m._31 + m._13) / s;
     } else if (m._22 > m._33) {
       const T s = 2.0 * sqrt(1.0f + m._22 - m._11 - m._33);
-      w = (m._13 - m._31) / s;
-      x = (m._12 + m._21) / s;
+      w = (m._31 - m._13) / s;
+      x = (m._21 + m._12) / s;
       y = 0.25f * s;
-      z = (m._23 + m._32) / s;
+      z = (m._32 + m._23) / s;
     } else {
       const T s = 2.0 * sqrt(1.0f + m._33 - m._11 - m._22);
-      w = (m._21 - m._12) / s;
-      x = (m._13 + m._31) / s;
-      y = (m._23 + m._32) / s;
+      w = (m._12 - m._21) / s;
+      x = (m._31 + m._13) / s;
+      y = (m._32 + m._23) / s;
       z = 0.25f * s;
     }
+
+    Normalize();
   }
 
   // result = this * aQuat
