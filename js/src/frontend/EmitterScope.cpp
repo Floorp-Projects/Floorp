@@ -48,7 +48,7 @@ bool EmitterScope::checkEnvironmentChainLength(BytecodeEmitter* bce) {
   if (EmitterScope* emitterScope = enclosing(&bce)) {
     hops = emitterScope->environmentChainLength_;
   } else {
-    hops = bce->sc->compilationEnclosingScope()->environmentChainLength();
+    hops = bce->compilationInfo.enclosingScope->environmentChainLength();
   }
 
   if (hops >= ENVCOORD_HOPS_LIMIT - 1) {
@@ -118,7 +118,7 @@ AbstractScopePtr EmitterScope::enclosingScope(BytecodeEmitter* bce) const {
 
   // The enclosing script is already compiled or the current script is the
   // global script.
-  return AbstractScopePtr(bce->sc->compilationEnclosingScope());
+  return AbstractScopePtr(bce->compilationInfo.enclosingScope);
 }
 
 /* static */
@@ -308,8 +308,8 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce, JSAtom* name) {
   // chain encompassing the compilation.
   if (!loc) {
     inCurrentScript = false;
-    loc = Some(searchInEnclosingScope(
-        name, bce->sc->compilationEnclosingScope(), hops));
+    loc = Some(searchInEnclosingScope(name, bce->compilationInfo.enclosingScope,
+                                      hops));
   }
 
   // Each script has its own frame. A free name that is accessed

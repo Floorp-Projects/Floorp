@@ -180,8 +180,9 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   JS::RootedVector<ScriptStencil> funcData;
 
   // The enclosing scope of the function if we're compiling standalone function.
+  // The enclosing scope of the `eval` if we're compiling eval.
   // Null otherwise.
-  JS::Rooted<Scope*> topLevelFunctionEnclosingScope;
+  JS::Rooted<Scope*> enclosingScope;
 
   // Stencil for top-level script. This includes standalone functions and
   // functions being delazified.
@@ -234,7 +235,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         bigIntData(cx),
         functions(cx),
         funcData(cx),
-        topLevelFunctionEnclosingScope(cx),
+        enclosingScope(cx),
         topLevel(cx),
         scopeCreationData(cx),
         asmJS(cx),
@@ -246,19 +247,17 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
     if (!init(cx)) {
       return false;
     }
-    this->topLevelFunctionEnclosingScope = enclosingScope;
+    this->enclosingScope = enclosingScope;
     return true;
   }
 
   void initFromLazy(BaseScript* lazy) {
     this->lazy = lazy;
     this->sourceObject = lazy->sourceObject();
-    this->topLevelFunctionEnclosingScope = lazy->function()->enclosingScope();
+    this->enclosingScope = lazy->function()->enclosingScope();
   }
 
-  void setTopLevelFunctionEnclosingScope(Scope* scope) {
-    topLevelFunctionEnclosingScope = scope;
-  }
+  void setEnclosingScope(Scope* scope) { enclosingScope = scope; }
 
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
