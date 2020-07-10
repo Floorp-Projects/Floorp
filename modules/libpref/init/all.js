@@ -450,7 +450,6 @@ pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
   pref("media.navigator.video.h264.max_mbps", 0);
   pref("media.peerconnection.video.vp9_enabled", true);
   pref("media.peerconnection.video.vp9_preferred", false);
-  pref("media.getusermedia.browser.enabled", false);
   pref("media.getusermedia.channels", 0);
   #if defined(ANDROID)
     pref("media.getusermedia.camera.off_while_disabled.enabled", false);
