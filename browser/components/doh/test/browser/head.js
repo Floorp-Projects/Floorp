@@ -2,14 +2,14 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
+  "ASRouter",
+  "resource://activity-stream/lib/ASRouter.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
   this,
-  "ASRouter",
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "DoHController",
+  "resource:///modules/DoHController.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -35,8 +35,6 @@ XPCOMUtils.defineLazyServiceGetter(
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-
-const ADDON_ID = "doh-rollout@mozilla.org";
 
 const EXAMPLE_URL = "https://example.com/";
 
@@ -128,7 +126,10 @@ async function setup() {
     // The CFR pref is set to an empty array in user.js for testing profiles,
     // so "reset" it back to that value.
     Preferences.set(CFR_PREF, "[]");
-    await resetPrefsAndRestartAddon();
+    await DoHController._uninit();
+    Services.telemetry.clearEvents();
+    Preferences.reset(Object.values(prefs));
+    await DoHController.init();
   });
 }
 
@@ -138,7 +139,7 @@ async function checkTRRSelectionTelemetry() {
     events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
     ).parent;
-    return events;
+    return events && events.length;
   });
   events = events.filter(
     e =>
@@ -180,11 +181,14 @@ async function checkHeuristicsTelemetry(
   await BrowserTestUtils.waitForCondition(() => {
     events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-    ).dynamic;
-    return events;
+    ).parent;
+    return events && events.length;
   });
   events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
+    e =>
+      e[1] == "security.doh.heuristics" &&
+      e[2] == "evaluate" &&
+      e[3] == "heuristics"
   );
   is(events.length, 1, "Found the expected heuristics event.");
   is(events[0][4], decision, "The event records the expected decision");
@@ -204,28 +208,42 @@ async function checkHeuristicsTelemetry(
 function ensureNoHeuristicsTelemetry() {
   let events = Services.telemetry.snapshotEvents(
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-  ).dynamic;
+  ).parent;
   if (!events) {
     ok(true, "Found no heuristics events.");
     return;
   }
   events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
+    e =>
+      e[1] == "security.doh.heuristics" &&
+      e[2] == "evaluate" &&
+      e[3] == "heuristics"
   );
   is(events.length, 0, "Found no heuristics events.");
 }
 
-async function waitForStateTelemetry() {
+async function waitForStateTelemetry(expectedStates) {
   let events;
   await BrowserTestUtils.waitForCondition(() => {
     events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-    ).dynamic;
+    ).parent;
     return events;
   });
-  events = events.filter(e => e[1] == "doh" && e[2] == "state");
-  is(events.length, 1, "Found the expected state event.");
+  events = events.filter(
+    e => e[1] == "security.doh.heuristics" && e[2] == "state"
+  );
+  is(events.length, expectedStates.length, "Found the expected state events.");
+  for (let state of expectedStates) {
+    let event = events.find(e => e[3] == state);
+    is(event[3], state, `${state} state found`);
+  }
   Services.telemetry.clearEvents();
+}
+
+async function restartDoHController() {
+  await DoHController._uninit();
+  await DoHController.init();
 }
 
 // setPassing/FailingHeuristics are used generically to test that DoH is enabled
@@ -239,28 +257,6 @@ function setPassingHeuristics() {
 function setFailingHeuristics() {
   gDNSOverride.clearHostOverride("sitereview.zscaler.com");
   gDNSOverride.addIPOverride("sitereview.zscaler.com", "213.152.228.242");
-}
-
-async function restartAddon() {
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
-  await addon.reload();
-}
-
-async function disableAddon() {
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
-  await addon.disable({ allowSystemAddons: true });
-}
-
-async function enableAddon() {
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
-  await addon.enable({ allowSystemAddons: true });
-}
-
-async function resetPrefsAndRestartAddon() {
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
-  await addon.disable({ allowSystemAddons: true });
-  Preferences.reset(Object.values(prefs));
-  await addon.enable({ allowSystemAddons: true });
 }
 
 async function waitForDoorhanger() {

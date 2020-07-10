@@ -1,10 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 "use strict";
 
 add_task(setup);
 
 const { EnterprisePolicyTesting } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm",
-  null
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 
 add_task(async function testPolicyOverride() {
@@ -23,14 +26,8 @@ add_task(async function testPolicyOverride() {
     "Policy engine is active."
   );
 
-  let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_SKIP_HEURISTICS_PREF);
   Preferences.set(prefs.DOH_ENABLED_PREF, true);
-  await prefPromise;
-  is(
-    Preferences.get(prefs.DOH_SKIP_HEURISTICS_PREF, false),
-    true,
-    "skipHeuristicsCheck pref is set to remember not to run heuristics."
-  );
+  await waitForStateTelemetry(["policyDisabled"]);
   is(
     Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
     undefined,
@@ -41,24 +38,18 @@ add_task(async function testPolicyOverride() {
     undefined,
     "TRR selection not performed."
   );
+  is(
+    Preferences.get(prefs.SKIP_HEURISTICS_PREF),
+    true,
+    "Pref set to suppress CFR."
+  );
   ensureNoTRRSelectionTelemetry();
-  await ensureNoTRRModeChange(0);
+  await ensureNoTRRModeChange(undefined);
   ensureNoHeuristicsTelemetry();
 
   // Simulate a network change.
   simulateNetworkChange();
-  await ensureNoTRRModeChange(0);
-  ensureNoHeuristicsTelemetry();
-
-  // Restart for good measure.
-  await restartAddon();
-  ensureNoTRRSelectionTelemetry();
-  await ensureNoTRRModeChange(0);
-  ensureNoHeuristicsTelemetry();
-
-  // Simulate a network change.
-  simulateNetworkChange();
-  await ensureNoTRRModeChange(0);
+  await ensureNoTRRModeChange(undefined);
   ensureNoHeuristicsTelemetry();
 
   // Clean up.

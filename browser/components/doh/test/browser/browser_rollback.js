@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 "use strict";
 
 requestLongerTimeout(2);
@@ -64,7 +68,7 @@ add_task(async function testRollback() {
   // Rollback!
   setPassingHeuristics();
   Preferences.reset(prefs.DOH_ENABLED_PREF);
-  await waitForStateTelemetry();
+  await waitForStateTelemetry(["rollback", "shutdown"]);
   await ensureTRRMode(undefined);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
@@ -87,7 +91,7 @@ add_task(async function testRollback() {
 
   // Rollback again for good measure! This time with failing heuristics.
   Preferences.reset(prefs.DOH_ENABLED_PREF);
-  await waitForStateTelemetry();
+  await waitForStateTelemetry(["rollback", "shutdown"]);
   await ensureTRRMode(undefined);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
@@ -110,7 +114,7 @@ add_task(async function testRollback() {
 
   // Rollback again, this time with TRR mode set to 2 prior to doing so.
   Preferences.reset(prefs.DOH_ENABLED_PREF);
-  await waitForStateTelemetry();
+  await waitForStateTelemetry(["rollback", "shutdown"]);
   await ensureTRRMode(undefined);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
@@ -128,14 +132,16 @@ add_task(async function testRollback() {
   await ensureNoTRRModeChange(2);
   await checkHeuristicsTelemetry("enable_doh", "netchange");
 
-  // Rollback again. This time, disable the add-on first to ensure it reacts
+  // Rollback again. This time, uninit DoHController first to ensure it reacts
   // correctly at startup.
-  await disableAddon();
+  await DoHController._uninit();
+  await waitForStateTelemetry(["shutdown"]);
   Preferences.reset(prefs.DOH_ENABLED_PREF);
-  await enableAddon();
+  await DoHController.init();
   await ensureTRRMode(undefined);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
+  await waitForStateTelemetry(["rollback"]);
   simulateNetworkChange();
   await ensureNoTRRModeChange(undefined);
   await ensureNoHeuristicsTelemetry();
