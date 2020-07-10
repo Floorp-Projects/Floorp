@@ -5,6 +5,7 @@ const gMediaSessionActions = [
   "seekforward",
   "previoustrack",
   "nexttrack",
+  "skipad",
   "stop",
 ];
 
