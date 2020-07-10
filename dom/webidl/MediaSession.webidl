@@ -13,7 +13,7 @@ enum MediaSessionPlaybackState {
   "playing"
 };
 
-// TODO: Implement the missing seekto (bug 1621403) and skipad (bug 1582569) actions
+// TODO: Implement the missing seekto (bug 1621403)
 enum MediaSessionAction {
   "play",
   "pause",
@@ -21,6 +21,7 @@ enum MediaSessionAction {
   "seekforward",
   "previoustrack",
   "nexttrack",
+  "skipad",
   "stop",
 };
 

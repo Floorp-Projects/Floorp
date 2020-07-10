@@ -15,6 +15,7 @@ enum MediaControlKey {
   "nexttrack",
   "seekbackward",
   "seekforward",
+  "skipad",
   "stop",
 };
 
