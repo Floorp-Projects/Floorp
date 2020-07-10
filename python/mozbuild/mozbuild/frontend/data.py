@@ -835,6 +835,9 @@ class SharedLibrary(Library):
             os_target = context.config.substs['OS_TARGET']
             if os_target == 'Darwin':
                 self.symbols_link_arg = '-Wl,-exported_symbols_list,' + self.symbols_file
+            elif os_target == 'SunOS':
+                self.symbols_link_arg = '-z gnu-version-script-compat -Wl,--version-script,' \
+                  + self.symbols_file
             elif os_target == 'WINNT':
                 if context.config.substs.get('GNU_CC'):
                     self.symbols_link_arg = self.symbols_file
