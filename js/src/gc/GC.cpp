@@ -3169,21 +3169,26 @@ void GCRuntime::triggerFullGCForAtoms(JSContext* cx) {
   MOZ_RELEASE_ASSERT(triggerGC(JS::GCReason::DELAYED_ATOMS_GC));
 }
 
-// Do all possible decommit immediately from the current thread without
-// releasing the GC lock or allocating any memory.
-void GCRuntime::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
-  MOZ_ASSERT(emptyChunks(lock).count() == 0);
-  for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
-       chunk.next()) {
-    chunk->decommitFreeArenasWithoutUnlocking(lock);
-  }
-  MOZ_ASSERT(availableChunks(lock).verify());
-}
-
 void GCRuntime::startDecommit() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DECOMMIT);
+
+#ifdef DEBUG
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(decommitTask.isIdle());
+
+  {
+    AutoLockGC lock(this);
+    MOZ_ASSERT(fullChunks(lock).verify());
+    MOZ_ASSERT(availableChunks(lock).verify());
+    MOZ_ASSERT(emptyChunks(lock).verify());
+
+    // Verify that all entries in the empty chunks pool are already decommitted.
+    for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done();
+         chunk.next()) {
+      MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
+    }
+  }
+#endif
 
   // If we are allocating heavily enough to trigger "high frequency" GC, then
   // skip decommit so that we do not compete with the mutator. However if we're
@@ -3193,36 +3198,12 @@ void GCRuntime::startDecommit() {
     return;
   }
 
-  BackgroundDecommitTask::ChunkVector toDecommit;
   {
     AutoLockGC lock(this);
-
-    // Verify that all entries in the empty chunks pool are already decommitted.
-    for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done();
-         chunk.next()) {
-      MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
-    }
-
-    // Since we release the GC lock while doing the decommit syscall below,
-    // it is dangerous to iterate the available list directly, as the active
-    // thread could modify it concurrently. Instead, we build and pass an
-    // explicit Vector containing the Chunks we want to visit.
-    MOZ_ASSERT(availableChunks(lock).verify());
-    availableChunks(lock).sort();
-    for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
-         chunk.next()) {
-      if (chunk->info.numArenasFreeCommitted && !toDecommit.append(chunk)) {
-        // The OOM handler does a full, immediate decommit.
-        return onOutOfMallocMemory(lock);
-      }
-    }
-
-    if (toDecommit.empty() && !tooManyEmptyChunks(lock)) {
-      return;
+    if (availableChunks(lock).empty() && !tooManyEmptyChunks(lock)) {
+      return;  // Nothing to do.
     }
   }
-
-  decommitTask.setChunksToScan(toDecommit);
 
 #ifdef DEBUG
   {
@@ -3239,41 +3220,68 @@ void GCRuntime::startDecommit() {
   decommitTask.runFromMainThread();
 }
 
-void js::gc::BackgroundDecommitTask::setChunksToScan(ChunkVector& chunks) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
-  MOZ_ASSERT(isIdle());
-  MOZ_ASSERT(toDecommit.ref().empty());
-  std::swap(toDecommit.ref(), chunks);
-}
-
 void js::gc::BackgroundDecommitTask::run() {
-  ChunkPool toFree;
+  ChunkPool emptyChunksToFree;
 
   {
     AutoLockGC lock(gc);
 
-    for (Chunk* chunk : toDecommit.ref()) {
-      // The arena list is not doubly-linked, so we have to work in the free
-      // list order and not in the natural order.
+    // To help minimize the total number of chunks needed over time, sort the
+    // available chunks list so that we allocate into more-used chunks first.
+    gc->availableChunks(lock).sort();
 
-      while (chunk->info.numArenasFreeCommitted && !cancel_) {
-        if (!chunk->decommitOneFreeArena(gc, lock)) {
-          // If we are low enough on memory that we can't update the page
-          // tables, break out of the loop.
-          break;
-        }
-      }
-    }
+    gc->decommitFreeArenas(cancel_, lock);
 
-    toDecommit.ref().clearAndFree();
-    toFree = gc->expireEmptyChunkPool(lock);
+    emptyChunksToFree = gc->expireEmptyChunkPool(lock);
   }
 
-  FreeChunkPool(toFree);
+  FreeChunkPool(emptyChunksToFree);
 
   AutoLockHelperThreadState lock;
   setFinishing(lock);
   gc->maybeRequestGCAfterBackgroundTask(lock);
+}
+
+// Called from a background thread to decommit free arenas. Releases the GC
+// lock.
+void GCRuntime::decommitFreeArenas(const bool& cancel, AutoLockGC& lock) {
+  // Since we release the GC lock while doing the decommit syscall below,
+  // it is dangerous to iterate the available list directly, as the active
+  // thread could modify it concurrently. Instead, we build and pass an
+  // explicit Vector containing the Chunks we want to visit.
+  Vector<Chunk*, 0, SystemAllocPolicy> chunksToDecommit;
+  for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
+       chunk.next()) {
+    if (chunk->info.numArenasFreeCommitted != 0 &&
+        !chunksToDecommit.append(chunk)) {
+      decommitFreeArenasWithoutUnlocking(lock);
+      return;
+    }
+  }
+
+  for (Chunk* chunk : chunksToDecommit) {
+    // The arena list is not doubly-linked, so we have to work in the free
+    // list order and not in the natural order.
+
+    while (chunk->info.numArenasFreeCommitted && !cancel) {
+      if (!chunk->decommitOneFreeArena(this, lock)) {
+        // If we are low enough on memory that we can't update the page
+        // tables, break out of the loop.
+        break;
+      }
+    }
+  }
+}
+
+// Do all possible decommit immediately from the current thread without
+// releasing the GC lock or allocating any memory.
+void GCRuntime::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
+  MOZ_ASSERT(emptyChunks(lock).count() == 0);
+  for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
+       chunk.next()) {
+    chunk->decommitFreeArenasWithoutUnlocking(lock);
+  }
+  MOZ_ASSERT(availableChunks(lock).verify());
 }
 
 void GCRuntime::maybeRequestGCAfterBackgroundTask(
