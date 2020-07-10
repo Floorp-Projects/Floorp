@@ -403,8 +403,7 @@ class ScriptStencil {
   bool isStandaloneFunction : 1;
 
   // This is set by the BytecodeEmitter of the enclosing script when a reference
-  // to this function is generated. This is also used to determine a hoisted
-  // function already is referenced by the bytecode.
+  // to this function is generated.
   bool wasFunctionEmitted : 1;
 
   // This function should be marked as a singleton. It is expected to be defined
