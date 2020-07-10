@@ -8,15 +8,16 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.SystemClock
+import android.provider.Browser.EXTRA_APPLICATION_ID
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import java.net.URISyntaxException
-import java.util.UUID
 
 private const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
 private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
@@ -39,19 +40,17 @@ internal const val APP_LINKS_CACHE_INTERVAL = 30 * 1000L // 30 seconds
  * @param context Context the feature is associated with.
  * @param launchInApp If {true} then launch app links in third party app(s). Default to false because
  * of security concerns.
- * @param unguessableWebUrl URL is not likely to be opened by a native app but will fallback to a browser.
  * @param alwaysDeniedSchemes List of schemes that will never be opened in a third-party app.
  */
 class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
-    private val unguessableWebUrl: String = "https://${UUID.randomUUID()}.net",
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES
 ) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun findActivities(intent: Intent): List<ResolveInfo> {
         return context.packageManager
-            .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: emptyList()
+            .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER) ?: emptyList()
     }
 
     private fun findDefaultActivity(intent: Intent): ResolveInfo? {
@@ -64,31 +63,6 @@ class AppLinksUseCases(
         } catch (e: URISyntaxException) {
             null
         }
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun findExcludedPackages(randomWebURLString: String): Set<String> {
-        val intent = safeParseUri(randomWebURLString, 0) ?: return emptySet()
-        // We generate a URL is not likely to be opened by a native app
-        // but will fallback to a browser.
-        // In this way, we're looking for only the browsers — including us.
-        return findActivities(intent.addCategory(Intent.CATEGORY_BROWSABLE))
-            .map { it.activityInfo.packageName }
-            .toHashSet()
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getBrowserPackageNames(): Set<String> {
-        val currentTimeStamp = SystemClock.elapsedRealtime()
-        val cache = browserNamesCache
-        if (cache != null && currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL) {
-            return cache.cachedBrowserNames
-        }
-
-        val browserNames = findExcludedPackages(unguessableWebUrl)
-        browserNamesCache = AppLinkBrowserNamesCache(currentTimeStamp, browserNames)
-
-        return browserNames
     }
 
     /**
@@ -122,9 +96,11 @@ class AppLinksUseCases(
 
             val redirectData = createBrowsableIntents(url)
             val isAppIntentHttpOrHttps = redirectData.appIntent?.data?.isHttpOrHttps ?: false
+            val isEngineSupportedScheme = ENGINE_SUPPORTED_SCHEMES.contains(Uri.parse(url).scheme)
 
             val appIntent = when {
-                redirectData.resolveInfo == null -> null
+                redirectData.resolveInfo == null && isEngineSupportedScheme -> null
+                redirectData.resolveInfo == null && redirectData.marketplaceIntent != null -> null
                 includeHttpAppLinks && (ignoreDefaultBrowser ||
                     (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))) -> null
                 includeHttpAppLinks && isAppIntentHttpOrHttps -> redirectData.appIntent
@@ -147,22 +123,8 @@ class AppLinksUseCases(
         private fun isDefaultBrowser(intent: Intent) =
             findDefaultActivity(intent)?.activityInfo?.packageName == context.packageName
 
-        private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {
-            return findActivities(intent)
-                .map { it.activityInfo.packageName to it }
-                .filter { intent.`package` == it.first || !getBrowserPackageNames().contains(it.first) }
-                .map { it.second }
-        }
-
         private fun createBrowsableIntents(url: String): RedirectData {
-            val intent = safeParseUri(url, 0)
-            if (intent != null && intent.action == Intent.ACTION_VIEW) {
-                intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                intent.component = null
-                intent.selector = null
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-
+            val intent = safeParseUri(url, Intent.URI_INTENT_SCHEME)
             val fallbackIntent = intent?.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
                 Intent.parseUri(it, 0)
             }
@@ -185,8 +147,20 @@ class AppLinksUseCases(
                 else -> intent
             }
 
+            appIntent?.let {
+                it.addCategory(Intent.CATEGORY_BROWSABLE)
+                it.component = null
+                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                it.selector?.addCategory(Intent.CATEGORY_BROWSABLE)
+                it.selector?.component = null
+                it.putExtra(EXTRA_APPLICATION_ID, context.packageName)
+            }
+
             val resolveInfoList = appIntent?.let {
-                getNonBrowserActivities(it)
+                findActivities(appIntent).filter {
+                    it.filter != null &&
+                    !(it.filter.countDataPaths() == 0 && it.filter.countDataAuthorities() == 0)
+                }
             }
             val resolveInfo = resolveInfoList?.firstOrNull()
 
@@ -226,6 +200,9 @@ class AppLinksUseCases(
                     }
                     context.startActivity(it)
                 } catch (e: ActivityNotFoundException) {
+                    failedToLaunchAction()
+                    Logger.error("failed to start third party app activity", e)
+                } catch (e: SecurityException) {
                     failedToLaunchAction()
                     Logger.error("failed to start third party app activity", e)
                 }
@@ -268,23 +245,15 @@ class AppLinksUseCases(
         var cachedAppLinkRedirect: AppLinkRedirect
     )
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal data class AppLinkBrowserNamesCache(
-        var cacheTimeStamp: Long,
-        var cachedBrowserNames: Set<String>
-    )
-
     companion object {
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         internal var redirectCache: AppLinkRedirectCache? = null
 
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal var browserNamesCache: AppLinkBrowserNamesCache? = null
-
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
         internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf("about", "data", "file", "ftp", "http",
             "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss")
+
         internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("file", "javascript", "data", "about")
     }
 }

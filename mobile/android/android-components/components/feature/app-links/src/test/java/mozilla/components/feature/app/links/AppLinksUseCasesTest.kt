@@ -7,6 +7,7 @@ package mozilla.components.feature.app.links
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -17,7 +18,6 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -53,11 +53,12 @@ class AppLinksUseCasesTest {
     private val layerUrl = "https://exmaple.com"
     private val layerPackage = "com.example.app"
     private val layerActivity = "com.example2.app.intentActivity"
+    private val mailUrl = "mailto:example@example.com"
+    private val mailPackage = "com.mail.app"
 
     @Before
     fun setup() {
         AppLinksUseCases.redirectCache = null
-        AppLinksUseCases.browserNamesCache = null
     }
 
     private fun createContext(vararg urlToPackages: Triple<String, String, String>, default: Boolean = false): Context {
@@ -77,6 +78,10 @@ class AppLinksUseCasesTest {
             val resolveInfo = ResolveInfo().apply {
                 labelRes = android.R.string.ok
                 activityInfo = info
+                if (pkgName != browserPackage && pkgName != mailPackage) {
+                    filter = IntentFilter()
+                    filter.addDataPath("test", 0)
+                }
             }
             packageManager.addResolveInfoForIntent(intent, resolveInfo)
             packageManager.addDrawableResolution(pkgName, android.R.drawable.btn_default, mock())
@@ -96,7 +101,7 @@ class AppLinksUseCasesTest {
         val context = createContext()
         val subject = AppLinksUseCases(context, { true })
         val redirect = subject.interceptedAppLinkRedirect("test://test#Intent;")
-        assertFalse(redirect.isRedirect())
+        assert(redirect.isRedirect())
     }
 
     @Test
@@ -191,9 +196,9 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `A URL that matches only excluded packages is not an app link`() {
+    fun `A URL that matches only general packages is not an app link`() {
         val context = createContext(Triple(appUrl, browserPackage, ""), Triple(browserUrl, browserPackage, ""))
-        val subject = AppLinksUseCases(context, { true }, unguessableWebUrl = browserUrl)
+        val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
@@ -203,9 +208,9 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `A URL that also matches excluded packages is an app link`() {
+    fun `A URL that also matches both specialized and general packages is an app link`() {
         val context = createContext(Triple(appUrl, appPackage, ""), Triple(appUrl, browserPackage, ""), Triple(browserUrl, browserPackage, ""))
-        val subject = AppLinksUseCases(context, { true }, unguessableWebUrl = browserUrl)
+        val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
@@ -216,22 +221,21 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `A URL that also matches general packages but the scheme is not supported is an app link`() {
+        val context = createContext(Triple(mailUrl, mailPackage, ""))
+        val subject = AppLinksUseCases(context, { true })
+
+        val redirect = subject.interceptedAppLinkRedirect(mailUrl)
+        assertTrue(redirect.isRedirect())
+    }
+
+    @Test
     fun `A URL that only matches default activity is not an app link`() {
         val context = createContext(Triple(appUrl, appPackage, ""), default = true)
         val subject = AppLinksUseCases(context, { true })
 
         val menuRedirect = subject.appLinkRedirect(appUrl)
         assertFalse(menuRedirect.hasExternalApp())
-    }
-
-    @Test
-    fun `A list of browser package names can be generated if not supplied`() {
-        val unguessable = "https://unguessable-test-url.com"
-        val context = createContext(Triple(unguessable, browserPackage, ""))
-        val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
-
-        subject.appLinkRedirect(unguessable)
-        assertEquals(subject.getBrowserPackageNames(), setOf(browserPackage))
     }
 
     @Test
@@ -350,34 +354,6 @@ class AppLinksUseCasesTest {
             redirect = subject.interceptedAppLinkRedirect(appUrl)
             assertTrue(redirect.isRedirect())
             assert(timestamp != AppLinksUseCases.redirectCache?.cacheTimeStamp)
-        }
-    }
-
-    @Test
-    fun `AppLinksUsecases uses browser names cache`() {
-        val testDispatcher = TestCoroutineDispatcher()
-        TestCoroutineScope(testDispatcher).launch {
-            val context = createContext(Triple(appUrl, appPackage, ""))
-
-            var subject = AppLinksUseCases(context, { true })
-            whenever(subject.findExcludedPackages(any())).thenReturn(emptySet())
-            var browserNames = subject.getBrowserPackageNames()
-            assertTrue(browserNames.isEmpty())
-            val timestamp = AppLinksUseCases.browserNamesCache?.cacheTimeStamp
-
-            whenever(subject.findExcludedPackages(any())).thenReturn(setOf(appPackage))
-            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2)
-            subject = AppLinksUseCases(context, { true })
-            browserNames = subject.getBrowserPackageNames()
-            assertTrue(browserNames.isEmpty())
-            assert(timestamp == AppLinksUseCases.browserNamesCache?.cacheTimeStamp)
-
-            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2 + 1)
-            subject = AppLinksUseCases(context, { true })
-            browserNames = subject.getBrowserPackageNames()
-            assertFalse(browserNames.isEmpty())
-            assertFalse(browserNames.contains(appPackage))
-            assert(timestamp != AppLinksUseCases.browserNamesCache?.cacheTimeStamp)
         }
     }
 
