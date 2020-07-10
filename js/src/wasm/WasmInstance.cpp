@@ -1639,7 +1639,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     return false;
   }
   for (size_t i = 0; i < elemSegments.length(); i++) {
-    if (elemSegments[i]->kind == ElemSegment::Kind::Passive) {
+    if (elemSegments[i]->kind != ElemSegment::Kind::Active) {
       passiveElemSegments_[i] = elemSegments[i];
     }
   }
