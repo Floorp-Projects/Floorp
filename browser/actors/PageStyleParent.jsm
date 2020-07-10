@@ -22,11 +22,6 @@ class PageStyleParent extends JSWindowActorParent {
 
     switch (msg.name) {
       case "PageStyle:Add":
-        if (browser.outerBrowser) {
-          // We are in RDM mode and we probably
-          // want to work with the outer browser.
-          browser = browser.outerBrowser;
-        }
         styleMenu.addBrowserStyleSheets(msg.data, permanentKey);
         break;
       case "PageStyle:Clear":

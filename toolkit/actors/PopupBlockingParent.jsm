@@ -266,10 +266,6 @@ class PopupBlockingParent extends JSWindowActorParent {
       return;
     }
 
-    if (browser.outerBrowser) {
-      browser = browser.outerBrowser; // handle RDM mode
-    }
-
     browser.popupBlocker._updateBlockedPopupEntries(this.browsingContext, data);
   }
 }

@@ -76,11 +76,7 @@ class PdfjsParent extends JSWindowActorParent {
    */
 
   get browser() {
-    let browser = this.browsingContext.top.embedderElement;
-    if (browser.outerBrowser) {
-      browser = browser.outerBrowser; // handle RDM mode
-    }
-    return browser;
+    return this.browsingContext.top.embedderElement;
   }
 
   _updateControlState(aMsg) {

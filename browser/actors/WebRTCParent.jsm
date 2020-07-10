@@ -52,12 +52,7 @@ class WebRTCParent extends JSWindowActorParent {
   }
 
   getBrowser() {
-    let browser = this.browsingContext.top.embedderElement;
-    if (browser && browser.outerBrowser) {
-      // Responsive design mode check
-      browser = browser.outerBrowser;
-    }
-    return browser;
+    return this.browsingContext.top.embedderElement;
   }
 
   receiveMessage(aMessage) {

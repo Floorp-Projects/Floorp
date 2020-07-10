@@ -132,8 +132,7 @@ class TranslationParent extends JSWindowActorParent {
   }
 
   get browser() {
-    let browser = this.browsingContext.top.embedderElement;
-    return browser.outerBrowser ? browser.outerBrowser : browser;
+    return this.browsingContext.top.embedderElement;
   }
 
   receiveMessage(aMessage) {
