@@ -47,19 +47,14 @@ static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
 NS_IMPL_ISUPPORTS(nsPrinterListX, nsIPrinterList);
 
 NS_IMETHODIMP
-nsPrinterListX::GetSystemDefaultPrinter(nsIPrinter** aDefaultPrinter) {
+nsPrinterListX::GetSystemDefaultPrinterName(nsAString& aName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ENSURE_ARG_POINTER(aDefaultPrinter);
-  *aDefaultPrinter = nullptr;
-
+  aName.Truncate();
   NSArray<NSString*>* printerNames = [NSPrinter printerNames];
   if ([printerNames count] > 0) {
     NSString* name = [printerNames objectAtIndex:0];
-    nsAutoString printerName;
-    nsCocoaUtils::GetStringForNSString(name, printerName);
-    *aDefaultPrinter = new nsPrinter(printerName);
-    NS_ADDREF(*aDefaultPrinter);
+    nsCocoaUtils::GetStringForNSString(name, aName);
     return NS_OK;
   }
 
