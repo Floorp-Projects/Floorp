@@ -8360,9 +8360,8 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
 
         if (peekSearchState != FOUND) {
           bool movedOverNonSelectable = false;
-          result = current->GetFrameFromDirection(
-              *aPos, &current, &offset, &jumpedLine, &movedOverNonSelectable);
-          if (NS_FAILED(result)) return result;
+          MOZ_TRY(current->GetFrameFromDirection(
+              *aPos, &current, &offset, &jumpedLine, &movedOverNonSelectable));
 
           // If we jumped lines, it's as if we found a character, but we still
           // need to eat non-renderable content on the new line.
@@ -8789,11 +8788,7 @@ Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
   bool lineIsRTL = it->GetDirection();
   bool isReordered;
 
-  nsresult result =
-      it->CheckLineOrder(aLine, &isReordered, &firstFrame, &lastFrame);
-  if (NS_FAILED(result)) {
-    return Err(result);
-  }
+  MOZ_TRY(it->CheckLineOrder(aLine, &isReordered, &firstFrame, &lastFrame));
 
   nsIFrame** framePtr = aDirection == eDirPrevious ? &firstFrame : &lastFrame;
   if (!*framePtr) {
@@ -8817,11 +8812,7 @@ Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
   int32_t lineFrameCount;
 
   nsAutoLineIterator it = aLineIterator;
-  nsresult result =
-      it->GetLine(aLine, &firstFrame, &lineFrameCount, nonUsedRect);
-  if (NS_FAILED(result)) {
-    return Err(result);
-  }
+  MOZ_TRY(it->GetLine(aLine, &firstFrame, &lineFrameCount, nonUsedRect));
 
   if (aDirection == eDirPrevious) {
     nsIFrame::GetFirstLeaf(&firstFrame);
@@ -8831,8 +8822,8 @@ Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
   // eDirNext
   lastFrame = firstFrame;
   for (; lineFrameCount > 1; lineFrameCount--) {
-    result = it->GetNextSiblingOnLine(lastFrame, aLine);
-    if (NS_FAILED(result) || !lastFrame) {
+    MOZ_TRY(it->GetNextSiblingOnLine(lastFrame, aLine));
+    if (!lastFrame) {
       NS_ERROR("should not be reached nsIFrame");
       return Err(NS_ERROR_FAILURE);
     }
