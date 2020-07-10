@@ -14,7 +14,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "resource://gre/modules/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
@@ -22,10 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
-
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.Provider.PrivateSearch")
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -92,8 +87,6 @@ class ProviderPrivateSearch extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    logger.info(`Starting query for ${queryContext.searchString}`);
-
     let searchString = queryContext.searchString.trim();
     if (
       queryContext.tokens.some(
@@ -119,7 +112,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       : await Services.search.getDefaultPrivate();
     let isPrivateEngine =
       separatePrivateDefault && engine != (await Services.search.getDefault());
-    logger.info(`isPrivateEngine: ${isPrivateEngine}`);
+    this.logger.info(`isPrivateEngine: ${isPrivateEngine}`);
 
     // This is a delay added before returning results, to avoid flicker.
     // Our result must appear only when all results are searches, but if search
@@ -128,7 +121,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
     await new SkippableTimer({
       name: "ProviderPrivateSearch",
       time: 100,
-      logger,
+      logger: this.logger,
     }).promise;
 
     let result = new UrlbarResult(
@@ -152,7 +145,6 @@ class ProviderPrivateSearch extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
-    logger.info(`Canceling query for ${queryContext.searchString}`);
     this.queries.delete(queryContext);
   }
 }
