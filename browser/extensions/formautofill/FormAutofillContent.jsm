@@ -514,15 +514,9 @@ var FormAutofillContent = {
    * 3. Number of filled fields is less than autofill threshold
    *
    * @param {HTMLElement} formElement Root element which receives submit event.
-   * @param {Window} domWin Content window; passed for unit tests and when
-   *                 invoked by the FormAutofillSection
-   * @param {Object} handler FormAutofillHander, if known by caller
+   * @param {Window} domWin Content window only passed for unit tests
    */
-  formSubmitted(
-    formElement,
-    domWin = formElement.ownerGlobal,
-    handler = undefined
-  ) {
+  formSubmitted(formElement, domWin = formElement.ownerGlobal) {
     this.debug("Handling form submission");
 
     if (!FormAutofill.isAutofillEnabled) {
@@ -536,7 +530,7 @@ var FormAutofillContent = {
       return;
     }
 
-    handler = handler ?? this._formsDetails.get(formElement);
+    let handler = this._formsDetails.get(formElement);
     if (!handler) {
       this.debug("Form element could not map to an existing handler");
       return;
@@ -725,10 +719,7 @@ var FormAutofillContent = {
     let formHandler = this._getFormHandler(element);
     if (!formHandler) {
       let formLike = FormLikeFactory.createFromField(element);
-      formHandler = new FormAutofillHandler(
-        formLike,
-        this.formSubmitted.bind(this)
-      );
+      formHandler = new FormAutofillHandler(formLike);
     } else if (!formHandler.updateFormIfNeeded(element)) {
       this.debug("No control is removed or inserted since last collection.");
       return;
