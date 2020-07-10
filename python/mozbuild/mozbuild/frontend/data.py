@@ -1266,7 +1266,6 @@ class GeneratedFile(ContextDerived):
 
         suffixes = [
             '.h',
-            '.inc',
             '.py',
             '.rs',
             # We need to compile Java to generate JNI wrappers for native code
@@ -1293,7 +1292,7 @@ class GeneratedFile(ContextDerived):
         if required_during_compile is None:
             self.required_during_compile = [
                 f for f in self.outputs if f.endswith(
-                    ('.asm', '.c', '.cpp', '.m', '.mm', '.def', 'symverscript'))]
+                    ('.asm', '.c', '.cpp', '.inc', '.m', '.mm', '.def', 'symverscript'))]
         else:
             self.required_during_compile = required_during_compile
 
