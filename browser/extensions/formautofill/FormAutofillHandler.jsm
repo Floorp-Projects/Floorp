@@ -885,6 +885,18 @@ class FormAutofillAddressSection extends FormAutofillSection {
 }
 
 class FormAutofillCreditCardSection extends FormAutofillSection {
+  /**
+   * Credit Card Section Constructor
+   *
+   * @param {Object} fieldDetails
+   *        The fieldDetail objects for the fields in this section
+   * @param {Object} winUtils
+   *                 A WindowUtils reference for the Window the
+   *                 section appears in
+   * @param {Object} handler
+   *                 The FormAutofillHandler responsible for this
+   *                 section
+   */
   constructor(fieldDetails, winUtils, handler) {
     super(fieldDetails, winUtils);
 
