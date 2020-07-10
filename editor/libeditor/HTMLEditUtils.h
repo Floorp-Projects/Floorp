@@ -529,6 +529,13 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetInclusiveAncestorEditableBlockElementOrInlineEditingHost() returns
+   * inclusive block ancestor element of aContent.  If aContent is in inline
+   * editing host, returns the editing host instead.
+   */
+  static Element* GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
+      nsIContent& aContent);
+  /**
    * GetClosestAncestorTableElement() returns the nearest inclusive ancestor
    * <table> element of aContent.
    */
