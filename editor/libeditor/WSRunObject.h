@@ -769,6 +769,8 @@ class MOZ_STACK_CLASS WSRunScanner {
     const EditorDOMPoint& StartRef() const { return mStart.PointRef(); }
     const EditorDOMPoint& EndRef() const { return mEnd.PointRef(); }
 
+    bool IsPreformatted() const { return mIsPreformatted; }
+
     /**
      * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
      * of the line and first visible point or end of the hard line.  When
