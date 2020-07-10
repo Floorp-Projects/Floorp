@@ -8303,6 +8303,27 @@ static bool IsMovingInFrameDirection(nsIFrame* frame, nsDirection aDirection,
   return aDirection == (isReverseDirection ? eDirPrevious : eDirNext);
 }
 
+// Determines "are we looking for a boundary between whitespace and
+// non-whitespace (in the direction we're moving in)". It is true when moving
+// forward and looking for a beginning of a word, or when moving backwards and
+// looking for an end of a word.
+static bool ShouldWordSelectionEatSpace(const nsPeekOffsetStruct& aPos) {
+  if (aPos.mWordMovementType != eDefaultBehavior) {
+    // aPos->mWordMovementType possible values:
+    //       eEndWord: eat the space if we're moving backwards
+    //       eStartWord: eat the space if we're moving forwards
+    return (aPos.mWordMovementType == eEndWord) ==
+           (aPos.mDirection == eDirPrevious);
+  }
+  // Use the hidden preference which is based on operating system
+  // behavior. This pref only affects whether moving forward by word
+  // should go to the end of this word or start of the next word. When
+  // going backwards, the start of the word is always used, on every
+  // operating system.
+  return aPos.mDirection == eDirNext &&
+         StaticPrefs::layout_word_select_eat_space_to_next_word();
+}
+
 nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
   if (!aPos) return NS_ERROR_NULL_POINTER;
   nsresult result = NS_ERROR_FAILURE;
@@ -8394,27 +8415,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       // Intentionally fall through the eSelectWord case.
       [[fallthrough]];
     case eSelectWord: {
-      // wordSelectEatSpace means "are we looking for a boundary between
-      // whitespace and non-whitespace (in the direction we're moving in)". It
-      // is true when moving forward and looking for a beginning of a word, or
-      // when moving backwards and looking for an end of a word.
-      bool wordSelectEatSpace;
-      if (aPos->mWordMovementType != eDefaultBehavior) {
-        // aPos->mWordMovementType possible values:
-        //       eEndWord: eat the space if we're moving backwards
-        //       eStartWord: eat the space if we're moving forwards
-        wordSelectEatSpace = ((aPos->mWordMovementType == eEndWord) ==
-                              (aPos->mDirection == eDirPrevious));
-      } else {
-        // Use the hidden preference which is based on operating system
-        // behavior. This pref only affects whether moving forward by word
-        // should go to the end of this word or start of the next word. When
-        // going backwards, the start of the word is always used, on every
-        // operating system.
-        wordSelectEatSpace =
-            aPos->mDirection == eDirNext &&
-            Preferences::GetBool("layout.word_select.eat_space_to_next_word");
-      }
+      bool wordSelectEatSpace = ShouldWordSelectionEatSpace(*aPos);
 
       // mSawBeforeType means "we already saw characters of the type
       // before the boundary we're looking for". Examples:
@@ -8724,7 +8725,7 @@ bool nsIFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
     // We always stop between whitespace and punctuation
     return true;
   }
-  if (!Preferences::GetBool("layout.word_select.stop_at_punctuation")) {
+  if (!StaticPrefs::layout_word_select_stop_at_punctuation()) {
     // When this pref is false, we never stop at a punctuation boundary unless
     // it's followed by whitespace (in the relevant direction).
     return aWhitespaceAfter;
