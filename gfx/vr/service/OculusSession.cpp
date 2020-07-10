@@ -1131,9 +1131,9 @@ void OculusSession::UpdateEyeParameters(VRSystemState& aState) {
 
     Matrix4x4 pose;
     pose.SetRotationFromQuaternion(
-        gfx::Quaternion(renderDesc.HmdToEyePose.Orientation.x,
-                        renderDesc.HmdToEyePose.Orientation.y,
-                        renderDesc.HmdToEyePose.Orientation.z,
+        gfx::Quaternion(-renderDesc.HmdToEyePose.Orientation.x,
+                        -renderDesc.HmdToEyePose.Orientation.y,
+                        -renderDesc.HmdToEyePose.Orientation.z,
                         renderDesc.HmdToEyePose.Orientation.w));
     pose.PreTranslate(renderDesc.HmdToEyePose.Position.x,
                       renderDesc.HmdToEyePose.Position.y,
@@ -1157,6 +1157,7 @@ void OculusSession::UpdateEyeParameters(VRSystemState& aState) {
       NS_WARNING("Failed to decompose eye pose matrix for Oculus");
     }
 
+    eyeRotation.Invert();
     mFrameStartPose[eye].Orientation.x = eyeRotation.x;
     mFrameStartPose[eye].Orientation.y = eyeRotation.y;
     mFrameStartPose[eye].Orientation.z = eyeRotation.z;

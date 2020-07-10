@@ -52,8 +52,8 @@ void VRHMDSensorState::CalcViewMatrices(
   gfx::Matrix4x4 matHead;
   if (flags & VRDisplayCapabilityFlags::Cap_Orientation) {
     matHead.SetRotationFromQuaternion(
-        gfx::Quaternion(pose.orientation[0], pose.orientation[1],
-                        pose.orientation[2], pose.orientation[3]));
+        gfx::Quaternion(-pose.orientation[0], -pose.orientation[1],
+                        -pose.orientation[2], pose.orientation[3]));
   }
   matHead.PreTranslate(-pose.position[0], -pose.position[1], -pose.position[2]);
 
