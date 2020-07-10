@@ -6,7 +6,6 @@
 
 DevToolsModules(
     'App.js',
-    'Browser.js',
     'Device.js',
     'DeviceForm.js',
     'DeviceInfo.js',
