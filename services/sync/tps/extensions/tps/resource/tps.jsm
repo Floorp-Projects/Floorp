@@ -200,8 +200,8 @@ var TPS = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   observe: function TPS__observe(subject, topic, data) {

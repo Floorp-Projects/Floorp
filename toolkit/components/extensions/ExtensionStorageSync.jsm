@@ -57,8 +57,8 @@ function ExtensionStorageApiCallback(resolve, reject, changeCallback) {
 
 ExtensionStorageApiCallback.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.mozIExtensionStorageListener,
-    Ci.mozIExtensionStorageCallback,
+    "mozIExtensionStorageListener",
+    "mozIExtensionStorageCallback",
   ]),
 
   handleSuccess(result) {

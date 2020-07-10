@@ -457,7 +457,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   let { prompt } = Services;
   let promptService = {
     _response: 1,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
     confirmEx: function(...args) {
       promptService._confirmExArgs = args;
       return promptService._response;

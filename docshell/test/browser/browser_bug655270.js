@@ -53,7 +53,7 @@ function test() {
     onDeleteURI() {},
     onClearHistory() {},
     onDeleteVisits() {},
-    QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
+    QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
   };
 
   PlacesUtils.history.addObserver(observer);

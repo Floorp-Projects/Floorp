@@ -126,7 +126,7 @@ function getL10n() {
  * 6. For startup-only migrators, override |startupOnlyMigrator|.
  */
 var MigratorPrototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserProfileMigrator]),
+  QueryInterface: ChromeUtils.generateQI(["nsIBrowserProfileMigrator"]),
 
   /**
    * OVERRIDE IF AND ONLY IF the source supports multiple profiles.

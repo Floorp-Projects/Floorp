@@ -103,7 +103,7 @@ class BrowserTestUtilsChildObserver {
 }
 
 BrowserTestUtilsChildObserver.prototype.QueryInterface = ChromeUtils.generateQI(
-  [Ci.nsIObserver, Ci.nsISupportsWeakReference]
+  ["nsIObserver", "nsISupportsWeakReference"]
 );
 
 class BrowserTestUtilsChild extends JSWindowActorChild {

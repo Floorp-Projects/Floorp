@@ -49,9 +49,9 @@ function Converter() {}
 
 Converter.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIStreamConverter,
-    Ci.nsIStreamListener,
-    Ci.nsIRequestObserver,
+    "nsIStreamConverter",
+    "nsIStreamListener",
+    "nsIRequestObserver",
   ]),
 
   get wrappedJSObject() {

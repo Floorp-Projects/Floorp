@@ -5,7 +5,7 @@
 function RecordingCmdLineHandler() {}
 RecordingCmdLineHandler.prototype = {
   /* nsISupports */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICommandLineHandler]),
+  QueryInterface: ChromeUtils.generateQI(["nsICommandLineHandler"]),
 
   /* nsICommandLineHandler */
   handle: function handler_handle(cmdLine) {

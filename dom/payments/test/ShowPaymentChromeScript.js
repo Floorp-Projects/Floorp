@@ -228,7 +228,7 @@ const DummyUIService = {
   completePayment: completeRequest,
   updatePayment: updateRequest,
   closePayment(requestId) {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPaymentUIService"]),
 };
 
 paymentSrv.setTestingUIService(

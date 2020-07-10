@@ -376,8 +376,8 @@ HighlighterEnvironment.prototype = {
     const self = this;
     this.listener = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference,
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
       ]),
 
       onStateChange: function(progress, request, flag) {

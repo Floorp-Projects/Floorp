@@ -61,7 +61,7 @@ PlacesCategoriesStarter.prototype = {
   },
 
   classID: Components.ID("803938d5-e26d-4453-bf46-ad4b26e41114"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 };
 
 var EXPORTED_SYMBOLS = ["PlacesCategoriesStarter"];

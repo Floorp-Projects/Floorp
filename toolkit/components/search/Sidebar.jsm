@@ -21,7 +21,7 @@ nsSidebar.prototype = {
   IsSearchProviderInstalled() {},
 
   classID: Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 };
 
 var EXPORTED_SYMBOLS = ["nsSidebar"];

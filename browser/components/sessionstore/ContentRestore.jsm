@@ -451,8 +451,8 @@ function HistoryListener(docShell, callback) {
 }
 HistoryListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsISHistoryListener,
-    Ci.nsISupportsWeakReference,
+    "nsISHistoryListener",
+    "nsISupportsWeakReference",
   ]),
 
   uninstall() {
@@ -511,8 +511,8 @@ function ProgressListener(docShell, callbacks) {
 
 ProgressListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
   ]),
 
   uninstall() {

@@ -77,7 +77,7 @@ this.PartitioningExceptionListService = function() {};
 PartitioningExceptionListService.prototype = {
   classID: Components.ID("{ab94809d-33f0-4f28-af38-01efbd3baf22}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPartitioningExceptionListService,
+    "nsIPartitioningExceptionListService",
   ]),
 
   _initialized: false,

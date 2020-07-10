@@ -22,8 +22,8 @@ add_task(async function() {
       onStatusChange() {},
 
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference,
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
       ]),
     };
     browser.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);

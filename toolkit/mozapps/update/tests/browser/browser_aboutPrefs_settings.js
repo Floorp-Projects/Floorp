@@ -89,7 +89,7 @@ add_task(async function testUpdateAutoPrefUI() {
   let discardUpdate = 0;
   let { prompt } = Services;
   let promptService = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
     confirmEx(...args) {
       promptService._confirmExArgs = args;
       return discardUpdate;

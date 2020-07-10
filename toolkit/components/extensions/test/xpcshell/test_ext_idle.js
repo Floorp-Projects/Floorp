@@ -25,7 +25,7 @@ let idleService = {
       this._activity.observerFires.push(state);
     }
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIIdleService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIIdleService"]),
   idleTime: 19999,
   addIdleObserver: function(observer, time) {
     this._observers.add(observer);

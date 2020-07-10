@@ -7,7 +7,7 @@ function run_test() {
   let complete = false;
 
   let runnable = {
-    internalQI: ChromeUtils.generateQI([Ci.nsIRunnable]),
+    internalQI: ChromeUtils.generateQI(["nsIRunnable"]),
     // eslint-disable-next-line mozilla/use-chromeutils-generateqi
     QueryInterface(iid) {
       // Attempt to schedule another runnable.  This simulates a GC/CC

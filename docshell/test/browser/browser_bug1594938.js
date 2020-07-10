@@ -37,8 +37,8 @@ add_task(async function test() {
             OnHistoryReplaceEntry: () => {},
 
             QueryInterface: ChromeUtils.generateQI([
-              Ci.nsISHistoryListener,
-              Ci.nsISupportsWeakReference,
+              "nsISHistoryListener",
+              "nsISupportsWeakReference",
             ]),
           };
 
@@ -77,8 +77,8 @@ add_task(async function test() {
         OnHistoryReplaceEntry: () => {},
 
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsISHistoryListener,
-          Ci.nsISupportsWeakReference,
+          "nsISHistoryListener",
+          "nsISupportsWeakReference",
         ]),
       };
 

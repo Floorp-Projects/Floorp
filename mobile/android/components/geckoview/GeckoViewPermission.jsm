@@ -290,6 +290,6 @@ GeckoViewPermission.prototype.classID = Components.ID(
   "{42f3c238-e8e8-4015-9ca2-148723a8afcf}"
 );
 GeckoViewPermission.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIObserver,
-  Ci.nsIContentPermissionPrompt,
+  "nsIObserver",
+  "nsIContentPermissionPrompt",
 ]);

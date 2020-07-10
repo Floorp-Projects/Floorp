@@ -125,8 +125,8 @@ function CustomizedReload(params) {
 
 CustomizedReload.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
   ]),
   get window() {
     return this.docShell.DOMWindow;

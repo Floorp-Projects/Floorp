@@ -48,8 +48,8 @@ function NetworkThrottleListener(queue) {
 
 NetworkThrottleListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIStreamListener,
-    Ci.nsIInterfaceRequestor,
+    "nsIStreamListener",
+    "nsIInterfaceRequestor",
   ]),
 
   /**

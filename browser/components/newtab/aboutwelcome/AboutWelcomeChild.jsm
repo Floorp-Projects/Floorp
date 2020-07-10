@@ -84,8 +84,8 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
     const listener = {
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference,
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
       ]),
     };
 

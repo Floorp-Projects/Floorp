@@ -643,7 +643,7 @@ class Page extends Domain {
             waitForFileWritten();
           }
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+        QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
       };
 
       const { tab } = this.session.target;

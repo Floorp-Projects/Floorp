@@ -91,8 +91,8 @@ class ProgressListener {
 }
 
 ProgressListener.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIWebProgressListener,
-  Ci.nsISupportsWeakReference,
+  "nsIWebProgressListener",
+  "nsISupportsWeakReference",
 ]);
 
 class BrowserDOMWindow {
@@ -255,7 +255,7 @@ class BrowserDOMWindow {
 }
 
 BrowserDOMWindow.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIBrowserDOMWindow,
+  "nsIBrowserDOMWindow",
 ]);
 
 window.addEventListener("DOMContentLoaded", init, true);

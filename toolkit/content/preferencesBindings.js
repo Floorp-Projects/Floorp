@@ -150,10 +150,7 @@ const Preferences = (window.Preferences = (function() {
       Services.prefs.removeObserver("", this);
     },
 
-    QueryInterface: ChromeUtils.generateQI([
-      Ci.nsITimerCallback,
-      Ci.nsIObserver,
-    ]),
+    QueryInterface: ChromeUtils.generateQI(["nsITimerCallback", "nsIObserver"]),
 
     _deferredValueUpdateElements: new Set(),
 

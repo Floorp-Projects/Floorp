@@ -294,7 +294,7 @@ function TabTracker(name, engine) {
 TabTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   clearChangedIDs() {
     this.modified = false;

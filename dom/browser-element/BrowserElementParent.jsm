@@ -36,8 +36,8 @@ BrowserElementParent.prototype = {
   classID: Components.ID("{9f171ac4-0939-4ef8-b360-3408aedc3060}"),
   contractID: "@mozilla.org/dom/browser-element-api;1",
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIBrowserElementAPI,
-    Ci.nsISupportsWeakReference,
+    "nsIBrowserElementAPI",
+    "nsISupportsWeakReference",
   ]),
 
   setFrameLoader(frameLoader) {

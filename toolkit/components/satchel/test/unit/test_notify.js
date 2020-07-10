@@ -19,8 +19,8 @@ ChromeUtils.defineModuleGetter(
 const TestObserver = {
   observed: [],
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
   observe(subject, topic, data) {
     if (subject instanceof Ci.nsISupportsString) {

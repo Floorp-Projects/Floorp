@@ -560,7 +560,7 @@ var Harness = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIWindowMediatorListener,
+    "nsIObserver",
+    "nsIWindowMediatorListener",
   ]),
 };

@@ -933,9 +933,9 @@ function PdfStreamConverter() {}
 
 PdfStreamConverter.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIStreamConverter,
-    Ci.nsIStreamListener,
-    Ci.nsIRequestObserver,
+    "nsIStreamConverter",
+    "nsIStreamListener",
+    "nsIRequestObserver",
   ]),
 
   /*

@@ -66,7 +66,7 @@ MockFactory.prototype = {
   lockFactory(aLock) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 
 function ContractHook(aContractID, aClass) {
@@ -146,7 +146,7 @@ ContractHook.prototype = {
 
 function MockDNSServiceInfo() {}
 MockDNSServiceInfo.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceInfo]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceInfo"]),
 
   set host(aHost) {
     this._host = aHost;
@@ -210,8 +210,8 @@ function TestPresentationDeviceListener() {
 }
 TestPresentationDeviceListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationDeviceListener,
-    Ci.nsISupportsWeakReference,
+    "nsIPresentationDeviceListener",
+    "nsISupportsWeakReference",
   ]),
 
   addDevice(device) {
@@ -262,13 +262,13 @@ function registerService() {
   let deferred = Promise.defer();
 
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {},
     registerService(serviceInfo, listener) {
       deferred.resolve();
       this.serviceRegistered++;
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel: () => {
           this.serviceUnregistered++;
         },
@@ -289,8 +289,8 @@ function registerService() {
   // Register
   provider.listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {},
     removeDevice(device) {},
@@ -316,7 +316,7 @@ function noRegisterService() {
   let deferred = Promise.defer();
 
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {},
     registerService(serviceInfo, listener) {
       deferred.resolve();
@@ -333,8 +333,8 @@ function noRegisterService() {
   // Try register
   provider.listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {},
     removeDevice(device) {},
@@ -356,13 +356,13 @@ function registerServiceDynamically() {
   let deferred = Promise.defer();
 
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {},
     registerService(serviceInfo, listener) {
       deferred.resolve();
       this.serviceRegistered++;
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel: () => {
           this.serviceUnregistered++;
         },
@@ -383,8 +383,8 @@ function registerServiceDynamically() {
   // Try Register
   provider.listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {},
     removeDevice(device) {},
@@ -425,14 +425,14 @@ function addDevice() {
     SERVICE_TYPE
   );
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -482,14 +482,14 @@ function filterDevice() {
     SERVICE_TYPE
   );
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -514,8 +514,8 @@ function filterDevice() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {
       let tests = [
@@ -568,14 +568,14 @@ function handleSessionRequest() {
     SERVICE_TYPE
   );
   let mockSDObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -593,14 +593,14 @@ function handleSessionRequest() {
   };
 
   let mockServerObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlService"]),
     connect(deviceInfo) {
       this.request = {
         deviceInfo,
       };
       return {
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIPresentationControlChannel,
+          "nsIPresentationControlChannel",
         ]),
       };
     },
@@ -618,8 +618,8 @@ function handleSessionRequest() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {
       this.device = device;
@@ -651,14 +651,14 @@ function handleOnSessionRequest() {
     SERVICE_TYPE
   );
   let mockSDObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -676,7 +676,7 @@ function handleOnSessionRequest() {
   };
 
   let mockServerObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlService"]),
     startServer() {},
     sessionRequest() {},
     close() {},
@@ -693,8 +693,8 @@ function handleOnSessionRequest() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {},
     removeDevice(device) {},
@@ -712,7 +712,7 @@ function handleOnSessionRequest() {
   provider.listener = listener;
 
   const deviceInfo = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPDeviceInfo]),
+    QueryInterface: ChromeUtils.generateQI(["nsITCPDeviceInfo"]),
     id: mockDevice.host,
     address: mockDevice.host,
     port: 54321,
@@ -721,7 +721,7 @@ function handleOnSessionRequest() {
   const testUrl = "http://example.com";
   const testPresentationId = "test-presentation-id";
   const testControlChannel = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlChannel"]),
   };
   provider
     .QueryInterface(Ci.nsIPresentationControlServerListener)
@@ -746,14 +746,14 @@ function handleOnSessionRequestFromUnknownDevice() {
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
 
   let mockSDObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {},
     registerService(serviceInfo, listener) {},
     resolveService(serviceInfo, listener) {},
   };
 
   let mockServerObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlService"]),
     startServer() {},
     sessionRequest() {},
     close() {},
@@ -770,8 +770,8 @@ function handleOnSessionRequestFromUnknownDevice() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {
       Assert.ok(false, "shouldn't create any new device");
@@ -795,7 +795,7 @@ function handleOnSessionRequestFromUnknownDevice() {
   provider.listener = listener;
 
   const deviceInfo = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPDeviceInfo]),
+    QueryInterface: ChromeUtils.generateQI(["nsITCPDeviceInfo"]),
     id: "unknown-device.local",
     address: "unknown-device.local",
     port: 12345,
@@ -804,7 +804,7 @@ function handleOnSessionRequestFromUnknownDevice() {
   const testUrl = "http://example.com";
   const testPresentationId = "test-presentation-id";
   const testControlChannel = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlChannel"]),
   };
   provider
     .QueryInterface(Ci.nsIPresentationControlServerListener)
@@ -828,7 +828,7 @@ function noAddDevice() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
 
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       Assert.ok(false, "shouldn't perform any device discovery");
     },
@@ -842,8 +842,8 @@ function noAddDevice() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {},
     removeDevice(device) {},
@@ -870,14 +870,14 @@ function ignoreIncompatibleDevice() {
   let deferred = Promise.defer();
 
   let mockSDObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -887,7 +887,7 @@ function ignoreIncompatibleDevice() {
         createDevice("", 54321, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -906,7 +906,7 @@ function ignoreIncompatibleDevice() {
   };
 
   let mockServerObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlService"]),
     startServer() {
       Services.tm.dispatchToMainThread(() => {
         this.listener.onServerReady(this.port, this.certFingerprint);
@@ -961,14 +961,14 @@ function ignoreSelfDevice() {
 
   let deferred = Promise.defer();
   let mockSDObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -978,7 +978,7 @@ function ignoreSelfDevice() {
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -997,7 +997,7 @@ function ignoreSelfDevice() {
   };
 
   let mockServerObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlService"]),
     startServer() {
       Services.tm.dispatchToMainThread(() => {
         this.listener.onServerReady(this.port, this.certFingerprint);
@@ -1048,14 +1048,14 @@ function addDeviceDynamically() {
     SERVICE_TYPE
   );
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
@@ -1110,7 +1110,7 @@ function updateDevice() {
   let mockObj = {
     discovered: false,
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
 
@@ -1122,7 +1122,7 @@ function updateDevice() {
       this.discovered = true;
 
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {
           listener.onDiscoveryStopped(serviceType);
         },
@@ -1147,8 +1147,8 @@ function updateDevice() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
 
     addDevice(device) {
@@ -1203,7 +1203,7 @@ function diffDiscovery() {
   let mockObj = {
     discovered: false,
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
 
@@ -1217,7 +1217,7 @@ function diffDiscovery() {
       this.discovered = true;
 
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {
           listener.onDiscoveryStopped(serviceType);
         },
@@ -1289,21 +1289,21 @@ function serverClosed() {
   );
 
   let mockObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(
         createDevice("", 0, mockDevice.serviceName, mockDevice.serviceType)
       );
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel() {},
       };
     },
     registerService(serviceInfo, listener) {
       this.serviceRegistered++;
       return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
         cancel: () => {
           this.serviceUnregistered++;
         },
@@ -1335,8 +1335,8 @@ function serverClosed() {
   // Register
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {
       this.devices.push(device);
@@ -1378,7 +1378,7 @@ function serverRetry() {
   let isRetrying = false;
 
   let mockSDObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    QueryInterface: ChromeUtils.generateQI(["nsIDNSServiceDiscovery"]),
     startDiscovery(serviceType, listener) {},
     registerService(serviceInfo, listener) {
       Assert.ok(isRetrying, "register service after retrying startServer");
@@ -1389,7 +1389,7 @@ function serverRetry() {
   };
 
   let mockServerObj = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlService"]),
     startServer(encrypted, port) {
       if (!isRetrying) {
         isRetrying = true;
@@ -1419,8 +1419,8 @@ function serverRetry() {
   );
   let listener = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationDeviceListener,
-      Ci.nsISupportsWeakReference,
+      "nsIPresentationDeviceListener",
+      "nsISupportsWeakReference",
     ]),
     addDevice(device) {},
     removeDevice(device) {},

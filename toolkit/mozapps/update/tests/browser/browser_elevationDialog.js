@@ -12,7 +12,7 @@ add_task(async function elevation_dialog() {
   // won't restart the application.
   let { startup } = Services;
   let appStartup = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAppStartup]),
+    QueryInterface: ChromeUtils.generateQI(["nsIAppStartup"]),
     quit(mode) {
       if (elevationDialog) {
         elevationDialog.close();

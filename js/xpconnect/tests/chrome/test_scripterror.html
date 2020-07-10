@@ -13,7 +13,7 @@ function awaitScriptError(fun) {
 
   return new Promise(resolve => {
     const observer = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
       observe(message) {
         if (!(message instanceof Ci.nsIScriptError)) {
           return;

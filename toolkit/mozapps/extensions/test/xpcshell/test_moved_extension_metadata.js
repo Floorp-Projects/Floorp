@@ -33,7 +33,7 @@ var dirProvider = {
     return null;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
 };
 Services.dirsvc.registerProvider(dirProvider);
 

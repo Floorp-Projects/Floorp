@@ -61,8 +61,8 @@ let autoCompleteSimple = {
   pendingSearch: null,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIFactory,
-    Ci.nsIAutoCompleteSearch
+    "nsIFactory",
+    "nsIAutoCompleteSearch"
   ]),
   createInstance: function (outer, iid) {
     return this.QueryInterface(iid);

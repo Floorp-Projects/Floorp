@@ -726,7 +726,7 @@ NavBookmarkObserver.prototype = {
   onItemChanged() {},
   onItemVisited() {},
   onItemMoved() {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
 /**
@@ -743,7 +743,7 @@ NavHistoryObserver.prototype = {
   onClearHistory() {},
   onPageChanged() {},
   onDeleteVisits() {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
 };
 
 /**
@@ -769,7 +769,7 @@ NavHistoryResultObserver.prototype = {
   nodeTitleChanged() {},
   nodeURIChanged() {},
   sortingChanged() {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryResultObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsINavHistoryResultObserver"]),
 };
 
 function checkBookmarkObject(info) {

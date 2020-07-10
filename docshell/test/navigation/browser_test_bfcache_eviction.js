@@ -36,8 +36,8 @@ add_task(async function() {
               resolve();
             },
             QueryInterface: ChromeUtils.generateQI([
-              Ci.nsISHistoryListener,
-              Ci.nsISupportsWeakReference,
+              "nsISHistoryListener",
+              "nsISupportsWeakReference",
             ]),
           };
           legacySHistory.addSHistoryListener(historyListener);
@@ -64,8 +64,8 @@ add_task(async function() {
           testDone.resolve();
         },
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsISHistoryListener,
-          Ci.nsISupportsWeakReference,
+          "nsISHistoryListener",
+          "nsISupportsWeakReference",
         ]),
       };
       legacySHistory.addSHistoryListener(historyListener);

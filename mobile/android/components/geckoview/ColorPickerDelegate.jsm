@@ -42,5 +42,5 @@ ColorPickerDelegate.prototype.classID = Components.ID(
   "{aa0dd6fc-73dd-4621-8385-c0b377e02cee}"
 );
 ColorPickerDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIColorPicker,
+  "nsIColorPicker",
 ]);

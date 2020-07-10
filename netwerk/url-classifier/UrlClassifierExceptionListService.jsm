@@ -83,7 +83,7 @@ class Feature {
 UrlClassifierExceptionListService.prototype = {
   classID: Components.ID("{b9f4fd03-9d87-4bfd-9958-85a821750ddc}"),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIUrlClassifierExceptionListService,
+    "nsIUrlClassifierExceptionListService",
   ]),
 
   features: {},

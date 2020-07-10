@@ -40,9 +40,9 @@ var FullZoom = {
   // nsISupports
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsIContentPrefObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsIContentPrefObserver",
+    "nsISupportsWeakReference",
   ]),
 
   // Initialization & Destruction

@@ -180,9 +180,9 @@ var RefreshBlocker = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebProgressListener2,
-    Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference,
+    "nsIWebProgressListener2",
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
   ]),
 };
 

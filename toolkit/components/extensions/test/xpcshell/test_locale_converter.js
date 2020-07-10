@@ -64,7 +64,7 @@ add_task(async function testAsyncConvert() {
   let listener;
   let awaitResult = new Promise((resolve, reject) => {
     listener = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
+      QueryInterface: ChromeUtils.generateQI(["nsIStreamListener"]),
 
       onDataAvailable(request, inputStream, offset, count) {
         this.resultParts.push(
@@ -127,7 +127,7 @@ add_task(async function testInvalidUUID() {
 
   Assert.throws(() => {
     let listener = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
+      QueryInterface: ChromeUtils.generateQI(["nsIStreamListener"]),
     };
 
     convService.asyncConvertData(FROM_TYPE, TO_TYPE, listener, uri);

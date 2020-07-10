@@ -25,7 +25,7 @@ var fakePromptServiceFactory = {
 };
 
 var promptService = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
   alert() {
     didFail = true;
   },

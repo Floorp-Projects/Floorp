@@ -311,8 +311,8 @@ class BaseAboutNewTabService {
 
     this.classID = Components.ID("{cb36c925-3adc-49b3-b720-a5cc49d8a40e}");
     this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIAboutNewTabService,
-      Ci.nsIObserver,
+      "nsIAboutNewTabService",
+      "nsIObserver",
     ]);
   }
 

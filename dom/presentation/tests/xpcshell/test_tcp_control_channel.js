@@ -39,9 +39,7 @@ function TestDescription(aType, aTcpAddress, aTcpPort) {
 }
 
 TestDescription.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPresentationChannelDescription,
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPresentationChannelDescription"]),
 };
 
 const CONTROLLER_CONTROL_CHANNEL_PORT = 36777;
@@ -168,7 +166,7 @@ function testPresentationServer() {
           yayFuncs.controllerControlChannelClose();
         },
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIPresentationControlChannelListener,
+          "nsIPresentationControlChannelListener",
         ]),
       };
     },
@@ -183,7 +181,7 @@ function testPresentationServer() {
     },
 
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationControlServerListener,
+      "nsIPresentationControlServerListener",
     ]),
   };
 
@@ -192,7 +190,7 @@ function testPresentationServer() {
     address: "127.0.0.1",
     port: PRESENTER_CONTROL_CHANNEL_PORT,
     certFingerprint: pcs.certFingerprint,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPDeviceInfo]),
+    QueryInterface: ChromeUtils.generateQI(["nsITCPDeviceInfo"]),
   };
 
   let controllerControlChannel = pcs.connect(presenterDeviceInfo);
@@ -266,12 +264,12 @@ function testPresentationServer() {
           yayFuncs.controllerControlChannelReconnect();
         },
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIPresentationControlChannelListener,
+          "nsIPresentationControlChannelListener",
         ]),
       };
     },
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationControlChannelListener,
+      "nsIPresentationControlChannelListener",
     ]),
   };
 }
@@ -325,7 +323,7 @@ function terminateRequest() {
             yayFuncs.controllerControlChannelDisconnected();
           },
           QueryInterface: ChromeUtils.generateQI([
-            Ci.nsIPresentationControlChannelListener,
+            "nsIPresentationControlChannelListener",
           ]),
         };
       } else {
@@ -340,7 +338,7 @@ function terminateRequest() {
       }
     },
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsITCPPresentationServerListener,
+      "nsITCPPresentationServerListener",
     ]),
   };
 
@@ -349,7 +347,7 @@ function terminateRequest() {
     address: "127.0.0.1",
     port: PRESENTER_CONTROL_CHANNEL_PORT,
     certFingerprint: pcs.certFingerprint,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPDeviceInfo]),
+    QueryInterface: ChromeUtils.generateQI(["nsITCPDeviceInfo"]),
   };
 
   let presenterControlChannel = pcs.connect(presenterDeviceInfo);
@@ -367,7 +365,7 @@ function terminateRequest() {
       yayFuncs.presenterControlChannelDisconnected();
     },
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationControlChannelListener,
+      "nsIPresentationControlChannelListener",
     ]),
   };
 }
@@ -413,12 +411,12 @@ function terminateRequestAbnormal() {
           yayFuncs.controllerControlChannelDisconnected();
         },
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIPresentationControlChannelListener,
+          "nsIPresentationControlChannelListener",
         ]),
       };
     },
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsITCPPresentationServerListener,
+      "nsITCPPresentationServerListener",
     ]),
   };
 
@@ -427,7 +425,7 @@ function terminateRequestAbnormal() {
     address: "127.0.0.1",
     port: PRESENTER_CONTROL_CHANNEL_PORT,
     certFingerprint: pcs.certFingerprint,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITCPDeviceInfo]),
+    QueryInterface: ChromeUtils.generateQI(["nsITCPDeviceInfo"]),
   };
 
   let presenterControlChannel = pcs.connect(presenterDeviceInfo);
@@ -445,7 +443,7 @@ function terminateRequestAbnormal() {
       yayFuncs.presenterControlChannelDisconnected();
     },
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIPresentationControlChannelListener,
+      "nsIPresentationControlChannelListener",
     ]),
   };
 }

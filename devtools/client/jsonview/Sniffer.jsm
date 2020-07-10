@@ -63,5 +63,5 @@ class Sniffer {
 }
 
 Sniffer.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIContentSniffer,
+  "nsIContentSniffer",
 ]);

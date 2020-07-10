@@ -2080,8 +2080,8 @@ DownloadCopySaver.prototype = {
       let resumeFromBytes = 0;
 
       const notificationCallbacks = {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor]),
-        getInterface: ChromeUtils.generateQI([Ci.nsIProgressEventSink]),
+        QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
+        getInterface: ChromeUtils.generateQI(["nsIProgressEventSink"]),
         onProgress: function DCSE_onProgress(
           aRequest,
           aProgress,

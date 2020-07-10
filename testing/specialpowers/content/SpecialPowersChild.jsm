@@ -164,10 +164,7 @@ SPConsoleListener.prototype = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIConsoleListener,
-    Ci.nsIObserver,
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener", "nsIObserver"]),
 };
 
 class SpecialPowersChild extends JSWindowActorChild {

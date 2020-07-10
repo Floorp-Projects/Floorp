@@ -411,7 +411,7 @@ BookmarkObserver.prototype = {
     });
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 
   check(expectedNotifications) {
     PlacesUtils.bookmarks.removeObserver(this);

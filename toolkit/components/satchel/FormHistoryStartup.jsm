@@ -16,8 +16,8 @@ FormHistoryStartup.prototype = {
   classID: Components.ID("{3A0012EB-007F-4BB8-AA81-A07385F77A25}"),
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
+    "nsIObserver",
+    "nsISupportsWeakReference",
   ]),
 
   observe(subject, topic, data) {

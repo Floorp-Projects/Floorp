@@ -74,7 +74,7 @@ const gClientAuthRememberService = {
     ];
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthRememberService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIClientAuthRememberService"]),
 };
 
 add_task(async function testRememberedDecisionsUI() {

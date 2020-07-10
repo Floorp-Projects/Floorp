@@ -8,7 +8,7 @@ function RandomSelector() {}
 
 RandomSelector.prototype = {
   classID: Components.ID("{c616fcfd-9737-41f1-aa74-cee72a38f91b}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
+  QueryInterface: ChromeUtils.generateQI(["nsIContentProcessProvider"]),
 
   provideProcess(aType, aProcesses, aMaxCount) {
     if (aProcesses.length < aMaxCount) {
@@ -25,7 +25,7 @@ function MinTabSelector() {}
 
 MinTabSelector.prototype = {
   classID: Components.ID("{2dc08eaf-6eef-4394-b1df-a3a927c1290b}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
+  QueryInterface: ChromeUtils.generateQI(["nsIContentProcessProvider"]),
 
   provideProcess(aType, aProcesses, aMaxCount) {
     let min = Number.MAX_VALUE;

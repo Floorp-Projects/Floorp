@@ -1251,7 +1251,7 @@ DevToolsStartup.prototype = {
   /* eslint-disable max-len */
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICommandLineHandler]),
+  QueryInterface: ChromeUtils.generateQI(["nsICommandLineHandler"]),
 };
 
 /**

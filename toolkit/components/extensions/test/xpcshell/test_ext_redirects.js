@@ -26,8 +26,8 @@ function onStopListener(channel) {
   return new Promise(resolve => {
     let orig = channel.QueryInterface(Ci.nsITraceableChannel).setNewListener({
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIRequestObserver,
-        Ci.nsIStreamListener,
+        "nsIRequestObserver",
+        "nsIStreamListener",
       ]),
       getFinalURI(request) {
         let { loadInfo } = request;

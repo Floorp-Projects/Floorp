@@ -119,7 +119,7 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
 }
 
 LoadURIDelegateChild.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsILoadURIDelegate,
+  "nsILoadURIDelegate",
 ]);
 
 const { debug, warn } = LoadURIDelegateChild.initLogging("LoadURIDelegate"); // eslint-disable-line no-unused-vars

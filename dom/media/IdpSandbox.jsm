@@ -22,7 +22,7 @@ RedirectHttpsOnly.prototype = {
   getInterface(iid) {
     return this.QueryInterface(iid);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink]),
+  QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink"]),
 };
 
 /** This class loads a resource into a single string. ResourceLoader.load() is
@@ -77,7 +77,7 @@ ResourceLoader.prototype = {
   getInterface(iid) {
     return this.QueryInterface(iid);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener"]),
 };
 
 /**

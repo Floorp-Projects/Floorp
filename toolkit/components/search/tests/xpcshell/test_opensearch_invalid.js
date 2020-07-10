@@ -9,7 +9,7 @@ const mockPrompter = {
   alert() {
     this.promptCount++;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
 };
 
 add_task(async function setup() {
@@ -20,7 +20,7 @@ add_task(async function setup() {
   // Mock the modal error dialog
   let windowWatcher = {
     getNewPrompter: () => mockPrompter,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
+    QueryInterface: ChromeUtils.generateQI(["nsIWindowWatcher"]),
   };
   let origWindowWatcher = Services.ww;
   Services.ww = windowWatcher;

@@ -30,8 +30,8 @@
             }
           },
 
-          QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                                  Ci.nsISupportsWeakReference])
+          QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                                  "nsISupportsWeakReference"])
         };
 
         frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)

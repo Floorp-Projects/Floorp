@@ -81,5 +81,5 @@ ShareDelegate.prototype.classID = Components.ID(
   "{1201d357-8417-4926-a694-e6408fbedcf8}"
 );
 ShareDelegate.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsISharePicker,
+  "nsISharePicker",
 ]);

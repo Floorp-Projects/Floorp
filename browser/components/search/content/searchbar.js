@@ -60,7 +60,7 @@
             searchbar.updateDisplay();
           }
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+        QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
       };
 
       this._ignoreFocus = false;

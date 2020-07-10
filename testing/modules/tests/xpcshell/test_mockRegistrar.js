@@ -12,14 +12,14 @@ function platformInfo(injectedValue) {
 platformInfo.prototype = {
   platformVersion: "some version",
   platformBuildID: "some id",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPlatformInfo]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPlatformInfo"]),
 };
 
 add_test(function test_register() {
   let localPlatformInfo = {
     platformVersion: "local version",
     platformBuildID: "local id",
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPlatformInfo]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPlatformInfo"]),
   };
 
   MockRegistrar.register("@mozilla.org/xre/app-info;1", localPlatformInfo);

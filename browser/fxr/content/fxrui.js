@@ -96,8 +96,8 @@ function setupBrowser() {
     browser.addProgressListener(
       {
         QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
         ]),
         onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
           // When URL changes, update the URL in the URL bar and update

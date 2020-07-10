@@ -141,9 +141,7 @@ class DNSLookup {
   }
 }
 
-DNSLookup.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsIDNSListener,
-]);
+DNSLookup.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDNSListener"]);
 
 // A wrapper around a single set of measurements. The required lookups are
 // triggered and the results aggregated before telemetry is sent. If aborted,

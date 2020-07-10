@@ -103,7 +103,7 @@ function UpdateServiceStub() {
 UpdateServiceStub.prototype = {
   observe() {},
   classID: Components.ID("{e43b0010-04ba-4da6-b523-1f92580bc150}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 };
 
 var EXPORTED_SYMBOLS = ["UpdateServiceStub"];

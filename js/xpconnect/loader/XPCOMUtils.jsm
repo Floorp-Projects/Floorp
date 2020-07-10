@@ -57,7 +57,7 @@ var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
 let global = Cu.getGlobalForObject({});
 
-const nsIFactoryQI = ChromeUtils.generateQI([Ci.nsIFactory]);
+const nsIFactoryQI = ChromeUtils.generateQI(["nsIFactory"]);
 
 // Some global imports expose additional symbols; for example,
 // `Cu.importGlobalProperties(["MessageChannel"])` imports `MessageChannel`
@@ -653,7 +653,7 @@ class LazyProxyHandler {
   }
 }
 
-var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
+var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]);
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");

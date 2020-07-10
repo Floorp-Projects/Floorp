@@ -98,7 +98,7 @@ const NormalUIService = {
     );
   },
   closePayment(requestId) {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI(["nsIPaymentUIService"]),
 };
 
 addMessageListener("set-normal-ui-service", function() {

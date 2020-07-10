@@ -145,7 +145,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
   classID: Components.ID("4f9f1e4c-7f2c-439e-9c9e-566b68bc187d"),
   contractID: "@mozilla.org/autocomplete/search;1?name=autofill-profiles",
   classDescription: "AutofillProfileAutoCompleteSearch",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteSearch]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteSearch"]),
 
   // Begin nsIAutoCompleteSearch implementation
 
@@ -310,7 +310,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
 };
 
 let ProfileAutocomplete = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   lastProfileAutoCompleteResult: null,
   lastProfileAutoCompleteFocusedInput: null,

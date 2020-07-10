@@ -33,8 +33,8 @@ function waitForDocLoadComplete(aBrowser = gBrowser) {
         }
       },
       QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference,
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
       ]),
     };
     aBrowser.addProgressListener(listener);
