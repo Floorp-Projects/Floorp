@@ -11,6 +11,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 
@@ -47,6 +48,13 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
     }
   }
 
+  // We don't want to partition view-source: pages
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+  if (NS_SUCCEEDED(rv) && net::SchemeIsViewSource(channelURI)) {
+    return false;
+  }
+
   nsAutoString partitionKey;
   Unused << cjs->GetPartitionKey(partitionKey);
 
@@ -66,7 +74,7 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
   auto* basePrin = BasePrincipal::Cast(toplevelPrincipal);
   nsCOMPtr<nsIURI> principalURI;
 
-  nsresult rv = basePrin->GetURI(getter_AddRefs(principalURI));
+  rv = basePrin->GetURI(getter_AddRefs(principalURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
