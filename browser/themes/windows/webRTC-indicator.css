@@ -7,3 +7,25 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../shared/webRTC-indicator.inc.css
+
+@media (-moz-windows-default-theme: 0) {
+  :root {
+    --indicator-background-color: -moz-Dialog;
+    --indicator-color: -moz-DialogText;
+    --indicator-border-color: InactiveBorder;
+    --indicator-item-separator: 1px solid ThreeDShadow;
+    --indicator-stop-button-background-color: hsla(0,0%,70%,.2);
+    --indicator-stop-button-hover-background-color: hsla(0,0%,70%,.4);
+    --indicator-stop-button-color: inherit;
+    --minimize-button-background-color: hsla(0,0%,70%,.2);
+    --minimize-button-hover-background-color: hsla(0,0%,70%,.4);
+    --minimize-button-active-background-color: hsla(0,0%,70%,.6);
+    --device-button-hover-background-color: hsla(0,0%,70%,.4);
+    --device-button-active-background-color: hsla(0,0%,70%,.6);
+  }
+
+  #minimize,
+  .stop-button {
+    border: 1px outset ThreeDLightShadow;
+  }
+}

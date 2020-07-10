@@ -9,8 +9,9 @@
   border-radius: 5px;
   --indicator-height: 32px;
   --indicator-background-color: rgb(249,249,250);
+  --indicator-color: rgb(12,12,13);
   --indicator-border-color: hsla(0,0%,0%,.32);
-  --indicator-icon-fill: rgba(12,12,13,0.8);
+  --indicator-icon-fill-opacity: 0.8;
   --indicator-item-separator: 1px solid hsla(210,4%,10%,.14);
   --indicator-stop-button-background-color: rgb(0,96,223);
   --indicator-stop-button-hover-background-color: rgb(0,62,170);
@@ -23,9 +24,24 @@
   max-height: var(--indicator-height);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --indicator-background-color: hsl(240, 1%, 20%);
+    --indicator-color: rgb(249, 249, 250);
+    --indicator-border-color: hsl(240, 1%, 40%);
+    --indicator-item-separator: 1px solid rgb(249, 249, 250);
+    --minimize-button-background-color: rgba(249,249,250,0.1);
+    --minimize-button-hover-background-color: rgba(249,249,250,0.15);
+    --minimize-button-active-background-color: rgba(249,249,250,0.2);
+    --device-button-hover-background-color: rgba(249,249,250,0.15);
+    --device-button-active-background-color: rgba(249,249,250,0.2);
+  }
+}
+
 body {
   display: inline-flex;
   background-color: var(--indicator-background-color);
+  color: var(--indicator-color);
   margin: 0;
   user-select: none;
   -moz-window-dragging: drag;
@@ -47,10 +63,12 @@ button {
   -moz-appearance: none;
   border-style: none;
   margin: 0;
-  -moz-context-properties: fill;
-  fill: var(--indicator-icon-fill);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--indicator-icon-fill-opacity);
   background-repeat: no-repeat;
   -moz-window-dragging: no-drag;
+  color: inherit;
 }
 
 .row-item {
@@ -107,6 +125,9 @@ button {
   width: 16px;
   height: 16px;
   margin-inline: 5px 10px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--indicator-icon-fill-opacity);
 }
 
 #device-share {
@@ -172,7 +193,7 @@ button {
   background-position: center;
   width: 5px;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--indicator-icon-fill);
+  fill: currentColor;
   fill-opacity: 0.4;
   margin: 5px;
 }
