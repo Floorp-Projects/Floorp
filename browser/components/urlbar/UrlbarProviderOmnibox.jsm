@@ -15,12 +15,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.repository.getLogger("Urlbar.Provider.Omnibox")
+);
 
 // After this time, we'll give up waiting for the extension to return matches.
 const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
@@ -50,7 +55,7 @@ class ProviderOmnibox extends UrlbarProvider {
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
-    return UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
+    return UrlbarUtils.PROVIDER_TYPE.EXTENSION;
   }
 
   /**
@@ -111,28 +116,12 @@ class ProviderOmnibox extends UrlbarProvider {
    *   The callback invoked by this method to add each result.
    */
   async startQuery(queryContext, addCallback) {
+    logger.info(`Starting query for ${queryContext.searchString}`);
     let instance = {};
     this.queries.set(queryContext, instance);
 
-    // Fetch heuristic result.
-    let keyword = queryContext.tokens[0].value;
-    let description = ExtensionSearchHandler.getDescription(keyword);
-    let heuristicResult = new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.OMNIBOX,
-      UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
-        content: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
-        keyword: [queryContext.tokens[0].value, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: UrlbarUtils.ICON.EXTENSION,
-      })
-    );
-    heuristicResult.heuristic = true;
-    addCallback(this, heuristicResult);
-
-    // Fetch non-heuristic results.
     let data = {
-      keyword,
+      keyword: queryContext.tokens[0].value,
       text: queryContext.searchString,
       inPrivateWindow: queryContext.isPrivate,
     };
@@ -141,9 +130,6 @@ class ProviderOmnibox extends UrlbarProvider {
       suggestions => {
         for (let suggestion of suggestions) {
           let content = `${queryContext.tokens[0].value} ${suggestion.content}`;
-          if (content == heuristicResult.payload.content) {
-            continue;
-          }
           let result = new UrlbarResult(
             UrlbarUtils.RESULT_TYPE.OMNIBOX,
             UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
@@ -167,7 +153,7 @@ class ProviderOmnibox extends UrlbarProvider {
     let timeoutPromise = new SkippableTimer({
       name: "ProviderOmnibox",
       time: MAXIMUM_ALLOWED_EXTENSION_TIME_MS,
-      logger: this.logger,
+      logger,
     }).promise;
     await Promise.race([timeoutPromise, this._resultsPromise]).catch(
       Cu.reportError
