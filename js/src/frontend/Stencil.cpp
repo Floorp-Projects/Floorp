@@ -58,6 +58,32 @@ bool frontend::EnvironmentShapeCreationData::createShape(
   return data_.match(m);
 }
 
+// This is used during allocation of the scopes to ensure that we only
+// allocate GC scopes with GC-enclosing scopes. This can recurse through
+// the scope chain.
+//
+// Once all ScopeCreation for a compilation tree is centralized, this
+// will go away, to be replaced with a single top down GC scope allocation.
+//
+// This uses an outparam to disambiguate between the case where we have a
+// real nullptr scope and we failed to allocate a new scope because of OOM.
+bool ScopeCreationData::getOrCreateEnclosingScope(JSContext* cx,
+                                                  MutableHandleScope scope) {
+  if (enclosing_.isScopeCreationData()) {
+    ScopeCreationData& enclosingData = enclosing_.scopeCreationData().get();
+    if (enclosingData.hasScope()) {
+      scope.set(enclosingData.getScope());
+      return true;
+    }
+
+    scope.set(enclosingData.createScope(cx, enclosing_.compilationInfo()));
+    return !!scope;
+  }
+
+  scope.set(enclosing_.scope());
+  return true;
+}
+
 JSFunction* ScopeCreationData::function(
     frontend::CompilationInfo& compilationInfo) {
   return compilationInfo.functions[*functionIndex_];
