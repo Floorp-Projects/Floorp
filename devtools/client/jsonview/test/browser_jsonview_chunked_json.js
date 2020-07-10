@@ -94,12 +94,16 @@ async function write(text) {
   data += text;
   const onJsonViewUpdated = SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [], () => {
+    [],
+    () => {
       return new Promise(resolve => {
         const observer = new content.MutationObserver(() => resolve());
-        observer.observe(content.wrappedJSObject.JSONView.json, { characterData: true });
+        observer.observe(content.wrappedJSObject.JSONView.json, {
+          characterData: true,
+        });
       });
-  });
+    }
+  );
   await server("write", text);
   await onJsonViewUpdated;
 }
