@@ -159,7 +159,7 @@ class AtomsTable {
    public:
     explicit SweepIterator(AtomsTable& atoms);
     bool empty() const;
-    JSAtom* front() const;
+    AtomStateEntry front() const;
     void removeFront();
     void popFront();
   };
@@ -183,7 +183,9 @@ class AtomsTable {
                                indexValue, lookup);
   }
 
-  void pinExistingAtom(JSContext* cx, JSAtom* atom);
+  bool atomIsPinned(JSRuntime* rt, JSAtom* atom);
+
+  void maybePinExistingAtom(JSContext* cx, JSAtom* atom);
 
   void tracePinnedAtoms(JSTracer* trc, const AutoAccessAtomsZone& access);
 
@@ -212,6 +214,8 @@ class AtomsTable {
   void lockAll();
   void unlockAll();
 };
+
+bool AtomIsPinned(JSContext* cx, JSAtom* atom);
 
 }  // namespace js
 
