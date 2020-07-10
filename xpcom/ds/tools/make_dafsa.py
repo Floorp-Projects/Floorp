@@ -22,15 +22,11 @@ source node and ending at a common sink node. All internal nodes contain
 a label and each word is represented by the labels in one path from
 the source node to the sink node.
 
-The following python represention is used for nodes:
+The following python representation is used for nodes:
 
   Source node: [ children ]
   Internal node: (label, [ children ])
   Sink node: None
-
-The graph is first compressed by prefixes like a trie. In the next step
-suffixes are compressed so that the graph gets diamond shaped. Finally
-one to one linked nodes are replaced by nodes with the labels joined.
 
 The order of the operations is crucial since lookups will be performed
 starting from the source with no backtracking. Thus a node must have at
@@ -191,116 +187,14 @@ The bytes in the generated array has the following meaning:
  9: 0x62 <char>         label character 0x62 -> match "b"
 10: 0x82 <return_value> 0x82 & 0x0F -> return 2
 """
-
 import sys
 import struct
+
+from incremental_dafsa import Dafsa
 
 
 class InputError(Exception):
     """Exception raised for errors in the input file."""
-
-
-def to_dafsa(words):
-    """Generates a DAFSA from a word list and returns the source node.
-
-    Each word is split into characters so that each character is represented by
-    a unique node. It is assumed the word list is not empty.
-    """
-    if not words:
-        raise InputError('The domain list must not be empty')
-
-    def ToNodes(word):
-        """Split words into characters"""
-        if not 0x1F < ord(word[0]) < 0x80:
-            raise InputError('Domain names must be printable 7-bit ASCII')
-        if len(word) == 1:
-            return chr(ord(word[0]) & 0x0F), [None]
-        return word[0], [ToNodes(word[1:])]
-    return [ToNodes(word) for word in words]
-
-
-def to_words(node):
-    """Generates a word list from all paths starting from an internal node."""
-    if not node:
-        return ['']
-    return [(node[0] + word) for child in node[1] for word in to_words(child)]
-
-
-def reverse(dafsa):
-    """Generates a new DAFSA that is reversed, so that the old sink node becomes
-    the new source node.
-    """
-    sink = []
-    nodemap = {}
-
-    def dfs(node, parent):
-        """Creates reverse nodes.
-
-        A new reverse node will be created for each old node. The new node will
-        get a reversed label and the parents of the old node as children.
-        """
-        if not node:
-            sink.append(parent)
-        elif id(node) not in nodemap:
-            nodemap[id(node)] = (node[0][::-1], [parent])
-            for child in node[1]:
-                dfs(child, nodemap[id(node)])
-        else:
-            nodemap[id(node)][1].append(parent)
-
-    for node in dafsa:
-        dfs(node, None)
-    return sink
-
-
-def join_labels(dafsa):
-    """Generates a new DAFSA where internal nodes are merged if there is a one to
-    one connection.
-    """
-    parentcount = {id(None): 2}
-    nodemap = {id(None): None}
-
-    def count_parents(node):
-        """Count incoming references"""
-        if id(node) in parentcount:
-            parentcount[id(node)] += 1
-        else:
-            parentcount[id(node)] = 1
-            for child in node[1]:
-                count_parents(child)
-
-    def join(node):
-        """Create new nodes"""
-        if id(node) not in nodemap:
-            children = [join(child) for child in node[1]]
-            if len(children) == 1 and parentcount[id(node[1][0])] == 1:
-                child = children[0]
-                nodemap[id(node)] = (node[0] + child[0], child[1])
-            else:
-                nodemap[id(node)] = (node[0], children)
-        return nodemap[id(node)]
-
-    for node in dafsa:
-        count_parents(node)
-    return [join(node) for node in dafsa]
-
-
-def join_suffixes(dafsa):
-    """Generates a new DAFSA where nodes that represent the same word lists
-    towards the sink are merged.
-    """
-    nodemap = {frozenset(('',)): None}
-
-    def join(node):
-        """Returns a macthing node. A new node is created if no matching node
-        exists. The graph is accessed in dfs order.
-        """
-        suffixes = frozenset(to_words(node))
-        if suffixes not in nodemap:
-            nodemap[suffixes] = (node[0], [join(child) for child in node[1]])
-        return nodemap[suffixes]
-
-    return [join(node) for node in dafsa]
 
 
 def top_sort(dafsa):
@@ -418,14 +312,6 @@ def encode(dafsa):
     return output
 
 
-def encode_words(words):
-    """Generates a dafsa representation of a word list"""
-    dafsa = to_dafsa(words)
-    for fun in (reverse, join_suffixes, reverse, join_suffixes, join_labels):
-        dafsa = fun(dafsa)
-    return dafsa
-
-
 def to_cxx(data, preamble=None):
     """Generates C++ code from a list of encoded bytes."""
     text = '/* This file is generated. DO NOT EDIT!\n\n'
@@ -448,13 +334,13 @@ def to_cxx(data, preamble=None):
 
 def words_to_cxx(words, preamble=None):
     """Generates C++ code from a word list"""
-    dafsa = encode_words(words)
+    dafsa = Dafsa.from_tld_data(words)
     return to_cxx(encode(dafsa), preamble)
 
 
 def words_to_bin(words):
     """Generates bytes from a word list"""
-    dafsa = encode_words(words)
+    dafsa = Dafsa.from_tld_data(words)
     data = encode(dafsa)
     return struct.pack('%dB' % len(data), *data)
 

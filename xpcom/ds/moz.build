@@ -144,3 +144,7 @@ GeneratedFile('nsGkAtomConsts.h', script='StaticAtoms.py',
               inputs=['Atom.py', 'HTMLAtoms.py'])
 
 FINAL_LIBRARY = 'xul'
+
+PYTHON_UNITTEST_MANIFESTS += [
+    'test/python.ini',
+]
