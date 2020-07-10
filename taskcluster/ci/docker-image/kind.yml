@@ -210,3 +210,6 @@ jobs:
         symbol: I(system-symbols-mac)
     system-symbols-win:
         symbol: I(system-symbols-win)
+    push-to-try:
+        symbol: I(push-to-try)
+        parent: debian10-base
