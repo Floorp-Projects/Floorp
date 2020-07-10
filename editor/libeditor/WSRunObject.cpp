@@ -209,14 +209,14 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeOfCurrentLine =
       textFragmentData.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
           aPointToInsert);
-  const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLine =
+  const Maybe<const WSFragment> visibleWhiteSpaces =
       !invisibleLeadingWhiteSpaceRangeOfNewLine.IsPositioned() ||
               !invisibleTrailingWhiteSpaceRangeOfCurrentLine.IsPositioned()
-          ? textFragmentData.CreateWSFragmentForVisibleAndMiddleOfLine()
+          ? textFragmentData.CreateWSFragmentForVisibleWhiteSpaces()
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpaces =
-      visibleWSFragmentInMiddleOfLine.isSome()
-          ? visibleWSFragmentInMiddleOfLine.ref().ComparePoint(aPointToInsert)
+      visibleWhiteSpaces.isSome()
+          ? visibleWhiteSpaces.ref().ComparePoint(aPointToInsert)
           : PointPosition::NotInSameDOMTree;
 
   EditorDOMPoint pointToInsert(aPointToInsert);
@@ -299,10 +299,10 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
              pointPositionWithVisibleWhiteSpaces ==
                  PointPosition::EndOfFragment) {
       // XXX If the DOM tree has been changed above, pointToInsert` and/or
-      //     `visibleWSFragmentInMiddleOfLine` may be invalid.  So, we may do
+      //     `visibleWhiteSpaces` may be invalid.  So, we may do
       //     something wrong here.
       nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-          visibleWSFragmentInMiddleOfLine.ref(), pointToInsert);
+          visibleWhiteSpaces.ref(), pointToInsert);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace() "
@@ -362,23 +362,21 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
       textFragmentDataAtEnd.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
           mScanEndPoint);
-  const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLineAtStart =
+  const Maybe<const WSFragment> visibleWhiteSpacesAtStart =
       !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
-          ? textFragmentDataAtStart.CreateWSFragmentForVisibleAndMiddleOfLine()
+          ? textFragmentDataAtStart.CreateWSFragmentForVisibleWhiteSpaces()
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpacesAtStart =
-      visibleWSFragmentInMiddleOfLineAtStart.isSome()
-          ? visibleWSFragmentInMiddleOfLineAtStart.ref().ComparePoint(
-                mScanStartPoint)
+      visibleWhiteSpacesAtStart.isSome()
+          ? visibleWhiteSpacesAtStart.ref().ComparePoint(mScanStartPoint)
           : PointPosition::NotInSameDOMTree;
-  const Maybe<const WSFragment> visibleWSFragmentInMiddleOfLineAtEnd =
+  const Maybe<const WSFragment> visibleWhiteSpacesAtEnd =
       !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
-          ? textFragmentDataAtEnd.CreateWSFragmentForVisibleAndMiddleOfLine()
+          ? textFragmentDataAtEnd.CreateWSFragmentForVisibleWhiteSpaces()
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpacesAtEnd =
-      visibleWSFragmentInMiddleOfLineAtEnd.isSome()
-          ? visibleWSFragmentInMiddleOfLineAtEnd.ref().ComparePoint(
-                mScanEndPoint)
+      visibleWhiteSpacesAtEnd.isSome()
+          ? visibleWhiteSpacesAtEnd.ref().ComparePoint(mScanEndPoint)
           : PointPosition::NotInSameDOMTree;
 
   EditorDOMPoint pointToInsert(mScanStartPoint);
@@ -415,7 +413,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
              pointPositionWithVisibleWhiteSpacesAtEnd ==
                  PointPosition::MiddleOfFragment) {
       nsresult rv = MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-          visibleWSFragmentInMiddleOfLineAtEnd.ref(), pointToInsert);
+          visibleWhiteSpacesAtEnd.ref(), pointToInsert);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() "
@@ -454,10 +452,10 @@ nsresult WSRunObject::InsertText(Document& aDocument,
              pointPositionWithVisibleWhiteSpacesAtStart ==
                  PointPosition::EndOfFragment) {
       // XXX If the DOM tree has been changed above, pointToInsert` and/or
-      //     `visibleWSFragmentInMiddleOfLine` may be invalid.  So, we may do
+      //     `visibleWhiteSpaces` may be invalid.  So, we may do
       //     something wrong here.
       nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-          visibleWSFragmentInMiddleOfLineAtStart.ref(), pointToInsert);
+          visibleWhiteSpacesAtStart.ref(), pointToInsert);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace() "
@@ -716,11 +714,11 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
 
   // If the range has visible text and start of the visible text is before
   // aPoint, return previous character in the text.
-  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+  Maybe<WSFragment> visibleWhiteSpaces =
       TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleAndMiddleOfLine();
-  if (visibleWSFragmentInMiddleOfLine.isSome() &&
-      visibleWSFragmentInMiddleOfLine.ref().RawStartPoint().IsBefore(aPoint)) {
+          .CreateWSFragmentForVisibleWhiteSpaces();
+  if (visibleWhiteSpaces.isSome() &&
+      visibleWhiteSpaces.ref().RawStartPoint().IsBefore(aPoint)) {
     EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
     // When it's a non-empty text node, return it.
     if (atPreviousChar.IsSet() && !atPreviousChar.IsContainerEmpty()) {
@@ -747,12 +745,11 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
 
   // If the range has visible text and aPoint equals or is before the end of the
   // visible text, return inclusive next character in the text.
-  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+  Maybe<WSFragment> visibleWhiteSpaces =
       TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleAndMiddleOfLine();
-  if (visibleWSFragmentInMiddleOfLine.isSome() &&
-      aPoint.EqualsOrIsBefore(
-          visibleWSFragmentInMiddleOfLine.ref().RawEndPoint())) {
+          .CreateWSFragmentForVisibleWhiteSpaces();
+  if (visibleWhiteSpaces.isSome() &&
+      aPoint.EqualsOrIsBefore(visibleWhiteSpaces.ref().RawEndPoint())) {
     EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
     // When it's a non-empty text node, return it.
     if (atNextChar.IsSet() && !atNextChar.IsContainerEmpty()) {
@@ -784,16 +781,16 @@ nsresult WSRunObject::NormalizeWhiteSpacesAround(
     // nothing to do!
     return NS_OK;
   }
-  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+  Maybe<WSFragment> visibleWhiteSpaces =
       TextFragmentData(wsRunObject.mStart, wsRunObject.mEnd,
                        wsRunObject.mNBSPData, wsRunObject.mPRE)
-          .CreateWSFragmentForVisibleAndMiddleOfLine();
-  if (visibleWSFragmentInMiddleOfLine.isNothing()) {
+          .CreateWSFragmentForVisibleWhiteSpaces();
+  if (visibleWhiteSpaces.isNothing()) {
     return NS_OK;
   }
 
-  nsresult rv = wsRunObject.NormalizeWhiteSpacesAtEndOf(
-      visibleWSFragmentInMiddleOfLine.ref());
+  nsresult rv =
+      wsRunObject.NormalizeWhiteSpacesAtEndOf(visibleWhiteSpaces.ref());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "WSRunObject::NormalizeWhiteSpacesAtEndOf() failed");
   return rv;
@@ -1135,8 +1132,7 @@ WSRunScanner::TextFragmentData::GetInvisibleTrailingWhiteSpaceRange() const {
 }
 
 Maybe<WSRunScanner::WSFragment>
-WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleAndMiddleOfLine()
-    const {
+WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleWhiteSpaces() const {
   WSFragment fragment;
   if (IsPreformattedOrSurrondedByVisibleContent()) {
     fragment.MarkAsVisible();
@@ -1187,8 +1183,6 @@ WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleAndMiddleOfLine()
       fragment.mEndNode = mEnd.PointRef().GetContainer();
       fragment.mEndOffset = mEnd.PointRef().Offset();
       fragment.SetEndBy(mEnd.RawReason());
-      // XXX At here, `EndsByBlockBoundary()` may be true.  So, the method name,
-      //     "MiddleOfHardLine" is wrong.
       return Some(fragment);
     }
     if (trailingWhiteSpaceRange.StartRef().IsSet()) {
@@ -1225,8 +1219,6 @@ WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleAndMiddleOfLine()
     fragment.mEndNode = mEnd.PointRef().GetContainer();
     fragment.mEndOffset = mEnd.PointRef().Offset();
     fragment.SetEndBy(mEnd.RawReason());
-    // XXX At here, `EndsByBlockBoundary()` is true.  So, the method name,
-    //     "MiddleOfHardLine" is wrong.
     return Some(fragment);
   }
 
@@ -1269,19 +1261,17 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
                 .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
                     mScanStartPoint)
           : EditorDOMRange();
-  const Maybe<const WSFragment>
-      nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart =
-          !deleteStartEqualsOrIsBeforeTextStart &&
-                  !textFragmentDataAtStart.IsPreformatted() &&
-                  !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
-              ? textFragmentDataAtStart
-                    .CreateWSFragmentForVisibleAndMiddleOfLine()
-              : Nothing();
+  const Maybe<const WSFragment> nonPreformattedVisibleWhiteSpacesAtStart =
+      !deleteStartEqualsOrIsBeforeTextStart &&
+              !textFragmentDataAtStart.IsPreformatted() &&
+              !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
+          ? textFragmentDataAtStart.CreateWSFragmentForVisibleWhiteSpaces()
+          : Nothing();
   const PointPosition
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
-          nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart.isSome()
-              ? nonPreformattedVisibleWSFragmentInMiddleOfLineAtStart.ref()
-                    .ComparePoint(mScanStartPoint)
+          nonPreformattedVisibleWhiteSpacesAtStart.isSome()
+              ? nonPreformattedVisibleWhiteSpacesAtStart.ref().ComparePoint(
+                    mScanStartPoint)
               : PointPosition::NotInSameDOMTree;
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
       !deleteEndIsAfterTextEnd
@@ -1289,17 +1279,15 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
                 .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
                     aEndObject->mScanStartPoint)
           : EditorDOMRange();
-  const Maybe<const WSFragment>
-      nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd =
-          !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
-                  !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
-              ? textFragmentDataAtEnd
-                    .CreateWSFragmentForVisibleAndMiddleOfLine()
-              : Nothing();
+  const Maybe<const WSFragment> nonPreformattedVisibleWhiteSpacesAtEnd =
+      !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
+              !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
+          ? textFragmentDataAtEnd.CreateWSFragmentForVisibleWhiteSpaces()
+          : Nothing();
   const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
-      nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd.isSome()
-          ? nonPreformattedVisibleWSFragmentInMiddleOfLineAtEnd.ref()
-                .ComparePoint(aEndObject->mScanStartPoint)
+      nonPreformattedVisibleWhiteSpacesAtEnd.isSome()
+          ? nonPreformattedVisibleWhiteSpacesAtEnd.ref().ComparePoint(
+                aEndObject->mScanStartPoint)
           : PointPosition::NotInSameDOMTree;
   const bool followingContentMayBecomeFirstVisibleContent =
       textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
@@ -1435,15 +1423,15 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
   // The main issue here is make sure white-spaces around the split point
   // doesn't end up becoming non-significant leading or trailing ws after
   // the split.
-  Maybe<WSFragment> visibleWSFragmentInMiddleOfLine =
+  Maybe<WSFragment> visibleWhiteSpaces =
       TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleAndMiddleOfLine();
-  if (visibleWSFragmentInMiddleOfLine.isNothing()) {
+          .CreateWSFragmentForVisibleWhiteSpaces();
+  if (visibleWhiteSpaces.isNothing()) {
     return NS_OK;  // No visible white-space sequence.
   }
 
   PointPosition pointPositionWithVisibleWhiteSpaces =
-      visibleWSFragmentInMiddleOfLine.ref().ComparePoint(mScanStartPoint);
+      visibleWhiteSpaces.ref().ComparePoint(mScanStartPoint);
 
   // XXX If we split white-space sequence, the following code modify the DOM
   //     tree twice.  This is not reasonable and the latter change may touch
