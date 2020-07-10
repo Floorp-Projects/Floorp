@@ -14,6 +14,11 @@ interface LocationService {
     suspend fun fetchRegion(readFromCache: Boolean = true): Region?
 
     /**
+     * Get if there is already a cached region.
+     */
+    fun hasRegionCached(): Boolean
+
+    /**
      * A [Region] returned by the location service.
      *
      * The [Region] use region codes and names from the GENC dataset, which is for the most part
@@ -34,6 +39,7 @@ interface LocationService {
          */
         fun dummy() = object : LocationService {
             override suspend fun fetchRegion(readFromCache: Boolean): Region? = null
+            override fun hasRegionCached(): Boolean = false
         }
     }
 }

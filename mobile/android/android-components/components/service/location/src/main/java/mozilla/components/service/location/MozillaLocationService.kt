@@ -72,6 +72,15 @@ class MozillaLocationService(
 
         client.fetchRegion(regionServiceUrl)?.also { context.cacheRegion(it) }
     }
+
+    /**
+     * Get if there is already a cached region.
+     * This does not guarantee we have the current actual region but only the last value
+     * which may be obsolete at this time.
+     */
+    override fun hasRegionCached(): Boolean {
+        return context.hasCachedRegion()
+    }
 }
 
 private fun Context.loadCachedRegion(): LocationService.Region? {
@@ -85,6 +94,11 @@ private fun Context.loadCachedRegion(): LocationService.Region? {
     } else {
         null
     }
+}
+
+private fun Context.hasCachedRegion(): Boolean {
+    val cache = regionCache()
+    return cache.contains(KEY_COUNTRY_CODE) && cache.contains(KEY_COUNTRY_NAME)
 }
 
 private fun Context.cacheRegion(region: LocationService.Region) {
