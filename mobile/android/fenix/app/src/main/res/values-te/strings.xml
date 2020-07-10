@@ -8,12 +8,20 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">మరిన్ని ఎంపికలు</string>
 
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">అంతరంగిక విహరణను చేతనించు</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">అంతరంగిక విహరణను అచేతనించు</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">వెతకండి లేదా చిరునామా ఇవ్వండి</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">తెరిచివున్న ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">మీ అంతరంగిక ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
+
+    <string name="private_browsing_common_myths">అంతరంగిక విహారణ గురించి సామాన్య అపోహలు</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">సెషనును తొలగించు</string>
 
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ఫరవాలేదు వద్దు</string>
@@ -24,6 +32,8 @@
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">కొత్త ట్యాబు</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">కొత్త అంతరంగిక ట్యాబు</string>
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">మేటి సైట్లు</string>
 
@@ -52,8 +62,14 @@
     <string name="browser_menu_install_on_homescreen">స్థాపించు</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">సింకైన ట్యాబులు</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">పేజీలో వెతుకు</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">అంతరంగిక ట్యాబు</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">కొత్త ట్యాబు</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">సేకరణకు భద్రపరుచు</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">రూపురేఖలు</string>
 
@@ -61,12 +77,25 @@
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ఎంచుకున్న భాష</string>
 
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">భాషను వెతకండి</string>
+
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">ఈసారి దీనితో వెతుకు:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">క్లిప్‌బోర్డ్ నుండి లంకెను పూరించు</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">అనుమతించు</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">అనుమతించవద్దు</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">వెతకండి</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">జాలంలో వెతకండి</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -140,13 +169,27 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">అందుకన్న ట్యాబులు</string>
 
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">ట్రాకింగ్ సంరక్షణ</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">ట్రాకింగ్ సంరక్షణ</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">మినహాయింపులు</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ఇంకా తెలుసుకోండి</string>
 
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">టెలీమెట్రీ</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">వాడుక, సాంకేతిక డేటా</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">మార్కెటింగ్ డేటా</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ప్రయోగాలు</string>
+
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s ఆరోగ్య నివేదిక</string>
 
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">ఖాతాను తొలగించు</string>
@@ -211,14 +254,39 @@
     <!-- Button in the current session menu. Saves the session when pressed -->
     <string name="current_session_save">భద్రపరుచు</string>
 
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">సేకరణకు భద్రపరుచు</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">సేకరణను తొలగించు</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">సేకరణ పేరుమార్చు</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">తెరిచివున్న ట్యాబులు</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">తీసివేయి</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (అంతరంగిక రీతి)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">చరిత్రను తొలగించు</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">మీరు నిజంగానే మీ చరిత్రను తుడిచివేయాలనుకుంటున్నారా?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">చరిత్ర తొలగించబడింది</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s తొలగించబడింది</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">తుడిచివేయి</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">కాపీచేయి</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">పంచుకోండి</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">కొత్త ట్యాబులో తెరువు</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">అంతరంగిక ట్యాబులో తెరువు</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">తొలగించు</string>
 
@@ -237,14 +305,29 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ఇక్కడ చరిత్రేమీ లేదు</string>
 
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">మీరు ఈ ట్యాబును పునరుద్ధరించడానికి లేదా మూసివేయడానికి ప్రయత్నించవచ్చు.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">క్రాష్ నివేదికను మొజిల్లాకు పంపు</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">ట్యాబును మూసివేయి</string>
+
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">ట్యాబును పునరుద్ధరించు</string>
 
     <!-- Content Description for session item menu button -->
     <string name="content_description_session_menu">సెషను ఎంపికలు</string>
 
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s తొలగించబడింది</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">సంచయం చేర్చు</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">ఇష్టాంశం భద్రమయింది!</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">కొత్త ట్యాబులో తెరువు</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">అంతరంగిక ట్యాబులో తెరువు</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">తొలగించు</string>
     <!--Bookmark overflow menu save button -->
@@ -253,6 +336,9 @@
     <string name="bookmark_folder_label">సంచయం</string>
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">పేరు</string>
+
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">చెల్లని URL</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
@@ -277,6 +363,12 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">సేకరణలు</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">సేకరణ ఎంపిక</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">సేకరణకు పేరు పెట్టడం</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">కొత్త సేకరణను చేర్చు</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">అన్నిటినీ ఎంచుకో</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
@@ -415,6 +507,12 @@
 
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">తొలగించు</string>
+
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">విహరణ డేటా తొలగించబడింది</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">కొత్త నైట్లీకి మారండి</string>
 
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">కొత్త నైట్లీని పొందండి</string>

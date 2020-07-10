@@ -915,6 +915,15 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">முன்னோட்ட பயர்பாக்சு இப்போது இராக்கால பயர்பாக்சு</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">ஒவ்வொரு இரவும் இராக்கால பயர்பாக்சு மேம்படுத்தப்பட்டு புதிய அம்சங்களைக் கொண்டு வெளியிடப்படுகிறது.
+        எப்படியாகினும், நிலைப்புத்தன்மை குறைந்திருக்கலாம். மேலும் நல்ல அனுபவத்திற்கு எங்கள் பீட்டா உலாவியைப் பதிவிறக்கவும்.</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">பீட்டா ஆண்ட்ராய்டு பயர்பாக்சைப் பெறுக</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">இராக்கால பயர்பாக்சு நகர்ந்தது</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
