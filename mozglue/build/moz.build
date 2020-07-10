@@ -36,7 +36,8 @@ if CONFIG['MOZ_TSAN']:
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFFILE = '!mozglue.def'
+    if CONFIG['MOZ_MEMORY']:
+        DEFFILE = 'mozglue.def'
     # We'll break the DLL blocklist if we immediately load user32.dll.
     # For the same reason, we delayload winmm.dll which statically links
     # user32.dll.

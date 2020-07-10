@@ -5,7 +5,6 @@
 LIBRARY mozglue.dll
 
 EXPORTS
-#ifdef MOZ_MEMORY
   ; symbols that are actually useful
   malloc=je_malloc
   calloc=je_calloc
@@ -21,4 +20,3 @@ EXPORTS
   _strdup=wrap_strdup
   wcsdup=wrap_wcsdup
   _wcsdup=wrap_wcsdup
-#endif
