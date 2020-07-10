@@ -64,10 +64,10 @@ add_task(async function testReportBreakageCancel() {
   Services.prefs.setBoolPref(TP_PREF, true);
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
+    await openProtectionsPanel();
     await TestUtils.waitForCondition(() =>
       gProtectionsHandler._protectionsPopup.hasAttribute("blocking")
     );
-    await openProtectionsPanel();
 
     let siteNotWorkingButton = document.getElementById(
       "protections-popup-tp-switch-breakage-link"

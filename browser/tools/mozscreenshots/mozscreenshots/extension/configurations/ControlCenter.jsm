@@ -318,6 +318,8 @@ async function openProtectionsPopup() {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let gBrowser = browserWindow.gBrowser;
   let { gProtectionsHandler } = gBrowser.ownerGlobal;
+  // Force initializing the popup; we can't add classes otherwise.
+  gProtectionsHandler._initializePopup();
   gProtectionsHandler._protectionsPopup.hidePopup();
   // Disable the popup shadow on OSX until we have figured out bug 1425253.
   if (AppConstants.platform == "macosx") {
