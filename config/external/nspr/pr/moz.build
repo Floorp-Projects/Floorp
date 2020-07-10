@@ -163,6 +163,8 @@ else:
         '/nsprpub/pr/src/md/windows/ntinrval.c',
         # w32poll.c needs a custom value of FD_SETSIZE for winsock.h.
         '/nsprpub/pr/src/md/windows/w32poll.c',
+        # w95sock.c needs winsock2.h which conflicts with winsock.h.
+        '/nsprpub/pr/src/md/windows/w95sock.c',
     ]
     UNIFIED_SOURCES += [
         '/nsprpub/pr/src/io/prdir.c',
@@ -179,7 +181,6 @@ else:
         '/nsprpub/pr/src/md/windows/w95cv.c',
         '/nsprpub/pr/src/md/windows/w95dllmain.c',
         '/nsprpub/pr/src/md/windows/w95io.c',
-        '/nsprpub/pr/src/md/windows/w95sock.c',
         '/nsprpub/pr/src/md/windows/w95thred.c',
         '/nsprpub/pr/src/md/windows/win32_errors.c',
         '/nsprpub/pr/src/misc/pripcsem.c',
