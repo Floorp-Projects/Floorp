@@ -800,13 +800,6 @@ const listeners = {
     "plugin-crashed": ["PluginManager"],
   },
 
-  ppmm: {
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
-    "AsyncPrefs:SetPref": ["AsyncPrefs"],
-    "AsyncPrefs:ResetPref": ["AsyncPrefs"],
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
-  },
-
   observe(subject, topic, data) {
     for (let module of this.observers[topic]) {
       try {
@@ -817,26 +810,9 @@ const listeners = {
     }
   },
 
-  receiveMessage(modules, data) {
-    let val;
-    for (let module of modules[data.name]) {
-      try {
-        val = global[module].receiveMessage(data) || val;
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-    return val;
-  },
-
   init() {
     for (let observer of Object.keys(this.observers)) {
       Services.obs.addObserver(this, observer);
-    }
-
-    let receiveMessagePPMM = this.receiveMessage.bind(this, this.ppmm);
-    for (let message of Object.keys(this.ppmm)) {
-      Services.ppmm.addMessageListener(message, receiveMessagePPMM);
     }
   },
 };
