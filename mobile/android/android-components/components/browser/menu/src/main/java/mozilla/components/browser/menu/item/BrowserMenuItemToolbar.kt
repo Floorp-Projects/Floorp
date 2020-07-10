@@ -53,6 +53,11 @@ class BrowserMenuItemToolbar(
                 item.listener()
                 menu.dismiss()
             }
+            button.setOnLongClickListener {
+                item.longClickListener()
+                menu.dismiss()
+                true
+            }
 
             layout.addView(button, LinearLayout.LayoutParams(0, MATCH_PARENT, 1f))
         }
@@ -77,13 +82,16 @@ class BrowserMenuItemToolbar(
      * @param contentDescription The button's content description, used for accessibility support.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
      * @param isEnabled Lambda to return true/false to indicate if this button should be enabled or disabled.
+     * @param longClickListener Callback to be invoked when the button is long clicked.
      * @param listener Callback to be invoked when the button is pressed.
      */
+    @Suppress("LongParameterList")
     open class Button(
         @DrawableRes val imageResource: Int,
         val contentDescription: String,
         @ColorRes val iconTintColorResource: Int = NO_ID,
         val isEnabled: () -> Boolean = { true },
+        val longClickListener: () -> Unit = {},
         val listener: () -> Unit
     ) {
 
@@ -131,8 +139,10 @@ class BrowserMenuItemToolbar(
      * @param secondaryImageTintResource Optional ID of secondary color resource to tint the icon.
      * @param isInPrimaryState Lambda to return true/false to indicate if this button should be primary or secondary.
      * @param disableInSecondaryState Optional boolean to disable the button when in secondary state.
+     * @param longClickListener Callback to be invoked when the button is long clicked.
      * @param listener Callback to be invoked when the button is pressed.
      */
+    @Suppress("LongParameterList")
     open class TwoStateButton(
         @DrawableRes val primaryImageResource: Int,
         val primaryContentDescription: String,
@@ -142,12 +152,14 @@ class BrowserMenuItemToolbar(
         @ColorRes val secondaryImageTintResource: Int = primaryImageTintResource,
         val isInPrimaryState: () -> Boolean = { true },
         val disableInSecondaryState: Boolean = false,
+        longClickListener: () -> Unit = {},
         listener: () -> Unit
     ) : Button(
         primaryImageResource,
         primaryContentDescription,
         primaryImageTintResource,
         isInPrimaryState,
+        longClickListener = longClickListener,
         listener = listener
     ) {
 

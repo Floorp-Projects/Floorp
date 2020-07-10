@@ -298,6 +298,39 @@ class BrowserMenuItemToolbarTest {
     }
 
     @Test
+    fun `long clicking item view invokes callback and dismisses menu`() {
+        var callbackInvoked = false
+
+        val button = BrowserMenuItemToolbar.Button(
+            R.drawable.abc_ic_ab_back_material,
+            "Test",
+            longClickListener = {
+                callbackInvoked = true
+            }
+        ) {}
+
+        assertFalse(callbackInvoked)
+
+        val menu = mock(BrowserMenu::class.java)
+        val layout = LinearLayout(testContext)
+
+        val toolbar = BrowserMenuItemToolbar(listOf(button))
+        toolbar.bind(menu, layout)
+
+        assertEquals(1, layout.childCount)
+
+        val view = layout.getChildAt(0)
+
+        assertFalse(callbackInvoked)
+        verify(menu, never()).dismiss()
+
+        view.performLongClick()
+
+        assertTrue(callbackInvoked)
+        verify(menu).dismiss()
+    }
+
+    @Test
     fun `toolbar can be converted to candidate`() {
         val listener = {}
 

@@ -27,6 +27,9 @@ permalink: /changelog/
 
 * **browser-state**
   * Added map of `SessionState.contextId` and their respective `ContainerState` in `BrowserState` to track the state of a container.
+  
+* **browser-menu**
+  * Added an optional `longClickListener` parameter to `BrowserMenuItemToolbar.Button` and `BrowserMenuItemToolbar.TwoStateButton` to handle long click events.
 
 # 49.0.0
 
