@@ -646,7 +646,6 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     MOZ_ASSERT(funbox->isAsmJSModule());
     MOZ_ASSERT(compilationInfo.asmJS.has(funbox->index()));
     MOZ_ASSERT(compilationInfo.topLevel.get().functionFlags.isAsmJSNative());
-    funbox->copyScriptFields(compilationInfo.topLevel.get());
   }
 
   if (!compilationInfo.instantiateStencils()) {
