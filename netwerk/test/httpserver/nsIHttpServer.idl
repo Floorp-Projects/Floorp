@@ -65,8 +65,12 @@ interface nsIHttpServer : nsISupports
    * @param file
    *   the file to serve for the given path, or null to remove any mapping that
    *   might exist; this file must exist for the lifetime of the server
+   * @param handler
+   *   an optional object which can be used to handle any further changes.
    */
-  void registerFile(in string path, in nsIFile file);
+  void registerFile(in string path,
+                    in nsIFile file,
+                    [optional] in nsIHttpRequestHandler handler);
 
   /**
    * Registers a custom path handler.
