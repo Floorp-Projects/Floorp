@@ -1,4 +1,3 @@
-
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
 All rights reserved.
@@ -501,7 +500,6 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     nr_ice_ctx *ctx;
     nr_ice_media_stream *stream;
     int component_id;
-
 
     assert(cb_arg);
     if (!cb_arg)
@@ -1087,6 +1085,10 @@ int nr_ice_ctx_hide_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand)
     if (ctx->flags & NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES) {
       if (cand->type == HOST)
         return 1;
+    }
+
+    if (cand->stream->obsolete) {
+      return 1;
     }
 
     return 0;
