@@ -98,12 +98,12 @@
 // on a single thread.  The following macros implement assertions for
 // checking these conditions.
 //
-// We re-use XPCOM's nsAutoOwningThread checks when they are available. This has
-// the advantage that it works with cooperative thread pools.
+// We re-use XPCOM's nsAutoOwningEventTarget checks when they are available.
+// This has the advantage that it works with cooperative thread pools.
 
 #  define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK \
     /* Will be none if mPtr = nullptr. */         \
-    Maybe<nsAutoOwningThread> _owningThread;
+    Maybe<nsAutoOwningEventTarget> _owningThread;
 #  define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
     do {                                         \
       if (p) {                                   \

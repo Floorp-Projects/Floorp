@@ -295,6 +295,10 @@ var ignoreFunctions = {
 
     // Calls MergeSort
     "uint8 v8::internal::RegExpDisjunction::SortConsecutiveAtoms(v8::internal::RegExpCompiler*)": true,
+
+    // nsIEventTarget.IsOnCurrentThreadInfallible does not get resolved, and
+    // this is called on non-JS threads so cannot use AutoSuppressGCAnalysis.
+    "uint8 nsAutoOwningEventTarget::IsCurrentThread() const": true,
 };
 
 function extraGCFunctions() {
