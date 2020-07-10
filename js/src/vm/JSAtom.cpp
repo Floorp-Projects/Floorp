@@ -404,6 +404,7 @@ AtomsTable::getPartitionIndex(const AtomHasher::Lookup& lookup) {
 inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
   for (auto r = atoms.all(); !r.empty(); r.popFront()) {
     const AtomStateEntry& entry = r.front();
+    MOZ_ASSERT(entry.isPinned() == entry.asPtrUnbarriered()->isPinned());
     MOZ_DIAGNOSTIC_ASSERT(entry.asPtrUnbarriered());
     if (entry.isPinned()) {
       JSAtom* atom = entry.asPtrUnbarriered();
@@ -435,7 +436,7 @@ static void TracePermanentAtoms(JSTracer* trc, AtomSet::Range atoms) {
   for (; !atoms.empty(); atoms.popFront()) {
     const AtomStateEntry& entry = atoms.front();
     JSAtom* atom = entry.asPtrUnbarriered();
-    MOZ_ASSERT(atom->isPermanentAtom());
+    MOZ_ASSERT(atom->isPinned());
     TraceProcessGlobalRoot(trc, atom, "permanent atom");
   }
 }
@@ -525,9 +526,9 @@ inline bool AtomsTable::SweepIterator::empty() const {
   return partitionIndex == PartitionCount;
 }
 
-inline AtomStateEntry AtomsTable::SweepIterator::front() const {
+inline JSAtom* AtomsTable::SweepIterator::front() const {
   MOZ_ASSERT(!empty());
-  return atomsIter->front();
+  return atomsIter->front().asPtrUnbarriered();
 }
 
 inline void AtomsTable::SweepIterator::removeFront() {
@@ -597,14 +598,15 @@ bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
       return false;
     }
 
-    AtomStateEntry entry = atomsToSweep.front();
-    JSAtom* atom = entry.asPtrUnbarriered();
+    JSAtom* atom = atomsToSweep.front();
     MOZ_DIAGNOSTIC_ASSERT(atom);
+    // TODO: Bug 1574981 - investigate talos regression in
+    // AtomsTable::sweepIncrementally
     if (IsAboutToBeFinalizedUnbarriered(&atom)) {
-      MOZ_ASSERT(!entry.isPinned());
+      MOZ_ASSERT(!atom->isPinned());
       atomsToSweep.removeFront();
     } else {
-      MOZ_ASSERT(atom == entry.asPtrUnbarriered());
+      MOZ_ASSERT(atom == atomsToSweep.front());
     }
     atomsToSweep.popFront();
   }
@@ -738,14 +740,14 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
 
 template <typename Chars>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
-    JSContext* cx, Chars chars, size_t length,
+    JSContext* cx, Chars chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
 
 template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
-    JSContext* cx, CharT* chars, size_t length,
+    JSContext* cx, CharT* chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
-  return AllocateNewAtom(cx, const_cast<const CharT*>(chars), length,
+  return AllocateNewAtom(cx, const_cast<const CharT*>(chars), length, pin,
                          indexValue, lookup);
 }
 
@@ -781,13 +783,14 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
 
   if (p) {
     JSAtom* atom = p->asPtr(cx);
-    if (pin && !p->isPinned()) {
+    if (pin && !atom->isPinned()) {
+      atom->setPinned();
       p->setPinned(true);
     }
     return atom;
   }
 
-  JSAtom* atom = AllocateNewAtom(cx, chars, length, indexValue, lookup);
+  JSAtom* atom = AllocateNewAtom(cx, chars, length, pin, indexValue, lookup);
   if (!atom) {
     return nullptr;
   }
@@ -833,7 +836,8 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
     return p->asPtr(cx);
   }
 
-  JSAtom* atom = AllocateNewAtom(cx, chars, length, indexValue, lookup);
+  JSAtom* atom =
+      AllocateNewAtom(cx, chars, length, DoNotPinAtom, indexValue, lookup);
   if (!atom) {
     return nullptr;
   }
@@ -933,7 +937,7 @@ template <typename InputCharsT>
 
 template <typename Chars>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
-    JSContext* cx, Chars chars, size_t length,
+    JSContext* cx, Chars chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
   AutoAllocInAtomsZone ac(cx);
 
@@ -948,6 +952,10 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
   JSAtom* atom = linear->morphAtomizedStringIntoAtom(lookup.hash);
   MOZ_ASSERT(atom->hash() == lookup.hash);
 
+  if (pin) {
+    atom->setPinned();
+  }
+
   if (indexValue) {
     atom->maybeInitializeIndex(*indexValue, true);
   }
@@ -960,8 +968,8 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str,
   if (str->isAtom()) {
     JSAtom& atom = str->asAtom();
     /* N.B. static atoms are effectively always interned. */
-    if (pin == PinAtom && !atom.isPermanentAtom()) {
-      cx->runtime()->atoms().maybePinExistingAtom(cx, &atom);
+    if (pin == PinAtom && !atom.isPinned()) {
+      cx->runtime()->atoms().pinExistingAtom(cx, &atom);
     }
 
     return &atom;
@@ -985,36 +993,9 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str,
                                    linear->length(), pin, indexValue);
 }
 
-bool js::AtomIsPinned(JSContext* cx, JSAtom* atom) {
-  JSRuntime* rt = cx->runtime();
-  return rt->atoms().atomIsPinned(rt, atom);
-}
-
-bool AtomsTable::atomIsPinned(JSRuntime* rt, JSAtom* atom) {
+void AtomsTable::pinExistingAtom(JSContext* cx, JSAtom* atom) {
   MOZ_ASSERT(atom);
-
-  if (atom->isPermanentAtom()) {
-    return true;
-  }
-
-  AtomHasher::Lookup lookup(atom);
-
-  AtomsTable::Partition& part = *partitions[getPartitionIndex(lookup)];
-  AtomsTable::AutoLock lock(rt, part.lock);
-  AtomSet::Ptr p = part.atoms.lookup(lookup);
-  if (!p && part.atomsAddedWhileSweeping) {
-    p = part.atomsAddedWhileSweeping->lookup(lookup);
-  }
-
-  MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
-  MOZ_ASSERT(p->asPtrUnbarriered() == atom);
-
-  return p->isPinned();
-}
-
-void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
-  MOZ_ASSERT(atom);
-  MOZ_ASSERT(!atom->isPermanentAtom());
+  MOZ_ASSERT(!atom->isPinned());
 
   AtomHasher::Lookup lookup(atom);
 
@@ -1025,9 +1006,10 @@ void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
     p = part.atomsAddedWhileSweeping->lookup(lookup);
   }
 
-  MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
+  MOZ_ASSERT(p);  // Unpinned atoms must exist in atoms table.
   MOZ_ASSERT(p->asPtrUnbarriered() == atom);
 
+  atom->setPinned();
   p->setPinned(true);
 }
 
