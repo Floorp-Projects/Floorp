@@ -14,7 +14,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Log: "resource://gre/modules/Log.jsm",
   NLP: "resource://gre/modules/NLP.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
@@ -24,10 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
-
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.Provider.Interventions")
-);
 
 XPCOMUtils.defineLazyGetter(this, "appUpdater", () => new AppUpdater());
 
@@ -666,7 +661,6 @@ class ProviderInterventions extends UrlbarProvider {
    *        query for.
    */
   cancelQuery(queryContext) {
-    logger.info(`Canceling query for ${queryContext.searchString}`);
     this.queries.delete(queryContext);
 
     // If we're waiting for appUpdater to finish its update check,
