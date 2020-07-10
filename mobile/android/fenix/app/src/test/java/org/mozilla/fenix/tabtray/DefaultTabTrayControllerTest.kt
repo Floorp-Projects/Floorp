@@ -61,6 +61,7 @@ class DefaultTabTrayControllerTest {
 
         every { activity.components.core.sessionManager } returns sessionManager
         every { activity.components.core.tabCollectionStorage } returns tabCollectionStorage
+        every { activity.components.core.engine.profiler } returns mockk(relaxed = true)
         every { sessionManager.sessionsOfType(private = true) } returns listOf(session).asSequence()
         every { sessionManager.sessionsOfType(private = false) } returns listOf(nonPrivateSession).asSequence()
         every { sessionManager.createSessionSnapshot(any()) } returns SessionManager.Snapshot.Item(
