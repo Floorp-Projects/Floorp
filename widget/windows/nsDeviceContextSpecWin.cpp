@@ -514,13 +514,8 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
 NS_IMPL_ISUPPORTS(nsPrinterListWin, nsIPrinterList)
 
 NS_IMETHODIMP
-nsPrinterListWin::GetSystemDefaultPrinter(nsIPrinter** aDefaultPrinter) {
-  NS_ENSURE_ARG_POINTER(aDefaultPrinter);
-  *aDefaultPrinter = nullptr;
-  nsAutoString printerName;
-  GlobalPrinters::GetInstance()->GetDefaultPrinterName(printerName);
-  *aDefaultPrinter = new nsPrinter(printerName);
-  NS_ADDREF(*aDefaultPrinter);
+nsPrinterListWin::GetSystemDefaultPrinterName(nsAString& aName) {
+  GlobalPrinters::GetInstance()->GetDefaultPrinterName(aName);
   return NS_OK;
 }
 

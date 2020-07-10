@@ -372,13 +372,8 @@ nsPrinterListGTK::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
 }
 
 NS_IMETHODIMP
-nsPrinterListGTK::GetSystemDefaultPrinter(nsIPrinter** aDefaultPrinter) {
-  nsAutoString printerName;
-  GlobalPrinters::GetInstance()->GetSystemDefaultPrinterName(printerName);
-
-  *aDefaultPrinter = new nsPrinter(printerName);
-  NS_ADDREF(*aDefaultPrinter);
-
+nsPrinterListGTK::GetSystemDefaultPrinterName(nsAString& aName) {
+  GlobalPrinters::GetInstance()->GetSystemDefaultPrinterName(aName);
   return NS_OK;
 }
 
