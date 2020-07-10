@@ -227,7 +227,7 @@ LOCAL_INCLUDES += [
     '!/dist/public/nss',
 ]
 
-GeneratedFile('nsSTSPreloadList.h',
+GeneratedFile('nsSTSPreloadListGenerated.inc',
               script='../../../xpcom/ds/tools/make_dafsa.py',
               inputs=['nsSTSPreloadList.inc'])
 

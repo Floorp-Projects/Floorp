@@ -40,7 +40,7 @@
 // influence its HSTS status via include subdomains, however).
 // This prevents the preload list from overriding the site's current
 // desired HSTS status.
-#include "nsSTSPreloadList.h"
+#include "nsSTSPreloadListGenerated.inc"
 
 using namespace mozilla;
 using namespace mozilla::psm;
