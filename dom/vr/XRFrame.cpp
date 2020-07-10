@@ -79,7 +79,7 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
 
     gfx::Matrix4x4Double originTransform;
     originTransform.SetRotationFromQuaternion(
-        aReferenceSpace.GetEffectiveOriginOrientation());
+        aReferenceSpace.GetEffectiveOriginOrientation().Inverse());
     originTransform.PreTranslate(-aReferenceSpace.GetEffectiveOriginPosition());
 
     headTransform *= originTransform;
@@ -155,7 +155,8 @@ already_AddRefed<XRPose> XRFrame::GetPose(const XRSpace& aSpace,
 
   const bool emulatedPosition = aSpace.IsPositionEmulated();
   gfx::Matrix4x4Double base;
-  base.SetRotationFromQuaternion(aBaseSpace.GetEffectiveOriginOrientation());
+  base.SetRotationFromQuaternion(
+      aBaseSpace.GetEffectiveOriginOrientation().Inverse());
   base.PreTranslate(-aBaseSpace.GetEffectiveOriginPosition());
 
   gfx::Matrix4x4Double matrix = aSpace.GetEffectiveOriginTransform() * base;
