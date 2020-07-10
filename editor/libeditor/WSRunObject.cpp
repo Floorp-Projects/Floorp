@@ -209,10 +209,10 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeOfCurrentLine =
       textFragmentData.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
           aPointToInsert);
-  const Maybe<const WSFragment> visibleWhiteSpaces =
+  const Maybe<const VisibleWhiteSpacesData> visibleWhiteSpaces =
       !invisibleLeadingWhiteSpaceRangeOfNewLine.IsPositioned() ||
               !invisibleTrailingWhiteSpaceRangeOfCurrentLine.IsPositioned()
-          ? textFragmentData.CreateWSFragmentForVisibleWhiteSpaces()
+          ? textFragmentData.CreateVisibleWhiteSpacesData()
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpaces =
       visibleWhiteSpaces.isSome()
@@ -362,17 +362,17 @@ nsresult WSRunObject::InsertText(Document& aDocument,
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
       textFragmentDataAtEnd.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
           mScanEndPoint);
-  const Maybe<const WSFragment> visibleWhiteSpacesAtStart =
+  const Maybe<const VisibleWhiteSpacesData> visibleWhiteSpacesAtStart =
       !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
-          ? textFragmentDataAtStart.CreateWSFragmentForVisibleWhiteSpaces()
+          ? textFragmentDataAtStart.CreateVisibleWhiteSpacesData()
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpacesAtStart =
       visibleWhiteSpacesAtStart.isSome()
           ? visibleWhiteSpacesAtStart.ref().ComparePoint(mScanStartPoint)
           : PointPosition::NotInSameDOMTree;
-  const Maybe<const WSFragment> visibleWhiteSpacesAtEnd =
+  const Maybe<const VisibleWhiteSpacesData> visibleWhiteSpacesAtEnd =
       !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
-          ? textFragmentDataAtEnd.CreateWSFragmentForVisibleWhiteSpaces()
+          ? textFragmentDataAtEnd.CreateVisibleWhiteSpacesData()
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpacesAtEnd =
       visibleWhiteSpacesAtEnd.isSome()
@@ -714,9 +714,9 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
 
   // If the range has visible text and start of the visible text is before
   // aPoint, return previous character in the text.
-  Maybe<WSFragment> visibleWhiteSpaces =
+  Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
       TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleWhiteSpaces();
+          .CreateVisibleWhiteSpacesData();
   if (visibleWhiteSpaces.isSome() &&
       visibleWhiteSpaces.ref().RawStartPoint().IsBefore(aPoint)) {
     EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
@@ -745,9 +745,9 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
 
   // If the range has visible text and aPoint equals or is before the end of the
   // visible text, return inclusive next character in the text.
-  Maybe<WSFragment> visibleWhiteSpaces =
+  Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
       TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleWhiteSpaces();
+          .CreateVisibleWhiteSpacesData();
   if (visibleWhiteSpaces.isSome() &&
       aPoint.EqualsOrIsBefore(visibleWhiteSpaces.ref().RawEndPoint())) {
     EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
@@ -781,10 +781,10 @@ nsresult WSRunObject::NormalizeWhiteSpacesAround(
     // nothing to do!
     return NS_OK;
   }
-  Maybe<WSFragment> visibleWhiteSpaces =
+  Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
       TextFragmentData(wsRunObject.mStart, wsRunObject.mEnd,
                        wsRunObject.mNBSPData, wsRunObject.mPRE)
-          .CreateWSFragmentForVisibleWhiteSpaces();
+          .CreateVisibleWhiteSpacesData();
   if (visibleWhiteSpaces.isNothing()) {
     return NS_OK;
   }
@@ -1131,21 +1131,21 @@ WSRunScanner::TextFragmentData::GetInvisibleTrailingWhiteSpaceRange() const {
   return mTrailingWhiteSpaceRange.ref();
 }
 
-Maybe<WSRunScanner::WSFragment>
-WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleWhiteSpaces() const {
-  WSFragment fragment;
+Maybe<WSRunScanner::VisibleWhiteSpacesData>
+WSRunScanner::TextFragmentData::CreateVisibleWhiteSpacesData() const {
+  VisibleWhiteSpacesData visibleWhiteSpaces;
   if (IsPreformattedOrSurrondedByVisibleContent()) {
     if (mStart.PointRef().IsSet()) {
-      fragment.mStartNode = mStart.PointRef().GetContainer();
-      fragment.mStartOffset = mStart.PointRef().Offset();
+      visibleWhiteSpaces.mStartNode = mStart.PointRef().GetContainer();
+      visibleWhiteSpaces.mStartOffset = mStart.PointRef().Offset();
     }
-    fragment.SetStartFrom(mStart.RawReason());
+    visibleWhiteSpaces.SetStartFrom(mStart.RawReason());
     if (mEnd.PointRef().IsSet()) {
-      fragment.mEndNode = mEnd.PointRef().GetContainer();
-      fragment.mEndOffset = mEnd.PointRef().Offset();
+      visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
+      visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
     }
-    fragment.SetEndBy(mEnd.RawReason());
-    return Some(fragment);
+    visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
+    return Some(visibleWhiteSpaces);
   }
 
   // If all of the range is invisible leading or trailing white-spaces,
@@ -1173,58 +1173,62 @@ WSRunScanner::TextFragmentData::CreateWSFragmentForVisibleWhiteSpaces() const {
 
   if (!StartsFromHardLineBreak()) {
     if (mStart.PointRef().IsSet()) {
-      fragment.mStartNode = mStart.PointRef().GetContainer();
-      fragment.mStartOffset = mStart.PointRef().Offset();
+      visibleWhiteSpaces.mStartNode = mStart.PointRef().GetContainer();
+      visibleWhiteSpaces.mStartOffset = mStart.PointRef().Offset();
     }
-    fragment.SetStartFrom(mStart.RawReason());
+    visibleWhiteSpaces.SetStartFrom(mStart.RawReason());
     if (!maybeHaveTrailingWhiteSpaces) {
-      fragment.mEndNode = mEnd.PointRef().GetContainer();
-      fragment.mEndOffset = mEnd.PointRef().Offset();
-      fragment.SetEndBy(mEnd.RawReason());
-      return Some(fragment);
+      visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
+      visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
+      visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
+      return Some(visibleWhiteSpaces);
     }
     if (trailingWhiteSpaceRange.StartRef().IsSet()) {
-      fragment.mEndNode = trailingWhiteSpaceRange.StartRef().GetContainer();
-      fragment.mEndOffset = trailingWhiteSpaceRange.StartRef().Offset();
+      visibleWhiteSpaces.mEndNode =
+          trailingWhiteSpaceRange.StartRef().GetContainer();
+      visibleWhiteSpaces.mEndOffset =
+          trailingWhiteSpaceRange.StartRef().Offset();
     }
-    fragment.SetEndByTrailingWhiteSpaces();
-    return Some(fragment);
+    visibleWhiteSpaces.SetEndByTrailingWhiteSpaces();
+    return Some(visibleWhiteSpaces);
   }
 
   MOZ_ASSERT(StartsFromHardLineBreak());
   MOZ_ASSERT(maybeHaveLeadingWhiteSpaces);
 
   if (leadingWhiteSpaceRange.EndRef().IsSet()) {
-    fragment.mStartNode = leadingWhiteSpaceRange.EndRef().GetContainer();
-    fragment.mStartOffset = leadingWhiteSpaceRange.EndRef().Offset();
+    visibleWhiteSpaces.mStartNode =
+        leadingWhiteSpaceRange.EndRef().GetContainer();
+    visibleWhiteSpaces.mStartOffset = leadingWhiteSpaceRange.EndRef().Offset();
   }
-  fragment.SetStartFromLeadingWhiteSpaces();
+  visibleWhiteSpaces.SetStartFromLeadingWhiteSpaces();
   if (!EndsByBlockBoundary()) {
     // then no trailing ws.  this normal run ends the overall ws run.
     if (mEnd.PointRef().IsSet()) {
-      fragment.mEndNode = mEnd.PointRef().GetContainer();
-      fragment.mEndOffset = mEnd.PointRef().Offset();
+      visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
+      visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
     }
-    fragment.SetEndBy(mEnd.RawReason());
-    return Some(fragment);
+    visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
+    return Some(visibleWhiteSpaces);
   }
 
   MOZ_ASSERT(EndsByBlockBoundary());
 
   if (!maybeHaveTrailingWhiteSpaces) {
     // normal ws runs right up to adjacent block (nbsp next to block)
-    fragment.mEndNode = mEnd.PointRef().GetContainer();
-    fragment.mEndOffset = mEnd.PointRef().Offset();
-    fragment.SetEndBy(mEnd.RawReason());
-    return Some(fragment);
+    visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
+    visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
+    visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
+    return Some(visibleWhiteSpaces);
   }
 
   if (trailingWhiteSpaceRange.StartRef().IsSet()) {
-    fragment.mEndNode = trailingWhiteSpaceRange.StartRef().GetContainer();
-    fragment.mEndOffset = trailingWhiteSpaceRange.StartRef().Offset();
+    visibleWhiteSpaces.mEndNode =
+        trailingWhiteSpaceRange.StartRef().GetContainer();
+    visibleWhiteSpaces.mEndOffset = trailingWhiteSpaceRange.StartRef().Offset();
   }
-  fragment.SetEndByTrailingWhiteSpaces();
-  return Some(fragment);
+  visibleWhiteSpaces.SetEndByTrailingWhiteSpaces();
+  return Some(visibleWhiteSpaces);
 }
 
 nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
@@ -1258,12 +1262,13 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
                 .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
                     mScanStartPoint)
           : EditorDOMRange();
-  const Maybe<const WSFragment> nonPreformattedVisibleWhiteSpacesAtStart =
-      !deleteStartEqualsOrIsBeforeTextStart &&
-              !textFragmentDataAtStart.IsPreformatted() &&
-              !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
-          ? textFragmentDataAtStart.CreateWSFragmentForVisibleWhiteSpaces()
-          : Nothing();
+  const Maybe<const VisibleWhiteSpacesData>
+      nonPreformattedVisibleWhiteSpacesAtStart =
+          !deleteStartEqualsOrIsBeforeTextStart &&
+                  !textFragmentDataAtStart.IsPreformatted() &&
+                  !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
+              ? textFragmentDataAtStart.CreateVisibleWhiteSpacesData()
+              : Nothing();
   const PointPosition
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
           nonPreformattedVisibleWhiteSpacesAtStart.isSome()
@@ -1276,11 +1281,12 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
                 .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
                     aEndObject->mScanStartPoint)
           : EditorDOMRange();
-  const Maybe<const WSFragment> nonPreformattedVisibleWhiteSpacesAtEnd =
-      !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
-              !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
-          ? textFragmentDataAtEnd.CreateWSFragmentForVisibleWhiteSpaces()
-          : Nothing();
+  const Maybe<const VisibleWhiteSpacesData>
+      nonPreformattedVisibleWhiteSpacesAtEnd =
+          !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
+                  !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
+              ? textFragmentDataAtEnd.CreateVisibleWhiteSpacesData()
+              : Nothing();
   const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
       nonPreformattedVisibleWhiteSpacesAtEnd.isSome()
           ? nonPreformattedVisibleWhiteSpacesAtEnd.ref().ComparePoint(
@@ -1420,9 +1426,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
   // The main issue here is make sure white-spaces around the split point
   // doesn't end up becoming non-significant leading or trailing ws after
   // the split.
-  Maybe<WSFragment> visibleWhiteSpaces =
+  Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
       TextFragmentData(mStart, mEnd, mNBSPData, mPRE)
-          .CreateWSFragmentForVisibleWhiteSpaces();
+          .CreateVisibleWhiteSpacesData();
   if (visibleWhiteSpaces.isNothing()) {
     return NS_OK;  // No visible white-space sequence.
   }
@@ -1803,45 +1809,52 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
   return aTextNode->TextFragment().CharAt(aOffset);
 }
 
-nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
+nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(
+    const VisibleWhiteSpacesData& aVisibleWhiteSpacesData) {
   // Remove this block if we ship Blink-compat white-space normalization.
   if (!StaticPrefs::editor_white_space_normalization_blink_compatible()) {
     // now check that what is to the left of it is compatible with replacing
     // nbsp with space
-    EditorDOMPoint atEndOfRun = aRun.EndPoint();
-    EditorDOMPointInText atPreviousCharOfEndOfRun =
-        GetPreviousEditableCharPoint(atEndOfRun);
-    if (!atPreviousCharOfEndOfRun.IsSet() ||
-        atPreviousCharOfEndOfRun.IsEndOfContainer() ||
-        !atPreviousCharOfEndOfRun.IsCharNBSP()) {
+    EditorDOMPoint atEndOfVisibleWhiteSpaces =
+        aVisibleWhiteSpacesData.EndPoint();
+    EditorDOMPointInText atPreviousCharOfEndOfVisibleWhiteSpaces =
+        GetPreviousEditableCharPoint(atEndOfVisibleWhiteSpaces);
+    if (!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() ||
+        atPreviousCharOfEndOfVisibleWhiteSpaces.IsEndOfContainer() ||
+        !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharNBSP()) {
       return NS_OK;
     }
 
     // now check that what is to the left of it is compatible with replacing
     // nbsp with space
-    EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfRun =
-        GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
+    EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
+        GetPreviousEditableCharPoint(atPreviousCharOfEndOfVisibleWhiteSpaces);
     bool isPreviousCharASCIIWhiteSpace =
-        atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
-        !atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer() &&
-        atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace();
+        atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
+        !atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+             .IsEndOfContainer() &&
+        atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+            .IsCharASCIISpace();
     bool maybeNBSPFollowingVisibleContent =
-        (atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
+        (atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
          !isPreviousCharASCIIWhiteSpace) ||
-        (!atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
-         (aRun.StartsFromNormalText() || aRun.StartsFromSpecialContent()));
+        (!atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
+         (aVisibleWhiteSpacesData.StartsFromNormalText() ||
+          aVisibleWhiteSpacesData.StartsFromSpecialContent()));
     bool followedByVisibleContentOrBRElement = false;
 
     // If the NBSP follows a visible content or an ASCII white-space, i.e.,
     // unless NBSP is first character and start of a block, we may need to
     // insert <br> element and restore the NBSP to an ASCII white-space.
     if (maybeNBSPFollowingVisibleContent || isPreviousCharASCIIWhiteSpace) {
-      followedByVisibleContentOrBRElement = aRun.EndsByNormalText() ||
-                                            aRun.EndsBySpecialContent() ||
-                                            aRun.EndsByBRElement();
+      followedByVisibleContentOrBRElement =
+          aVisibleWhiteSpacesData.EndsByNormalText() ||
+          aVisibleWhiteSpacesData.EndsBySpecialContent() ||
+          aVisibleWhiteSpacesData.EndsByBRElement();
       // First, try to insert <br> element if NBSP is at end of a block.
       // XXX We should stop this if there is a visible content.
-      if (aRun.EndsByBlockBoundary() && mScanStartPoint.IsInContentNode()) {
+      if (aVisibleWhiteSpacesData.EndsByBlockBoundary() &&
+          mScanStartPoint.IsInContentNode()) {
         bool insertBRElement = HTMLEditUtils::IsBlockElement(
             *mScanStartPoint.ContainerAsContent());
         if (!insertBRElement) {
@@ -1877,7 +1890,7 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
 
           RefPtr<Element> brElement =
               MOZ_KnownLive(mHTMLEditor)
-                  .InsertBRElementWithTransaction(atEndOfRun);
+                  .InsertBRElementWithTransaction(atEndOfVisibleWhiteSpaces);
           if (NS_WARN_IF(mHTMLEditor.Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -1886,13 +1899,17 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
             return NS_ERROR_FAILURE;
           }
 
-          atPreviousCharOfEndOfRun = GetPreviousEditableCharPoint(atEndOfRun);
-          atPreviousCharOfPreviousCharOfEndOfRun =
-              GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
+          atPreviousCharOfEndOfVisibleWhiteSpaces =
+              GetPreviousEditableCharPoint(atEndOfVisibleWhiteSpaces);
+          atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
+              GetPreviousEditableCharPoint(
+                  atPreviousCharOfEndOfVisibleWhiteSpaces);
           isPreviousCharASCIIWhiteSpace =
-              atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
-              !atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer() &&
-              atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace();
+              atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
+              !atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+                   .IsEndOfContainer() &&
+              atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+                  .IsCharASCIISpace();
           followedByVisibleContentOrBRElement = true;
         }
       }
@@ -1905,8 +1922,10 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
         nsresult rv =
             MOZ_KnownLive(mHTMLEditor)
                 .ReplaceTextWithTransaction(
-                    MOZ_KnownLive(*atPreviousCharOfEndOfRun.ContainerAsText()),
-                    atPreviousCharOfEndOfRun.Offset(), 1, u" "_ns);
+                    MOZ_KnownLive(*atPreviousCharOfEndOfVisibleWhiteSpaces
+                                       .ContainerAsText()),
+                    atPreviousCharOfEndOfVisibleWhiteSpaces.Offset(), 1,
+                    u" "_ns);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "HTMLEditor::ReplaceTextWithTransaction() failed");
         return rv;
@@ -1927,15 +1946,16 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
 
     // Currently, we're at an NBSP following an ASCII space, and we need to
     // replace them with `"&nbsp; "` for avoiding collapsing white-spaces.
-    MOZ_ASSERT(!atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer());
+    MOZ_ASSERT(!atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+                    .IsEndOfContainer());
     EditorDOMPointInText atFirstASCIIWhiteSpace =
         GetFirstASCIIWhiteSpacePointCollapsedTo(
-            atPreviousCharOfPreviousCharOfEndOfRun);
+            atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces);
     AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
     uint32_t numberOfASCIIWhiteSpacesInStartNode =
         atFirstASCIIWhiteSpace.ContainerAsText() ==
-                atPreviousCharOfEndOfRun.ContainerAsText()
-            ? atPreviousCharOfEndOfRun.Offset() -
+                atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText()
+            ? atPreviousCharOfEndOfVisibleWhiteSpaces.Offset() -
                   atFirstASCIIWhiteSpace.Offset()
             : atFirstASCIIWhiteSpace.ContainerAsText()->Length() -
                   atFirstASCIIWhiteSpace.Offset();
@@ -1943,7 +1963,7 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
     uint32_t replaceLengthInStartNode =
         numberOfASCIIWhiteSpacesInStartNode +
         (atFirstASCIIWhiteSpace.ContainerAsText() ==
-                 atPreviousCharOfEndOfRun.ContainerAsText()
+                 atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText()
              ? 1
              : 0);
     nsresult rv =
@@ -1958,18 +1978,18 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
     }
 
     if (atFirstASCIIWhiteSpace.GetContainer() ==
-        atPreviousCharOfEndOfRun.GetContainer()) {
+        atPreviousCharOfEndOfVisibleWhiteSpaces.GetContainer()) {
       return NS_OK;
     }
 
     // We need to remove the following unnecessary ASCII white-spaces and
-    // NBSP at atPreviousCharOfEndOfRun because we collapsed them into
-    // the start node.
+    // NBSP at atPreviousCharOfEndOfVisibleWhiteSpaces because we collapsed them
+    // into the start node.
     rv = MOZ_KnownLive(mHTMLEditor)
              .DeleteTextAndTextNodesWithTransaction(
                  EditorDOMPointInText::AtEndOf(
                      *atFirstASCIIWhiteSpace.ContainerAsText()),
-                 atPreviousCharOfEndOfRun.NextPoint());
+                 atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint());
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -1988,33 +2008,35 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
 
   // First, check if the last character is an NBSP.  Otherwise, we don't need
   // to do nothing here.
-  EditorDOMPoint atEndOfRun = aRun.EndPoint();
-  EditorDOMPointInText atPreviousCharOfEndOfRun =
-      GetPreviousEditableCharPoint(atEndOfRun);
-  if (!atPreviousCharOfEndOfRun.IsSet() ||
-      atPreviousCharOfEndOfRun.IsEndOfContainer() ||
-      !atPreviousCharOfEndOfRun.IsCharNBSP()) {
+  EditorDOMPoint atEndOfVisibleWhiteSpaces = aVisibleWhiteSpacesData.EndPoint();
+  EditorDOMPointInText atPreviousCharOfEndOfVisibleWhiteSpaces =
+      GetPreviousEditableCharPoint(atEndOfVisibleWhiteSpaces);
+  if (!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() ||
+      atPreviousCharOfEndOfVisibleWhiteSpaces.IsEndOfContainer() ||
+      !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharNBSP()) {
     return NS_OK;
   }
 
   // Next, consider the range to collapse ASCII white-spaces before there.
   EditorDOMPointInText startToDelete, endToDelete;
 
-  EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfRun =
-      GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
+  EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
+      GetPreviousEditableCharPoint(atPreviousCharOfEndOfVisibleWhiteSpaces);
   // If there are some preceding ASCII white-spaces, we need to treat them
   // as one white-space.  I.e., we need to collapse them.
-  if (atPreviousCharOfEndOfRun.IsCharNBSP() &&
-      atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
-      atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace()) {
+  if (atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharNBSP() &&
+      atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
+      atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+          .IsCharASCIISpace()) {
     startToDelete = GetFirstASCIIWhiteSpacePointCollapsedTo(
-        atPreviousCharOfPreviousCharOfEndOfRun);
-    endToDelete = atPreviousCharOfPreviousCharOfEndOfRun;
+        atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces);
+    endToDelete = atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces;
   }
   // Otherwise, we don't need to remove any white-spaces, but we may need
   // to normalize the white-space sequence containing the previous NBSP.
   else {
-    startToDelete = endToDelete = atPreviousCharOfEndOfRun.NextPoint();
+    startToDelete = endToDelete =
+        atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint();
   }
 
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
@@ -2028,7 +2050,8 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
 }
 
 nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-    const WSFragment& aRun, const EditorDOMPoint& aPoint) {
+    const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
+    const EditorDOMPoint& aPoint) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   // Try to change an NBSP to a space, if possible, just to prevent NBSP
@@ -2054,7 +2077,8 @@ nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
   }
   // If previous content of the NBSP is block boundary, we cannot replace the
   // NBSP with an ASCII white-space to keep it rendered.
-  else if (!aRun.StartsFromNormalText() && !aRun.StartsFromSpecialContent()) {
+  else if (!aVisibleWhiteSpacesData.StartsFromNormalText() &&
+           !aVisibleWhiteSpacesData.StartsFromSpecialContent()) {
     return NS_OK;
   }
 
@@ -2069,7 +2093,8 @@ nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
 }
 
 nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-    const WSFragment& aRun, const EditorDOMPoint& aPoint) {
+    const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
+    const EditorDOMPoint& aPoint) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   // Try to change an nbsp to a space, if possible, just to prevent nbsp
@@ -2094,8 +2119,9 @@ nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
   }
   // If the NBSP is last character in the hard line, we don't need to
   // replace it because it's required to render multiple white-spaces.
-  else if (!aRun.EndsByNormalText() && !aRun.EndsBySpecialContent() &&
-           !aRun.EndsByBRElement()) {
+  else if (!aVisibleWhiteSpacesData.EndsByNormalText() &&
+           !aVisibleWhiteSpacesData.EndsBySpecialContent() &&
+           !aVisibleWhiteSpacesData.EndsByBRElement()) {
     return NS_OK;
   }
 

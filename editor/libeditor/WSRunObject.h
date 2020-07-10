@@ -22,14 +22,7 @@
 namespace mozilla {
 
 // class WSRunObject represents the entire white-space situation
-// around a given point.  It collects up a list of nodes that contain
-// white-space and categorizes in up to 3 different WSFragments (detailed
-// below).  Each WSFragment is a collection of white-space that is
-// either all insignificant, or that is significant.  A WSFragment could
-// consist of insignificant white-space because it is after a block
-// boundary or after a break.  Or it could be insignificant because it
-// is before a block.  Or it could be significant because it is
-// surrounded by text, or starts and ends with nbsps, etc.
+// around a given point.
 
 // Throughout I refer to LeadingWS, NormalWS, TrailingWS.  LeadingWS &
 // TrailingWS are runs of ascii ws that are insignificant (do not render)
@@ -426,17 +419,15 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   class TextFragmentData;
 
-  // WSFragment represents a single run of ws (all leadingws, or all normalws,
-  // or all trailingws, or all leading+trailingws).  Note that this single run
-  // may still span multiple nodes.
-  struct MOZ_STACK_CLASS WSFragment final {
+  // VisibleWhiteSpacesData represents 0 or more visible white-spaces.
+  struct MOZ_STACK_CLASS VisibleWhiteSpacesData final {
     nsCOMPtr<nsINode> mStartNode;  // node where ws run starts
     nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
     int32_t mStartOffset;          // offset where ws run starts
     int32_t mEndOffset;            // offset where ws run ends
 
    private:
-    WSFragment()
+    VisibleWhiteSpacesData()
         : mStartOffset(0),
           mEndOffset(0),
           mLeftWSType(WSType::NotInitialized),
@@ -457,7 +448,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
-     * Information why this fragments starts from (i.e., this indicates the
+     * Information why the white-spaces start from (i.e., this indicates the
      * previous content type of the fragment).
      */
     void SetStartFrom(WSType aLeftWSType) { mLeftWSType = aLeftWSType; }
@@ -475,7 +466,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
-     * Information why this fragments ends by (i.e., this indicates the
+     * Information why the white-spaces end by (i.e., this indicates the
      * next content type of the fragment).
      */
     void SetEndBy(WSType aRightWSType) { mRightWSType = aRightWSType; }
@@ -499,7 +490,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
-     * ComparePointWitWSFragment() compares aPoint with this fragment.
+     * ComparePoint() compares aPoint with the white-spaces.
      */
     enum class PointPosition {
       BeforeStartOfFragment,
@@ -540,7 +531,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     friend class WSRunScanner::TextFragmentData;
   };
 
-  using PointPosition = WSFragment::PointPosition;
+  using PointPosition = VisibleWhiteSpacesData::PointPosition;
 
   /**
    * GetInclusiveNextEditableCharPoint() returns aPoint if it points a character
@@ -839,8 +830,8 @@ class MOZ_STACK_CLASS WSRunScanner {
       if (aPoint.EqualsOrIsBefore(mStart.PointRef())) {
         return true;
       }
-      // WSFragment is marked as start of line only when it represents leading
-      // white-spaces.
+      // VisibleWhiteSpacesData is marked as start of line only when it
+      // represents leading white-spaces.
       EditorDOMRange leadingWhiteSpaceRange =
           GetInvisibleLeadingWhiteSpaceRange();
       if (!leadingWhiteSpaceRange.StartRef().IsSet()) {
@@ -873,10 +864,8 @@ class MOZ_STACK_CLASS WSRunScanner {
 
       // If the point is in visible white-spaces and ends with an ASCII
       // white-space, it may be collapsed even if it won't be end of line.
-      // Note that WSFragment for visible white-space is always not marked
-      // as start nor end of line.
-      Maybe<WSFragment> visibleWhiteSpaces =
-          CreateWSFragmentForVisibleWhiteSpaces();
+      Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
+          CreateVisibleWhiteSpacesData();
       if (visibleWhiteSpaces.isNothing()) {
         return false;
       }
@@ -901,11 +890,10 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
-     * CreateWSFragmentForVisibleWhiteSpaces() creates WSFragment whose
-     * `IsVisible()` returns true.  That is one or more white-spaces which
-     * are visible.
+     * CreateVisibleWhiteSpacesData() creates VisibleWhiteSpacesData.
+     * That is zero or more white-spaces which are visible.
      */
-    Maybe<WSFragment> CreateWSFragmentForVisibleWhiteSpaces() const;
+    Maybe<VisibleWhiteSpacesData> CreateVisibleWhiteSpacesData() const;
 
    private:
     /**
@@ -1137,20 +1125,22 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
       const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces);
 
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult NormalizeWhiteSpacesAtEndOf(
+      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData);
 
   /**
    * MaybeReplacePreviousNBSPWithASCIIWhiteSpace() replaces previous character
    * of aPoint if it's a NBSP and it's unnecessary.
    *
-   * @param aRun        Current text run.  aPoint must be in this run.
+   * @param aVisibleWhiteSpacesData
+   *                    The visible whitespaces.  aPoint must be in this.
    * @param aPoint      Current insertion point.  Its previous character is
    *                    unnecessary NBSP will be checked.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeReplacePreviousNBSPWithASCIIWhiteSpace(const WSFragment& aRun,
-                                              const EditorDOMPoint& aPoint);
+  MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
+      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
+      const EditorDOMPoint& aPoint);
 
   /**
    * MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() replaces an NBSP at
@@ -1163,7 +1153,8 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-      const WSFragment& aRun, const EditorDOMPoint& aPoint);
+      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
+      const EditorDOMPoint& aPoint);
 
   /**
    * See explanation of the static method for this.
