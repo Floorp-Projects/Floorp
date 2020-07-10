@@ -438,9 +438,7 @@ class MOZ_STACK_CLASS WSRunScanner {
           mEndOffset(0),
           mLeftWSType(WSType::NotInitialized),
           mRightWSType(WSType::NotInitialized),
-          mIsVisible(Visible::No),
-          mIsStartOfHardLine(StartOfHardLine::No),
-          mIsEndOfHardLine(EndOfHardLine::No) {}
+          mIsVisible(Visible::No) {}
 
     EditorDOMPoint StartPoint() const {
       return EditorDOMPoint(mStartNode, mStartOffset);
@@ -456,29 +454,13 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     enum class Visible : bool { No, Yes };
-    enum class StartOfHardLine : bool { No, Yes };
-    enum class EndOfHardLine : bool { No, Yes };
 
     /**
      * Information about this fragment.
      * XXX "Visible" might be wrong in some situation, but not sure.
      */
     void MarkAsVisible() { mIsVisible = Visible::Yes; }
-    void MarkAsStartOfHardLine() { mIsStartOfHardLine = StartOfHardLine::Yes; }
-    void MarkAsEndOfHardLine() { mIsEndOfHardLine = EndOfHardLine::Yes; }
     bool IsVisible() const { return mIsVisible == Visible::Yes; }
-    bool IsStartOfHardLine() const {
-      return mIsStartOfHardLine == StartOfHardLine::Yes;
-    }
-    bool IsMiddleOfHardLine() const {
-      return !IsStartOfHardLine() && !IsEndOfHardLine();
-    }
-    bool IsEndOfHardLine() const {
-      return mIsEndOfHardLine == EndOfHardLine::Yes;
-    }
-    bool IsVisibleAndMiddleOfHardLine() const {
-      return IsVisible() && IsMiddleOfHardLine();
-    }
 
     /**
      * Information why this fragments starts from (i.e., this indicates the
@@ -561,8 +543,6 @@ class MOZ_STACK_CLASS WSRunScanner {
    private:
     WSType mLeftWSType, mRightWSType;
     Visible mIsVisible;
-    StartOfHardLine mIsStartOfHardLine;
-    EndOfHardLine mIsEndOfHardLine;
   };
 
   using PointPosition = WSFragment::PointPosition;
