@@ -39,26 +39,22 @@ const { CommonUtils } = ChromeUtils.import(
 const EXAMPLE_URL = "https://example.com/";
 
 const prefs = {
-  DOH_ENABLED_PREF: "doh-rollout.enabled",
+  ENABLED_PREF: "doh-rollout.enabled",
   ROLLOUT_TRR_MODE_PREF: "doh-rollout.mode",
   NETWORK_TRR_MODE_PREF: "network.trr.mode",
-  DOH_SELF_ENABLED_PREF: "doh-rollout.self-enabled",
-  DOH_DOORHANGER_SHOWN_PREF: "doh-rollout.doorhanger-shown",
-  DOH_DOORHANGER_USER_DECISION_PREF: "doh-rollout.doorhanger-decision",
-  DOH_DISABLED_PREF: "doh-rollout.disable-heuristics",
-  DOH_SKIP_HEURISTICS_PREF: "doh-rollout.skipHeuristicsCheck",
-  DOH_DONE_FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
-  DOH_BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
-  DOH_PREVIOUS_TRR_MODE_PREF: "doh-rollout.previous.trr.mode",
-  DOH_DEBUG_PREF: "doh-rollout.debug",
-  DOH_TRR_SELECT_ENABLED_PREF: "doh-rollout.trr-selection.enabled",
-  DOH_TRR_SELECT_URI_PREF: "doh-rollout.uri",
-  DOH_TRR_SELECT_COMMIT_PREF: "doh-rollout.trr-selection.commit-result",
-  DOH_TRR_SELECT_DRY_RUN_RESULT_PREF:
-    "doh-rollout.trr-selection.dry-run-result",
-  DOH_PROVIDER_STEERING_PREF: "doh-rollout.provider-steering.enabled",
-  DOH_PROVIDER_STEERING_LIST_PREF:
-    "doh-rollout.provider-steering.provider-list",
+  BREADCRUMB_PREF: "doh-rollout.self-enabled",
+  DOORHANGER_USER_DECISION_PREF: "doh-rollout.doorhanger-decision",
+  DISABLED_PREF: "doh-rollout.disable-heuristics",
+  SKIP_HEURISTICS_PREF: "doh-rollout.skipHeuristicsCheck",
+  FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
+  BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
+  PREVIOUS_TRR_MODE_PREF: "doh-rollout.previous.trr.mode",
+  TRR_SELECT_ENABLED_PREF: "doh-rollout.trr-selection.enabled",
+  TRR_SELECT_URI_PREF: "doh-rollout.uri",
+  TRR_SELECT_COMMIT_PREF: "doh-rollout.trr-selection.commit-result",
+  TRR_SELECT_DRY_RUN_RESULT_PREF: "doh-rollout.trr-selection.dry-run-result",
+  PROVIDER_STEERING_PREF: "doh-rollout.provider-steering.enabled",
+  PROVIDER_STEERING_LIST_PREF: "doh-rollout.provider-steering.provider-list",
   PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
 
@@ -84,15 +80,15 @@ async function setup() {
 
   // Enable trr selection for tests. This is off by default so it can be
   // controlled via Normandy.
-  Preferences.set(prefs.DOH_TRR_SELECT_ENABLED_PREF, true);
+  Preferences.set(prefs.TRR_SELECT_ENABLED_PREF, true);
 
   // Enable committing the TRR selection. This pref ships false by default so
   // it can be controlled e.g. via Normandy, but for testing let's set enable.
-  Preferences.set(prefs.DOH_TRR_SELECT_COMMIT_PREF, true);
+  Preferences.set(prefs.TRR_SELECT_COMMIT_PREF, true);
 
   // Enable provider steering. This pref ships false by default so it can be
   // controlled e.g. via Normandy, but for testing let's enable.
-  Preferences.set(prefs.DOH_PROVIDER_STEERING_PREF, true);
+  Preferences.set(prefs.PROVIDER_STEERING_PREF, true);
 
   // Set up heuristics, all passing by default.
 
