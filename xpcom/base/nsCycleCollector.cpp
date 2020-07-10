@@ -3894,7 +3894,7 @@ already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink() {
   return sink.forget();
 }
 
-void nsCycleCollector_collect(nsICycleCollectorListener* aManualListener) {
+bool nsCycleCollector_collect(nsICycleCollectorListener* aManualListener) {
   CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
@@ -3904,7 +3904,7 @@ void nsCycleCollector_collect(nsICycleCollectorListener* aManualListener) {
   AUTO_PROFILER_LABEL("nsCycleCollector_collect", GCCC);
 
   SliceBudget unlimitedBudget = SliceBudget::unlimited();
-  data->mCollector->Collect(ManualCC, unlimitedBudget, aManualListener);
+  return data->mCollector->Collect(ManualCC, unlimitedBudget, aManualListener);
 }
 
 void nsCycleCollector_collectSlice(SliceBudget& budget,
