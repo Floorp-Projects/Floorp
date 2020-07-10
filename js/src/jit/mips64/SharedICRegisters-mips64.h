@@ -40,6 +40,8 @@ static constexpr Register BaselineSecondScratchReg = SecondScratchReg;
 // FloatReg0 must be equal to ReturnFloatReg.
 static constexpr FloatRegister FloatReg0 = f0;
 static constexpr FloatRegister FloatReg1 = f2;
+static constexpr FloatRegister FloatReg2 = f4;
+static constexpr FloatRegister FloatReg3 = f6;
 
 }  // namespace jit
 }  // namespace js
