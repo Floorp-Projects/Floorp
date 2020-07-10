@@ -8324,6 +8324,23 @@ static bool ShouldWordSelectionEatSpace(const nsPeekOffsetStruct& aPos) {
          StaticPrefs::layout_word_select_eat_space_to_next_word();
 }
 
+enum class OffsetIsAtLineEdge : bool { No, Yes };
+
+static void SetPeekResultFromFrame(nsPeekOffsetStruct& aPos, nsIFrame* aFrame,
+                                   int32_t aOffset,
+                                   OffsetIsAtLineEdge aAtLineEdge) {
+  FrameContentRange range = GetRangeForFrame(aFrame);
+  aPos.mResultFrame = aFrame;
+  aPos.mResultContent = range.content;
+  // Output offset is relative to content, not frame
+  aPos.mContentOffset =
+      aOffset < 0 ? range.end + aOffset + 1 : range.start + aOffset;
+  if (aAtLineEdge == OffsetIsAtLineEdge::Yes) {
+    aPos.mAttach = aPos.mContentOffset == range.start ? CARET_ASSOCIATE_AFTER
+                                                      : CARET_ASSOCIATE_BEFORE;
+  }
+}
+
 nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
   MOZ_ASSERT(aPos && !HasAnyStateBits(NS_FRAME_IS_DIRTY));
   nsresult result = NS_ERROR_FAILURE;
@@ -8384,11 +8401,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       }
 
       // Set outputs
-      range = GetRangeForFrame(current);
-      aPos->mResultFrame = current;
-      aPos->mResultContent = range.content;
-      // Output offset is relative to content, not frame
-      aPos->mContentOffset = offset < 0 ? range.end : range.start + offset;
+      SetPeekResultFromFrame(*aPos, current, offset, OffsetIsAtLineEdge::No);
       // If we're dealing with a text frame and moving backward positions us at
       // the end of that line, decrease the offset by one to make sure that
       // we're placed before the linefeed character on the previous line.
@@ -8457,12 +8470,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       }
 
       // Set outputs
-      range = GetRangeForFrame(current);
-      aPos->mResultFrame = current;
-      aPos->mResultContent = range.content;
-      // Output offset is relative to content, not frame
-      aPos->mContentOffset =
-          offset < 0 ? range.end + offset + 1 : range.start + offset;
+      SetPeekResultFromFrame(*aPos, current, offset, OffsetIsAtLineEdge::No);
       break;
     }
     case eSelectLine: {
@@ -8622,19 +8630,16 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       if (!baseFrame) return NS_ERROR_FAILURE;
       FrameTarget targetFrame =
           DrillDownToSelectionFrame(baseFrame, endOfLine, 0);
-      FrameContentRange range = GetRangeForFrame(targetFrame.frame);
-      aPos->mResultContent = range.content;
-      aPos->mContentOffset = endOfLine ? range.end : range.start;
+      SetPeekResultFromFrame(*aPos, targetFrame.frame, endOfLine ? -1 : 0,
+                             OffsetIsAtLineEdge::Yes);
       if (endOfLine && targetFrame.frame->HasSignificantTerminalNewline()) {
         // Do not position the caret after the terminating newline if we're
         // trying to move to the end of line (see bug 596506)
         --aPos->mContentOffset;
       }
-      aPos->mResultFrame = targetFrame.frame;
-      aPos->mAttach = aPos->mContentOffset == range.start
-                          ? CARET_ASSOCIATE_AFTER
-                          : CARET_ASSOCIATE_BEFORE;
-      if (!range.content) return NS_ERROR_FAILURE;
+      if (!aPos->mResultContent) {
+        return NS_ERROR_FAILURE;
+      }
       return NS_OK;
     }
 
