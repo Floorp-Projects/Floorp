@@ -66,6 +66,9 @@ void MediaControlKeyHandler::OnKeyPressed(MediaControlKey aKey) {
     case MediaControlKey::Seekforward:
       controller->SeekForward();
       return;
+    case MediaControlKey::Skipad:
+      controller->SkipAd();
+      return;
     case MediaControlKey::Stop:
       controller->Stop();
       return;
