@@ -12,11 +12,7 @@ use std::time::Duration;
 
 use qlog::{self, event::Event, PacketHeader, QuicFrame};
 
-use neqo_common::{
-    hex, qinfo,
-    qlog::{handle_qlog_result, NeqoQlog},
-    Decoder,
-};
+use neqo_common::{hex, qinfo, qlog::NeqoQlog, Decoder};
 
 use crate::frame::{self, Frame};
 use crate::packet::{DecryptedPacket, PacketNumber, PacketType, PublicPacket};
@@ -25,10 +21,10 @@ use crate::tparams::{self, TransportParametersHandler};
 use crate::tracking::SentPacket;
 use crate::QuicVersion;
 
-pub fn connection_tparams_set(maybe_qlog: &mut Option<NeqoQlog>, tph: &TransportParametersHandler) {
-    if let Some(qlog) = maybe_qlog {
+pub fn connection_tparams_set(qlog: &mut NeqoQlog, tph: &TransportParametersHandler) {
+    qlog.add_event(|| {
         let remote = tph.remote();
-        let event = Event::transport_parameters_set(
+        Some(Event::transport_parameters_set(
             None,
             None,
             None,
@@ -81,24 +77,21 @@ pub fn connection_tparams_set(maybe_qlog: &mut Option<NeqoQlog>, tph: &Transport
             )),
             // TODO(hawkinsw@obs.cr): We do not yet handle PREFERRED_ADDRESS in tparams yet.
             None,
-        );
-
-        let res = qlog.stream().add_event(event);
-        handle_qlog_result(maybe_qlog, res)
-    }
+        ))
+    })
 }
 
-pub fn server_connection_started(maybe_qlog: &mut Option<NeqoQlog>, path: &Path) {
-    connection_started(maybe_qlog, path)
+pub fn server_connection_started(qlog: &mut NeqoQlog, path: &Path) {
+    connection_started(qlog, path)
 }
 
-pub fn client_connection_started(maybe_qlog: &mut Option<NeqoQlog>, path: &Path) {
-    connection_started(maybe_qlog, path)
+pub fn client_connection_started(qlog: &mut NeqoQlog, path: &Path) {
+    connection_started(qlog, path)
 }
 
-fn connection_started(maybe_qlog: &mut Option<NeqoQlog>, path: &Path) {
-    if let Some(qlog) = maybe_qlog {
-        let res = qlog.stream().add_event(Event::connection_started(
+fn connection_started(qlog: &mut NeqoQlog, path: &Path) {
+    qlog.add_event(|| {
+        Some(Event::connection_started(
             if path.local_address().ip().is_ipv4() {
                 "ipv4".into()
             } else {
@@ -112,105 +105,86 @@ fn connection_started(maybe_qlog: &mut Option<NeqoQlog>, path: &Path) {
             Some(format!("{:x}", QuicVersion::default().as_u32())),
             Some(format!("{}", path.local_cid())),
             Some(format!("{}", path.remote_cid())),
-        ));
-        handle_qlog_result(maybe_qlog, res)
-    }
+        ))
+    })
 }
 
-pub fn packet_sent(
-    maybe_qlog: &mut Option<NeqoQlog>,
-    pt: PacketType,
-    pn: PacketNumber,
-    body: &[u8],
-) {
-    if let Some(qlog) = maybe_qlog {
+pub fn packet_sent(qlog: &mut NeqoQlog, pt: PacketType, pn: PacketNumber, body: &[u8]) {
+    qlog.add_event_with_stream(|stream| {
         let mut d = Decoder::from(body);
 
-        let res: Result<_, qlog::Error> = (|| {
-            qlog.stream().add_event(Event::packet_sent_min(
-                to_qlog_pkt_type(pt),
-                PacketHeader::new(pn, None, None, None, None, None),
-                Some(Vec::new()),
-            ))?;
+        stream.add_event(Event::packet_sent_min(
+            to_qlog_pkt_type(pt),
+            PacketHeader::new(pn, None, None, None, None, None),
+            Some(Vec::new()),
+        ))?;
 
-            while d.remaining() > 0 {
-                match Frame::decode(&mut d) {
-                    Ok(f) => {
-                        qlog.stream().add_frame(frame_to_qlogframe(&f), false)?;
-                    }
-                    Err(_) => {
-                        qinfo!("qlog: invalid frame");
-                        break;
-                    }
+        while d.remaining() > 0 {
+            match Frame::decode(&mut d) {
+                Ok(f) => {
+                    stream.add_frame(frame_to_qlogframe(&f), false)?;
+                }
+                Err(_) => {
+                    qinfo!("qlog: invalid frame");
+                    break;
                 }
             }
+        }
 
-            qlog.stream().finish_frames()
-        })();
-        handle_qlog_result(maybe_qlog, res)
-    }
+        stream.finish_frames()
+    })
 }
 
-pub fn packet_dropped(maybe_qlog: &mut Option<NeqoQlog>, payload: &PublicPacket) {
-    if let Some(qlog) = maybe_qlog {
-        let res = qlog.stream().add_event(Event::packet_dropped(
+pub fn packet_dropped(qlog: &mut NeqoQlog, payload: &PublicPacket) {
+    qlog.add_event(|| {
+        Some(Event::packet_dropped(
             Some(to_qlog_pkt_type(payload.packet_type())),
             Some(u64::try_from(payload.packet_len()).unwrap()),
             None,
-        ));
-        handle_qlog_result(maybe_qlog, res)
-    }
+        ))
+    })
 }
 
-pub fn packets_lost(maybe_qlog: &mut Option<NeqoQlog>, pkts: &[SentPacket]) {
-    if let Some(qlog) = maybe_qlog {
-        let mut res = Ok(());
+pub fn packets_lost(qlog: &mut NeqoQlog, pkts: &[SentPacket]) {
+    qlog.add_event_with_stream(|stream| {
         for pkt in pkts {
-            res = (|| {
-                qlog.stream().add_event(Event::packet_lost_min(
-                    to_qlog_pkt_type(pkt.pt),
-                    pkt.pn.to_string(),
-                    Vec::new(),
-                ))?;
-
-                qlog.stream().finish_frames()
-            })();
-            if res.is_err() {
-                break;
-            }
-        }
-        handle_qlog_result(maybe_qlog, res)
-    }
-}
-
-pub fn packet_received(maybe_qlog: &mut Option<NeqoQlog>, payload: &DecryptedPacket) {
-    if let Some(qlog) = maybe_qlog {
-        let mut d = Decoder::from(&payload[..]);
-
-        let res: Result<_, qlog::Error> = (|| {
-            qlog.stream().add_event(Event::packet_received(
-                to_qlog_pkt_type(payload.packet_type()),
-                PacketHeader::new(payload.pn(), None, None, None, None, None),
-                Some(Vec::new()),
-                None,
-                None,
-                None,
+            stream.add_event(Event::packet_lost_min(
+                to_qlog_pkt_type(pkt.pt),
+                pkt.pn.to_string(),
+                Vec::new(),
             ))?;
 
-            while d.remaining() > 0 {
-                match Frame::decode(&mut d) {
-                    Ok(f) => qlog.stream().add_frame(frame_to_qlogframe(&f), false)?,
-                    Err(_) => {
-                        qinfo!("qlog: invalid frame");
-                        break;
-                    }
+            stream.finish_frames()?;
+        }
+        Ok(())
+    })
+}
+
+pub fn packet_received(qlog: &mut NeqoQlog, payload: &DecryptedPacket) {
+    qlog.add_event_with_stream(|stream| {
+        let mut d = Decoder::from(&payload[..]);
+
+        stream.add_event(Event::packet_received(
+            to_qlog_pkt_type(payload.packet_type()),
+            PacketHeader::new(payload.pn(), None, None, None, None, None),
+            Some(Vec::new()),
+            None,
+            None,
+            None,
+        ))?;
+
+        while d.remaining() > 0 {
+            match Frame::decode(&mut d) {
+                Ok(f) => stream.add_frame(frame_to_qlogframe(&f), false)?,
+                Err(_) => {
+                    qinfo!("qlog: invalid frame");
+                    break;
                 }
             }
+        }
 
-            qlog.stream().finish_frames()
-        })();
-        handle_qlog_result(maybe_qlog, res)
-    }
+        stream.finish_frames()
+    })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -233,20 +207,22 @@ impl CongestionState {
 }
 
 pub fn congestion_state_updated(
-    maybe_qlog: &mut Option<NeqoQlog>,
+    qlog: &mut NeqoQlog,
     curr_state: &mut CongestionState,
     new_state: CongestionState,
 ) {
-    if let Some(qlog) = maybe_qlog {
+    qlog.add_event(|| {
         if *curr_state != new_state {
-            let res = qlog.stream().add_event(Event::congestion_state_updated(
+            let evt = Event::congestion_state_updated(
                 Some(curr_state.to_str().to_owned()),
                 new_state.to_str().to_owned(),
-            ));
-            handle_qlog_result(maybe_qlog, res);
+            );
             *curr_state = new_state;
+            Some(evt)
+        } else {
+            None
         }
-    }
+    });
 }
 
 #[allow(dead_code)]
@@ -265,8 +241,10 @@ pub enum QlogMetric {
     PacingRate(u64),
 }
 
-pub fn metrics_updated(maybe_qlog: &mut Option<NeqoQlog>, updated_metrics: &[QlogMetric]) {
-    if let Some(qlog) = maybe_qlog {
+pub fn metrics_updated(qlog: &mut NeqoQlog, updated_metrics: &[QlogMetric]) {
+    debug_assert!(!updated_metrics.is_empty());
+
+    qlog.add_event(|| {
         let mut min_rtt: Option<u64> = None;
         let mut smoothed_rtt: Option<u64> = None;
         let mut latest_rtt: Option<u64> = None;
@@ -303,7 +281,7 @@ pub fn metrics_updated(maybe_qlog: &mut Option<NeqoQlog>, updated_metrics: &[Qlo
             }
         }
 
-        let res = qlog.stream().add_event(Event::metrics_updated(
+        Some(Event::metrics_updated(
             min_rtt,
             smoothed_rtt,
             latest_rtt,
@@ -316,9 +294,8 @@ pub fn metrics_updated(maybe_qlog: &mut Option<NeqoQlog>, updated_metrics: &[Qlo
             packets_in_flight,
             in_recovery,
             pacing_rate,
-        ));
-        handle_qlog_result(maybe_qlog, res)
-    }
+        ))
+    })
 }
 
 // Helper functions

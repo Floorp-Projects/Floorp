@@ -74,7 +74,7 @@ impl Http3ServerHandler {
             return;
         }
 
-        let res = self.check_connection_events(conn);
+        let res = self.check_connection_events(conn, now);
         if !self.check_result(conn, now, &res) && self.base_handler.state().active() {
             let res = self.base_handler.process_sending(conn);
             self.check_result(conn, now, &res);
@@ -116,7 +116,7 @@ impl Http3ServerHandler {
     }
 
     // If this return an error the connection must be closed.
-    fn check_connection_events(&mut self, conn: &mut Connection) -> Res<()> {
+    fn check_connection_events(&mut self, conn: &mut Connection, now: Instant) -> Res<()> {
         qtrace!([self], "Check connection events.");
         while let Some(e) = conn.next_event() {
             qdebug!([self], "check_connection_events - event {:?}.", e);
@@ -125,7 +125,11 @@ impl Http3ServerHandler {
                     StreamType::BiDi => self.base_handler.add_streams(
                         stream_id.as_u64(),
                         SendMessage::new(stream_id.as_u64(), Box::new(self.events.clone())),
-                        RecvMessage::new(stream_id.as_u64(), Box::new(self.events.clone()), None),
+                        Box::new(RecvMessage::new(
+                            stream_id.as_u64(),
+                            Box::new(self.events.clone()),
+                            None,
+                        )),
                     ),
                     StreamType::UniDi => {
                         if self
@@ -143,16 +147,21 @@ impl Http3ServerHandler {
                     stream_id,
                     app_error,
                 } => {
-                    let _ = self
-                        .base_handler
-                        .handle_stream_reset(conn, stream_id, app_error)?;
+                    self.base_handler
+                        .handle_stream_reset(stream_id, app_error)?;
                 }
                 ConnectionEvent::SendStreamStopSending {
                     stream_id,
                     app_error,
-                } => self.handle_stream_stop_sending(conn, stream_id, app_error)?,
+                } => self
+                    .base_handler
+                    .handle_stream_stop_sending(stream_id, app_error)?,
                 ConnectionEvent::StateChange(state) => {
                     if self.base_handler.handle_state_change(conn, &state)? {
+                        if self.base_handler.state() == Http3State::Connected {
+                            let settings = self.base_handler.save_settings();
+                            conn.send_ticket(now, &settings)?;
+                        }
                         self.events
                             .connection_state_change(self.base_handler.state());
                     }
@@ -178,7 +187,9 @@ impl Http3ServerHandler {
                             // TODO implement push
                             Ok(())
                         }
-                        HFrame::Goaway { .. } => Err(Error::HttpFrameUnexpected),
+                        HFrame::Goaway { .. } | HFrame::CancelPush { .. } => {
+                            Err(Error::HttpFrameUnexpected)
+                        }
                         _ => unreachable!(
                             "we should only put MaxPushId and Goaway into control_frames."
                         ),
@@ -188,28 +199,6 @@ impl Http3ServerHandler {
             }
             _ => Ok(()),
         }
-    }
-
-    fn handle_stream_stop_sending(
-        &mut self,
-        conn: &mut Connection,
-        stop_stream_id: u64,
-        app_err: AppError,
-    ) -> Res<()> {
-        if self
-            .base_handler
-            .send_streams
-            .remove(&stop_stream_id)
-            .is_some()
-        {
-            // receiving side may be closed already, just ignore an error in the following line.
-            let _ = conn.stream_stop_sending(stop_stream_id, app_err);
-            self.base_handler.recv_streams.remove(&stop_stream_id);
-        } else if self.base_handler.is_critical_stream(stop_stream_id) {
-            return Err(Error::HttpClosedCriticalStream);
-        }
-
-        Ok(())
     }
 
     /// Response data are read directly into a buffer supplied as a parameter of this function to avoid copying

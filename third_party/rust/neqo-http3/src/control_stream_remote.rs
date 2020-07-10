@@ -49,27 +49,16 @@ impl ControlStreamRemote {
     }
 
     /// Check if a stream is the control stream and read received data.
-    pub fn receive_if_this_stream(&mut self, conn: &mut Connection, stream_id: u64) -> Res<bool> {
-        if let Some(id) = self.stream_id {
-            if id == stream_id {
-                qdebug!([self], "Receiving data.");
-                self.fin = self.frame_reader.receive(conn, stream_id)?;
-                return Ok(true);
+    pub fn receive(&mut self, conn: &mut Connection) -> Res<Option<HFrame>> {
+        assert!(self.stream_id.is_some());
+        qdebug!([self], "Receiving data.");
+        match self.frame_reader.receive(conn, self.stream_id.unwrap())? {
+            (_, true) => {
+                self.fin = true;
+                Err(Error::HttpClosedCriticalStream)
             }
+            (s, false) => Ok(s),
         }
-        Ok(false)
-    }
-
-    pub fn recvd_fin(&self) -> bool {
-        self.fin
-    }
-
-    pub fn frame_reader_done(&self) -> bool {
-        self.frame_reader.done()
-    }
-
-    pub fn get_frame(&mut self) -> Res<HFrame> {
-        self.frame_reader.get_frame()
     }
 
     #[must_use]
