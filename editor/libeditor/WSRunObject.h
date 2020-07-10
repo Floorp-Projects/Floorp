@@ -567,47 +567,6 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   using PointPosition = WSFragment::PointPosition;
 
-  using WSFragmentArray = AutoTArray<WSFragment, 3>;
-  const WSFragmentArray& WSFragmentArrayRef() const {
-    const_cast<WSRunScanner*>(this)->EnsureWSFragments();
-    return mFragments;
-  }
-
-  /**
-   * FindNearestFragment() and FindNearestFragmentIndex() look for a WSFragment
-   * which is closest to specified direction from aPoint.
-   *
-   * @param aPoint      The point to start to look for.
-   * @param aForward    true if caller needs to look for a WSFragment after the
-   *                    point in the DOM tree.  Otherwise, i.e., before the
-   *                    point, false.
-   * @return            Found WSFragment instance or index.
-   *                    If aForward is true and:
-   *                      if aPoint is end of a run, returns next run.
-   *                      if aPoint is start of a run, returns the run.
-   *                      if aPoint is before the first run, returns the first
-   *                      run.
-   *                      If aPoint is after the last run, returns nullptr.
-   *                    If aForward is false and:
-   *                      if aPoint is end of a run, returns the run.
-   *                      if aPoint is start of a run, returns its next run.
-   *                      if aPoint is before the first run, returns nullptr.
-   *                      if aPoint is after the last run, returns the last run.
-   */
-  template <typename PT, typename CT>
-  const WSFragment* FindNearestFragment(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const {
-    WSFragmentArray::index_type index =
-        FindNearestFragmentIndex(aPoint, aForward);
-    if (index == WSFragmentArray::NoIndex) {
-      return nullptr;
-    }
-    return &mFragments[index];
-  }
-  template <typename PT, typename CT>
-  WSFragmentArray::index_type FindNearestFragmentIndex(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const;
-
   /**
    * GetInclusiveNextEditableCharPoint() returns aPoint if it points a character
    * in an editable text node, or start of next editable text node otherwise.
@@ -755,8 +714,6 @@ class MOZ_STACK_CLASS WSRunScanner {
           mEnd(aEndBoundaryData),
           mNBSPData(aNBSPData),
           mIsPreformatted(aIsPreformatted) {}
-
-    void InitializeWSFragmentArray(WSFragmentArray& aFragments) const;
 
     bool StartsFromNormalText() const { return mStart.IsNormalText(); }
     bool StartsFromSpecialContent() const { return mStart.IsSpecialContent(); }
@@ -1000,7 +957,6 @@ class MOZ_STACK_CLASS WSRunScanner {
     bool mIsPreformatted;
   };
 
-  void EnsureWSFragments();
   template <typename EditorDOMPointType>
   void InitializeRangeStart(
       const EditorDOMPointType& aPoint,
@@ -1033,12 +989,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   BoundaryData mStart;
   BoundaryData mEnd;
   NoBreakingSpaceData mNBSPData;
-
- private:
-  // Don't access `mFragments` directly.  Use `WSFragmentArrayRef()` when you
-  // want to access.  Then, it initializes all fragments for you if they has
-  // not been initialized yet.
-  WSFragmentArray mFragments;
 };
 
 class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
