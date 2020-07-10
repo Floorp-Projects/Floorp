@@ -436,6 +436,7 @@ void FunctionBox::finishScriptFlags() {
 
 void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
   MOZ_ASSERT(&stencil == &functionStencil().get());
+  MOZ_ASSERT(!isAsmJSModule());
 
   SharedContext::copyScriptFields(stencil);
 
