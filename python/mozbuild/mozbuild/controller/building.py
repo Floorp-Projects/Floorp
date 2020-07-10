@@ -1008,9 +1008,8 @@ class BuildDriver(MozbuildObject):
         MozbuildObject.__init__(self, *args, **kwargs)
         self.mach_context = None
 
-    def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
-              directory=None, verbose=False, keep_going=False, mach_context=None,
-              append_env=None):
+    def build(self, what=None, jobs=0, directory=None, verbose=False,
+              keep_going=False, mach_context=None, append_env=None):
         """Invoke the build backend.
 
         ``what`` defines the thing to build. If not defined, the default
@@ -1036,7 +1035,6 @@ class BuildDriver(MozbuildObject):
                 return 1
 
             if directory is not None:
-                disable_extra_make_dependencies = True
                 directory = mozpath.normsep(directory)
                 if directory.startswith('/'):
                     directory = directory[1:]
@@ -1151,22 +1149,6 @@ class BuildDriver(MozbuildObject):
                         return 1
 
                     target_pairs.append((make_dir, make_target))
-
-                # Possibly add extra make depencies using dumbmake.
-                if not disable_extra_make_dependencies:
-                    from dumbmake.dumbmake import (dependency_map,
-                                                   add_extra_dependencies)
-                    depfile = os.path.join(self.topsrcdir, 'build',
-                                           'dumbmake-dependencies')
-                    with io.open(depfile, encoding='utf-8', newline='\n') as f:
-                        dm = dependency_map(f.readlines())
-                    new_pairs = list(add_extra_dependencies(target_pairs, dm))
-                    self.log(logging.DEBUG, 'dumbmake',
-                             {'target_pairs': target_pairs,
-                              'new_pairs': new_pairs},
-                             'Added extra dependencies: will build {new_pairs} ' +
-                             'instead of {target_pairs}.')
-                    target_pairs = new_pairs
 
                 # Build target pairs.
                 for make_dir, make_target in target_pairs:
