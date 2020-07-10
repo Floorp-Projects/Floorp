@@ -122,6 +122,12 @@ class BaseQuaternion {
 
   BaseQuaternion& Invert() { return Conjugate().Normalize(); }
 
+  BaseQuaternion Inverse() const {
+    BaseQuaternion q = *this;
+    q.Invert();
+    return q;
+  }
+
   Point3DTyped<UnknownUnits, T> RotatePoint(
       const Point3DTyped<UnknownUnits, T>& aPoint) const {
     T uvx = T(2.0) * (y * aPoint.z - z * aPoint.y);
