@@ -2,7 +2,7 @@
 
 # PictureInPictureChangedAction
 
-`data class PictureInPictureChangedAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L260)
+`data class PictureInPictureChangedAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L261)
 
 Updates [pipEnabled](pip-enabled.md) with the given [sessionId](session-id.md).
 

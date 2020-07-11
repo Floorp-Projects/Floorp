@@ -17,6 +17,7 @@ Interface describing a [LocationService](./index.md) that returns a [Region](-re
 | Name | Summary |
 |---|---|
 | [fetchRegion](fetch-region.md) | `abstract suspend fun fetchRegion(readFromCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`Region`](-region/index.md)`?`<br>Determines the current [Region](-region/index.md) of the user. |
+| [hasRegionCached](has-region-cached.md) | `abstract fun hasRegionCached(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Get if there is already a cached region. |
 
 ### Companion Object Functions
 

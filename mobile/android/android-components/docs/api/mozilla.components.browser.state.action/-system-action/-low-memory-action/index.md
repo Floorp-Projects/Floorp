@@ -2,7 +2,7 @@
 
 # LowMemoryAction
 
-`data class LowMemoryAction : `[`SystemAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L51)
+`data class LowMemoryAction : `[`SystemAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L52)
 
 Optimizes the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional
 resources if the system is in a low memory condition.

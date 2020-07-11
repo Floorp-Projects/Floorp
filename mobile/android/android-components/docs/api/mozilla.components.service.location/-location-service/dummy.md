@@ -2,7 +2,7 @@
 
 # dummy
 
-`fun dummy(): `[`LocationService`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/LocationService.kt#L35)
+`fun dummy(): `[`LocationService`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/LocationService.kt#L40)
 
 Creates a dummy [LocationService](index.md) implementation that always returns `null`.
 

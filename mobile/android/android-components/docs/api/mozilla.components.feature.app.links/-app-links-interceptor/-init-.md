@@ -3,7 +3,7 @@
 # &lt;init&gt;
 
 `AppLinksInterceptor(context: <ERROR CLASS>, interceptLinkClicks: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, engineSupportedSchemes: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = ENGINE_SUPPORTED_SCHEMES, alwaysDeniedSchemes: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = ALWAYS_DENY_SCHEMES, launchInApp: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, useCases: `[`AppLinksUseCases`](../-app-links-use-cases/index.md)` = AppLinksUseCases(context, launchInApp,
-        alwaysDeniedSchemes = alwaysDeniedSchemes), launchFromInterceptor: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`
+        alwaysDeniedSchemes = alwaysDeniedSchemes), launchFromInterceptor: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, allowRedirectUrls: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = ALLOW_REDIRECT_HOSTS)`
 
 This feature implements use cases for detecting and handling redirects to external apps. The user
 is asked to confirm her intention before leaving the app. These include the Android Intents,
@@ -38,3 +38,5 @@ of security concerns.
 have registered to open.
 
 `launchFromInterceptor` - If {true} then the interceptor will launch the link in third-party apps if available.
+
+`allowRedirectUrls` - A set of URLs that allows intercept when `onLoadRequest` is triggered by redirect.

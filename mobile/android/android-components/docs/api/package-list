@@ -187,7 +187,6 @@ mozilla.components.feature.addons.update
 mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
-mozilla.components.feature.containers
 mozilla.components.feature.contextmenu
 mozilla.components.feature.contextmenu.ext
 mozilla.components.feature.contextmenu.facts
