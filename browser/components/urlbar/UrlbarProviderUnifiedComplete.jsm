@@ -84,17 +84,8 @@ class ProviderUnifiedComplete extends UrlbarProvider {
         acResult,
         urls
       );
-      // The Muxer gives UnifiedComplete special status and waits for it to
-      // return results before sorting them. We need to know that
-      // UnifiedComplete has finished even if it isn't returning results, so we
-      // call addCallback with an empty result here, which is something only
-      // UnifiedComplete is allowed to do.
-      if (!results.length) {
-        addCallback(this, null);
-      } else {
-        for (let result of results) {
-          addCallback(this, result);
-        }
+      for (let result of results) {
+        addCallback(this, result);
       }
     });
     this.queries.delete(queryContext);

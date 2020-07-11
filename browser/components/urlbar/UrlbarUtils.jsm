@@ -512,6 +512,58 @@ var UrlbarUtils = {
   },
 
   /**
+   * Strips parts of a URL defined in `options`.
+   *
+   * @param {string} spec
+   *        The text to modify.
+   * @param {object} options
+   * @param {boolean} options.stripHttp
+   *        Whether to strip http.
+   * @param {boolean} options.stripHttps
+   *        Whether to strip https.
+   * @param {boolean} options.stripWww
+   *        Whether to strip `www.`.
+   * @param {boolean} options.trimSlash
+   *        Whether to trim the trailing slash.
+   * @param {boolean} options.trimEmptyQuery
+   *        Whether to trim a trailing `?`.
+   * @param {boolean} options.trimEmptyHash
+   *        Whether to trim a trailing `#`.
+   * @returns {array} [modified, prefix, suffix]
+   *          modified: {string} The modified spec.
+   *          prefix: {string} The parts stripped from the prefix, if any.
+   *          suffix: {string} The parts trimmed from the suffix, if any.
+   */
+  stripPrefixAndTrim(spec, options = {}) {
+    let prefix = "";
+    let suffix = "";
+    if (options.stripHttp && spec.startsWith("http://")) {
+      spec = spec.slice(7);
+      prefix = "http://";
+    } else if (options.stripHttps && spec.startsWith("https://")) {
+      spec = spec.slice(8);
+      prefix = "https://";
+    }
+    if (options.stripWww && spec.startsWith("www.")) {
+      spec = spec.slice(4);
+      prefix += "www.";
+    }
+    if (options.trimEmptyHash && spec.endsWith("#")) {
+      spec = spec.slice(0, -1);
+      suffix = "#" + suffix;
+    }
+    if (options.trimEmptyQuery && spec.endsWith("?")) {
+      spec = spec.slice(0, -1);
+      suffix = "?" + suffix;
+    }
+    if (options.trimSlash && spec.endsWith("/")) {
+      spec = spec.slice(0, -1);
+      suffix = "/" + suffix;
+    }
+    return [spec, prefix, suffix];
+  },
+
+  /**
    * Used to filter out the javascript protocol from URIs, since we don't
    * support LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL for those.
    * @param {string} pasteData The data to check for javacript protocol.
