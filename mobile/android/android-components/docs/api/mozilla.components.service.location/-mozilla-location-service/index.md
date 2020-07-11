@@ -32,6 +32,7 @@ https://location.services.mozilla.com/contact
 | Name | Summary |
 |---|---|
 | [fetchRegion](fetch-region.md) | `suspend fun fetchRegion(readFromCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Region`](../-location-service/-region/index.md)`?`<br>Determines the current [LocationService.Region](../-location-service/-region/index.md) based on the IP address used to access the service. |
+| [hasRegionCached](has-region-cached.md) | `fun hasRegionCached(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Get if there is already a cached region. This does not guarantee we have the current actual region but only the last value which may be obsolete at this time. |
 
 ### Extension Functions
 

@@ -7,6 +7,7 @@
 | Name | Summary |
 |---|---|
 | [BrowserState](-browser-state/index.md) | `data class BrowserState : `[`State`](../mozilla.components.lib.state/-state.md)<br>Value type that represents the complete state of the browser/engine. |
+| [ContainerState](-container-state/index.md) | `data class ContainerState`<br>Value type that represents the state of a container also known as a contextual identity. |
 | [ContentState](-content-state/index.md) | `data class ContentState`<br>Value type that represents the state of the content within a [SessionState](-session-state/index.md). |
 | [CustomTabActionButtonConfig](-custom-tab-action-button-config/index.md) | `data class CustomTabActionButtonConfig` |
 | [CustomTabConfig](-custom-tab-config/index.md) | `data class CustomTabConfig`<br>Holds configuration data for a Custom Tab. |
@@ -21,6 +22,12 @@
 | [TabSessionState](-tab-session-state/index.md) | `data class TabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a tab (private or normal). |
 | [TrackingProtectionState](-tracking-protection-state/index.md) | `data class TrackingProtectionState`<br>Value type that represents the state of tracking protection within a [SessionState](-session-state/index.md). |
 | [WebExtensionState](-web-extension-state/index.md) | `data class WebExtensionState`<br>Value type that represents the state of a web extension. |
+
+### Type Aliases
+
+| Name | Summary |
+|---|---|
+| [Container](-container.md) | `typealias Container = `[`ContainerState`](-container-state/index.md) |
 
 ### Functions
 

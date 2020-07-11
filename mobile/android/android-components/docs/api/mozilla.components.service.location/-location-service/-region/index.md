@@ -2,7 +2,7 @@
 
 # Region
 
-`data class Region` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/LocationService.kt#L26)
+`data class Region` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/LocationService.kt#L31)
 
 A [Region](./index.md) returned by the location service.
 
