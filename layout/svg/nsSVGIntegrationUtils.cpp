@@ -784,6 +784,10 @@ bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     // Create one extra draw target for drawing positioned mask, so that we do
     // not have to copy the content of maskTarget before painting
     // clip-path into it.
+    if (!maskTarget->CanCreateSimilarDrawTarget(maskTarget->GetSize(),
+                                                SurfaceFormat::A8)) {
+      return false;
+    }
     maskTarget = maskTarget->CreateSimilarDrawTarget(maskTarget->GetSize(),
                                                      SurfaceFormat::A8);
   }
