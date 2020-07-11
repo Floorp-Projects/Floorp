@@ -1948,9 +1948,14 @@ class StaticAnalysis(MachCommandBase):
 
         # Then build the rest of the build dependencies by running the full
         # export target, because we can't do anything better.
-        return builder._run_make(directory=self.topobjdir, target='export',
-                                 line_handler=None, silent=not verbose,
-                                 num_jobs=jobs)
+        for target in ('export', 'pre-compile'):
+            rc = builder._run_make(directory=self.topobjdir, target=target,
+                                   line_handler=None, silent=not verbose,
+                                   num_jobs=jobs)
+            if rc != 0:
+                return rc
+
+        return 0
 
     def _set_clang_tools_paths(self):
         rc, config, _ = self._get_config_environment()

@@ -80,8 +80,9 @@ class MakeBackend(CommonBackend):
                 if tier and not needs_AB_rCD:
                     # Android localized resources have special Makefile
                     # handling.
-                    ret.append('%s%s: %s' % (
-                        tier, ':' if tier in ('export', 'libs', 'misc') else '', stub_file))
+                    double_colon_tiers = ('export', 'pre-compile', 'libs', 'misc')
+                    ret.append('%s%s %s' % (
+                        tier, '::' if tier in double_colon_tiers else ':', stub_file))
             for output in outputs:
                 ret.append('%s: %s ;' % (output, stub_file))
                 ret.append('GARBAGE += %s' % output)

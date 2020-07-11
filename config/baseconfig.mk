@@ -38,7 +38,7 @@ ifndef INCLUDED_AUTOCONF_MK
 default::
 else
 # All possible tiers
-ALL_TIERS := artifact win32-artifact android-fat-aar-artifact pre-export export rust compile misc libs android-stage-package android-archive-geckoview tools check
+ALL_TIERS := artifact win32-artifact android-fat-aar-artifact pre-export export pre-compile rust compile misc libs android-stage-package android-archive-geckoview tools check
 
 # All tiers that may be used manually via `mach build $tier`
 RUNNABLE_TIERS := $(ALL_TIERS)
@@ -57,7 +57,7 @@ RUNNABLE_TIERS := $(filter-out android-archive-geckoview,$(RUNNABLE_TIERS))
 endif
 
 # All tiers that run automatically on `mach build`
-TIERS := $(filter-out check,$(RUNNABLE_TIERS))
+TIERS := $(filter-out pre-compile check,$(RUNNABLE_TIERS))
 ifndef COMPILE_ENVIRONMENT
 TIERS := $(filter-out rust compile,$(TIERS))
 endif
