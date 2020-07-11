@@ -161,10 +161,10 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
     }
     mLastFrameID = img->mFrameID;
     mLastProducerID = img->mProducerID;
+
+    UpdateBias(imageIndex);
   }
   SetCurrentTextureHost(img->mTextureHost);
-
-  UpdateBias(imageIndex);
 
   return mCurrentTextureHost;
 }
