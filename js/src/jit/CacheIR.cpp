@@ -283,7 +283,7 @@ static bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idval,
     return true;
   }
 
-  if (!ValueToId<CanGC>(cx, idval, id)) {
+  if (!PrimitiveValueToId<CanGC>(cx, idval, id)) {
     return false;
   }
 

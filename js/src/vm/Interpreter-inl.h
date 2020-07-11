@@ -223,7 +223,8 @@ inline bool HasOwnProperty(JSContext* cx, HandleValue val, HandleValue idValue,
   // As an optimization, provide a fast path when rooting is not necessary and
   // we can safely retrieve the object's shape.
   jsid id;
-  if (val.isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
+  if (val.isObject() && idValue.isPrimitive() &&
+      PrimitiveValueToId<NoGC>(cx, idValue, &id)) {
     JSObject* obj = &val.toObject();
     PropertyResult prop;
     if (obj->isNative() && NativeLookupOwnProperty<NoGC>(

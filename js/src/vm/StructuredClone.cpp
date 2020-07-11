@@ -3258,7 +3258,7 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp) {
         return false;
       }
 
-      if (!ValueToId<CanGC>(context(), key, &id)) {
+      if (!PrimitiveValueToId<CanGC>(context(), key, &id)) {
         return false;
       }
 

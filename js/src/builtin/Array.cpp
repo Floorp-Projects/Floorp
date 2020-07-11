@@ -296,7 +296,8 @@ bool ToId(JSContext* cx, uint64_t index, MutableHandleId id) {
   }
 
   Value tmp = DoubleValue(index);
-  return ValueToId<CanGC>(cx, HandleValue::fromMarkedLocation(&tmp), id);
+  return PrimitiveValueToId<CanGC>(cx, HandleValue::fromMarkedLocation(&tmp),
+                                   id);
 }
 
 /*

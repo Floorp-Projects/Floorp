@@ -1400,7 +1400,7 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
       if (proto) {
         RootedId id(cx);
         RootedValue idv(cx, StringValue(*idp));
-        if (!ValueToId<CanGC>(cx, idv, &id)) {
+        if (!PrimitiveValueToId<CanGC>(cx, idv, &id)) {
           return false;
         }
 

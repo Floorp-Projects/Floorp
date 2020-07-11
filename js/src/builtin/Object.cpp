@@ -83,7 +83,8 @@ bool js::obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp) {
 
   /* Steps 1-2. */
   jsid id;
-  if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
+  if (args.thisv().isObject() && idValue.isPrimitive() &&
+      PrimitiveValueToId<NoGC>(cx, idValue, &id)) {
     JSObject* obj = &args.thisv().toObject();
 
     /* Step 3. */

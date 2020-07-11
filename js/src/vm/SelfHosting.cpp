@@ -641,7 +641,7 @@ static bool intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject obj(cx, &args[0].toObject());
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, args[1], &id)) {
+  if (!PrimitiveValueToId<CanGC>(cx, args[1], &id)) {
     return false;
   }
 
