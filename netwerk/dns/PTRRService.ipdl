@@ -19,7 +19,6 @@ child:
   async __delete__();
   async UpdatePlatformDNSInformation(nsCString[] aSuffixList,
                                      bool aPlatformDisabledTRR);
-  async InitTRRBLStorage(DataStorageEntry aEntry, FileDescriptor aWriteFd);
   async UpdateParentalControlEnabled(bool aEnabled);
   async ClearDNSCache(bool aTrrToo);
   async SetDetectedTrrURI(nsCString aURI);

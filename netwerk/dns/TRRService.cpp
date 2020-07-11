@@ -46,7 +46,7 @@ NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 
 TRRService::TRRService()
     : mInitialized(false),
-      mTRRBlocklistExpireTime(72 * 3600),
+      mBlocklistDurationSeconds(60),
       mLock("trrservice"),
       mConfirmationNS("example.com"_ns),
       mWaitForCaptive(true),
@@ -57,7 +57,7 @@ TRRService::TRRService()
       mSkipTRRWhenParentalControlEnabled(true),
       mDisableAfterFails(5),
       mPlatformDisabledTRR(false),
-      mClearTRRBLStorage(false),
+      mTRRBLStorage("DataMutex::TRRBlocklist"),
       mConfirmationState(CONFIRM_INIT),
       mRetryConfirmInterval(1000),
       mTRRFailures(0),
@@ -234,8 +234,9 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
     }
 
     if (!mPrivateURI.IsEmpty()) {
-      mClearTRRBLStorage = true;
       LOG(("TRRService clearing blocklist because of change in uri service\n"));
+      auto bl = mTRRBLStorage.Lock();
+      bl->Clear();
       clearCache = true;
     }
     mPrivateURI = newURI;
@@ -313,7 +314,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
     uint32_t secs;
     if (NS_SUCCEEDED(
             Preferences::GetUint(TRR_PREF("blacklist-duration"), &secs))) {
-      mTRRBlocklistExpireTime = secs;
+      mBlocklistDurationSeconds = secs;
     }
   }
   if (!name || !strcmp(name, TRR_PREF("early-AAAA"))) {
@@ -492,33 +493,6 @@ bool TRRService::IsOnTRRThread() {
   return thread->IsOnCurrentThread();
 }
 
-void TRRService::InitTRRBLStorage(DataStorage* aInitedStorage) {
-  if (mTRRBLStorage) {
-    return;
-  }
-
-  // We need a lock if we modify mTRRBLStorage variable because it is
-  // access off the main thread as well.
-  MutexAutoLock lock(mLock);
-  if (aInitedStorage) {
-    mTRRBLStorage = aInitedStorage;
-  } else {
-    mTRRBLStorage = DataStorage::Get(DataStorageClass::TRRBlacklist);
-    if (mTRRBLStorage) {
-      if (NS_FAILED(mTRRBLStorage->Init(nullptr))) {
-        mTRRBLStorage = nullptr;
-      }
-    }
-  }
-
-  if (mClearTRRBLStorage) {
-    if (mTRRBLStorage) {
-      mTRRBLStorage->Clear();
-    }
-    mClearTRRBLStorage = false;
-  }
-}
-
 NS_IMETHODIMP
 TRRService::Observe(nsISupports* aSubject, const char* aTopic,
                     const char16_t* aData) {
@@ -542,11 +516,6 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, NS_CAPTIVE_PORTAL_CONNECTIVITY)) {
     nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
     LOG(("TRRservice captive portal was %s\n", data.get()));
-    // When TRRService is in socket process, InitTRRBLStorage() will be called
-    // by TRRServiceChild.
-    if (XRE_IsParentProcess()) {
-      InitTRRBLStorage(nullptr);
-    }
 
     // We should avoid doing calling MaybeConfirm in response to a pref change
     // unless the service is in a TRR=enabled mode.
@@ -563,10 +532,9 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
   } else if (!strcmp(aTopic, kClearPrivateData) || !strcmp(aTopic, kPurge)) {
-    // flush the TRR blocklist, both in-memory and on-disk
-    if (mTRRBLStorage) {
-      mTRRBLStorage->Clear();
-    }
+    // flush the TRR blocklist
+    auto bl = mTRRBLStorage.Lock();
+    bl->Clear();
   } else if (!strcmp(aTopic, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC) ||
              !strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
     // nsINetworkLinkService is only available on parent process.
@@ -693,51 +661,23 @@ bool TRRService::IsDomainBlocked(const nsACString& aHost,
     return true;
   }
 
-  // It's OK to call this method here because it only happens on the main
-  // thread, and we only change the excluded domains/dns suffix list
-  // on the main thread in response to observer notifications.
-  // Calling the locking version of this method would cause us to grab
-  // the mutex for every label of the hostname, which would be very
-  // inefficient.
-  if (NS_IsMainThread()) {
-    if (IsExcludedFromTRR_unlocked(aHost)) {
-      return true;
-    }
-  } else {
-    MOZ_ASSERT(IsOnTRRThread());
-    if (IsExcludedFromTRR(aHost)) {
-      return true;
-    }
-  }
-
-  if (!mTRRBLStorage) {
+  auto bl = mTRRBLStorage.Lock();
+  if (bl->IsEmpty()) {
     return false;
-  }
-
-  if (mClearTRRBLStorage) {
-    mTRRBLStorage->Clear();
-    mClearTRRBLStorage = false;
-    return false;  // just cleared!
   }
 
   // use a unified casing for the hashkey
   nsAutoCString hashkey(aHost + aOriginSuffix);
-  nsCString val(mTRRBLStorage->Get(hashkey, aPrivateBrowsing
-                                                ? DataStorage_Private
-                                                : DataStorage_Persistent));
-
-  if (!val.IsEmpty()) {
-    nsresult code;
-    int32_t until = val.ToInteger(&code) + mTRRBlocklistExpireTime;
+  if (int32_t* val = bl->GetValue(hashkey)) {
+    int32_t until = *val + mBlocklistDurationSeconds;
     int32_t expire = NowInSeconds();
-    if (NS_SUCCEEDED(code) && (until > expire)) {
+    if (until > expire) {
       LOG(("Host [%s] is TRR blocklisted\n", nsCString(aHost).get()));
       return true;
     }
 
     // the blocklisted entry has expired
-    mTRRBLStorage->Remove(hashkey, aPrivateBrowsing ? DataStorage_Private
-                                                    : DataStorage_Persistent);
+    bl->Remove(hashkey);
   }
   return false;
 }
@@ -828,58 +768,17 @@ bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
   return false;
 }
 
-class ProxyBlockList : public Runnable {
- public:
-  ProxyBlockList(TRRService* service, const nsACString& aHost,
-                 const nsACString& aOriginSuffix, bool pb, bool aParentsToo)
-      : mozilla::Runnable("ProxyBlockList"),
-        mService(service),
-        mHost(aHost),
-        mOriginSuffix(aOriginSuffix),
-        mPB(pb),
-        mParentsToo(aParentsToo) {}
-
-  NS_IMETHOD Run() override {
-    mService->AddToBlocklist(mHost, mOriginSuffix, mPB, mParentsToo);
-    mService = nullptr;
-    return NS_OK;
-  }
-
- private:
-  RefPtr<TRRService> mService;
-  nsCString mHost;
-  nsCString mOriginSuffix;
-  bool mPB;
-  bool mParentsToo;
-};
-
 void TRRService::AddToBlocklist(const nsACString& aHost,
                                 const nsACString& aOriginSuffix,
                                 bool privateBrowsing, bool aParentsToo) {
-  {
-    MutexAutoLock lock(mLock);
-    if (!mTRRBLStorage) {
-      return;
-    }
-  }
-
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(new ProxyBlockList(this, aHost, aOriginSuffix,
-                                               privateBrowsing, aParentsToo));
-    return;
-  }
-
-  MOZ_ASSERT(NS_IsMainThread());
-
   LOG(("TRR blocklist %s\n", nsCString(aHost).get()));
   nsAutoCString hashkey(aHost + aOriginSuffix);
-  nsAutoCString val;
-  val.AppendInt(NowInSeconds());  // creation time
 
   // this overwrites any existing entry
-  mTRRBLStorage->Put(
-      hashkey, val,
-      privateBrowsing ? DataStorage_Private : DataStorage_Persistent);
+  {
+    auto bl = mTRRBLStorage.Lock();
+    bl->Put(hashkey, NowInSeconds());
+  }
 
   if (aParentsToo) {
     // when given a full host name, verify its domain as well
@@ -974,6 +873,13 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
       LOG(("TRRService finishing confirmation test %s %d %X\n",
            mPrivateURI.get(), (int)mConfirmationState, (unsigned int)status));
       mConfirmer = nullptr;
+
+      if (mConfirmationState == CONFIRM_OK) {
+        // A fresh confirmation means previous blocked entries might not
+        // be valid anymore.
+        auto bl = mTRRBLStorage.Lock();
+        bl->Clear();
+      }
     }
     if (mConfirmationState == CONFIRM_FAILED) {
       // retry failed NS confirmation
@@ -984,9 +890,6 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
         mRetryConfirmInterval *= 2;
       }
     } else {
-      // A fresh confirmation means previous blocked entries might not
-      // be valid anymore.
-      mClearTRRBLStorage = true;
       if (mMode != MODE_TRRONLY) {
         // don't accumulate trronly data here since trronly failures are
         // handled above by trying again, so counting the successes here would
