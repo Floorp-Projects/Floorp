@@ -61,24 +61,6 @@ void TRRServiceParent::Init() {
 
   Unused << socketParent->SendPTRRServiceConstructor(
       this, captiveIsPassed, parentalControlEnabled, suffixList);
-
-  RefPtr<DataStorage> storage =
-      DataStorage::Get(DataStorageClass::TRRBlacklist);
-  if (!storage) {
-    return;
-  }
-
-  if (NS_FAILED(storage->Init(nullptr))) {
-    return;
-  }
-
-  psm::DataStorageEntry entry;
-  storage->GetAll(&entry.items());
-
-  RefPtr<TRRServiceParent> self = this;
-  storage->AsyncTakeFileDesc([self, entry](ipc::FileDescriptor&& aWriteFd) {
-    Unused << self->SendInitTRRBLStorage(entry, aWriteFd);
-  });
 }
 
 NS_IMETHODIMP
