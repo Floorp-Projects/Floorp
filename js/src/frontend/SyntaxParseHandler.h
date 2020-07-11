@@ -192,13 +192,14 @@ class SyntaxParseHandler {
 
   NameNodeType newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
     lastAtom = name;
-    if (name == cx->names().arguments) {
+    if (name == cx->parserNames().arguments) {
       return NodeArgumentsName;
     }
-    if (pos.begin + strlen("async") == pos.end && name == cx->names().async) {
+    if (pos.begin + strlen("async") == pos.end &&
+        name == cx->parserNames().async) {
       return NodePotentialAsyncKeyword;
     }
-    if (name == cx->names().eval) {
+    if (name == cx->parserNames().eval) {
       return NodeEvalName;
     }
     return NodeName;
