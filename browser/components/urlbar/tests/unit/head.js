@@ -44,6 +44,40 @@ add_task(async function initXPCShellDependencies() {
 });
 
 /**
+ * Gets the database connection.  If the Places connection is invalid it will
+ * try to create a new connection.
+ *
+ * @param [optional] aForceNewConnection
+ *        Forces creation of a new connection to the database.  When a
+ *        connection is asyncClosed it cannot anymore schedule async statements,
+ *        though connectionReady will keep returning true (Bug 726990).
+ *
+ * @return The database connection or null if unable to get one.
+ */
+var gDBConn;
+function DBConn(aForceNewConnection) {
+  if (!aForceNewConnection) {
+    let db = PlacesUtils.history.DBConnection;
+    if (db.connectionReady) {
+      return db;
+    }
+  }
+
+  // If the Places database connection has been closed, create a new connection.
+  if (!gDBConn || aForceNewConnection) {
+    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    file.append("places.sqlite");
+    let dbConn = (gDBConn = Services.storage.openDatabase(file));
+
+    TestUtils.topicObserved("profile-before-change").then(() =>
+      dbConn.asyncClose()
+    );
+  }
+
+  return gDBConn.connectionReady ? gDBConn : null;
+}
+
+/**
  * @param {string} searchString The search string to insert into the context.
  * @param {object} properties Overrides for the default values.
  * @returns {UrlbarQueryContext} Creates a dummy query context with pre-filled
@@ -280,6 +314,69 @@ async function addTestTailSuggestionsEngine(suggestionsFn = null) {
 }
 
 /**
+ * Helper for tests that generate search results but aren't interested in
+ * suggestions, such as autofill tests. Installs a test engine and disables
+ * suggestions.
+ */
+function testEngine_setup() {
+  add_task(async function setup() {
+    await cleanupPlaces();
+    let engine = await addTestSuggestionsEngine();
+    let oldDefaultEngine = await Services.search.getDefault();
+
+    registerCleanupFunction(async () => {
+      Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
+      Services.prefs.clearUserPref(
+        "browser.search.separatePrivateDefault.ui.enabled"
+      );
+      Services.search.setDefault(oldDefaultEngine);
+    });
+
+    Services.search.setDefault(engine);
+    Services.prefs.setBoolPref(
+      "browser.search.separatePrivateDefault.ui.enabled",
+      false
+    );
+    Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
+  });
+}
+
+async function cleanupPlaces() {
+  Services.prefs.clearUserPref("browser.urlbar.autoFill");
+  Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+}
+
+/**
+ * Returns the frecency of a url.
+ *
+ * @param {string} aURI The URI or spec to get frecency for.
+ * @returns {number} the frecency value.
+ */
+function frecencyForUrl(aURI) {
+  let url = aURI;
+  if (aURI instanceof Ci.nsIURI) {
+    url = aURI.spec;
+  } else if (aURI instanceof URL) {
+    url = aURI.href;
+  }
+  let stmt = DBConn().createStatement(
+    "SELECT frecency FROM moz_places WHERE url_hash = hash(?1) AND url = ?1"
+  );
+  stmt.bindByIndex(0, url);
+  try {
+    if (!stmt.executeStep()) {
+      throw new Error("No result for frecency.");
+    }
+    return stmt.getInt32(0);
+  } finally {
+    stmt.finalize();
+  }
+}
+
+/**
  * Creates a UrlbarResult for a bookmark result.
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
@@ -372,6 +469,79 @@ function makeOmniboxResult(
 }
 
 /**
+ * Creates a UrlbarResult for a keyword search result.
+ * @param {UrlbarQueryContext} queryContext
+ *   The context that this result will be displayed in.
+ * @param {string} options.uri
+ *   The page URI.
+ * @param {string} options.keyword
+ *   The page's search keyword.
+ * @param {string} [options.title]
+ *   The title for the bookmarked keyword page.
+ * @param {string} [options.iconUri]
+ *   A URI for the engine's icon.
+ * @param {string} [options.postData]
+ *   The search POST data.
+ * @param {boolean} [options.heuristic]
+ *   True if this is a heuristic result. Defaults to false.
+ * @returns {UrlbarResult}
+ */
+function makeKeywordSearchResult(
+  queryContext,
+  { uri, keyword, title, iconUri, postData, heuristic = false }
+) {
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.KEYWORD,
+    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      title: [title ? title : uri, UrlbarUtils.HIGHLIGHT.TYPED],
+      url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
+      keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
+      input: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
+      postData,
+      icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
+    })
+  );
+
+  if (heuristic) {
+    result.heuristic = heuristic;
+  }
+  return result;
+}
+
+/**
+ * Creates a UrlbarResult for a priority search result.
+ * @param {UrlbarQueryContext} queryContext
+ *   The context that this result will be displayed in.
+ * @param {string} [options.engineName]
+ *   The name of the engine providing the suggestion. Leave blank if there
+ *   is no suggestion.
+ * @param {string} [options.engineIconUri]
+ *   A URI for the engine's icon.
+ * @param {boolean} [options.heuristic]
+ *   True if this is a heuristic result. Defaults to false.
+ * @returns {UrlbarResult}
+ */
+function makePrioritySearchResult(
+  queryContext,
+  { engineName, engineIconUri, heuristic }
+) {
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_SOURCE.SEARCH,
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
+      icon: engineIconUri ? engineIconUri : "",
+    })
+  );
+
+  if (heuristic) {
+    result.heuristic = heuristic;
+  }
+  return result;
+}
+
+/**
  * Creates a UrlbarResult for a search result.
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
@@ -393,6 +563,9 @@ function makeOmniboxResult(
  *   True if this is a heuristic result. Defaults to false.
  * @param {number} [options.keywordOffer]
  *   A value from UrlbarUtils.KEYWORD_OFFER.
+ * @param {string} providerName
+ *   The name of the provider offering this result. The test suite will not
+ *   check which provider offered a result unless this option is specified.
  * @returns {UrlbarResult}
  */
 function makeSearchResult(
@@ -408,6 +581,7 @@ function makeSearchResult(
     engineIconUri,
     heuristic = false,
     keywordOffer,
+    providerName,
   }
 ) {
   if (!keywordOffer) {
@@ -453,6 +627,10 @@ function makeSearchResult(
     result.payload.lowerCaseSuggestion = result.payload.suggestion.toLocaleLowerCase();
   }
 
+  if (providerName) {
+    result.providerName = providerName;
+  }
+
   result.heuristic = heuristic;
   return result;
 }
@@ -471,11 +649,14 @@ function makeSearchResult(
  *   A URI for the page's icon.
  * @param {boolean} [options.heuristic]
  *   True if this is a heuristic result. Defaults to false.
+ *  * @param {string} providerName
+ *   The name of the provider offering this result. The test suite will not
+ *   check which provider offered a result unless this option is specified.
  * @returns {UrlbarResult}
  */
 function makeVisitResult(
   queryContext,
-  { title, uri, iconUri, tags = null, heuristic = false }
+  { title, uri, iconUri, tags = null, heuristic = false, providerName }
 ) {
   let payload = {
     url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -494,6 +675,10 @@ function makeVisitResult(
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
   );
 
+  if (providerName) {
+    result.providerName = providerName;
+  }
+
   result.heuristic = heuristic;
   return result;
 }
@@ -503,12 +688,26 @@ function makeVisitResult(
  * the param `matches`.
  * @param {UrlbarQueryContext} context
  *   The context for this query.
+ * @param {string} [incompleteSearch]
+ *   A search will be fired for this string and then be immediately canceled by
+ *   the query in `context`.
+ * @param {string} [autofilled]
+ *   The autofilled value in the first result.
+ * @param {string} [completed]
+ *   The value that would be filled if the autofill result was confirmed.
+ *   Has no effect if `autofilled` is not specified.
  * @param {array} matches
  *   An array of UrlbarResults.
  * @param {boolean} [isPrivate]
  *   Set this to `true` to simulate a search in a private window.
  */
-async function check_results({ context, matches = [] } = {}) {
+async function check_results({
+  context,
+  incompleteSearch,
+  autofilled,
+  completed,
+  matches = [],
+} = {}) {
   if (!context) {
     return;
   }
@@ -530,7 +729,34 @@ async function check_results({ context, matches = [] } = {}) {
       autofillFirstResult() {},
     },
   });
+
+  if (incompleteSearch) {
+    let incompleteContext = createContext(incompleteSearch, {
+      isPrivate: context.isPrivate,
+    });
+    controller.startQuery(incompleteContext);
+  }
   await controller.startQuery(context);
+
+  if (autofilled) {
+    Assert.ok(context.results[0], "There is a first result.");
+    Assert.ok(
+      context.results[0].autofill,
+      "The first result is an autofill result"
+    );
+    Assert.equal(
+      context.results[0].autofill.value,
+      autofilled,
+      "The correct value was autofilled."
+    );
+    if (completed) {
+      Assert.equal(
+        context.results[0].payload.url,
+        completed,
+        "The completed autofill value is correct."
+      );
+    }
+  }
 
   Assert.equal(
     context.results.length,
@@ -549,4 +775,14 @@ async function check_results({ context, matches = [] } = {}) {
     context.results.map(m => m.heuristic),
     "Heuristic results are correctly flagged."
   );
+
+  matches.forEach((match, i) => {
+    if (match.providerName) {
+      Assert.equal(
+        match.providerName,
+        context.results[i].providerName,
+        `The result at index ${i} is from the correct provider.`
+      );
+    }
+  });
 }

@@ -4,7 +4,20 @@
 
 "use strict";
 
-addAutofillTasks(true);
+const ENGINE_NAME = "engine-suggestions.xml";
+const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
+
+const origin = "example.com";
+
+async function cleanup() {
+  let suggestPrefs = ["history", "bookmark", "openpage"];
+  for (let type of suggestPrefs) {
+    Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
+  }
+  await cleanupPlaces();
+}
+
+testEngine_setup();
 
 // "example.com/" should match http://example.com/.  i.e., the search string
 // should be treated as if it didn't have the trailing slash.
@@ -14,16 +27,18 @@ add_task(async function trailingSlash() {
       uri: "http://example.com/",
     },
   ]);
-  await check_autocomplete({
-    search: "example.com/",
-    autofilled: "example.com/",
-    completed: "http://example.com/",
+
+  let context = createContext(`${origin}/`, { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: `${origin}/`,
+    completed: `http://${origin}/`,
     matches: [
-      {
-        value: "example.com/",
-        comment: "example.com/",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: `http://${origin}/`,
+        title: `${origin}/`,
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -37,16 +52,17 @@ add_task(async function trailingSlashWWW() {
       uri: "http://www.example.com/",
     },
   ]);
-  await check_autocomplete({
-    search: "example.com/",
+  let context = createContext(`${origin}/`, { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "example.com/",
     completed: "http://www.example.com/",
     matches: [
-      {
-        value: "example.com/",
-        comment: "www.example.com/",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: `http://www.${origin}/`,
+        title: `www.${origin}/`,
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -59,16 +75,17 @@ add_task(async function port() {
       uri: "http://example.com:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "ex",
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "example.com:8888/",
     completed: "http://example.com:8888/",
     matches: [
-      {
-        value: "example.com:8888/",
-        comment: "example.com:8888",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: `http://${origin}:8888/`,
+        title: `${origin}:8888`,
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -82,16 +99,17 @@ add_task(async function portPartial() {
       uri: "http://example.com:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "example.com:8",
+  let context = createContext(`${origin}:8`, { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "example.com:8888/",
     completed: "http://example.com:8888/",
     matches: [
-      {
-        value: "example.com:8888/",
-        comment: "example.com:8888",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: `http://${origin}:8888/`,
+        title: `${origin}:8888`,
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -105,16 +123,17 @@ add_task(async function preserveCase() {
       uri: "http://example.com/",
     },
   ]);
-  await check_autocomplete({
-    search: "EXaM",
+  let context = createContext("EXaM", { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "EXaMple.com/",
     completed: "http://example.com/",
     matches: [
-      {
-        value: "example.com/",
-        comment: "example.com",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: `http://${origin}/`,
+        title: `${origin}`,
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -129,16 +148,17 @@ add_task(async function preserveCasePort() {
       uri: "http://example.com:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "EXaM",
+  let context = createContext("EXaM", { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "EXaMple.com:8888/",
     completed: "http://example.com:8888/",
     matches: [
-      {
-        value: "example.com:8888/",
-        comment: "example.com:8888",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: `http://${origin}:8888/`,
+        title: `${origin}:8888`,
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -151,9 +171,18 @@ add_task(async function portNoMatch1() {
       uri: "http://example.com:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "example.com:89",
-    matches: [],
+  let context = createContext(`${origin}:89`, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: `http://${origin}:89/`,
+        title: `http://${origin}:89/`,
+        iconUri: "",
+        heuristic: true,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
+    ],
   });
   await cleanup();
 });
@@ -165,9 +194,18 @@ add_task(async function portNoMatch2() {
       uri: "http://example.com:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "example.com:9",
-    matches: [],
+  let context = createContext(`${origin}:9`, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: `http://${origin}:9/`,
+        title: `http://${origin}:9/`,
+        iconUri: "",
+        heuristic: true,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
+    ],
   });
   await cleanup();
 });
@@ -179,9 +217,17 @@ add_task(async function trailingSlash() {
       uri: "http://example.com/",
     },
   ]);
-  await check_autocomplete({
-    search: "example/",
-    matches: [],
+  let context = createContext("example/", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: "http://example/",
+        title: "http://example/",
+        heuristic: true,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
+    ],
   });
   await cleanup();
 });
@@ -193,21 +239,31 @@ add_task(async function multidotted() {
       uri: "http://www.example.co.jp:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "www.example.co.",
+  let context = createContext("www.example.co.", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "www.example.co.jp:8888/",
     completed: "http://www.example.co.jp:8888/",
     matches: [
-      {
-        value: "www.example.co.jp:8888/",
-        comment: "www.example.co.jp:8888",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: "http://www.example.co.jp:8888/",
+        title: "www.example.co.jp:8888",
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
     ],
   });
   await cleanup();
 });
 
 add_task(async function test_ip() {
+  // IP addresses have complicated rules around whether they show
+  // HeuristicFallback's backup search result. Flip this pref to disable that
+  // backup search and simplify ths subtest.
+  Services.prefs.setBoolPref("keyword.enabled", false);
   for (let str of [
     "192.168.1.1/",
     "255.255.255.255:8080/",
@@ -218,20 +274,23 @@ add_task(async function test_ip() {
     info("testing " + str);
     await PlacesTestUtils.addVisits("http://" + str);
     for (let i = 1; i < str.length; ++i) {
-      await check_autocomplete({
-        search: str.substring(0, i),
+      let context = createContext(str.substring(0, i), { isPrivate: false });
+      await check_results({
+        context,
+        autofilled: str,
         completed: "http://" + str,
         matches: [
-          {
-            value: str,
-            comment: str.replace(/\/$/, ""), // strip trailing slash
-            style: ["autofill", "heuristic"],
-          },
+          makeVisitResult(context, {
+            uri: "http://" + str,
+            title: str.replace(/\/$/, ""), // strip trailing slash
+            heuristic: true,
+          }),
         ],
       });
     }
     await cleanup();
   }
+  Services.prefs.clearUserPref("keyword.enabled");
 });
 
 // host starting with large number.
@@ -241,15 +300,17 @@ add_task(async function large_number_host() {
       uri: "http://12345example.it:8888/",
     },
   ]);
-  await check_autocomplete({
-    search: "1234",
+  let context = createContext("1234", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "12345example.it:8888/",
     completed: "http://12345example.it:8888/",
     matches: [
-      {
-        value: "12345example.it:8888/",
-        comment: "12345example.it:8888",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: "http://12345example.it:8888/",
+        title: "12345example.it:8888",
+        heuristic: true,
+      }),
     ],
   });
   await cleanup();
@@ -296,16 +357,17 @@ add_task(async function groupByHost() {
   );
 
   // The https origin should be autofilled.
-  await check_autocomplete({
-    search: "ex",
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "example.com/",
     completed: "https://example.com/",
     matches: [
-      {
-        value: "example.com/",
-        comment: "https://example.com",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: "https://example.com/",
+        title: "https://example.com",
+        heuristic: true,
+      }),
     ],
   });
 
@@ -360,16 +422,17 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
   );
 
   // The https origin should be autofilled.
-  await check_autocomplete({
-    search: "ex",
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "example.com/",
     completed: "https://example.com/",
     matches: [
-      {
-        value: "example.com/",
-        comment: "https://example.com",
-        style: ["autofill", "heuristic"],
-      },
+      makeVisitResult(context, {
+        uri: "https://example.com/",
+        title: "https://example.com",
+        heuristic: true,
+      }),
     ],
   });
 
@@ -378,8 +441,8 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
   await cleanup();
 });
 
-// This is similar to suggestHistoryFalse_bookmark_0 in autofill_tasks.js, but
-// it adds unbookmarked visits for multiple URLs with the same origin.
+// This is similar to suggestHistoryFalse_bookmark_0 in test_autofill_tasks.js,
+// but it adds unbookmarked visits for multiple URLs with the same origin.
 add_task(async function suggestHistoryFalse_bookmark_multiple() {
   // Force only bookmarked pages to be suggested and therefore only bookmarked
   // pages to be completed.
@@ -400,9 +463,16 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
       uri: baseURL + "other1",
     },
   ]);
-  await check_autocomplete({
-    search,
-    matches: [],
+  let context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        heuristic: true,
+      }),
+    ],
   });
 
   await PlacesTestUtils.addVisits([
@@ -410,9 +480,16 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
       uri: bookmarkedURL,
     },
   ]);
-  await check_autocomplete({
-    search,
-    matches: [],
+  context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        heuristic: true,
+      }),
+    ],
   });
 
   await PlacesTestUtils.addVisits([
@@ -420,30 +497,37 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
       uri: baseURL + "other2",
     },
   ]);
-  await check_autocomplete({
-    search,
-    matches: [],
+  context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        heuristic: true,
+      }),
+    ],
   });
 
   // Now bookmark the second URL.  It should be suggested and completed.
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: bookmarkedURL,
   });
-  await check_autocomplete({
-    search,
+  context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "example.com/",
     completed: baseURL,
     matches: [
-      {
-        value: "example.com/",
-        comment: "example.com",
-        style: ["autofill", "heuristic"],
-      },
-      {
-        value: bookmarkedURL,
-        comment: "A bookmark",
-        style: ["bookmark"],
-      },
+      makeVisitResult(context, {
+        uri: baseURL,
+        title: "example.com",
+        heuristic: true,
+      }),
+      makeBookmarkResult(context, {
+        uri: bookmarkedURL,
+        title: "A bookmark",
+      }),
     ],
   });
 
@@ -473,9 +557,18 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       uri: baseURL + "other1",
     },
   ]);
-  await check_autocomplete({
-    search,
-    matches: [],
+  let context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: `${search}/`,
+        title: `${search}/`,
+        iconUri: "",
+        heuristic: true,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
+    ],
   });
 
   await PlacesTestUtils.addVisits([
@@ -483,9 +576,18 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       uri: bookmarkedURL,
     },
   ]);
-  await check_autocomplete({
-    search,
-    matches: [],
+  context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: `${search}/`,
+        title: `${search}/`,
+        iconUri: "",
+        heuristic: true,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
+    ],
   });
 
   await PlacesTestUtils.addVisits([
@@ -493,32 +595,82 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       uri: baseURL + "other2",
     },
   ]);
-  await check_autocomplete({
-    search,
-    matches: [],
+  context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        uri: `${search}/`,
+        title: `${search}/`,
+        iconUri: "",
+        heuristic: true,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+      }),
+    ],
   });
 
   // Now bookmark the second URL.  It should be suggested and completed.
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: bookmarkedURL,
   });
-  await check_autocomplete({
-    search,
+  context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
     autofilled: "http://example.com/",
     completed: baseURL,
     matches: [
-      {
-        value: "http://example.com/",
-        comment: "example.com",
-        style: ["autofill", "heuristic"],
-      },
-      {
-        value: bookmarkedURL,
-        comment: "A bookmark",
-        style: ["bookmark"],
-      },
+      makeVisitResult(context, {
+        uri: baseURL,
+        title: "example.com",
+        heuristic: true,
+      }),
+      makeBookmarkResult(context, {
+        uri: bookmarkedURL,
+        title: "A bookmark",
+      }),
     ],
   });
 
   await cleanup();
 });
+
+/**
+ * Returns the origin frecency stats.
+ *
+ * @returns {object}
+ *          An object { count, sum, squares }.
+ */
+async function getOriginFrecencyStats() {
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(`
+    SELECT
+      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_count'), 0),
+      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum'), 0),
+      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum_of_squares'), 0)
+  `);
+  let count = rows[0].getResultByIndex(0);
+  let sum = rows[0].getResultByIndex(1);
+  let squares = rows[0].getResultByIndex(2);
+  return { count, sum, squares };
+}
+
+/**
+ * Returns the origin autofill frecency threshold.
+ *
+ * @returns {number}
+ *          The threshold.
+ */
+async function getOriginAutofillThreshold() {
+  let { count, sum, squares } = await getOriginFrecencyStats();
+  if (!count) {
+    return 0;
+  }
+  if (count == 1) {
+    return sum;
+  }
+  let stddevMultiplier = UrlbarPrefs.get("autoFill.stddevMultiplier");
+  return (
+    sum / count +
+    stddevMultiplier * Math.sqrt((squares - (sum * sum) / count) / count)
+  );
+}
