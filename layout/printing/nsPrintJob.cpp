@@ -2862,7 +2862,11 @@ nsresult nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO) {
 /*=============== nsIObserver Interface ======================*/
 MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsPrintJob::Observe(
     nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
-  // Only process a null topic which means the progress dialog is open.
+  // We expect to be called by nsIPrintingPromptService after we were passed to
+  // it by via the nsIPrintingPromptService::ShowPrintProgressDialog call in
+  // ShowPrintProgress.  Once it has opened the progress dialog it calls this
+  // method, passing null as the topic.
+
   if (aTopic) {
     return NS_OK;
   }
