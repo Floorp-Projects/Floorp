@@ -34,6 +34,9 @@ class SyncedTabsLayout @JvmOverloads constructor(
     }
 
     override fun onError(error: SyncedTabsView.ErrorType) {
+        // We may still be displaying a "loading" spinner, hide it.
+        stopLoading()
+
         val stringResId = when (error) {
             SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE -> R.string.synced_tabs_connect_another_device
             SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE -> R.string.synced_tabs_enable_tab_syncing
