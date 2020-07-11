@@ -53,7 +53,7 @@ class nsSharedPageData {
   float mShrinkToFitRatio;
 };
 
-// Simple page sequence frame class. Used when we're in paginated mode
+// Page sequence frame class. Manages a series of pages, in paginated mode.
 class nsPageSequenceFrame final : public nsContainerFrame {
  public:
   friend nsPageSequenceFrame* NS_NewPageSequenceFrame(

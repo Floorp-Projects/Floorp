@@ -17,7 +17,7 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-// Page frame class used by the simple page sequence frame
+// Page frame class. Represents an individual page, in paginated mode.
 class nsPageFrame final : public nsContainerFrame {
  public:
   NS_DECL_QUERYFRAME

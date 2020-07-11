@@ -16,7 +16,7 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-// Page frame class used by the simple page sequence frame
+// Page content frame class. Represents a page's content, in paginated mode.
 class nsPageContentFrame final : public mozilla::ViewportFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsPageContentFrame)
