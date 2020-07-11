@@ -2095,9 +2095,8 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       sGetTtlEnabled) {
     LOG(("Issuing second async lookup for TTL for host [%s].",
          addrRec->host.get()));
-    addrRec->flags = (addrRec->flags & ~RES_PRIORITY_MEDIUM) |
-                     RES_PRIORITY_LOW | RES_DISABLE_TRR;
-    DebugOnly<nsresult> rv = NameLookup(rec);
+    addrRec->flags = (addrRec->flags & ~RES_PRIORITY_MEDIUM) | RES_PRIORITY_LOW;
+    DebugOnly<nsresult> rv = NativeLookup(rec);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Could not issue second async lookup for TTL.");
   }
