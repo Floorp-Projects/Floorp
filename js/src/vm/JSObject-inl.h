@@ -361,7 +361,7 @@ extern bool ToPropertyKeySlow(JSContext* cx, HandleValue argument,
 MOZ_ALWAYS_INLINE bool ToPropertyKey(JSContext* cx, HandleValue argument,
                                      MutableHandleId result) {
   if (MOZ_LIKELY(argument.isPrimitive())) {
-    return ValueToId<CanGC>(cx, argument, result);
+    return PrimitiveValueToId<CanGC>(cx, argument, result);
   }
 
   return ToPropertyKeySlow(cx, argument, result);

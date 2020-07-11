@@ -1734,7 +1734,7 @@ bool DebuggerScript::CallData::getAllOffsets() {
         RootedId id(cx);
         RootedValue v(cx, NumberValue(lineno));
         offsets = NewDenseEmptyArray(cx);
-        if (!offsets || !ValueToId<CanGC>(cx, v, &id)) {
+        if (!offsets || !PrimitiveValueToId<CanGC>(cx, v, &id)) {
           return false;
         }
 

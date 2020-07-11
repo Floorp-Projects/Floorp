@@ -1593,7 +1593,7 @@ JS_PUBLIC_API bool JS_StringToId(JSContext* cx, HandleString string,
   CHECK_THREAD(cx);
   cx->check(string);
   RootedValue value(cx, StringValue(string));
-  return ValueToId<CanGC>(cx, value, idp);
+  return PrimitiveValueToId<CanGC>(cx, value, idp);
 }
 
 JS_PUBLIC_API bool JS_IdToValue(JSContext* cx, jsid id, MutableHandleValue vp) {

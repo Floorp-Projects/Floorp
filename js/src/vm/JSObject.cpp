@@ -1418,7 +1418,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
     MOZ_TRY(XDRScriptConst(xdr, &tmpValue));
 
     if (mode == XDR_DECODE) {
-      if (!ValueToId<CanGC>(cx, tmpIdValue, &tmpId)) {
+      if (!PrimitiveValueToId<CanGC>(cx, tmpIdValue, &tmpId)) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
       properties[i].get().id = tmpId;
@@ -3074,7 +3074,7 @@ bool js::ToPropertyKeySlow(JSContext* cx, HandleValue argument,
   }
 
   // Steps 3-4.
-  return ValueToId<CanGC>(cx, key, result);
+  return PrimitiveValueToId<CanGC>(cx, key, result);
 }
 
 /* * */
@@ -3198,7 +3198,7 @@ JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
   if (val.isNullOrUndefined()) {
     RootedId key(cx);
     if (keyValue.isPrimitive()) {
-      if (!ValueToId<CanGC>(cx, keyValue, &key)) {
+      if (!PrimitiveValueToId<CanGC>(cx, keyValue, &key)) {
         return nullptr;
       }
       ReportIsNullOrUndefinedForPropertyAccess(cx, val, valIndex, key);
