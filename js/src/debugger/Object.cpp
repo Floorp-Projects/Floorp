@@ -68,8 +68,7 @@
 #include "vm/WrapperObject.h"             // for JSObject::is, WrapperObject
 
 #include "vm/Compartment-inl.h"  // for Compartment::wrap
-#include "vm/JSAtom-inl.h"       // for ValueToId
-#include "vm/JSObject-inl.h"  // for GetObjectClassName, InitClass, NewObjectWithGivenProtoAndKind
+#include "vm/JSObject-inl.h"  // for GetObjectClassName, InitClass, NewObjectWithGivenProtoAndKind, ToPropertyKey
 #include "vm/NativeObject-inl.h"      // for NativeObject::global
 #include "vm/ObjectOperations-inl.h"  // for DeleteProperty, GetProperty
 #include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
@@ -814,7 +813,7 @@ bool DebuggerObject::CallData::getOwnPropertySymbolsMethod() {
 
 bool DebuggerObject::CallData::getOwnPropertyDescriptorMethod() {
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
+  if (!ToPropertyKey(cx, args.get(0), &id)) {
     return false;
   }
 
@@ -859,7 +858,7 @@ bool DebuggerObject::CallData::definePropertyMethod() {
   }
 
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, args[0], &id)) {
+  if (!ToPropertyKey(cx, args[0], &id)) {
     return false;
   }
 
@@ -910,7 +909,7 @@ bool DebuggerObject::CallData::definePropertiesMethod() {
  */
 bool DebuggerObject::CallData::deletePropertyMethod() {
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
+  if (!ToPropertyKey(cx, args.get(0), &id)) {
     return false;
   }
 
@@ -949,7 +948,7 @@ bool DebuggerObject::CallData::getPropertyMethod() {
   Debugger* dbg = Debugger::fromChildJSObject(object);
 
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
+  if (!ToPropertyKey(cx, args.get(0), &id)) {
     return false;
   }
 
@@ -965,7 +964,7 @@ bool DebuggerObject::CallData::setPropertyMethod() {
   Debugger* dbg = Debugger::fromChildJSObject(object);
 
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
+  if (!ToPropertyKey(cx, args.get(0), &id)) {
     return false;
   }
 
