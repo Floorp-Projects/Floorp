@@ -281,7 +281,7 @@ bool Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
 bool js::ProxyHasOwn(JSContext* cx, HandleObject proxy, HandleValue idVal,
                      bool* result) {
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, idVal, &id)) {
+  if (!ToPropertyKey(cx, idVal, &id)) {
     return false;
   }
 
