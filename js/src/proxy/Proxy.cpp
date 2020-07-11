@@ -404,7 +404,7 @@ bool js::ProxySetPropertyByValue(JSContext* cx, HandleObject proxy,
                                  HandleValue idVal, HandleValue val,
                                  bool strict) {
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, idVal, &id)) {
+  if (!ToPropertyKey(cx, idVal, &id)) {
     return false;
   }
 
