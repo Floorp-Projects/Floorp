@@ -261,6 +261,11 @@ nsresult TRR::SendHTTPRequest() {
       return NS_ERROR_UNKNOWN_HOST;
     }
 
+    if (gTRRService->IsExcludedFromTRR(mHost)) {
+      RecordReason(nsHostRecord::TRR_EXCLUDED);
+      return NS_ERROR_UNKNOWN_HOST;
+    }
+
     if (UseDefaultServer() && (mType == TRRTYPE_A)) {
       Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
                             TRRService::AutoDetectedKey(), false);
