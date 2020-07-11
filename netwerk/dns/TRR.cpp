@@ -244,14 +244,14 @@ nsresult TRR::SendHTTPRequest() {
 
   if (((mType == TRRTYPE_A) || (mType == TRRTYPE_AAAA)) &&
       mRec->mEffectiveTRRMode != nsIRequest::TRR_ONLY_MODE) {
-    // let NS resolves skip the blacklist check
-    // we also don't check the blacklist for TRR only requests
+    // let NS resolves skip the blocklist check
+    // we also don't check the blocklist for TRR only requests
     MOZ_ASSERT(mRec);
 
     if (UseDefaultServer() &&
-        gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
+        gTRRService->IsTemporarilyBlocked(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
-        // count only blacklist for A records to avoid double counts
+        // count only blocklist for A records to avoid double counts
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
                               TRRService::AutoDetectedKey(), true);
       }
