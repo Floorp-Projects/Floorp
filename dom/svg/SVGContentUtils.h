@@ -71,7 +71,7 @@ enum SVGTransformTypes {
 
 /**
  * Functions generally used by SVG Content classes. Functions here
- * should not generally depend on layout methods/classes e.g. nsSVGUtils
+ * should not generally depend on layout methods/classes e.g. SVGUtils
  */
 class SVGContentUtils {
  public:
@@ -88,9 +88,9 @@ class SVGContentUtils {
   /**
    * Activates the animation element aContent as a result of navigation to the
    * fragment identifier that identifies aContent. aContent must be an instance
-   * of nsSVGAnimationElement.
+   * of SVGAnimationElement.
    *
-   * This is just a shim to allow nsSVGAnimationElement::ActivateByHyperlink to
+   * This is just a shim to allow SVGAnimationElement::ActivateByHyperlink to
    * be called from layout/base without adding to that directory's include
    * paths.
    */

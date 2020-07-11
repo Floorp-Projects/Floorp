@@ -11,11 +11,11 @@
 #include "nsStyleTransformMatrix.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsSVGUtils.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/SVGUtils.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 
@@ -52,7 +52,7 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
     if (!StaticPrefs::svg_transform_box_enabled()) {
       mX = -mFrame->GetPosition().x;
       mY = -mFrame->GetPosition().y;
-      Size contextSize = nsSVGUtils::GetContextSize(mFrame);
+      Size contextSize = SVGUtils::GetContextSize(mFrame);
       mWidth = nsPresContext::CSSPixelsToAppUnits(contextSize.width);
       mHeight = nsPresContext::CSSPixelsToAppUnits(contextSize.height);
     } else if (mFrame->StyleDisplay()->mTransformBox ==
@@ -81,7 +81,7 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
       // transform is relative to {0,0} in current user space.
       mX = -mFrame->GetPosition().x;
       mY = -mFrame->GetPosition().y;
-      Size contextSize = nsSVGUtils::GetContextSize(mFrame);
+      Size contextSize = SVGUtils::GetContextSize(mFrame);
       mWidth = nsPresContext::CSSPixelsToAppUnits(contextSize.width);
       mHeight = nsPresContext::CSSPixelsToAppUnits(contextSize.height);
     }

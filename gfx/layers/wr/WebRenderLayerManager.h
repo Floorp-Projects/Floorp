@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/SVGIntegrationUtils.h"  // for WrFiltersHolder
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"

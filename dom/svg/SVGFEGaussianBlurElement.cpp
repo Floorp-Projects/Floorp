@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGFEGaussianBlurElement.h"
 #include "mozilla/dom/SVGFEGaussianBlurElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
-#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEGaussianBlur)
 

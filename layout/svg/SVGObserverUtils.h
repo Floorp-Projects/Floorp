@@ -19,7 +19,6 @@
 #include "nsIReferrerInfo.h"
 #include "nsStringFwd.h"
 #include "nsStubMutationObserver.h"
-#include "nsSVGUtils.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsAtom;
@@ -265,7 +264,7 @@ class SVGObserverUtils {
    * to be applied, only that there are no references to SVG filter elements.
    *
    * XXX Callers other than ComputePostEffectsVisualOverflowRect and
-   * nsSVGUtils::GetPostFilterVisualOverflowRect should not need to initiate
+   * SVGUtils::GetPostFilterVisualOverflowRect should not need to initiate
    * observing.  If we have a bug that causes invalidation (which would remove
    * observers) between reflow and painting, then we don't really want to
    * re-add abservers during painting.  That has the potential to hide logic

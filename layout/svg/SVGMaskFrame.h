@@ -13,7 +13,6 @@
 #include "mozilla/gfx/2D.h"
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
-#include "nsSVGUtils.h"
 
 class gfxContext;
 

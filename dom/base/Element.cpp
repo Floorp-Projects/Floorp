@@ -98,7 +98,6 @@
 
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/DOMRect.h"
-#include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "ChildIterator.h"

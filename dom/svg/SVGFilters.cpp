@@ -21,7 +21,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGFilterInstance.h"
-#include "nsSVGUtils.h"
 #include "mozilla/dom/SVGComponentTransferFunctionElement.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGFEDistantLightElement.h"

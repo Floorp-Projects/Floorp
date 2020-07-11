@@ -16,8 +16,6 @@
 #include "SVGObserverUtils.h"
 #include "SVGElement.h"
 #include "SVGFilterInstance.h"
-#include "nsSVGIntegrationUtils.h"
-#include "nsSVGUtils.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

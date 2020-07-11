@@ -8,6 +8,7 @@
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -18,7 +19,6 @@
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGUtils.h"
 #include "nsWindowSizes.h"
 
 namespace mozilla {
@@ -411,8 +411,7 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
       // SVG 'text' element's SVGTextFrame doesn't respond to hit-testing, so
       // if 'content' is a child of such an element then we need to manually
       // defer to the parent here.
-      if (aMultiple == Multiple::Yes &&
-          !nsSVGUtils::IsInSVGTextSubtree(frame)) {
+      if (aMultiple == Multiple::Yes && !SVGUtils::IsInSVGTextSubtree(frame)) {
         continue;
       }
 

@@ -1060,10 +1060,10 @@ class nsIFrame : public nsQueryFrame {
    *
    * Frames that are laid out according to SVG's coordinate space based rules
    * (frames with the NS_FRAME_SVG_LAYOUT bit set, which *excludes*
-   * nsSVGOuterSVGFrame) are different.  Many frames of this type do not set or
+   * SVGOuterSVGFrame) are different.  Many frames of this type do not set or
    * use mRect, in which case the frame rect is undefined.  The exceptions are:
    *
-   *   - nsSVGInnerSVGFrame
+   *   - SVGInnerSVGFrame
    *   - SVGGeometryFrame (used for <path>, <circle>, etc.)
    *   - SVGImageFrame
    *   - SVGForeignObjectFrame
@@ -3316,7 +3316,7 @@ class nsIFrame : public nsQueryFrame {
   bool IsBlockFrameOrSubclass() const;
 
   /**
-   * Returns true if the frame is an instance of nsSVGGeometryFrame or one
+   * Returns true if the frame is an instance of SVGGeometryFrame or one
    * of its subclasses.
    */
   inline bool IsSVGGeometryFrameOrSubclass() const;

@@ -76,7 +76,7 @@ class SVGImageElement : public SVGImageElementBase,
       const Matrix* aToNonScalingStrokeSpace = nullptr) override;
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
-  // nsSVGSVGElement methods:
+  // SVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;

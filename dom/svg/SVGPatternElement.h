@@ -48,7 +48,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  // nsSVGSVGElement methods:
+  // SVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   virtual mozilla::SVGAnimatedTransformList* GetAnimatedTransformList(

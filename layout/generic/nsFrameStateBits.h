@@ -233,7 +233,7 @@ FRAME_STATE_BIT(Generic, 42, NS_FRAME_FONT_INFLATION_FLOW_ROOT)
 
 // This bit is set on SVG frames that are laid out using SVG's coordinate
 // system based layout (as opposed to any of the CSS layout models). Note that
-// this does not include nsSVGOuterSVGFrame since it takes part is CSS layout.
+// this does not include SVGOuterSVGFrame since it takes part in CSS layout.
 FRAME_STATE_BIT(Generic, 43, NS_FRAME_SVG_LAYOUT)
 
 // This bit is set if a frame has a multi-column ancestor (i.e.

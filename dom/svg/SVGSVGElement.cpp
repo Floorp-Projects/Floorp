@@ -18,6 +18,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILTimeContainer.h"
+#include "mozilla/SVGUtils.h"
 
 #include "DOMSVGAngle.h"
 #include "DOMSVGLength.h"
@@ -26,7 +27,6 @@
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
 #include "ISVGSVGFrame.h"
-#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
 
@@ -464,7 +464,7 @@ int32_t SVGSVGElement::GetIntrinsicWidth() {
   // know the length isn't a percentage so the context won't be used (and we
   // need to pass the element to be able to resolve em/ex units).
   float width = mLengthAttributes[ATTR_WIDTH].GetAnimValue(this);
-  return nsSVGUtils::ClampToInt(width);
+  return SVGUtils::ClampToInt(width);
 }
 
 int32_t SVGSVGElement::GetIntrinsicHeight() {
@@ -476,7 +476,7 @@ int32_t SVGSVGElement::GetIntrinsicHeight() {
   // know the length isn't a percentage so the context won't be used (and we
   // need to pass the element to be able to resolve em/ex units).
   float height = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(this);
-  return nsSVGUtils::ClampToInt(height);
+  return SVGUtils::ClampToInt(height);
 }
 
 void SVGSVGElement::FlushImageTransformInvalidation() {
