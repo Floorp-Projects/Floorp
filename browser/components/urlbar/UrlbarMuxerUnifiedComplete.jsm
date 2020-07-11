@@ -48,8 +48,6 @@ const heuristicOrder = [
   "UrlbarProviderSearchTips",
   "Omnibox",
   "UnifiedComplete",
-  "Autofill",
-  "TokenAliasEngines",
   "HeuristicFallback",
 ];
 /**
@@ -76,6 +74,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *
    * @param {UrlbarQueryContext} context
    *   The query context.
+   * @returns {boolean} If results were successfully sorted. This return value
+   *   is a stopgap and can be removed when bug 1648468 lands.
    */
   sort(context) {
     // This method is called multiple times per keystroke, so it should be as
@@ -131,17 +131,21 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     let resultsWithSuggestedIndex = [];
     let formHistoryResults = new Set();
     let formHistorySuggestions = new Set();
-    // Used to deduped URLs based on their stripped prefix and title. Schema:
-    //   {string} strippedUrl => {prefix, title, rank}
-    let strippedUrlToTopPrefixAndTitle = new Map();
     let maxFormHistoryCount = Math.min(
       UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
       context.maxResults
     );
+    let hasUnifiedComplete = false;
 
     // Do the first pass through the results.  We only collect info for the
     // second pass here.
     for (let result of context.results) {
+      // Keep track of whether UnifiedComplete has returned results. We will
+      // quit early if it hasn't.
+      if (result.providerName == "UnifiedComplete") {
+        hasUnifiedComplete = true;
+      }
+
       // The "Search in a Private Window" result should only be shown when there
       // are other results and all of them are searches.  It should not be shown
       // if the user typed an alias because that's an explicit engine choice.
@@ -180,28 +184,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       ) {
         canShowTailSuggestions = false;
       }
+    }
 
-      if (result.type == UrlbarUtils.RESULT_TYPE.URL && result.payload.url) {
-        let [strippedUrl, prefix] = UrlbarUtils.stripPrefixAndTrim(
-          result.payload.url,
-          {
-            stripHttp: true,
-            stripHttps: true,
-            stripWww: true,
-            trimEmptyQuery: true,
-          }
-        );
-        let prefixRank = UrlbarUtils.getPrefixRank(prefix);
-        let topPrefixData = strippedUrlToTopPrefixAndTitle.get(strippedUrl);
-        let topPrefixRank = topPrefixData ? topPrefixData.rank : -1;
-        if (topPrefixRank < prefixRank) {
-          strippedUrlToTopPrefixAndTitle.set(strippedUrl, {
-            prefix,
-            title: result.payload.title,
-            rank: prefixRank,
-          });
-        }
-      }
+    // Quit early if we're still waiting on UnifiedComplete. If it turns out
+    // UnifiedComplete doesn't need to return any results, it will call sort()
+    // regardless to unblock showing results.
+    if (
+      !hasUnifiedComplete &&
+      context.pendingHeuristicProviders.has("UnifiedComplete")
+    ) {
+      return false;
     }
 
     // Do the second pass through results to build the list of unsorted results.
@@ -209,62 +201,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     for (let result of context.results) {
       // Exclude low-ranked heuristic results.
       if (result.heuristic && result != context.heuristicResult) {
-        continue;
-      }
-
-      // We expect UnifiedComplete sent us the highest-ranked www. and non-www
-      // origins, if any. Now, compare them to each other and to the heuristic
-      // result.
-      // 1. If the heuristic result is lower ranked than both, discard the www
-      //    origin, unless it has a different page title than the non-www
-      //    origin. This is a guard against deduping when www.site.com and
-      //    site.com have different content.
-      // 2. If the heuristic result is higher than either the www origin or
-      //    non-www origin:
-      //    2a. If the heuristic is a www origin, discard the non-www origin.
-      //    2b. If the heuristic is a non-www origin, discard the www origin.
-      if (
-        !result.heuristic &&
-        result.type == UrlbarUtils.RESULT_TYPE.URL &&
-        result.payload.url
-      ) {
-        let [strippedUrl, prefix] = UrlbarUtils.stripPrefixAndTrim(
-          result.payload.url,
-          {
-            stripHttp: true,
-            stripHttps: true,
-            stripWww: true,
-            trimEmptyQuery: true,
-          }
-        );
-        let topPrefixData = strippedUrlToTopPrefixAndTitle.get(strippedUrl);
-        // We don't expect completely identical URLs in the results at this
-        // point, so if the prefixes are the same, then we're deduping a result
-        // against itself.
-        if (topPrefixData && prefix != topPrefixData.prefix) {
-          let prefixRank = UrlbarUtils.getPrefixRank(prefix);
-          if (
-            topPrefixData.rank > prefixRank &&
-            prefix.endsWith("www.") == topPrefixData.prefix.endsWith("www.")
-          ) {
-            continue;
-          } else if (
-            topPrefixData.rank > prefixRank &&
-            result.payload?.title == topPrefixData.title
-          ) {
-            continue;
-          }
-        }
-      }
-
-      // Exclude results that dupe autofill.
-      if (
-        context.heuristicResult &&
-        context.heuristicResult.providerName == "Autofill" &&
-        result.providerName != "Autofill" &&
-        context.heuristicResult.payload?.url == result.payload.url &&
-        context.heuristicResult.type == result.type
-      ) {
         continue;
       }
 
@@ -389,6 +325,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     context.results = sortedResults;
+    return true;
   }
 
   /**

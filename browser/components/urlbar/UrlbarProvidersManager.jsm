@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 var localProviderModules = {
   UrlbarProviderUnifiedComplete:
     "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
-  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
   UrlbarProviderHeuristicFallback:
     "resource:///modules/UrlbarProviderHeuristicFallback.jsm",
   UrlbarProviderInterventions:
@@ -454,9 +453,16 @@ class Query {
       return;
     }
 
+    let addResult = true;
+
+    if (!result) {
+      addResult = false;
+    }
+
     // Check if the result source should be filtered out. Pay attention to the
     // heuristic result though, that is supposed to be added regardless.
     if (
+      addResult &&
       !this.acceptableSources.includes(result.source) &&
       !result.heuristic &&
       // Treat form history as searches for the purpose of acceptableSources.
@@ -464,21 +470,33 @@ class Query {
         result.source != UrlbarUtils.RESULT_SOURCE.HISTORY ||
         !this.acceptableSources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
     ) {
-      return;
+      addResult = false;
     }
 
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
     if (
+      addResult &&
       result.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
       result.payload.url &&
       result.payload.url.startsWith("javascript:") &&
       !this.context.searchString.startsWith("javascript:") &&
       UrlbarPrefs.get("filter.javascript")
     ) {
-      return;
+      addResult = false;
     }
 
+    // We wait on UnifiedComplete to return a heuristic result. If it has no
+    // heuristic result to return, we still need to sort and display results, so
+    // we follow the usual codepath to muxer.sort. We only offer this for
+    // UnifiedComplete, so we check the provider's name here. This is a stopgap
+    // measure until bug 1648468 lands.
+    if (!addResult) {
+      if (provider.name == "UnifiedComplete") {
+        this._notifyResultsFromProvider(provider);
+      }
+      return;
+    }
     result.providerName = provider.name;
     result.providerType = provider.type;
     this.context.results.push(result);
@@ -525,7 +543,7 @@ class Query {
   }
 
   _notifyResults() {
-    this.muxer.sort(this.context);
+    let sorted = this.muxer.sort(this.context);
 
     if (this._heuristicProviderTimer) {
       this._heuristicProviderTimer.cancel().catch(Cu.reportError);
@@ -535,6 +553,10 @@ class Query {
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);
       this._chunkTimer = null;
+    }
+
+    if (!sorted) {
+      return;
     }
 
     // Before the muxer.sort call above, this.context.results should never be
