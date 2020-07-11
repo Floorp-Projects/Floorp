@@ -401,37 +401,6 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
-static bool DocHasPrintCallbackCanvas(Document& aDoc) {
-  Element* root = aDoc.GetRootElement();
-  if (!root) {
-    return false;
-  }
-  // FIXME(emilio): This doesn't account for shadow dom and it's unnecessarily
-  // inefficient. Though I guess it doesn't really matter.
-  RefPtr<nsContentList> canvases =
-      NS_GetContentList(root, kNameSpaceID_XHTML, u"canvas"_ns);
-  uint32_t canvasCount = canvases->Length(true);
-  for (uint32_t i = 0; i < canvasCount; ++i) {
-    auto* canvas = HTMLCanvasElement::FromNodeOrNull(canvases->Item(i, false));
-    if (canvas && canvas->GetMozPrintCallback()) {
-      return true;
-    }
-  }
-
-  bool result = false;
-
-  auto checkSubDoc = [&result](Document& aSubDoc) {
-    if (DocHasPrintCallbackCanvas(aSubDoc)) {
-      result = true;
-      return CallState::Stop;
-    }
-    return CallState::Continue;
-  };
-
-  aDoc.EnumerateSubDocuments(checkSubDoc);
-  return result;
-}
-
 //-------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference,
@@ -500,8 +469,6 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
       wbc->IsWindowModal(&mIsForModalWindow);
     }
   }
-
-  mHasMozPrintCallback = DocHasPrintCallbackCanvas(*aOriginalDoc);
 
   return NS_OK;
 }
