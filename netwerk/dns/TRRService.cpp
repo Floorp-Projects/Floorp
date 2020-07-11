@@ -984,6 +984,9 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
         mRetryConfirmInterval *= 2;
       }
     } else {
+      // A fresh confirmation means previous blocked entries might not
+      // be valid anymore.
+      mClearTRRBLStorage = true;
       if (mMode != MODE_TRRONLY) {
         // don't accumulate trronly data here since trronly failures are
         // handled above by trying again, so counting the successes here would
