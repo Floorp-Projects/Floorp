@@ -241,14 +241,21 @@ FormAutofillPreferences.prototype = {
       this.refs.savedCreditCardsBtn = savedCreditCardsBtn;
 
       if (OSKeyStore.canReauth()) {
+        let reauthLearnMoreURL = `${creditCardLearnMoreURL}#w_require-authentication-for-autofill`;
         let reauth = document.createXULElement("hbox");
         let reauthCheckboxGroup = document.createXULElement("hbox");
         let reauthCheckbox = document.createXULElement("checkbox");
+        let reauthLearnMore = document.createXULElement("label", {
+          is: "text-link",
+        });
 
         reauthCheckboxGroup.classList.add("indent");
+        reauthLearnMore.classList.add("learnMore");
+        reauthCheckbox.classList.add("tail-with-learn-more");
         reauthCheckbox.disabled = !FormAutofill.isAutofillCreditCardsEnabled;
 
         reauth.id = "creditCardReauthenticate";
+        reauthLearnMore.id = "creditCardReauthenticateLearnMore";
 
         reauth.setAttribute("data-subcategory", "reauth-credit-card-autofill");
 
@@ -266,6 +273,11 @@ FormAutofillPreferences.prototype = {
           "label",
           this.bundle.GetStringFromName(autofillReauthCheckboxLabel)
         );
+        reauthLearnMore.textContent = this.bundle.GetStringFromName(
+          "learnMoreLabel"
+        );
+
+        reauthLearnMore.setAttribute("href", reauthLearnMoreURL);
 
         // Manually set the checked state
         if (FormAutofillUtils._reauthEnabledByUser) {
@@ -278,6 +290,7 @@ FormAutofillPreferences.prototype = {
         formAutofillGroup.appendChild(reauth);
         reauth.appendChild(reauthCheckboxGroup);
         reauthCheckboxGroup.appendChild(reauthCheckbox);
+        reauthCheckboxGroup.appendChild(reauthLearnMore);
         this.refs.reauthCheckbox = reauthCheckbox;
       }
     }
