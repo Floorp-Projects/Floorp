@@ -20,12 +20,12 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGGeometryFrame.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
-#include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
 
 using namespace mozilla::dom;
@@ -172,11 +172,11 @@ static nsresult GetTargetGeometry(gfxRect* aBBox,
                                   uint16_t aPatternUnits, nsIFrame* aTarget,
                                   const Matrix& aContextMatrix,
                                   const gfxRect* aOverrideBounds) {
-  *aBBox = aOverrideBounds
-               ? *aOverrideBounds
-               : nsSVGUtils::GetBBox(aTarget,
-                                     nsSVGUtils::eUseFrameBoundsForOuterSVG |
-                                         nsSVGUtils::eBBoxIncludeFillGeometry);
+  *aBBox =
+      aOverrideBounds
+          ? *aOverrideBounds
+          : SVGUtils::GetBBox(aTarget, SVGUtils::eUseFrameBoundsForOuterSVG |
+                                           SVGUtils::eBBoxIncludeFillGeometry);
 
   // Sanity check
   if (IncludeBBoxScale(aViewBox, aPatternContentUnits, aPatternUnits) &&
@@ -281,7 +281,7 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   // revert the vector effect transform so that the pattern appears unchanged
   if (aFillOrStroke == &nsStyleSVG::mStroke) {
     gfxMatrix userToOuterSVG;
-    if (nsSVGUtils::GetNonScalingStrokeTransform(aSource, &userToOuterSVG)) {
+    if (SVGUtils::GetNonScalingStrokeTransform(aSource, &userToOuterSVG)) {
       patternTransform *= ToMatrix(userToOuterSVG);
       if (patternTransform.IsSingular()) {
         NS_WARNING("Singular matrix painting non-scaling-stroke");
@@ -304,8 +304,8 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
       ThebesRect(patternTransform.TransformBounds(ToRect(bbox)));
 
   bool resultOverflows;
-  IntSize surfaceSize = nsSVGUtils::ConvertToSurfaceSize(transformedBBox.Size(),
-                                                         &resultOverflows);
+  IntSize surfaceSize =
+      SVGUtils::ConvertToSurfaceSize(transformedBBox.Size(), &resultOverflows);
 
   // 0 disables rendering, < 0 is an error
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0) {
@@ -362,10 +362,10 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
       ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
-        tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
+        tm = SVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
       }
 
-      nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm, aImgParams);
+      SVGUtils::PaintFrameWithEffects(kid, *ctx, tm, aImgParams);
     }
   }
 
@@ -593,16 +593,16 @@ gfxRect SVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
   tmpWidth = GetLengthValue(SVGPatternElement::ATTR_WIDTH);
 
   if (aPatternUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    x = nsSVGUtils::ObjectSpace(aTargetBBox, tmpX);
-    y = nsSVGUtils::ObjectSpace(aTargetBBox, tmpY);
-    width = nsSVGUtils::ObjectSpace(aTargetBBox, tmpWidth);
-    height = nsSVGUtils::ObjectSpace(aTargetBBox, tmpHeight);
+    x = SVGUtils::ObjectSpace(aTargetBBox, tmpX);
+    y = SVGUtils::ObjectSpace(aTargetBBox, tmpY);
+    width = SVGUtils::ObjectSpace(aTargetBBox, tmpWidth);
+    height = SVGUtils::ObjectSpace(aTargetBBox, tmpHeight);
   } else {
     float scale = MaxExpansion(aTargetCTM);
-    x = nsSVGUtils::UserSpace(aTarget, tmpX) * scale;
-    y = nsSVGUtils::UserSpace(aTarget, tmpY) * scale;
-    width = nsSVGUtils::UserSpace(aTarget, tmpWidth) * scale;
-    height = nsSVGUtils::UserSpace(aTarget, tmpHeight) * scale;
+    x = SVGUtils::UserSpace(aTarget, tmpX) * scale;
+    y = SVGUtils::UserSpace(aTarget, tmpY) * scale;
+    width = SVGUtils::UserSpace(aTarget, tmpWidth) * scale;
+    height = SVGUtils::UserSpace(aTarget, tmpHeight) * scale;
   }
 
   return gfxRect(x, y, width, height);

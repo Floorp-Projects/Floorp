@@ -33,6 +33,8 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/SVGIntegrationUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/ViewportUtils.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
@@ -41,8 +43,6 @@
 #include "nsStyleTransformMatrix.h"
 #include "nsTransitionManager.h"
 #include "gfxMatrix.h"
-#include "nsSVGIntegrationUtils.h"
-#include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsIFrameInlines.h"
@@ -1975,7 +1975,7 @@ bool nsDisplayListBuilder::ShouldBuildScrollInfoItemsForHoisting() const {
    * ScrollFrameWillBuildScrollInfoLayer() in nsSliderFrame.cpp.
    */
   for (nsIFrame* frame : mSVGEffectsFrames) {
-    if (nsSVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(frame)) {
+    if (SVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(frame)) {
       return true;
     }
   }
@@ -5913,7 +5913,7 @@ bool nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
   const bool usingLayers = !aBuilder->IsPaintingForWebRender();
 
   if (ApplyToFilterOrMask(usingLayers)) {
-    MOZ_ASSERT(nsSVGIntegrationUtils::UsingEffectsForFrame(mFrame));
+    MOZ_ASSERT(SVGIntegrationUtils::UsingEffectsForFrame(mFrame));
     mChildOpacityState = ChildOpacityState::Applied;
     return true;
   }
@@ -7562,7 +7562,7 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
   // Apply any translation due to 'transform-origin' and/or 'transform-box':
   result.ChangeBasis(aProperties.mToTransformOrigin);
 
-  // See the comment for nsSVGContainerFrame::HasChildrenOnlyTransform for
+  // See the comment for SVGContainerFrame::HasChildrenOnlyTransform for
   // an explanation of what children-only transforms are.
   bool parentHasChildrenOnlyTransform =
       hasSVGTransforms && !parentsChildrenOnlyTransform.IsIdentity();
@@ -9010,18 +9010,18 @@ void nsDisplayEffectsBase::HitTest(nsDisplayListBuilder* aBuilder,
                                    const nsRect& aRect, HitTestState* aState,
                                    nsTArray<nsIFrame*>* aOutFrames) {
   nsPoint rectCenter(aRect.x + aRect.width / 2, aRect.y + aRect.height / 2);
-  if (nsSVGIntegrationUtils::HitTestFrameForEffects(
+  if (SVGIntegrationUtils::HitTestFrameForEffects(
           mFrame, rectCenter - ToReferenceFrame())) {
     mList.HitTest(aBuilder, aRect, aState, aOutFrames);
   }
 }
 
 gfxRect nsDisplayEffectsBase::BBoxInUserSpace() const {
-  return nsSVGUtils::GetBBox(mFrame);
+  return SVGUtils::GetBBox(mFrame);
 }
 
 gfxPoint nsDisplayEffectsBase::UserSpaceOffset() const {
-  return nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mFrame);
+  return SVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mFrame);
 }
 
 void nsDisplayEffectsBase::ComputeInvalidationRegion(
@@ -9062,7 +9062,7 @@ bool nsDisplayEffectsBase::ValidateSVGFrame() {
   return true;
 }
 
-typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
+typedef SVGIntegrationUtils::PaintFramesParams PaintFramesParams;
 
 static void ComputeMaskGeometry(PaintFramesParams& aParams) {
   // Properties are added lazily and may have been removed by a restyle, so
@@ -9222,12 +9222,12 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
 
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  nsSVGIntegrationUtils::PaintFramesParams params(
-      *aMaskContext, mFrame, mBounds, borderArea, aBuilder, nullptr,
-      mHandleOpacity, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(*aMaskContext, mFrame, mBounds,
+                                                borderArea, aBuilder, nullptr,
+                                                mHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
   bool maskIsComplete = false;
-  bool painted = nsSVGIntegrationUtils::PaintMask(params, maskIsComplete);
+  bool painted = SVGIntegrationUtils::PaintMask(params, maskIsComplete);
   if (aMaskPainted) {
     *aMaskPainted = painted;
   }
@@ -9263,7 +9263,7 @@ bool nsDisplayMasksAndClipPaths::CanPaintOnMaskLayer(LayerManager* aManager) {
     return false;
   }
 
-  if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
+  if (!SVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
     return false;
   }
 
@@ -9339,13 +9339,13 @@ void nsDisplayMasksAndClipPaths::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  nsSVGIntegrationUtils::PaintFramesParams params(
-      *aCtx, mFrame, GetPaintRect(), borderArea, aBuilder, aManager,
-      mHandleOpacity, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
+                                                borderArea, aBuilder, aManager,
+                                                mHandleOpacity, imgParams);
 
   ComputeMaskGeometry(params);
 
-  nsSVGIntegrationUtils::PaintMaskAndClipPath(params);
+  SVGIntegrationUtils::PaintMaskAndClipPath(params);
 
   context->PopClip();
 
@@ -9366,13 +9366,13 @@ void nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
 
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  nsSVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
-                                                  borderArea, aBuilder, nullptr,
-                                                  mHandleOpacity, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
+                                                borderArea, aBuilder, nullptr,
+                                                mHandleOpacity, imgParams);
 
   ComputeMaskGeometry(params);
 
-  nsSVGIntegrationUtils::PaintMaskAndClipPath(params, aPaintChildren);
+  SVGIntegrationUtils::PaintMaskAndClipPath(params, aPaintChildren);
 
   context->PopClip();
 
@@ -9385,7 +9385,7 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
   nsIFrame* frame = aDisplayItem.Frame();
   auto* style = frame->StyleSVGReset();
   MOZ_ASSERT(style->HasClipPath() || style->HasMask());
-  if (!nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(frame)) {
+  if (!SVGIntegrationUtils::UsingSimpleClipPathForFrame(frame)) {
     return Nothing();
   }
 
@@ -9449,7 +9449,7 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
       // without using a mask image.
       //
       // And if you _really really_ need to add an exception, add it to
-      // nsSVGIntegrationUtils::UsingSimpleClipPathForFrame
+      // SVGIntegrationUtils::UsingSimpleClipPathForFrame
       MOZ_ASSERT_UNREACHABLE("Unhandled shape id?");
       return Nothing();
   }
@@ -9522,7 +9522,7 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
 void nsDisplayMasksAndClipPaths::SelectOpacityOptimization(
     const bool aUsingLayers) {
   if (aUsingLayers ||
-      !nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(mFrame)) {
+      !SVGIntegrationUtils::UsingSimpleClipPathForFrame(mFrame)) {
     // Handle opacity in mask and clip-path drawing code.
     SetHandleOpacity();
     MOZ_ASSERT(!mApplyOpacityWithSimpleClipPath);
@@ -9632,7 +9632,7 @@ bool nsDisplayBackdropRootContainer::CreateWebRenderCommands(
 /* static */
 bool nsDisplayBackdropFilters::CanCreateWebRenderCommands(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-  return nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
+  return SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
 }
 
 bool nsDisplayBackdropFilters::CreateWebRenderCommands(
@@ -9644,10 +9644,10 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
   auto filterChain = mFrame->StyleEffects()->mBackdropFilters.AsSpan();
-  if (!nsSVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
-                                                        wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                    wrFilters, filterClip)) {
+  if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
+                                                      wrFilters) &&
+      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                  wrFilters, filterClip)) {
     return false;
   }
 
@@ -9728,7 +9728,7 @@ LayerState nsDisplayFilters::GetLayerState(
 bool nsDisplayFilters::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                          nsRegion* aVisibleRegion) {
   nsPoint offset = ToReferenceFrame();
-  nsRect dirtyRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(
+  nsRect dirtyRect = SVGIntegrationUtils::GetRequiredSourceForInvalidArea(
                          mFrame, GetPaintRect() - offset) +
                      offset;
 
@@ -9761,15 +9761,15 @@ void nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                     gfxContext* aCtx, LayerManager* aManager) {
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  nsSVGIntegrationUtils::PaintFramesParams params(
-      *aCtx, mFrame, GetPaintRect(), borderArea, aBuilder, aManager,
-      mHandleOpacity, imgParams);
-  nsSVGIntegrationUtils::PaintFilter(params);
+  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
+                                                borderArea, aBuilder, aManager,
+                                                mHandleOpacity, imgParams);
+  SVGIntegrationUtils::PaintFilter(params);
   nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
 bool nsDisplayFilters::CanCreateWebRenderCommands() {
-  return nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(mFrame);
+  return SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(mFrame);
 }
 
 bool nsDisplayFilters::CreateWebRenderCommands(
@@ -9783,10 +9783,10 @@ bool nsDisplayFilters::CreateWebRenderCommands(
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
   auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
-  if (!nsSVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
-                                                        wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                    wrFilters, filterClip)) {
+  if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
+                                                      wrFilters) &&
+      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                  wrFilters, filterClip)) {
     return false;
   }
 

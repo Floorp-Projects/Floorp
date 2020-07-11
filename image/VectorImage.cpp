@@ -254,7 +254,7 @@ class SVGDrawingCallback : public gfxDrawingCallback {
   uint32_t mImageFlags;
 };
 
-// Based loosely on nsSVGIntegrationUtils' PaintFrameCallback::operator()
+// Based loosely on SVGIntegrationUtils' PaintFrameCallback::operator()
 bool SVGDrawingCallback::operator()(gfxContext* aContext,
                                     const gfxRect& aFillRect,
                                     const SamplingFilter aSamplingFilter,

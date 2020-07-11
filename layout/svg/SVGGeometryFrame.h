@@ -15,7 +15,6 @@
 #include "nsIFrame.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
-#include "nsSVGUtils.h"
 
 namespace mozilla {
 
@@ -37,7 +36,6 @@ struct imgDrawingParams;
 class gfxContext;
 class nsAtom;
 class nsIFrame;
-class nsSVGMarkerFrame;
 
 struct nsRect;
 

@@ -11,7 +11,6 @@
 #include "mozilla/SVGContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsQueryFrame.h"
-#include "nsSVGUtils.h"
 
 class nsAtom;
 class nsIContent;

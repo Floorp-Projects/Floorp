@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGFETurbulenceElement.h"
 #include "mozilla/dom/SVGFETurbulenceElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
-#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
 

@@ -68,7 +68,6 @@
 
 #include "nsFrameLoader.h"
 #include "nsPIDOMWindow.h"
-#include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"

@@ -12,7 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/ShapeUtils.h"
-#include "nsSVGUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -61,7 +61,7 @@ bool CSSClipPathInstance::HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
   RefPtr<DrawTarget> drawTarget =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   RefPtr<Path> path = instance.CreateClipPath(
-      drawTarget, nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame));
+      drawTarget, SVGUtils::GetCSSPxToDevPxMatrix(aFrame));
   float pixelRatio = float(AppUnitsPerCSSPixel()) /
                      aFrame->PresContext()->AppUnitsPerDevPixel();
   return path && path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
@@ -78,7 +78,7 @@ Maybe<Rect> CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
   RefPtr<DrawTarget> drawTarget =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   RefPtr<Path> path = instance.CreateClipPath(
-      drawTarget, nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame));
+      drawTarget, SVGUtils::GetCSSPxToDevPxMatrix(aFrame));
   return path ? Some(path->GetBounds()) : Nothing();
 }
 

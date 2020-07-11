@@ -18,6 +18,7 @@
 #include "mozilla/SVGClipPathFrame.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGTextFrame.h"
+#include "mozilla/SVGUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
@@ -32,8 +33,9 @@
 #include "SVGMarkerFrame.h"
 #include "SVGPaintServerFrame.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 bool URLAndReferrerInfo::operator==(const URLAndReferrerInfo& aRHS) const {
   bool uriEqual = false, referrerEqual = false;
@@ -147,8 +149,6 @@ static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
   RefPtr<URLAndReferrerInfo> info = new URLAndReferrerInfo(uri, aReferrerInfo);
   return info.forget();
 }
-
-namespace mozilla {
 
 class SVGFilterObserverList;
 
@@ -475,7 +475,7 @@ void SVGTextPathObserver::OnRenderingChange() {
   }
 
   MOZ_ASSERT(frame->IsFrameOfType(nsIFrame::eSVG) ||
-                 nsSVGUtils::IsInSVGTextSubtree(frame),
+                 SVGUtils::IsInSVGTextSubtree(frame),
              "SVG frame expected");
 
   MOZ_ASSERT(frame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
@@ -520,7 +520,7 @@ void SVGMarkerObserver::OnRenderingChange() {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
     // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
     // XXXSDL KILL THIS!!!
-    nsSVGUtils::ScheduleReflowSVG(frame);
+    SVGUtils::ScheduleReflowSVG(frame);
   }
   frame->PresContext()->RestyleManager()->PostRestyleEvent(
       frame->GetContent()->AsElement(), RestyleHint{0},
@@ -1269,14 +1269,14 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveFilters(
     nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames) {
   SVGFilterObserverListForCSSProp* observerList =
       GetOrCreateFilterObserverListForCSS(aFilteredFrame);
-  return ::GetAndObserveFilters(observerList, aFilterFrames);
+  return mozilla::GetAndObserveFilters(observerList, aFilterFrames);
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetFiltersIfObserving(
     nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames) {
   SVGFilterObserverListForCSSProp* observerList =
       aFilteredFrame->GetProperty(FilterProperty());
-  return ::GetAndObserveFilters(observerList, aFilterFrames);
+  return mozilla::GetAndObserveFilters(observerList, aFilterFrames);
 }
 
 already_AddRefed<nsISupports> SVGObserverUtils::ObserveFiltersForCanvasContext(
@@ -1644,7 +1644,7 @@ void SVGObserverUtils::InvalidateRenderingObservers(nsIFrame* aFrame) {
   }
 
   // If the rendering has changed, the bounds may well have changed too:
-  aFrame->RemoveProperty(nsSVGUtils::ObjectBoundingBoxProperty());
+  aFrame->RemoveProperty(SVGUtils::ObjectBoundingBoxProperty());
 
   SVGRenderingObserverSet* observers = GetObserverSet(content->AsElement());
   if (observers) {
@@ -1670,7 +1670,7 @@ void SVGObserverUtils::InvalidateDirectRenderingObservers(
     Element* aElement, uint32_t aFlags /* = 0 */) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
     // If the rendering has changed, the bounds may well have changed too:
-    frame->RemoveProperty(nsSVGUtils::ObjectBoundingBoxProperty());
+    frame->RemoveProperty(SVGUtils::ObjectBoundingBoxProperty());
   }
 
   if (aElement->HasRenderingObservers()) {

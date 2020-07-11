@@ -32,13 +32,13 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
-#include "nsRefreshDriver.h"  // for nsAPostRefreshObserver
-#include "nsSVGIntegrationUtils.h"
+#include "nsRefreshDriver.h"     // for nsAPostRefreshObserver
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -931,8 +931,7 @@ static bool ScrollFrameWillBuildScrollInfoLayer(nsIFrame* aScrollFrame) {
    */
   nsIFrame* current = aScrollFrame;
   while (current) {
-    if (nsSVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(
-            current)) {
+    if (SVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(current)) {
       return true;
     }
     current = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(current);

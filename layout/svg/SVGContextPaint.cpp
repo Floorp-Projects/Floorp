@@ -13,6 +13,7 @@
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "SVGPaintServerFrame.h"
 
 using namespace mozilla::gfx;
@@ -124,7 +125,7 @@ static void SetupInheritablePaint(const DrawTarget* aDrawTarget,
   }
 
   nscolor color =
-      nsSVGUtils::GetFallbackOrPaintColor(*aFrame->Style(), aFillOrStroke);
+      SVGUtils::GetFallbackOrPaintColor(*aFrame->Style(), aFillOrStroke);
   aTargetPaint.SetColor(color);
 }
 
@@ -142,7 +143,7 @@ DrawMode SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
     SetFillOpacity(0.0f);
   } else {
     float opacity =
-        nsSVGUtils::GetOpacity(style->mFillOpacity, aOuterContextPaint);
+        SVGUtils::GetOpacity(style->mFillOpacity, aOuterContextPaint);
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mFillPaint, &nsStyleSVG::mFill,
@@ -158,7 +159,7 @@ DrawMode SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
     SetStrokeOpacity(0.0f);
   } else {
     float opacity =
-        nsSVGUtils::GetOpacity(style->mStrokeOpacity, aOuterContextPaint);
+        SVGUtils::GetOpacity(style->mStrokeOpacity, aOuterContextPaint);
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mStrokePaint,

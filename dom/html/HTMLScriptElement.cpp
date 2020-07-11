@@ -137,7 +137,7 @@ void HTMLScriptElement::SetText(const nsAString& aValue, ErrorResult& aRv) {
   aRv = nsContentUtils::SetNodeTextContent(this, aValue, true);
 }
 
-// variation of this code in nsSVGScriptElement - check if changes
+// variation of this code in SVGScriptElement - check if changes
 // need to be transfered when modifying
 
 bool HTMLScriptElement::GetScriptType(nsAString& aType) {
@@ -176,7 +176,7 @@ void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
   mIsModule = aOwnerDoc->ModuleScriptsEnabled() && !type.IsEmpty() &&
               type.LowerCaseEqualsASCII("module");
 
-  // variation of this code in nsSVGScriptElement - check if changes
+  // variation of this code in SVGScriptElement - check if changes
   // need to be transfered when modifying.  Note that we don't use GetSrc here
   // because it will return the base URL when the attr value is "".
   nsAutoString src;

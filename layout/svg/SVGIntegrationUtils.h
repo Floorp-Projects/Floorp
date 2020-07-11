@@ -20,19 +20,8 @@ class gfxDrawable;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsIFrame;
-
-struct nsRect;
-
-namespace mozilla {
-namespace gfx {
-class DrawTarget;
-}  // namespace gfx
-namespace layers {
-class LayerManager;
-}  // namespace layers
-}  // namespace mozilla
-
 struct nsPoint;
+struct nsRect;
 struct nsSize;
 
 struct WrFiltersHolder {
@@ -43,14 +32,24 @@ struct WrFiltersHolder {
   nsTArray<nsTArray<float>> values;
 };
 
+namespace mozilla {
+
+namespace gfx {
+class DrawTarget;
+}  // namespace gfx
+
+namespace layers {
+class LayerManager;
+}  // namespace layers
+
 /**
  * Integration of SVG effects (clipPath clipping, masking and filters) into
  * regular display list based painting and hit-testing.
  */
-class nsSVGIntegrationUtils final {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::IntRect IntRect;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+class SVGIntegrationUtils final {
+  typedef gfx::DrawTarget DrawTarget;
+  typedef gfx::IntRect IntRect;
+  typedef image::imgDrawingParams imgDrawingParams;
 
  public:
   /**
@@ -89,8 +88,7 @@ class nsSVGIntegrationUtils final {
    * frame's continuations' border boxes, converted to SVG user units (equal to
    * CSS px units), as required by the SVG code.
    */
-  static mozilla::gfx::Size GetSVGCoordContextForNonSVGFrame(
-      nsIFrame* aNonSVGFrame);
+  static gfx::Size GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame);
 
   /**
    * SVG effects such as SVG filters, masking and clipPath may require an SVG
@@ -156,17 +154,17 @@ class nsSVGIntegrationUtils final {
     const nsRect& dirtyRect;
     const nsRect& borderArea;
     nsDisplayListBuilder* builder;
-    mozilla::layers::LayerManager* layerManager;
+    layers::LayerManager* layerManager;
     bool handleOpacity;  // If true, PaintMaskAndClipPath/ PaintFilter should
                          // apply css opacity.
-    mozilla::Maybe<mozilla::gfx::Rect> maskRect;
+    Maybe<gfx::Rect> maskRect;
     imgDrawingParams& imgParams;
 
     explicit PaintFramesParams(gfxContext& aCtx, nsIFrame* aFrame,
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsDisplayListBuilder* aBuilder,
-                               mozilla::layers::LayerManager* aLayerManager,
+                               layers::LayerManager* aLayerManager,
                                bool aHandleOpacity,
                                imgDrawingParams& aImgParams)
         : ctx(aCtx),
@@ -213,18 +211,18 @@ class nsSVGIntegrationUtils final {
   /**
    * Build WebRender filters for a frame with CSS filters applied to it.
    */
-  static bool CreateWebRenderCSSFilters(
-      mozilla::Span<const mozilla::StyleFilter> aFilters, nsIFrame* aFrame,
-      WrFiltersHolder& aWrFilters);
+  static bool CreateWebRenderCSSFilters(Span<const StyleFilter> aFilters,
+                                        nsIFrame* aFrame,
+                                        WrFiltersHolder& aWrFilters);
 
   /**
    * Try to build WebRender filters for a frame with SVG filters applied to it
    * if the filters are supported.
    */
-  static bool BuildWebRenderFilters(
-      nsIFrame* aFilteredFrame,
-      mozilla::Span<const mozilla::StyleFilter> aFilters,
-      WrFiltersHolder& aWrFilters, mozilla::Maybe<nsRect>& aPostFilterClip);
+  static bool BuildWebRenderFilters(nsIFrame* aFilteredFrame,
+                                    Span<const StyleFilter> aFilters,
+                                    WrFiltersHolder& aWrFilters,
+                                    Maybe<nsRect>& aPostFilterClip);
 
   /**
    * Check if the filters present on |aFrame| are supported by WebRender.
@@ -262,7 +260,7 @@ class nsSVGIntegrationUtils final {
 
   static already_AddRefed<gfxDrawable> DrawableFromPaintServer(
       nsIFrame* aFrame, nsIFrame* aTarget, const nsSize& aPaintServerSize,
-      const mozilla::gfx::IntSize& aRenderSize, const DrawTarget* aDrawTarget,
+      const gfx::IntSize& aRenderSize, const DrawTarget* aDrawTarget,
       const gfxMatrix& aContextMatrix, uint32_t aFlags);
 
   /**
@@ -271,5 +269,7 @@ class nsSVGIntegrationUtils final {
    */
   static nsPoint GetOffsetToBoundingBox(nsIFrame* aFrame);
 };
+
+}  // namespace mozilla
 
 #endif /*NSSVGINTEGRATIONUTILS_H_*/

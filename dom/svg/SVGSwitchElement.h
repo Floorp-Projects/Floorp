@@ -10,8 +10,6 @@
 #include "mozilla/dom/SVGGraphicsElement.h"
 #include "nsCOMPtr.h"
 
-class nsSVGSwitchFrame;
-
 nsresult NS_NewSVGSwitchElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
@@ -21,8 +19,6 @@ namespace dom {
 typedef SVGGraphicsElement SVGSwitchElementBase;
 
 class SVGSwitchElement final : public SVGSwitchElementBase {
-  friend class ::nsSVGSwitchFrame;
-
  protected:
   friend nsresult(::NS_NewSVGSwitchElement(
       nsIContent** aResult,

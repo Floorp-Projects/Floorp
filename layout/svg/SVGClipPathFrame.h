@@ -10,7 +10,6 @@
 #include "gfxMatrix.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SVGContainerFrame.h"
-#include "nsSVGUtils.h"
 
 class gfxContext;
 

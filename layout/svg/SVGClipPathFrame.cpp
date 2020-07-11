@@ -14,10 +14,10 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGGeometryFrame.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "nsGkAtoms.h"
-#include "nsSVGUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -61,7 +61,7 @@ void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
           static_cast<SVGGeometryElement*>(pathFrame->GetContent());
 
       gfxMatrix toChildsUserSpace =
-          nsSVGUtils::GetTransformMatrixInUserSpace(pathFrame) *
+          SVGUtils::GetTransformMatrixInUserSpace(pathFrame) *
           (GetClipPathTransform(aClippedFrame) * aMatrix);
 
       gfxMatrix newMatrix = aContext.CurrentMatrixDouble()
@@ -70,7 +70,7 @@ void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
       if (!newMatrix.IsSingular()) {
         aContext.SetMatrixDouble(newMatrix);
         FillRule clipRule =
-            nsSVGUtils::ToFillRule(pathFrame->StyleSVG()->mClipRule);
+            SVGUtils::ToFillRule(pathFrame->StyleSVG()->mClipRule);
         clipPath = pathElement->GetOrBuildPath(drawTarget, clipRule);
       }
     }
@@ -126,8 +126,8 @@ void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   SVGClipPathFrame* clipPathThatClipsClipPath;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(this, &clipPathThatClipsClipPath);
-  nsSVGUtils::MaskUsage maskUsage;
-  nsSVGUtils::DetermineMaskUsage(this, true, maskUsage);
+  SVGUtils::MaskUsage maskUsage;
+  SVGUtils::DetermineMaskUsage(this, true, maskUsage);
 
   if (maskUsage.shouldApplyClipPath) {
     clipPathThatClipsClipPath->ApplyClipPath(aMaskContext, aClippedFrame,
@@ -181,8 +181,8 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
     return;
   }
 
-  nsSVGUtils::MaskUsage maskUsage;
-  nsSVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
+  SVGUtils::MaskUsage maskUsage;
+  SVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
   if (maskUsage.shouldApplyClipPath) {
     clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame,
                                           mMatrixForChildren);
@@ -205,7 +205,7 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   nsIContent* childContent = child->GetContent();
   if (childContent->IsSVGElement()) {
     toChildsUserSpace =
-        nsSVGUtils::GetTransformMatrixInUserSpace(child) * mMatrixForChildren;
+        SVGUtils::GetTransformMatrixInUserSpace(child) * mMatrixForChildren;
   }
 
   // clipPath does not result in any image rendering, so we just use a dummy
@@ -286,7 +286,7 @@ bool SVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
     if (SVGFrame) {
       gfxPoint pointForChild = point;
 
-      gfxMatrix m = nsSVGUtils::GetTransformMatrixInUserSpace(kid);
+      gfxMatrix m = SVGUtils::GetTransformMatrixInUserSpace(kid);
       if (!m.IsIdentity()) {
         if (!m.Invert()) {
           return false;
@@ -386,7 +386,7 @@ nsresult SVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::transform) {
       SVGObserverUtils::InvalidateDirectRenderingObservers(this);
-      nsSVGUtils::NotifyChildrenOfSVGChange(
+      SVGUtils::NotifyChildrenOfSVGChange(
           this, ISVGDisplayableFrame::TRANSFORM_CHANGED);
     }
     if (aAttribute == nsGkAtoms::clipPathUnits) {
@@ -413,19 +413,19 @@ gfxMatrix SVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame) {
   SVGClipPathElement* content = static_cast<SVGClipPathElement*>(GetContent());
 
   gfxMatrix tm = content->PrependLocalTransformsTo({}, eChildToUserSpace) *
-                 nsSVGUtils::GetTransformMatrixInUserSpace(this);
+                 SVGUtils::GetTransformMatrixInUserSpace(this);
 
   SVGAnimatedEnumeration* clipPathUnits =
       &content->mEnumAttributes[SVGClipPathElement::CLIPPATHUNITS];
 
-  uint32_t flags = nsSVGUtils::eBBoxIncludeFillGeometry |
+  uint32_t flags = SVGUtils::eBBoxIncludeFillGeometry |
                    (aClippedFrame->StyleBorder()->mBoxDecorationBreak ==
                             StyleBoxDecorationBreak::Clone
-                        ? nsSVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
+                        ? SVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
                         : 0);
 
-  return nsSVGUtils::AdjustMatrixForUnits(tm, clipPathUnits, aClippedFrame,
-                                          flags);
+  return SVGUtils::AdjustMatrixForUnits(tm, clipPathUnits, aClippedFrame,
+                                        flags);
 }
 
 SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
@@ -447,9 +447,9 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
       ISVGDisplayableFrame* svg = do_QueryFrame(frame);
       if (svg) {
         gfxMatrix matrix =
-            nsSVGUtils::GetTransformMatrixInUserSpace(frame) * aMatrix;
+            SVGUtils::GetTransformMatrixInUserSpace(frame) * aMatrix;
         tmpBBox = svg->GetBBoxContribution(gfx::ToMatrix(matrix),
-                                           nsSVGUtils::eBBoxIncludeFill);
+                                           SVGUtils::eBBoxIncludeFill);
         SVGClipPathFrame* clipPathFrame;
         if (SVGObserverUtils::GetAndObserveClipPath(frame, &clipPathFrame) !=
                 SVGObserverUtils::eHasRefsSomeInvalid &&
@@ -457,7 +457,7 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
           tmpBBox =
               clipPathFrame->GetBBoxForClipPathFrame(tmpBBox, aMatrix, aFlags);
         }
-        if (!(aFlags & nsSVGUtils::eDoNotClipToBBoxOfContentInsideClipPath)) {
+        if (!(aFlags & SVGUtils::eDoNotClipToBBoxOfContentInsideClipPath)) {
           tmpBBox.Intersect(aBBox);
         }
         unionBBox.UnionEdges(tmpBBox);

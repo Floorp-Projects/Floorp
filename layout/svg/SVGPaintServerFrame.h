@@ -14,7 +14,6 @@
 #include "nsIFrame.h"
 #include "nsIFrame.h"
 #include "nsQueryFrame.h"
-#include "nsSVGUtils.h"
 
 class gfxContext;
 class gfxPattern;

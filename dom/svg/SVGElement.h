@@ -165,7 +165,7 @@ class SVGElement : public SVGElementBase  // nsIContent
       SVGTransformTypes aWhich = eAllTransforms) const;
 
   // Setter for to set the current <animateMotion> transformation
-  // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
+  // Only visible for SVGGraphicElement, so it's a no-op here, and that
   // subclass has the useful implementation.
   virtual void SetAnimateMotionTransform(
       const mozilla::gfx::Matrix* aMatrix) { /*no-op*/
@@ -281,7 +281,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   SVGAnimatedLengthList* GetAnimatedLengthList(uint8_t aAttrEnum);
   virtual SVGAnimatedPointList* GetAnimatedPointList() { return nullptr; }
   virtual SVGAnimatedPathSegList* GetAnimPathSegList() {
-    // DOM interface 'SVGAnimatedPathData' (*inherited* by nsSVGPathElement)
+    // DOM interface 'SVGAnimatedPathData' (*inherited* by SVGPathElement)
     // has a member called 'animatedPathSegList' member, so we have a shorter
     // name so we don't get hidden by the GetAnimatedPathSegList declared by
     // NS_DECL_NSIDOMSVGANIMATEDPATHDATA.

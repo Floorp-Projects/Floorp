@@ -30,6 +30,8 @@
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGTextFrame.h"
+#include "mozilla/SVGIntegrationUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/ToString.h"
 #include "mozilla/ViewportUtils.h"
 
@@ -88,7 +90,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
-#include "nsSVGIntegrationUtils.h"
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"
@@ -567,7 +568,7 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
 }
 
 static void MaybeScheduleReflowSVGNonDisplayText(nsIFrame* aFrame) {
-  if (!nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (!SVGUtils::IsInSVGTextSubtree(aFrame)) {
     return;
   }
 
@@ -1654,7 +1655,7 @@ const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
 nsMargin nsIFrame::GetUsedMargin() const {
   nsMargin margin(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
-      nsSVGUtils::IsInSVGTextSubtree(this))
+      SVGUtils::IsInSVGTextSubtree(this))
     return margin;
 
   nsMargin* m = GetProperty(UsedMarginProperty());
@@ -1675,7 +1676,7 @@ nsMargin nsIFrame::GetUsedMargin() const {
 nsMargin nsIFrame::GetUsedBorder() const {
   nsMargin border(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
-      nsSVGUtils::IsInSVGTextSubtree(this))
+      SVGUtils::IsInSVGTextSubtree(this))
     return border;
 
   // Theme methods don't use const-ness.
@@ -1704,7 +1705,7 @@ nsMargin nsIFrame::GetUsedBorder() const {
 nsMargin nsIFrame::GetUsedPadding() const {
   nsMargin padding(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
-      nsSVGUtils::IsInSVGTextSubtree(this))
+      SVGUtils::IsInSVGTextSubtree(this))
     return padding;
 
   // Theme methods don't use const-ness.
@@ -1890,7 +1891,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
 
   return !ShouldApplyOverflowClipping(disp) &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
-         !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
+         !SVGIntegrationUtils::UsingEffectsForFrame(this);
 }
 
 bool nsIFrame::Combines3DTransformWithAncestors(
@@ -2996,15 +2997,15 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
                                             nsIFrame* aMaskedFrame) {
   const nsStyleSVGReset* svgReset = aMaskedFrame->StyleSVGReset();
 
-  nsSVGUtils::MaskUsage maskUsage;
-  nsSVGUtils::DetermineMaskUsage(aMaskedFrame, false, maskUsage);
+  SVGUtils::MaskUsage maskUsage;
+  SVGUtils::DetermineMaskUsage(aMaskedFrame, false, maskUsage);
 
   nsPoint offsetToUserSpace =
       nsLayoutUtils::ComputeOffsetToUserSpace(aBuilder, aMaskedFrame);
   int32_t devPixelRatio = aMaskedFrame->PresContext()->AppUnitsPerDevPixel();
   gfxPoint devPixelOffsetToUserSpace =
       nsLayoutUtils::PointToGfxPoint(offsetToUserSpace, devPixelRatio);
-  gfxMatrix cssToDevMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(aMaskedFrame);
+  gfxMatrix cssToDevMatrix = SVGUtils::GetCSSPxToDevPxMatrix(aMaskedFrame);
 
   nsPoint toReferenceFrame;
   aBuilder->FindReferenceFrameFor(aMaskedFrame, &toReferenceFrame);
@@ -3018,11 +3019,11 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
       combinedClip = Some(ThebesRect(*result));
     }
   } else if (maskUsage.shouldApplyClipPath) {
-    gfxRect result = nsSVGUtils::GetBBox(
+    gfxRect result = SVGUtils::GetBBox(
         aMaskedFrame,
-        nsSVGUtils::eBBoxIncludeClipped | nsSVGUtils::eBBoxIncludeFill |
-            nsSVGUtils::eBBoxIncludeMarkers | nsSVGUtils::eBBoxIncludeStroke |
-            nsSVGUtils::eDoNotClipToBBoxOfContentInsideClipPath);
+        SVGUtils::eBBoxIncludeClipped | SVGUtils::eBBoxIncludeFill |
+            SVGUtils::eBBoxIncludeMarkers | SVGUtils::eBBoxIncludeStroke |
+            SVGUtils::eDoNotClipToBBoxOfContentInsideClipPath);
     combinedClip = Some(cssToDevMatrix.TransformBounds(result));
   } else {
     // The code for this case is adapted from ComputeMaskGeometry().
@@ -3206,7 +3207,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // NeedsActiveLayer was to change, which we don't currently do.
   const bool useOpacity =
       HasVisualOpacity(disp, effects, effectSetForOpacity) &&
-      !nsSVGUtils::CanOptimizeOpacity(this);
+      !SVGUtils::CanOptimizeOpacity(this);
 
   const bool isTransformed = IsTransformed(disp);
   const bool hasPerspective = isTransformed && HasPerspective(disp);
@@ -3330,16 +3331,16 @@ void nsIFrame::BuildDisplayListForStackingContext(
   }
 
   bool usingFilter = effects->HasFilters();
-  bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
+  bool usingMask = SVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
   bool usingSVGEffects = usingFilter || usingMask;
 
   nsRect visibleRectOutsideSVGEffects = visibleRect;
   nsDisplayList hoistedScrollInfoItemsStorage;
   if (usingSVGEffects) {
     dirtyRect =
-        nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
-    visibleRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(
-        this, visibleRect);
+        SVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
+    visibleRect =
+        SVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, visibleRect);
     aBuilder->EnterSVGEffectsContents(this, &hoistedScrollInfoItemsStorage);
   }
 
@@ -5518,7 +5519,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
       kid->FindCloserFrameForSelection(aPoint, &closest);
     }
     if (closest.mFrame) {
-      if (nsSVGUtils::IsInSVGTextSubtree(closest.mFrame))
+      if (SVGUtils::IsInSVGTextSubtree(closest.mFrame))
         return FrameTarget(closest.mFrame, false, false);
       return GetSelectionClosestFrameForChild(closest.mFrame, aPoint, aFlags);
     }
@@ -5638,7 +5639,7 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
 
   nsPoint pt;
   if (closest.frame != this) {
-    if (nsSVGUtils::IsInSVGTextSubtree(closest.frame)) {
+    if (SVGUtils::IsInSVGTextSubtree(closest.frame)) {
       pt = nsLayoutUtils::TransformAncestorPointToFrame(
           RelativeTo{closest.frame}, aPoint, RelativeTo{this});
     } else {
@@ -7287,7 +7288,7 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
     if (aFrame->StyleEffects()->HasFilters()) {
       SetOrUpdateRectValuedProperty(aFrame, nsIFrame::PreEffectsBBoxProperty(),
                                     r);
-      r = nsSVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
+      r = SVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
     }
     return r;
   }
@@ -7323,10 +7324,10 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   // only one heap-allocated rect per frame and it will be cleaned up when
   // the frame dies.
 
-  if (nsSVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame)) {
+  if (SVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame)) {
     SetOrUpdateRectValuedProperty(aFrame, nsIFrame::PreEffectsBBoxProperty(),
                                   r);
-    r = nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);
+    r = SVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);
   }
 
   return r;
@@ -9928,7 +9929,7 @@ static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
 }
 
 Maybe<StyleVerticalAlignKeyword> nsIFrame::VerticalAlignEnum() const {
-  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
+  if (SVGUtils::IsInSVGTextSubtree(this)) {
     StyleDominantBaseline dominantBaseline = StyleSVG()->mDominantBaseline;
     return Some(ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline));
   }
@@ -10712,7 +10713,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
          // but the spec says it acts like the rest of these
          ChildrenHavePerspective(aStyleDisplay) ||
          aStyleEffects->mMixBlendMode != StyleBlend::Normal ||
-         nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
+         SVGIntegrationUtils::UsingEffectsForFrame(this) ||
          aStyleDisplay->IsPositionForcingStackingContext() ||
          ZIndex().isSome() ||
          (aStyleDisplay->mWillChange.bits &
@@ -10971,12 +10972,12 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
 
   // Anything that didn't match the above conditions is visible to hit-testing.
   result = CompositorHitTestFlags::eVisibleToHitTest;
-  if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
+  if (SVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
     // If WebRender is enabled, simple clip-paths can be converted into WR
     // clips that WR knows how to hit-test against, so we don't need to mark
     // it as an irregular area.
     if (!gfxVars::UseWebRender() ||
-        !nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(this)) {
+        !SVGIntegrationUtils::UsingSimpleClipPathForFrame(this)) {
       result += CompositorHitTestFlags::eIrregularArea;
     }
   }

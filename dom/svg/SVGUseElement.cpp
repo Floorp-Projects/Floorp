@@ -313,7 +313,7 @@ void SVGUseElement::UpdateShadowTree() {
   });
 
   // make sure target is valid type for <use>
-  // QIable nsSVGGraphicsElement would eliminate enumerating all elements
+  // QIable SVGGraphicsElement would eliminate enumerating all elements
   if (!targetElement ||
       !targetElement->IsAnyOfSVGElements(
           nsGkAtoms::svg, nsGkAtoms::symbol, nsGkAtoms::g, nsGkAtoms::path,
@@ -529,7 +529,7 @@ SVGElement::StringAttributesInfo SVGUseElement::GetStringInfo() {
 
 SVGUseFrame* SVGUseElement::GetFrame() const {
   nsIFrame* frame = GetPrimaryFrame();
-  // We might be a plain nsSVGContainerFrame if we didn't pass the conditional
+  // We might be a plain SVGContainerFrame if we didn't pass the conditional
   // processing checks.
   if (!frame || !frame->IsSVGUseFrame()) {
     MOZ_ASSERT_IF(frame, frame->Type() == LayoutFrameType::None);

@@ -16,11 +16,11 @@
 
 class gfxContext;
 class nsIFrame;
-class SVGBBox;
 
 namespace mozilla {
 class SVGAnimatedLengthList;
 class SVGAnimatedNumberList;
+class SVGBBox;
 class SVGLengthList;
 class SVGNumberList;
 class SVGUserUnitList;

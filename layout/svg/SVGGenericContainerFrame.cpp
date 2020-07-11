@@ -6,7 +6,6 @@
 
 // Main header first:
 #include "SVGGenericContainerFrame.h"
-#include "nsSVGIntegrationUtils.h"
 
 #include "mozilla/PresShell.h"
 

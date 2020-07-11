@@ -11,10 +11,6 @@
 #include "mozilla/PresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
-#include "nsSVGIntegrationUtils.h"
-#include "nsSVGUtils.h"
-#include "SVGGraphicsElement.h"
-#include "SVGTransformableElement.h"
 
 using namespace mozilla::dom;
 

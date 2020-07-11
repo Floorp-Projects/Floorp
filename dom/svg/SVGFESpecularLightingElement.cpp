@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGFESpecularLightingElement.h"
 #include "mozilla/dom/SVGFESpecularLightingElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
-#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FESpecularLighting)
 

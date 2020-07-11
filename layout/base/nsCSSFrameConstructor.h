@@ -1466,7 +1466,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
       mozilla::PseudoStyleType aInnerPseudo, bool aCandidateRootFrame);
 
   /**
-   * Construct an nsSVGOuterSVGFrame.
+   * Construct an SVGOuterSVGFrame.
    */
   nsIFrame* ConstructOuterSVG(nsFrameConstructorState& aState,
                               FrameConstructionItem& aItem,
@@ -1475,7 +1475,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                               nsFrameList& aFrameList);
 
   /**
-   * Construct an nsSVGMarkerFrame.
+   * Construct an SVGMarkerFrame.
    */
   nsIFrame* ConstructMarker(nsFrameConstructorState& aState,
                             FrameConstructionItem& aItem,

@@ -244,7 +244,6 @@
 
 #include "mozilla/SMILAnimationController.h"
 #include "imgIContainer.h"
-#include "nsSVGUtils.h"
 
 #include "nsRefreshDriver.h"
 

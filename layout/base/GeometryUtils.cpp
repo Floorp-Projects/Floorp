@@ -7,6 +7,7 @@
 #include "GeometryUtils.h"
 
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/GeometryUtilsBinding.h"
@@ -19,7 +20,6 @@
 #include "nsIFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -143,7 +143,7 @@ static nsIFrame* GetFirstNonAnonymousFrameForNode(nsINode* aNode) {
  */
 static nsRect GetBoxRectForFrame(nsIFrame** aFrame, CSSBoxType aType) {
   nsRect r;
-  nsIFrame* f = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(*aFrame, &r);
+  nsIFrame* f = SVGUtils::GetOuterSVGFrameAndCoveredRegion(*aFrame, &r);
   if (f && f != *aFrame) {
     // For non-outer SVG frames, the BoxType is ignored.
     *aFrame = f;

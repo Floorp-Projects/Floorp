@@ -13,13 +13,13 @@
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "SVGFilterFrame.h"
-#include "nsSVGUtils.h"
 #include "FilterSupport.h"
 #include "gfx2DGlue.h"
 
@@ -87,7 +87,7 @@ bool SVGFilterInstance::ComputeBounds() {
   uint16_t filterUnits =
       mFilterFrame->GetEnumValue(SVGFilterElement::FILTERUNITS);
   gfxRect userSpaceBounds =
-      nsSVGUtils::GetRelativeRect(filterUnits, XYWH, mTargetBBox, mMetrics);
+      SVGUtils::GetRelativeRect(filterUnits, XYWH, mTargetBBox, mMetrics);
 
   // Transform the user space bounds to filter space, so we
   // can align them with the pixel boundaries of the offscreen surface.
@@ -171,9 +171,9 @@ float SVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
 
   float value;
   if (mPrimitiveUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    value = nsSVGUtils::ObjectSpace(mTargetBBox, &val);
+    value = SVGUtils::ObjectSpace(mTargetBBox, &val);
   } else {
-    value = nsSVGUtils::UserSpace(mMetrics, &val);
+    value = SVGUtils::UserSpace(mMetrics, &val);
   }
 
   switch (aCtxType) {
@@ -202,7 +202,7 @@ Point3D SVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
   gfxRect feArea =
-      nsSVGUtils::GetRelativeRect(mPrimitiveUnits, val, mTargetBBox, mMetrics);
+      SVGUtils::GetRelativeRect(mPrimitiveUnits, val, mTargetBBox, mMetrics);
   gfxRect r = UserSpaceToFilterSpace(feArea);
   return Point3D(r.x, r.y, GetPrimitiveNumber(SVGContentUtils::XY, aPoint.z));
 }
@@ -237,7 +237,7 @@ IntRect SVGFilterInstance::ComputeFilterPrimitiveSubregion(
     defaultFilterSubregion = mFilterSpaceBounds;
   }
 
-  gfxRect feArea = nsSVGUtils::GetRelativeRect(
+  gfxRect feArea = SVGUtils::GetRelativeRect(
       mPrimitiveUnits, &fE->mLengthAttributes[SVGFE::ATTR_X], mTargetBBox,
       mMetrics);
   Rect region = ToRect(UserSpaceToFilterSpace(feArea));

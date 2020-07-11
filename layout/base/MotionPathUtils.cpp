@@ -28,7 +28,7 @@ RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
   // for calculating the path length. We may need to update this.
   // https://github.com/w3c/fxtf-drafts/issues/369
   // FIXME: Bug 1579294: SVG layout may get a |container| with empty mRect
-  // (e.g. nsSVGOuterSVGAnonChildFrame), which makes the path length zero.
+  // (e.g. SVGOuterSVGAnonChildFrame), which makes the path length zero.
   const nsIFrame* container = aFrame->GetContainingBlock();
   if (!container) {
     // If there is no parent frame, it's impossible to calculate the path

@@ -13,9 +13,9 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGTextFrame.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGElement.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
 
 using namespace mozilla::dom;
@@ -171,8 +171,8 @@ void SVGDisplayContainerFrame::InsertFrames(
         kid->RemoveStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
                              NS_FRAME_HAS_DIRTY_CHILDREN);
         // No need to invalidate the new kid's old bounds, so we just use
-        // nsSVGUtils::ScheduleBoundsUpdate.
-        nsSVGUtils::ScheduleReflowSVG(kid);
+        // SVGUtils::ScheduleBoundsUpdate.
+        SVGUtils::ScheduleReflowSVG(kid);
         if (isFirstReflow) {
           // Add back the NS_FRAME_FIRST_REFLOW bit:
           kid->AddStateBits(NS_FRAME_FIRST_REFLOW);
@@ -263,12 +263,12 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
         continue;  // nothing to paint for kid
       }
 
-      m = nsSVGUtils::GetTransformMatrixInUserSpace(kid) * m;
+      m = SVGUtils::GetTransformMatrixInUserSpace(kid) * m;
       if (m.IsSingular()) {
         continue;
       }
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, aContext, m, aImgParams, aDirtyRect);
+    SVGUtils::PaintFrameWithEffects(kid, aContext, m, aImgParams, aDirtyRect);
   }
 }
 
@@ -277,11 +277,11 @@ nsIFrame* SVGDisplayContainerFrame::GetFrameForPoint(const gfxPoint& aPoint) {
                    (mState & NS_FRAME_IS_NONDISPLAY),
                "If display lists are enabled, only hit-testing of a "
                "clipPath's contents should take this code path");
-  return nsSVGUtils::HitTestChildren(this, aPoint);
+  return SVGUtils::HitTestChildren(this, aPoint);
 }
 
 void SVGDisplayContainerFrame::ReflowSVG() {
-  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
+  NS_ASSERTION(SVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
@@ -289,7 +289,7 @@ void SVGDisplayContainerFrame::ReflowSVG() {
 
   MOZ_ASSERT(!IsSVGOuterSVGFrame(), "Do not call on outer-<svg>");
 
-  if (!nsSVGUtils::NeedsReflowSVG(this)) {
+  if (!SVGUtils::NeedsReflowSVG(this)) {
     return;
   }
 
@@ -374,7 +374,7 @@ void SVGDisplayContainerFrame::NotifySVGChanged(uint32_t aFlags) {
     mCanvasTM = nullptr;
   }
 
-  nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
+  SVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
 }
 
 SVGBBox SVGDisplayContainerFrame::GetBBoxContribution(
@@ -393,7 +393,7 @@ SVGBBox SVGDisplayContainerFrame::GetBBoxContribution(
       if (content->IsSVGElement()) {
         transform = static_cast<SVGElement*>(content)->PrependLocalTransformsTo(
                         {}, eChildToUserSpace) *
-                    nsSVGUtils::GetTransformMatrixInUserSpace(kid) * transform;
+                    SVGUtils::GetTransformMatrixInUserSpace(kid) * transform;
       }
       // We need to include zero width/height vertical/horizontal lines, so we
       // have to use UnionEdges.

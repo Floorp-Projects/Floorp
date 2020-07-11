@@ -87,7 +87,7 @@ class SMILTimedElement {
   nsresult EndElementAt(double aOffsetSeconds);
 
   /**
-   * Methods for supporting the nsSVGAnimationElement interface.
+   * Methods for supporting the SVGAnimationElement interface.
    */
 
   /**

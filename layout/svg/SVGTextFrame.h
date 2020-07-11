@@ -273,7 +273,7 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
 
   /**
    * Calls ScheduleReflowSVGNonDisplayText if this is a non-display frame,
-   * and nsSVGUtils::ScheduleReflowSVG otherwise.
+   * and SVGUtils::ScheduleReflowSVG otherwise.
    */
   void ScheduleReflowSVG();
 
@@ -291,7 +291,7 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   void ReflowSVGNonDisplayText();
 
   /**
-   * This is a function that behaves similarly to nsSVGUtils::ScheduleReflowSVG,
+   * This is a function that behaves similarly to SVGUtils::ScheduleReflowSVG,
    * but which will skip over any ancestor non-display container frames on the
    * way to the SVGOuterSVGFrame.  It exists for the situation where a
    * non-display <text> element has changed and needs to ensure ReflowSVG will

@@ -311,7 +311,7 @@ nsresult SMILTimedElement::EndElementAt(double aOffsetSeconds) {
 }
 
 //----------------------------------------------------------------------
-// nsSVGAnimationElement methods
+// SVGAnimationElement methods
 
 SMILTimeValue SMILTimedElement::GetStartTime() const {
   return mElementState == STATE_WAITING || mElementState == STATE_ACTIVE

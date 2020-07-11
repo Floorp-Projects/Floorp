@@ -40,6 +40,7 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/EffectsInfo.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
@@ -58,7 +59,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
-#include "nsSVGIntegrationUtils.h"
 #include "nsSubDocumentFrame.h"
 #include "nsTransitionManager.h"
 
@@ -5461,7 +5461,7 @@ void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       invalid = visible.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
     }
     if (aItem.mLayerState == LayerState::LAYER_SVG_EFFECTS) {
-      invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(
+      invalid = SVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(
           aItem.mItem->Frame(), aItem.mItem->ToReferenceFrame(), invalid);
     }
     if (!invalid.IsEmpty()) {

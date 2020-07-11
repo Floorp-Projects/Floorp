@@ -28,6 +28,7 @@
 #include "nsIFrameInlines.h"
 #include "CounterStyleManager.h"
 #include <algorithm>
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsGridContainerFrame.h"
 
@@ -2502,7 +2503,7 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
     ComputedPhysicalPadding() = LayoutDevicePixel::ToAppUnits(
         widgetPadding, presContext->AppUnitsPerDevPixel());
     needPaddingProp = false;
-  } else if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
+  } else if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
     ComputedPhysicalPadding().SizeTo(0, 0, 0, 0);
     needPaddingProp = false;
   } else if (aPadding) {  // padding is an input arg
@@ -2551,7 +2552,7 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
         presContext->DeviceContext(), mFrame, disp->mAppearance);
     ComputedPhysicalBorderPadding() = LayoutDevicePixel::ToAppUnits(
         border, presContext->AppUnitsPerDevPixel());
-  } else if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
+  } else if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
     ComputedPhysicalBorderPadding().SizeTo(0, 0, 0, 0);
   } else if (aBorder) {  // border is an input arg
     ComputedPhysicalBorderPadding() = *aBorder;
@@ -2828,7 +2829,7 @@ nscoord ReflowInput::CalcLineHeight(nsIContent* aContent,
 bool SizeComputationInput::ComputeMargin(WritingMode aWM,
                                          nscoord aPercentBasis) {
   // SVG text frames have no margin.
-  if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
+  if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
     return false;
   }
 
