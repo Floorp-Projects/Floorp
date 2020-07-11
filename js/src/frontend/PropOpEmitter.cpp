@@ -22,7 +22,7 @@ bool PropOpEmitter::prepareAtomIndex(JSAtom* prop) {
   if (!bce_->makeAtomIndex(prop, &propAtomIndex_)) {
     return false;
   }
-  isLength_ = prop == bce_->cx->names().length;
+  isLength_ = prop == bce_->cx->parserNames().length;
 
   return true;
 }

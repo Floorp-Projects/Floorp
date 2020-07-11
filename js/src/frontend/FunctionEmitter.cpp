@@ -532,8 +532,8 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
     // The '.this' and '.generator' function special
     // bindings should never appear in the extra var
     // scope. 'arguments', however, may.
-    MOZ_ASSERT(name != bce_->cx->names().dotThis &&
-               name != bce_->cx->names().dotGenerator);
+    MOZ_ASSERT(name != bce_->cx->parserNames().dotThis &&
+               name != bce_->cx->parserNames().dotGenerator);
 
     NameOpEmitter noe(bce_, name, NameOpEmitter::Kind::Initialize);
     if (!noe.prepareForRhs()) {
