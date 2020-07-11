@@ -5,20 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositableClient.h"
-#include <stdint.h>       // for uint64_t, uint32_t
+
+#include <stdint.h>  // for uint64_t, uint32_t
+
 #include "gfxPlatform.h"  // for gfxPlatform
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"
-#include "mozilla/mozalloc.h"  // for operator delete, etc
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "mozilla/mozalloc.h"  // for operator delete, etc
 #ifdef XP_WIN
 #  include "gfxWindowsPlatform.h"  // for gfxWindowsPlatform
 #  include "mozilla/layers/TextureD3D11.h"
 #endif
-#include "gfxUtils.h"
 #include "IPDLActor.h"
+#include "gfxUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -32,11 +34,18 @@ void CompositableClient::InitIPDL(const CompositableHandle& aHandle) {
 
   mHandle = aHandle;
   mIsAsync |= !NS_IsMainThread();
+  // By simply taking the lock on mTextureClientRecycler we force memory barrier
+  // on mHandle and mIsAsync which makes them behave as Atomic as they are only
+  // ever set in this method.
+  auto l = mTextureClientRecycler.Lock();
 }
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
                                        TextureFlags aTextureFlags)
-    : mForwarder(aForwarder), mTextureFlags(aTextureFlags), mIsAsync(false) {}
+    : mForwarder(aForwarder),
+      mTextureFlags(aTextureFlags),
+      mTextureClientRecycler("CompositableClient::mTextureClientRecycler"),
+      mIsAsync(false) {}
 
 CompositableClient::~CompositableClient() { Destroy(); }
 
@@ -62,8 +71,9 @@ bool CompositableClient::IsConnected() const {
 }
 
 void CompositableClient::Destroy() {
-  if (mTextureClientRecycler) {
-    mTextureClientRecycler->Destroy();
+  auto l = mTextureClientRecycler.Lock();
+  if (*l) {
+    (*l)->Destroy();
   }
 
   if (mHandle) {
@@ -114,14 +124,16 @@ bool CompositableClient::AddTextureClient(TextureClient* aClient) {
 }
 
 void CompositableClient::ClearCachedResources() {
-  if (mTextureClientRecycler) {
-    mTextureClientRecycler->ShrinkToMinimumSize();
+  auto l = mTextureClientRecycler.Lock();
+  if (*l) {
+    (*l)->ShrinkToMinimumSize();
   }
 }
 
 void CompositableClient::HandleMemoryPressure() {
-  if (mTextureClientRecycler) {
-    mTextureClientRecycler->ShrinkToMinimumSize();
+  auto l = mTextureClientRecycler.Lock();
+  if (*l) {
+    (*l)->ShrinkToMinimumSize();
   }
 }
 
@@ -130,52 +142,17 @@ void CompositableClient::RemoveTexture(TextureClient* aTexture) {
 }
 
 TextureClientRecycleAllocator* CompositableClient::GetTextureClientRecycler() {
-  if (mTextureClientRecycler) {
-    return mTextureClientRecycler;
+  auto l = mTextureClientRecycler.Lock();
+  if (*l) {
+    return *l;
   }
 
   if (!mForwarder || !mForwarder->GetTextureForwarder()) {
     return nullptr;
   }
 
-  if (!mForwarder->GetTextureForwarder()->UsesImageBridge()) {
-    MOZ_ASSERT(NS_IsMainThread());
-    mTextureClientRecycler =
-        new layers::TextureClientRecycleAllocator(mForwarder);
-    return mTextureClientRecycler;
-  }
-
-  // Handle a case that mForwarder is ImageBridge
-
-  if (InImageBridgeChildThread()) {
-    mTextureClientRecycler =
-        new layers::TextureClientRecycleAllocator(mForwarder);
-    return mTextureClientRecycler;
-  }
-
-  ReentrantMonitor barrier("CompositableClient::GetTextureClientRecycler");
-  ReentrantMonitorAutoEnter mainThreadAutoMon(barrier);
-  bool done = false;
-
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "layers::CompositableClient::GetTextureClientRecycler", [&]() {
-        if (!mTextureClientRecycler) {
-          mTextureClientRecycler =
-              new layers::TextureClientRecycleAllocator(mForwarder);
-        }
-        ReentrantMonitorAutoEnter childThreadAutoMon(barrier);
-        done = true;
-        barrier.NotifyAll();
-      });
-
-  ImageBridgeChild::GetSingleton()->GetThread()->Dispatch(runnable.forget());
-
-  // should stop the thread until done.
-  while (!done) {
-    barrier.Wait();
-  }
-
-  return mTextureClientRecycler;
+  *l = new layers::TextureClientRecycleAllocator(mForwarder);
+  return *l;
 }
 
 void CompositableClient::DumpTextureClient(std::stringstream& aStream,

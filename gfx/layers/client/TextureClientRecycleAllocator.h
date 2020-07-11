@@ -111,7 +111,7 @@ class TextureClientRecycleAllocator : public ITextureClientRecycleAllocator {
       gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
       TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags);
 
-  RefPtr<KnowsCompositor> mKnowsCompositor;
+  const RefPtr<KnowsCompositor> mKnowsCompositor;
 
   friend class DefaultTextureClientAllocationHelper;
   void RecycleTextureClient(TextureClient* aClient) override;
