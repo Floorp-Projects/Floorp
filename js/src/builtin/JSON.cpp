@@ -770,7 +770,12 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
         }
 
         /* Step 4b(iii)(5)(c-g). */
-        if (!item.isNumber() && !item.isString()) {
+        RootedId id(cx);
+        if (item.isNumber() || item.isString()) {
+          if (!ValueToId<CanGC>(cx, item, &id)) {
+            return false;
+          }
+        } else {
           ESClass cls;
           if (!GetClassOfValue(cx, item, &cls)) {
             return false;
@@ -779,11 +784,13 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
           if (cls != ESClass::String && cls != ESClass::Number) {
             continue;
           }
-        }
 
-        RootedId id(cx);
-        if (!ValueToId<CanGC>(cx, item, &id)) {
-          return false;
+          JSAtom* atom = ToAtom<CanGC>(cx, item);
+          if (!atom) {
+            return false;
+          }
+
+          id.set(AtomToId(atom));
         }
 
         /* Step 4b(iii)(5)(g). */
