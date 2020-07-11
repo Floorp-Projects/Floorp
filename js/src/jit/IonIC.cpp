@@ -261,13 +261,20 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
       cx, ic, ionScript, ic->kind(), val, idVal, receiver,
       GetPropertyResultFlags::All);
 
-  RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, idVal, &id)) {
-    return false;
-  }
+  if (ic->kind() == CacheKind::GetPropSuper) {
+    RootedPropertyName name(cx, idVal.toString()->asAtom().asPropertyName());
+    if (!GetProperty(cx, obj, receiver, name, res)) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(ic->kind() == CacheKind::GetElemSuper);
 
-  if (!GetProperty(cx, obj, receiver, id, res)) {
-    return false;
+    JSOp op = JSOp(*ic->pc());
+    MOZ_ASSERT(op == JSOp::GetElemSuper);
+
+    if (!GetObjectElementOperation(cx, op, obj, receiver, idVal, res)) {
+      return false;
+    }
   }
 
   // Monitor changes to cache entry.
