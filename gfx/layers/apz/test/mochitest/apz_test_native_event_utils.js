@@ -5,7 +5,9 @@
 
 function getResolution() {
   let resolution = -1; // bogus value in case DWU fails us
-  resolution = SpecialPowers.getDOMWindowUtils(window).getResolution();
+  // Use window.top to get the root content window which is what has
+  // the resolution.
+  resolution = SpecialPowers.getDOMWindowUtils(window.top).getResolution();
   return resolution;
 }
 
@@ -160,18 +162,81 @@ function getBoundingClientRectRelativeToVisualViewport(aElement) {
 // Not all functions have been "upgraded" to allow a window argument yet; feel
 // free to upgrade others as necessary.
 
+// Get the origin of |aTarget| relative to the root content document's
+// visual viewport in CSS coordinates.
+// |aTarget| may be an element (contained in the root content document or
+// a subdocument) or, as a special case, the root content window.
+// FIXME: Support iframe windows as targets.
+function getTargetOrigin(aTarget) {
+  let origin = { left: 0, top: 0 };
+
+  // If the target is the root content window, its origin relative
+  // to the visual viewport is (0, 0).
+  if (aTarget instanceof Window) {
+    // FIXME: Assert that it's not an iframe window.
+    return origin;
+  }
+
+  // Otherwise, we have an element. Start with the origin of
+  // its bounding client rect which is relative to the enclosing
+  // document's layout viewport. Note that for iframes, the
+  // layout viewport is also the visual viewport.
+  let rect = aTarget.getBoundingClientRect();
+  origin.left += rect.left;
+  origin.top += rect.top;
+
+  // Iterate up the window hierarchy until we reach the root
+  // content window, adding the offsets of any iframe windows
+  // relative to their parent window.
+  while (aTarget.ownerDocument.defaultView.frameElement) {
+    let iframe = aTarget.ownerDocument.defaultView.frameElement;
+    // The offset of the iframe window relative to the parent window
+    // includes the iframe's border, and the iframe's origin in its
+    // containing document.
+    let style = iframe.ownerDocument.defaultView.getComputedStyle(iframe);
+    let borderLeft = parseFloat(style.borderLeftWidth) || 0;
+    let borderTop = parseFloat(style.borderTopWidth) || 0;
+    let paddingLeft = parseFloat(style.paddingLeft) || 0;
+    let paddingTop = parseFloat(style.paddingTop) || 0;
+    rect = iframe.getBoundingClientRect();
+    origin.left += rect.left + borderLeft + paddingLeft;
+    origin.top += rect.top + borderTop + paddingTop;
+    aTarget = iframe;
+  }
+
+  // Now we have coordinates relative to the root content document's
+  // layout viewport. Subtract the offset of the visual viewport
+  // relative to the layout viewport, to get coordinates relative to
+  // the visual viewport.
+  var offsetX = {},
+    offsetY = {};
+  let rootUtils = SpecialPowers.getDOMWindowUtils(window.top);
+  rootUtils.getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+  origin.left -= offsetX.value;
+  origin.top -= offsetY.value;
+  return origin;
+}
+
 // Convert (aX, aY), in CSS pixels relative to aTarget's bounding rect
 // to device pixels relative to the screen.
 function coordinatesRelativeToScreen(aX, aY, aTarget) {
-  var targetWindow = windowForTarget(aTarget);
+  // Note that |window| might not be the root content window, for two
+  // possible reasons:
+  //  1. The mochitest that's calling into this function is not using a mechanism
+  //     like runSubtestsSeriallyInFreshWindows() to load the test page in
+  //     a top-level context, so it's loaded into an iframe by the mochitest
+  //     harness.
+  //  2. The mochitest itself creates an iframe and calls this function from
+  //     script running in the context of the iframe.
+  // Since the resolution applies to the root content document, below we use
+  // the mozInnerScreen{X,Y} of the root content window (window.top) only,
+  // and factor any offsets between iframe windows and the root content window
+  // into |origin|.
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var deviceScale = utils.screenPixelsPerCSSPixel;
   var deviceScaleNoOverride = utils.screenPixelsPerCSSPixelNoOverride;
   var resolution = getResolution();
-  var rect =
-    aTarget instanceof Window
-      ? { left: 0, top: 0 } /* we don't use the width or height */
-      : getBoundingClientRectRelativeToVisualViewport(aTarget);
+  var origin = getTargetOrigin(aTarget);
   // moxInnerScreen{X,Y} are in CSS coordinates of the browser chrome.
   // The device scale applies to them, but the resolution only zooms the content.
   // In addition, if we're inside RDM, RDM overrides the device scale;
@@ -179,11 +244,11 @@ function coordinatesRelativeToScreen(aX, aY, aTarget) {
   // document, not to mozInnerScreen{X,Y}.
   return {
     x:
-      targetWindow.mozInnerScreenX * deviceScaleNoOverride +
-      (rect.left + aX) * resolution * deviceScale,
+      window.top.mozInnerScreenX * deviceScaleNoOverride +
+      (origin.left + aX) * resolution * deviceScale,
     y:
-      targetWindow.mozInnerScreenY * deviceScaleNoOverride +
-      (rect.top + aY) * resolution * deviceScale,
+      window.top.mozInnerScreenY * deviceScaleNoOverride +
+      (origin.top + aY) * resolution * deviceScale,
   };
 }
 
