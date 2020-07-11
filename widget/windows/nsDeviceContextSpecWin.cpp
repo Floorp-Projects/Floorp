@@ -21,6 +21,7 @@
 #include "nsTArray.h"
 #include "nsIPrintSettingsWin.h"
 
+#include "nsPaper.h"
 #include "nsPrinter.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -604,8 +605,8 @@ nsPrinterListWin::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     // https://docs.microsoft.com/en-us/cpp/cpp/char-wchar-t-char16-t-char32-t?view=vs-2019
     nsAutoString printerName;
     printerName.Assign(name);
-    RefPtr<nsIPrinter> printer = new nsPrinter(printerName);
-    aPrinters.AppendElement(std::move(printer));
+    nsTArray<RefPtr<nsIPaper>> paperList;
+    aPrinters.AppendElement(new nsPrinter(printerName, paperList));
   }
 
   return NS_OK;
