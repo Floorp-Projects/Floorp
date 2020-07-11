@@ -547,18 +547,6 @@ class UrlbarView {
       });
     }
 
-    // If we update the selected element, a new unique ID is generated for it.
-    // We need to ensure that aria-activedescendant reflects this new ID.
-    if (this.selectedElement && !this.oneOffSearchButtons.selectedButton) {
-      let aadID = this.input.inputField.getAttribute("aria-activedescendant");
-      if (!aadID) {
-        Cu.reportError("Selected element but no aria-activedescendant!");
-        this._setAccessibleFocus(this.selectedElement);
-      } else if (!this.document.getElementById(aadID)) {
-        this._setAccessibleFocus(this.selectedElement);
-      }
-    }
-
     this._openPanel();
 
     if (firstResult.heuristic) {
