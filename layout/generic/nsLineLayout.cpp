@@ -3186,6 +3186,14 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
                                    lineWM, mContainerSize,
                                    psd->mIStart + mTextIndent + dx);
     if (dx) {
+      if (startFrame->mFrame->IsLineFrame()) {
+        // If startFrame is a ::first-line frame, the mIStart and mTextIndent
+        // offsets will already have been applied to its position. But we still
+        // need to apply the text-align adjustment |dx| to its position.
+        startFrame->mBounds.IStart(lineWM) += dx;
+        startFrame->mFrame->SetRect(lineWM, startFrame->mBounds,
+                                    ContainerSizeForSpan(psd));
+      }
       aLine->IndentBy(dx, ContainerSize());
     }
   } else if (dx) {
