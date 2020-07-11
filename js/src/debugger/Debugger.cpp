@@ -175,7 +175,7 @@ JSScript* js::GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun) {
 }
 
 bool js::ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id) {
-  if (!ValueToId<CanGC>(cx, v, id)) {
+  if (!ToPropertyKey(cx, v, id)) {
     return false;
   }
   if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {

@@ -1584,7 +1584,7 @@ JS_PUBLIC_API bool JS_ValueToId(JSContext* cx, HandleValue value,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(value);
-  return ValueToId<CanGC>(cx, value, idp);
+  return ToPropertyKey(cx, value, idp);
 }
 
 JS_PUBLIC_API bool JS_StringToId(JSContext* cx, HandleString string,
