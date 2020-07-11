@@ -49,6 +49,7 @@ const heuristicOrder = [
   "Omnibox",
   "UnifiedComplete",
   "Autofill",
+  "TokenAliasEngines",
   "HeuristicFallback",
 ];
 /**
