@@ -1486,9 +1486,6 @@ nscoord nsBidiPresUtils::ReorderFrames(nsIFrame* aFirstFrameOnLine,
     // aNumFramesOnLine to -1 makes InitLogicalArrayFromLine look at all of
     // them.
     aNumFramesOnLine = -1;
-    // As the line frame itself has been adjusted at its inline-start position
-    // by the caller, we do not want to apply this to its children.
-    aStart = 0;
   }
 
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
