@@ -296,30 +296,6 @@ input:-moz-focusring {
 }
 
 /**
- * Viewport Container
- */
-
-.viewport {
-  display: inline-block;
-  /* Align all viewports to the top */
-  vertical-align: top;
-}
-
-.resizable-viewport {
-  border: 1px solid var(--theme-splitter-color);
-  box-shadow: var(--rdm-box-shadow);
-  position: relative;
-}
-
-/**
- * Viewport Content
- */
-
-.viewport-content.resizing {
-  pointer-events: none;
-}
-
-/**
  * Viewport Browser
  */
 
@@ -331,46 +307,6 @@ input:-moz-focusring {
 
 .browser:-moz-focusring {
   outline: none;
-}
-
-/**
- * Viewport Resize Handles
- */
-
-.viewport-resize-handle {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  bottom: 0;
-  right: 0;
-  background-image: url("./images/grippers.svg");
-  background-position: bottom right;
-  padding: 0 1px 1px 0;
-  background-repeat: no-repeat;
-  background-origin: content-box;
-  cursor: se-resize;
-}
-
-.viewport-resize-handle.hidden {
-  display: none;
-}
-
-.viewport-horizontal-resize-handle {
-  position: absolute;
-  width: 5px;
-  height: calc(100% - 16px);
-  right: -4px;
-  top: 0;
-  cursor: e-resize;
-}
-
-.viewport-vertical-resize-handle {
-  position: absolute;
-  width: calc(100% - 16px);
-  height: 5px;
-  left: 0;
-  bottom: -4px;
-  cursor: s-resize;
 }
 
 /**
