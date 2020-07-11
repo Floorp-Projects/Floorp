@@ -6,7 +6,7 @@
 #ifndef TRRService_h_
 #define TRRService_h_
 
-#include "mozilla/DataStorage.h"
+#include "mozilla/DataMutex.h"
 #include "nsHostResolver.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -110,10 +110,9 @@ class TRRService : public TRRServiceBase,
   // or false if mPrivateURI already had that value.
   bool MaybeSetPrivateURI(const nsACString& aURI) override;
   void ClearEntireCache();
-  void InitTRRBLStorage(DataStorage* aInitedStorage);
 
   bool mInitialized;
-  Atomic<uint32_t, Relaxed> mTRRBlocklistExpireTime;
+  Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds;
 
   Mutex mLock;
 
@@ -142,8 +141,7 @@ class TRRService : public TRRServiceBase,
   // mTRRBLStorage is only modified on the main thread, but we query whether it
   // is initialized or not off the main thread as well. Therefore we need to
   // lock while creating it and while accessing it off the main thread.
-  RefPtr<DataStorage> mTRRBLStorage;
-  Atomic<bool, Relaxed> mClearTRRBLStorage;
+  DataMutex<nsDataHashtable<nsCStringHashKey, int32_t>> mTRRBLStorage;
 
   // A set of domains that we should not use TRR for.
   nsTHashtable<nsCStringHashKey> mExcludedDomains;

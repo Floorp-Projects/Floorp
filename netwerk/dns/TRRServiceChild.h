@@ -29,8 +29,6 @@ class TRRServiceChild : public PTRRServiceChild {
                                              const nsString& aData);
   mozilla::ipc::IPCResult RecvUpdatePlatformDNSInformation(
       nsTArray<nsCString>&& aDNSSuffixList, const bool& aPlatformDisabledTRR);
-  mozilla::ipc::IPCResult RecvInitTRRBLStorage(
-      const psm::DataStorageEntry& aEntry, const FileDescriptor& aWriteFd);
   mozilla::ipc::IPCResult RecvUpdateParentalControlEnabled(
       const bool& aEnabled);
   mozilla::ipc::IPCResult RecvClearDNSCache(const bool& aTrrToo);

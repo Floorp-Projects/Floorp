@@ -6,7 +6,6 @@
 
 #include "mozilla/net/TRRServiceChild.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/DataStorage.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDNService.h"
 #include "nsIObserverService.h"
@@ -36,18 +35,6 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvUpdatePlatformDNSInformation(
     nsTArray<nsCString>&& aDNSSuffixList, const bool& aPlatformDisabledTRR) {
   gTRRService->RebuildSuffixList(std::move(aDNSSuffixList));
   gTRRService->mPlatformDisabledTRR = aPlatformDisabledTRR;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult TRRServiceChild::RecvInitTRRBLStorage(
-    const psm::DataStorageEntry& aEntry, const FileDescriptor& aWriteFd) {
-  RefPtr<DataStorage> storage =
-      DataStorage::Get(DataStorageClass::TRRBlacklist);
-  if (storage) {
-    if (NS_SUCCEEDED(storage->Init(&aEntry.items(), aWriteFd))) {
-      gTRRService->InitTRRBLStorage(storage);
-    }
-  }
   return IPC_OK();
 }
 
