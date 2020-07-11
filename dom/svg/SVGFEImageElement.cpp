@@ -7,6 +7,7 @@
 #include "mozilla/dom/SVGFEImageElement.h"
 
 #include "mozilla/EventStates.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/SVGFEImageElementBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/UserActivation.h"
@@ -14,9 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGUtils.h"
 #include "nsNetUtil.h"
-#include "SVGObserverUtils.h"
 #include "imgIContainer.h"
 #include "gfx2DGlue.h"
 

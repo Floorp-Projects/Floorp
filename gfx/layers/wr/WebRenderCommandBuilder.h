@@ -12,6 +12,7 @@
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/WebRenderUserData.h"
+#include "mozilla/SVGIntegrationUtils.h"  // for WrFiltersHolder
 #include "nsDisplayList.h"
 #include "nsIFrame.h"
 #include "DisplayItemCache.h"

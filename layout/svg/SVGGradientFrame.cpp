@@ -13,6 +13,7 @@
 #include "gfxPattern.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGGradientElement.h"
 #include "mozilla/dom/SVGGradientElementBinding.h"
 #include "mozilla/dom/SVGStopElement.h"
@@ -143,9 +144,9 @@ gfxMatrix SVGGradientFrame::GetGradientTransform(
 
     gfxRect bbox = aOverrideBounds
                        ? *aOverrideBounds
-                       : nsSVGUtils::GetBBox(
-                             aSource, nsSVGUtils::eUseFrameBoundsForOuterSVG |
-                                          nsSVGUtils::eBBoxIncludeFillGeometry);
+                       : SVGUtils::GetBBox(
+                             aSource, SVGUtils::eUseFrameBoundsForOuterSVG |
+                                          SVGUtils::eBBoxIncludeFillGeometry);
     bboxMatrix =
         gfxMatrix(bbox.Width(), 0, 0, bbox.Height(), bbox.X(), bbox.Y());
   }
@@ -271,7 +272,7 @@ already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
   // revert any vector effect transform so that the gradient appears unchanged
   if (aFillOrStroke == &nsStyleSVG::mStroke) {
     gfxMatrix userToOuterSVG;
-    if (nsSVGUtils::GetNonScalingStrokeTransform(aSource, &userToOuterSVG)) {
+    if (SVGUtils::GetNonScalingStrokeTransform(aSource, &userToOuterSVG)) {
       patternMatrix *= userToOuterSVG;
     }
   }
@@ -427,7 +428,7 @@ float SVGLinearGradientFrame::GetLengthValue(uint32_t aIndex) {
 
   uint16_t gradientUnits = GetGradientUnits();
   if (gradientUnits == SVG_UNIT_TYPE_USERSPACEONUSE) {
-    return nsSVGUtils::UserSpace(mSource, &length);
+    return SVGUtils::UserSpace(mSource, &length);
   }
 
   NS_ASSERTION(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
@@ -528,7 +529,7 @@ float SVGRadialGradientFrame::GetLengthValueFromElement(
 
   uint16_t gradientUnits = GetGradientUnits();
   if (gradientUnits == SVG_UNIT_TYPE_USERSPACEONUSE) {
-    return nsSVGUtils::UserSpace(mSource, &length);
+    return SVGUtils::UserSpace(mSource, &length);
   }
 
   NS_ASSERTION(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,

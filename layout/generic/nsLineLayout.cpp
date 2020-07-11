@@ -9,9 +9,10 @@
 #include "nsLineLayout.h"
 
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/SVGTextFrame.h"
+#include "mozilla/SVGUtils.h"
 
 #include "LayoutLogging.h"
-#include "SVGTextFrame.h"
 #include "nsBlockFrame.h"
 #include "nsFontMetrics.h"
 #include "nsStyleConsts.h"
@@ -79,8 +80,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
       mDirtyNextLine(false),
       mLineAtStart(false),
       mHasRuby(false),
-      mSuppressLineWrap(
-          nsSVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
+      mSuppressLineWrap(SVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
 #ifdef DEBUG
       ,
       mSpansAllocated(0),
@@ -1715,7 +1715,7 @@ void nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
 
 static float GetInflationForBlockDirAlignment(nsIFrame* aFrame,
                                               nscoord aInflationMinFontSize) {
-  if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
     const nsIFrame* container =
         nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::SVGText);
     NS_ASSERTION(container, "expected to find an ancestor SVGTextFrame");
@@ -3081,7 +3081,7 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
   StyleTextAlign textAlign =
       aIsLastLine ? mStyleText->TextAlignForLastLine() : mStyleText->mTextAlign;
 
-  bool isSVG = nsSVGUtils::IsInSVGTextSubtree(mBlockReflowInput->mFrame);
+  bool isSVG = SVGUtils::IsInSVGTextSubtree(mBlockReflowInput->mFrame);
   bool doTextAlign = remainingISize > 0;
 
   int32_t additionalGaps = 0;

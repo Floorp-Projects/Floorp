@@ -10,6 +10,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SVGContextPaint.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FontTableURIProtocolHandler.h"
@@ -27,7 +28,6 @@
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
 #include "nsIPrincipal.h"
-#include "nsSVGUtils.h"
 #include "nsContentUtils.h"
 #include "gfxFont.h"
 #include "gfxContext.h"
@@ -205,7 +205,7 @@ void gfxSVGGlyphs::RenderGlyph(gfxContext* aContext, uint32_t aGlyphId,
   AutoSetRestoreSVGContextPaint autoSetRestore(
       *aContextPaint, *glyph->OwnerDoc()->AsSVGDocument());
 
-  nsSVGUtils::PaintSVGGlyph(glyph, aContext);
+  SVGUtils::PaintSVGGlyph(glyph, aContext);
 }
 
 bool gfxSVGGlyphs::GetGlyphExtents(uint32_t aGlyphId,
@@ -215,7 +215,7 @@ bool gfxSVGGlyphs::GetGlyphExtents(uint32_t aGlyphId,
   NS_ASSERTION(glyph,
                "No glyph element. Should check with HasSVGGlyph() first!");
 
-  return nsSVGUtils::GetSVGGlyphExtents(glyph, aSVGToAppSpace, aResult);
+  return SVGUtils::GetSVGGlyphExtents(glyph, aSVGToAppSpace, aResult);
 }
 
 Element* gfxSVGGlyphs::GetGlyphElement(uint32_t aGlyphId) {

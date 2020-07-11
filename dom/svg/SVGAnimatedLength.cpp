@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SMILValue.h"
+#include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "DOMSVGAnimatedLength.h"
 #include "DOMSVGLength.h"
@@ -19,7 +20,6 @@
 #include "nsTextFormatter.h"
 #include "SMILFloatType.h"
 #include "SVGAttrTearoffTable.h"
-#include "nsSVGIntegrationUtils.h"
 
 using namespace mozilla::dom;
 
@@ -158,7 +158,7 @@ float NonSVGFrameUserSpaceMetrics::GetExLength() const {
 }
 
 gfx::Size NonSVGFrameUserSpaceMetrics::GetSize() const {
-  return nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(mFrame);
+  return SVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(mFrame);
 }
 
 float UserSpaceMetricsWithSize::GetAxisLength(uint8_t aCtxType) const {

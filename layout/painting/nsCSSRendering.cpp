@@ -48,8 +48,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsContentUtils.h"
-#include "SVGObserverUtils.h"
-#include "nsSVGIntegrationUtils.h"
 #include "gfxDrawable.h"
 #include "GeckoProfiler.h"
 #include "nsCSSRenderingBorders.h"

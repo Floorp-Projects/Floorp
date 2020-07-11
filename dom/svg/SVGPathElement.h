@@ -41,7 +41,7 @@ class SVGPathElement final : public SVGPathElementBase {
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
-  // nsSVGSVGElement methods:
+  // SVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:

@@ -6,15 +6,16 @@
 
 #include "nsFontFaceUtils.h"
 
+#include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/SVGUtils.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTArray.h"
-#include "SVGTextFrame.h"
 
 using namespace mozilla;
 
@@ -89,12 +90,12 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
 // TODO(emilio): Can we use the restyle-hint machinery instead of this?
 static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
-  if (f->IsFrameOfType(nsIFrame::eSVG) || nsSVGUtils::IsInSVGTextSubtree(f)) {
+  if (f->IsFrameOfType(nsIFrame::eSVG) || SVGUtils::IsInSVGTextSubtree(f)) {
     // SVG frames (and the non-SVG descendants of an SVGTextFrame) need special
     // reflow handling.  We need to search upwards for the first displayed
-    // nsSVGOuterSVGFrame or non-SVG frame, which is the frame we can call
+    // SVGOuterSVGFrame or non-SVG frame, which is the frame we can call
     // FrameNeedsReflow on.  (This logic is based on
-    // nsSVGUtils::ScheduleReflowSVG and
+    // SVGUtils::ScheduleReflowSVG and
     // SVGTextFrame::ScheduleReflowSVGNonDisplayText.)
     if (f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       while (f) {
@@ -106,7 +107,7 @@ static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
             return;
           }
           if (f->IsSVGOuterSVGFrame() || !(f->IsFrameOfType(nsIFrame::eSVG) ||
-                                           nsSVGUtils::IsInSVGTextSubtree(f))) {
+                                           SVGUtils::IsInSVGTextSubtree(f))) {
             break;
           }
           f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);

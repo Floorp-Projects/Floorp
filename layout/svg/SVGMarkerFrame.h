@@ -14,7 +14,6 @@
 #include "nsIFrame.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
-#include "nsSVGUtils.h"
 
 class gfxContext;
 

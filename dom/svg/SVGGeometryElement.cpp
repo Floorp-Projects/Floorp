@@ -9,7 +9,6 @@
 #include "DOMSVGPoint.h"
 #include "gfxPlatform.h"
 #include "nsCOMPtr.h"
-#include "nsSVGUtils.h"
 #include "SVGAnimatedLength.h"
 #include "SVGCircleElement.h"
 #include "SVGEllipseElement.h"

@@ -14,7 +14,6 @@
 #include "nsIFrame.h"
 #include "nsQueryFrame.h"
 #include "nsRect.h"
-#include "nsSVGUtils.h"
 
 class gfxContext;
 class nsFrameList;
@@ -110,7 +109,7 @@ class SVGContainerFrame : public nsContainerFrame {
  *
  * This class's methods can *not* assume that mContent points to an instance of
  * an SVG element class since this class is inherited by
- * nsSVGGenericContainerFrame which is used for unrecognized elements in the
+ * SVGGenericContainerFrame which is used for unrecognized elements in the
  * SVG namespace. Do *not* blindly cast to SVG element types.
  */
 class SVGDisplayContainerFrame : public SVGContainerFrame,

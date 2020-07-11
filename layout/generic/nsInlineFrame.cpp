@@ -14,6 +14,8 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/SVGTextFrame.h"
+#include "mozilla/SVGUtils.h"
 #include "nsLineLayout.h"
 #include "nsBlockFrame.h"
 #include "nsPlaceholderFrame.h"
@@ -22,7 +24,6 @@
 #include "nsPresContextInlines.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsDisplayList.h"
-#include "SVGTextFrame.h"
 #include "nsStyleChangeList.h"
 
 #ifdef DEBUG
@@ -54,7 +55,7 @@ nsresult nsInlineFrame::GetFrameName(nsAString& aResult) const {
 
 void nsInlineFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                     bool aRebuildDisplayItems) {
-  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
+  if (SVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
         GetParent(), LayoutFrameType::SVGText);
     svgTextFrame->InvalidateFrame();
@@ -66,7 +67,7 @@ void nsInlineFrame::InvalidateFrame(uint32_t aDisplayItemKey,
 void nsInlineFrame::InvalidateFrameWithRect(const nsRect& aRect,
                                             uint32_t aDisplayItemKey,
                                             bool aRebuildDisplayItems) {
-  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
+  if (SVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
         GetParent(), LayoutFrameType::SVGText);
     svgTextFrame->InvalidateFrame();
@@ -379,7 +380,7 @@ nsresult nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,
     return rv;
   }
 
-  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
+  if (SVGUtils::IsInSVGTextSubtree(this)) {
     SVGTextFrame* f = static_cast<SVGTextFrame*>(
         nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::SVGText));
     f->HandleAttributeChangeInDescendant(mContent->AsElement(), aNameSpaceID,

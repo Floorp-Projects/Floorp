@@ -86,7 +86,6 @@
 #include "nsRange.h"
 #include "nsString.h"
 #include "nsStyleConsts.h"
-#include "nsSVGUtils.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
 #include "nsWindowSizes.h"

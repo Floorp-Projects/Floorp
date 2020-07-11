@@ -13,8 +13,6 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsQueryObject.h"
-#include "nsSVGUtils.h"
-#include "SVGObserverUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
 

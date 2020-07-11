@@ -10,8 +10,6 @@
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "nsSVGIntegrationUtils.h"
-#include "nsSVGUtils.h"
 #include "SVGLengthList.h"
 
 nsIFrame* NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
