@@ -48,6 +48,7 @@ const heuristicOrder = [
   "UrlbarProviderSearchTips",
   "Omnibox",
   "UnifiedComplete",
+  "Autofill",
   "HeuristicFallback",
 ];
 /**
@@ -74,8 +75,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *
    * @param {UrlbarQueryContext} context
    *   The query context.
-   * @returns {boolean} If results were successfully sorted. This return value
-   *   is a stopgap and can be removed when bug 1648468 lands.
    */
   sort(context) {
     // This method is called multiple times per keystroke, so it should be as
@@ -135,17 +134,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
       context.maxResults
     );
-    let hasUnifiedComplete = false;
 
     // Do the first pass through the results.  We only collect info for the
     // second pass here.
     for (let result of context.results) {
-      // Keep track of whether UnifiedComplete has returned results. We will
-      // quit early if it hasn't.
-      if (result.providerName == "UnifiedComplete") {
-        hasUnifiedComplete = true;
-      }
-
       // The "Search in a Private Window" result should only be shown when there
       // are other results and all of them are searches.  It should not be shown
       // if the user typed an alias because that's an explicit engine choice.
@@ -184,16 +176,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       ) {
         canShowTailSuggestions = false;
       }
-    }
-
-    // Quit early if we're still waiting on UnifiedComplete. If it turns out
-    // UnifiedComplete doesn't need to return any results, it will call sort()
-    // regardless to unblock showing results.
-    if (
-      !hasUnifiedComplete &&
-      context.pendingHeuristicProviders.has("UnifiedComplete")
-    ) {
-      return false;
     }
 
     // Do the second pass through results to build the list of unsorted results.
@@ -325,7 +307,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     context.results = sortedResults;
-    return true;
   }
 
   /**

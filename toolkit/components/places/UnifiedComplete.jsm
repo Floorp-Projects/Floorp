@@ -14,8 +14,6 @@ const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE_FILTERED = 0;
-const QUERYTYPE_AUTOFILL_ORIGIN = 1;
-const QUERYTYPE_AUTOFILL_URL = 2;
 const QUERYTYPE_ADAPTIVE = 3;
 
 // The default frecency value used when inserting matches with unknown frecency.
@@ -132,201 +130,6 @@ const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
                             :matchBehavior, :searchBehavior)
    ORDER BY rank DESC, h.frecency DESC
    LIMIT :maxResults`;
-
-// Result row indexes for originQuery()
-const QUERYINDEX_ORIGIN_AUTOFILLED_VALUE = 1;
-const QUERYINDEX_ORIGIN_URL = 2;
-const QUERYINDEX_ORIGIN_FRECENCY = 3;
-
-// `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
-// the mean of all moz_origins.frecency values + stddevMultiplier * one standard
-// deviation.  This is inlined directly in the SQL (as opposed to being a custom
-// Sqlite function for example) in order to be as efficient as possible.
-const SQL_AUTOFILL_WITH = `
-  WITH
-  frecency_stats(count, sum, squares) AS (
-    SELECT
-      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = 'origin_frecency_count') AS REAL),
-      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = 'origin_frecency_sum') AS REAL),
-      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = 'origin_frecency_sum_of_squares') AS REAL)
-  ),
-  autofill_frecency_threshold(value) AS (
-    SELECT
-      CASE count
-      WHEN 0 THEN 0.0
-      WHEN 1 THEN sum
-      ELSE (sum / count) + (:stddevMultiplier * sqrt((squares - ((sum * sum) / count)) / count))
-      END
-    FROM frecency_stats
-  )
-`;
-
-const SQL_AUTOFILL_FRECENCY_THRESHOLD = `host_frecency >= (
-  SELECT value FROM autofill_frecency_threshold
-)`;
-
-function originQuery({ select = "", where = "", having = "" }) {
-  return `${SQL_AUTOFILL_WITH}
-          SELECT :query_type,
-                 fixed_up_host || '/',
-                 IFNULL(:prefix, prefix) || moz_origins.host || '/',
-                 frecency,
-                 bookmarked,
-                 id
-          FROM (
-            SELECT host,
-                   host AS fixed_up_host,
-                   TOTAL(frecency) AS host_frecency,
-                   (
-                     SELECT TOTAL(foreign_count) > 0
-                     FROM moz_places
-                     WHERE moz_places.origin_id = moz_origins.id
-                   ) AS bookmarked
-                   ${select}
-            FROM moz_origins
-            WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
-                  ${where}
-            GROUP BY host
-            HAVING ${having}
-            UNION ALL
-            SELECT host,
-                   fixup_url(host) AS fixed_up_host,
-                   TOTAL(frecency) AS host_frecency,
-                   (
-                     SELECT TOTAL(foreign_count) > 0
-                     FROM moz_places
-                     WHERE moz_places.origin_id = moz_origins.id
-                   ) AS bookmarked
-                   ${select}
-            FROM moz_origins
-            WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
-                  ${where}
-            GROUP BY host
-            HAVING ${having}
-          ) AS grouped_hosts
-          JOIN moz_origins ON moz_origins.host = grouped_hosts.host
-          ORDER BY frecency DESC, id DESC
-          LIMIT 1 `;
-}
-
-const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery({
-  having: `bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
-
-const QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK = originQuery({
-  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
-
-const QUERY_ORIGIN_HISTORY = originQuery({
-  select: `, (
-    SELECT TOTAL(visit_count) > 0
-    FROM moz_places
-    WHERE moz_places.origin_id = moz_origins.id
-   ) AS visited`,
-  having: `visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
-
-const QUERY_ORIGIN_PREFIX_HISTORY = originQuery({
-  select: `, (
-    SELECT TOTAL(visit_count) > 0
-    FROM moz_places
-    WHERE moz_places.origin_id = moz_origins.id
-   ) AS visited`,
-  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
-
-const QUERY_ORIGIN_BOOKMARK = originQuery({
-  having: `bookmarked`,
-});
-
-const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery({
-  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `bookmarked`,
-});
-
-// Result row indexes for urlQuery()
-const QUERYINDEX_URL_URL = 1;
-const QUERYINDEX_URL_STRIPPED_URL = 2;
-const QUERYINDEX_URL_FRECENCY = 3;
-
-function urlQuery(where1, where2) {
-  // We limit the search to places that are either bookmarked or have a frecency
-  // over some small, arbitrary threshold (20) in order to avoid scanning as few
-  // rows as possible.  Keep in mind that we run this query every time the user
-  // types a key when the urlbar value looks like a URL with a path.
-  return `/* do not warn (bug no): cannot use an index to sort */
-          SELECT :query_type,
-                 url,
-                 :strippedURL,
-                 frecency,
-                 foreign_count > 0 AS bookmarked,
-                 visit_count > 0 AS visited,
-                 id
-          FROM moz_places
-          WHERE rev_host = :revHost
-                ${where1}
-          UNION ALL
-          SELECT :query_type,
-                 url,
-                 :strippedURL,
-                 frecency,
-                 foreign_count > 0 AS bookmarked,
-                 visit_count > 0 AS visited,
-                 id
-          FROM moz_places
-          WHERE rev_host = :revHost || 'www.'
-                ${where2}
-          ORDER BY frecency DESC, id DESC
-          LIMIT 1 `;
-}
-
-const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
-  `AND (bookmarked OR frecency > 20)
-   AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND (bookmarked OR frecency > 20)
-   AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
-);
-
-const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
-  `AND (bookmarked OR frecency > 20)
-   AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND (bookmarked OR frecency > 20)
-   AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
-);
-
-const QUERY_URL_HISTORY = urlQuery(
-  `AND (visited OR NOT bookmarked)
-   AND frecency > 20
-   AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND (visited OR NOT bookmarked)
-   AND frecency > 20
-   AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
-);
-
-const QUERY_URL_PREFIX_HISTORY = urlQuery(
-  `AND (visited OR NOT bookmarked)
-   AND frecency > 20
-   AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND (visited OR NOT bookmarked)
-   AND frecency > 20
-   AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
-);
-
-const QUERY_URL_BOOKMARK = urlQuery(
-  `AND bookmarked
-   AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND bookmarked
-   AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
-);
-
-const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
-  `AND bookmarked
-   AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND bookmarked
-   AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
-);
 
 // Getters
 
@@ -959,20 +762,18 @@ Search.prototype = {
     // For any given search, we run many queries/heuristics:
     // 1) by alias (as defined in SearchService)
     // 2) inline completion from search engine resultDomains
-    // 3) inline completion for origins (this._originQuery) or urls (this._urlQuery)
-    // 4) directly typed in url (ie, can be navigated to as-is)
-    // 5) submission for the current search engine
-    // 6) Places keywords
-    // 7) adaptive learning (this._adaptiveQuery)
-    // 8) open pages not supported by history (this._switchToTabQuery)
-    // 9) query based on match behavior
+    // 3) submission for the current search engine
+    // 4) Places keywords
+    // 5) adaptive learning (this._adaptiveQuery)
+    // 6) open pages not supported by history (this._switchToTabQuery)
+    // 7) query based on match behavior
     //
-    // (6) only gets run if we get any filtered tokens, since if there are no
+    // (4) only gets run if we get any filtered tokens, since if there are no
     // tokens, there is nothing to match.
     //
-    // (1), (4), (5) only get run if actions are enabled. When actions are
+    // (1) and (5) only get run if actions are enabled. When actions are
     // enabled, the first result is always a special result (resulting from one
-    // of the queries between (1) and (6) inclusive). As such, the UI is
+    // of the queries between (1) and (4) inclusive). As such, the UI is
     // expected to auto-select the first result when actions are enabled. If the
     // first result is an inline completion result, that will also be the
     // default result and therefore be autofilled (this also happens if actions
@@ -1127,20 +928,6 @@ Search.prototype = {
     }
   },
 
-  _matchAboutPageForAutofill() {
-    if (!this._shouldMatchAboutPages()) {
-      return false;
-    }
-    for (const url of AboutPagesUtils.visibleAboutUrls) {
-      if (url.startsWith(`about:${this._searchString.toLowerCase()}`)) {
-        this._result.setDefaultIndex(0);
-        this._addAutofillMatch(url.substr(6), url);
-        return true;
-      }
-    }
-    return false;
-  },
-
   async _checkPreloadedSitesExpiry() {
     if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
       return;
@@ -1290,30 +1077,6 @@ Search.prototype = {
     let shouldAutofill = this._shouldAutofill;
 
     if (this.pending && shouldAutofill) {
-      // It may also look like an about: link.
-      let matched = await this._matchAboutPageForAutofill();
-      if (matched) {
-        return true;
-      }
-    }
-
-    if (this.pending && shouldAutofill) {
-      // It may also look like a URL we know from the database.
-      let matched = await this._matchKnownUrl(conn);
-      if (matched) {
-        return true;
-      }
-    }
-
-    if (this.pending && shouldAutofill) {
-      // Or it may look like a search engine domain.
-      let matched = await this._matchSearchEngineDomain();
-      if (matched) {
-        return true;
-      }
-    }
-
-    if (this.pending && shouldAutofill) {
       let matched = this._matchPreloadedSiteForAutofill();
       if (matched) {
         return true;
@@ -1329,33 +1092,6 @@ Search.prototype = {
 
     // Fall back to UrlbarProviderHeuristicFallback.
     return false;
-  },
-
-  async _matchKnownUrl(conn) {
-    let gotResult = false;
-
-    // If search string looks like an origin, try to autofill against origins.
-    // Otherwise treat it as a possible URL.  When the string has only one slash
-    // at the end, we still treat it as an URL.
-    let query, params;
-    if (
-      UrlbarTokenizer.looksLikeOrigin(this._searchString, {
-        ignoreKnownDomains: true,
-      })
-    ) {
-      [query, params] = this._originQuery;
-    } else {
-      [query, params] = this._urlQuery;
-    }
-
-    // _urlQuery doesn't always return a query.
-    if (query) {
-      await conn.executeCached(query, params, (row, cancel) => {
-        gotResult = true;
-        this._onResultRow(row, cancel);
-      });
-    }
-    return gotResult;
   },
 
   async _matchPlacesKeyword(keyword) {
@@ -1411,71 +1147,6 @@ Search.prototype = {
     if (!this._keywordSubstitute) {
       this._keywordSubstitute = entry.url.host;
     }
-    return true;
-  },
-
-  async _matchSearchEngineDomain() {
-    if (!UrlbarPrefs.get("autoFill.searchEngines")) {
-      return false;
-    }
-    if (!this._searchString) {
-      return false;
-    }
-
-    // engineForDomainPrefix only matches against engine domains.
-    // Remove an eventual trailing slash from the search string (without the
-    // prefix) and check if the resulting string is worth matching.
-    // Later, we'll verify that the found result matches the original
-    // searchString and eventually discard it.
-    let searchStr = this._searchString;
-    if (searchStr.indexOf("/") == searchStr.length - 1) {
-      searchStr = searchStr.slice(0, -1);
-    }
-    // If the search string looks more like a url than a domain, bail out.
-    if (
-      !UrlbarTokenizer.looksLikeOrigin(searchStr, { ignoreKnownDomains: true })
-    ) {
-      return false;
-    }
-
-    let engine = await UrlbarSearchUtils.engineForDomainPrefix(searchStr);
-    if (!engine) {
-      return false;
-    }
-    let url = engine.searchForm;
-    let domain = engine.getResultDomain();
-    // Verify that the match we got is acceptable. Autofilling "example/" to
-    // "example.com/" would not be good.
-    if (
-      (this._strippedPrefix && !url.startsWith(this._strippedPrefix)) ||
-      !(domain + "/").includes(this._searchString)
-    ) {
-      return false;
-    }
-
-    // The value that's autofilled in the input is the prefix the user typed, if
-    // any, plus the portion of the engine domain that the user typed.  Append a
-    // trailing slash too, as is usual with autofill.
-    let value =
-      this._strippedPrefix + domain.substr(domain.indexOf(searchStr)) + "/";
-
-    let finalCompleteValue = url;
-    try {
-      let fixupInfo = Services.uriFixup.getFixupURIInfo(url, 0);
-      if (fixupInfo.fixedURI) {
-        finalCompleteValue = fixupInfo.fixedURI.spec;
-      }
-    } catch (ex) {}
-
-    this._result.setDefaultIndex(0);
-    this._addMatch({
-      value,
-      finalCompleteValue,
-      comment: engine.name,
-      icon: engine.iconURI ? engine.iconURI.spec : null,
-      style: "priority-search",
-      frecency: Infinity,
-    });
     return true;
   },
 
@@ -1600,14 +1271,6 @@ Search.prototype = {
   _onResultRow(row, cancel) {
     let queryType = row.getResultByIndex(QUERYINDEX_QUERYTYPE);
     switch (queryType) {
-      case QUERYTYPE_AUTOFILL_ORIGIN:
-        this._result.setDefaultIndex(0);
-        this._addOriginAutofillMatch(row);
-        break;
-      case QUERYTYPE_AUTOFILL_URL:
-        this._result.setDefaultIndex(0);
-        this._addURLAutofillMatch(row);
-        break;
       case QUERYTYPE_ADAPTIVE:
         this._addAdaptiveQueryMatch(row);
         break;
@@ -1967,42 +1630,6 @@ Search.prototype = {
     return { index, replace };
   },
 
-  _addOriginAutofillMatch(row) {
-    this._addAutofillMatch(
-      row.getResultByIndex(QUERYINDEX_ORIGIN_AUTOFILLED_VALUE),
-      row.getResultByIndex(QUERYINDEX_ORIGIN_URL),
-      row.getResultByIndex(QUERYINDEX_ORIGIN_FRECENCY)
-    );
-  },
-
-  _addURLAutofillMatch(row) {
-    let url = row.getResultByIndex(QUERYINDEX_URL_URL);
-    let strippedURL = row.getResultByIndex(QUERYINDEX_URL_STRIPPED_URL);
-    // We autofill urls to-the-next-slash.
-    // http://mozilla.org/foo/bar/baz will be autofilled to:
-    //  - http://mozilla.org/f[oo/]
-    //  - http://mozilla.org/foo/b[ar/]
-    //  - http://mozilla.org/foo/bar/b[az]
-    let value;
-    let strippedURLIndex = url.indexOf(strippedURL);
-    let strippedPrefix = url.substr(0, strippedURLIndex);
-    let nextSlashIndex = url.indexOf(
-      "/",
-      strippedURLIndex + strippedURL.length - 1
-    );
-    if (nextSlashIndex == -1) {
-      value = url.substr(strippedURLIndex);
-    } else {
-      value = url.substring(strippedURLIndex, nextSlashIndex + 1);
-    }
-
-    this._addAutofillMatch(
-      value,
-      strippedPrefix + value,
-      row.getResultByIndex(QUERYINDEX_URL_FRECENCY)
-    );
-  },
-
   _addAutofillMatch(
     autofilledValue,
     finalCompleteValue,
@@ -2271,125 +1898,6 @@ Search.prototype = {
     }
 
     return true;
-  },
-
-  /**
-   * Obtains the query to search for autofill origin results.
-   *
-   * @return an array consisting of the correctly optimized query to search the
-   *         database with and an object containing the params to bound.
-   */
-  get _originQuery() {
-    // At this point, _searchString is not a URL with a path; it does not
-    // contain a slash, except for possibly at the very end.  If there is
-    // trailing slash, remove it when searching here to match the rest of the
-    // string because it may be an origin.
-    let searchStr = this._searchString.endsWith("/")
-      ? this._searchString.slice(0, -1)
-      : this._searchString;
-
-    let opts = {
-      query_type: QUERYTYPE_AUTOFILL_ORIGIN,
-      searchString: searchStr.toLowerCase(),
-      stddevMultiplier: UrlbarPrefs.get("autoFill.stddevMultiplier"),
-    };
-    if (this._strippedPrefix) {
-      opts.prefix = this._strippedPrefix;
-    }
-
-    if (this.hasBehavior("history") && this.hasBehavior("bookmark")) {
-      return [
-        this._strippedPrefix
-          ? QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK
-          : QUERY_ORIGIN_HISTORY_BOOKMARK,
-        opts,
-      ];
-    }
-    if (this.hasBehavior("history")) {
-      return [
-        this._strippedPrefix
-          ? QUERY_ORIGIN_PREFIX_HISTORY
-          : QUERY_ORIGIN_HISTORY,
-        opts,
-      ];
-    }
-    if (this.hasBehavior("bookmark")) {
-      return [
-        this._strippedPrefix
-          ? QUERY_ORIGIN_PREFIX_BOOKMARK
-          : QUERY_ORIGIN_BOOKMARK,
-        opts,
-      ];
-    }
-    throw new Error("Either history or bookmark behavior expected");
-  },
-
-  /**
-   * Obtains the query to search for autoFill url results.
-   *
-   * @return an array consisting of the correctly optimized query to search the
-   *         database with and an object containing the params to bound.
-   */
-  get _urlQuery() {
-    // Try to get the host from the search string.  The host is the part of the
-    // URL up to either the path slash, port colon, or query "?".  If the search
-    // string doesn't look like it begins with a host, then return; it doesn't
-    // make sense to do a URL query with it.
-    if (!this._urlQueryHostRegexp) {
-      this._urlQueryHostRegexp = /^[^/:?]+/;
-    }
-    let hostMatch = this._urlQueryHostRegexp.exec(this._searchString);
-    if (!hostMatch) {
-      return [null, null];
-    }
-
-    let host = hostMatch[0].toLowerCase();
-    let revHost =
-      host
-        .split("")
-        .reverse()
-        .join("") + ".";
-
-    // Build a string that's the URL stripped of its prefix, i.e., the host plus
-    // everything after the host.  Use _trimmedOriginalSearchString instead of
-    // this._searchString because this._searchString has had unEscapeURIForUI()
-    // called on it.  It's therefore not necessarily the literal URL.
-    let strippedURL = this._trimmedOriginalSearchString;
-    if (this._strippedPrefix) {
-      strippedURL = strippedURL.substr(this._strippedPrefix.length);
-    }
-    strippedURL = host + strippedURL.substr(host.length);
-
-    let opts = {
-      query_type: QUERYTYPE_AUTOFILL_URL,
-      revHost,
-      strippedURL,
-    };
-    if (this._strippedPrefix) {
-      opts.prefix = this._strippedPrefix;
-    }
-
-    if (this.hasBehavior("history") && this.hasBehavior("bookmark")) {
-      return [
-        this._strippedPrefix
-          ? QUERY_URL_PREFIX_HISTORY_BOOKMARK
-          : QUERY_URL_HISTORY_BOOKMARK,
-        opts,
-      ];
-    }
-    if (this.hasBehavior("history")) {
-      return [
-        this._strippedPrefix ? QUERY_URL_PREFIX_HISTORY : QUERY_URL_HISTORY,
-        opts,
-      ];
-    }
-    if (this.hasBehavior("bookmark")) {
-      return [
-        this._strippedPrefix ? QUERY_URL_PREFIX_BOOKMARK : QUERY_URL_BOOKMARK,
-        opts,
-      ];
-    }
-    throw new Error("Either history or bookmark behavior expected");
   },
 
   // The result is notified to the search listener on a timer, to chunk multiple
