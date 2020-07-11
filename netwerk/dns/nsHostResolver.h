@@ -89,6 +89,46 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // Returns the TRR mode encoded by the flags
   nsIRequest::TRRMode TRRMode();
 
+  // IMPORTANT: when adding new values, always add them to the end, otherwise
+  // it will mess up telemetry.
+  enum TRRSkippedReason : uint32_t {
+    TRR_UNSET = 0,
+    TRR_OK = 1,           // Only set when we actually got a positive TRR result
+    TRR_NO_GSERVICE = 2,  // no gService
+    TRR_PARENTAL_CONTROL = 3,         // parental control is on
+    TRR_OFF_EXPLICIT = 4,             // user has set mode5
+    TRR_REQ_MODE_DISABLED = 5,        // request  has disabled flags set
+    TRR_MODE_NOT_ENABLED = 6,         // mode0
+    TRR_FAILED = 7,                   // unknown failure
+    TRR_MODE_UNHANDLED_DEFAULT = 8,   // Unhandled case in ComputeEffectiveMode
+    TRR_MODE_UNHANDLED_DISABLED = 9,  // Unhandled case in ComputeEffectiveMode
+    TRR_DISABLED_FLAG = 10,           // the DISABLE_TRR flag was set
+    TRR_TIMEOUT = 11,                 // the TRR channel timed out
+    TRR_CHANNEL_DNS_FAIL = 12,        // DoH server name failed to resolve
+    TRR_IS_OFFLINE = 13,     // The browser is offline or lacks connectivity
+    TRR_NOT_CONFIRMED = 14,  // TRR confirmation is not done yet
+    TRR_DID_NOT_MAKE_QUERY = 15,  // TrrLookup exited without doing a TRR query
+    TRR_UNKNOWN_CHANNEL_FAILURE = 16,  // unknown channel failure reason
+    TRR_HOST_BLOCKED_TEMPORARY = 17,   // host blacklisted
+    TRR_SEND_FAILED = 18,          // The call to TRR::SendHTTPRequest failed
+    TRR_NET_RESET = 19,            // NS_ERROR_NET_RESET
+    TRR_NET_TIMEOUT = 20,          // NS_ERROR_NET_TIMEOUT
+    TRR_NET_REFUSED = 21,          // NS_ERROR_CONNECTION_REFUSED
+    TRR_NET_INTERRUPT = 22,        // NS_ERROR_NET_INTERRUPT
+    TRR_NET_INADEQ_SEQURITY = 23,  // NS_ERROR_NET_INADEQUATE_SECURITY
+    TRR_NO_ANSWERS = 24,           // TRR returned no answers
+    TRR_DECODE_FAILED = 25,        // DohDecode failed
+    TRR_EXCLUDED = 26,             // ExcludedFromTRR
+    TRR_SERVER_RESPONSE_ERR = 27,  // Server responded with non-200 code
+  };
+
+  // Records the first reason that caused TRR to be skipped or to fail.
+  void RecordReason(TRRSkippedReason reason) {
+    if (mTRRTRRSkippedReason == TRR_UNSET) {
+      mTRRTRRSkippedReason = reason;
+    }
+  }
+
  protected:
   friend class nsHostResolver;
   friend class mozilla::net::TRR;
@@ -151,6 +191,10 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // The mode into account if the TRR service is disabled,
   // parental controls are on, domain matches exclusion list, etc.
   nsIRequest::TRRMode mEffectiveTRRMode;
+
+  TRRSkippedReason mTRRTRRSkippedReason = TRR_UNSET;
+  TRRSkippedReason mTRRAFailReason = TRR_UNSET;
+  TRRSkippedReason mTRRAAAAFailReason = TRR_UNSET;
 
   uint16_t mResolving;  // counter of outstanding resolving calls
 
@@ -382,9 +426,10 @@ class AHostResolver {
     LOOKUP_RESOLVEAGAIN,
   };
 
-  virtual LookupStatus CompleteLookup(nsHostRecord*, nsresult,
-                                      mozilla::net::AddrInfo*, bool pb,
-                                      const nsACString& aOriginsuffix) = 0;
+  virtual LookupStatus CompleteLookup(
+      nsHostRecord*, nsresult, mozilla::net::AddrInfo*, bool pb,
+      const nsACString& aOriginsuffix,
+      nsHostRecord::TRRSkippedReason aReason) = 0;
   virtual LookupStatus CompleteLookupByType(
       nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
       uint32_t aTtl, bool pb) = 0;
@@ -499,8 +544,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   void FlushCache(bool aTrrToo);
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
-                              bool pb,
-                              const nsACString& aOriginsuffix) override;
+                              bool pb, const nsACString& aOriginsuffix,
+                              nsHostRecord::TRRSkippedReason aReason) override;
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                     mozilla::net::TypeRecordResultType& aResult,
                                     uint32_t aTtl, bool pb) override;
@@ -510,6 +555,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                          nsHostRecord** result) override;
   nsresult TrrLookup_unlocked(nsHostRecord*,
                               mozilla::net::TRR* pushedTRR = nullptr) override;
+  static mozilla::net::ResolverMode Mode();
 
  private:
   explicit nsHostResolver(uint32_t maxCacheEntries,
@@ -520,7 +566,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   nsresult Init();
   // In debug builds it asserts that the element is in the list.
   void AssertOnQ(nsHostRecord*, mozilla::LinkedList<RefPtr<nsHostRecord>>&);
-  mozilla::net::ResolverMode Mode();
+  static void ComputeEffectiveTRRMode(nsHostRecord* aRec);
   nsresult NativeLookup(nsHostRecord*);
   nsresult TrrLookup(nsHostRecord*, mozilla::net::TRR* pushedTRR = nullptr);
 

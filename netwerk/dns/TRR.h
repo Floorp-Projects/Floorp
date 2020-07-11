@@ -180,6 +180,13 @@ class TRR : public Runnable,
   uint32_t mTTL = UINT32_MAX;
   TypeRecordResultType mResult = mozilla::AsVariant(Nothing());
 
+  nsHostRecord::TRRSkippedReason mTRRSkippedReason = nsHostRecord::TRR_UNSET;
+  void RecordReason(nsHostRecord::TRRSkippedReason reason) {
+    if (mTRRSkippedReason == nsHostRecord::TRR_UNSET) {
+      mTRRSkippedReason = reason;
+    }
+  }
+
   // keep a copy of the originSuffix for the cases where mRec == nullptr */
   const nsCString mOriginSuffix;
 };

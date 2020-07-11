@@ -950,7 +950,7 @@ void TRRService::TRRIsOkay(enum TrrOkay aReason) {
 
 AHostResolver::LookupStatus TRRService::CompleteLookup(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
-    const nsACString& aOriginSuffix) {
+    const nsACString& aOriginSuffix, nsHostRecord::TRRSkippedReason aReason) {
   // this is an NS check for the TRR blacklist or confirmationNS check
 
   MOZ_ASSERT_IF(XRE_IsParentProcess(), NS_IsMainThread() || IsOnTRRThread());
