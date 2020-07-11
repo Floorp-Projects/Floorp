@@ -78,8 +78,6 @@ linux64-plain/opt:
             - linux64-nasm
             - linux64-node
             - linux64-cbindgen
-            - linux64-lucetc
-            - wasi-sysroot
     optimization:
         push-interval-10: null
 
@@ -259,8 +257,6 @@ linux64-plain/debug:
             - linux64-nasm
             - linux64-node
             - linux64-cbindgen
-            - linux64-lucetc
-            - wasi-sysroot
     optimization:
         push-interval-10: null
 
@@ -348,8 +344,6 @@ linux64-base-toolchains/opt:
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node
-            - linux64-lucetc
-            - wasi-sysroot
 
 linux64-base-toolchains/debug:
     description: "Linux64 base toolchains Debug"
@@ -391,8 +385,6 @@ linux64-base-toolchains/debug:
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node
-            - linux64-lucetc
-            - wasi-sysroot
             # `fix-stacks` is needed because xpcshell self tests run as part of
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
@@ -432,8 +424,6 @@ linux64-base-toolchains-clang/opt:
             - linux64-cbindgen
             - linux64-nasm-2.14.02
             - linux64-node
-            - linux64-lucetc
-            - wasi-sysroot
 
 linux64-base-toolchains-clang/debug:
     description: "Linux64 base toolchains clang Debug"
@@ -472,8 +462,6 @@ linux64-base-toolchains-clang/debug:
             - linux64-cbindgen
             - linux64-nasm-2.14.02
             - linux64-node
-            - linux64-lucetc
-            - wasi-sysroot
             # `fix-stacks` is needed because xpcshell self tests run as part of
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
