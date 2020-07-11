@@ -348,7 +348,7 @@ bool js::ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id,
 bool js::ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy,
                                  HandleValue idVal, MutableHandleValue vp) {
   RootedId id(cx);
-  if (!ValueToId<CanGC>(cx, idVal, &id)) {
+  if (!ToPropertyKey(cx, idVal, &id)) {
     return false;
   }
 
