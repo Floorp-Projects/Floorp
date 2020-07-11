@@ -500,7 +500,7 @@ void AddrHostRecord::ResolveComplete() {
   }
 
   if (mTRRUsed && !mTRRSuccess && mNativeSuccess && gTRRService) {
-    gTRRService->TRRBlacklist(nsCString(host), originSuffix, pb, true);
+    gTRRService->AddToBlocklist(nsCString(host), originSuffix, pb, true);
   }
 }
 
