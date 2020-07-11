@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIPaper.idl"
 #include "nsISupports.idl"
 
 [scriptable, uuid(d2dde9bb-df86-469c-bfcc-fd95a44b1db8)]
@@ -13,9 +12,4 @@ interface nsIPrinter : nsISupports
    * The name of the printer.
    */
   readonly attribute AString name;
-
-  /**
-   * The list of available paper sizes.
-   */
-  readonly attribute Array<nsIPaper> paperList;
 };
