@@ -186,6 +186,17 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         continue;
       }
 
+      // Exclude results that dupe autofill.
+      if (
+        context.heuristicResult &&
+        context.heuristicResult.providerName == "Autofill" &&
+        result.providerName != "Autofill" &&
+        context.heuristicResult.payload?.url == result.payload.url &&
+        context.heuristicResult.type == result.type
+      ) {
+        continue;
+      }
+
       // Exclude "Search in a Private Window" as determined in the first pass.
       if (
         result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
