@@ -193,7 +193,10 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   // into subtree if accessible allows "text equivalent from subtree rule" or
   // it's not root and not control.
   if (isEmptyTextEquiv) {
-    if (ShouldIncludeInSubtreeCalculation(aAccessible)) {
+    uint32_t nameRule = GetRoleRule(aAccessible->Role());
+    if (nameRule == eNameFromSubtreeRule ||
+        (nameRule & eNameFromSubtreeIfReqRule &&
+         aAccessible != sInitiatorAcc)) {
       rv = AppendFromAccessibleChildren(aAccessible, aString);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -322,32 +325,4 @@ uint32_t nsTextEquivUtils::GetRoleRule(role aRole) {
   }
 
 #undef ROLE
-}
-
-bool nsTextEquivUtils::ShouldIncludeInSubtreeCalculation(
-    Accessible* aAccessible) {
-  uint32_t nameRule = GetRoleRule(aAccessible->Role());
-  if (nameRule == eNameFromSubtreeRule) {
-    return true;
-  }
-  if (!(nameRule & eNameFromSubtreeIfReqRule)) {
-    return false;
-  }
-
-  if (aAccessible == sInitiatorAcc) {
-    // We're calculating the text equivalent for this accessible, but this
-    // accessible should only be included when calculating the text equivalent
-    // for something else.
-    return false;
-  }
-
-  role initiatorRole = sInitiatorAcc->Role();
-  if (initiatorRole == roles::OUTLINEITEM &&
-      aAccessible->Role() == roles::GROUPING) {
-    // Child treeitems are contained in a group. We don't want to include those
-    // in the parent treeitem's text equivalent.
-    return false;
-  }
-
-  return true;
 }
