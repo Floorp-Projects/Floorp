@@ -885,8 +885,46 @@ class FormAutofillAddressSection extends FormAutofillSection {
 }
 
 class FormAutofillCreditCardSection extends FormAutofillSection {
-  constructor(fieldDetails, winUtils) {
+  /**
+   * Credit Card Section Constructor
+   *
+   * @param {Object} fieldDetails
+   *        The fieldDetail objects for the fields in this section
+   * @param {Object} winUtils
+   *        A WindowUtils reference for the Window the section appears in
+   * @param {Object} handler
+   *        The FormAutofillHandler responsible for this section
+   */
+  constructor(fieldDetails, winUtils, handler) {
     super(fieldDetails, winUtils);
+
+    this.handler = handler;
+
+    // For valid sections, check whether the section is in an
+    // <iframe>; and, if so, watch for the <iframe> to pagehide.
+    // If the section is invalid, then the superclass constructor
+    // will have cleared out `this.fieldDetails`.
+    if (this.fieldDetails.length) {
+      if (handler.window.location != handler.window.parent?.location) {
+        log.debug(
+          "Credit card form is in an iframe -- watching for pagehide",
+          fieldDetails
+        );
+        handler.window.addEventListener(
+          "pagehide",
+          this._handlePageHide.bind(this)
+        );
+      }
+    }
+  }
+
+  _handlePageHide(event) {
+    this.handler.window.removeEventListener(
+      "pagehide",
+      this._handlePageHide.bind(this)
+    );
+    log.debug("Credit card subframe is pagehideing", this.handler.form);
+    this.handler.onFormSubmitted();
   }
 
   isValidSection() {
@@ -1087,19 +1125,37 @@ class FormAutofillHandler {
    * Initialize the form from `FormLike` object to handle the section or form
    * operations.
    * @param {FormLike} form Form that need to be auto filled
+   * @param {function} onFormSubmitted Function that can be invoked
+   *                   to simulate form submission. Function is passed
+   *                   three arguments: (1) a FormLike for the form being
+   *                   submitted, (2) the corresponding Window, and (3) the
+   *                   responsible FormAutofillHandler.
    */
-  constructor(form) {
+  constructor(form, onFormSubmitted = () => {}) {
     this._updateForm(form);
+
+    /**
+     * The window to which this form belongs
+     */
+    this.window = this.form.rootElement.ownerGlobal;
 
     /**
      * A WindowUtils reference of which Window the form belongs
      */
-    this.winUtils = this.form.rootElement.ownerGlobal.windowUtils;
+    this.winUtils = this.window.windowUtils;
 
     /**
      * Time in milliseconds since epoch when a user started filling in the form.
      */
     this.timeStartedFillingMS = null;
+
+    /**
+     * This function is used if the form handler (or one of its sections)
+     * determines that it needs to act as if the form had been submitted.
+     */
+    this.onFormSubmitted = () => {
+      onFormSubmitted(this.form, this.window, this);
+    };
   }
 
   set focusedInput(element) {
@@ -1214,7 +1270,8 @@ class FormAutofillHandler {
       } else if (type == FormAutofillUtils.SECTION_TYPES.CREDIT_CARD) {
         section = new FormAutofillCreditCardSection(
           fieldDetails,
-          this.winUtils
+          this.winUtils,
+          this
         );
       } else {
         throw new Error("Unknown field type.");
