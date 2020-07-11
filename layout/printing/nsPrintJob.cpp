@@ -168,26 +168,6 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
 #  define DUMP_DOC_TREELAYOUT
 #endif
 
-static CallState CollectDocuments(Document& aDoc,
-                                  nsTArray<nsCOMPtr<Document>>& aDocs) {
-  aDocs.AppendElement(&aDoc);
-  auto recurse = [&aDocs](Document& aSubDoc) {
-    return CollectDocuments(aSubDoc, aDocs);
-  };
-  aDoc.EnumerateSubDocuments(recurse);
-  return CallState::Continue;
-}
-
-static void DispatchEventToWindowTree(Document& aDoc, const nsAString& aEvent) {
-  nsTArray<nsCOMPtr<Document>> targets;
-  CollectDocuments(aDoc, targets);
-  for (nsCOMPtr<Document>& doc : targets) {
-    nsContentUtils::DispatchTrustedEvent(doc, doc->GetWindow(), aEvent,
-                                         CanBubble::eNo, Cancelable::eNo,
-                                         nullptr);
-  }
-}
-
 class nsScriptSuppressor {
  public:
   explicit nsScriptSuppressor(nsPrintJob* aPrintJob)
@@ -401,6 +381,37 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
+static bool DocHasPrintCallbackCanvas(Document& aDoc) {
+  Element* root = aDoc.GetRootElement();
+  if (!root) {
+    return false;
+  }
+  // FIXME(emilio): This doesn't account for shadow dom and it's unnecessarily
+  // inefficient. Though I guess it doesn't really matter.
+  RefPtr<nsContentList> canvases =
+      NS_GetContentList(root, kNameSpaceID_XHTML, u"canvas"_ns);
+  uint32_t canvasCount = canvases->Length(true);
+  for (uint32_t i = 0; i < canvasCount; ++i) {
+    auto* canvas = HTMLCanvasElement::FromNodeOrNull(canvases->Item(i, false));
+    if (canvas && canvas->GetMozPrintCallback()) {
+      return true;
+    }
+  }
+
+  bool result = false;
+
+  auto checkSubDoc = [&result](Document& aSubDoc) {
+    if (DocHasPrintCallbackCanvas(aSubDoc)) {
+      result = true;
+      return CallState::Stop;
+    }
+    return CallState::Continue;
+  };
+
+  aDoc.EnumerateSubDocuments(checkSubDoc);
+  return result;
+}
+
 //-------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference,
@@ -469,6 +480,8 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
       wbc->IsWindowModal(&mIsForModalWindow);
     }
   }
+
+  mHasMozPrintCallback = DocHasPrintCallbackCanvas(*aOriginalDoc);
 
   return NS_OK;
 }
@@ -651,14 +664,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
-    if (!aSourceDoc->IsStaticDocument()) {
-      // This is the original document.  We must send 'beforeprint' and
-      // 'afterprint' events to give the document the chance to make changes
-      // for print output.  (Obviously if `aSourceDoc` is a clone, it already
-      // has these changes.)
-      DispatchEventToWindowTree(*aSourceDoc, u"beforeprint"_ns);
-    }
-
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
     rv = printData->mPrintObject->InitAsRootObject(docShell, aSourceDoc,
@@ -673,10 +678,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     BuildNestedPrintObjects(printData->mPrintObject->mDocument,
                             printData->mPrintObject, &printData->mPrintDocList);
-
-    if (!aSourceDoc->IsStaticDocument()) {
-      DispatchEventToWindowTree(*aSourceDoc, u"afterprint"_ns);
-    }
   }
 
   // The nsAutoScriptBlocker above will now have been destroyed, which may
