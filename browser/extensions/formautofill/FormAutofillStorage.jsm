@@ -1996,24 +1996,21 @@ class CreditCards extends AutofillRecords {
   async getDuplicateGuid(targetCreditCard) {
     let clonedTargetCreditCard = this._clone(targetCreditCard);
     this._normalizeRecord(clonedTargetCreditCard);
+    if (!clonedTargetCreditCard["cc-number"]) {
+      return null;
+    }
+
     for (let creditCard of this._data) {
-      let isDuplicate = await Promise.all(
-        this.VALID_FIELDS.map(async field => {
-          if (!clonedTargetCreditCard[field]) {
-            return !creditCard[field];
-          }
-          if (field == "cc-number" && creditCard[field]) {
-            // Compare the masked numbers instead when decryption requires a password
-            // because we don't want to leak the credit card number.
-            return (
-              CreditCard.getLongMaskedNumber(clonedTargetCreditCard[field]) ==
-              creditCard[field]
-            );
-          }
-          return clonedTargetCreditCard[field] == creditCard[field];
-        })
-      ).then(fieldResults => fieldResults.every(result => result));
-      if (isDuplicate) {
+      if (creditCard.deleted) {
+        continue;
+      }
+
+      let decrypted = await OSKeyStore.decrypt(
+        creditCard["cc-number-encrypted"],
+        false
+      );
+
+      if (decrypted == clonedTargetCreditCard["cc-number"]) {
         return creditCard.guid;
       }
     }

@@ -593,6 +593,13 @@ class FormAutofillParent extends JSWindowActorParent {
       creditCard.record["cc-type"] = "";
     }
 
+    let existingGuid = await gFormAutofillStorage.creditCards.getDuplicateGuid(
+      creditCard.record
+    );
+    if (existingGuid) {
+      creditCard.guid = existingGuid;
+    }
+
     // We'll show the credit card doorhanger if:
     //   - User applys autofill and changed
     //   - User fills form manually and the filling data is not duplicated to storage
@@ -654,15 +661,6 @@ class FormAutofillParent extends JSWindowActorParent {
         1
       );
       this._recordFormFillingTime("creditCard", "manual", timeStartedFillingMS);
-    }
-
-    // Early return if it's a duplicate data
-    let dupGuid = await gFormAutofillStorage.creditCards.getDuplicateGuid(
-      creditCard.record
-    );
-    if (dupGuid) {
-      gFormAutofillStorage.creditCards.notifyUsed(dupGuid);
-      return false;
     }
 
     // Indicate that the user has seen the doorhanger.
