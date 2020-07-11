@@ -39,9 +39,9 @@ function* test(testDriver) {
   let target = subframe.contentWindow.document.getElementById("target");
   // To get an event that's dispatched in the iframe's document,
   // synthesize a native tap. This will synthesize three events:
-  // a mouse-move, a mouse-down, and a mouse-up. The mouse-move 
+  // a mouse-move, a mouse-down, and a mouse-up. The mouse-move
   // and mouse-down are dispatched in the root content document.
-  // The mouse-down causes the iframe to "capture" the mouse, which 
+  // The mouse-down causes the iframe to "capture" the mouse, which
   // leads the mouse-up to be dispatched in the iframe's document
   // instead. We listen for the mouse-up.
   target.addEventListener("mouseup", testDriver);
