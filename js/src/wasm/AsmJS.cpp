@@ -615,7 +615,7 @@ static inline bool IsUseOfName(ParseNode* pn, PropertyName* name) {
 }
 
 static inline bool IsIgnoredDirectiveName(JSContext* cx, JSAtom* atom) {
-  return atom != cx->names().useStrict;
+  return atom != cx->parserNames().useStrict;
 }
 
 static inline bool IsIgnoredDirective(JSContext* cx, ParseNode* pn) {
@@ -2631,7 +2631,8 @@ class MOZ_STACK_CLASS FunctionValidator : public FunctionValidatorShared {
 
 static bool CheckIdentifier(ModuleValidatorShared& m, ParseNode* usepn,
                             PropertyName* name) {
-  if (name == m.cx()->names().arguments || name == m.cx()->names().eval) {
+  if (name == m.cx()->parserNames().arguments ||
+      name == m.cx()->parserNames().eval) {
     return m.failName(usepn, "'%s' is not an allowed identifier", name);
   }
   return true;
@@ -2836,7 +2837,7 @@ static bool CheckGlobalVariableInitImport(ModuleValidatorShared& m,
 
 static bool IsArrayViewCtorName(ModuleValidatorShared& m, PropertyName* name,
                                 Scalar::Type* type) {
-  JSAtomState& names = m.cx()->names();
+  JSAtomState& names = m.cx()->parserNames();
   if (name == names.Int8Array) {
     *type = Scalar::Int8;
   } else if (name == names.Uint8Array) {
@@ -2980,7 +2981,7 @@ static bool CheckGlobalDotImport(ModuleValidatorShared& m,
       return m.failName(base, "expecting %s.*", globalName);
     }
 
-    if (math == m.cx()->names().Math) {
+    if (math == m.cx()->parserNames().Math) {
       return CheckGlobalMathImport(m, initNode, varName, field);
     }
     return m.failName(base, "expecting %s.Math", globalName);
@@ -2992,10 +2993,10 @@ static bool CheckGlobalDotImport(ModuleValidatorShared& m,
 
   auto baseName = base->as<NameNode>().name();
   if (baseName == m.globalArgumentName()) {
-    if (field == m.cx()->names().NaN) {
+    if (field == m.cx()->parserNames().NaN) {
       return m.addGlobalConstant(varName, GenericNaN(), field);
     }
-    if (field == m.cx()->names().Infinity) {
+    if (field == m.cx()->parserNames().Infinity) {
       return m.addGlobalConstant(varName, PositiveInfinity<double>(), field);
     }
 
@@ -6462,7 +6463,7 @@ static bool GetDataProperty(JSContext* cx, HandleValue objVal,
 static bool GetDataProperty(JSContext* cx, HandleValue objVal,
                             const ImmutablePropertyNamePtr& field,
                             MutableHandleValue v) {
-  // Help the conversion along for all the cx->names().* users.
+  // Help the conversion along for all the cx->parserNames().* users.
   HandlePropertyName fieldHandle = field;
   return GetDataProperty(cx, objVal, fieldHandle, v);
 }
