@@ -3,22 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPrinter.h"
+#include "nsPaper.h"
 
-nsPrinter::nsPrinter(const nsAString& aName,
-                     const nsTArray<RefPtr<nsIPaper>>& aPaperList)
-    : mName(aName), mPaperList(aPaperList.Clone()) {}
-
-NS_IMPL_ISUPPORTS(nsPrinter, nsIPrinter);
+NS_IMPL_ISUPPORTS(nsPaper, nsIPaper);
 
 NS_IMETHODIMP
-nsPrinter::GetName(nsAString& aName) {
+nsPaper::GetName(nsAString& aName) {
   aName = mName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrinter::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
-  aPaperList.Assign(mPaperList);
+nsPaper::GetWidth(double* aWidth) {
+  NS_ENSURE_ARG_POINTER(aWidth);
+  *aWidth = mWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPaper::GetHeight(double* aHeight) {
+  NS_ENSURE_ARG_POINTER(aHeight);
+  *aHeight = mHeight;
   return NS_OK;
 }
