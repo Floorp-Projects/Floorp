@@ -2,58 +2,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const ENGINE_NAME = "engine-suggestions.xml";
-
-testEngine_setup();
-
 add_task(async function test_prefix_space_noautofill() {
   await PlacesTestUtils.addVisits({
-    uri: Services.io.newURI("http://moz.org/test/"),
+    uri: NetUtil.newURI("http://moz.org/test/"),
+    transition: TRANSITION_TYPED,
   });
 
   info("Should not try to autoFill if search string contains a space");
-  let context = createContext(" mo", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        query: " mo",
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "http://moz.org/test/",
-        title: "test visit for http://moz.org/test/",
-      }),
-    ],
+  await check_autocomplete({
+    search: " mo",
+    autofilled: " mo",
+    completed: " mo",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_trailing_space_noautofill() {
   await PlacesTestUtils.addVisits({
-    uri: Services.io.newURI("http://moz.org/test/"),
+    uri: NetUtil.newURI("http://moz.org/test/"),
+    transition: TRANSITION_TYPED,
   });
 
   info("Should not try to autoFill if search string contains a space");
-  let context = createContext("mo ", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        query: "mo ",
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "http://moz.org/test/",
-        title: "test visit for http://moz.org/test/",
-      }),
-    ],
+  await check_autocomplete({
+    search: "mo ",
+    autofilled: "mo ",
+    completed: "mo ",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_searchEngine_autofill() {
@@ -68,18 +46,13 @@ add_task(async function test_searchEngine_autofill() {
   info(
     "Should autoFill search engine if search string does not contains a space"
   );
-  let context = createContext("ca", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makePrioritySearchResult(context, {
-        engineName: "CakeSearch",
-        heuristic: true,
-      }),
-    ],
+  await check_autocomplete({
+    search: "ca",
+    autofilled: "cake.search/",
+    completed: "http://cake.search/",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_searchEngine_prefix_space_noautofill() {
@@ -94,19 +67,13 @@ add_task(async function test_searchEngine_prefix_space_noautofill() {
   info(
     "Should not try to autoFill search engine if search string contains a space"
   );
-  let context = createContext(" cu", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        query: " cu",
-        heuristic: true,
-      }),
-    ],
+  await check_autocomplete({
+    search: " cu",
+    autofilled: " cu",
+    completed: " cu",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_searchEngine_trailing_space_noautofill() {
@@ -121,19 +88,13 @@ add_task(async function test_searchEngine_trailing_space_noautofill() {
   info(
     "Should not try to autoFill search engine if search string contains a space"
   );
-  let context = createContext("ba ", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        query: "ba ",
-        heuristic: true,
-      }),
-    ],
+  await check_autocomplete({
+    search: "ba ",
+    autofilled: "ba ",
+    completed: "ba ",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_searchEngine_www_noautofill() {
@@ -148,18 +109,13 @@ add_task(async function test_searchEngine_www_noautofill() {
   info(
     "Should not autoFill search engine if search string contains www. but engine doesn't"
   );
-  let context = createContext("www.ham", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        heuristic: true,
-      }),
-    ],
+  await check_autocomplete({
+    search: "www.ham",
+    autofilled: "www.ham",
+    completed: "www.ham",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_searchEngine_different_scheme_noautofill() {
@@ -174,20 +130,13 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
   info(
     "Should not autoFill search engine if search string has a different scheme."
   );
-  let context = createContext("http://pie", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeVisitResult(context, {
-        uri: "http://pie/",
-        title: "http://pie/",
-        iconUri: "",
-        heuristic: true,
-      }),
-    ],
+  await check_autocomplete({
+    search: "http://pie",
+    autofilled: "http://pie",
+    completed: "http://pie",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_searchEngine_matching_prefix_autofill() {
@@ -200,77 +149,46 @@ add_task(async function test_searchEngine_matching_prefix_autofill() {
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info("Should autoFill search engine if search string has matching prefix.");
-  let context = createContext("http://www.be", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
+    search: "http://www.be",
     autofilled: "http://www.bean.search/",
-    matches: [
-      makePrioritySearchResult(context, {
-        engineName: "BeanSearch",
-        heuristic: true,
-      }),
-    ],
+    completed: "http://www.bean.search/",
   });
 
   info("Should autoFill search engine if search string has www prefix.");
-  context = createContext("www.be", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
+    search: "www.be",
     autofilled: "www.bean.search/",
-    matches: [
-      makePrioritySearchResult(context, {
-        engineName: "BeanSearch",
-        heuristic: true,
-      }),
-    ],
+    completed: "http://www.bean.search/",
   });
 
   info("Should autoFill search engine if search string has matching scheme.");
-  context = createContext("http://be", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
+    search: "http://be",
     autofilled: "http://bean.search/",
-    matches: [
-      makePrioritySearchResult(context, {
-        engineName: "BeanSearch",
-        heuristic: true,
-      }),
-    ],
+    completed: "http://www.bean.search/",
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
 
 add_task(async function test_prefix_autofill() {
   await PlacesTestUtils.addVisits({
-    uri: Services.io.newURI("http://mozilla.org/test/"),
+    uri: NetUtil.newURI("http://mozilla.org/test/"),
   });
   await PlacesTestUtils.addVisits({
-    uri: Services.io.newURI("http://moz.org/test/"),
+    uri: NetUtil.newURI("http://moz.org/test/"),
   });
 
   info(
     "Should not try to autoFill in-the-middle if a search is canceled immediately"
   );
-  let context = createContext("mozi", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
     incompleteSearch: "moz",
+    search: "mozi",
     autofilled: "mozilla.org/",
     completed: "http://mozilla.org/",
-    matches: [
-      makeVisitResult(context, {
-        uri: "http://mozilla.org/",
-        title: "mozilla.org",
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "http://mozilla.org/test/",
-        title: "test visit for http://mozilla.org/test/",
-        providerName: "UnifiedComplete",
-      }),
-    ],
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });

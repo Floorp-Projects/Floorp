@@ -444,16 +444,6 @@ var UrlbarUtils = {
     return [submission.uri.spec, submission.postData];
   },
 
-  // Ranks a URL prefix from 3 - 0 with the following preferences:
-  // https:// > https://www. > http:// > http://www.
-  // Higher is better for the purposes of deduping URLs.
-  // Returns -1 if the prefix does not match any of the above.
-  getPrefixRank(prefix) {
-    return ["http://www.", "http://", "https://www.", "https://"].indexOf(
-      prefix
-    );
-  },
-
   /**
    * Get the number of rows a result should span in the autocomplete dropdown.
    *
@@ -519,58 +509,6 @@ var UrlbarUtils = {
     } catch (ex) {
       // Can't setup speculative connection for this url, just ignore it.
     }
-  },
-
-  /**
-   * Strips parts of a URL defined in `options`.
-   *
-   * @param {string} spec
-   *        The text to modify.
-   * @param {object} options
-   * @param {boolean} options.stripHttp
-   *        Whether to strip http.
-   * @param {boolean} options.stripHttps
-   *        Whether to strip https.
-   * @param {boolean} options.stripWww
-   *        Whether to strip `www.`.
-   * @param {boolean} options.trimSlash
-   *        Whether to trim the trailing slash.
-   * @param {boolean} options.trimEmptyQuery
-   *        Whether to trim a trailing `?`.
-   * @param {boolean} options.trimEmptyHash
-   *        Whether to trim a trailing `#`.
-   * @returns {array} [modified, prefix, suffix]
-   *          modified: {string} The modified spec.
-   *          prefix: {string} The parts stripped from the prefix, if any.
-   *          suffix: {string} The parts trimmed from the suffix, if any.
-   */
-  stripPrefixAndTrim(spec, options = {}) {
-    let prefix = "";
-    let suffix = "";
-    if (options.stripHttp && spec.startsWith("http://")) {
-      spec = spec.slice(7);
-      prefix = "http://";
-    } else if (options.stripHttps && spec.startsWith("https://")) {
-      spec = spec.slice(8);
-      prefix = "https://";
-    }
-    if (options.stripWww && spec.startsWith("www.")) {
-      spec = spec.slice(4);
-      prefix += "www.";
-    }
-    if (options.trimEmptyHash && spec.endsWith("#")) {
-      spec = spec.slice(0, -1);
-      suffix = "#" + suffix;
-    }
-    if (options.trimEmptyQuery && spec.endsWith("?")) {
-      spec = spec.slice(0, -1);
-      suffix = "?" + suffix;
-    }
-    if (options.trimSlash && spec.endsWith("/")) {
-      spec = spec.slice(0, -1);
-      suffix = "/" + suffix;
-    }
-    return [spec, prefix, suffix];
   },
 
   /**
