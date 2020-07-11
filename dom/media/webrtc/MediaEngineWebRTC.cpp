@@ -8,6 +8,7 @@
 
 #include "CamerasChild.h"
 #include "CSFLog.h"
+#include "MediaEngineTabVideoSource.h"
 #include "MediaEngineRemoteVideoSource.h"
 #include "MediaEngineWebRTCAudio.h"
 #include "MediaManager.h"
@@ -34,8 +35,16 @@ CubebDeviceEnumerator* GetEnumerator() {
 
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
     : mDelayAgnostic(aPrefs.mDelayAgnostic),
-      mExtendedFilter(aPrefs.mExtendedFilter) {
+      mExtendedFilter(aPrefs.mExtendedFilter),
+      mHasTabVideoSource(false) {
   AssertIsOnOwningThread();
+
+  nsCOMPtr<nsIComponentRegistrar> compMgr;
+  NS_GetComponentRegistrar(getter_AddRefs(compMgr));
+  if (compMgr) {
+    compMgr->IsContractIDRegistered(NS_TABSOURCESERVICE_CONTRACTID,
+                                    &mHasTabVideoSource);
+  }
 
   GetChildAndCall(
       &CamerasChild::ConnectDeviceListChangeListener<MediaEngineWebRTC>,
@@ -160,6 +169,14 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
         vSource->GetGroupId(), u""_ns));
   }
+
+  if (mHasTabVideoSource || aCapEngine == camera::BrowserEngine) {
+    RefPtr<MediaEngineSource> tabVideoSource = new MediaEngineTabVideoSource();
+    aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+        tabVideoSource, tabVideoSource->GetName(),
+        NS_ConvertUTF8toUTF16(tabVideoSource->GetUUID()),
+        tabVideoSource->GetGroupId(), u""_ns));
+  }
 }
 
 void MediaEngineWebRTC::EnumerateMicrophoneDevices(
@@ -262,7 +279,6 @@ void MediaEngineWebRTC::EnumerateDevices(
         // are still useful for testing.
         EnumerateVideoDevices(aWindowId, camera::WinEngine, aDevices);
         EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
-        EnumerateVideoDevices(aWindowId, camera::BrowserEngine, aDevices);
         break;
       case dom::MediaSourceEnum::Screen:
         EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
