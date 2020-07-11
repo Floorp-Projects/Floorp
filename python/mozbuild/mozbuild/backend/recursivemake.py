@@ -379,6 +379,7 @@ class RecursiveMakeBackend(MakeBackend):
         self._rust_targets = set()
         self._rust_lib_targets = set()
         self._gkrust_target = None
+        self._pre_compile = set()
 
         self._no_skip = {
             'export': set(),
@@ -546,18 +547,20 @@ class RecursiveMakeBackend(MakeBackend):
             if obj.required_before_compile:
                 tier = 'export'
             elif obj.required_during_compile:
-                tier = None
+                tier = 'pre-compile'
             else:
                 tier = 'misc'
-            if tier:
-                relobjdir = mozpath.relpath(obj.objdir, self.environment.topobjdir)
+            relobjdir = mozpath.relpath(obj.objdir, self.environment.topobjdir)
+            if tier == 'pre-compile':
+                self._pre_compile.add(relobjdir)
+            else:
                 self._no_skip[tier].add(relobjdir)
             backend_file.write_once('include $(topsrcdir)/config/AB_rCD.mk\n')
             relobjdir = mozpath.relpath(obj.objdir, backend_file.objdir)
             # For generated files that we handle in the top-level backend file,
             # we want to have a `directory/tier` target depending on the file.
             # For the others, we want a `tier` target.
-            if tier and relobjdir:
+            if tier != 'pre-compile' and relobjdir:
                 tier = '%s/%s' % (relobjdir, tier)
             for stmt in self._format_statements_for_generated_file(
                     obj, tier, extra_dependencies='backend.mk' if obj.flags else ''):
@@ -740,6 +743,9 @@ class RecursiveMakeBackend(MakeBackend):
             rule = root_deps_mk.create_rule(['recurse_%s' % tier])
             if main:
                 rule.add_dependencies('%s/%s' % (d, tier) for d in sorted(main))
+
+        rule = root_deps_mk.create_rule(['recurse_pre-compile'])
+        rule.add_dependencies('%s/pre-compile' % d for d in sorted(self._pre_compile))
 
         all_compile_deps = six.moves.reduce(
             lambda x, y: x | y,
