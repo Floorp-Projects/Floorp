@@ -36,7 +36,7 @@
     <dimen name="synced_tab_item_min_height">56dp</dimen>
     <dimen name="component_collection_creation_list_margin">16dp</dimen>
     <dimen name="exceptions_description_margin">12dp</dimen>
-    <dimen name="preference_seek_bar_padding">24dp</dimen>
+    <dimen name="preference_seek_bar_padding">16dp</dimen>
     <dimen name="custom_checkbox_alignment_margin">68dp</dimen>
 
     <dimen name="context_menu_height">48dp</dimen>
@@ -50,6 +50,7 @@
 
     <!--Preferences-->
     <dimen name="checkbox_preference_padding_vertical">12dp</dimen>
+    <dimen name="top_bar_alignment_margin_start">72dp</dimen>
 
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">28dp</dimen>

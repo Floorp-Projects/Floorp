@@ -8,8 +8,7 @@
         android:defaultValue="true"
         android:key="@string/pref_key_accessibility_auto_size"
         android:summary="@string/preference_accessibility_auto_size_summary"
-        android:title="@string/preference_accessibility_auto_size_2"
-        app:iconSpaceReserved="false" />
+        android:title="@string/preference_accessibility_auto_size_2" />
     <!-- Custom Preference that scales from 50-200% by steps of 5 represented by 0-30 in steps of 1-->
     <org.mozilla.fenix.settings.TextPercentageSeekBarPreference
         android:defaultValue="10"
@@ -29,6 +28,5 @@
         android:key="@string/pref_key_accessibility_force_enable_zoom"
         android:summary="@string/preference_accessibility_force_enable_zoom_summary"
         android:title="@string/preference_accessibility_force_enable_zoom"
-        app:allowDividerAbove="true"
-        app:iconSpaceReserved="false" />
+        app:allowDividerAbove="true" />
 </PreferenceScreen>

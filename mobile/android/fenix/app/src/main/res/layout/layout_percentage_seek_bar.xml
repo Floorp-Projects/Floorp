@@ -10,9 +10,9 @@
     android:baselineAligned="false"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:paddingStart="@dimen/radio_button_preference_horizontal"
+    android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+    android:layout_marginEnd="@dimen/radio_button_preference_horizontal"
     android:paddingTop="@dimen/preference_seek_bar_padding"
-    android:paddingEnd="@dimen/radio_button_preference_horizontal"
     android:paddingBottom="@dimen/preference_seek_bar_padding">
 
     <TextView
@@ -20,6 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textAlignment="viewStart"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Font size" />
 
@@ -27,11 +28,10 @@
         android:id="@android:id/summary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="6dp"
         android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textAlignment="viewStart"
         android:textColor="?android:attr/textColorSecondary"
         app:layout_constraintTop_toBottomOf="@android:id/title"
-        tools:layout_editor_absoluteX="16dp"
         tools:text="Make text on websites larger or smaller" />
 
     <SeekBar
@@ -76,6 +76,7 @@
         android:layout_height="match_parent"
         android:layout_marginTop="33dp"
         android:padding="16dp"
+        android:textAlignment="viewStart"
         android:text="@string/accessibility_text_size_sample_text_1"
         android:textColor="@color/text_scale_example_text_color"
         android:textSize="16sp"
