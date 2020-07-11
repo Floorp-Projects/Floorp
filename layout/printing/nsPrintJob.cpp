@@ -168,6 +168,26 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
 #  define DUMP_DOC_TREELAYOUT
 #endif
 
+static CallState CollectDocuments(Document& aDoc,
+                                  nsTArray<nsCOMPtr<Document>>& aDocs) {
+  aDocs.AppendElement(&aDoc);
+  auto recurse = [&aDocs](Document& aSubDoc) {
+    return CollectDocuments(aSubDoc, aDocs);
+  };
+  aDoc.EnumerateSubDocuments(recurse);
+  return CallState::Continue;
+}
+
+static void DispatchEventToWindowTree(Document& aDoc, const nsAString& aEvent) {
+  nsTArray<nsCOMPtr<Document>> targets;
+  CollectDocuments(aDoc, targets);
+  for (nsCOMPtr<Document>& doc : targets) {
+    nsContentUtils::DispatchTrustedEvent(doc, doc->GetWindow(), aEvent,
+                                         CanBubble::eNo, Cancelable::eNo,
+                                         nullptr);
+  }
+}
+
 class nsScriptSuppressor {
  public:
   explicit nsScriptSuppressor(nsPrintJob* aPrintJob)
@@ -663,6 +683,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!aSourceDoc->IsStaticDocument()) {
+    // This is the original document.  We must send 'beforeprint' and
+    // 'afterprint' events to give the document the chance to make changes
+    // for print output.  (Obviously if `aSourceDoc` is a clone, it already
+    // has these changes.)
+    DispatchEventToWindowTree(*aSourceDoc, u"beforeprint"_ns);
+  }
+
   {
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
@@ -678,6 +706,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     BuildNestedPrintObjects(printData->mPrintObject->mDocument,
                             printData->mPrintObject, &printData->mPrintDocList);
+  }
+
+  if (!aSourceDoc->IsStaticDocument()) {
+    DispatchEventToWindowTree(*aSourceDoc, u"afterprint"_ns);
   }
 
   // The nsAutoScriptBlocker above will now have been destroyed, which may
