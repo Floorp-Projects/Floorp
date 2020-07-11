@@ -791,7 +791,7 @@ static bool CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v,
       return false;
     }
 
-    if (!ValueToId<CanGC>(cx, next, &id)) {
+    if (!PrimitiveValueToId<CanGC>(cx, next, &id)) {
       return false;
     }
 

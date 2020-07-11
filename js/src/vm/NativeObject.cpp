@@ -2512,7 +2512,7 @@ bool js::NativeGetElement(JSContext* cx, HandleNativeObject obj,
     }
   } else {
     RootedValue indexVal(cx, Int32Value(index));
-    if (!ValueToId<CanGC>(cx, indexVal, &id)) {
+    if (!PrimitiveValueToId<CanGC>(cx, indexVal, &id)) {
       return false;
     }
   }

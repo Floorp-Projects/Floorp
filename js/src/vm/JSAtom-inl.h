@@ -72,9 +72,12 @@ inline bool ValueToIdPure(const Value& v, jsid* id) {
 }
 
 template <AllowGC allowGC>
-inline bool ValueToId(
+inline bool PrimitiveValueToId(
     JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
     typename MaybeRooted<jsid, allowGC>::MutableHandleType idp) {
+  // Non-primitive values should call ToPropertyKey.
+  MOZ_ASSERT(v.isPrimitive());
+
   if (v.isString()) {
     if (v.toString()->isAtom()) {
       idp.set(AtomToId(&v.toString()->asAtom()));
