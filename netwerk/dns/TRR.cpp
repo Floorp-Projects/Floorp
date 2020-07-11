@@ -167,6 +167,7 @@ TRR::Run() {
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   if ((gTRRService == nullptr) || NS_FAILED(SendHTTPRequest())) {
+    RecordReason(nsHostRecord::TRR_SEND_FAILED);
     FailData(NS_ERROR_FAILURE);
     // The dtor will now be run
   }
@@ -254,6 +255,8 @@ nsresult TRR::SendHTTPRequest() {
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
                               TRRService::AutoDetectedKey(), true);
       }
+
+      RecordReason(nsHostRecord::TRR_HOST_BLOCKED_TEMPORARY);
       // not really an error but no TRR is issued
       return NS_ERROR_UNKNOWN_HOST;
     }
@@ -646,6 +649,42 @@ TRR::OnPush(nsIHttpChannel* associated, nsIHttpChannel* pushed) {
 NS_IMETHODIMP
 TRR::OnStartRequest(nsIRequest* aRequest) {
   LOG(("TRR::OnStartRequest %p %s %d\n", this, mHost.get(), mType));
+
+  nsresult status = NS_OK;
+  aRequest->GetStatus(&status);
+
+  if (NS_FAILED(status)) {
+    if (NS_IsOffline()) {
+      RecordReason(nsHostRecord::TRR_IS_OFFLINE);
+    }
+
+    switch (status) {
+      case NS_ERROR_UNKNOWN_HOST:
+        RecordReason(nsHostRecord::TRR_CHANNEL_DNS_FAIL);
+        break;
+      case NS_ERROR_OFFLINE:
+        RecordReason(nsHostRecord::TRR_IS_OFFLINE);
+        break;
+      case NS_ERROR_NET_RESET:
+        RecordReason(nsHostRecord::TRR_NET_RESET);
+        break;
+      case NS_ERROR_NET_TIMEOUT:
+        RecordReason(nsHostRecord::TRR_NET_TIMEOUT);
+        break;
+      case NS_ERROR_PROXY_CONNECTION_REFUSED:
+        RecordReason(nsHostRecord::TRR_NET_REFUSED);
+        break;
+      case NS_ERROR_NET_INTERRUPT:
+        RecordReason(nsHostRecord::TRR_NET_INTERRUPT);
+        break;
+      case NS_ERROR_NET_INADEQUATE_SECURITY:
+        RecordReason(nsHostRecord::TRR_NET_INADEQ_SEQURITY);
+        break;
+      default:
+        RecordReason(nsHostRecord::TRR_UNKNOWN_CHANNEL_FAILURE);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1264,7 +1303,8 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;
     }
-    (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai, mPB, mOriginSuffix);
+    (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai, mPB, mOriginSuffix,
+                                        mTRRSkippedReason);
     mHostResolver = nullptr;
     mRec = nullptr;
   } else {
@@ -1278,6 +1318,9 @@ nsresult TRR::FailData(nsresult error) {
     return NS_ERROR_FAILURE;
   }
 
+  // If we didn't record a reason until now, record a default one.
+  RecordReason(nsHostRecord::TRR_FAILED);
+
   if (mType == TRRTYPE_TXT || mType == TRRTYPE_HTTPSSVC) {
     TypeRecordResultType empty(Nothing{});
     (void)mHostResolver->CompleteLookupByType(mRec, error, empty, 0, mPB);
@@ -1286,7 +1329,8 @@ nsresult TRR::FailData(nsresult error) {
     // this comes from TRR
     RefPtr<AddrInfo> ai = new AddrInfo(mHost, mType);
 
-    (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB, mOriginSuffix);
+    (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB, mOriginSuffix,
+                                        mTRRSkippedReason);
   }
 
   mHostResolver = nullptr;
@@ -1341,6 +1385,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
 
   if (NS_FAILED(rv)) {
     LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
+    RecordReason(nsHostRecord::TRR_DECODE_FAILED);
     return NS_ERROR_FAILURE;
   }
 
@@ -1421,10 +1466,12 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     if (NS_SUCCEEDED(rv) && httpStatus == 200) {
       rv = On200Response(channel);
       if (NS_SUCCEEDED(rv) && UseDefaultServer()) {
+        RecordReason(nsHostRecord::TRR_OK);
         RecordProcessingTime(channel);
         return rv;
       }
     } else {
+      RecordReason(nsHostRecord::TRR_SERVER_RESPONSE_ERR);
       LOG(("TRR:OnStopRequest:%d %p rv %x httpStatus %d\n", __LINE__, this,
            (int)rv, httpStatus));
     }
@@ -1534,6 +1581,7 @@ void TRR::Cancel() {
   }
 
   if (mChannel) {
+    RecordReason(nsHostRecord::TRR_TIMEOUT);
     LOG(("TRR: %p canceling Channel %p %s %d\n", this, mChannel.get(),
          mHost.get(), mType));
     mChannel->Cancel(NS_ERROR_ABORT);

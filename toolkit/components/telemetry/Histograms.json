@@ -4008,6 +4008,28 @@
     "releaseChannelCollection": "opt-out",
     "description": "DNS: success distribution when both native and TRR were used"
   },
+  "TRR_SKIP_REASON_TRR_FIRST": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "bug_numbers": [1649143],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode, it lists the reason we may have skipped TRR"
+  },
+  "TRR_SKIP_REASON_DNS_WORKED": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "bug_numbers": [1649143],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode if DNS succeeded, it lists the reason we may have skipped TRR"
+  },
   "DNS_TRR_FIRST3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],

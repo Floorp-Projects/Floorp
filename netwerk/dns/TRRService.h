@@ -54,8 +54,8 @@ class TRRService : public TRRServiceBase,
   uint32_t GetRequestTimeout();
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
-                              bool pb,
-                              const nsACString& aOriginSuffix) override;
+                              bool pb, const nsACString& aOriginSuffix,
+                              nsHostRecord::TRRSkippedReason aReason) override;
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                     mozilla::net::TypeRecordResultType&,
                                     uint32_t, bool pb) override;
