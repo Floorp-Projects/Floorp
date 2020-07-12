@@ -401,6 +401,51 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
+static nsresult GetGlobalPrintSettings(
+    nsIPrintSettings** aGlobalPrintSettings) {
+  *aGlobalPrintSettings = nullptr;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+      do_GetService(sPrintSettingsServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIPrintSettings> settings;
+  rv = printSettingsService->GetGlobalPrintSettings(getter_AddRefs(settings));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoString printerName;
+  settings->GetPrinterName(printerName);
+
+  bool shouldGetLastUsedPrinterName = printerName.IsEmpty();
+#ifdef MOZ_X11
+  // In Linux, GTK backend does not support per printer settings.
+  // Calling GetLastUsedPrinterName causes a sandbox violation (see Bug
+  // 1329216). The printer name is not needed anywhere else on Linux
+  // before it gets to the parent. In the parent, we will then query the
+  // last-used printer name if no name is set. Unless we are in the parent,
+  // we will skip this part.
+  if (!XRE_IsParentProcess()) {
+    shouldGetLastUsedPrinterName = false;
+  }
+#endif
+  if (shouldGetLastUsedPrinterName) {
+    printSettingsService->GetLastUsedPrinterName(printerName);
+    settings->SetPrinterName(printerName);
+  }
+  printSettingsService->InitPrintSettingsFromPrinter(printerName, settings);
+  printSettingsService->InitPrintSettingsFromPrefs(
+      settings, true, nsIPrintSettings::kInitSaveAll);
+
+  *aGlobalPrintSettings = settings.forget().take();
+
+  return NS_OK;
+}
+
 //-------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference,
@@ -907,6 +952,11 @@ nsresult nsPrintJob::Print(Document* aSourceDoc,
 
   nsresult rv = CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
 
+  if (!aPrintSettings) {
+    // This is temporary until after bug 1602410 lands.
+    return rv;
+  }
+
   // Save the print settings if the user picked them.
   // We should probably do this immediately after the user confirms their
   // selection (that is, move this to nsPrintingPromptService::ShowPrintDialog,
@@ -988,20 +1038,6 @@ int32_t nsPrintJob::GetPrintPreviewNumPages() {
     return 0;
   }
   return numPages;
-}
-
-//----------------------------------------------------------------------------------
-nsresult nsPrintJob::GetGlobalPrintSettings(
-    nsIPrintSettings** aGlobalPrintSettings) {
-  NS_ENSURE_ARG_POINTER(aGlobalPrintSettings);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-      do_GetService(sPrintSettingsServiceContractID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = printSettingsService->GetGlobalPrintSettings(aGlobalPrintSettings);
-  }
-  return rv;
 }
 
 //----------------------------------------------------------------------------------

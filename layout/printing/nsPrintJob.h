@@ -46,7 +46,6 @@ class nsPrintJob final : public nsIObserver,
                          public nsIWebProgressListener,
                          public nsSupportsWeakReference {
  public:
-  static nsresult GetGlobalPrintSettings(nsIPrintSettings** aPrintSettings);
   static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
 
   nsPrintJob() = default;
