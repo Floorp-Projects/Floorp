@@ -578,8 +578,16 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     nsCOMPtr<nsIPrintingPromptService> pps(
         do_QueryInterface(aWebProgressListener));
     mProgressDialogIsShown = pps != nullptr;
+
+    mIsCreatingPrintPreview = true;
+
+    // ensures docShell tree navigation in frozen
+    SetIsPrintPreview(true);
   } else {
     mProgressDialogIsShown = false;
+
+    // ensures docShell tree navigation in frozen
+    SetIsPrinting(true);
   }
 
   // Grab the new instance with local variable to guarantee that it won't be
@@ -606,9 +614,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     // to mPrtPreview once we've finish creating the print preview. We must
     // clear mPtrPreview so that code will use mPtr until that happens.
     mPrtPreview = nullptr;
-
-    mIsCreatingPrintPreview = true;
-    SetIsPrintPreview(true);
   }
 
   // Create a print session and let the print settings know about it.
@@ -685,10 +690,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // it shouldn't continue to do anything with this instance.
   if (mIsDestroying || (aIsPrintPreview && !mIsCreatingPrintPreview)) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (!aIsPrintPreview) {
-    SetIsPrinting(true);
   }
 
   // XXX This isn't really correct...
