@@ -907,10 +907,7 @@ extern "C" {
     fn apz_deregister_sampler(window_id: WrWindowId);
 
     fn omta_register_sampler(window_id: WrWindowId);
-    fn omta_sample(
-        window_id: WrWindowId,
-        transaction: &mut Transaction
-    );
+    fn omta_sample(window_id: WrWindowId, transaction: &mut Transaction);
     fn omta_deregister_sampler(window_id: WrWindowId);
 }
 
@@ -1424,7 +1421,13 @@ pub extern "C" fn wr_window_new(
         ctx.make_current();
         (Rc::new(ctx.clone()) as Rc<dyn gl::Gl>, Some(ctx))
     } else {
-        (native_gl.as_ref().expect("Native GL context required when not using SWGL!").clone(), None)
+        (
+            native_gl
+                .as_ref()
+                .expect("Native GL context required when not using SWGL!")
+                .clone(),
+            None,
+        )
     };
 
     let version = gl.get_string(gl::VERSION);
@@ -1440,8 +1443,7 @@ pub extern "C" fn wr_window_new(
         }
     };
 
-    let upload_method = if gl_context != ptr::null_mut() &&
-                           unsafe { is_glcontext_angle(gl_context) } {
+    let upload_method = if gl_context != ptr::null_mut() && unsafe { is_glcontext_angle(gl_context) } {
         UploadMethod::Immediate
     } else {
         UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT)
