@@ -76,7 +76,7 @@ impl NeqoHttp3Conn {
             "h3-29" => QuicVersion::Draft29,
             "h3-28" => QuicVersion::Draft28,
             "h3-27" => QuicVersion::Draft27,
-            _ => return Err(NS_ERROR_INVALID_ARG)
+            _ => return Err(NS_ERROR_INVALID_ARG),
         };
 
         let conn = match Http3Client::new(
@@ -415,9 +415,13 @@ pub enum Http3Event {
         fin: bool,
     },
     /// New bytes are available on a push stream for reading.
-    PushDataReadable { push_id: u64 },
+    PushDataReadable {
+        push_id: u64,
+    },
     /// A push has been canceled.
-    PushCanceled { push_id: u64 },
+    PushCanceled {
+        push_id: u64,
+    },
     RequestsCreatable,
     AuthenticationNeeded,
     ZeroRttRejected,
@@ -432,7 +436,10 @@ pub enum Http3Event {
     NoEvent,
 }
 
-fn convert_h3_to_h1_headers(headers: Vec<(String, String)>, ret_headers: &mut ThinVec<u8>) -> nsresult {
+fn convert_h3_to_h1_headers(
+    headers: Vec<(String, String)>,
+    ret_headers: &mut ThinVec<u8>,
+) -> nsresult {
     if headers.iter().filter(|(k, _)| k == ":status").count() != 1 {
         return NS_ERROR_ILLEGAL_VALUE;
     }
@@ -483,14 +490,25 @@ pub extern "C" fn neqo_http3conn_event(
             }
             Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable { stream_id },
             Http3ClientEvent::Reset { stream_id, error } => Http3Event::Reset { stream_id, error },
-            Http3ClientEvent::PushPromise { push_id, request_stream_id, headers } => {
+            Http3ClientEvent::PushPromise {
+                push_id,
+                request_stream_id,
+                headers,
+            } => {
                 let res = convert_h3_to_h1_headers(headers, ret_headers);
                 if res != NS_OK {
                     return res;
                 }
-                Http3Event::PushPromise { push_id, request_stream_id }
+                Http3Event::PushPromise {
+                    push_id,
+                    request_stream_id,
+                }
             }
-            Http3ClientEvent::PushHeaderReady { push_id, headers, fin } => {
+            Http3ClientEvent::PushHeaderReady {
+                push_id,
+                headers,
+                fin,
+            } => {
                 if let Some(headers) = headers {
                     let res = convert_h3_to_h1_headers(headers, ret_headers);
                     if res != NS_OK {
@@ -499,7 +517,9 @@ pub extern "C" fn neqo_http3conn_event(
                 }
                 Http3Event::PushHeaderReady { push_id, fin }
             }
-            Http3ClientEvent::PushDataReadable { push_id } => Http3Event::PushDataReadable { push_id },
+            Http3ClientEvent::PushDataReadable { push_id } => {
+                Http3Event::PushDataReadable { push_id }
+            }
             Http3ClientEvent::PushCanceled { push_id } => Http3Event::PushCanceled { push_id },
             Http3ClientEvent::RequestsCreatable => Http3Event::RequestsCreatable,
             Http3ClientEvent::AuthenticationNeeded => Http3Event::AuthenticationNeeded,
