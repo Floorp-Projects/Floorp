@@ -215,6 +215,9 @@ with only_when(depends(target)(lambda t: t.kernel == 'WINNT')):
 # We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
 check_and_add_gcc_warning('-Wno-gnu-zero-variadic-macro-arguments')
 
+# Make it an error to be missing function declarations.
+check_and_add_gcc_warning('-Werror=implicit-function-declaration')
+
 # Disable a warning with gcc 7. See bug 1320656
 # We are far from using C++17 and the impact of the warning will be
 # limited to a potential public ABI.
