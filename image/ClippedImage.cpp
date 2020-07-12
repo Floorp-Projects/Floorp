@@ -12,11 +12,11 @@
 
 #include "ImageRegion.h"
 #include "Orientation.h"
-#include "SVGImageContext.h"
 #include "gfxDrawable.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGImageContext.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/gfx/2D.h"
 

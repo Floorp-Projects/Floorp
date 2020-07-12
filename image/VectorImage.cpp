@@ -21,6 +21,7 @@
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGObserverUtils.h"  // for SVGRenderingObserver
 #include "mozilla/Tuple.h"
 #include "nsIStreamListener.h"
 #include "nsMimeTypes.h"
@@ -28,7 +29,6 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsStubDocumentObserver.h"
-#include "SVGObserverUtils.h"  // for SVGRenderingObserver
 #include "nsWindowSizes.h"
 #include "ImageRegion.h"
 #include "ISurfaceProvider.h"

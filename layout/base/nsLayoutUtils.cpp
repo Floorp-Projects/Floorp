@@ -134,7 +134,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelHandlingUtils
 #include "RegionBuilder.h"
-#include "SVGViewportElement.h"
+#include "mozilla/dom/SVGViewportElement.h"
 #include "DisplayItemClip.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"

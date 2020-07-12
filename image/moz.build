@@ -117,8 +117,6 @@ LOCAL_INCLUDES += [
     '/dom/svg',
     # We need to instantiate the decoders
     '/image/decoders',
-    # Because VectorImage.cpp includes SVGUtils.h and SVGObserverUtils.h
-    '/layout/svg',
     # For URI-related functionality
     '/netwerk/base',
     # DecodePool uses thread-related facilities.

@@ -179,7 +179,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',
     '/dom/storage',
-    '/dom/svg',
     '/dom/xml',
     '/dom/xul',
     '/js/xpconnect/wrappers',

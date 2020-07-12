@@ -31,6 +31,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/SVGImageContext.h"
 #include "mozilla/Unused.h"
 
 #include "nsCOMPtr.h"
@@ -85,7 +86,6 @@
 #include "mozilla/Preferences.h"
 
 #include "mozilla/dom/Link.h"
-#include "SVGImageContext.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 
 using namespace mozilla;

@@ -12,7 +12,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "ImageRegion.h"
-#include "SVGImageContext.h"
+#include "mozilla/SVGImageContext.h"
 
 using std::swap;
 

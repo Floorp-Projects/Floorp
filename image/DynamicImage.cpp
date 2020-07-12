@@ -9,9 +9,9 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGImageContext.h"
 #include "ImageRegion.h"
 #include "Orientation.h"
-#include "SVGImageContext.h"
 
 #include "mozilla/MemoryReporting.h"
 

@@ -525,7 +525,6 @@ LOCAL_INCLUDES += [
     '/layout/forms',
     '/layout/generic',
     '/layout/style',
-    '/layout/svg',
     '/layout/xul',
     '/netwerk/base',
     '/netwerk/url-classifier',
