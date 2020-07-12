@@ -5191,8 +5191,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
 
-    nsCOMPtr<nsIPrintSettings> printSettings;
     if (printSettingsService) {
+      nsCOMPtr<nsIPrintSettings> printSettings;
       printSettingsService->GetGlobalPrintSettings(
           getter_AddRefs(printSettings));
 
@@ -5223,9 +5223,6 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
       EnterModalState();
       webBrowserPrint->Print(printSettings, nullptr);
       LeaveModalState();
-    } else {
-      webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
-      webBrowserPrint->Print(printSettings, nullptr);
     }
   }
 #endif  // NS_PRINTING
