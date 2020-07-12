@@ -85,7 +85,6 @@ LOCAL_INCLUDES += [
     '/ipc/chromium/src',
     '/layout/generic',
     '/layout/style',
-    '/layout/svg',
     '/layout/xul',
     '/layout/xul/tree/',
 ]

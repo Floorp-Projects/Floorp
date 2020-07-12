@@ -20,11 +20,11 @@
 #include "nsDisplayList.h"
 #include "nsIFrameInlines.h"
 #include "FrameLayerBuilder.h"
-#include "SVGObserverUtils.h"
 #include "imgIContainer.h"
 #include "Image.h"
 #include "GeckoProfiler.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/layers/WebRenderUserData.h"
 
 using namespace mozilla::dom;

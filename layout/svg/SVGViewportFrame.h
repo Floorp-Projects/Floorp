@@ -8,8 +8,8 @@
 #define __NS_SVGVIEWPORTFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ISVGSVGFrame.h"
 #include "mozilla/SVGContainerFrame.h"
-#include "ISVGSVGFrame.h"
 
 class gfxContext;
 

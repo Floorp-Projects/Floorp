@@ -238,7 +238,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
     '../generic',
-    '../svg',
     '../xul',
     '/dom/base',
     '/dom/html',

@@ -16,7 +16,6 @@
 #include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
 #include "mozilla/SVGGeometryFrame.h"
-#include "mozilla/dom/SVGImageElement.h"
 #include "nsIReflowCallback.h"
 #include "mozilla/Unused.h"
 

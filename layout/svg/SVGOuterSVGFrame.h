@@ -8,9 +8,9 @@
 #define __NS_SVGOUTERSVGFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ISVGSVGFrame.h"
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/UniquePtr.h"
-#include "ISVGSVGFrame.h"
 #include "nsRegion.h"
 
 class gfxContext;
