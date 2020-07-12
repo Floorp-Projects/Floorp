@@ -230,14 +230,21 @@ class LoginManagerParent extends JSWindowActorParent {
         "The child process should not send an origin to the parent process. See bug 1513003"
       );
     }
-    let origin = this.manager.documentPrincipal?.originNoSuffix;
-    if (!origin) {
-      throw new Error("An origin is required");
-    }
+    let context = {};
+    XPCOMUtils.defineLazyGetter(context, "origin", () => {
+      // We still need getLoginOrigin to remove the path for file: URIs until we fix bug 1625391.
+      let origin = LoginHelper.getLoginOrigin(
+        this.manager.documentPrincipal?.originNoSuffix
+      );
+      if (!origin) {
+        throw new Error("An origin is required. Message name: " + msg.name);
+      }
+      return origin;
+    });
     switch (msg.name) {
       case "PasswordManager:findLogins": {
         return this.sendLoginDataToChild(
-          origin,
+          context.origin,
           data.actionOrigin,
           data.options
         );
@@ -245,10 +252,10 @@ class LoginManagerParent extends JSWindowActorParent {
 
       case "PasswordManager:onFormSubmit": {
         let browser = this.getRootBrowser();
-        let submitPromise = this.onFormSubmit(browser, origin, data);
+        let submitPromise = this.onFormSubmit(browser, context.origin, data);
         if (gListenerForTests) {
           submitPromise.then(() => {
-            gListenerForTests("FormSubmit", { origin, data });
+            gListenerForTests("FormSubmit", { origin: context.origin, data });
           });
         }
         break;
@@ -261,12 +268,12 @@ class LoginManagerParent extends JSWindowActorParent {
           gListenerForTests("PasswordEditedOrGenerated", {});
         }
         let browser = this.getRootBrowser();
-        this._onPasswordEditedOrGenerated(browser, origin, data);
+        this._onPasswordEditedOrGenerated(browser, context.origin, data);
         break;
       }
 
       case "PasswordManager:autoCompleteLogins": {
-        return this.doAutocompleteSearch(origin, data);
+        return this.doAutocompleteSearch(context.origin, data);
       }
 
       case "PasswordManager:removeLogin": {
