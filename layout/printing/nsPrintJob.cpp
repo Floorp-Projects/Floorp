@@ -596,50 +596,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                                  : nsPrintData::eIsPrinting);
   RefPtr<nsPrintData> printData = mPrt;
 
-  // if they don't pass in a PrintSettings, then get the Global PS
-  printData->mPrintSettings = aPrintSettings;
-  if (!printData->mPrintSettings) {
-    rv = GetGlobalPrintSettings(getter_AddRefs(printData->mPrintSettings));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = EnsureSettingsHasPrinterNameSet(printData->mPrintSettings);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  printData->mPrintSettings->SetIsCancelled(false);
-  printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
-
   if (mIsCreatingPrintPreview) {
     // Our new print preview nsPrintData is stored in mPtr until we move it
     // to mPrtPreview once we've finish creating the print preview. We must
     // clear mPtrPreview so that code will use mPtr until that happens.
     mPrtPreview = nullptr;
-  }
-
-  // Create a print session and let the print settings know about it.
-  // Don't overwrite an existing print session.
-  // The print settings hold an nsWeakPtr to the session so it does not
-  // need to be cleared from the settings at the end of the job.
-  // XXX What lifetime does the printSession need to have?
-  nsCOMPtr<nsIPrintSession> printSession;
-  bool remotePrintJobListening = false;
-  if (!mIsCreatingPrintPreview) {
-    rv = printData->mPrintSettings->GetPrintSession(
-        getter_AddRefs(printSession));
-    if (NS_FAILED(rv) || !printSession) {
-      printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      printData->mPrintSettings->SetPrintSession(printSession);
-    } else {
-      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
-          printSession->GetRemotePrintJob();
-      if (remotePrintJob) {
-        // If we have a RemotePrintJob add it to the print progress listeners,
-        // so it can forward to the parent.
-        printData->mPrintProgressListeners.AppendElement(remotePrintJob);
-        remotePrintJobListening = true;
-      }
-    }
   }
 
   if (aWebProgressListener != nullptr) {
@@ -696,6 +657,45 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   if (!printData->mPrintObject->mDocument ||
       !printData->mPrintObject->mDocument->GetRootElement())
     return NS_ERROR_GFX_PRINTER_STARTDOC;
+
+  // if they don't pass in a PrintSettings, then get the Global PS
+  printData->mPrintSettings = aPrintSettings;
+  if (!printData->mPrintSettings) {
+    rv = GetGlobalPrintSettings(getter_AddRefs(printData->mPrintSettings));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = EnsureSettingsHasPrinterNameSet(printData->mPrintSettings);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  printData->mPrintSettings->SetIsCancelled(false);
+  printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
+
+  // Create a print session and let the print settings know about it.
+  // Don't overwrite an existing print session.
+  // The print settings hold an nsWeakPtr to the session so it does not
+  // need to be cleared from the settings at the end of the job.
+  // XXX What lifetime does the printSession need to have?
+  nsCOMPtr<nsIPrintSession> printSession;
+  bool remotePrintJobListening = false;
+  if (!mIsCreatingPrintPreview) {
+    rv = printData->mPrintSettings->GetPrintSession(
+        getter_AddRefs(printSession));
+    if (NS_FAILED(rv) || !printSession) {
+      printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      printData->mPrintSettings->SetPrintSession(printSession);
+    } else {
+      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
+          printSession->GetRemotePrintJob();
+      if (remotePrintJob) {
+        // If we have a RemotePrintJob add it to the print progress listeners,
+        // so it can forward to the parent.
+        printData->mPrintProgressListeners.AppendElement(remotePrintJob);
+        remotePrintJobListening = true;
+      }
+    }
+  }
 
   // Now determine how to set up the Frame print UI
   bool isSelection = IsThereARangeSelection(printData->mCurrentFocusWin);
