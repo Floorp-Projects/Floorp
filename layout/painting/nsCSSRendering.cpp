@@ -20,6 +20,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGImageContext.h"
 #include "gfxFont.h"
 #include "ScaledFontBase.h"
 #include "skia/include/core/SkTextBlob.h"
@@ -60,7 +61,6 @@
 #include "nsInlineFrame.h"
 #include "nsRubyTextContainerFrame.h"
 #include <algorithm>
-#include "SVGImageContext.h"
 #include "TextDrawTarget.h"
 
 using namespace mozilla;

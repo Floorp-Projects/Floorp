@@ -152,7 +152,6 @@ LOCAL_INCLUDES += [
     '../painting',
     '../printing',
     '../style',
-    '../svg',
     '../tables',
     '../xul',
     '../xul/tree/',

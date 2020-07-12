@@ -120,9 +120,9 @@
 #include "nsStyleSheetService.h"
 #include "gfxUtils.h"
 #include "mozilla/SMILAnimationController.h"
-#include "SVGContentUtils.h"
-#include "SVGObserverUtils.h"
-#include "SVGFragmentIdentifier.h"
+#include "mozilla/SVGContentUtils.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGFragmentIdentifier.h"
 #include "nsFrameSelection.h"
 
 #include "mozilla/dom/Performance.h"

@@ -13,7 +13,6 @@
 
 #include "CounterStyleManager.h"
 #include "ImageLayers.h"
-#include "SVGImageContext.h"
 #include "TextDrawTarget.h"
 #include "UnitTransforms.h"
 #include "gfx2DGlue.h"
@@ -23,6 +22,7 @@
 #include "imgRequestProxy.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGImageContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"

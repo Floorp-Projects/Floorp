@@ -7,6 +7,7 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/SMILAnimationController.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
@@ -26,7 +27,6 @@
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "SVGObserverUtils.h"
 #include "nsMimeTypes.h"
 
 namespace mozilla {

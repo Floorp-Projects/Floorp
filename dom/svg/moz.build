@@ -12,6 +12,7 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 EXPORTS.mozilla += [
     'SVGAttrValueWrapper.h',
     'SVGContentUtils.h',
+    'SVGFragmentIdentifier.h',
     'SVGPreserveAspectRatio.h',
     'SVGStringList.h',
     'SVGTagList.h',
