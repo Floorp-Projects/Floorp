@@ -55,7 +55,7 @@ class ProviderOmnibox extends UrlbarProvider {
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
-    return UrlbarUtils.PROVIDER_TYPE.EXTENSION;
+    return UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
   }
 
   /**
@@ -120,8 +120,25 @@ class ProviderOmnibox extends UrlbarProvider {
     let instance = {};
     this.queries.set(queryContext, instance);
 
+    // Fetch heuristic result.
+    let keyword = queryContext.tokens[0].value;
+    let description = ExtensionSearchHandler.getDescription(keyword);
+    let heuristicResult = new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.OMNIBOX,
+      UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
+        content: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
+        keyword: [queryContext.tokens[0].value, UrlbarUtils.HIGHLIGHT.TYPED],
+        icon: UrlbarUtils.ICON.EXTENSION,
+      })
+    );
+    heuristicResult.heuristic = true;
+    addCallback(this, heuristicResult);
+
+    // Fetch non-heuristic results.
     let data = {
-      keyword: queryContext.tokens[0].value,
+      keyword,
       text: queryContext.searchString,
       inPrivateWindow: queryContext.isPrivate,
     };
@@ -130,6 +147,9 @@ class ProviderOmnibox extends UrlbarProvider {
       suggestions => {
         for (let suggestion of suggestions) {
           let content = `${queryContext.tokens[0].value} ${suggestion.content}`;
+          if (content == heuristicResult.payload.content) {
+            continue;
+          }
           let result = new UrlbarResult(
             UrlbarUtils.RESULT_TYPE.OMNIBOX,
             UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
