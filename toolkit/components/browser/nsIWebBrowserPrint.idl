@@ -27,16 +27,6 @@ interface nsIWebBrowserPrint : nsISupports
   const short PRINTPREVIEW_END          = 4;
 
   /**
-   * Returns a "global" PrintSettings object
-   * Creates a new the first time, if one doesn't exist.
-   *
-   * Then returns the same object each time after that.
-   *
-   * Initializes the globalPrintSettings from the default printer
-   */
-  readonly attribute nsIPrintSettings globalPrintSettings;
-
-  /**
    * Returns a pointer to the PrintSettings object that
    * that was passed into either "print" or "print preview"
    *
