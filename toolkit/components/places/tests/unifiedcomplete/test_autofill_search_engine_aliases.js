@@ -32,26 +32,30 @@ add_task(async function basic() {
     title: TEST_ENGINE_ALIAS,
   });
 
-  let search = TEST_ENGINE_ALIAS.substr(
-    0,
-    Math.round(TEST_ENGINE_ALIAS.length / 2)
-  );
   let autofilledValue = TEST_ENGINE_ALIAS + " ";
-  let context = createContext(search, { isPrivate: false });
-  await check_results({
-    context,
+  let completedURL = makeActionURI("searchengine", {
+    engineName: TEST_ENGINE_NAME,
+    alias: TEST_ENGINE_ALIAS,
+    input: autofilledValue,
+    searchQuery: "",
+  }).spec;
+  await check_autocomplete({
+    search: TEST_ENGINE_ALIAS.substr(
+      0,
+      Math.round(TEST_ENGINE_ALIAS.length / 2)
+    ),
     autofilled: autofilledValue,
+    completed: completedURL,
     matches: [
-      makeSearchResult(context, {
-        engineName: TEST_ENGINE_NAME,
-        alias: TEST_ENGINE_ALIAS,
-        query: "",
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.HIDE,
-        heuristic: true,
-      }),
+      {
+        value: autofilledValue,
+        comment: TEST_ENGINE_NAME,
+        uri: completedURL,
+        style: ["autofill", "action", "searchengine", "heuristic"],
+      },
     ],
   });
-  await cleanupPlaces();
+  await cleanup();
 });
 
 // Searching for @AUTOFI should autofill to @AUTOFIlltest, preserving the case
@@ -70,21 +74,25 @@ add_task(async function preserveCase() {
     Math.round(TEST_ENGINE_ALIAS.length / 2)
   );
   let alias = search + TEST_ENGINE_ALIAS.substr(search.length);
-
   let autofilledValue = alias + " ";
-  let context = createContext(search, { isPrivate: false });
-  await check_results({
-    context,
+  let completedURL = makeActionURI("searchengine", {
+    engineName: TEST_ENGINE_NAME,
+    alias,
+    input: autofilledValue,
+    searchQuery: "",
+  }).spec;
+  await check_autocomplete({
+    search,
     autofilled: autofilledValue,
+    completed: completedURL,
     matches: [
-      makeSearchResult(context, {
-        engineName: TEST_ENGINE_NAME,
-        alias,
-        query: "",
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.HIDE,
-        heuristic: true,
-      }),
+      {
+        value: autofilledValue,
+        comment: TEST_ENGINE_NAME,
+        uri: completedURL,
+        style: ["autofill", "action", "searchengine", "heuristic"],
+      },
     ],
   });
-  await cleanupPlaces();
+  await cleanup();
 });

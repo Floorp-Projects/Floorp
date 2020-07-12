@@ -31,23 +31,22 @@ add_task(async function dedupe_prefix() {
     },
   ]);
 
-  // We should get https://www. as the heuristic result but https:// in the
+  // We should get https://www. as the heuristic result and https:// in the
   // results since the latter's prefix is a higher priority.
-  let context = createContext("example.com/foo/", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
+    search: "example.com/foo/",
     autofilled: "example.com/foo/",
     completed: "https://www.example.com/foo/",
     matches: [
-      makeVisitResult(context, {
-        uri: "https://www.example.com/foo/",
-        title: "https://www.example.com/foo/",
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "https://example.com/foo/",
-        title: "Example Page",
-      }),
+      {
+        value: "example.com/foo/",
+        comment: "https://www.example.com/foo/",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: "https://example.com/foo/",
+        comment: "Example Page",
+      },
     ],
   });
 
@@ -63,21 +62,20 @@ add_task(async function dedupe_prefix() {
     ]);
   }
 
-  context = createContext("example.com/foo/", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
+    search: "example.com/foo/",
     autofilled: "example.com/foo/",
     completed: "http://www.example.com/foo/",
     matches: [
-      makeVisitResult(context, {
-        uri: "http://www.example.com/foo/",
-        title: "www.example.com/foo/",
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "https://example.com/foo/",
-        title: "Example Page",
-      }),
+      {
+        value: "example.com/foo/",
+        comment: "www.example.com/foo/",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: "https://example.com/foo/",
+        comment: "Example Page",
+      },
     ],
   });
 
@@ -94,23 +92,22 @@ add_task(async function dedupe_prefix() {
     ]);
   }
 
-  context = createContext("example.com/foo/", { isPrivate: false });
-  await check_results({
-    context,
+  await check_autocomplete({
+    search: "example.com/foo/",
     autofilled: "example.com/foo/",
     completed: "https://example.com/foo/",
     matches: [
-      makeVisitResult(context, {
-        uri: "https://example.com/foo/",
-        title: "https://example.com/foo/",
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "https://www.example.com/foo/",
-        title: "Example Page",
-      }),
+      {
+        value: "example.com/foo/",
+        comment: "https://example.com/foo/",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: "https://www.example.com/foo/",
+        comment: "Example Page",
+      },
     ],
   });
 
-  await cleanupPlaces();
+  await cleanup();
 });
