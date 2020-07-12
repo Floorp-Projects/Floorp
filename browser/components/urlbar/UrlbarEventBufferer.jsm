@@ -14,11 +14,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  Log: "resource://gre/modules/Log.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.EventBufferer")
+  UrlbarUtils.getLogger({ prefix: "EventBufferer" })
 );
 
 // Maximum time events can be deferred for.
