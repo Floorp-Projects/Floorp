@@ -21,19 +21,19 @@ add_task(async function urlToTip() {
   ]);
 
   // Add a provider that returns a tip result when the search string is "testx".
+  let tipResult = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TIP,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    {
+      text: "This is a test tip.",
+      buttonText: "OK",
+      helpUrl: "http://example.com/",
+      type: "test",
+    }
+  );
+  tipResult.suggestedIndex = 1;
   let provider = new UrlbarTestUtils.TestProvider({
-    results: [
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.TIP,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          text: "This is a test tip.",
-          buttonText: "OK",
-          helpUrl: "http://example.com/",
-          type: "test",
-        }
-      ),
-    ],
+    results: [tipResult],
   });
   provider.isActive = context => context.searchString == "testx";
   UrlbarProvidersManager.registerProvider(provider);
@@ -122,19 +122,19 @@ add_task(async function tipToURL() {
 
   // Add a provider that returns a tip result when the search string is "test"
   // or "testxx".
+  let tipResult = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TIP,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    {
+      text: "This is a test tip.",
+      buttonText: "OK",
+      helpUrl: "http://example.com/",
+      type: "test",
+    }
+  );
+  tipResult.suggestedIndex = 1;
   let provider = new UrlbarTestUtils.TestProvider({
-    results: [
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.TIP,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          text: "This is a test tip.",
-          buttonText: "OK",
-          helpUrl: "http://example.com/",
-          type: "test",
-        }
-      ),
-    ],
+    results: [tipResult],
   });
   provider.isActive = context =>
     ["test", "testxx"].includes(context.searchString);

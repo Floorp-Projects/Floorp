@@ -63,7 +63,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return false; // TODO: Set to true in future part of this patch.
+    return true;
   }
 
   /**
