@@ -226,7 +226,7 @@ fn prepare_prim_for_render(
     );
 
     if !is_passthrough {
-        update_clip_task(
+        if !update_clip_task(
             prim_instance,
             &prim_rect.origin,
             prim_spatial_node_index,
@@ -238,7 +238,12 @@ fn prepare_prim_for_render(
             store,
             data_stores,
             scratch,
-        );
+        ) {
+            if prim_instance.is_chased() {
+                println!("\tconsidered invisible");
+            }
+            return false;
+        }
 
         if prim_instance.is_chased() {
             println!("\tconsidered visible and ready with local pos {:?}", prim_rect.origin);
@@ -1187,7 +1192,7 @@ fn decompose_repeated_primitive(
 fn update_clip_task_for_brush(
     instance: &PrimitiveInstance,
     prim_origin: &LayoutPoint,
-    prim_info: &mut PrimitiveVisibility,
+    prim_info: &PrimitiveVisibility,
     prim_spatial_node_index: SpatialNodeIndex,
     root_spatial_node_index: SpatialNodeIndex,
     pic_context: &PictureContext,
@@ -1201,13 +1206,13 @@ fn update_clip_task_for_brush(
     clip_mask_instances: &mut Vec<ClipMaskKind>,
     unclipped: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
-) -> bool {
+) -> Option<ClipTaskIndex> {
     let segments = match instance.kind {
         PrimitiveInstanceKind::TextRun { .. } |
         PrimitiveInstanceKind::Clear { .. } |
         PrimitiveInstanceKind::LineDecoration { .. } |
         PrimitiveInstanceKind::Backdrop { .. } => {
-            return false;
+            return None;
         }
         PrimitiveInstanceKind::Image { image_instance_index, .. } => {
             let segment_instance_index = prim_store
@@ -1215,7 +1220,7 @@ fn update_clip_task_for_brush(
                 .segment_instance_index;
 
             if segment_instance_index == SegmentInstanceIndex::UNUSED {
-                return false;
+                return None;
             }
 
             let segment_instance = &segment_instances_store[segment_instance_index];
@@ -1228,7 +1233,7 @@ fn update_clip_task_for_brush(
             // or some other factor (UNUSED).
             if segment_instance_index == SegmentInstanceIndex::UNUSED ||
                segment_instance_index == SegmentInstanceIndex::INVALID {
-                return false;
+                return None;
             }
 
             let segment_instance = &segment_instances_store[segment_instance_index];
@@ -1239,7 +1244,7 @@ fn update_clip_task_for_brush(
             debug_assert!(segment_instance_index != SegmentInstanceIndex::INVALID);
 
             if segment_instance_index == SegmentInstanceIndex::UNUSED {
-                return false;
+                return None;
             }
 
             let segment_instance = &segment_instances_store[segment_instance_index];
@@ -1266,7 +1271,7 @@ fn update_clip_task_for_brush(
             // TODO: This is quite messy - once we remove legacy primitives we
             //       can change this to be a tuple match on (instance, template)
             if prim_data.brush_segments.is_empty() {
-                return false;
+                return None;
             }
 
             prim_data.brush_segments.as_slice()
@@ -1277,7 +1282,7 @@ fn update_clip_task_for_brush(
             // TODO: This is quite messy - once we remove legacy primitives we
             //       can change this to be a tuple match on (instance, template)
             if prim_data.brush_segments.is_empty() {
-                return false;
+                return None;
             }
 
             prim_data.brush_segments.as_slice()
@@ -1288,7 +1293,7 @@ fn update_clip_task_for_brush(
             // TODO: This is quite messy - once we remove legacy primitives we
             //       can change this to be a tuple match on (instance, template)
             if prim_data.brush_segments.is_empty() {
-                return false;
+                return None;
             }
 
             prim_data.brush_segments.as_slice()
@@ -1298,13 +1303,13 @@ fn update_clip_task_for_brush(
     // If there are no segments, early out to avoid setting a valid
     // clip task instance location below.
     if segments.is_empty() {
-        return true;
+        return None;
     }
 
     // Set where in the clip mask instances array the clip mask info
     // can be found for this primitive. Each segment will push the
     // clip mask information for itself in update_clip_task below.
-    prim_info.clip_task_index = ClipTaskIndex(clip_mask_instances.len() as _);
+    let clip_task_index = ClipTaskIndex(clip_mask_instances.len() as _);
 
     // If we only built 1 segment, there is no point in re-running
     // the clip chain builder. Instead, just use the clip chain
@@ -1371,7 +1376,7 @@ fn update_clip_task_for_brush(
         }
     }
 
-    true
+    Some(clip_task_index)
 }
 
 pub fn update_clip_task(
@@ -1386,7 +1391,7 @@ pub fn update_clip_task(
     prim_store: &mut PrimitiveStore,
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
-) {
+) -> bool {
     let prim_info = &mut scratch.prim_info[instance.visibility_info.0 as usize];
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
 
@@ -1401,12 +1406,12 @@ pub fn update_clip_task(
         device_pixel_scale,
     ) {
         Some(rect) => rect,
-        None => return,
+        None => return false,
     };
 
     build_segments_if_needed(
         instance,
-        &prim_info,
+        prim_info,
         frame_state,
         prim_store,
         data_stores,
@@ -1415,7 +1420,7 @@ pub fn update_clip_task(
     );
 
     // First try to  render this primitive's mask using optimized brush rendering.
-    if update_clip_task_for_brush(
+    prim_info.clip_task_index = if let Some(clip_task_index) = update_clip_task_for_brush(
         instance,
         prim_origin,
         prim_info,
@@ -1434,49 +1439,61 @@ pub fn update_clip_task(
         device_pixel_scale,
     ) {
         if instance.is_chased() {
-            println!("\tsegment tasks have been created for clipping");
+            println!("\tsegment tasks have been created for clipping: {:?}", clip_task_index);
         }
-        return;
-    }
-
-    if prim_info.clip_chain.needs_mask {
+        clip_task_index
+    } else if prim_info.clip_chain.needs_mask {
         // Get a minimal device space rect, clipped to the screen that we
         // need to allocate for the clip mask, as well as interpolated
         // snap offsets.
-        if let Some(device_rect) = get_clipped_device_rect(
+        let unadjusted_device_rect = match get_clipped_device_rect(
             &unclipped,
             &pic_state.map_raster_to_world,
             prim_info.clipped_world_rect,
             device_pixel_scale,
         ) {
-            let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
+            Some(device_rect) => device_rect,
+            None => return false,
+        };
 
-            let clip_task_id = RenderTask::new_mask(
-                device_rect,
-                prim_info.clip_chain.clips_range,
-                root_spatial_node_index,
-                frame_state.clip_store,
-                frame_state.gpu_cache,
-                frame_state.resource_cache,
-                frame_state.render_tasks,
-                &mut data_stores.clip,
-                device_pixel_scale,
-                frame_context.fb_config,
-            );
-            if instance.is_chased() {
-                println!("\tcreated task {:?} with device rect {:?}",
-                    clip_task_id, device_rect);
-            }
-            // Set the global clip mask instance for this primitive.
-            let clip_task_index = ClipTaskIndex(scratch.clip_mask_instances.len() as _);
-            scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
-            prim_info.clip_task_index = clip_task_index;
-            frame_state.render_tasks.add_dependency(
-                frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
-                clip_task_id,
-            );
+        let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(
+            unadjusted_device_rect,
+            device_pixel_scale,
+        );
+
+        let clip_task_id = RenderTask::new_mask(
+            device_rect,
+            prim_info.clip_chain.clips_range,
+            root_spatial_node_index,
+            frame_state.clip_store,
+            frame_state.gpu_cache,
+            frame_state.resource_cache,
+            frame_state.render_tasks,
+            &mut data_stores.clip,
+            device_pixel_scale,
+            frame_context.fb_config,
+        );
+        if instance.is_chased() {
+            println!("\tcreated task {:?} with device rect {:?}",
+                clip_task_id, device_rect);
         }
-    }
+        // Set the global clip mask instance for this primitive.
+        let clip_task_index = ClipTaskIndex(scratch.clip_mask_instances.len() as _);
+        scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
+        prim_info.clip_task_index = clip_task_index;
+        frame_state.render_tasks.add_dependency(
+            frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
+            clip_task_id,
+        );
+        clip_task_index
+    } else {
+        if instance.is_chased() {
+            println!("\tno mask is needed");
+        }
+        ClipTaskIndex::INVALID
+    };
+
+    true
 }
 
 /// Write out to the clip mask instances array the correct clip mask
@@ -1494,64 +1511,61 @@ pub fn update_brush_segment_clip_task(
     unclipped: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> ClipMaskKind {
-    match clip_chain {
-        Some(clip_chain) => {
-            if !clip_chain.needs_mask ||
-               (!segment.may_need_clip_mask && !clip_chain.has_non_local_clips) {
-                return ClipMaskKind::None;
-            }
-
-            let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect) {
-                Some(rect) => rect,
-                None => return ClipMaskKind::Clipped,
-            };
-
-            let segment_world_rect = match segment_world_rect.intersection(&prim_bounding_rect) {
-                Some(rect) => rect,
-                None => return ClipMaskKind::Clipped,
-            };
-
-            // Get a minimal device space rect, clipped to the screen that we
-            // need to allocate for the clip mask, as well as interpolated
-            // snap offsets.
-            let device_rect = match get_clipped_device_rect(
-                unclipped,
-                &pic_state.map_raster_to_world,
-                segment_world_rect,
-                device_pixel_scale,
-            ) {
-                Some(info) => info,
-                None => {
-                    return ClipMaskKind::Clipped;
-                }
-            };
-
-            let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
-
-            let clip_task_id = RenderTask::new_mask(
-                device_rect,
-                clip_chain.clips_range,
-                root_spatial_node_index,
-                frame_state.clip_store,
-                frame_state.gpu_cache,
-                frame_state.resource_cache,
-                frame_state.render_tasks,
-                clip_data_store,
-                device_pixel_scale,
-                frame_context.fb_config,
-            );
-            let port = frame_state
-                .surfaces[surface_index.0]
-                .render_tasks
-                .unwrap_or_else(|| panic!("bug: no task for surface {:?}", surface_index))
-                .port;
-            frame_state.render_tasks.add_dependency(port, clip_task_id);
-            ClipMaskKind::Mask(clip_task_id)
-        }
-        None => {
-            ClipMaskKind::Clipped
-        }
+    let clip_chain = match clip_chain {
+        Some(chain) => chain,
+        None => return ClipMaskKind::Clipped,
+    };
+    if !clip_chain.needs_mask ||
+       (!segment.may_need_clip_mask && !clip_chain.has_non_local_clips) {
+        return ClipMaskKind::None;
     }
+
+    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect) {
+        Some(rect) => rect,
+        None => return ClipMaskKind::Clipped,
+    };
+
+    let segment_world_rect = match segment_world_rect.intersection(&prim_bounding_rect) {
+        Some(rect) => rect,
+        None => return ClipMaskKind::Clipped,
+    };
+
+    // Get a minimal device space rect, clipped to the screen that we
+    // need to allocate for the clip mask, as well as interpolated
+    // snap offsets.
+    let device_rect = match get_clipped_device_rect(
+        unclipped,
+        &pic_state.map_raster_to_world,
+        segment_world_rect,
+        device_pixel_scale,
+    ) {
+        Some(info) => info,
+        None => {
+            return ClipMaskKind::Clipped;
+        }
+    };
+
+    let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
+
+    let clip_task_id = RenderTask::new_mask(
+        device_rect,
+        clip_chain.clips_range,
+        root_spatial_node_index,
+        frame_state.clip_store,
+        frame_state.gpu_cache,
+        frame_state.resource_cache,
+        frame_state.render_tasks,
+        clip_data_store,
+        device_pixel_scale,
+        frame_context.fb_config,
+    );
+    let port = frame_state
+        .surfaces[surface_index.0]
+        .render_tasks
+        .unwrap_or_else(|| panic!("bug: no task for surface {:?}", surface_index))
+        .port;
+    frame_state.render_tasks.add_dependency(port, clip_task_id);
+    ClipMaskKind::Mask(clip_task_id)
 }
 
 

@@ -27,7 +27,7 @@ use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::RenderTaskAddress;
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
-use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache};
+use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityIndex, PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags};
 use smallvec::SmallVec;
@@ -878,6 +878,9 @@ impl BatchBuilder {
     ) {
         #[cfg(debug_assertions)] //TODO: why is this needed?
         debug_assert_eq!(prim_instance.prepared_frame_id, render_tasks.frame_id());
+
+        assert_ne!(prim_instance.visibility_info, PrimitiveVisibilityIndex::INVALID,
+            "Invisible primitive {:?} shouldn't be added to the batch", prim_instance);
 
         let is_chased = prim_instance.is_chased();
 
@@ -2292,6 +2295,13 @@ impl BatchBuilder {
                 }.encode();
 
                 if image_instance.visible_tiles.is_empty() {
+                    if cfg!(debug_assertions) {
+                        match ctx.resource_cache.get_image_properties(request.key) {
+                            Some(ImageProperties { tiling: None, .. }) => (),
+                            other => panic!("Non-tiled image with no visible images detected! Properties {:?}", other),
+                        }
+                    }
+
                     let cache_item = match image_data.source {
                         ImageSource::Default => {
                             resolve_image(
