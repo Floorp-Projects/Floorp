@@ -68,8 +68,8 @@ describe("WebConsoleWrapper", () => {
       getPrivatePacket("XHR POST request")
     );
 
-    const postId = Symbol();
-    const getId = Symbol();
+    const postId = "pid1";
+    const getId = "gid1";
 
     // Add messages in the store to make sure that update to private requests are
     // removed from the queue.
@@ -94,11 +94,11 @@ describe("WebConsoleWrapper", () => {
       publicNetworkUpdate,
       {
         ...getPrivatePacket("XHR GET request update"),
-        networkInfo: { actor: getId },
+        actor: getId,
       },
       {
         ...getPrivatePacket("XHR POST request update"),
-        networkInfo: { actor: postId },
+        actor: postId,
       }
     );
 

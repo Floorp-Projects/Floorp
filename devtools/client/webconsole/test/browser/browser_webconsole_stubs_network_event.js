@@ -4,6 +4,7 @@
 "use strict";
 
 const {
+  createResourceWatcherForTab,
   STUBS_UPDATE_ENV,
   getStubFile,
   getCleanedPacket,
@@ -62,31 +63,52 @@ add_task(async function() {
 });
 
 async function generateNetworkEventStubs() {
-  const packets = new Map();
-  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  const { ui } = toolbox.getCurrentPanel().hud;
+  const stubs = new Map();
+  const tab = await addTab(TEST_URI);
+  const resourceWatcher = await createResourceWatcherForTab(tab);
+
+  let addNetworkStub = function() {};
+  let addNetworkUpdateStub = function() {};
+
+  const onAvailable = resource => {
+    addNetworkStub(resource);
+  };
+  const onUpdated = resource => {
+    addNetworkUpdateStub(resource);
+  };
+
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+    onAvailable,
+    onUpdated,
+  });
 
   for (const [key, code] of getCommands()) {
-    const consoleFront = await toolbox.target.getFront("console");
-    const onNetwork = consoleFront.once("networkEvent", packet => {
-      packets.set(key, getCleanedPacket(key, packet));
-    });
-
-    const onNetworkUpdate = ui.once("network-message-updated", res => {
-      const updateKey = `${key} update`;
-      // We cannot ensure the form of the network update packet, some properties
-      // might be in another order than in the original packet.
-      // Hand-picking only what we need should prevent this.
-      const packet = {
-        networkInfo: {
-          type: res.networkInfo.type,
-          actor: res.networkInfo.actor,
-          request: res.networkInfo.request,
-          response: res.networkInfo.response,
-          totalTime: res.networkInfo.totalTime,
-        },
+    const noExpectedUpdates = 7;
+    const networkEventDone = new Promise(resolve => {
+      addNetworkStub = ({ resourceType, targetFront, resource }) => {
+        stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
+        resolve();
       };
-      packets.set(updateKey, getCleanedPacket(updateKey, packet));
+    });
+    const networkEventUpdateDone = new Promise(resolve => {
+      let updateCount = 0;
+      addNetworkUpdateStub = ({ resourceType, targetFront, resource }) => {
+        const updateKey = `${key} update`;
+        // make sure all the updates have been happened
+        if (updateCount >= noExpectedUpdates) {
+          stubs.set(
+            updateKey,
+            // We cannot ensure the form of the resource, some properties
+            // might be in another order than in the original resource.
+            // Hand-picking only what we need should prevent this.
+            getCleanedPacket(updateKey, getOrderedResource(resource))
+          );
+
+          resolve();
+        } else {
+          updateCount++;
+        }
+      };
     });
 
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
@@ -100,12 +122,42 @@ async function generateNetworkEventStubs() {
       content.wrappedJSObject.triggerPacket();
       script.remove();
     });
-
-    await Promise.all([onNetwork, onNetworkUpdate]);
+    await Promise.all([networkEventDone, networkEventUpdateDone]);
   }
-
-  await closeTabAndToolbox();
-  return packets;
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+    onAvailable,
+    onUpdated,
+  });
+  return stubs;
+}
+// Ensures the order of the resource properties
+function getOrderedResource(resource) {
+  return {
+    resourceType: resource.resourceType,
+    _type: resource._type,
+    timeStamp: resource.timeStamp,
+    node: resource.node,
+    actor: resource.actor,
+    discardRequestBody: resource.discardRequestBody,
+    discardResponseBody: resource.discardResponseBody,
+    startedDateTime: resource.startedDateTime,
+    request: resource.request,
+    isXHR: resource.isXHR,
+    cause: resource.cause,
+    response: resource.response,
+    timings: resource.timings,
+    private: resource.private,
+    fromCache: resource.fromCache,
+    fromServiceWorker: resource.fromServiceWorker,
+    isThirdPartyTrackingResource: resource.isThirdPartyTrackingResource,
+    referrerPolicy: resource.referrerPolicy,
+    blockedReason: resource.blockedReason,
+    channelId: resource.channelId,
+    updates: resource.updates,
+    updateType: resource.updateType,
+    totalTime: resource.totalTime,
+    securityState: resource.securityState,
+  };
 }
 
 function getCommands() {

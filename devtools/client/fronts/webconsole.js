@@ -32,33 +32,16 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "consoleActor";
-    /**
-     * Holds the network requests currently displayed by the Web Console. Each key
-     * represents the connection ID and the value is network request information.
-     * @private
-     * @type object
-     */
-    this._networkRequests = new Map();
 
     this.pendingEvaluationResults = new Map();
     this.onEvaluationResult = this.onEvaluationResult.bind(this);
-    this.onNetworkEvent = this._onNetworkEvent.bind(this);
-    this.onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
+    this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
 
     this.on("evaluationResult", this.onEvaluationResult);
-    this.on("serverNetworkEvent", this.onNetworkEvent);
     this.before("consoleAPICall", this.beforeConsoleAPICall);
     this.before("pageError", this.beforePageError);
 
-    this._client.on("networkEventUpdate", this.onNetworkEventUpdate);
-  }
-
-  getNetworkRequest(actorId) {
-    return this._networkRequests.get(actorId);
-  }
-
-  getNetworkEvents() {
-    return this._networkRequests.values();
+    this._client.on("networkEventUpdate", this._onNetworkEventUpdate);
   }
 
   get actor() {
@@ -66,111 +49,15 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   /**
-   * The "networkEvent" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string type
-   *        Message type.
-   * @param object packet
-   *        The message received from the server.
-   */
-  _onNetworkEvent(packet) {
-    const actor = packet.eventActor;
-    const networkInfo = {
-      type: "networkEvent",
-      timeStamp: actor.timeStamp,
-      node: null,
-      actor: actor.actor,
-      discardRequestBody: true,
-      discardResponseBody: true,
-      startedDateTime: actor.startedDateTime,
-      request: {
-        url: actor.url,
-        method: actor.method,
-      },
-      isXHR: actor.isXHR,
-      cause: actor.cause,
-      response: {},
-      timings: {},
-      // track the list of network event updates
-      updates: [],
-      private: actor.private,
-      fromCache: actor.fromCache,
-      fromServiceWorker: actor.fromServiceWorker,
-      isThirdPartyTrackingResource: actor.isThirdPartyTrackingResource,
-      referrerPolicy: actor.referrerPolicy,
-      blockedReason: actor.blockedReason,
-      blockingExtension: actor.blockingExtension,
-      channelId: actor.channelId,
-    };
-    this._networkRequests.set(actor.actor, networkInfo);
-
-    this.emit("networkEvent", networkInfo);
-  }
-
-  /**
    * The "networkEventUpdate" message type handler. We redirect any message to
    * the UI for displaying.
    *
    * @private
-   * @param string type
-   *        Message type.
    * @param object packet
    *        The message received from the server.
    */
   _onNetworkEventUpdate(packet) {
-    const networkInfo = this.getNetworkRequest(packet.from);
-    if (!networkInfo) {
-      return;
-    }
-
-    networkInfo.updates.push(packet.updateType);
-
-    switch (packet.updateType) {
-      case "requestHeaders":
-        networkInfo.request.headersSize = packet.headersSize;
-        break;
-      case "requestPostData":
-        networkInfo.discardRequestBody = packet.discardRequestBody;
-        networkInfo.request.bodySize = packet.dataSize;
-        break;
-      case "responseStart":
-        networkInfo.response.httpVersion = packet.response.httpVersion;
-        networkInfo.response.status = packet.response.status;
-        networkInfo.response.statusText = packet.response.statusText;
-        networkInfo.response.headersSize = packet.response.headersSize;
-        networkInfo.response.remoteAddress = packet.response.remoteAddress;
-        networkInfo.response.remotePort = packet.response.remotePort;
-        networkInfo.discardResponseBody = packet.response.discardResponseBody;
-        networkInfo.response.waitingTime = packet.response.waitingTime;
-        networkInfo.response.content = {
-          mimeType: packet.response.mimeType,
-        };
-        break;
-      case "responseContent":
-        networkInfo.response.content = {
-          mimeType: packet.mimeType,
-        };
-        networkInfo.response.bodySize = packet.contentSize;
-        networkInfo.response.transferredSize = packet.transferredSize;
-        networkInfo.discardResponseBody = packet.discardResponseBody;
-        break;
-      case "eventTimings":
-        networkInfo.totalTime = packet.totalTime;
-        break;
-      case "securityInfo":
-        networkInfo.securityState = packet.state;
-        break;
-      case "responseCache":
-        networkInfo.response.responseCache = packet.responseCache;
-        break;
-    }
-
-    this.emit("networkEventUpdate", {
-      packet: packet,
-      networkInfo,
-    });
+    this.emit("serverNetworkUpdateEvent", packet);
   }
 
   /**
@@ -587,13 +474,6 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     }
   }
 
-  clearNetworkRequests() {
-    // Prevent exception if the front has already been destroyed.
-    if (this._networkRequests) {
-      this._networkRequests.clear();
-    }
-  }
-
   /**
    * Close the WebConsoleFront.
    *
@@ -603,18 +483,15 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       return null;
     }
 
-    this._client.off("networkEventUpdate", this.onNetworkEventUpdate);
+    this._client.off("networkEventUpdate", this._onNetworkEventUpdate);
     // This will make future calls to this function harmless because of the early return
     // at the top of the function.
     this._client = null;
 
     this.off("evaluationResult", this.onEvaluationResult);
-    this.off("serverNetworkEvent", this.onNetworkEvent);
     this._longStrings = null;
     this.pendingEvaluationResults.clear();
     this.pendingEvaluationResults = null;
-    this.clearNetworkRequests();
-    this._networkRequests = null;
     return super.destroy();
   }
 }
