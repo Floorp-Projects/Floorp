@@ -35,6 +35,9 @@ add_task(async function testExecuteScript() {
         currentWindow: true,
       });
       let frames = await browser.webNavigation.getAllFrames({ tabId: tab.id });
+      browser.test.assertEq(3, frames.length, "Expect exactly three frames");
+      browser.test.assertEq(0, frames[0].frameId, "Main frame has frameId:0");
+      browser.test.assertTrue(frames[1].frameId > 0, "Subframe has a valid id");
 
       browser.test.log(
         `FRAMES: ${frames[1].frameId} ${JSON.stringify(frames)}\n`
@@ -351,7 +354,7 @@ add_task(async function testExecuteScript() {
             browser.test.assertEq(1, result.length, "Expected one result");
             browser.test.assertTrue(
               /\/file_iframe_document\.html$/.test(result[0]),
-              `Result for frameId[0] is correct: ${result[0]}`
+              `Result for main frame (frameId:0) is correct: ${result[0]}`
             );
           }),
 
