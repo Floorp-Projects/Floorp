@@ -1514,6 +1514,7 @@ add_task(async function formHistory() {
         uri: "http://foo.example.com/",
         title: "foo.example.com",
         heuristic: true,
+        tags: [],
       }),
       makeFormHistoryResult(context, {
         suggestion: "foo",
