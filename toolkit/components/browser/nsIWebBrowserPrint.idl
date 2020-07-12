@@ -68,8 +68,8 @@ interface nsIWebBrowserPrint : nsISupports
    * @param aWPListener - is updated during the print
    * @return void
    */
-  void print(in nsIPrintSettings aThePrintSettings,
-             in nsIWebProgressListener aWPListener);
+  [noscript] void print(in nsIPrintSettings aThePrintSettings,
+                        in nsIWebProgressListener aWPListener);
 
   /**
    * Print Preview the specified DOM window
