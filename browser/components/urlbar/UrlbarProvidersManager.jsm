@@ -35,6 +35,8 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 var localProviderModules = {
   UrlbarProviderUnifiedComplete:
     "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
+  UrlbarProviderHeuristicFallback:
+    "resource:///modules/UrlbarProviderHeuristicFallback.jsm",
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
   UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.jsm",

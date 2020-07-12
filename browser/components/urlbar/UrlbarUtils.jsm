@@ -608,6 +608,28 @@ var UrlbarUtils = {
   },
 
   /**
+   * Strips the prefix from a URL and returns the prefix and the remainder of the
+   * URL.  "Prefix" is defined to be the scheme and colon, plus, if present, two
+   * slashes.  If the given string is not actually a URL, then an empty prefix and
+   * the string itself is returned.
+   *
+   * @param {string} str The possible URL to strip.
+   * @returns {array} If `str` is a URL, then [prefix, remainder].  Otherwise, ["", str].
+   */
+  stripURLPrefix(str) {
+    const REGEXP_STRIP_PREFIX = /^[a-z]+:(?:\/){0,2}/i;
+    let match = REGEXP_STRIP_PREFIX.exec(str);
+    if (!match) {
+      return ["", str];
+    }
+    let prefix = match[0];
+    if (prefix.length < str.length && str[prefix.length] == " ") {
+      return ["", str];
+    }
+    return [prefix, str.substr(prefix.length)];
+  },
+
+  /**
    * Runs a search for the given string, and returns the heuristic result.
    * @param {string} searchString The string to search for.
    * @param {nsIDOMWindow} window The window requesting it.
@@ -1008,7 +1030,7 @@ class UrlbarQueryContext {
    * serializable so they can be sent to extensions.
    */
   get fixupInfo() {
-    if (this.searchString && !this._fixupInfo) {
+    if (this.searchString.trim() && !this._fixupInfo) {
       let flags =
         Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
         Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
@@ -1016,17 +1038,34 @@ class UrlbarQueryContext {
         flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
 
-      let info = Services.uriFixup.getFixupURIInfo(
-        this.searchString.trim(),
-        flags
-      );
-      this._fixupInfo = {
-        href: info.fixedURI.spec,
-        isSearch: !!info.keywordAsSent,
-      };
+      try {
+        let info = Services.uriFixup.getFixupURIInfo(
+          this.searchString.trim(),
+          flags
+        );
+        this._fixupInfo = {
+          href: info.fixedURI.spec,
+          isSearch: !!info.keywordAsSent,
+        };
+      } catch (ex) {
+        this._fixupError = ex.result;
+      }
     }
 
     return this._fixupInfo || null;
+  }
+
+  /**
+   * Returns the error that was thrown when fixupInfo was fetched, if any. If
+   * fixupInfo has not yet been fetched for this queryContext, it is fetched
+   * here.
+   */
+  get fixupError() {
+    if (!this.fixupInfo) {
+      return this._fixupError;
+    }
+
+    return null;
   }
 }
 
