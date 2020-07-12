@@ -337,6 +337,9 @@ async function runTipTests() {
     ),
   ];
 
+  // Ensure the tip appears in the expected position.
+  matches[1].suggestedIndex = 2;
+
   let provider = new TipTestProvider(matches);
   UrlbarProvidersManager.registerProvider(provider);
 
