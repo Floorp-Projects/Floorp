@@ -29,8 +29,10 @@ import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.ThemeManager
@@ -192,11 +194,13 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                 onPositiveButtonClicked = onPositiveButtonClicked
             )
             dialog.show(parentFragmentManager, PERMISSIONS_DIALOG_FRAGMENT_TAG)
+            requireContext().components.analytics.metrics.track(Event.AddonInstalled(addon.id))
         }
     }
 
     private fun showInstallationDialog(addon: Addon) {
         if (!isInstallationInProgress && !hasExistingAddonInstallationDialogFragment()) {
+            requireComponents.analytics.metrics.track(Event.AddonInstalled(addon.id))
             val addonCollectionProvider = requireContext().components.addonCollectionProvider
 
             val dialog = AddonInstallationDialogFragment.newInstance(

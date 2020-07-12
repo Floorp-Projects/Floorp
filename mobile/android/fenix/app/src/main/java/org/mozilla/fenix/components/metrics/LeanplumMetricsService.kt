@@ -38,9 +38,10 @@ private val Event.name: String?
         is Event.ClearedPrivateData -> "E_Cleared_Private_Data"
         is Event.DismissedOnboarding -> "E_Dismissed_Onboarding"
         is Event.FennecToFenixMigrated -> "E_Fennec_To_Fenix_Migrated"
+        is Event.AddonInstalled -> "E_Addon_Installed"
 
         // Do not track other events in Leanplum
-        else -> ""
+        else -> null
     }
 
 class LeanplumMetricsService(private val application: Application) : MetricsService {

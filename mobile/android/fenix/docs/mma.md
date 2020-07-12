@@ -231,6 +231,11 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>The user has just migrated from Fennec to Fenix.</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/8208#issuecomment-584040440">#8208</a></td>
   </tr>
+  <tr>
+    <td>`E_Addon_Installed`</td>
+    <td>The user has installed an addon from the addon management page.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/12136#issuecomment-651922547">#12136</a></td>
+  </tr>
 </table>
 
 Deep links

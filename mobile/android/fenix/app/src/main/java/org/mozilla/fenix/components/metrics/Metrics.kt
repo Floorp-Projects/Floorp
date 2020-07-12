@@ -465,6 +465,8 @@ sealed class Event {
     }
 
     object CrashReporterOpened : Event()
+    data class AddonInstalled(val addonId: String) : Event()
+
     data class CrashReporterClosed(val crashSubmitted: Boolean) : Event() {
         override val extras: Map<CrashReporter.closedKeys, String>?
             get() = mapOf(CrashReporter.closedKeys.crashSubmitted to crashSubmitted.toString())

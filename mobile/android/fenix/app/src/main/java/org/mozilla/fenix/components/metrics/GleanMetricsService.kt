@@ -650,6 +650,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ClearedPrivateData -> null
         is Event.DismissedOnboarding -> null
         is Event.FennecToFenixMigrated -> null
+        is Event.AddonInstalled -> null
     }
 
 class GleanMetricsService(private val context: Context) : MetricsService {
