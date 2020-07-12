@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   DefaultBrowserCheck: "resource:///modules/BrowserGlue.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Log: "resource://gre/modules/Log.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -28,6 +29,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.repository.getLogger("Urlbar.Provider.SearchTips")
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -225,6 +230,7 @@ class ProviderSearchTips extends UrlbarProvider {
    *        query for.
    */
   cancelQuery(queryContext) {
+    logger.info(`Canceling query for ${queryContext.searchString}`);
     this.queries.delete(queryContext);
   }
 

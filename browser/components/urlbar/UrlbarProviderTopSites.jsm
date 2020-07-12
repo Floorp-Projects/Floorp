@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
+  Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -23,6 +24,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TOP_SITES_MAX_SITES_PER_ROW: "resource://activity-stream/common/Reducers.jsm",
   TOP_SITES_DEFAULT_ROWS: "resource://activity-stream/common/Reducers.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.repository.getLogger("Urlbar.Provider.TopSites")
+);
 
 /**
  * This module exports a provider returning the user's newtab Top Sites.
@@ -242,6 +247,7 @@ class ProviderTopSites extends UrlbarProvider {
    *        query for.
    */
   cancelQuery(queryContext) {
+    logger.info(`Canceling query for ${queryContext.searchString}`);
     this.queries.delete(queryContext);
   }
 }
