@@ -44,14 +44,6 @@ var {
   Services.scriptloader.loadSubScript(uri.spec, this);
 }
 
-// Add a lazy getter for common autofill test tasks used by some tests.
-{
-  /* import-globals-from ./autofill_tasks.js */
-  let file = do_get_file("autofill_tasks.js", false);
-  let uri = Services.io.newFileURI(file);
-  XPCOMUtils.defineLazyScriptGetter(this, "addAutofillTasks", uri.spec);
-}
-
 // Put any other stuff relative to this test folder below.
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -275,10 +267,6 @@ async function check_autocomplete(test) {
     };
   });
   let expectedSearches = 1;
-  if (test.incompleteSearch) {
-    controller.startSearch(test.incompleteSearch);
-    expectedSearches++;
-  }
 
   info("Searching for: '" + test.search + "'");
   controller.startSearch(test.search);
