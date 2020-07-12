@@ -9,7 +9,7 @@ use std::path::Path;
 use std::process::Command;
 
 use anyhow::{ensure, Context, Result};
-use fs_extra::dir::{CopyOptions, move_dir};
+use fs_extra::dir::{move_dir, CopyOptions};
 use serde::Deserialize;
 
 mod config;

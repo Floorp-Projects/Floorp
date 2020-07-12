@@ -26,8 +26,13 @@ pub extern "C" fn wr_swgl_make_current(ctx: *mut c_void) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_swgl_init_default_framebuffer(ctx: *mut c_void, width: i32, height: i32,
-                                                   stride: i32, buf: *mut c_void) {
+pub extern "C" fn wr_swgl_init_default_framebuffer(
+    ctx: *mut c_void,
+    width: i32,
+    height: i32,
+    stride: i32,
+    buf: *mut c_void,
+) {
     swgl::Context::from(ctx).init_default_framebuffer(width, height, stride, buf);
 }
 
@@ -325,8 +330,13 @@ impl Compositor for SwCompositor {
             self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, fbo_id);
             self.gl
                 .framebuffer_texture_2d(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, color_id, 0);
-            self.gl
-                .framebuffer_texture_2d(gl::DRAW_FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::TEXTURE_2D, self.depth_id, 0);
+            self.gl.framebuffer_texture_2d(
+                gl::DRAW_FRAMEBUFFER,
+                gl::DEPTH_ATTACHMENT,
+                gl::TEXTURE_2D,
+                self.depth_id,
+                0,
+            );
             self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
 
             let mut tex_id = 0;
