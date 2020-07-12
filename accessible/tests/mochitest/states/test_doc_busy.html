@@ -33,35 +33,61 @@
     }
 
     async function doTest() {
-      EventsLogger.enabled = true;
-      const busyEvents = waitForOrderedEvents([
-        [EVENT_STATE_CHANGE, matchDocBusyChange(true)],
-        [EVENT_STATE_CHANGE, matchDocBusyChange(false)]
-      ]);
+      // Because of variable timing, there are two acceptable possibilities:
+      // 1. We get an event for busy and an event for not busy.
+      // 2. The two events get coalesced, so no events are fired.
+      // However, we fail this test if we get the first event but not the
+      // second.
+      let gotBusy = false;
+      let gotNotBusy = false;
+      // We never actually wait on this; we just check the booleans it sets.
+      // We still need to hold a reference so it doesn't get garbage collected
+      // before it does anything.
+      // eslint-disable-next-line no-unused-vars
+      const busyEvents = async function() {
+        await waitForEvent(EVENT_STATE_CHANGE, matchDocBusyChange(true));
+        info("Got busy event");
+        gotBusy = true;
+        await waitForEvent(EVENT_STATE_CHANGE, matchDocBusyChange(false));
+        info("Got not-busy event");
+        gotNotBusy = true;
+      }();
+
       const downloadPromptOpened = BrowserTestUtils.domWindowOpened(null,
         async win => {
           info("Window opened, waiting for load event");
           await BrowserTestUtils.waitForEvent(win, "load");
-          if (win.location && win.location.href == "about:blank") {
-            info("Loaded about:blank, waiting for real load event");
-            await BrowserTestUtils.waitForEvent(win, "load");
-          }
           info("Window loaded, checking if download prompt");
-          info("Location: " + win.location);
           return win.location &&
             win.location.href == "chrome://mozapps/content/downloads/unknownContentType.xhtml";
         }
       );
+
       info("Clicking link to trigger download");
       synthesizeMouse(getNode("link"), 1, 1, {});
-      info("Waiting for a11y busy events");
-      await busyEvents;
-      EventsLogger.enabled = false;
-
       info("Waiting for download prompt to open");
       const downloadWin = await downloadPromptOpened;
+
+      // Any busy events should have been fired by the time the download
+      // prompt has opened.
+      if (gotBusy && gotNotBusy) {
+        ok(true, "Got both busy change and not-busy change");
+      } else if (!gotBusy && !gotNotBusy) {
+        ok(true, "No busy events, coalesced");
+      } else {
+        ok(false, "Got busy change but didn't get not-busy change!");
+      }
+      testStates(document, 0, 0, STATE_BUSY, 0, "Document not busy");
+
+      // Clean up.
       info("Closing download prompt");
       downloadWin.close();
+      // We might still be waiting on busy events. Remove any pending observers.
+      for (let observer of Services.obs.enumerateObservers(
+        "accessible-event")
+      ) {
+        Services.obs.removeObserver(observer, "accessible-event");
+      }
 
       SimpleTest.finish();
     }
