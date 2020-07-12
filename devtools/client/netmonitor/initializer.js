@@ -79,11 +79,6 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
   (async function() {
     try {
       const target = await targetFromURL(url);
-
-      // Start the network event listening as it is done in the toolbox code
-      const consoleFront = await target.getFront("console");
-      await consoleFront.startListeners(["NetworkActivity"]);
-
       // Create a fake toolbox object
       const toolbox = {
         target,

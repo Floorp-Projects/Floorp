@@ -17,7 +17,6 @@ function enableMessagesCacheClearing(webConsoleUI) {
       state = reducer(state, action);
 
       if (webConsoleUI && action.type === MESSAGES_CLEAR) {
-        webConsoleUI.clearNetworkRequests();
         webConsoleUI.clearMessagesCache();
       }
       return state;

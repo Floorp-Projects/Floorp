@@ -175,7 +175,6 @@ function NetworkEventMessage({
       return serviceContainer.getLongString(grip);
     },
     getTabTarget: () => {},
-    getNetworkRequest: () => {},
     sendHTTPRequest: () => {},
     setPreferences: () => {},
     triggerActivity: () => {},

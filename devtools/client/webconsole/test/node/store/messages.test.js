@@ -881,15 +881,9 @@ describe("Message reducer:", () => {
       let updatePacket = clonePacket(stubPackets.get("GET request update"));
 
       packet.actor = "message1";
-      updatePacket.networkInfo.actor = "message1";
+      updatePacket.actor = "message1";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(
-        actions.networkMessageUpdate(
-          updatePacket.networkInfo,
-          null,
-          updatePacket
-        )
-      );
+      dispatch(actions.networkMessageUpdate(updatePacket, null));
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual(["message1"]);
@@ -897,15 +891,9 @@ describe("Message reducer:", () => {
       packet = clonePacket(stubPackets.get("GET request"));
       updatePacket = stubPackets.get("XHR GET request update");
       packet.actor = "message2";
-      updatePacket.networkInfo.actor = "message2";
+      updatePacket.actor = "message2";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(
-        actions.networkMessageUpdate(
-          updatePacket.networkInfo,
-          null,
-          updatePacket
-        )
-      );
+      dispatch(actions.networkMessageUpdate(updatePacket, null));
 
       networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual(["message1", "message2"]);
@@ -915,13 +903,7 @@ describe("Message reducer:", () => {
       const { dispatch, getState } = setupStore(["XHR GET request"]);
 
       const updatePacket = stubPackets.get("XHR GET request update");
-      dispatch(
-        actions.networkMessageUpdate(
-          updatePacket.networkInfo,
-          null,
-          updatePacket
-        )
-      );
+      dispatch(actions.networkMessageUpdate(updatePacket, null));
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates).length > 0).toBe(true);
@@ -945,37 +927,19 @@ describe("Message reducer:", () => {
         stubPackets.get("XHR GET request update")
       );
       packet.actor = "message1";
-      updatePacket.networkInfo.actor = "message1";
+      updatePacket.actor = "message1";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(
-        actions.networkMessageUpdate(
-          updatePacket.networkInfo,
-          null,
-          updatePacket
-        )
-      );
+      dispatch(actions.networkMessageUpdate(updatePacket, null));
 
       packet.actor = "message2";
-      updatePacket.networkInfo.actor = "message2";
+      updatePacket.actor = "message2";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(
-        actions.networkMessageUpdate(
-          updatePacket.networkInfo,
-          null,
-          updatePacket
-        )
-      );
+      dispatch(actions.networkMessageUpdate(updatePacket, null));
 
       packet.actor = "message3";
-      updatePacket.networkInfo.actor = "message3";
+      updatePacket.actor = "message3";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(
-        actions.networkMessageUpdate(
-          updatePacket.networkInfo,
-          null,
-          updatePacket
-        )
-      );
+      dispatch(actions.networkMessageUpdate(updatePacket, null));
 
       // Check that we have the expected data.
       const messages = getAllMessagesById(getState());
