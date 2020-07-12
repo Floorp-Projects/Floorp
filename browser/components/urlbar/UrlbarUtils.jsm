@@ -651,7 +651,7 @@ var UrlbarUtils = {
         "usercontextid"
       ),
       allowSearchSuggestions: false,
-      providers: ["UnifiedComplete"],
+      providers: ["UnifiedComplete", "HeuristicFallback"],
     });
     await UrlbarProvidersManager.startQuery(context);
     if (!context.heuristicResult) {
@@ -1000,6 +1000,8 @@ class UrlbarQueryContext {
     }
 
     this.lastResultCount = 0;
+    this.allHeuristicResults = [];
+    this.pendingHeuristicProviders = new Set();
     this.userContextId =
       options.userContextId ||
       Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
