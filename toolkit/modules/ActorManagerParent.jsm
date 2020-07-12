@@ -51,6 +51,11 @@ let JSPROCESSACTORS = {
       moduleURI: "resource://gre/modules/ContentPrefServiceChild.jsm",
     },
   },
+  ExtensionContent: {
+    child: {
+      moduleURI: "resource://gre/modules/ExtensionContent.jsm",
+    },
+  },
 };
 
 /**
