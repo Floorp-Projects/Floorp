@@ -1336,16 +1336,6 @@ Search.prototype = {
     this.notifyResult(true, match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC);
   },
 
-  // Ranks a URL prefix from 3 - 0 with the following preferences:
-  // https:// > https://www. > http:// > http://www.
-  // Higher is better.
-  // Returns -1 if the prefix does not match any of the above.
-  _getPrefixRank(prefix) {
-    return ["http://www.", "http://", "https://www.", "https://"].indexOf(
-      prefix
-    );
-  },
-
   /**
    * Check for duplicates and either discard the duplicate or replace the
    * original match, in case the new one is more specific. For example,
@@ -1411,12 +1401,9 @@ Search.prototype = {
         // 1. If the two URLs are the same, dedupe whichever is not the
         //    heuristic result.
         // 2. If they both contain www. or both do not contain it, prefer https.
-        // 3. If they differ by www.:
-        //    3a. If the page titles are different, keep both. This is a guard
-        //        against deduping when www.site.com and site.com have different
-        //        content.
-        //    3b. Otherwise, dedupe based on the priorities in _getPrefixRank.
-        let prefixRank = this._getPrefixRank(prefix);
+        // 3. If they differ by www., send both results to the Muxer and allow
+        //    it to decide based on results from other providers.
+        let prefixRank = UrlbarUtils.getPrefixRank(prefix);
         for (let i = 0; i < this._usedURLs.length; ++i) {
           if (!this._usedURLs[i]) {
             // This is true when the result at [i] is a searchengine result.
@@ -1427,10 +1414,9 @@ Search.prototype = {
             key: existingKey,
             prefix: existingPrefix,
             type: existingType,
-            comment: existingComment,
           } = this._usedURLs[i];
 
-          let existingPrefixRank = this._getPrefixRank(existingPrefix);
+          let existingPrefixRank = UrlbarUtils.getPrefixRank(existingPrefix);
           if (ObjectUtils.deepEqual(existingKey, urlMapKey)) {
             isDupe = true;
 
@@ -1475,25 +1461,12 @@ Search.prototype = {
                 continue;
               }
             } else {
-              // If either result is the heuristic, this will be true and we
-              // will keep both results.
-              if (match.comment != existingComment) {
-                isDupe = false;
-                continue;
-              }
-
-              if (prefixRank <= existingPrefixRank) {
-                break; // Replace match.
-              } else {
-                this._usedURLs[i] = {
-                  key: urlMapKey,
-                  action,
-                  type: match.type,
-                  prefix,
-                  comment: match.comment,
-                };
-                return { index: i, replace: true };
-              }
+              // We have two identical URLs that differ only by www. We need to
+              // be sure what the heuristic result is before deciding how we
+              // should dedupe. We mark these as non-duplicates and let the
+              // muxer handle it.
+              isDupe = false;
+              continue;
             }
           }
         }

@@ -444,6 +444,16 @@ var UrlbarUtils = {
     return [submission.uri.spec, submission.postData];
   },
 
+  // Ranks a URL prefix from 3 - 0 with the following preferences:
+  // https:// > https://www. > http:// > http://www.
+  // Higher is better for the purposes of deduping URLs.
+  // Returns -1 if the prefix does not match any of the above.
+  getPrefixRank(prefix) {
+    return ["http://www.", "http://", "https://www.", "https://"].indexOf(
+      prefix
+    );
+  },
+
   /**
    * Get the number of rows a result should span in the autocomplete dropdown.
    *

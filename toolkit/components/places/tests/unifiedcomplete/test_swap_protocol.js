@@ -31,11 +31,11 @@ add_task(async function test_swap_protocol() {
     { uri: uri8, title: "title" },
   ]);
 
-  // uri1, uri2, and uri5 won't appear since they are duplicates of uri6, except
-  // for their prefixes.
+  // uri1 and uri2 won't appear since they are lower-ranked duplicates of uri6.
   let allMatches = [
     { uri: uri3, title: "title" },
     { uri: uri4, title: "title" },
+    { uri: uri5, title: "title" },
     { uri: uri6, title: "title" },
   ];
 
