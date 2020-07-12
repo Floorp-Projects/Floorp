@@ -578,22 +578,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     nsCOMPtr<nsIPrintingPromptService> pps(
         do_QueryInterface(aWebProgressListener));
     mProgressDialogIsShown = pps != nullptr;
-
-    mIsCreatingPrintPreview = true;
-
-    // ensures docShell tree navigation in frozen
-    SetIsPrintPreview(true);
   } else {
     mProgressDialogIsShown = false;
-
-    // ensures docShell tree navigation in frozen
-    SetIsPrinting(true);
   }
 
   // Grab the new instance with local variable to guarantee that it won't be
   // deleted during this method.
-  mPrt = new nsPrintData(mIsCreatingPrintPreview ? nsPrintData::eIsPrintPreview
-                                                 : nsPrintData::eIsPrinting);
+  mPrt = new nsPrintData(aIsPrintPreview ? nsPrintData::eIsPrintPreview
+                                         : nsPrintData::eIsPrinting);
   RefPtr<nsPrintData> printData = mPrt;
 
   // if they don't pass in a PrintSettings, then get the Global PS
@@ -609,11 +601,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   printData->mPrintSettings->SetIsCancelled(false);
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
-  if (mIsCreatingPrintPreview) {
+  if (aIsPrintPreview) {
     // Our new print preview nsPrintData is stored in mPtr until we move it
     // to mPrtPreview once we've finish creating the print preview. We must
     // clear mPtrPreview so that code will use mPtr until that happens.
     mPrtPreview = nullptr;
+
+    mIsCreatingPrintPreview = true;
+    SetIsPrintPreview(true);
   }
 
   // Create a print session and let the print settings know about it.
@@ -623,7 +618,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // XXX What lifetime does the printSession need to have?
   nsCOMPtr<nsIPrintSession> printSession;
   bool remotePrintJobListening = false;
-  if (!mIsCreatingPrintPreview) {
+  if (!aIsPrintPreview) {
     rv = printData->mPrintSettings->GetPrintSession(
         getter_AddRefs(printSession));
     if (NS_FAILED(rv) || !printSession) {
@@ -667,7 +662,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
     rv = printData->mPrintObject->InitAsRootObject(docShell, aSourceDoc,
-                                                   mIsCreatingPrintPreview);
+                                                   aIsPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
     printData->mPrintDocList.AppendElement(printData->mPrintObject.get());
@@ -688,8 +683,12 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // cause our print/print-preview operation to finish. In this case, we
   // should immediately return an error code so that the root caller knows
   // it shouldn't continue to do anything with this instance.
-  if (mIsDestroying || (mIsCreatingPrintPreview && !mIsCreatingPrintPreview)) {
+  if (mIsDestroying || (aIsPrintPreview && !mIsCreatingPrintPreview)) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (!aIsPrintPreview) {
+    SetIsPrinting(true);
   }
 
   // XXX This isn't really correct...
@@ -719,7 +718,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // because we use that to retrieve the print settings from the printer.
   // The dialog is not shown, but this means we don't need to access the printer
   // driver from the child, which causes sandboxing issues.
-  if (!mIsCreatingPrintPreview || printingViaParent) {
+  if (!aIsPrintPreview || printingViaParent) {
     scriptSuppressor.Suppress();
     bool printSilently = false;
     printData->mPrintSettings->GetPrintSilent(&printSilently);
@@ -738,7 +737,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       if (printPromptService) {
         nsPIDOMWindowOuter* domWin = nullptr;
         // We leave domWin as nullptr to indicate a call for print preview.
-        if (!mIsCreatingPrintPreview) {
+        if (!aIsPrintPreview) {
           domWin = mOriginalDoc->GetWindow();
           NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
 
@@ -765,7 +764,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         rv = printPromptService->ShowPrintDialog(domWin,
                                                  printData->mPrintSettings);
 
-        if (!mIsCreatingPrintPreview) {
+        if (!aIsPrintPreview) {
           if (rv == NS_ERROR_ABORT) {
             // When printing silently we can't get here since the user doesn't
             // have the opportunity to cancel printing.
@@ -795,7 +794,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
           // are telling GFX we want to print silent
           printSilently = true;
 
-          if (printData->mPrintSettings && !mIsCreatingPrintPreview) {
+          if (printData->mPrintSettings && !aIsPrintPreview) {
             // The user might have changed shrink-to-fit in the print dialog, so
             // update our copy of its state
             printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
@@ -831,8 +830,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = devspec->Init(nullptr, printData->mPrintSettings,
-                     mIsCreatingPrintPreview);
+  rv = devspec->Init(nullptr, printData->mPrintSettings, aIsPrintPreview);
   NS_ENSURE_SUCCESS(rv, rv);
 
   printData->mPrintDC = new nsDeviceContext();
@@ -845,7 +843,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         [self](nsresult aResult) { self->PageDone(aResult); });
   }
 
-  if (mIsCreatingPrintPreview) {
+  if (aIsPrintPreview) {
     // override any UI that wants to PrintPreview any selection or page range
     // we want to view every page in PrintPreview each time
     printData->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
@@ -864,7 +862,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   mLoadCounter = 0;
   mDidLoadDataForPrinting = false;
 
-  if (mIsCreatingPrintPreview) {
+  if (aIsPrintPreview) {
     bool notifyOnInit = false;
     ShowPrintProgress(false, notifyOnInit);
 
