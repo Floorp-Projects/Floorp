@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
@@ -26,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  UrlbarUtils.getLogger({ prefix: "ProvidersManager" })
+  Log.repository.getLogger("Urlbar.ProvidersManager")
 );
 
 // List of available local providers, each is implemented in its own jsm module
@@ -34,8 +35,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 var localProviderModules = {
   UrlbarProviderUnifiedComplete:
     "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
-  UrlbarProviderHeuristicFallback:
-    "resource:///modules/UrlbarProviderHeuristicFallback.jsm",
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
   UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.jsm",
@@ -233,7 +232,7 @@ class ProvidersManager {
    * @param {object} queryContext
    */
   cancelQuery(queryContext) {
-    logger.info(`Query cancel "${queryContext.searchString}"`);
+    logger.info(`Query cancel ${queryContext.searchString}`);
     let query = this.queries.get(queryContext);
     if (!query) {
       throw new Error("Couldn't find a matching query for the given context");
@@ -362,21 +361,12 @@ class Query {
     }
 
     // Start querying active providers.
-
     let queryPromises = [];
-    let startQuery = provider => {
-      provider.logger.info(`Starting query for "${this.context.searchString}"`);
-      return provider.tryMethod(
-        "startQuery",
-        this.context,
-        this.add.bind(this)
-      );
-    };
-
     for (let provider of activeProviders) {
       if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
-        this.context.pendingHeuristicProviders.add(provider.name);
-        queryPromises.push(startQuery(provider));
+        queryPromises.push(
+          provider.tryMethod("startQuery", this.context, this.add.bind(this))
+        );
         continue;
       }
       if (!this._sleepTimer) {
@@ -386,13 +376,20 @@ class Query {
         this._sleepTimer = new SkippableTimer({
           name: "Query provider timer",
           time: UrlbarPrefs.get("delay"),
-          logger: provider.logger,
+          logger,
         });
       }
       queryPromises.push(
-        this._sleepTimer.promise.then(() =>
-          this.canceled ? undefined : startQuery(provider)
-        )
+        this._sleepTimer.promise.then(() => {
+          if (this.canceled) {
+            return undefined;
+          }
+          return provider.tryMethod(
+            "startQuery",
+            this.context,
+            this.add.bind(this)
+          );
+        })
       );
     }
 
@@ -418,9 +415,6 @@ class Query {
     }
     this.canceled = true;
     for (let provider of this.providers) {
-      provider.logger.info(
-        `Canceling query for "${this.context.searchString}"`
-      );
       provider.tryMethod("cancelQuery", this.context);
     }
     if (this._chunkTimer) {
@@ -440,29 +434,13 @@ class Query {
     if (!(provider instanceof UrlbarProvider)) {
       throw new Error("Invalid provider passed to the add callback");
     }
-
-    // When this set is empty, we can display heuristic results early. We remove
-    // the provider from the list without checking result.heuristic since
-    // heuristic providers don't necessarily have to return heuristic results.
-    // We expect a provider with type HEURISTIC will return its heuristic
-    // result(s) first.
-    this.context.pendingHeuristicProviders.delete(provider.name);
-
     // Stop returning results as soon as we've been canceled.
     if (this.canceled) {
       return;
     }
-
-    let addResult = true;
-
-    if (!result) {
-      addResult = false;
-    }
-
     // Check if the result source should be filtered out. Pay attention to the
     // heuristic result though, that is supposed to be added regardless.
     if (
-      addResult &&
       !this.acceptableSources.includes(result.source) &&
       !result.heuristic &&
       // Treat form history as searches for the purpose of acceptableSources.
@@ -470,93 +448,51 @@ class Query {
         result.source != UrlbarUtils.RESULT_SOURCE.HISTORY ||
         !this.acceptableSources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
     ) {
-      addResult = false;
+      return;
     }
 
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
     if (
-      addResult &&
       result.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
       result.payload.url &&
       result.payload.url.startsWith("javascript:") &&
       !this.context.searchString.startsWith("javascript:") &&
       UrlbarPrefs.get("filter.javascript")
     ) {
-      addResult = false;
-    }
-
-    // We wait on UnifiedComplete to return a heuristic result. If it has no
-    // heuristic result to return, we still need to sort and display results, so
-    // we follow the usual codepath to muxer.sort. We only offer this for
-    // UnifiedComplete, so we check the provider's name here. This is a stopgap
-    // measure until bug 1648468 lands.
-    if (!addResult) {
-      if (provider.name == "UnifiedComplete") {
-        this._notifyResultsFromProvider(provider);
-      }
       return;
     }
+
     result.providerName = provider.name;
-    result.providerType = provider.type;
     this.context.results.push(result);
     if (result.heuristic) {
-      this.context.allHeuristicResults.push(result);
+      this.context.heuristicResult = result;
     }
 
     this._notifyResultsFromProvider(provider);
   }
 
   _notifyResultsFromProvider(provider) {
-    // We create two chunking timers: one for heuristic results, and one for
-    // other results. We expect heuristic providers to return their heuristic
-    // results before other results/providers in most cases. When all heuristic
-    // providers have returned some results, we fire the heuristic timer early.
-    // If the timer fires first, we stop waiting on the remaining heuristic
-    // providers.
-    // Both timers are used to reduce UI flicker.
+    // If the provider is not of heuristic type, chunk results, to improve the
+    // dataflow and reduce UI flicker.
     if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
-      if (!this._heuristicProviderTimer) {
-        this._heuristicProviderTimer = new SkippableTimer({
-          name: "Heuristic provider timer",
-          callback: () => this._notifyResults(),
-          time: CHUNK_RESULTS_DELAY_MS,
-          logger: provider.logger,
-        });
-      }
+      this._notifyResults();
     } else if (!this._chunkTimer) {
       this._chunkTimer = new SkippableTimer({
         name: "Query chunk timer",
         callback: () => this._notifyResults(),
         time: CHUNK_RESULTS_DELAY_MS,
-        logger: provider.logger,
+        logger,
       });
-    }
-    // If all active heuristic providers have returned results, we can skip the
-    // heuristic results timer and start showing results immediately.
-    if (
-      this._heuristicProviderTimer &&
-      !this.context.pendingHeuristicProviders.size
-    ) {
-      this._heuristicProviderTimer.fire().catch(Cu.reportError);
     }
   }
 
   _notifyResults() {
-    let sorted = this.muxer.sort(this.context);
-
-    if (this._heuristicProviderTimer) {
-      this._heuristicProviderTimer.cancel().catch(Cu.reportError);
-      this._heuristicProviderTimer = null;
-    }
+    this.muxer.sort(this.context);
 
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);
       this._chunkTimer = null;
-    }
-
-    if (!sorted) {
-      return;
     }
 
     // Before the muxer.sort call above, this.context.results should never be
@@ -573,13 +509,13 @@ class Query {
 
     // Crop results to the requested number, taking their result spans into
     // account.
+    logger.debug(
+      `Cropping ${this.context.results.length} results to ${this.context.maxResults}`
+    );
     let resultCount = this.context.maxResults;
     for (let i = 0; i < this.context.results.length; i++) {
       resultCount -= UrlbarUtils.getSpanForResult(this.context.results[i]);
       if (resultCount < 0) {
-        logger.debug(
-          `Splicing results from ${i} to crop results to ${this.context.maxResults}`
-        );
         this.context.results.splice(i, this.context.results.length - i);
         break;
       }
