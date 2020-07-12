@@ -25,15 +25,11 @@ add_task(async function test_tab_matches() {
   await addOpenPages(uri3, 1);
   await addOpenPages(uri4, 1);
 
-  info("two results, normal result is a tab match");
+  info("basic tab match");
   await check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [
-      makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
-      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-      makeSearchMatch("abc.com", { heuristic: false }),
-    ],
+    matches: [makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" })],
   });
 
   info("three results, one tab match");
@@ -41,7 +37,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
       {
         uri: uri2,
@@ -62,7 +57,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
       makeSwitchToTabMatch("http://xyz.net/", {
         title: "xyz.net - we're better than ABC",
@@ -81,7 +75,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
       makeSwitchToTabMatch("http://xyz.net/", {
         title: "xyz.net - we're better than ABC",
@@ -101,7 +94,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions user-context-id:3",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       makeSwitchToTabMatch("http://foobar.org/", {
         title: "foobar.org - much better than ABC, definitely better than XYZ",
       }),
@@ -119,7 +111,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions user-context-id:2",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       { uri: uri1, title: "ABC rocks", style: ["favicon"] },
       {
         uri: uri2,
@@ -142,7 +133,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
       makeSwitchToTabMatch("http://xyz.net/", {
         title: "xyz.net - we're better than ABC",
@@ -160,7 +150,6 @@ add_task(async function test_tab_matches() {
     search: "abc",
     searchParam: "enable-actions disable-private-actions",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       { uri: uri1, title: "ABC rocks", style: ["favicon"] },
       {
         uri: uri2,
@@ -195,13 +184,12 @@ add_task(async function test_tab_matches() {
   });
 
   info("three results, no tab matches");
-  removeOpenPages(uri1, 1);
-  removeOpenPages(uri2, 6);
+  await removeOpenPages(uri1, 1);
+  await removeOpenPages(uri2, 6);
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("abc", { heuristic: true }),
       { uri: uri1, title: "ABC rocks", style: ["favicon"] },
       {
         uri: uri2,
@@ -221,46 +209,28 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
     searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " abc", {
-        heuristic: true,
-        searchQuery: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
-      }),
-      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-    ],
+    matches: [makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" })],
   });
 
   info("tab match with not-addable pages");
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch("mozilla", { heuristic: true }),
-      makeSwitchToTabMatch("about:mozilla"),
-    ],
+    matches: [makeSwitchToTabMatch("about:mozilla")],
   });
 
   info("tab match with not-addable pages, no boundary search");
   await check_autocomplete({
     search: "ut:mo",
     searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch("ut:mo", { heuristic: true }),
-      makeSwitchToTabMatch("about:mozilla"),
-    ],
+    matches: [makeSwitchToTabMatch("about:mozilla")],
   });
 
   info("tab match with not-addable pages and restriction character");
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
     searchParam: "enable-actions",
-    matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla", {
-        heuristic: true,
-        searchQuery: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
-      }),
-      makeSwitchToTabMatch("about:mozilla"),
-    ],
+    matches: [makeSwitchToTabMatch("about:mozilla")],
   });
 
   info("tab match with not-addable pages and only restriction character");
@@ -268,7 +238,6 @@ add_task(async function test_tab_matches() {
     search: UrlbarTokenizer.RESTRICT.OPENPAGE,
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, { heuristic: true }),
       makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
       makeSwitchToTabMatch("about:mozilla"),
       makeSwitchToTabMatch("data:text/html,test"),
@@ -286,11 +255,7 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [
-      makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
-      makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-      makeSearchMatch("abc.com", { heuristic: false }),
-    ],
+    matches: [makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" })],
   });
   await PlacesUtils.bookmarks.remove(bm);
 
