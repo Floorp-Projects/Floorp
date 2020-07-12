@@ -123,8 +123,15 @@ IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
 }
 
 IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
-    const nsresult& aStatus, const nsresult& aLoadGroupStatus) {
-  DisconnectChildListeners(aStatus, aLoadGroupStatus);
+    const nsresult& aStatus, const nsresult& aLoadGroupStatus,
+    bool aSwitchedProcess) {
+  // If this is a normal failure, then we want to disconnect our listeners and
+  // notify them of the failure. If this is a process switch, then we can just
+  // ignore it silently, and trust that the switch will shut down our docshell
+  // and cancel us when it's ready.
+  if (!aSwitchedProcess) {
+    DisconnectChildListeners(aStatus, aLoadGroupStatus);
+  }
   return IPC_OK();
 }
 
