@@ -814,16 +814,14 @@ Search.prototype = {
       // If the heuristic result is an engine from a token alias, the search
       // restriction char, or we're in search-restriction mode, then we're done.
       // UrlbarProviderSearchSuggestions will handle suggestions, if any.
-      let tokenAliasQuery =
-        this._searchEngineAliasMatch &&
-        this._searchEngineAliasMatch.isTokenAlias;
       let emptySearchRestriction =
         this._trimmedOriginalSearchString.length <= 3 &&
         this._leadingRestrictionToken == UrlbarTokenizer.RESTRICT.SEARCH &&
         /\s*\S?$/.test(this._trimmedOriginalSearchString);
       if (
         emptySearchRestriction ||
-        tokenAliasQuery ||
+        (tokenAliasEngines &&
+          this._trimmedOriginalSearchString.startsWith("@")) ||
         (this.hasBehavior("search") && this.hasBehavior("restrict"))
       ) {
         this._autocompleteSearch.finishSearch(true);
@@ -1000,60 +998,6 @@ Search.prototype = {
     return true;
   },
 
-  async _matchSearchEngineTokenAliasForAutofill() {
-    // We need an "@engine" heuristic token.
-    let token = this._heuristicToken;
-    if (!token || token.length == 1 || !token.startsWith("@")) {
-      return false;
-    }
-
-    // See if any engine has a token alias that starts with the heuristic token.
-    let engines = await UrlbarSearchUtils.tokenAliasEngines();
-    for (let { engine, tokenAliases } of engines) {
-      for (let alias of tokenAliases) {
-        if (alias.startsWith(token.toLocaleLowerCase())) {
-          // We found one.  The match we add here is a little special compared
-          // to others.  It needs to be an autofill match and its `value` must
-          // be the string that will be autofilled so that the controller will
-          // autofill it.  But it also must be a searchengine action so that the
-          // front end will style it as a search engine result.  The front end
-          // uses `finalCompleteValue` as the URL for autofill results, so set
-          // that to the moz-action URL.
-          let aliasPreservingUserCase = token + alias.substr(token.length);
-          let value = aliasPreservingUserCase + " ";
-          this._result.setDefaultIndex(0);
-          this._addMatch({
-            value,
-            finalCompleteValue: makeActionUrl("searchengine", {
-              engineName: engine.name,
-              alias: aliasPreservingUserCase,
-              input: value,
-              searchQuery: "",
-            }),
-            comment: engine.name,
-            frecency: FRECENCY_DEFAULT,
-            style: "autofill action searchengine",
-            icon: engine.iconURI ? engine.iconURI.spec : null,
-          });
-
-          // Set _searchEngineAliasMatch with an empty query so that we don't
-          // attempt to add any more matches.  When a token alias is autofilled,
-          // the only match should be the one we just added.
-          this._searchEngineAliasMatch = {
-            engine,
-            alias: aliasPreservingUserCase,
-            query: "",
-            isTokenAlias: true,
-          };
-
-          return true;
-        }
-      }
-    }
-
-    return false;
-  },
-
   async _matchFirstHeuristicResult(conn) {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
@@ -1078,13 +1022,6 @@ Search.prototype = {
 
     if (this.pending && shouldAutofill) {
       let matched = this._matchPreloadedSiteForAutofill();
-      if (matched) {
-        return true;
-      }
-    }
-
-    if (this.pending && shouldAutofill) {
-      let matched = await this._matchSearchEngineTokenAliasForAutofill();
       if (matched) {
         return true;
       }
