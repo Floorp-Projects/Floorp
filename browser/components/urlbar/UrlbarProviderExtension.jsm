@@ -286,7 +286,6 @@ class UrlbarProviderExtension extends UrlbarProvider {
         name: "UrlbarProviderExtension notification timer",
         time: UrlbarProviderExtension.notificationTimeout,
         reportErrorOnTimeout: true,
-        logger: this.logger,
       });
       result = await Promise.race([
         timer.promise,
