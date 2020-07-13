@@ -29,5 +29,6 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromAddSearchEngineFragment(R.id.addSearchEngineFragment),
     FromEditCustomSearchEngineFragment(R.id.editCustomSearchEngineFragment),
     FromAddonDetailsFragment(R.id.addonDetailsFragment),
+    FromAddonPermissionsDetailsFragment(R.id.addonPermissionsDetailFragment),
     FromLoginDetailFragment(R.id.loginDetailFragment)
 }

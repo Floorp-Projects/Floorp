@@ -4,61 +4,36 @@
 
 package org.mozilla.fenix.addons
 
-import android.content.Intent
-import android.content.Intent.ACTION_VIEW
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import androidx.annotation.StringRes
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.fragment_add_on_permissions.view.*
-import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.ui.AddonPermissionsAdapter
 import mozilla.components.feature.addons.ui.translatedName
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.theme.ThemeManager
-
-private const val LEARN_MORE_URL =
-    "https://support.mozilla.org/kb/permission-request-messages-firefox-extensions"
 
 /**
  * A fragment to show the permissions of an add-on.
  */
-class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permissions) {
+class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permissions),
+    AddonPermissionsDetailsInteractor {
 
     private val args by navArgs<AddonPermissionsDetailsFragmentArgs>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         showToolbar(args.addon.translatedName)
-
-        bindPermissions(args.addon, view)
-        bindLearnMore(view)
+        AddonPermissionsDetailsView(view, interactor = this).bind(args.addon)
     }
 
-    private fun bindPermissions(addon: Addon, view: View) {
-        view.add_ons_permissions.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            val sortedPermissions = addon.translatePermissions().map {
-                @StringRes val stringId = it
-                getString(stringId)
-            }.sorted()
-            adapter = AddonPermissionsAdapter(
-                sortedPermissions,
-                style = AddonPermissionsAdapter.Style(
-                    ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
-                )
-            )
-        }
-    }
-
-    private fun bindLearnMore(view: View) {
-        view.learn_more_label.setOnClickListener {
-            val intent = Intent(ACTION_VIEW, LEARN_MORE_URL.toUri())
-            startActivity(intent)
-        }
+    override fun openWebsite(addonSiteUrl: Uri) {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = addonSiteUrl.toString(),
+            newTab = true,
+            from = BrowserDirection.FromAddonPermissionsDetailsFragment
+        )
     }
 }

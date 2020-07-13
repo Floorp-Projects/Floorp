@@ -56,6 +56,7 @@ import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
+import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
 import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -514,6 +515,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             EditCustomSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromAddonDetailsFragment ->
             AddonDetailsFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromAddonPermissionsDetailsFragment ->
+            AddonPermissionsDetailsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromLoginDetailFragment ->
             LoginDetailFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
