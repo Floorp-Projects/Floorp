@@ -75,89 +75,6 @@ bool SharedMemory::IsValid() const { return mapped_file_ >= 0; }
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
 
-// Workaround for CVE-2018-4435 (https://crbug.com/project-zero/1671);
-// can be removed when minimum OS version is at least 10.12.
-#ifdef OS_MACOSX
-static const char* GetTmpDir() {
-  static const char* const kTmpDir = [] {
-    const char* tmpdir = PR_GetEnv("TMPDIR");
-    if (tmpdir) {
-      return tmpdir;
-    }
-    return "/tmp";
-  }();
-  return kTmpDir;
-}
-
-static int FakeShmOpen(const char* name, int oflag, int mode) {
-  CHECK(name[0] == '/');
-  std::string path(GetTmpDir());
-  path += name;
-  return open(path.c_str(), oflag | O_CLOEXEC | O_NOCTTY, mode);
-}
-
-static int FakeShmUnlink(const char* name) {
-  CHECK(name[0] == '/');
-  std::string path(GetTmpDir());
-  path += name;
-  return unlink(path.c_str());
-}
-
-static bool IsShmOpenSecure() {
-  static const bool kIsSecure = [] {
-    mozilla::UniqueFileHandle rwfd, rofd;
-    std::string name;
-    CHECK(SharedMemory::AppendPosixShmPrefix(&name, getpid()));
-    name += "sectest";
-    // The prefix includes the pid and this will be called at most
-    // once per process, so no need for a counter.
-    rwfd.reset(
-        HANDLE_EINTR(shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600)));
-    // An adversary could steal the name.  Handle this semi-gracefully.
-    DCHECK(rwfd);
-    if (!rwfd) {
-      return false;
-    }
-    rofd.reset(shm_open(name.c_str(), O_RDONLY, 0400));
-    CHECK(rofd);
-    CHECK(shm_unlink(name.c_str()) == 0);
-    CHECK(ftruncate(rwfd.get(), 1) == 0);
-    rwfd = nullptr;
-    void* map = mmap(nullptr, 1, PROT_READ, MAP_SHARED, rofd.get(), 0);
-    CHECK(map != MAP_FAILED);
-    bool ok = mprotect(map, 1, PROT_READ | PROT_WRITE) != 0;
-    munmap(map, 1);
-    return ok;
-  }();
-  return kIsSecure;
-}
-
-static int SafeShmOpen(bool freezeable, const char* name, int oflag, int mode) {
-  if (!freezeable || IsShmOpenSecure()) {
-    return shm_open(name, oflag, mode);
-  } else {
-    return FakeShmOpen(name, oflag, mode);
-  }
-}
-
-static int SafeShmUnlink(bool freezeable, const char* name) {
-  if (!freezeable || IsShmOpenSecure()) {
-    return shm_unlink(name);
-  } else {
-    return FakeShmUnlink(name);
-  }
-}
-
-#elif !defined(ANDROID)
-static int SafeShmOpen(bool freezeable, const char* name, int oflag, int mode) {
-  return shm_open(name, oflag, mode);
-}
-
-static int SafeShmUnlink(bool freezeable, const char* name) {
-  return shm_unlink(name);
-}
-#endif
-
 // static
 bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
 #if defined(ANDROID)
@@ -218,21 +135,20 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
     CHECK(AppendPosixShmPrefix(&name, getpid()));
     StringAppendF(&name, "%zu", sNameCounter++);
     // O_EXCL means the names being predictable shouldn't be a problem.
-    fd.reset(HANDLE_EINTR(SafeShmOpen(freezeable, name.c_str(),
-                                      O_RDWR | O_CREAT | O_EXCL, 0600)));
+    fd.reset(
+        HANDLE_EINTR(shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600)));
     if (fd) {
       if (freezeable) {
-        frozen_fd.reset(HANDLE_EINTR(
-            SafeShmOpen(freezeable, name.c_str(), O_RDONLY, 0400)));
+        frozen_fd.reset(HANDLE_EINTR(shm_open(name.c_str(), O_RDONLY, 0400)));
         if (!frozen_fd) {
           int open_err = errno;
-          SafeShmUnlink(freezeable, name.c_str());
+          shm_unlink(name.c_str());
           DLOG(FATAL) << "failed to re-open freezeable shm: "
                       << strerror(open_err);
           return false;
         }
       }
-      if (SafeShmUnlink(freezeable, name.c_str()) != 0) {
+      if (shm_unlink(name.c_str()) != 0) {
         // This shouldn't happen, but if it does: assume the file is
         // in fact leaked, and bail out now while it's still 0-length.
         DLOG(FATAL) << "failed to unlink shm: " << strerror(errno);
