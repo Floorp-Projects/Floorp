@@ -10,4 +10,4 @@ export CI_BUILD_URL="https://tools.taskcluster.net/tasks/$TASK_ID"
 
 # Execute codecov script for uploading report
 # bash <(curl -s https://codecov.io/bash)
-bash <(curl -s https://codecov.io/bash) -t @.cc_token
+bash automation/taskcluster/.codecov -t @.cc_token

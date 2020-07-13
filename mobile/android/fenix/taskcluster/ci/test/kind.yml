@@ -45,8 +45,8 @@ jobs:
                 - '-Pcoverage'
                 - 'jacocoGeckoNightlyDebugTestReport'
                 - 'githubTestDetails'
-#            post-gradlew:
-#                - ['automation/taskcluster/upload_coverage_report.sh']
+            post-gradlew:
+                - ['automation/taskcluster/upload_coverage_report.sh']
             secrets:
                 - name: project/mobile/fenix/public-tokens
                   key: codecov
