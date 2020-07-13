@@ -25,10 +25,6 @@ html[dir="rtl"] .command-bar {
   margin-inline-end: 4px;
 }
 
-.command-bar .active .disable-pausing {
-  background-color: var(--theme-icon-checked-color);
-}
-
 .command-bar .divider {
   width: 1px;
   background: var(--theme-splitter-color);
