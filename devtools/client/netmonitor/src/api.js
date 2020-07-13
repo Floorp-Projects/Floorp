@@ -111,7 +111,7 @@ NetMonitorAPI.prototype = {
    * Support for `devtools.network.onRequestFinished`. A hook for
    * every finished HTTP request used by WebExtensions API.
    */
-  async onPayloadReady(requestId) {
+  async onPayloadReady(resource) {
     if (!this._requestFinishedListeners.size) {
       return;
     }
@@ -121,9 +121,12 @@ NetMonitorAPI.prototype = {
     } = require("devtools/client/netmonitor/src/har/har-exporter");
 
     const connector = await this.getHarExportConnector();
-    const request = getDisplayedRequestById(this.store.getState(), requestId);
+    const request = getDisplayedRequestById(
+      this.store.getState(),
+      resource.actor
+    );
     if (!request) {
-      console.error("HAR: request not found " + requestId);
+      console.error("HAR: request not found " + resource.actor);
       return;
     }
 
@@ -142,7 +145,7 @@ NetMonitorAPI.prototype = {
     this._requestFinishedListeners.forEach(listener =>
       listener({
         harEntry,
-        requestId,
+        requestId: resource.actor,
       })
     );
   },

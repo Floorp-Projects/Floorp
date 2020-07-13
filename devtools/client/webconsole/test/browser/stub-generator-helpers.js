@@ -209,8 +209,8 @@ function getCleanedPacket(key, packet) {
 
   if (res.eventActor) {
     // Clean actor ids and startedDateTime on network messages.
-    res.eventActor.actor = existingPacket.eventActor.actor;
-    res.eventActor.startedDateTime = existingPacket.eventActor.startedDateTime;
+    res.eventActor.actor = existingPacket.actor;
+    res.eventActor.startedDateTime = existingPacket.startedDateTime;
   }
 
   if (res.pageError) {
@@ -288,54 +288,37 @@ function getCleanedPacket(key, packet) {
     res.packet = Object.assign({}, res.packet, override);
   }
 
-  if (res.networkInfo) {
-    if (res.networkInfo.startedDateTime) {
-      res.networkInfo.startedDateTime =
-        existingPacket.networkInfo.startedDateTime;
-    }
+  if (res.startedDateTime) {
+    res.startedDateTime = existingPacket.startedDateTime;
+  }
 
-    if (res.networkInfo.totalTime) {
-      res.networkInfo.totalTime = existingPacket.networkInfo.totalTime;
-    }
+  if (res.totalTime && existingPacket.totalTime) {
+    res.totalTime = existingPacket.totalTime;
+  }
 
-    if (res.networkInfo.actor) {
-      res.networkInfo.actor = existingPacket.networkInfo.actor;
-    }
+  if (res.actor && existingPacket.actor) {
+    res.actor = existingPacket.actor;
+  }
 
-    if (res.networkInfo.request && res.networkInfo.request.headersSize) {
-      res.networkInfo.request.headersSize =
-        existingPacket.networkInfo.request.headersSize;
-    }
+  if (res?.request?.headersSize && existingPacket?.request?.headersSize) {
+    res.request.headersSize = existingPacket.request.headersSize;
+  }
 
-    if (
-      res.networkInfo.response &&
-      res.networkInfo.response.headersSize !== undefined
-    ) {
-      res.networkInfo.response.headersSize =
-        existingPacket.networkInfo.response.headersSize;
-    }
-    if (
-      res.networkInfo.response &&
-      res.networkInfo.response.bodySize !== undefined
-    ) {
-      res.networkInfo.response.bodySize =
-        existingPacket.networkInfo.response.bodySize;
-    }
-    if (
-      res.networkInfo.response &&
-      res.networkInfo.response.transferredSize !== undefined
-    ) {
-      res.networkInfo.response.transferredSize =
-        existingPacket.networkInfo.response.transferredSize;
-    }
+  if (res?.response?.headersSize && existingPacket?.response?.headersSize) {
+    res.response.headersSize = existingPacket.response.headersSize;
+  }
+  if (res?.response?.bodySize && existingPacket?.response?.bodySize) {
+    res.response.bodySize = existingPacket.response.bodySize;
+  }
+  if (
+    res?.response?.transferredSize &&
+    existingPacket?.response?.transferredSize
+  ) {
+    res.response.transferredSize = existingPacket.response.transferredSize;
+  }
 
-    if (
-      res.networkInfo.response &&
-      res.networkInfo.response.waitingTime !== undefined
-    ) {
-      res.networkInfo.response.waitingTime =
-        existingPacket.networkInfo.response.waitingTime;
-    }
+  if (res?.response?.waitingTime && existingPacket?.response?.waitingTime) {
+    res.response.waitingTime = existingPacket.response.waitingTime;
   }
 
   if (res.updates && Array.isArray(res.updates)) {
@@ -348,7 +331,6 @@ function getCleanedPacket(key, packet) {
       existingPacket.helperResult.object
     );
   }
-
   return res;
 }
 
@@ -356,11 +338,12 @@ function cleanTimeStamp(packet) {
   // We want to have the same timestamp for every stub, so they won't be re-sorted when
   // adding them to the store.
   const uniqueTimeStamp = 1572867483805;
-
+  // lowercased timestamp
   if (packet.timestamp) {
     packet.timestamp = uniqueTimeStamp;
   }
 
+  // camelcased timestamp
   if (packet.timeStamp) {
     packet.timeStamp = uniqueTimeStamp;
   }
@@ -391,10 +374,6 @@ function cleanTimeStamp(packet) {
 
   if (packet?.pageError?.timeStamp) {
     packet.pageError.timeStamp = uniqueTimeStamp;
-  }
-
-  if (packet?.networkInfo?.timeStamp) {
-    packet.networkInfo.timeStamp = uniqueTimeStamp;
   }
 }
 
@@ -462,9 +441,7 @@ const stubPackets = parsePacketsWithFronts(rawPackets);
 
 const stubPreparedMessages = new Map();
 for (const [key, packet] of Array.from(stubPackets.entries())) {
-  const transformedPacket = prepareMessage(${
-    isNetworkMessage ? "packet.networkInfo || packet" : "packet"
-  }, {
+  const transformedPacket = prepareMessage(${"packet"}, {
     getNextId: () => "1",
   });
   const message = ${
