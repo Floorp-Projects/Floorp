@@ -519,12 +519,6 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
   JSContext* cx = compilationInfo.cx;
 
-  Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
-  if (!module) {
-    return nullptr;
-  }
-  compilationInfo.module = module;
-
   ModuleBuilder builder(cx, parser.ptr());
   StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
 
@@ -554,17 +548,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   MOZ_ASSERT(compilationInfo.script);
-
-  if (!moduleMetadata.initModule(cx, module)) {
-    return nullptr;
-  }
-
-  module->initScriptSlots(compilationInfo.script);
-  module->initStatusSlot();
-
-  if (!ModuleObject::createEnvironment(cx, module)) {
-    return nullptr;
-  }
+  MOZ_ASSERT(compilationInfo.module);
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
@@ -572,7 +556,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
-  return module;
+  return compilationInfo.module;
 }
 
 // Parse a standalone JS function, which might appear as the value of an
