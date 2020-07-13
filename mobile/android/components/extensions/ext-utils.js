@@ -134,6 +134,16 @@ class WindowTracker extends WindowTrackerBase {
     this.progressListeners = new DefaultWeakMap(() => new WeakMap());
   }
 
+  getCurrentWindow(context) {
+    // In GeckoView the popup is on a separate window so getCurrentWindow for
+    // the popup should return whatever is the topWindow.
+    // TODO: Bug 1651506 use context?.viewType === "popup" instead
+    if (context?.currentWindow?.moduleManager.settings.isPopup) {
+      return this.topWindow;
+    }
+    return super.getCurrentWindow(context);
+  }
+
   get topWindow() {
     return mobileWindowTracker.topWindow;
   }
@@ -459,6 +469,16 @@ class TabContext extends EventEmitter {
 class Window extends WindowBase {
   get focused() {
     return this.window.document.hasFocus();
+  }
+
+  isCurrentFor(context) {
+    // In GeckoView the popup is on a separate window so the current window for
+    // the popup is whatever is the topWindow.
+    // TODO: Bug 1651506 use context?.viewType === "popup" instead
+    if (context?.currentWindow?.moduleManager.settings.isPopup) {
+      return mobileWindowTracker.topWindow == this.window;
+    }
+    return super.isCurrentFor(context);
   }
 
   get top() {
