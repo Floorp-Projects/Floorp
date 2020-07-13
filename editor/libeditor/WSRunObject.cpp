@@ -225,8 +225,9 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
           // We are at start of non-nbsps.  Convert to a single nbsp.
           EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
               GetEndOfCollapsibleASCIIWhiteSpaces(atNextCharOfInsertionPoint);
-          nsresult rv = ReplaceASCIIWhiteSpacesWithOneNBSP(
-              atNextCharOfInsertionPoint, endOfCollapsibleASCIIWhiteSpaces);
+          nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+              MOZ_KnownLive(mHTMLEditor), atNextCharOfInsertionPoint,
+              endOfCollapsibleASCIIWhiteSpaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
@@ -1367,8 +1368,9 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
           }
           EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
               GetEndOfCollapsibleASCIIWhiteSpaces(nextCharOfStartOfEnd);
-          nsresult rv = aEndObject->ReplaceASCIIWhiteSpacesWithOneNBSP(
-              nextCharOfStartOfEnd, endOfCollapsibleASCIIWhiteSpaces);
+          nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+              MOZ_KnownLive(mHTMLEditor), nextCharOfStartOfEnd,
+              endOfCollapsibleASCIIWhiteSpaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
@@ -1427,8 +1429,9 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
         }
         EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
             GetEndOfCollapsibleASCIIWhiteSpaces(atPreviousCharOfStart);
-        nsresult rv = ReplaceASCIIWhiteSpacesWithOneNBSP(
-            atPreviousCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+        nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+            MOZ_KnownLive(mHTMLEditor), atPreviousCharOfStart,
+            endOfCollapsibleASCIIWhiteSpaces);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
@@ -1476,8 +1479,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
       }
       EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
           GetEndOfCollapsibleASCIIWhiteSpaces(atNextCharOfStart);
-      nsresult rv = ReplaceASCIIWhiteSpacesWithOneNBSP(
-          atNextCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+      nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+          MOZ_KnownLive(mHTMLEditor), atNextCharOfStart,
+          endOfCollapsibleASCIIWhiteSpaces);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
         return rv;
@@ -1502,8 +1506,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
       }
       EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
           GetEndOfCollapsibleASCIIWhiteSpaces(atPreviousCharOfStart);
-      nsresult rv = ReplaceASCIIWhiteSpacesWithOneNBSP(
-          atPreviousCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+      nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+          MOZ_KnownLive(mHTMLEditor), atPreviousCharOfStart,
+          endOfCollapsibleASCIIWhiteSpaces);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
         return rv;
@@ -1797,7 +1802,9 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
   }
 }
 
+// static
 nsresult WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+    HTMLEditor& aHTMLEditor,
     const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
     const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces) {
   MOZ_ASSERT(aAtFirstASCIIWhiteSpace.IsSetAndValid());
@@ -1807,19 +1814,17 @@ nsresult WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
   MOZ_ASSERT(aEndOfCollapsibleASCIIWhiteSpaces.IsEndOfContainer() ||
              !aEndOfCollapsibleASCIIWhiteSpaces.IsCharASCIISpace());
 
-  AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  nsresult rv =
-      MOZ_KnownLive(mHTMLEditor)
-          .ReplaceTextWithTransaction(
-              MOZ_KnownLive(*aAtFirstASCIIWhiteSpace.ContainerAsText()),
-              aAtFirstASCIIWhiteSpace.Offset(),
-              aAtFirstASCIIWhiteSpace.ContainerAsText() ==
-                      aEndOfCollapsibleASCIIWhiteSpaces.ContainerAsText()
-                  ? aEndOfCollapsibleASCIIWhiteSpaces.Offset() -
-                        aAtFirstASCIIWhiteSpace.Offset()
-                  : aAtFirstASCIIWhiteSpace.ContainerAsText()->TextLength() -
-                        aAtFirstASCIIWhiteSpace.Offset(),
-              nsDependentSubstring(&kNBSP, 1));
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
+  nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
+      MOZ_KnownLive(*aAtFirstASCIIWhiteSpace.ContainerAsText()),
+      aAtFirstASCIIWhiteSpace.Offset(),
+      aAtFirstASCIIWhiteSpace.ContainerAsText() ==
+              aEndOfCollapsibleASCIIWhiteSpaces.ContainerAsText()
+          ? aEndOfCollapsibleASCIIWhiteSpaces.Offset() -
+                aAtFirstASCIIWhiteSpace.Offset()
+          : aAtFirstASCIIWhiteSpace.ContainerAsText()->TextLength() -
+                aAtFirstASCIIWhiteSpace.Offset(),
+      nsDependentSubstring(&kNBSP, 1));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
     return rv;
@@ -1832,11 +1837,9 @@ nsresult WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
 
   // We need to remove the following unnecessary ASCII white-spaces because we
   // collapsed them into the start node.
-  rv = MOZ_KnownLive(mHTMLEditor)
-           .DeleteTextAndTextNodesWithTransaction(
-               EditorDOMPointInText::AtEndOf(
-                   *aAtFirstASCIIWhiteSpace.ContainerAsText()),
-               aEndOfCollapsibleASCIIWhiteSpaces);
+  rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+      EditorDOMPointInText::AtEndOf(*aAtFirstASCIIWhiteSpace.ContainerAsText()),
+      aEndOfCollapsibleASCIIWhiteSpaces);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
