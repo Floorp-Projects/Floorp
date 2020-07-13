@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -15,34 +12,41 @@
     android:focusable="true"
     android:minHeight="?android:attr/listPreferredItemHeight">
 
-    <ImageView
-        android:id="@+id/favicon_image"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+    <FrameLayout
+        android:id="@+id/favicon_wrapper"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="4dp"
         android:layout_marginStart="16dp"
-        android:adjustViewBounds="true"
-        android:importantForAccessibility="no"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
+        android:background="@drawable/top_sites_background"
+        android:layout_gravity="center"
+        android:importantForAccessibility="noHideDescendants"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <ImageView
+            android:id="@+id/favicon_image"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/webAddressView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_weight="1"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="48dp"
         android:ellipsize="middle"
-        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:textColor="?primaryText"
         app:layout_constraintBottom_toTopOf="@id/usernameView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/favicon_image"
+        app:layout_constraintStart_toEndOf="@+id/favicon_wrapper"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />
@@ -51,16 +55,14 @@
         android:id="@+id/usernameView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_weight="1"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="48dp"
         android:ellipsize="middle"
-        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
         android:singleLine="true"
         android:textColor="?secondaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/favicon_image"
+        app:layout_constraintStart_toEndOf="@+id/favicon_wrapper"
         app:layout_constraintTop_toBottomOf="@id/webAddressView"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />
