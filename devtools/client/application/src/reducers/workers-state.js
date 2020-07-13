@@ -5,6 +5,8 @@
 "use strict";
 
 const {
+  START_WORKER,
+  UNREGISTER_WORKER,
   UPDATE_CAN_DEBUG_WORKERS,
   UPDATE_WORKERS,
 } = require("devtools/client/application/src/constants");
@@ -47,6 +49,11 @@ function workersReducer(state = WorkersState(), action) {
         list: workers.map(buildWorkerDataFromFronts).flat(),
       });
     }
+    // these actions don't change the state, but get picked up by the
+    // telemetry middleware
+    case START_WORKER:
+    case UNREGISTER_WORKER:
+      return state;
     default:
       return state;
   }
