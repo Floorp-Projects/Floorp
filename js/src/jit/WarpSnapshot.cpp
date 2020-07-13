@@ -24,9 +24,9 @@ static_assert(!std::is_polymorphic_v<WarpOpSnapshot>,
               "WarpOpSnapshot should not have any virtual methods");
 
 WarpSnapshot::WarpSnapshot(JSContext* cx, TempAllocator& alloc,
-                           WarpScriptSnapshot* script,
+                           WarpScriptSnapshotList&& scriptSnapshots,
                            const WarpBailoutInfo& bailoutInfo)
-    : script_(script),
+    : scriptSnapshots_(std::move(scriptSnapshots)),
       globalLexicalEnv_(&cx->global()->lexicalEnvironment()),
       globalLexicalEnvThis_(globalLexicalEnv_->thisObject()),
       bailoutInfo_(bailoutInfo),
@@ -68,10 +68,14 @@ void WarpSnapshot::dump(GenericPrinter& out) const {
   }
   out.printf("\n");
 
-  script_->dump(out);
+  for (auto* scriptSnapshot : scriptSnapshots_) {
+    scriptSnapshot->dump(out);
+  }
 }
 
 void WarpScriptSnapshot::dump(GenericPrinter& out) const {
+  out.printf("WarpScriptSnapshot (0x%p)\n", this);
+  out.printf("------------------------------\n");
   out.printf("Script: %s:%u:%u (0x%p)\n", script_->filename(),
              script_->lineno(), script_->column(),
              static_cast<JSScript*>(script_));
@@ -189,7 +193,9 @@ static void TraceWarpGCPtr(JSTracer* trc, WarpGCPtr<T>& thing,
 }
 
 void WarpSnapshot::trace(JSTracer* trc) {
-  script_->trace(trc);
+  for (auto* script : scriptSnapshots_) {
+    script->trace(trc);
+  }
   TraceWarpGCPtr(trc, globalLexicalEnv_, "warp-lexical");
   TraceWarpGCPtr(trc, globalLexicalEnvThis_, "warp-lexicalthis");
 

@@ -103,6 +103,7 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   WarpCompilation* warpCompilation_;
   MIRGraph& graph_;
   const CompileInfo& info_;
+  const WarpScriptSnapshot* scriptSnapshot_;
   JSScript* script_;
 
   // Pointer to a WarpOpSnapshot or nullptr if we reached the end of the list.
@@ -118,6 +119,7 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
+  const WarpScriptSnapshot* scriptSnapshot() const { return scriptSnapshot_; }
 
   uint32_t loopDepth() const { return warpCompilation_->loopDepth(); }
   void incLoopDepth() { warpCompilation_->incLoopDepth(); }

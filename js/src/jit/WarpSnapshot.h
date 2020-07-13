@@ -428,7 +428,8 @@ using WarpEnvironment =
                      FunctionEnvironment>;
 
 // Snapshot data for a single JSScript.
-class WarpScriptSnapshot : public TempObject {
+class WarpScriptSnapshot : public TempObject,
+                           public mozilla::LinkedListElement<WarpScriptSnapshot> {
   WarpGCPtr<JSScript*> script_;
   WarpEnvironment environment_;
   WarpOpSnapshotList opSnapshots_;
@@ -495,11 +496,13 @@ class WarpBailoutInfo {
   void setFailedLexicalCheck() { failedLexicalCheck_ = true; }
 };
 
+using WarpScriptSnapshotList = mozilla::LinkedList<WarpScriptSnapshot>;
+
 // Data allocated by WarpOracle on the main thread that's used off-thread by
 // WarpBuilder to build the MIR graph.
 class WarpSnapshot : public TempObject {
-  // The script to compile.
-  WarpScriptSnapshot* script_;
+  // The scripts being compiled.
+  WarpScriptSnapshotList scriptSnapshots_;
 
   // The global lexical environment and its thisObject(). We don't inline
   // cross-realm calls so this can be stored once per snapshot.
@@ -515,10 +518,10 @@ class WarpSnapshot : public TempObject {
 
  public:
   explicit WarpSnapshot(JSContext* cx, TempAllocator& alloc,
-                        WarpScriptSnapshot* script,
+                        WarpScriptSnapshotList&& scriptSnapshots,
                         const WarpBailoutInfo& bailoutInfo);
 
-  WarpScriptSnapshot* script() const { return script_; }
+  WarpScriptSnapshot* rootScript() { return scriptSnapshots_.getFirst(); }
 
   LexicalEnvironmentObject* globalLexicalEnv() const {
     return globalLexicalEnv_;
