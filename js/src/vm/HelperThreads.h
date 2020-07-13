@@ -96,7 +96,7 @@ class GlobalHelperThreadState {
 
   typedef Vector<jit::IonCompileTask*, 0, SystemAllocPolicy>
       IonCompileTaskVector;
-  typedef Vector<ParseTask*, 0, SystemAllocPolicy> ParseTaskVector;
+  typedef Vector<UniquePtr<ParseTask>, 0, SystemAllocPolicy> ParseTaskVector;
   using ParseTaskList = mozilla::LinkedList<ParseTask>;
   typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy>
       SourceCompressionTaskVector;

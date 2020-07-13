@@ -756,8 +756,7 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
     bool pending = false;
     GlobalHelperThreadState::ParseTaskVector& worklist =
         HelperThreadState().parseWorklist(lock);
-    for (size_t i = 0; i < worklist.length(); i++) {
-      ParseTask* task = worklist[i];
+    for (const auto& task : worklist) {
       if (task->runtimeMatches(rt)) {
         pending = true;
       }
@@ -800,8 +799,7 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
 #ifdef DEBUG
   GlobalHelperThreadState::ParseTaskVector& worklist =
       HelperThreadState().parseWorklist(lock);
-  for (size_t i = 0; i < worklist.length(); i++) {
-    ParseTask* task = worklist[i];
+  for (const auto& task : worklist) {
     MOZ_ASSERT(!task->runtimeMatches(rt));
   }
 #endif
@@ -907,18 +905,12 @@ static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {
   AutoLockHelperThreadState lock;
 
   bool mustWait = OffThreadParsingMustWaitForGC(cx->runtime());
-
-  // Append null first, then overwrite it on  success, to avoid having two
-  // |task| pointers (one ostensibly "unique") in flight at once.  (Obviously it
-  // would be better if these vectors stored unique pointers themselves....)
   auto& queue = mustWait ? HelperThreadState().parseWaitingOnGC(lock)
                          : HelperThreadState().parseWorklist(lock);
-  if (!queue.append(nullptr)) {
+  if (!queue.append(std::move(task))) {
     ReportOutOfMemory(cx);
     return false;
   }
-
-  queue.back() = task.release();
 
   if (!mustWait) {
     queue.back()->activate(cx->runtime());
@@ -1061,10 +1053,9 @@ void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
         HelperThreadState().parseWaitingOnGC(lock);
 
     for (size_t i = 0; i < waiting.length(); i++) {
-      ParseTask* task = waiting[i];
-      if (task->runtimeMatches(rt)) {
+      if (waiting[i]->runtimeMatches(rt)) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!newTasks.append(task)) {
+        if (!newTasks.append(std::move(waiting[i]))) {
           oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
         }
         HelperThreadState().remove(waiting, &i);
@@ -1087,8 +1078,12 @@ void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
 
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!HelperThreadState().parseWorklist(lock).appendAll(newTasks)) {
-      oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
+    GlobalHelperThreadState::ParseTaskVector& worklist =
+        HelperThreadState().parseWorklist(lock);
+    for (size_t i = 0; i < newTasks.length(); i++) {
+      if (!worklist.append(std::move(newTasks[i]))) {
+        oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
+      }
     }
   }
 
@@ -1404,13 +1399,13 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
       helperContexts_.sizeOfExcludingThis(mallocSizeOf);
 
   // Report ParseTasks on wait lists
-  for (auto task : parseWorklist_) {
+  for (const auto& task : parseWorklist_) {
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
   for (auto task : parseFinishedList_) {
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
-  for (auto task : parseWaitingOnGC_) {
+  for (const auto& task : parseWaitingOnGC_) {
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
 
@@ -2170,9 +2165,15 @@ void HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(HelperThreadState().canStartParseTask(locked));
   MOZ_ASSERT(idle());
 
-  currentTask.emplace(HelperThreadState().parseWorklist(locked).popCopy());
-  ParseTask* task = parseTask();
+  {
+    auto& worklist = HelperThreadState().parseWorklist(locked);
+    UniquePtr<ParseTask> task;
+    task = std::move(worklist.back());
+    worklist.popBack();
+    currentTask.emplace(task.release());
+  }
 
+  ParseTask* task = parseTask();
   task->runTaskLocked(locked);
 
   currentTask.reset();
@@ -2369,13 +2370,13 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
     }
   }
 
-  for (auto parseTask : parseWorklist_) {
+  for (auto& parseTask : parseWorklist_) {
     parseTask->trace(trc);
   }
   for (auto parseTask : parseFinishedList_) {
     parseTask->trace(trc);
   }
-  for (auto parseTask : parseWaitingOnGC_) {
+  for (auto& parseTask : parseWaitingOnGC_) {
     parseTask->trace(trc);
   }
 }
