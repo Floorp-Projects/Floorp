@@ -21,7 +21,8 @@
 namespace js {
 namespace frontend {
 
-class ParserNameId;
+class ParserAtom;
+class ParserName;
 
 template <typename CharT>
 class SpecificParserAtomLookup;
@@ -72,6 +73,14 @@ class ParserAtomEntry {
     return ParserAtomEntry(std::move(ptr), length, hash);
   }
 
+  ParserAtom* asAtom() { return reinterpret_cast<ParserAtom*>(this); }
+  const ParserAtom* asAtom() const {
+    return reinterpret_cast<const ParserAtom*>(this);
+  }
+
+  inline ParserName* asName();
+  inline const ParserName* asName() const;
+
   bool hasLatin1Chars() const { return chars_.is<UniqueLatin1Chars>(); }
   bool hasTwoByteChars() const { return chars_.is<UniqueTwoByteChars>(); }
 
@@ -85,6 +94,10 @@ class ParserAtomEntry {
   }
 
   bool isIndex(uint32_t* indexp) const;
+  bool isIndex() const {
+    uint32_t index;
+    return isIndex(&index);
+  }
 
   HashNumber hash() const { return hash_; }
   uint32_t length() const { return length_; }
@@ -112,67 +125,26 @@ class ParserAtomEntry {
   bool toNumber(JSContext* cx, double* result) const;
 };
 
-class ParserAtomId {
- protected:
-  const ParserAtomEntry* entry_;
-
- public:
-  explicit ParserAtomId(const ParserAtomEntry* entry) : entry_(entry) {}
-  ParserAtomId() = default;
-
-  bool isValid() const { return entry_ != nullptr; }
-  const ParserAtomEntry* entry() const {
-    MOZ_ASSERT(isValid());
-    return entry_;
-  }
-  MOZ_IMPLICIT operator bool() const { return isValid(); }
-
-  static ParserAtomId Invalid() { return ParserAtomId(nullptr); }
-
-  // As the "unchecked" tag signifies, this method should only be called
-  // after it has been confirmed that this atom is a name and not an index.
-  inline ParserNameId toNameIdUnchecked() const;
-
-  bool operator==(const ParserAtomId& other) { return entry_ == other.entry_; }
-  bool operator!=(const ParserAtomId& other) { return !(*this == other); }
-
-  bool isIndex(uint32_t* indexp) const { return entry()->isIndex(indexp); }
-  bool equalsJSAtom(JSAtom* other) const {
-    return entry()->equalsJSAtom(other);
-  }
-
-  size_t length() const { return entry()->length(); }
-  size_t empty() const { return length() == 0; }
-
-  struct Hasher {
-    using Lookup = ParserAtomId;
-
-    static inline HashNumber hash(const Lookup& l) {
-      return DefaultHasher<const ParserAtomEntry*>::hash(l.entry());
-    }
-    static inline bool match(const ParserAtomId& entry,
-                             const ParserAtomId& lookup) {
-      return lookup == entry;
-    }
-  };
+class ParserAtom : public ParserAtomEntry {
+  ParserAtom() = delete;
+  ParserAtom(const ParserAtom&) = delete;
 };
 
-class ParserNameId : public ParserAtomId {
- public:
-  ParserNameId() = default;
-  explicit ParserNameId(const ParserAtomEntry* entry) : ParserAtomId(entry) {}
-  ParserNameId(const ParserNameId& other) = default;
-
-  static ParserNameId Invalid() { return ParserNameId(nullptr); }
+class ParserName : public ParserAtom {
+  ParserName() = delete;
+  ParserName(const ParserName&) = delete;
 };
 
-inline ParserNameId ParserAtomId::toNameIdUnchecked() const {
-  mozilla::DebugOnly<uint32_t> idx;
-  MOZ_ASSERT(!entry_ || !isIndex(&idx));
-  return ParserNameId(entry_);
+UniqueChars ParserAtomToPrintableString(JSContext* cx, const ParserAtom* atom);
+
+inline ParserName* ParserAtomEntry::asName() {
+  MOZ_ASSERT(!isIndex());
+  return static_cast<ParserName*>(this);
 }
-
-UniqueChars ParserAtomToPrintableString(JSContext* cx, ParserAtomId atom);
+inline const ParserName* ParserAtomEntry::asName() const {
+  MOZ_ASSERT(!isIndex());
+  return static_cast<const ParserName*>(this);
+}
 
 /**
  * A lookup structure that allows for querying ParserAtoms in
@@ -209,11 +181,11 @@ struct ParserAtomLookupHasher {
 class WellKnownParserAtoms {
  public:
   /* Various built-in or commonly-used names. */
-#define PROPERTYNAME_FIELD_(idpart, id, text) ParserNameId id{};
+#define PROPERTYNAME_FIELD_(idpart, id, text) const ParserName* id{};
   FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
-#define PROPERTYNAME_FIELD_(name, clasp) ParserNameId name{};
+#define PROPERTYNAME_FIELD_(name, clasp) const ParserName* name{};
   JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
@@ -222,7 +194,7 @@ class WellKnownParserAtoms {
                            TempAllocPolicy>;
   EntrySet entrySet_;
 
-  bool initSingle(JSContext* cx, ParserNameId* name, const char* str);
+  bool initSingle(JSContext* cx, const ParserName** name, const char* str);
 
  public:
   explicit WellKnownParserAtoms(JSContext* cx) : entrySet_(cx) {}
@@ -230,7 +202,7 @@ class WellKnownParserAtoms {
   bool init(JSContext* cx);
 
   template <typename CharT>
-  ParserAtomId lookupChar16Seq(InflatedChar16Sequence<CharT> seq) const;
+  const ParserAtom* lookupChar16Seq(InflatedChar16Sequence<CharT> seq) const;
 };
 
 /**
@@ -248,47 +220,40 @@ class ParserAtomsTable {
   explicit ParserAtomsTable(JSContext* cx);
 
  private:
-  JS::Result<ParserAtomId, OOM&> addEntry(JSContext* cx,
-                                          EntrySet::AddPtr addPtr,
-                                          ParserAtomEntry&& entry);
+  JS::Result<const ParserAtom*, OOM&> addEntry(JSContext* cx,
+                                               EntrySet::AddPtr addPtr,
+                                               ParserAtomEntry&& entry);
 
   template <typename AtomCharT, typename SeqCharT>
-  JS::Result<ParserAtomId, OOM&> internChar16Seq(
+  JS::Result<const ParserAtom*, OOM&> internChar16Seq(
       JSContext* cx, EntrySet::AddPtr add, InflatedChar16Sequence<SeqCharT> seq,
       uint32_t length, HashNumber hash);
 
   template <typename CharT>
-  JS::Result<ParserAtomId, OOM&> lookupOrInternChar16Seq(
+  JS::Result<const ParserAtom*, OOM&> lookupOrInternChar16Seq(
       JSContext* cx, InflatedChar16Sequence<CharT> seq);
 
  public:
-  JS::Result<ParserAtomId, OOM&> internChar16(JSContext* cx,
-                                              const char16_t* char16Ptr,
-                                              uint32_t length);
+  JS::Result<const ParserAtom*, OOM&> internChar16(JSContext* cx,
+                                                   const char16_t* char16Ptr,
+                                                   uint32_t length);
 
-  JS::Result<ParserAtomId, OOM&> internAscii(JSContext* cx,
-                                             const char* asciiPtr,
-                                             uint32_t length);
+  JS::Result<const ParserAtom*, OOM&> internAscii(JSContext* cx,
+                                                  const char* asciiPtr,
+                                                  uint32_t length);
 
-  JS::Result<ParserAtomId, OOM&> internLatin1(JSContext* cx,
-                                              const Latin1Char* latin1Ptr,
-                                              uint32_t length);
+  JS::Result<const ParserAtom*, OOM&> internLatin1(JSContext* cx,
+                                                   const Latin1Char* latin1Ptr,
+                                                   uint32_t length);
 
-  JS::Result<ParserAtomId, OOM&> internUtf8(JSContext* cx,
-                                            const mozilla::Utf8Unit* utf8Ptr,
-                                            uint32_t length);
+  JS::Result<const ParserAtom*, OOM&> internUtf8(
+      JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t length);
 
-  JS::Result<ParserAtomId, OOM&> internJSAtom(JSContext* cx, JSAtom* atom);
+  JS::Result<const ParserAtom*, OOM&> internJSAtom(JSContext* cx, JSAtom* atom);
 
-  JS::Result<ParserAtomId, OOM&> concatAtoms(JSContext* cx, ParserAtomId prefix,
-                                             ParserAtomId suffix);
-
-  // Lift this code
-  // Once all the parser code has been changed to use a ParserAtomId, these
-  // can go away.
-  JS::Result<JSAtom*, OOM&> toJSAtom(JSContext* cx, ParserAtomId id) const {
-    return id.entry()->toJSAtom(cx);
-  }
+  JS::Result<const ParserAtom*, OOM&> concatAtoms(JSContext* cx,
+                                                  const ParserAtom* prefix,
+                                                  const ParserAtom* suffix);
 };
 
 template <typename CharT>
