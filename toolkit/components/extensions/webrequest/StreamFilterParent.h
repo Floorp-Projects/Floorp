@@ -175,10 +175,10 @@ class StreamFilterParent final : public PStreamFilterParent,
   bool mSentStop;
   bool mDisconnected = false;
 
-  // If redirection happens, the stream filter is disconnected in OnStartRequest
-  // and the following ODA would not be filtered. We need a new flag to ensure
-  // we set the disconnected flag. We can not use mDisconnected due to race
-  // condition. Only mState is possible to late to be set.
+  // If redirection happens or alterate cached data is being sent, the stream
+  // filter is disconnected in OnStartRequest and the following ODA would not
+  // be filtered. Using mDisconnected causes race condition. mState is possible
+  // to late to be set, which leads out of sync.
   bool mDisconnectedByOnStartRequest = false;
 
   nsCOMPtr<nsISupports> mContext;
