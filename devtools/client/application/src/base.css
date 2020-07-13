@@ -17,7 +17,6 @@
   --title-20-font-size: 17px;
   --title-20-font-weight: 400;
   --title-30-font-size: 22px;
-  --title-30-font-weight: 300;
 
   /* Global styles */
   --base-line-height: 1.8;
@@ -33,6 +32,14 @@
 
   /* Global layout vars */
   --base-unit: 4px;
+
+  /* these are the color for icons in empty pages - note that these are not
+     available in devtools' variables.css */
+  --dimmed-icon-color: #d3d3d3;
+}
+
+:root.theme-dark {
+  --dimmed-icon-color: #484848;
 }
 
 /*
