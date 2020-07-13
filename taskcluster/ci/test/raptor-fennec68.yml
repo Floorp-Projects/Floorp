@@ -105,13 +105,7 @@ raptor-youtube-playback-h264-fennec68:
     description: "Raptor YouTube Playback H264 on Fennec68"
     try-name: raptor-youtube-playback-h264-fennec68
     treeherder-symbol: Rap(ytp-h264)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            android-hw-g5.*-shippable/opt: ['mozilla-central']
-            default: []
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-std-fennec68
