@@ -1230,11 +1230,13 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    * white-spaces.
    *
    * @param aAtFirstASCIIWhiteSpace             First ASCII white-space
-   * position.
+   *                                            position.
    * @param aEndOfCollapsibleASCIIWhiteSpaces   The position after last ASCII
    *                                            white-space.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceASCIIWhiteSpacesWithOneNBSP(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  ReplaceASCIIWhiteSpacesWithOneNBSP(
+      HTMLEditor& aHTMLEditor,
       const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
       const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces);
 
