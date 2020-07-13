@@ -146,7 +146,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   },
 });
 
-function getSheetText(sheet, consoleActor) {
+function getSheetText(sheet) {
   const cssText = modifiedStyleSheets.get(sheet);
   if (cssText !== undefined) {
     return Promise.resolve(cssText);
@@ -158,7 +158,7 @@ function getSheetText(sheet, consoleActor) {
     return Promise.resolve(content);
   }
 
-  return fetchStylesheet(sheet, consoleActor).then(({ content }) => content);
+  return fetchStylesheet(sheet).then(({ content }) => content);
 }
 
 exports.getSheetText = getSheetText;
@@ -498,23 +498,10 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return Promise.resolve(this.text);
     }
 
-    return getSheetText(this.rawSheet, this._consoleActor).then(text => {
+    return getSheetText(this.rawSheet).then(text => {
       this.text = text;
       return text;
     });
-  },
-
-  /**
-   * Try to locate the console actor if it exists via our parent actor (the tab).
-   *
-   * Keep this in sync with the BrowsingContextTargetActor version.
-   */
-  get _consoleActor() {
-    if (this.parentActor.exited) {
-      return null;
-    }
-    const form = this.parentActor.form();
-    return this.conn._getOrCreateActor(form.consoleActor);
   },
 
   /**
