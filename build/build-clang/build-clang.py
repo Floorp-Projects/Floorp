@@ -318,6 +318,13 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                 "-DDARWIN_osx_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
                 "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin"
             ]
+            # Starting in LLVM 11 (which requires SDK 10.12) the build tries to
+            # detect the SDK version by calling xcrun. Cross-compiles don't have
+            # an xcrun, so we have to set the version explicitly.
+            if "MacOSX10.12.sdk" in os.getenv("CROSS_SYSROOT"):
+                cmake_args += [
+                    "-DDARWIN_macosx_OVERRIDE_SDK_VERSION=10.12",
+                ]
         if pgo_phase == "gen":
             # Per https://releases.llvm.org/10.0.0/docs/HowToBuildWithPGO.html
             cmake_args += [
@@ -597,9 +604,6 @@ if __name__ == "__main__":
     libcxx_source_dir = source_dir + "/libcxx"
     libcxxabi_source_dir = source_dir + "/libcxxabi"
 
-    if is_darwin():
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
-
     exe_ext = ""
     if is_windows():
         exe_ext = ".exe"
@@ -695,8 +699,13 @@ if __name__ == "__main__":
             raise ValueError("extra_targets must be a list")
         if not all(isinstance(t, str) for t in extra_targets):
             raise ValueError("members of extra_targets should be strings")
+
     if is_linux() and gcc_dir is None:
         raise ValueError("Config file needs to set gcc_dir")
+
+    if is_darwin() or osx_cross_compile:
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.11'
+
     cc = get_tool(config, "cc")
     cxx = get_tool(config, "cxx")
     asm = get_tool(config, "ml" if is_windows() else "as")
