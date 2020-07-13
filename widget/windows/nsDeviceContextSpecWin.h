@@ -90,7 +90,7 @@ class nsPrinterListWin final : public nsIPrinterList {
   nsPrinterListWin() = default;
 
  private:
-  ~nsPrinterListWin() = default;
+  ~nsPrinterListWin();
 };
 
 #endif
