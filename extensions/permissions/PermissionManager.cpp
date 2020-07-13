@@ -618,6 +618,7 @@ PermissionManager::PermissionManager()
     : mMonitor("PermissionManager::mMonitor"),
       mState(eInitializing),
       mMemoryOnlyDB(false),
+      mBlockerAdded(false),
       mLargestID(0) {}
 
 PermissionManager::~PermissionManager() {
@@ -694,6 +695,7 @@ nsresult PermissionManager::Init() {
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
     observerService->AddObserver(this, "profile-do-change", true);
     observerService->AddObserver(this, "testonly-reload-permissions-from-disk",
                                  true);
@@ -737,6 +739,25 @@ nsresult PermissionManager::OpenDatabase(nsIFile* aPermissionsFile) {
 
 void PermissionManager::InitDB(bool aRemoveFile) {
   mState = eInitializing;
+
+  if (XRE_IsParentProcess() && !mBlockerAdded) {
+    nsCOMPtr<nsIAsyncShutdownClient> asc = GetShutdownPhase();
+    if (asc) {
+      nsAutoString blockerName;
+      MOZ_ALWAYS_SUCCEEDS(GetName(blockerName));
+
+      // This method can fail during some xpcshell-tests because InitDB() is
+      // called over and over again outside the init browser phase, or without
+      // having a uer-profile directory.
+      nsresult rv =
+          asc->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                          __LINE__, blockerName);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+      if (NS_SUCCEEDED(rv)) {
+        mBlockerAdded = true;
+      }
+    }
+  }
 
   {
     MonitorAutoLock lock(mMonitor);
@@ -2356,16 +2377,15 @@ NS_IMETHODIMP PermissionManager::Observe(nsISupports* aSubject,
                                          const char16_t* someData) {
   ENSURE_NOT_CHILD_PROCESS;
 
-  if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    // In some xpcshell tests, without profile, we are not able to register the
+    // shutdown-blocker. If this happens, let's shutdown the service manually.
+    if (!mBlockerAdded) {
+      BlockShutdown(nullptr);
+    }
+  } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(false);
-
-    nsAutoString blockerName;
-    MOZ_ALWAYS_SUCCEEDS(GetName(blockerName));
-
-    Unused << NS_WARN_IF(NS_FAILED(GetShutdownPhase()->AddBlocker(
-        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-        blockerName)));
   } else if (!nsCRT::strcmp(aTopic, "testonly-reload-permissions-from-disk")) {
     // Testing mechanism to reload all permissions from disk. Because the
     // permission manager automatically initializes itself at startup, tests
@@ -3547,7 +3567,10 @@ nsresult PermissionManager::TestPermissionWithoutDefaultsFromPrincipal(
 void PermissionManager::MaybeCompleteShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  DebugOnly<nsresult> rv = GetShutdownPhase()->RemoveBlocker(this);
+  nsCOMPtr<nsIAsyncShutdownClient> asc = GetShutdownPhase();
+  MOZ_ASSERT(asc);
+
+  DebugOnly<nsresult> rv = asc->RemoveBlocker(this);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -3587,7 +3610,9 @@ nsCOMPtr<nsIAsyncShutdownClient> PermissionManager::GetShutdownPhase() const {
   nsresult rv;
   nsCOMPtr<nsIAsyncShutdownService> svc =
       do_GetService("@mozilla.org/async-shutdown-service;1", &rv);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIAsyncShutdownClient> client;
   rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
