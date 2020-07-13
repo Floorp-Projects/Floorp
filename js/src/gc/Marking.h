@@ -94,8 +94,6 @@ inline bool IsAboutToBeFinalized(ReadBarriered<T>* thingp) {
       ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
-bool IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);
-
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);
 
 inline Cell* ToMarkable(const Value& v) {

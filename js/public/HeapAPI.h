@@ -31,6 +31,7 @@ JS_FRIEND_API bool CurrentThreadCanAccessZone(JS::Zone* zone);
 namespace gc {
 
 struct Cell;
+class TenuredCell;
 
 const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
@@ -528,6 +529,12 @@ MOZ_ALWAYS_INLINE bool IsInsideNursery(const Cell* cell) {
   MOZ_ASSERT(location == ChunkLocation::Nursery ||
              location == ChunkLocation::TenuredHeap);
   return location == ChunkLocation::Nursery;
+}
+
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const TenuredCell* cell) {
+  MOZ_ASSERT_IF(cell,
+                detail::GetCellLocation(cell) == ChunkLocation::TenuredHeap);
+  return false;
 }
 
 // Allow use before the compiler knows the derivation of JSObject, JSString, and
