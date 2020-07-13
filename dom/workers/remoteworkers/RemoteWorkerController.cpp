@@ -459,10 +459,9 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
     copyArgs.clientInfoAndState() = std::move(args.clientInfoAndState());
 
     RefPtr<ServiceWorkerCloneData> copyData = new ServiceWorkerCloneData();
-    copyData->StealFromClonedMessageDataForBackgroundParent(args.clonedData());
-
-    if (!copyData->BuildClonedMessageDataForBackgroundParent(
-            aOwner->mActor->Manager(), copyArgs.clonedData())) {
+    if (!copyData->StealFromAndBuildClonedMessageDataForBackgroundParent(
+            args.clonedData(), aOwner->mActor->Manager(),
+            copyArgs.clonedData())) {
       mPromise->Reject(NS_ERROR_DOM_DATA_CLONE_ERR, __func__);
       mPromise = nullptr;
       return true;
