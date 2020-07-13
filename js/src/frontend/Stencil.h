@@ -270,7 +270,6 @@ class ScopeCreationData {
   // ModuleScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<ModuleScope::Data*> dataArg,
-                     HandleModuleObject module,
                      Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
 
   // WithScope
