@@ -1467,7 +1467,8 @@ CodeGenerator* CompileBackEnd(MIRGenerator* mir, WarpSnapshot* snapshot) {
   MOZ_ASSERT(!!snapshot == JitOptions.warpBuilder);
 
   if (snapshot) {
-    WarpBuilder builder(*snapshot, *mir);
+    WarpCompilation comp(mir->alloc());
+    WarpBuilder builder(*snapshot, *mir, &comp);
     if (!builder.build()) {
       return nullptr;
     }

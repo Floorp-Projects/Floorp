@@ -75,9 +75,32 @@ class MIRGenerator;
 class MIRGraph;
 class WarpSnapshot;
 
+// Data that is shared across all WarpBuilders for a given compilation.
+class MOZ_STACK_CLASS WarpCompilation {
+  // The total loop depth, including loops in the caller while
+  // compiling inlined functions.
+  uint32_t loopDepth_ = 0;
+
+  // Loop phis for iterators that need to be kept alive.
+  PhiVector iterators_;
+
+ public:
+  explicit WarpCompilation(TempAllocator& alloc) : iterators_(alloc) {}
+
+  uint32_t loopDepth() const { return loopDepth_; }
+  void incLoopDepth() { loopDepth_++; }
+  void decLoopDepth() {
+    MOZ_ASSERT(loopDepth() > 0);
+    loopDepth_--;
+  }
+
+  PhiVector* iterators() { return &iterators_; }
+};
+
 // WarpBuilder builds a MIR graph from WarpSnapshot. Unlike WarpOracle,
 // WarpBuilder can run off-thread.
 class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
+  WarpCompilation* warpCompilation_;
   MIRGraph& graph_;
   const CompileInfo& info_;
   JSScript* script_;
@@ -87,21 +110,19 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   // WarpOpSnapshot is sorted the same way), the iterator always moves forward.
   const WarpOpSnapshot* opSnapshotIter_ = nullptr;
 
-  // Note: we need both loopDepth_ and loopStack_.length(): once we support
-  // inlining, loopDepth_ will be moved to a per-compilation data structure
-  // (OuterWarpBuilder?) whereas loopStack_ and pendingEdges_ will be
-  // builder-specific state.
-  uint32_t loopDepth_ = 0;
+  // Note: loopStack_ is builder-specific. loopStack_.length is the
+  // depth relative to the current script.  The overall loop depth is
+  // stored in the WarpCompilation.
   LoopStateStack loopStack_;
   PendingEdgesMap pendingEdges_;
 
-  // Loop phis for iterators that need to be kept alive.
-  // TODO: once we support inlining, this needs to be stored once per
-  // compilation instead of builder.
-  PhiVector iterators_;
-
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
+
+  uint32_t loopDepth() const { return warpCompilation_->loopDepth(); }
+  void incLoopDepth() { warpCompilation_->incLoopDepth(); }
+  void decLoopDepth() { warpCompilation_->decLoopDepth(); }
+  PhiVector* iterators() { return warpCompilation_->iterators(); }
 
   BytecodeSite* newBytecodeSite(BytecodeLocation loc);
 
@@ -172,7 +193,8 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 #undef BUILD_OP
 
  public:
-  WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen);
+  WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen,
+              WarpCompilation* warpCompilation);
 
   MOZ_MUST_USE bool build();
 };
