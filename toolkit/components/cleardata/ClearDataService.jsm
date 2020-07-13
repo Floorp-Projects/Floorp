@@ -434,14 +434,14 @@ const QuotaCleaner = {
     Services.obs.notifyObservers(
       null,
       "extension:purge-localStorage",
-      aPrincipal.URI.host
+      aPrincipal.host
     );
 
     // Clear sessionStorage
     Services.obs.notifyObservers(
       null,
       "browser:purge-sessionStorage",
-      aPrincipal.URI.host
+      aPrincipal.host
     );
 
     // ServiceWorkers: they must be removed before cleaning QuotaManager.
@@ -504,7 +504,7 @@ const QuotaCleaner = {
               );
               let host;
               try {
-                host = principal.URI.host;
+                host = principal.host;
               } catch (e) {
                 // There is no host for the given principal.
                 continue;
@@ -701,7 +701,7 @@ const StorageAccessCleaner = {
           let toBeRemoved = false;
           try {
             toBeRemoved = Services.eTLD.hasRootDomain(
-              perm.principal.URI.host,
+              perm.principal.host,
               aHost
             );
           } catch (ex) {
@@ -819,10 +819,7 @@ const PermissionsCleaner = {
       for (let perm of Services.perms.all) {
         let toBeRemoved;
         try {
-          toBeRemoved = Services.eTLD.hasRootDomain(
-            perm.principal.URI.host,
-            aHost
-          );
+          toBeRemoved = Services.eTLD.hasRootDomain(perm.principal.host, aHost);
         } catch (ex) {
           continue;
         }
@@ -1204,7 +1201,7 @@ ClearDataService.prototype = Object.freeze({
       // is to delete by host.
       if (aCleaner.deleteByHost) {
         return aCleaner.deleteByHost(
-          aPrincipal.URI.host,
+          aPrincipal.host,
           aPrincipal.originAttributes
         );
       }

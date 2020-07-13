@@ -41,12 +41,13 @@ amContentHandler.prototype = {
 
     let sourceHost;
     let sourceURL;
+
     try {
       sourceURL = triggeringPrincipal.URI.spec;
-      sourceHost = triggeringPrincipal.URI.host;
-    } catch (err) {
-      // Ignore errors when retrieving the host for the principal (e.g. null principals raise
-      // an NS_ERROR_FAILURE when principal.URI.host is accessed).
+      sourceHost = triggeringPrincipal.host;
+    } catch (error) {
+      // Ignore errors when retrieving the host for the principal (e.g. data URIs return
+      // an NS_ERROR_FAILURE when principal.host is accessed).
     }
 
     let install = {
