@@ -102,6 +102,10 @@ mozilla::GenericErrorResult<AbortReason> WarpOracle::abort(HandleScript script,
   return res;
 }
 
+void WarpOracle::addScriptSnapshot(WarpScriptSnapshot* scriptSnapshot) {
+  scriptSnapshots_.insertBack(scriptSnapshot);
+}
+
 AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   JitSpew(JitSpew_IonScripts,
           "Warp %sompiling script %s:%u:%u (%p) (warmup-counter=%" PRIu32
@@ -120,8 +124,11 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   WarpScriptSnapshot* scriptSnapshot;
   MOZ_TRY_VAR(scriptSnapshot, scriptOracle.createScriptSnapshot());
 
+  // Insert the outermost scriptSnapshot at the front of the list.
+  scriptSnapshots_.insertFront(scriptSnapshot);
+
   auto* snapshot = new (alloc_.fallible())
-      WarpSnapshot(cx_, alloc_, scriptSnapshot, bailoutInfo_);
+      WarpSnapshot(cx_, alloc_, std::move(scriptSnapshots_), bailoutInfo_);
   if (!snapshot) {
     return abort(outerScript_, AbortReason::Alloc);
   }
@@ -712,7 +719,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
   }
 
   autoClearOpSnapshots.release();
-
   return scriptSnapshot;
 }
 

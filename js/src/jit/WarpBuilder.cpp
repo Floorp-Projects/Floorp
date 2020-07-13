@@ -29,9 +29,10 @@ WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen,
       warpCompilation_(warpCompilation),
       graph_(mirGen.graph()),
       info_(mirGen.outerInfo()),
-      script_(snapshot.script()->script()),
+      scriptSnapshot_(snapshot.rootScript()),
+      script_(snapshot.rootScript()->script()),
       loopStack_(mirGen.alloc()) {
-  opSnapshotIter_ = snapshot.script()->opSnapshots().getFirst();
+  opSnapshotIter_ = scriptSnapshot_->opSnapshots().getFirst();
 }
 
 BytecodeSite* WarpBuilder::newBytecodeSite(BytecodeLocation loc) {
@@ -366,7 +367,7 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
 }
 
 bool WarpBuilder::buildEnvironmentChain() {
-  const WarpEnvironment& env = snapshot().script()->environment();
+  const WarpEnvironment& env = scriptSnapshot()->environment();
 
   if (env.is<NoEnvironment>()) {
     return true;
@@ -2112,7 +2113,7 @@ bool WarpBuilder::build_GetIntrinsic(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_ImportMeta(BytecodeLocation loc) {
-  ModuleObject* moduleObj = snapshot().script()->moduleObject();
+  ModuleObject* moduleObj = scriptSnapshot()->moduleObject();
   MOZ_ASSERT(moduleObj);
 
   MModuleMetadata* ins = MModuleMetadata::New(alloc(), moduleObj);
@@ -2294,7 +2295,7 @@ bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
   MOZ_ASSERT(script_->isFunction());
   MOZ_ASSERT(info().funMaybeLazy());
 
-  if (snapshot().script()->isArrowFunction()) {
+  if (scriptSnapshot()->isArrowFunction()) {
     MDefinition* callee = getCallee();
     MArrowNewTarget* ins = MArrowNewTarget::New(alloc(), callee);
     current->add(ins);
@@ -2574,19 +2575,19 @@ bool WarpBuilder::build_Debugger(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_InstrumentationActive(BytecodeLocation) {
-  bool active = snapshot().script()->instrumentationActive();
+  bool active = scriptSnapshot()->instrumentationActive();
   pushConstant(BooleanValue(active));
   return true;
 }
 
 bool WarpBuilder::build_InstrumentationCallback(BytecodeLocation) {
-  JSObject* callback = snapshot().script()->instrumentationCallback();
+  JSObject* callback = scriptSnapshot()->instrumentationCallback();
   pushConstant(ObjectValue(*callback));
   return true;
 }
 
 bool WarpBuilder::build_InstrumentationScriptId(BytecodeLocation) {
-  int32_t scriptId = snapshot().script()->instrumentationScriptId();
+  int32_t scriptId = scriptSnapshot()->instrumentationScriptId();
   pushConstant(Int32Value(scriptId));
   return true;
 }
