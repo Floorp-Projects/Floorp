@@ -3330,12 +3330,6 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetGlobalPrintSettings(
-    nsIPrintSettings** aGlobalPrintSettings) {
-  return nsPrintJob::GetGlobalPrintSettings(aGlobalPrintSettings);
-}
-
 // XXX This always returns false for subdocuments
 NS_IMETHODIMP
 nsDocumentViewer::GetDoingPrint(bool* aDoingPrint) {

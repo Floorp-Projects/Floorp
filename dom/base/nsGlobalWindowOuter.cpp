@@ -5192,36 +5192,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
 
     if (printSettingsService) {
-      nsCOMPtr<nsIPrintSettings> printSettings;
-      printSettingsService->GetGlobalPrintSettings(
-          getter_AddRefs(printSettings));
-
-      nsAutoString printerName;
-      printSettings->GetPrinterName(printerName);
-
-      bool shouldGetLastUsedPrinterName = printerName.IsEmpty();
-#  ifdef MOZ_X11
-      // In Linux, GTK backend does not support per printer settings.
-      // Calling GetLastUsedPrinterName causes a sandbox violation (see Bug
-      // 1329216). The printer name is not needed anywhere else on Linux
-      // before it gets to the parent. In the parent, we will then query the
-      // last-used printer name if no name is set. Unless we are in the parent,
-      // we will skip this part.
-      if (!XRE_IsParentProcess()) {
-        shouldGetLastUsedPrinterName = false;
-      }
-#  endif
-      if (shouldGetLastUsedPrinterName) {
-        printSettingsService->GetLastUsedPrinterName(printerName);
-        printSettings->SetPrinterName(printerName);
-      }
-      printSettingsService->InitPrintSettingsFromPrinter(printerName,
-                                                         printSettings);
-      printSettingsService->InitPrintSettingsFromPrefs(
-          printSettings, true, nsIPrintSettings::kInitSaveAll);
-
       EnterModalState();
-      webBrowserPrint->Print(printSettings, nullptr);
+      webBrowserPrint->Print(nullptr, nullptr);
       LeaveModalState();
     }
   }
