@@ -180,7 +180,7 @@ bool FeaturePolicyUtils::IsFeatureAllowed(Document* aDocument,
     return true;
   }
 
-  // Skip apply features in experimental pharse
+  // Skip apply features in experimental phase
   if (!StaticPrefs::dom_security_featurePolicy_experimental_enabled() &&
       IsExperimentalFeature(aFeatureName)) {
     return true;

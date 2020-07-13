@@ -55,6 +55,10 @@ function testIFrameWithoutAllowFullscreen() {
   // we should not receive a fullscreenchange event in this document.
   var iframe = document.createElement("iframe");
   iframe.src = INNER_FILE;
+  // The iframe is same-origin so when we use feature policy otherwise we'd hit
+  // the "allowed" code-path (as intended). It is a bug that this test passes
+  // without the allow attribute.
+  iframe.allow = "fullscreen 'none'";
   setupForInnerTest("an iframe without allowfullscreen", () => {
     document.body.removeChild(iframe);
     SimpleTest.executeSoon(testFrameElement);
