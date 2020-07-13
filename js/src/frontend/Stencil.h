@@ -329,6 +329,10 @@ class ScopeCreationData {
 
 class EmptyGlobalScopeType {};
 
+// See JSOp::Lambda for interepretation of this index.
+using FunctionDeclaration = uint32_t;
+using FunctionDeclarationVector = Vector<FunctionDeclaration>;
+
 // Common type for ImportEntry / ExportEntry / ModuleRequest within frontend. We
 // use a shared stencil class type to simplify serialization.
 //
