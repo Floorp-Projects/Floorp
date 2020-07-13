@@ -38,13 +38,10 @@ function printpreview() {
       throw Components.Exception("", Cr.NS_NOINTERFACE);
     }
   }
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Ci.nsIPrefBranch);
-  prefs.setBoolPref('print.show_print_progress', false);
-  //XXX I would have thought this would work, instead I'm forced to use prefs service
-  gWbp.globalPrintSettings.showPrintProgress = false; 
-  gWbp.printPreview(gWbp.globalPrintSettings, frameElts[0].contentWindow, listener);
-  prefs.clearUserPref('print.show_print_progress');
+  let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                       .getService(Ci.nsIPrintSettingsService).globalPrintSettings;
+  settings.showPrintProgress = false; 
+  gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
 }
 
 function exitprintpreview() {
