@@ -739,7 +739,9 @@ class SelectParent extends JSWindowActorParent {
           data.options.options,
           data.options.uniqueStyles,
           data.selectedIndex,
-          ZoomManager.getZoomForBrowser(browser),
+          // We only want to apply the full zoom. The text zoom is already
+          // applied in the font-size.
+          ZoomManager.getFullZoomForBrowser(browser),
           data.defaultStyle,
           data.style
         );
