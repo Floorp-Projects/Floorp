@@ -73,16 +73,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   gHttpHandler->OnOpeningDocumentRequest(this);
 
-  RefPtr<nsDocShell> docShell = GetDocShell();
-  if (!docShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // `loadingContext` is the BC that is initiating the resource load.
-  // For normal subdocument loads, the BC is the one that the subdoc will load
-  // into. For <object>/<embed> it's the embedder doc's BC.
-  RefPtr<BrowsingContext> loadingContext = docShell->GetBrowsingContext();
-  if (!loadingContext || loadingContext->IsDiscarded()) {
+  if (!GetDocShell() || !GetDocShell()->GetBrowsingContext() ||
+      GetDocShell()->GetBrowsingContext()->IsDiscarded()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -92,6 +84,9 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.cacheKey() = mCacheKey;
   args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
+  args.outerWindowId() = GetDocShell()->GetOuterWindowID();
+  args.uriModified() = mUriModified;
+  args.isXFOError() = mIsXFOError;
 
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {
@@ -104,44 +99,15 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   }
 
   args.hasValidTransientUserAction() =
-      loadingContext->HasValidTransientUserGestureActivation();
+      GetDocShell()
+          ->GetBrowsingContext()
+          ->HasValidTransientUserGestureActivation();
 
-  switch (mLoadInfo->GetExternalContentPolicyType()) {
-    case nsIContentPolicy::TYPE_DOCUMENT:
-    case nsIContentPolicy::TYPE_SUBDOCUMENT: {
-      DocumentCreationArgs docArgs;
-      docArgs.outerWindowId() = docShell->GetOuterWindowID();
-      docArgs.uriModified() = mUriModified;
-      docArgs.isXFOError() = mIsXFOError;
+  GetDocShell()->GetBrowsingContext()->SetCurrentLoadIdentifier(
+      Some(mLoadState->GetLoadIdentifier()));
 
-      args.elementCreationArgs() = docArgs;
-      break;
-    }
-
-    case nsIContentPolicy::TYPE_OBJECT: {
-      ObjectCreationArgs objectArgs;
-      objectArgs.embedderInnerWindowId() = InnerWindowIDForExtantDoc(docShell);
-      objectArgs.loadFlags() = mLoadFlags;
-      objectArgs.contentPolicyType() = mLoadInfo->InternalContentPolicyType();
-      objectArgs.isUrgentStart() = UserActivation::IsHandlingUserInput();
-
-      args.elementCreationArgs() = objectArgs;
-      break;
-    }
-  }
-
-  switch (mLoadInfo->GetExternalContentPolicyType()) {
-    case nsIContentPolicy::TYPE_DOCUMENT:
-    case nsIContentPolicy::TYPE_SUBDOCUMENT:
-      loadingContext->SetCurrentLoadIdentifier(
-          Some(mLoadState->GetLoadIdentifier()));
-      break;
-
-    default:
-      break;
-  }
-
-  gNeckoChild->SendPDocumentChannelConstructor(this, loadingContext, args);
+  gNeckoChild->SendPDocumentChannelConstructor(
+      this, GetDocShell()->GetBrowsingContext(), args);
 
   mIsPending = true;
   mWasOpened = true;

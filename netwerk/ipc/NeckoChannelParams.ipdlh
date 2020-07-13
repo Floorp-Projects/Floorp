@@ -437,33 +437,18 @@ struct CookieStruct
   uint8_t   schemeMap;
 };
 
-struct DocumentCreationArgs {
-  uint64_t outerWindowId;
-  bool uriModified;
-  bool isXFOError;
-};
-
-struct ObjectCreationArgs {
-  uint64_t embedderInnerWindowId;
-  uint32_t loadFlags;
-  uint8_t contentPolicyType;
-  bool isUrgentStart;
-};
-
-union DocumentChannelElementCreationArgs {
-  DocumentCreationArgs;
-  ObjectCreationArgs;
-};
-
 struct DocumentChannelCreationArgs {
   DocShellLoadStateInit loadState;
   TimeStamp asyncOpenTime;
   uint64_t channelId;
   uint32_t cacheKey;
+  bool pluginsAllowed;
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
+  uint64_t outerWindowId;
   bool hasValidTransientUserAction;
-  DocumentChannelElementCreationArgs elementCreationArgs;
+  bool uriModified;
+  bool isXFOError;
 };
 
 struct RedirectToRealChannelArgs {
