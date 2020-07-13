@@ -1557,10 +1557,22 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
   double fractionPromoted =
       double(previousGC.tenuredBytes) / double(previousGC.nurseryCapacity);
 
-  // Adjust the nursery size to try to achieve a target promotion rate.
-  static const double PromotionGoal = 0.02;
+  // Calculate the fraction of time spent collecting the nursery.
+  double timeFraction = 0.0;
+#ifndef JS_MORE_DETERMINISTIC
+  if (lastResizeTime) {
+    TimeDuration collectorTime = now - collectionStartTime();
+    TimeDuration totalTime = now - lastResizeTime;
+    timeFraction = collectorTime.ToSeconds() / totalTime.ToSeconds();
+  }
+#endif
 
-  double growthFactor = fractionPromoted / PromotionGoal;
+  // Adjust the nursery size to try to achieve a target promotion rate and
+  // collector time goals.
+  static const double PromotionGoal = 0.02;
+  static const double TimeGoal = 0.01;
+  double growthFactor =
+      std::max(fractionPromoted / PromotionGoal, timeFraction / TimeGoal);
 
   // Limit the range of the growth factor to prevent transient high promotion
   // rates from affecting the nursery size too far into the future.
@@ -1574,6 +1586,7 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
       now - lastResizeTime < TimeDuration::FromMilliseconds(200)) {
     growthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
   }
+
   lastResizeTime = now;
   smoothedGrowthFactor = growthFactor;
 #endif

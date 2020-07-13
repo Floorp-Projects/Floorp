@@ -426,6 +426,10 @@ class Nursery {
 
   void joinDecommitTask() { decommitTask.join(); }
 
+  mozilla::TimeStamp collectionStartTime() {
+    return startTimes_[ProfileKey::Total];
+  }
+
   // Round a size in bytes to the nearest valid nursery size.
   static size_t roundSize(size_t size);
 
