@@ -105,6 +105,13 @@ class SearchEngineSelector {
     this._configuration = await (this._getConfigurationPromise = this._getConfiguration());
     delete this._getConfigurationPromise;
 
+    if (!this._configuration?.length) {
+      throw Components.Exception(
+        "Failed to get engine data from Remote Settings",
+        Cr.NS_ERROR_UNEXPECTED
+      );
+    }
+
     if (!this._listenerAdded) {
       this._remoteConfig.on("sync", this._onConfigurationUpdated);
       this._listenerAdded = true;
