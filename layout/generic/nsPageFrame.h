@@ -26,15 +26,15 @@ class nsPageFrame final : public nsContainerFrame {
   friend nsPageFrame* NS_NewPageFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   //////////////////
@@ -48,7 +48,7 @@ class nsPageFrame final : public nsContainerFrame {
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings
-  virtual bool HonorPrintBackgroundSettings() override { return false; }
+  bool HonorPrintBackgroundSettings() override { return false; }
 
   void PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
                          bool aSubpixelAA);
@@ -96,17 +96,17 @@ class nsPageBreakFrame final : public nsLeafFrame {
   explicit nsPageBreakFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsPageBreakFrame();
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
  protected:
-  virtual nscoord GetIntrinsicISize() override;
-  virtual nscoord GetIntrinsicBSize() override;
+  nscoord GetIntrinsicISize() override;
+  nscoord GetIntrinsicBSize() override;
 
   bool mHaveReflowed;
 
