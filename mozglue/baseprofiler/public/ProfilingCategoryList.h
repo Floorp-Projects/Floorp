@@ -34,6 +34,7 @@
   BEGIN_CATEGORY(OTHER, "Other", "grey") \
     SUBCATEGORY(OTHER, OTHER, "Other") \
     SUBCATEGORY(OTHER, OTHER_PreferenceRead, "Preference Read") \
+    SUBCATEGORY(OTHER, OTHER_Profiling, "Profiling") \
   END_CATEGORY \
   BEGIN_CATEGORY(LAYOUT, "Layout", "purple") \
     SUBCATEGORY(LAYOUT, LAYOUT, "Other") \
