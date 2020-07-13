@@ -323,66 +323,67 @@ void Sampler::SuspendAndSampleAndResumeThread(
 
   // Send message 1 to the samplee (the thread to be sampled), by
   // signalling at it.
+  // This could fail if the thread doesn't exist anymore.
   int r = tgkill(mMyPid, sampleeTid, SIGPROF);
-  MOZ_ASSERT(r == 0);
-
-  // Wait for message 2 from the samplee, indicating that the context
-  // is available and that the thread is suspended.
-  while (true) {
-    r = sem_wait(&sSigHandlerCoordinator->mMessage2);
-    if (r == -1 && errno == EINTR) {
-      // Interrupted by a signal.  Try again.
-      continue;
+  if (r == 0) {
+    // Wait for message 2 from the samplee, indicating that the context
+    // is available and that the thread is suspended.
+    while (true) {
+      r = sem_wait(&sSigHandlerCoordinator->mMessage2);
+      if (r == -1 && errno == EINTR) {
+        // Interrupted by a signal.  Try again.
+        continue;
+      }
+      // We don't expect any other kind of failure.
+      MOZ_ASSERT(r == 0);
+      break;
     }
-    // We don't expect any other kind of failure.
+
+    //----------------------------------------------------------------//
+    // Sample the target thread.
+
+    // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+    //
+    // The profiler's "critical section" begins here.  In the critical section,
+    // we must not do any dynamic memory allocation, nor try to acquire any lock
+    // or any other unshareable resource.  This is because the thread to be
+    // sampled has been suspended at some entirely arbitrary point, and we have
+    // no idea which unsharable resources (locks, essentially) it holds.  So any
+    // attempt to acquire any lock, including the implied locks used by the
+    // malloc implementation, risks deadlock.  This includes TimeStamp::Now(),
+    // which gets a lock on Windows.
+
+    // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
+    // valid.  We can poke around in it and unwind its stack as we like.
+
+    // Extract the current register values.
+    Registers regs;
+    PopulateRegsFromContext(regs, &sSigHandlerCoordinator->mUContext);
+    aProcessRegs(regs, aNow);
+
+    //----------------------------------------------------------------//
+    // Resume the target thread.
+
+    // Send message 3 to the samplee, which tells it to resume.
+    r = sem_post(&sSigHandlerCoordinator->mMessage3);
     MOZ_ASSERT(r == 0);
-    break;
-  }
 
-  //----------------------------------------------------------------//
-  // Sample the target thread.
-
-  // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-  //
-  // The profiler's "critical section" begins here.  In the critical section,
-  // we must not do any dynamic memory allocation, nor try to acquire any lock
-  // or any other unshareable resource.  This is because the thread to be
-  // sampled has been suspended at some entirely arbitrary point, and we have
-  // no idea which unsharable resources (locks, essentially) it holds.  So any
-  // attempt to acquire any lock, including the implied locks used by the
-  // malloc implementation, risks deadlock.  This includes TimeStamp::Now(),
-  // which gets a lock on Windows.
-
-  // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
-  // valid.  We can poke around in it and unwind its stack as we like.
-
-  // Extract the current register values.
-  Registers regs;
-  PopulateRegsFromContext(regs, &sSigHandlerCoordinator->mUContext);
-  aProcessRegs(regs, aNow);
-
-  //----------------------------------------------------------------//
-  // Resume the target thread.
-
-  // Send message 3 to the samplee, which tells it to resume.
-  r = sem_post(&sSigHandlerCoordinator->mMessage3);
-  MOZ_ASSERT(r == 0);
-
-  // Wait for message 4 from the samplee, which tells us that it has
-  // finished with |sSigHandlerCoordinator|.
-  while (true) {
-    r = sem_wait(&sSigHandlerCoordinator->mMessage4);
-    if (r == -1 && errno == EINTR) {
-      continue;
+    // Wait for message 4 from the samplee, which tells us that it has
+    // finished with |sSigHandlerCoordinator|.
+    while (true) {
+      r = sem_wait(&sSigHandlerCoordinator->mMessage4);
+      if (r == -1 && errno == EINTR) {
+        continue;
+      }
+      MOZ_ASSERT(r == 0);
+      break;
     }
-    MOZ_ASSERT(r == 0);
-    break;
-  }
 
-  // The profiler's critical section ends here.  After this point, none of the
-  // critical section limitations documented above apply.
-  //
-  // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+    // The profiler's critical section ends here.  After this point, none of the
+    // critical section limitations documented above apply.
+    //
+    // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+  }
 
   // This isn't strictly necessary, but doing so does help pick up anomalies
   // in which the signal handler is running when it shouldn't be.
