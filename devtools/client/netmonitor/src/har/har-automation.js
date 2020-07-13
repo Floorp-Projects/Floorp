@@ -88,7 +88,7 @@ HarAutomation.prototype = {
     // data from events sent from the backend.
     this.collector = new HarCollector({
       webConsoleFront: this.webConsoleFront,
-      resourceWatcher: this.toolbox.resourceWatcher,
+      devToolsClient: this.devToolsClient,
     });
 
     this.collector.start();

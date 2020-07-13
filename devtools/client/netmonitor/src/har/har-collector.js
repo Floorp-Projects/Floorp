@@ -17,10 +17,10 @@ const trace = {
  */
 function HarCollector(options) {
   this.webConsoleFront = options.webConsoleFront;
-  this.resourceWatcher = options.resourceWatcher;
+  this.devToolsClient = options.devToolsClient;
 
-  this.onResourceAvailable = this.onResourceAvailable.bind(this);
-  this.onResourceUpdated = this.onResourceUpdated.bind(this);
+  this.onNetworkEvent = this.onNetworkEvent.bind(this);
+  this.onNetworkEventUpdate = this.onNetworkEventUpdate.bind(this);
   this.onRequestHeaders = this.onRequestHeaders.bind(this);
   this.onRequestCookies = this.onRequestCookies.bind(this);
   this.onRequestPostData = this.onRequestPostData.bind(this);
@@ -35,24 +35,14 @@ function HarCollector(options) {
 HarCollector.prototype = {
   // Connection
 
-  start: async function() {
-    await this.resourceWatcher.watchResources(
-      [this.resourceWatcher.TYPES.NETWORK_EVENT],
-      {
-        onAvailable: this.onResourceAvailable,
-        onUpdated: this.onResourceUpdated,
-      }
-    );
+  start: function() {
+    this.webConsoleFront.on("networkEvent", this.onNetworkEvent);
+    this.devToolsClient.on("networkEventUpdate", this.onNetworkEventUpdate);
   },
 
-  stop: async function() {
-    await this.resourceWatcher.unwatchResources(
-      [this.resourceWatcher.TYPES.NETWORK_EVENT],
-      {
-        onAvailable: this.onResourceAvailable,
-        onUpdated: this.onResourceUpdated,
-      }
-    );
+  stop: function() {
+    this.webConsoleFront.off("networkEvent", this.onNetworkEvent);
+    this.devToolsClient.off("networkEventUpdate", this.onNetworkEventUpdate);
   },
 
   clear: function() {
@@ -166,15 +156,15 @@ HarCollector.prototype = {
 
   // Event Handlers
 
-  onResourceAvailable: function({ resourceType, targetFront, resource }) {
-    trace.log("HarCollector.onNetworkEvent; ", resource);
+  onNetworkEvent: function(packet) {
+    trace.log("HarCollector.onNetworkEvent; ", packet);
 
     const {
       actor,
       startedDateTime,
       request: { method, url },
       isXHR,
-    } = resource;
+    } = packet;
     const startTime = Date.parse(startedDateTime);
 
     if (this.firstRequestStart == -1) {
@@ -208,19 +198,21 @@ HarCollector.prototype = {
     this.items.push(file);
   },
 
-  onResourceUpdated: function({ resourceType, targetFront, resource }) {
+  onNetworkEventUpdate: function(packet) {
+    const actor = packet.from;
+
     // Skip events from unknown actors (not in the list).
     // It can happen when there are zombie requests received after
     // the target is closed or multiple tabs are attached through
     // one connection (one DevToolsClient object).
-    const file = this.getFile(resource.actor);
+    const file = this.getFile(packet.from);
     if (!file) {
       return;
     }
 
     trace.log(
-      "HarCollector.onNetworkEventUpdate; " + resource.updateType,
-      resource
+      "HarCollector.onNetworkEventUpdate; " + packet.updateType,
+      packet
     );
 
     const includeResponseBodies = Services.prefs.getBoolPref(
@@ -228,66 +220,62 @@ HarCollector.prototype = {
     );
 
     let request;
-    switch (resource.updateType) {
+    switch (packet.updateType) {
       case "requestHeaders":
         request = this.getData(
-          resource.actor,
+          actor,
           "getRequestHeaders",
           this.onRequestHeaders
         );
         break;
       case "requestCookies":
         request = this.getData(
-          resource.actor,
+          actor,
           "getRequestCookies",
           this.onRequestCookies
         );
         break;
       case "requestPostData":
         request = this.getData(
-          resource.actor,
+          actor,
           "getRequestPostData",
           this.onRequestPostData
         );
         break;
       case "responseHeaders":
         request = this.getData(
-          resource.actor,
+          actor,
           "getResponseHeaders",
           this.onResponseHeaders
         );
         break;
       case "responseCookies":
         request = this.getData(
-          resource.actor,
+          actor,
           "getResponseCookies",
           this.onResponseCookies
         );
         break;
       case "responseStart":
-        file.httpVersion = resource.response.httpVersion;
-        file.status = resource.response.status;
-        file.statusText = resource.response.statusText;
+        file.httpVersion = packet.response.httpVersion;
+        file.status = packet.response.status;
+        file.statusText = packet.response.statusText;
         break;
       case "responseContent":
-        file.contentSize = resource.contentSize;
-        file.mimeType = resource.mimeType;
-        file.transferredSize = resource.transferredSize;
+        file.contentSize = packet.contentSize;
+        file.mimeType = packet.mimeType;
+        file.transferredSize = packet.transferredSize;
 
         if (includeResponseBodies) {
           request = this.getData(
-            resource.actor,
+            actor,
             "getResponseContent",
             this.onResponseContent
           );
         }
         break;
       case "eventTimings":
-        request = this.getData(
-          resource.actor,
-          "getEventTimings",
-          this.onEventTimings
-        );
+        request = this.getData(actor, "getEventTimings", this.onEventTimings);
         break;
     }
 
