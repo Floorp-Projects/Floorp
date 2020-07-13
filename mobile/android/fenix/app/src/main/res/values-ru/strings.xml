@@ -1065,11 +1065,11 @@
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">ПОВТОРИТЬ</string>
     <!-- Title of QR Pairing Fragment -->
-    <string name="sync_scan_code">Просканируйте QR-код</string>
+    <string name="sync_scan_code">Сканирование QR-кода</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Откройте Firefox на вашем компьютере и перейдите на <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Готов к сканированию</string>
+    <string name="sign_in_ready_for_scan">Сканировать QR-код</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Войти с распознаванием лица</string>
     <!-- Text shown for settings option for sign with email -->

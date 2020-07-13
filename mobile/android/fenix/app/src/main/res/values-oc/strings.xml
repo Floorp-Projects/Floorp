@@ -14,13 +14,31 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Recèrca o adreça</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s es produch per Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Sètz en una session privada</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s escafa vòstre istoric de recèrcas e de navegacion quand quitatz l’aplicacion o tampatz totes los onglets e fenèstras de navegacion privada. Malgrat qu’aquò vos faga pas venir anonim pels sites web o vòstre provesidor Internet, fa venir mai simple de gardar privat çò que fasètz en linha pels autres qu’utilizan aqueste ordenador.</string>
+    <string name="private_browsing_common_myths">Mites màgers de la navegacion privada</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Suprimir la session</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Apondre un acorchi per dobrir d’onglets privats de l’ecran d’acuèlh estant.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Apondre un acorchi</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Non, mercé</string>
+
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Apondre lo widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Pas ara</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -28,6 +46,9 @@
 
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Novèl onglet de nav. privada</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Mai visitats</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -38,6 +59,8 @@
     <string name="browser_menu_forward">Pagina seguenta</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
     <string name="browser_menu_refresh">Actualizar</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Arrestar</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string name="browser_menu_bookmark">Marcapagina</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
@@ -58,12 +81,16 @@
     <string name="browser_menu_add_to_homescreen">Apondre a l’ecran d’acuèlh</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installar</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Onglets sincronizats</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Recercar dins la pagina</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Onglet privat</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Onglet novèl</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Salvar a la colleccion</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partejar</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -78,6 +105,12 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Fonciona gràcia a %1$s</string>
 
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Mòde lectura</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Tampar la vista de lectura</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Dobrir amb l’aplicacion</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aparéncia</string>
 
@@ -91,8 +124,13 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Cercar una lenga</string>
 
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Escanerizar</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Acorchis</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Paramètres del motor de recèrca</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Recercar amb</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -103,6 +141,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">Autorizar pas</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Autorizar las suggestions de recèrca en navegacion privada ?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s enviarà tot çò que picatz dins la barra d’adreça al motor de recèrca</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Ne saber mai</string>
 
@@ -111,6 +151,9 @@
     <string name="search_widget_text_short">Recercar</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Recercar sul web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Recèrca a la votz</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -129,18 +172,36 @@
     <string name="preferences_search_address_bar">Barra d‘adreça</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ajuda</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Valorar sus Google Play</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Donar vòstre vejaire</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">A prepaus de %1$s</string>
 
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Vòstres dreches</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Senhals</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Cartas de crèdit e adreças</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Definir coma navegador per defaut</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Avançat</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Vida privada</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Vida privada e seguretat</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Autorizacions de site</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Navegacion privada</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Dobrir los ligams en navigacion privada</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permetre las capturas d’ecran en navegacion privada</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilitat</string>
     <!-- Preference category for account information -->
@@ -158,8 +219,22 @@
     <!-- Preference for language -->
     <string name="preferences_language">Lenga</string>
 
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Donadas collectadas</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Culhida de donadas</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Politica de confidencialitat</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Aisinas pels desvolopaires</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Desbugatge distant per USB</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Mostrar las suggestions de recèrca</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Mostrar la recèrca a la votz</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Mostrar en navegacion privada</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Cercar dins los marcapaginas</string>
     <!-- Preference for account settings -->
@@ -170,6 +245,8 @@
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar ara</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Causir qué sincronizar</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">Istoric</string>
     <!-- Preference for syncing bookmarks -->
@@ -177,6 +254,8 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Identificants</string>
 
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Onglets dobèrts</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Desconnexion</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -190,6 +269,11 @@
     <string name="sync_last_synced_summary">Darrièra sincronizacion : %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Darrièra sincr. : pas jamai</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s sus %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -208,20 +292,56 @@
     <string name="preferences_tracking_protection">Proteccion contra lo seguiment</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Excepcions</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">La proteccion contra lo seguiment es desactivada per aquestes sites</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Activar per totes los sites</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Ne saber mai</string>
 
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetria</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Donadas marketing</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Experimentacions</string>
+
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Raportador de plantatge</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Servici de localizacion de Mozilla</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Rapòrt de santat de %s</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Activar la sincronizacion</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Connexion</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Suprimir lo compte</string>
 
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Dobrir la camèra</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Anullar</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Naut</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Bas</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">Clar</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Fosc</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Definit per l’estalviador de batariá</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Segon lo tèma del periferic</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -242,12 +362,16 @@
     <string name="library_desktop_bookmarks_unfiled">Autres marcapaginas</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Istoric</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Onglets sincronizats</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lista de lectura</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Recercar</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Paramètres</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menú dels elements de l’istoric</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Tampar</string>
 
@@ -260,10 +384,40 @@
     <string name="tabs_header_private_tabs_title">Onglets privats</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Apondre un onlget</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Dobrir onglet privat</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privat</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Onglets dobèrts</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Salvar a la colleccion</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Partejar totes los onglets</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Tampar totes los onglets</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Onglet novèl</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Acuèlh</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Bascular de mòde d’onglets</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Suprimir l’onglet de la colleccion</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Tampar l’onglet</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Tampar l’onglet %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Dobrir lo menú dels onglets</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Tampar totes los onglets</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Partejar los onglets</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Enregistrar los onglets dins la colleccion</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Menú de l’onglet</string>
     <!-- Tab menu item to share the tab -->
     <string name="tab_share">Partejar aqueste onglet</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
@@ -273,8 +427,19 @@
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Partejar</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Imatge de la session actuala</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Enregistrar dins una colleccion</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Suprimir la colleccion</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Onglets dobèrts</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Suprimir</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (mòde privat)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -287,8 +452,19 @@
     <string name="history_delete_single_item_snackbar">%1$s suprimit</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Escafar</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Copiar</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Partejar</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Dobrir dins un onglet novèl</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Dobrir en navigacion privada</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Suprimir</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d seleccionats</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Suprimir %1$d elements</string>
@@ -301,35 +477,114 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Mai ancian</string>
 
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Cap d’istoric</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">%1$s a pas pogut cargar aquesta pagina.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Podètz ensajar de restablir o de tampar l’onglet seguent.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Enviar un senhalament de bug a Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Tampar l’onglet</string>
 
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Restablir l’onglet</string>
 
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Opcions de session</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Partejar la session</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Menú dels marcapaginas</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Modificar lo marcapagina</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Seleccionar un dossièr</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Volètz vertadièrament suprimir aqueste dorsièr ?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s suprimit</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Apondre un dossièr</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Marcapagina creat.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Marcapagina apondut !</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">MODIFICAR</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Modificar</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Seleccionar</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Copiar</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Partejar</string>
 
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Dobrir dins un onglet novèl</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Dobrir en navigacion privada</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Suprimir</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">Enregistrar</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d seleccionats</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Modificar lo marcapagina</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Modificar lo dossièr</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">DOSSIÈR</string>
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">NOM</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Apondre un dossièr</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Seleccionar un dossièr</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Deu aver un títol</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">URL invalida</string>
 
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">I a pas cap de marcapagina aquí</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s suprimit</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Marcapagina suprimit</string>
 
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">ANULLAR</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Permissions</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Anar als paramètres</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Recomandat</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Gerir las autorizacions de site</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Escafar las permissions</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Escafar la permission</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Escafar las permissions de totes los sites</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Lectura automatica</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Camèra</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -339,11 +594,49 @@
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Notificacion</string>
 
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Demandar per autorizar</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blocat</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Autorizat</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blocat per Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Excepcions</string>
+
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Activada</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Desactivada</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Autorizar l’àudio e la vidèo</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Colleccions</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Menú de colleccion</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Nom de la colleccion</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Onglets enregistrats !</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Onglet enregistrat !</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Tampar</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Enregistrar</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Veire</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Colleccion %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Enviar e partejar</string>
     <!-- Share screen header -->
     <string name="share_header_2">Partejar</string>
     <!-- Content description (not visible, for screen readers etc.):
@@ -353,19 +646,39 @@
     <string name="share_link_subheader">Partejar un ligam</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Enviar al periferic</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Totas las accions</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Utilizats fa res</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Se connectar a Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Enviar a totes los periferics</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Tornar connectar a Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Fòra linha</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Connectar un periferic mai</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Comprés !</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Enviar al periferic</string>
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Cap de periferic pas connectat</string>
 
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Dobrir</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">Onglet suprimit</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Onglets suprimits</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Onglet tampat</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Onglets tampats</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">ANULLAR</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">Confirmar</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
@@ -374,6 +687,9 @@
     <string name="tab_collection_dialog_positive">Suprimir</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Anullar</string>
+
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL copiada</string>
 
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Onglets dobèrts</string>
@@ -400,31 +716,323 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Suprimir</string>
 
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">La benvenguda a %s !</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Avètz ja un compte ?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Descobrissètz %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Descobrissètz las novetats</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Òc, connectatz-me</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Connexion…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Se connectar a Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Demorar desconnectat</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Estandard (per defaut)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Estricte (recomandat)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Estricte</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Dobrir los paramètres</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Tampar</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Començar de navegar</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Causissètz vòstre tèma</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Automatic</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tèma fosc</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Tèma clar</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Onglets enviats !</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Onglet enviat !</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Se desconectar</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Anullar</string>
 
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Paramètres de proteccion</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Proteccion contra lo seguiment renfortida</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Navegatz sens èsser seguit</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ne saber mai</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Personalizada</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Contengut utilizat pel seguiment</string>
+
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Dins totes los onglets</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Sonque en navegacion privada</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Sonque dins os onglets personalizats</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Minaires de criptomonedas</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Generadors d’emprentas numericas</string>
+    <string name="enhanced_tracking_protection_blocked">Blocat</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Autorizat</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Traçadors de malhums socials</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cookies de seguiment entre sites</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Minaires de criptomonedas</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Generadors d’emprentas numericas</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Contengut utilizat pel seguiment</string>
+
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Las proteccions son activadas per aqueste site</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Las proteccions son desactivadas per aqueste site</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">La proteccion renfortida contra lo seguiment es desactivada per aquestes sites</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Tornar</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Vòstres dreches</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Bibliotècas liuras qu’utilizam</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Qu’es nòu dins %s</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Assisténcia</string>
+
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Plantatges</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Entresenhas sus la licéncia</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 onglet</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d onglets</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Copiar</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Pegar e anar</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Pegar</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL copiada dins lo quichapapièrs.</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Apondre a l’ecran d’acuèlh</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Anullar</string>
 
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Apondre</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Contunhar cap al site web</string>
+
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Nom de l’acorchi</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Identificants e senhals</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Salvar los identificants e senhals</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Demandar per salvar</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Salvar pas jamai</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Emplenament automatic</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sincronizar los identificants</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Activat</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Desactivat</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Se reconnectar</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Se connectar a Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Identificants salvats</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Per ne saber mai sus Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Excepcions</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Recercar d’identificants</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Òrdre alfabetic</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Utilizats recentament</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Site</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Nom d’utilizaire</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Senhal</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Tornatz picar lo PIN</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Aquesta connexion es pas segura. Los identificant picats aquí poirián èsser divulgats.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Ne saber mai</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Volètz que %s enregistre aqueste identificant ?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Enregistrar</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Enregistrar pas</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Senhal copiat al quichapapièrs</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nom d’utilizaire copiat al quichapapièrs</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Site copiat al quichapapièrs</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copiar lo senhal</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copiar lo nom d’utilizaire</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copiar lo site</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Mostrar lo senhal</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Amagar lo senhal</string>
+
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Mai tard</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">O configurar ara</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nom (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Darrièra utilizacion</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Apondre un motor de recèrca</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Modificar lo motor de recèrca</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Apondre</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Enregistrar</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Modificar</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Suprimir</string>
 
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Autre</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Nom</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Ne saber mai</string>
+
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Ligam per ne saber mai</string>
+
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Picatz una cadena de recèrca</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Error de connexion a « %s »</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s creat</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s enregistrat</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s : supression realizada</string>
 
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Mesa a jorn de %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Aviar %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">La migracion a acabat</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Senhals</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Per l’autorizar :</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Connexion segura</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Connexion pas segura</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Volètz vertadièrament suprimir totas las autorizacions per totes los sites ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
     <string name="confirm_clear_permissions_site">Volètz vertadièrament suprimir totas las autorizacions per aqueste site ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Volètz vertadièrament suprimir aquesta autorizacion per aqueste site ?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Cap d’excepcions de site</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Articles principals</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Sètz segur que volètz suprimir aqueste marcapagina ?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Apondre als sites populars</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Verificat per : %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Suprimir</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Modificar</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Sètz segur que volètz suprimir aqueste identificant ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Suprimir</string>
 
-    </resources>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Opcions de l’identificant</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Anullar las modificacions</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Modificar</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Senhal requesit</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Recèrca a la votz</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Parlatz ara</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Connectatz-vos amb un compte Firefox</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Se connectar a Sync</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Òc, plan comprés</string>
+
+</resources>

@@ -920,8 +920,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Löscht die Browser-Daten automatisch, wenn Sie im Hauptmenü die Option „Beenden“ auswählen</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Löscht die Browser-Daten automatisch, wenn Sie im Hauptmenü die Option „Beenden“ auswählen</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Chronik</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Beenden</string>
 
@@ -953,7 +951,7 @@
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ist umgezogen</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_installed">Diese App erhält keine Sicherheitsupdates mehr. Nutzen Sie diese App nicht mehr und wechseln Sie zum neuen Nightly.
-        \ n \ nUm Ihre Lesezeichen, Zugangsdaten und Chronik auf eine andere App zu übertragen, erstellen Sie ein Firefox-Konto.</string>
+\n\nUm Ihre Lesezeichen, Zugangsdaten und Chronik auf eine andere App zu übertragen, erstellen Sie ein Firefox-Konto.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Wechseln Sie zum neuen Nightly</string>
 
@@ -961,7 +959,7 @@
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly ist umgezogen</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_not_installed">Diese App erhält keine Sicherheitsupdates mehr. Holen Sie sich das neue Nightly und nutzen Sie diese App nicht mehr.
-        \ n \ nUm Ihre Lesezeichen, Zugangsdaten und Chronik auf eine andere App zu übertragen, erstellen Sie ein Firefox-Konto.</string>
+\n\nUm Ihre Lesezeichen, Zugangsdaten und Chronik auf eine andere App zu übertragen, erstellen Sie ein Firefox-Konto.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Holen Sie sich das neue Nightly</string>
 

@@ -19,6 +19,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ແທັບສ່ວນຕົວຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">ເປີດ 1 ແຖບ. ແຕະເພື່ອປ່ຽນແທັບ.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">ເປີດ %1$s ແຖບ. ແຕະເພື່ອປ່ຽນແທັບ.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ແມ່ນຜະລິດຂື້ນໂດຍ Mozilla.</string>
 
@@ -96,6 +101,8 @@
     <string name="browser_menu_private_tab">ແທັບສ່ວນຕົວ</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">ແທັບໃຫມ່</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">ບັນທຶກໄປໄວ້ບ່ອນເກັບສະສົມ</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">ແບ່ງປັນ</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -203,6 +210,8 @@
     <string name="preferences_add_private_browsing_shortcut">ເພີ່ມທາງລັດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ສິ່ງອຳນວຍຄວາມສະດວກ</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">ກຳຫນົດເຊີເວີ Sync</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ບັນຊີ</string>
     <!-- Preference shown on banner to sign into account -->
@@ -422,6 +431,8 @@
     <string name="tab_drawer_fab_content">ສ່ວນຕົວ</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">ເປີດແທັບ</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">ບັນທຶກໄປໄວ້ບ່ອນເກັບສະສົມ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ແບ່ງປັນແທັບທັງໝົດ</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -430,6 +441,8 @@
     <string name="tab_tray_menu_open_new_tab">ແທັບໃຫມ່</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">ໄປຫນ້າທຳອິດ</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">ລຶບແຖບອອກຈາກບ່ອນເກັບສະສົມ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ປິດແທັບ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -440,6 +453,8 @@
     <string name="tabs_menu_close_all_tabs">ປິດແທັບທັງຫມົດ</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">ແບ່ງປັນແທັບ</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">ບັນທຶກແຖບໄປໄວ້ໃນບ່ອນເກັບສະສົມ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ເມນູແທັບ</string>
     <!-- Tab menu item to share the tab -->
@@ -451,6 +466,12 @@
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">ແບ່ງປັນ</string>
 
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">ບັນທຶກໄປໄວ້ບ່ອນເກັບສະສົມ</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">ລຶບບ່ອນເກັບສະສົມ</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">ປ່ຽນຊື່ບ່ອນເກັບສະສົມ</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ເປີດແທັບ</string>
     <!-- Text for the menu button to remove a top site -->
@@ -510,6 +531,12 @@
     <string name="tab_crash_close">ປິດແທັບ</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">ກູ້ຄືນແທັບ</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">ຕົວເລືອກຂອງແຊັສຊັນ</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">ແບ່ງປັນແຊັສຊັນ</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
@@ -586,5 +613,42 @@
     <string name="permissions_header">ສິດອະນຸຍາດ</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">ໄປທີ່ການຕັ້ງຄ່າ</string>
+
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">ແນະນຳ</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">ຈັດການສິດໃນເວັບໄຊທ</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">ລົບລ້າງສິດ</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">ລົບລ້າງສິດ</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">ລົບລ້າງສິດສຳລັບທຸກເວັບໄຊທ</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">ເປີດອັດຕະໂນມັດ</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">ກ້ອງຖ່າຍຮູບ</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ໄມໂຄຣໂຟນ</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ຕໍາ​ແໜ່​ງທີ່​ຕັ້ງ</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">ການແຈ້ງເຕືອນ</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ຖາມເພື່ອອະນຸຍາດ</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">ບັອກແລ້ວ</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ອະນຸຍາດແລ້ວ</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">ຂໍ້ຍົກເວັ້ນ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">ເປີດ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">ປິດ</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">ອະນຸຍາດໃຫ້ເປີດສຽງ ແລະ ວີດີໂອ</string>
 
     </resources>

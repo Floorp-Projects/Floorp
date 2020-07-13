@@ -22,6 +22,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Wawe\' xkeq\'alajin pe ri ichinan taq ruwi\'.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 ruwi\' jaqon. Tachapa\' richin nak\'ëx ruwi\'.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s ruwi\' ejaqon. Tachapa\' richin nak\'ëx ruwi\'.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s b\'anon ruma Mozilla.</string>
 
@@ -299,6 +304,8 @@
     <string name="preferences_sync_bookmarks">Taq yaketal</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Ketikirisäx molojri\'ïl</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Kejaq ruwi\'</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Titz\'apïx molojri\'ïl</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -489,6 +496,8 @@
     <string name="tabs_menu_close_all_tabs">Titz\'apïx ronojel ri taq ruwi\'</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Kekomonïx taq ruwi\'</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Keyak ruwi\' pa mol</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Ruk\'utsamaj ruwi\'</string>
     <!-- Tab menu item to share the tab -->
@@ -711,6 +720,10 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Ruk\'utsamaj mol</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Ke\'amolo\' ri taq wachinäq niqa chawa</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Ketzob\'ajïx taq kanoxïk, taq ruxaq chuqa\' taq ruwi\' ejunam richin ye\'okisäx na.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Kecha\' taq Ruwi\'</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -920,6 +933,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly nuk\'ëx ri\' ronojel taq aq\'a\' chuqa\' k\'o k\'ak\'a\' tojtob\'enel taq rusamaj.
         Po rik\'in jub\'a\' man kan ta jikïl. Taqasaj ri beta qokik\'amaya\'l richin jun jikïl samaj.</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Tak\'ulu\' Firefox richin Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly xsilöx</string>
@@ -1438,6 +1454,9 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Kach\'o wakami</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">K\'o chik jun tikirib\'äl molojri\'ïl rik\'in re b\'i\'aj re\'</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Tok rik\'in jun Rub\'i\' Rutaqoya\'l Firefox</string>
@@ -1448,4 +1467,19 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Tatzija\' ri kiximik taq ruwi\'.</string>
 
-    </resources>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Majun ruwi\' ajaqon pa Firefox pa ri ch\'aqa\' chik awokisab\'al.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Titz\'et jun kicholb\'al ruwi\' pa juley chik awokisab\'al.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Tatikirisaj molojri\'ïl pa yaximon</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Xaq\'i\' ruchi\' ri jutaqil taq ruxaq</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Richin natz\'aqatisaj jun k\'ak\'a\' jutaqil ruxaq, tayuju\' jun. Tapitz\'a\' pa ruwi\' ri ruxaq richin nacha\' tiyuj.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">ÜTZ, Wetaman Chik</string>
+
+</resources>

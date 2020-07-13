@@ -464,7 +464,7 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">開新隱私瀏覽分頁</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
-    <string name="tab_drawer_fab_content">隱私</string>
+    <string name="tab_drawer_fab_content">隱私分頁</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">開啟分頁</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -940,7 +940,7 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Nightly 已接手原 Firefox Preview 功能</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。\n\n若想要有較穩定的使用體驗，請下載我們的 Beta 測試版。</string>
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。\n\n若想要有較穩定的使用體驗，請下載 Beta 測試版。</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">下載 Firefox for Android Beta 測試版</string>
@@ -1148,7 +1148,7 @@
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">加密貨幣採礦程式</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">防止有害的指令碼，使用您的裝置來為數位貨幣「採礦」。</string>
+    <string name="etp_cryptominers_description">防止有害指令碼使用您的裝置來為數位貨幣「採礦」。</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">數位指紋追蹤程式</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->

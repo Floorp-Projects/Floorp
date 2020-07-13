@@ -15,17 +15,31 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">వెతకండి లేదా చిరునామా ఇవ్వండి</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">తెరిచివున్న ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
+    <string name="no_open_tabs_description">మీ తెరిచివున్న ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">మీ అంతరంగిక ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
 
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">మీరు అంతరంగిక సెషన్‌లో ఉన్నారు</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">మీరు  అంతరంగిక ట్యాబులను మూసివేసినప్పుడు లేదా అనువర్తనం నుండి నిష్క్రమించినప్పుడు  మీ వెతుకుడు, విహరణ చరిత్రను %1$s తుడిచివేస్తుంది. ఇది మిమ్మల్ని వెబ్‌సైట్లకు లేదా మీ ఇంటర్నెట్ సర్వీస్ ప్రొవైడర్‌కు అనామకంగా చేయనప్పటికీ, ఈ పరికరాన్ని వాడే ఇతరుల నుండి మీ  ఆన్‌లైన్ కార్యకలాపాన్ని అంతరంగికంగా ఉంచుకోవడంలో తోడ్పడుతుంది.</string>
     <string name="private_browsing_common_myths">అంతరంగిక విహారణ గురించి సామాన్య అపోహలు</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">సెషనును తొలగించు</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">మీ ముంగిలి తెర నుండి అంతరంగిక ట్యాబులను తెరవడానికి సత్వరమార్గాన్ని చేర్చుకోండి.</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ఫరవాలేదు వద్దు</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Firefoxకి వేగంగా చేరుకోడానికి మీ ముంగిలి తెరకు విడ్జెట్టును చేర్చుకోండి.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">విడ్జెటును చేర్చు</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">ఇప్పుడు కాదు</string>
 
@@ -42,10 +56,16 @@
     <string name="browser_tabs_button">తెరిచివున్న ట్యాబులు</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">వెనుకకు</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">రీఫ్రెష్ చేయి</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">ఇష్టాంశం చేయి</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">ఇష్టాంశాన్ని సవరించు</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">పొడగింతలు</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">పొడగింతలేమీ లేవు</string>
+    <string name="no_add_ons">ఇక్కడ పొడగింతలేమీ లేవు</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">సహాయం</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -70,6 +90,25 @@
     <string name="browser_menu_new_tab">కొత్త ట్యాబు</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">సేకరణకు భద్రపరుచు</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">పంచుకోండి</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">దీనితో పంచుకో…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">%1$sలో తెరువు</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s‌చే శక్తిమంతం</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$sచే శక్తిమంతం</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">చదివే వీక్షణ</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">చదివే వీక్షణను మూసివేయి</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">అనువర్తనంలో తెరువు</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">రూపురేఖలు</string>
 
@@ -77,6 +116,8 @@
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ఎంచుకున్న భాష</string>
 
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">పరికరపు భాషను అనుసరించు</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">భాషను వెతకండి</string>
 
@@ -133,6 +174,8 @@
     <string name="preferences_private_browsing_options">అంతరంగిక విహారణ</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ఖాతా</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">పనిముట్ల పట్టీ</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">అలంకారం</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -209,6 +252,9 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">చీకటి</string>
 
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">సెషనులు</string>
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">తెరపట్లు</string>
     <!-- Option in Library to open Downloads page -->
@@ -217,6 +263,8 @@
     <string name="library_bookmarks">ఇష్టాంశాలు</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
     <string name="library_desktop_bookmarks_root">డెస్క్‌టాప్ ఇష్టాంశాలు</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">ఇష్టాంశాల మెనూ</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">ఇతర ఇష్టాంశాలు</string>
     <!-- Option in Library to open History page -->
@@ -230,6 +278,8 @@
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">తెరిచివున్న ట్యాబులు</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">అంతరంగిక ట్యాబులు</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">అంతరంగికం</string>
     <!-- Text shown as the title of the open tab tray -->
@@ -241,6 +291,8 @@
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">కొత్త ట్యాబు</string>
 
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">ముంగిలికి వెళ్ళు</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ట్యాబును మూసివేయి</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->

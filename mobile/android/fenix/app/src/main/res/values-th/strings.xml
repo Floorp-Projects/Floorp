@@ -19,6 +19,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">แท็บส่วนตัวของคุณจะถูกแสดงที่นี่</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 แท็บที่เปิด แตะเพื่อสลับไปยังแท็บ</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s แท็บที่เปิด แตะเพื่อสลับไปยังแท็บ</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ผลิตขึ้นโดย Mozilla</string>
 
@@ -693,6 +698,8 @@
     <string name="collections_header">ชุดสะสม</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">เมนูชุดสะสม</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">รวบรวมสิ่งที่สำคัญสำหรับคุณ</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">เลือกแท็บ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -956,6 +963,8 @@
     <string name="onboarding_tracking_protection_header_2">ความเป็นส่วนตัวอัตโนมัติ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">มาตรฐาน (ค่าเริ่มต้น)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">ปิดกั้นตัวติดตามน้อยลง หน้าเว็บจะโหลดตามปกติ</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">เข้มงวด (แนะนำ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1049,6 +1058,8 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">เรียนรู้เพิ่มเติม</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">มาตรฐาน (ค่าเริ่มต้น)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">ปิดกั้นตัวติดตามน้อยลง หน้าเว็บจะโหลดตามปกติ</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบมาตรฐาน</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1397,6 +1408,10 @@
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">เชื่อมต่ออุปกรณ์อื่น</string>
 
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">โปรดรับรอบความถูกต้องอีกครั้ง</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">โปรดเปิดใช้งานซิงค์แท็บ</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">คุณไม่มีแท็บใด ๆ ที่เปิดอยู่ใน Firefox บนอุปกรณ์อื่น ๆ ของคุณ</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
@@ -1404,6 +1419,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">ลงชื่อเข้าใช้เพื่อซิงค์</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">ถึงขีดจำกัดของไซต์เด่นแล้ว</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
 

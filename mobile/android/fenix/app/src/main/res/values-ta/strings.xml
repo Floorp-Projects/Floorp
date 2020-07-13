@@ -88,7 +88,7 @@
     <!-- Browser menu button that sends a to a the what's new article -->
     <string name="browser_menu_whats_new">புதியவை என்ன</string>
     <!-- Browser menu button that opens the settings menu -->
-    <string name="browser_menu_settings">அமைப்புகள்</string>
+    <string name="browser_menu_settings">அமைவுகள்</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">நூலகம்</string>
     <!-- Browser menu toggle that requests a desktop site -->
@@ -151,7 +151,7 @@
     <string name="search_shortcuts_button">குறுக்குவழிகள்</string>
 
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">தேடுபொறி அமைப்புகள்</string>
+    <string name="search_shortcuts_engine_settings">தேடுபொறி அமைவுகள்</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">இதனுடன் தேடு:</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -282,7 +282,7 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">புத்தகக்குறிகளைத் தேடு</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">கணக்கு அமைப்புகள்</string>
+    <string name="preferences_account_settings">கணக்கு அமைவுகள்</string>
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">இணைப்புகளைத் செயலியில் திறக்கவும்</string>
@@ -490,7 +490,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">கீற்றுகளைப் பகிர்</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection1">கீற்றுகளை சேகரிப்பில் சேமிக்கவும்</string>
+    <string name="tabs_menu_save_to_collection1">கீற்றுகளைத் திரட்டில் சேமி</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">கீற்றுப் பட்டி</string>
     <!-- Tab menu item to share the tab -->
@@ -705,21 +705,21 @@
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
-    <string name="collections_header">தொகுப்புகள்</string>
+    <string name="collections_header">திரட்டுகள்</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
-    <string name="collection_menu_button_content_description">சேகரிப்பு பட்டி</string>
+    <string name="collection_menu_button_content_description">திரட்டு பட்டி</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">உங்களுக்கு முக்கியமான விடையங்களைச் சேகரிக்கவும்</string>
+    <string name="no_collections_header1">உங்களுக்கு முக்கியமான விடயங்களைச் சேகரியுங்கள்</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">விரைவான அணுகலுக்காக ஒத்த தேடல்கள், தளங்கள் மற்றும் கீற்றுகளை ஒன்றிணைக்கவும்.</string>
+    <string name="no_collections_description1">விரைவான அணுகலுக்காக ஒத்த தேடல்கள், தளங்கள், கீற்றுகளை ஒன்றிணையுங்கள்.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">கீற்றுகளைத் தேர்</string>
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">சேகரிப்பை தேர்</string>
+    <string name="create_collection_select_collection">திரட்டைத் தேர்</string>
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">சேகரிப்பை பெயரிடு</string>
+    <string name="create_collection_name_collection">திரட்டைப் பெயரிடு</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">புதிய தொகுப்பைச் சேர்</string>
+    <string name="create_collection_add_new_collection">புதிய திரட்டைச் சேர்</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">அனைத்தையும் தேர்</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
@@ -736,7 +736,7 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">கீற்றுகள் சேமிக்கப்பட்டன!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">கீற்று சேமிக்கப்பட்ட!</string>
+    <string name="create_collection_tab_saved">கீற்று சேமிக்கப்பட்டது!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">மூடு</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
@@ -745,7 +745,7 @@
     <string name="create_collection_view">பார்</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">%d சேகரிப்பு</string>
+    <string name="create_collection_default_name">திரட்டு %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -802,10 +802,10 @@
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">மூலம் இயக்கப்படுகிறது</string>
     <!-- Text shown in snackbar when user deletes a collection -->
-    <string name="snackbar_collection_deleted">சேகரிப்பு அழிக்கப்பட்டது</string>
+    <string name="snackbar_collection_deleted">திரட்டு அழிக்கப்பட்டது</string>
 
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">சேகரிப்பு மறுபெயரிடப்பட்டது</string>
+    <string name="snackbar_collection_renamed">திரட்டு மறுபெயரிடப்பட்டது</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">கீற்று அழிக்கப்பட்டது</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
@@ -924,6 +924,20 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">இராக்கால பயர்பாக்சு நகர்ந்தது</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">இனி இச்செயலி பாதுகாப்பு புதுப்பிப்புகளைப் பெறாது. இச்செயலியை பாவிப்பதை நிறுத்திவிட்டு புதிய இராக்கால செயலிக்கு மாறவும்.
+        \n\nஉங்களின் புத்தகக்குறிகள், உள்நுழைவுகள் மற்றும் வரலாற்றை மற்றொரு செயலிக்கு மாற்ற, பயர்பாக்சு கணக்கை உருவாக்கவும்.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">புதிய இராக்கால உலாவிக்கு மாறவும்</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">இராக்கால பயர்பாக்சு நகர்ந்தது</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">இனி இச்செயலி பாதுகாப்பு புதுப்பிப்புகளைப் பெறாது. இச்செயலியை பாவிப்பதை நிறுத்திவிட்டு புதிய இராக்கால செயலிக்கு மாறவும்.
+        \n\nஉங்களின் புத்தகக்குறிகள், உள்நுழைவுகள் மற்றும் வரலாற்றை மற்றொரு செயலிக்கு மாற்ற, பயர்பாக்சு கணக்கை உருவாக்கவும்.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">புதிய இராக்கால உலாவியைப் பெறுங்கள்</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -943,10 +957,16 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s இலிருந்து ஆக அதிகமானதைப் பெறுங்கள்.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">இந்தத் தொலைபேசியில் மற்றொரு பயர்பாக்சு உலாவியில் %s பெயரில் உள்நுழைந்துள்ளீர்கள். இக்கணக்கில் உள்நுழைய விரும்புகிறீர்களா?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ஆம், புகுபதி</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">புகுபதிகிறது…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">பயர்பாக்சில் உள்நுழை</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">விடுபதிந்தே இரு</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1024,12 +1044,16 @@
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">குறியீட்டை வருடு</string>
 
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[உங்கள் கணினியில் பயர்பாக்சைத் திறந்து <b>https://firefox.com/pair</b> பக்கத்திற்கு செல்லவும்]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">வருடத் தயார்</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">உங்கள் படக்கருவியால் புகுபதிக</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">பதிலாக மின்னஞ்சல் பயன்படுத்துக</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">பயர்பாக்சு உங்கள் கணக்குடன் ஒத்திசைவு செய்யாது, அதே சமயம் உங்கள் சாதனத்தில் உள்ள எந்த உலாவல் தரவையும் அழிக்காது.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s உங்கள் கணக்குடன் ஒத்திசைவை நிறுத்தும், ஆனால் இச்சாதனத்திலுள்ள உங்கள் உலாவல் தரவை அழிக்காது.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1406,6 +1430,9 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">அந்தப் பயனர்பெயருடன் ஒரு புகுபதிகை ஏற்கனவே உள்ளது</string>
 
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">ஒரு பயர்பாக்சு கணக்குடன் இணை.</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">மற்றொரு சாதனத்தை இணைக்க.</string>
 
@@ -1413,6 +1440,8 @@
     <string name="synced_tabs_reauth">மறு-அங்கீகரியுங்கள்.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">கீற்று ஒத்திசைவைச் செயற்படுத்துங்கள்.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">உங்களின் மற்ற சாதனங்களின் பயர்பாக்சில் திறந்த கீற்றுகள் ஏதுமில்லை.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">உங்கள் மற்ற கருவிகளிலிருந்து கீற்றுகளின் பட்டியலைப் பார்க்க.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

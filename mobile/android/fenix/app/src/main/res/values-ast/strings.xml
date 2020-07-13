@@ -34,8 +34,7 @@
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s llimpia los historiales cuando coles de l\'aplicación o zarres toles llingüetes privaes. Magar qu\'esto nun t\'anonimiza n\'internet, fai que la to actividá en llinia seya fácil d\'anubrir
-        a otros usuarios qu\'usen el preséu.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s llimpia los historiales cuando coles de l\'aplicación o zarres toles llingüetes privaes. Magar qu\'esto nun t\'anonimiza n\'internet, fai que la to actividá en llinia seya fácil d\'anubrir a otros usuarios qu\'usen el preséu.</string>
     <string name="private_browsing_common_myths">Mitos comunes tocante al restolar en privao</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Desaniciar la sesión</string>
@@ -220,6 +219,10 @@
     <string name="preferences_add_private_browsing_shortcut">Amestar un atayu pa restolar en privao</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accesibilidá</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Sirvidor personalizáu de Firefox Accounts</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Sirvidor personalizáu de Sync</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done">Modificóse\'l sirvidor de cuentes/sincronización de Firefox. Colando de l\'aplicación p\'aplicar los cambeos…</string>
     <!-- Preference category for account information -->
@@ -872,6 +875,8 @@
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Posición</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Prueba\'l restolar con una mano cola barra de ferramientes no baxero o móvila a lo cimero.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Restolar en privao</string>
     <!-- text for the private browsing onboarding card description
@@ -902,6 +907,8 @@
     <string name="onboarding_theme_picker_header">Escoyeta d\'un estilu</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description1">Aforra daqué de batería y curia los güeyos activando\'l mou escuru.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Siguir l\'estilu del sistema</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_summary">Adáutase a los axustes del preséu</string>
     <!-- Theme setting for dark mode -->
@@ -1049,6 +1056,9 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Les biblioteques qu\'usamos</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menú de depuración: %1$d calcu(os) p\'activar</string>
     <string name="about_debug_menu_toast_done">Activóse\'l menú de depuración</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
@@ -1078,6 +1088,9 @@
     <string name="add_to_homescreen_continue">Siguir col sitiu</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nome del atayu</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Pues amestar fácilmente esti sitiu web a la pantalla d\'aniciu del preséu p\'acceder nel intre y restolalu como si fore una aplicación.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Anicios de sesión y contraseñes</string>
@@ -1250,6 +1263,12 @@
     <string name="quick_settings_sheet_secure_connection">La conexón ye segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">La conexón ye insegura</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">¿De xuru que quies quitar tolos permisos de tolos sitios?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">¿De xuru que quies quitar tolos permisos d\'esti sitiu?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">¿De xuru que quies quitar esti permisu d\'esti sitiu?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Nun hai nenguna</string>
     <!-- Label for the Pocket default top site -->
@@ -1270,6 +1289,12 @@
 
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Desaniciar</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">El campu de testu editable pa la direición web del aniciu de sesión.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">El campu de testu editable pal nome d\'usuariu del aniciu de sesión.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">El campu de testu editable pa la contraseña del aniciu de sesión.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edición</string>
     <!--  The error message in edit login view when password field is blank. -->
@@ -1296,7 +1321,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Algamóse la llende de sitios destacaos</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">P\'amestar sitios nuevos, desanicia dalgún. Ten primíu un sitiu y esbilla Desaniciar.</string>
+    <string name="top_sites_max_limit_content">P\'amestar sitios nuevos desanicia dalgún. Ten primíu un sitiu y esbilla Desaniciar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 

@@ -34,7 +34,7 @@
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s-ը մաքրում է ձեր որոնման և զննարկման պատմությունը, երբ դուրս եք գալիս ծրագրից կամ փակում եք բոլոր գաղտնի ներդիրները: Չնայած դա ձեզ անանուն չի դարձնում ինտերնետային կայքերի կամ ձեր ինտերնետային ծառայություններ մատուցողի համար, այն ավելի հեշտ է դարձնում ձեր առցանց ակտիվության գաղտնիությունը այն դեպքում, եթե մեկ ուրիշը ևս օգտագործում է այս սարքը:</string>
+    <string name="private_browsing_placeholder_description_2">%1$s-ին մաքրում է որոնման և զննարկման պատմությունը, երբ փակում եք ներդիրը կամ դուրս եք գալիս հավելվածից: Չնայած դա ձեզ անանուն չի դարձնում կայքերի կամ ձեր համացանցի ծառայություններ մատուցողի համար, այն ավելի հեշտ է դարձնում ձեր առցանց ակտիվության գաղտնիությունը այն դեպքում, եթե մեկ ուրիշը ևս օգտագործում է տվյալ սարքը:</string>
     <string name="private_browsing_common_myths">Տարածված առասպելներ գաղտնի դիտարկման վերաբերյալ</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ջնջել աշխատաշրջանը</string>
@@ -887,8 +887,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Ինքնաբար ջնջում է դիտարկման տվյալները, երբ հիմնական ցանկից ընտրում եք «Փակել»:</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Ինքնաբար ջնջում է դիտարկման տվյալները, երբ հիմնական ցանկից ընտրում եք \«Փակել»\:</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Դիտարկման պատմություն</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Փակել</string>
 

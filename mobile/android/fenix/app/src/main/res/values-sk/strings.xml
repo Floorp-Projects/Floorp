@@ -23,6 +23,9 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 otvorená karta. Ťuknutím prepnete karty.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">1 otvorených kariet. Ťuknutím prepnete karty.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s vyvíja Mozilla.</string>
 

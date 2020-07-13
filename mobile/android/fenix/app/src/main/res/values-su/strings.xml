@@ -8,11 +8,47 @@
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Pilihan séjén</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Hurungkeun langlangan pribadi</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Pareuman langlangan pribadi</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Paluruh atawa asupkeun alamat</string>
 
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Sakur tab anu muka bakal ditémbongkeun di dieu.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Sakur tab pribadi anjeun bakal ditémbongkeun di dieu.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 tab muka. Toél pikeun ngagilir tab.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s tab muka. Toél pikeun ngagilir tab.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s dihasilkeun ku Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Anjeun keur dina rintakan nyamuni</string>
+    <string name="private_browsing_common_myths">Mitos umum ngeunaan langlangan nyamuni</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Hapus rintakan</string>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Teu, nuhun</string>
+
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Tambihkeun widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Moal waka</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Tab anyar</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Tab nyamuni anyar</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Loka kawentar</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -33,6 +69,8 @@
 
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Émboh</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Teu aya add-on di dieu</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pitulung</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -47,6 +85,8 @@
     <string name="browser_menu_add_to_homescreen">Tambahkeun ka layar Tepas</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Pasang</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Tab singkron</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Panggihan dina kaca</string>
     <!-- Browser menu button that creates a private tab -->
@@ -58,6 +98,8 @@
     <string name="browser_menu_save_to_collection_2">Simpen kana koléksi</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bagikeun</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Bagikeun sareng…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Buka di %1$s</string>
@@ -74,6 +116,9 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Pidangan</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Basa anu dipilih</string>
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Paluruh</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -142,10 +187,18 @@
     <string name="preferences_set_as_default_browser">Jadikeun panyungsi baku</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Terusan</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Salindungan</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Salindungan jeung kaamanan</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Idin loka</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Nyungsi nyamuni</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Buka tutumbu di tab nyamuni</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Ngidinan layar dina langlangan nyamuni</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tambahan tarabas nyungsi nyamuni</string>
     <!-- Preference for accessibility -->
@@ -156,16 +209,34 @@
     <string name="preferences_category_account">Akun</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Asup</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Téma</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Sesuaikeun</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Singkronkeun markah, jujutan, jeung nu lianna maké Firefox Account anjeun</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Akun Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Sambungkeun deui pikeun neruskeun nyingkronkeun</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Basa</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Pilihan data</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Koléksi data</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Wawar privasi</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Parabot pamekar</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Debugging ti kajauhan liwat USB</string>
     <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">Témbongkeun takulan pamaluruhan</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Témbongkeun anjuran maluruh</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Tampilkeun panyungsi sora</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Témbongkeun dina rintakan nyamuni</string>
 
@@ -203,20 +274,90 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Nyingkronkeun…</string>
 
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Singkronan panungtung: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Singkronan panungtung: acan pernah</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s dina %2$s %3$s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Tab nu katampa</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Tab Katampa</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Tab Katampa</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Tab ti %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Kilung Palacakan</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Kilung Palacakan</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Iwal</string>
     <!-- Preference description for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions_description">Kilung Palacakan pikeun ieu loka ayeuna pareum</string>
 
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Lenyepan</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemétri</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Data pamasaran</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Éksperimén</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Ngidinan Mozilla masang sareng ngumpulkeun data kanggo fitur ékspérimén</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Laporan karuksakan</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Laporan kaséhatan %s</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Hurungkeun Sync</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Pinday sandi papasangan dina Firefox déstop</string>
 
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Asup</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Asup pikeun nyambungkeun deui</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Cabut akun</string>
 
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Buka Kaméra</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Bolay</string>
 
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Luhur</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Handap</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Caang</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Poék</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Turutan téma paranti</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Sesi</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Téwakan layar</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Undeuran</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Markah</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
@@ -227,22 +368,139 @@
     <string name="library_desktop_bookmarks_toolbar">Palang Parabot Markah</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Markah Lianna</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Jujutan</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Tab singkron</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Daptar Bacaeun</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Paluruh</string>
+
+    <!-- Settings Page Title -->
+    <string name="settings_title">Setélan</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menu barang jujutan</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Tutup</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Buka tab</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Sesi nyamuni</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Tab nyamuni</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Tambah tab</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Tambah tab nyamuni</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Salindungan</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Buka Tab</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Simpen kana koléksi</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Bagikeun sadaya tab</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Tutup kabéh tab</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Tab anyar</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Cabut tab tina koléksi</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Tutup tab</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Tutup tab %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Buka menu tab</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Tutup kabéh tab</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Bagikeun tab</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Simpen tab kana koléksi</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Menu tab</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Bagikeun tab</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Pupus</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Teundeun</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Bagikeun</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Gambaran sési kiwari</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Simpen kana koléksi</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Hapus koléksi</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Ganti ngaran koléksi</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Buka tab</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Piceun</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Mode Nyamuni)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Hapus jujutan</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Yakin rék meresihan jujutan anjeun?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Mupus jujutan</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Mupus %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Beresihan</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Tiron</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Bagikeun</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Buka dina tab anyar</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Buka dina tab nyamuni</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Pupus</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d dipilih</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Hapus %1$d item</string>
+
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">24 jam terakhir</string>
+
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">7 dinten kapungkur</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">30 dinten kapungkur</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Lawas</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Teu aya jujutan di dieu</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Hampura. %1$s teu tiasa nyungsi ieu kaca.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Kirim laporan nu ruksak ka Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Tutup tab</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Malikkeun tab</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Pilihan sési</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Bagikeun sési</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
@@ -251,6 +509,10 @@
     <string name="bookmark_edit">Édit markah</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Pilih map</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Yakin anjeun rék mupus ieu folder?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Mupus %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tambah map</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -301,9 +563,27 @@
     <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">Euweuh markah di dieu</string>
 
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Mupus %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Mupus markah</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">BEDO</string>
 
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Idin</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Buka Setélan</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Sepré sétélan gancang</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Disarankeun</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Ngatur idin loka</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Beresihan idin</string>
     <!-- Button label for clearing a site permission-->
@@ -311,6 +591,8 @@
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Beresihan idin di sadaya loka</string>
 
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Autoplay</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kaméra</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -319,13 +601,114 @@
     <string name="preference_phone_feature_location">Lokasi</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Iber</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Nyuhunkeun diidinan</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Dipeungpeuk</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Idinan</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Diblokir ku Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Iwal</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Hurung</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Pareum</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Ngidinan sora jeung pidéo</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Blokir sora jeung pidéo dina data sélulér wungkul</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Sora jeung pidéo bakal dimaénkeun dina Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Blokir sora hungkul</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Blokir sora jueng pidéo</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Hurung</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Pareum</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Koléksi</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Menu koléksi</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Kumpulkeun hal anu penting pikeun anjeun</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Ngagabungkeun pamaluruhan, loka sareng tab anu sami pikeun aksés gancang engké.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Pilih Tab</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Pilih koléksi</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Ngaran koléksi</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Nambihkeun koléksi anyar</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Pilih Kabéh</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Ulah Pilih Kabéh</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Pilih tab pikeun diteundeun</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d tab dipilih</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d tab dipilih</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Tab diteundeun!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Tab disimpen!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Tutup</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Teundeun</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Témbong</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Koléksi %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Kirim jeung Bagikeun</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Bagikeun</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Bagikeun</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Bagikeun tutumbu</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Kirim ka parangkat</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Sadaya lampah</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Anyar dianggo</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Asup ka Sync</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Kirim ka sadaya parangkat</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Sambungkeun deui ka Sync</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Luring</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Sambungkeun parangkat séjén</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Ngarti</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Kirim ka parangkat</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Teu aya parangkat nyambung</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Sambungkeun Parangkat Séjén…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -338,6 +721,36 @@
     <string name="notification_pbm_action_open">Buka</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Hapus jeung Buka</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Ditanagaan ku</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Mupus koléksi</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Koléksi dingaranan</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Mupus tab</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Mupus tab</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Tab ditutup</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Tab ditutup</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Ditambahkeun kana loka kawentar!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Tab nyamuni ditutup</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Tab nyamuni ditutup</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Mupus tab nyamuni</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">BEDO</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Loka dipiceun</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Bedo</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Sahkeun</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Idinan %1$s muka %2$s</string>
@@ -345,11 +758,27 @@
     <string name="qr_scanner_dialog_positive">IDINAN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">HULAG</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Anjeun yakin rék mupus %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Pupus</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Bolay</string>
 
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL ditiron</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Ieu mangrupikeun conto téks. Di dieu pikeun nunjukkeun kumaha téks bakal némbongan nalika anjeun ningkatkeun atanapi ngirangan ukuran dina sétélan ieu.</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Ukuran font</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Ukuran font otomatis</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Hapus data sungsian</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Buka tab</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -393,8 +822,44 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Pupus</string>
 
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Data panyungsi pupus</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Mupus data sungsian…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Sawangan téh ayeuna Firefox Nightly</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Manggih Firefox Android Béta</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly parantos ngalih</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Ngalih ka Nightly anyar</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly parantos ngalih</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Manggih Nightly anyar</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Wilujeng sumping di %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Geus boga akun?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Ngenalkeun %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Tingali naon nu anyar</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Kéngingkeun waleran di dieu</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Maksimalkeun %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -412,10 +877,65 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Gagal asup</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Salindungan otomatis</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Baku (bawaan)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Pereketkeun (pijeujeuh)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Pereketkeun</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Nyungsi nyamuni</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Buka tab nyamuni sakali: Toél ikon %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Unggal buka tab nyamuni: Anyarkeun sétélan langlangan nyamuni anjeun.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Buka setélan</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Salindungan anjeun</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Maca wawaran salindungan kami</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Tutup</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Mitembeyan nyungsi</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Pilih téma anjeun</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Otomatis</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Téma poék</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Téma caang</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Tab dikirim!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Tab dikirim!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Teu tiasa ngirim</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">COBA DEUI</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Pinday sandi</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Dina komputer anjeun buka Firefox terus buka <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Siap mindai</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Asup maké kaméra anjeun</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Maké surél wéh</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox bakal eureun nyingkronkeun jeung akun anjeun, ngan moal mupus sakur data langlangan anjeun dina ieu alat.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s bakal eureun nyingkronkeun jeung akun anjeun, ngan moal mupus sakur data langlangan anjeun dina ieu parangkat.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Pegatkeun</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -424,8 +944,16 @@
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Setélan Kilung</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Protéksi Palacakan Tingkat Lanjut</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nyungsi bari teu dituturkeun</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lenyepan</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Baku (bawaan)</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Pereketkeun</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Réréméh</string>
@@ -437,14 +965,61 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Sakabéh réréméh pihak katilu (bisa ngabalukarkeun raramatloka jadi teu bener)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Sakabéh réréméh (bakal ngabalukarkeun raramatloka jadi teu bener)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Kontén palacak</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Dina sadaya tab</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Ngan dina tab Nyamuni</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Gurandil kripto</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Sidik ramo</string>
+    <string name="enhanced_tracking_protection_blocked">Dipeungpeuk</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Idinan</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Palacak Media Sosial</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Réréméh Palacak Meuntas-Loka</string>
 
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Meungpeuk réréméh anu dipaké ku maskapé jaringan iklan jeung analitika pikeun ngumpulkeun data langlangan anjeun di loka anu kaanjangan.</string>
 
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Gurandil kripto</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Sidik ramo</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Kontén palacak</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Eureunan iklan, pidéo, jeung kontén lianna anu ngandung sandi palacak. Bisa mangaruhan fungsionalitas sababaraha raramatloka.</string>
+
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Protéksi Palacakan Tingkat Lanjut pareum dina ieu loka</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Mundur</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Hak anjeun</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Nu anyar di %s</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Pangrojong</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Karuksakan</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Wawar privasi</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Ieu hak anjeun</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Émbaran lisensi</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 tab</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d tab</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -456,11 +1031,73 @@
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ditiron kana papan klip</string>
 
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Tambahkeun ka layar Tepas</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Bolay</string>
 
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Tambah</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Teruskeun ka loka</string>
+
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Naros keur neundeun</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Ulah diteundeun</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Hurung</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Pareum</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Sambungkeun deui</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Asup ka Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Asup log kasimpen</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Leuwih jéntré ngeunaan Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Iwal</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Paluruh login</string>
+
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Sacara abjad</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Anyar dianggo</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Loka</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Sandiasma</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Kecap sandi</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Lenyepan</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Teundeun</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Ulah diteundeun</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Kecap sandi ditiron kana papan klip</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Sandiasma ditiron kana papan klip</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Loka ditiron kana papan klip</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Niron sandi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Niron sandiasma</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Niron loka</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Témbongkeun sandi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Sumputkeun sandi</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Engké</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Ngaran (A-Z)</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pamaluruh</string>
@@ -506,6 +1143,15 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Wilujeng sumping ka %s anyar</string>
 
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Mutahirkeun %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Mimitan %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migrasi réngsé</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Kecap sandi</string>
+
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Yakin rék ngaberesihan sadaya idin di sadaya loka?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -515,4 +1161,23 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Yakin anjeun rék mupus ieu markah?</string>
 
-    </resources>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Tambahkeun ka loka kawentar</string>
+
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Pupus</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Édit</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Pupus</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Pilihan asup log</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Édit</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Nyarios ayeuna</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Okéh, Ngarti</string>
+
+</resources>
