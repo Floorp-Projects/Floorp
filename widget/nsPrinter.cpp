@@ -5,20 +5,10 @@
 
 #include "nsPrinter.h"
 
-nsPrinter::nsPrinter(const nsAString& aName,
-                     const nsTArray<RefPtr<nsIPaper>>& aPaperList)
-    : mName(aName), mPaperList(aPaperList.Clone()) {}
-
 NS_IMPL_ISUPPORTS(nsPrinter, nsIPrinter);
 
 NS_IMETHODIMP
 nsPrinter::GetName(nsAString& aName) {
   aName = mName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinter::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
-  aPaperList.Assign(mPaperList);
   return NS_OK;
 }

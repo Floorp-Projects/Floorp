@@ -19,7 +19,6 @@
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 
-#include "nsPaper.h"
 #include "nsPrinter.h"
 #include "nsPSPrinters.h"
 
@@ -364,8 +363,8 @@ nsPrinterListGTK::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   uint32_t numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
   for (uint32_t i = 0; i < numPrinters; ++i) {
     nsString* name = GlobalPrinters::GetInstance()->GetStringAt(i);
-    nsTArray<RefPtr<nsIPaper>> paperList;
-    aPrinters.AppendElement(new nsPrinter(*name, paperList));
+    RefPtr<nsIPrinter> printer = new nsPrinter(*name);
+    aPrinters.AppendElement(std::move(printer));
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
