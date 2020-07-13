@@ -488,7 +488,7 @@ class WebrtcVideoConduit
 
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
 
-  mozilla::ReentrantMonitor mTransportMonitor;
+  mutable mozilla::ReentrantMonitor mTransportMonitor;
 
   // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mTransmitterTransport;
@@ -674,7 +674,7 @@ class WebrtcVideoConduit
   // Accessed from main and mStsThread. Uses locks internally.
   RefPtr<RtpSourceObserver> mRtpSourceObserver;
   // Tracking the attributes of received frames over time
-  // Accessed only on the mStsThread
+  // Protected by mTransportMonitor
   dom::RTCVideoFrameHistoryInternal mReceivedFrameHistory;
 };
 }  // namespace mozilla
