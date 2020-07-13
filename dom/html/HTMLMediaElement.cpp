@@ -3435,7 +3435,6 @@ void HTMLMediaElement::PauseIfShouldNotBePlaying() {
     AUTOPLAY_LOG("pause because not allowed to play, element=%p", this);
     ErrorResult rv;
     Pause(rv);
-    OwnerDoc()->SetDocTreeHadPlayRevoked();
   }
 }
 
