@@ -32,7 +32,7 @@ JSDOC_NOT_FOUND = """\
 JSDoc==3.5.5 is required to build the docs but was not found on your system.
 Please install it globally by running:
 
-    $ npm install -g jsdoc@3.5.5
+    $ mach npm install -g jsdoc@3.5.5
 
 Bug 1498604 tracks bootstrapping jsdoc properly.
 Bug 1556460 tracks supporting newer versions of jsdoc.
