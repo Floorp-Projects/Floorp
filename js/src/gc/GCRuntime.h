@@ -673,7 +673,8 @@ class GCRuntime {
                                                  SliceBudget& budget);
   bool mightSweepInThisSlice(bool nonIncremental);
   bool mightCompactInThisSlice(bool nonIncremental);
-  void collectNursery(JS::GCReason reason, gcstats::PhaseKind phase);
+  void collectNursery(JSGCInvocationKind kind, JS::GCReason reason,
+                      gcstats::PhaseKind phase);
 
   friend class AutoCallGCCallbacks;
   void maybeCallGCCallback(JSGCStatus status, JS::GCReason reason);
