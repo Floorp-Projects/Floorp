@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Bookmarks: "resource://gre/modules/Bookmarks.jsm",
   History: "resource://gre/modules/History.jsm",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "MOZ_ACTION_REGEX", () => {
@@ -1476,6 +1477,9 @@ var PlacesUtils = {
    * @see promiseDBConnection
    */
   promiseLargeCacheDBConnection: () => gAsyncDBLargeCacheConnPromised,
+  get largeCacheDBConnDeferred() {
+    return gAsyncDBLargeCacheConnDeferred;
+  },
 
   /**
    * Returns a Sqlite.jsm wrapper for the main Places connection. Most callers
@@ -2065,6 +2069,7 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised", () =>
     .catch(Cu.reportError)
 );
 
+var gAsyncDBLargeCacheConnDeferred = PromiseUtils.defer();
 XPCOMUtils.defineLazyGetter(this, "gAsyncDBLargeCacheConnPromised", () =>
   Sqlite.cloneStorageConnection({
     connection: PlacesUtils.history.DBConnection,
@@ -2078,6 +2083,24 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBLargeCacheConnPromised", () =>
       // mozStorage value defined as MAX_CACHE_SIZE_BYTES in
       // storage/mozStorageConnection.cpp.
       await conn.execute("PRAGMA cache_size = -6144"); // 6MiB
+      // These should be kept in sync with nsPlacesTables.h.
+      await conn.execute(`
+        CREATE TEMP TABLE IF NOT EXISTS moz_openpages_temp (
+          url TEXT,
+          userContextId INTEGER,
+          open_count INTEGER,
+          PRIMARY KEY (url, userContextId)
+        )`);
+      await conn.execute(`
+        CREATE TEMP TRIGGER IF NOT EXISTS moz_openpages_temp_afterupdate_trigger
+        AFTER UPDATE OF open_count ON moz_openpages_temp FOR EACH ROW
+        WHEN NEW.open_count = 0
+        BEGIN
+          DELETE FROM moz_openpages_temp
+          WHERE url = NEW.url
+            AND userContextId = NEW.userContextId;
+        END`);
+      gAsyncDBLargeCacheConnDeferred.resolve(conn);
       return conn;
     })
     .catch(Cu.reportError)
