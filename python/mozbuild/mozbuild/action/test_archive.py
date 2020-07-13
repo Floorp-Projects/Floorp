@@ -116,6 +116,7 @@ ARCHIVE_FILES = {
                 'jsreftest/**',
                 'jit-test/**',
                 'jittest/**',  # To make the ignore checker happy
+                'perftests/**',
             ],
         },
         {
@@ -464,6 +465,60 @@ ARCHIVE_FILES = {
             'pattern': '**',
             'dest': 'talos/talos/tests/webkit/PerformanceTests/',
         },
+    ],
+    'perftests': [
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'testing/mozbase/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'third_party/python/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'tools/lint/eslint/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': '**/perftest_*.js'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': '**/hooks_*py'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'build/autoconf/**'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'build/moz.configure/**'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'python/**'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'build/mach_bootstrap.py'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'build/virtualenv_packages.txt'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'mach/**'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'testing/web-platform/tests/tools/third_party/certifi/**'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern':  'testing/mozharness/**'
+        }
     ],
     'condprof': [
         {

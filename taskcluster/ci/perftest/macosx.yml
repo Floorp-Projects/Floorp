@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: t-osx-1014
+    fetches:
+        build:
+            - artifact: target.perftests.tests.tar.gz
+            - artifact: target.dmg
+              extract: false
+        toolchain:
+            - macosx64-geckodriver
+            - macosx64-node
+    platform: macosx64-shippable/opt
+    require-build:
+        macosx64-shippable/opt: build-macosx64-shippable/opt
+
+domcount:
+    description: Run DOM test on macOS
+    treeherder:
+        symbol: perftest(macos-dom)
+    attributes:
+        batch: false
+        cron: true
+    run:
+        command: >-
+            mkdir -p ${MOZ_FETCHES_DIR}/firefox &&
+            hdiutil attach -nobrowse -noautoopen -mountpoint ${MOZ_FETCHES_DIR}/firefox ${MOZ_FETCHES_DIR}/target.dmg &&
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            browser/base/content/test/perftest_browser_xhtml_dom.js
+            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/Firefox\ Nightly.app/Contents/MacOS/firefox
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics name:totalDOMCount,unit:count name:panelMenuCount,unit:count name:lightDOMCount,unit:count name:lightDOMDetails,unit:count
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts &&
+            hdiutil detach ${MOZ_FETCHES_DIR}/firefox -force

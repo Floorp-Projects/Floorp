@@ -95,7 +95,15 @@ class MachLogger:
         self._logger(logging.ERROR, name, kwargs, msg)
 
 
-def install_package(virtualenv_manager, package):
+def install_package(virtualenv_manager, package, ignore_failure=False):
+    """Installs a package using the virtualenv manager.
+
+    Makes sure the package is really installed when the user already has it
+    in their local installation.
+
+    Returns True on success, or re-raise the error. If ignore_failure
+    is set to True, ignore the error and return False
+    """
     from pip._internal.req.constructors import install_req_from_line
 
     req = install_req_from_line(package)
@@ -108,9 +116,15 @@ def install_package(virtualenv_manager, package):
         site_packages = os.path.abspath(req.satisfied_by.location)
         if site_packages.startswith(venv_site_lib):
             # already installed in this venv, we can skip
-            return
+            return True
     with silence():
-        virtualenv_manager._run_pip(["install", package])
+        try:
+            virtualenv_manager._run_pip(["install", package])
+            return True
+        except Exception:
+            if not ignore_failure:
+                raise
+    return False
 
 
 def build_test_list(tests, randomized=False):

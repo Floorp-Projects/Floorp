@@ -76,8 +76,25 @@ def _req(package):
 def test_install_package():
     vem = mock.Mock()
     vem.bin_path = "someplace"
-    install_package(vem, "foo")
+    assert install_package(vem, "foo")
     vem._run_pip.assert_called()
+
+
+@mock.patch("pip._internal.req.constructors.install_req_from_line", new=_req)
+def test_install_package_failures():
+    vem = mock.Mock()
+    vem.bin_path = "someplace"
+
+    def run_pip(*args):
+        raise Exception()
+
+    vem._run_pip = run_pip
+
+    with pytest.raises(Exception):
+        install_package(vem, "foo")
+
+    # we can also absorb the error, and just return False
+    assert not install_package(vem, "foo", ignore_failure=True)
 
 
 @mock.patch("mozperftest.utils.requests.get", requests_content())
