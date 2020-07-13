@@ -690,16 +690,6 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JSFreeOp* fop,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// FunctionDeclaration
-
-FunctionDeclaration::FunctionDeclaration(HandleAtom name, uint32_t funIndex)
-    : name(name), funIndex(funIndex) {}
-
-void FunctionDeclaration::trace(JSTracer* trc) {
-  TraceEdge(trc, &name, "FunctionDeclaration name");
-}
-
-///////////////////////////////////////////////////////////////////////////
 // ModuleObject
 
 /* static */ const JSClassOps ModuleObject::classOps_ = {
@@ -762,7 +752,8 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
   InitReservedSlot(self, ImportBindingsSlot, bindings,
                    MemoryUse::ModuleBindingMap);
 
-  FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>();
+  frontend::FunctionDeclarationVector* funDecls =
+      cx->new_<frontend::FunctionDeclarationVector>(cx);
   if (!funDecls) {
     return nullptr;
   }
@@ -778,7 +769,8 @@ void ModuleObject::finalize(JSFreeOp* fop, JSObject* obj) {
   if (self->hasImportBindings()) {
     fop->delete_(obj, &self->importBindings(), MemoryUse::ModuleBindingMap);
   }
-  if (FunctionDeclarationVector* funDecls = self->functionDeclarations()) {
+  if (frontend::FunctionDeclarationVector* funDecls =
+          self->functionDeclarations()) {
     // Not tracked as these may move between zones on merge.
     fop->deleteUntracked(funDecls);
   }
@@ -826,13 +818,13 @@ ScriptSourceObject* ModuleObject::scriptSourceObject() const {
               .as<ScriptSourceObject>();
 }
 
-FunctionDeclarationVector* ModuleObject::functionDeclarations() {
+frontend::FunctionDeclarationVector* ModuleObject::functionDeclarations() {
   Value value = getReservedSlot(FunctionDeclarationsSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
 
-  return static_cast<FunctionDeclarationVector*>(value.toPrivate());
+  return static_cast<frontend::FunctionDeclarationVector*>(value.toPrivate());
 }
 
 void ModuleObject::initScriptSlots(HandleScript script) {
@@ -995,21 +987,10 @@ void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
   if (module.hasImportBindings()) {
     module.importBindings().trace(trc);
   }
-
-  if (FunctionDeclarationVector* funDecls = module.functionDeclarations()) {
-    funDecls->trace(trc);
-  }
 }
 
-bool ModuleObject::noteFunctionDeclaration(JSContext* cx, HandleAtom name,
-                                           uint32_t funIndex) {
-  FunctionDeclarationVector* funDecls = functionDeclarations();
-  if (!funDecls->emplaceBack(name, funIndex)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  return true;
+bool ModuleObject::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
+  return functionDeclarations()->emplaceBack(funIndex);
 }
 
 /* static */
@@ -1022,7 +1003,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   }
 #endif
   // |self| initially manages this vector.
-  FunctionDeclarationVector* funDecls = self->functionDeclarations();
+  frontend::FunctionDeclarationVector* funDecls = self->functionDeclarations();
   if (!funDecls) {
     JS_ReportErrorASCII(
         cx, "Module function declarations have already been instantiated");
@@ -1033,17 +1014,18 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   RootedObject obj(cx);
   RootedValue value(cx);
   RootedFunction fun(cx);
+  RootedPropertyName name(cx);
 
-  for (const auto& funDecl : *funDecls) {
-    uint32_t funIndex = funDecl.funIndex;
+  for (uint32_t funIndex : *funDecls) {
     fun.set(self->script()->getFunction(funIndex));
     obj = Lambda(cx, fun, env);
     if (!obj) {
       return false;
     }
 
+    name = fun->explicitName()->asPropertyName();
     value = ObjectValue(*obj);
-    if (!SetProperty(cx, env, funDecl.name->asPropertyName(), value)) {
+    if (!SetProperty(cx, env, name, value)) {
       return false;
     }
   }
@@ -2012,7 +1994,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
   // funcDecls points to data traced by the ModuleObject,
   // but is itself heap-allocated so we don't need to
   // worry about rooting it again here.
-  FunctionDeclarationVector* funcDecls;
+  frontend::FunctionDeclarationVector* funcDecls;
 
   uint32_t requestedModulesLength = 0;
   uint32_t importEntriesLength = 0;
@@ -2126,22 +2108,17 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
   MOZ_TRY(XDRExportEntries(xdr, &starExportEntries));
 
   /* FunctionDeclarations slot */
-  RootedAtom funcName(cx);
   uint32_t funIndex = 0;
   MOZ_TRY(xdr->codeUint32(&funcDeclLength));
   for (uint32_t i = 0; i < funcDeclLength; i++) {
     if (mode == XDR_ENCODE) {
-      FunctionDeclaration fd = (*funcDecls)[i];
-      funcName = fd.name;
-      funIndex = fd.funIndex;
+      funIndex = (*funcDecls)[i];
     }
 
-    MOZ_TRY(XDRAtom(xdr, &funcName));
     MOZ_TRY(xdr->codeUint32(&funIndex));
 
     if (mode == XDR_DECODE) {
-      FunctionDeclaration funcDecl(funcName, funIndex);
-      if (!module->functionDeclarations()->append(funcDecl)) {
+      if (!module->functionDeclarations()->append(funIndex)) {
         ReportOutOfMemory(cx);
         return xdr->fail(JS::TranscodeResult_Throw);
       }
