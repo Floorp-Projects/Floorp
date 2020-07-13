@@ -607,6 +607,8 @@ class PermissionManager final : public nsIPermissionManager,
 
   bool mMemoryOnlyDB;
 
+  bool mBlockerAdded;
+
   nsTHashtable<PermissionHashKey> mPermissionTable;
   // a unique, monotonically increasing id used to identify each database entry
   int64_t mLargestID;
