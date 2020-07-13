@@ -711,6 +711,13 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Error(EPERM);
 #endif
 
+        // Bug 1651701: an API for restartable atomic sequences and
+        // per-CPU data; exposing information about CPU numbers and
+        // when threads are migrated or preempted isn't great but the
+        // risk should be relatively low.
+      case __NR_rseq:
+        return Allow();
+
 #ifdef MOZ_ASAN
         // ASAN's error reporter wants to know if stderr is a tty.
       case __NR_ioctl: {
