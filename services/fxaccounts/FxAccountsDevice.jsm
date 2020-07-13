@@ -218,7 +218,9 @@ class FxAccountsDevice {
             const devices = await this._fxai.fxAccountsClient.getDeviceList(
               accountData.sessionToken
             );
-            log.info("got new device list", devices);
+            log.info(
+              `Got new device list: ${devices.map(d => d.id).join(", ")}`
+            );
             // Check if our push registration previously succeeded and is still
             // good (although background device registration means it's possible
             // we'll be fetching the device list before we've actually

@@ -838,7 +838,7 @@ var gSync = {
     if (fxaCommandsDevices.length) {
       this.log.info(
         `Sending a tab to ${fxaCommandsDevices
-          .map(d => d.name)
+          .map(d => d.id)
           .join(", ")} using FxA commands.`
       );
       const report = await fxAccounts.commands.sendTab.send(
@@ -847,7 +847,7 @@ var gSync = {
       );
       for (let { device, error } of report.failed) {
         this.log.error(
-          `Failed to send a tab with FxA commands for ${device.name}.`,
+          `Failed to send a tab with FxA commands for ${device.id}.`,
           error
         );
         numFailed++;
@@ -855,7 +855,7 @@ var gSync = {
     }
     for (let client of oldSendTabClients) {
       try {
-        this.log.info(`Sending a tab to ${client.name} using Sync.`);
+        this.log.info(`Sending a tab to ${client.id} using Sync.`);
         await Weave.Service.clientsEngine.sendURIToClientForDisplay(
           url,
           client.id,
