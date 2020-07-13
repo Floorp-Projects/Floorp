@@ -20,6 +20,7 @@
 <script class="testbody" type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.expectAssertions(1);  // Assertions in WSRunScanner::TextFragmentData::GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace()
 SimpleTest.waitForFocus(runTests);
 
 const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
