@@ -94,7 +94,7 @@ const TRR_SELECT_DRY_RUN_RESULT_PREF =
   "doh-rollout.trr-selection.dry-run-result";
 const TRR_SELECT_COMMIT_RESULT_PREF = "doh-rollout.trr-selection.commit-result";
 
-const HEURISTICS_TELEMETRY_CATEGORY = "security.doh.heuristics";
+const HEURISTICS_TELEMETRY_CATEGORY = "doh";
 const TRRSELECT_TELEMETRY_CATEGORY = "security.doh.trrPerformance";
 
 const kLinkStatusChangedTopic = "network:link-status-changed";
