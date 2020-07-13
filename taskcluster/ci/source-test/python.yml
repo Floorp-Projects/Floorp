@@ -368,6 +368,7 @@ mozbuild:
             - '**/moz.configure'
             - 'build/moz.configure/**'
             - 'config/tests/**'
+            - 'dom/bindings/mozwebidlcodegen/**'
             - 'python/mach/**'
             - 'python/mozboot/**'
             - 'python/mozbuild/**'
