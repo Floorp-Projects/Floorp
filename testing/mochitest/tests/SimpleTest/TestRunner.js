@@ -943,7 +943,6 @@ var xOriginDispatchMap = {
   logger: TestRunner.structuredLogger,
   addFailedTest: TestRunner.addFailedTest,
   expectAssertions: TestRunner.expectAssertions,
-  expectChildProcessCrash: TestRunner.expectChildProcessCrash,
   requestLongerTimeout: TestRunner.requestLongerTimeout,
   testUnloaded: TestRunner.testUnloaded,
   "structuredLogger.deactivateBuffering":
