@@ -115,7 +115,7 @@ function transformResource(resource) {
       return transformCSSMessageResource(resource);
     }
 
-    case "networkEvent": {
+    case ResourceWatcher.TYPES.NETWORK_EVENT: {
       return transformNetworkEventResource(resource);
     }
 

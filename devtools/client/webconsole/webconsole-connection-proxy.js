@@ -34,11 +34,8 @@ class WebConsoleConnectionProxy {
     this.webConsoleUI = webConsoleUI;
     this.target = target;
     this.needContentProcessMessagesListener = needContentProcessMessagesListener;
-
     this._connecter = null;
 
-    this._onNetworkEvent = this._onNetworkEvent.bind(this);
-    this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
     this._onLastPrivateContextExited = this._onLastPrivateContextExited.bind(
@@ -81,9 +78,6 @@ class WebConsoleConnectionProxy {
         );
       await this.webConsoleUI.setSaveRequestAndResponseBodies(saveBodies);
 
-      const networkMessages = this._getNetworkMessages();
-      this.dispatchMessagesAdd(networkMessages);
-
       this._addWebConsoleFrontEventListeners();
 
       if (this.webConsoleFront && !this.webConsoleFront.hasNativeConsoleAPI) {
@@ -122,19 +116,15 @@ class WebConsoleConnectionProxy {
    * @returns Promise
    */
   _attachConsole() {
-    if (!this.webConsoleFront) {
+    if (!this.webConsoleFront || !this.needContentProcessMessagesListener) {
       return null;
     }
 
-    const listeners = ["NetworkActivity"];
     // Enable the forwarding of console messages to the parent process
     // when we open the Browser Console or Toolbox without fission support. If Fission
     // is enabled, we don't use the ContentProcessMessages listener, but attach to the
     // content processes directly.
-    if (this.needContentProcessMessagesListener) {
-      listeners.push("ContentProcessMessages");
-    }
-    return this.webConsoleFront.startListeners(listeners);
+    return this.webConsoleFront.startListeners(["ContentProcessMessages"]);
   }
 
   /**
@@ -147,8 +137,6 @@ class WebConsoleConnectionProxy {
       return;
     }
 
-    this.webConsoleFront.on("networkEvent", this._onNetworkEvent);
-    this.webConsoleFront.on("networkEventUpdate", this._onNetworkEventUpdate);
     this.webConsoleFront.on(
       "lastPrivateContextExited",
       this._onLastPrivateContextExited
@@ -165,8 +153,6 @@ class WebConsoleConnectionProxy {
    * @private
    */
   _removeWebConsoleFrontEventListeners() {
-    this.webConsoleFront.off("networkEvent", this._onNetworkEvent);
-    this.webConsoleFront.off("networkEventUpdate", this._onNetworkEventUpdate);
     this.webConsoleFront.off(
       "lastPrivateContextExited",
       this._onLastPrivateContextExited
@@ -177,51 +163,11 @@ class WebConsoleConnectionProxy {
     );
   }
 
-  /**
-   * Get network messages from the server.
-   *
-   * @private
-   * @returns An array of network messages.
-   */
-  _getNetworkMessages() {
-    if (!this.webConsoleFront) {
-      return [];
-    }
-
-    return Array.from(this.webConsoleFront.getNetworkEvents());
-  }
-
   _clearLogpointMessages(logpointId) {
     // Some message might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI?.wrapper) {
-      return;
+    if (this.webConsoleUI?.wrapper) {
+      this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
     }
-
-    this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
-  }
-
-  /**
-   * The "networkEvent" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param object networkInfo
-   *        The network request information.
-   */
-  _onNetworkEvent(networkInfo) {
-    this.dispatchMessageAdd(networkInfo);
-  }
-
-  /**
-   * The "networkEventUpdate" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param object response
-   *        The update response received from the server.
-   */
-  _onNetworkEventUpdate(response) {
-    this.dispatchMessageUpdate(response.networkInfo, response);
   }
 
   /**
@@ -268,39 +214,6 @@ class WebConsoleConnectionProxy {
       return;
     }
     this.webConsoleUI.handleTabWillNavigate(packet);
-  }
-
-  /**
-   * Dispatch a message add on the new frontend and emit an event for tests.
-   */
-  dispatchMessageAdd(packet) {
-    // Some message might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI?.wrapper) {
-      return;
-    }
-    this.webConsoleUI.wrapper.dispatchMessageAdd(packet);
-  }
-
-  /**
-   * Batched dispatch of messages.
-   */
-  dispatchMessagesAdd(packets) {
-    // Some message might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI?.wrapper) {
-      return;
-    }
-    this.webConsoleUI.wrapper.dispatchMessagesAdd(packets);
-  }
-
-  /**
-   * Dispatch a message event on the new frontend and emit an event for tests.
-   */
-  dispatchMessageUpdate(networkInfo, response) {
-    // Some message might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI?.wrapper) {
-      return;
-    }
-    this.webConsoleUI.wrapper.dispatchMessageUpdate(networkInfo, response);
   }
 
   /**

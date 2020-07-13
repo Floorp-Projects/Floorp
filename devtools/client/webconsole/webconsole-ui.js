@@ -79,6 +79,7 @@ class WebConsoleUI {
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
+    this._onResourceUpdated = this._onResourceUpdated.bind(this);
 
     EventEmitter.decorate(this);
   }
@@ -235,17 +236,11 @@ class WebConsoleUI {
     if (this.wrapper) {
       this.wrapper.dispatchMessagesClear();
     }
-    this.clearNetworkRequests();
+
     if (clearStorage) {
       this.clearMessagesCache();
     }
     this.emitForTests("messages-cleared");
-  }
-
-  clearNetworkRequests() {
-    for (const proxy of this.getAllProxies()) {
-      proxy.webConsoleFront.clearNetworkRequests();
-    }
   }
 
   clearMessagesCache() {
@@ -342,8 +337,12 @@ class WebConsoleUI {
         resourceWatcher.TYPES.CONSOLE_MESSAGE,
         resourceWatcher.TYPES.ERROR_MESSAGE,
         resourceWatcher.TYPES.PLATFORM_MESSAGE,
+        resourceWatcher.TYPES.NETWORK_EVENT,
       ],
-      { onAvailable: this._onResourceAvailable }
+      {
+        onAvailable: this._onResourceAvailable,
+        onUpdated: this._onResourceUpdated,
+      }
     );
   }
 
@@ -368,6 +367,12 @@ class WebConsoleUI {
       return;
     }
     this.wrapper.dispatchMessageAdd(resource);
+  }
+
+  _onResourceUpdated({ resourceType, targetFront, resource }) {
+    if (resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT) {
+      this.wrapper.dispatchMessageUpdate(resource);
+    }
   }
 
   /**

@@ -752,10 +752,6 @@ Toolbox.prototype = {
   async _attachTarget(targetFront) {
     await targetFront.attach();
 
-    // Start tracking network activity on toolbox open for targets such as tabs.
-    const webConsoleFront = await targetFront.getFront("console");
-    await webConsoleFront.startListeners(["NetworkActivity"]);
-
     // Do not attach to the thread of additional Frame targets, as they are
     // already tracked by the content process targets. At least in the context
     // of the Browser Toolbox.
@@ -841,6 +837,16 @@ Toolbox.prototype = {
         TargetList.ALL_TYPES,
         this._onTargetAvailable,
         this._onTargetDestroyed
+      );
+
+      // Start tracking network activity on toolbox open for targets such as tabs.
+      // The listeners attached here do nothing. Doing this just makes sure that
+      // there is always at least one listener existing for network events across
+      // the lifetime of the various panels, so stopping the resource watcher from
+      // clearing out its cache of network event resources.
+      await this.resourceWatcher.watchResources(
+        [this.resourceWatcher.TYPES.NETWORK_EVENT],
+        { onAvailable: () => {}, onUpdated: () => {} }
       );
 
       await domReady;

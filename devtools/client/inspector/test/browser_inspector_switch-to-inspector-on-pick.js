@@ -6,7 +6,7 @@
 // panel.
 
 const TEST_URI =
-  "data:text/html;charset=UTF-8," + "<p>Switch to inspector on pick</p>";
+  "data:text/html;charset=UTF-8,<script>console.log(`hello`)</script><p>Switch to inspector on pick</p>";
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 const DATA = [
@@ -20,7 +20,7 @@ const DATA = [
       start_state: "initial_panel",
       panel_name: "webconsole",
       cold: "true",
-      message_count: "0",
+      message_count: "1",
       width: "1300",
     },
   },
@@ -65,7 +65,7 @@ add_task(async function() {
 
   await startPickerAndAssertSwitchToInspector(toolbox);
 
-  info("Stoppping element picker.");
+  info("Stopping element picker.");
   await toolbox.nodePicker.stop();
 
   checkResults();
