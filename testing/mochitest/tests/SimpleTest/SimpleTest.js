@@ -96,9 +96,6 @@ let xOriginRunner = {
   expectAssertions(min, max) {
     this.callHarnessMethod("runner", "expectAssertions", min, max);
   },
-  expectChildProcessCrash() {
-    this.callHarnessMethod("runner", "expectChildProcessCrash");
-  },
   requestLongerTimeout(factor) {
     this.harnessWindow.postMessage(
       {
