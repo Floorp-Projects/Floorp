@@ -12,6 +12,7 @@
 <div contenteditable id="editor"><p><br></p></div>
 <script>
 SimpleTest.waitForExplicitFinish();
+SimpleTest.expectAssertions(2);  // Assertions in WSRunScanner::TextFragmentData::GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace()
 SimpleTest.waitForFocus(async function doTests() {
   await SpecialPowers.pushPrefEnv({set: [
     ["dom.compositionevent.text.dispatch_only_system_group_in_content", true],

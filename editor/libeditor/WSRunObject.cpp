@@ -415,13 +415,22 @@ nsresult WSRunObject::InsertText(Document& aDocument,
                  PointPosition::StartOfFragment ||
              pointPositionWithVisibleWhiteSpacesAtEnd ==
                  PointPosition::MiddleOfFragment) {
-      nsresult rv = MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-          visibleWhiteSpacesAtEnd.ref(), pointToInsert);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() "
-            "failed");
-        return rv;
+      EditorDOMPointInText atNBSPReplacedWithASCIIWhiteSpace =
+          textFragmentDataAtEnd
+              .GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+                  pointToInsert);
+      if (atNBSPReplacedWithASCIIWhiteSpace.IsSet()) {
+        AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+        nsresult rv =
+            MOZ_KnownLive(mHTMLEditor)
+                .ReplaceTextWithTransaction(
+                    MOZ_KnownLive(
+                        *atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+                    atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
+          return rv;
+        }
       }
     }
 
@@ -2154,19 +2163,28 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   return atPreviousChar;
 }
 
-nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-    const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
-    const EditorDOMPoint& aPoint) {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
+EditorDOMPointInText WSRunScanner::TextFragmentData::
+    GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+        const EditorDOMPoint& aPointToInsert) const {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+  MOZ_ASSERT(CreateVisibleWhiteSpacesData().isSome());
+  NS_ASSERTION(
+      CreateVisibleWhiteSpacesData().ref().ComparePoint(aPointToInsert) ==
+              PointPosition::StartOfFragment ||
+          CreateVisibleWhiteSpacesData().ref().ComparePoint(aPointToInsert) ==
+              PointPosition::MiddleOfFragment,
+      "Inclusive next char of aPointToInsert should be in the visible "
+      "white-spaces");
 
   // Try to change an nbsp to a space, if possible, just to prevent nbsp
   // proliferation This routine is called when we are about to make this point
   // in the ws abut an inserted text, so we don't have to worry about what is
   // before it.  What is before it now will end up before the inserted text.
-  EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
+  EditorDOMPointInText atNextChar =
+      GetInclusiveNextEditableCharPoint(aPointToInsert);
   if (!atNextChar.IsSet() || NS_WARN_IF(atNextChar.IsEndOfContainer()) ||
       !atNextChar.IsCharNBSP()) {
-    return NS_OK;
+    return EditorDOMPointInText();
   }
 
   EditorDOMPointInText atNextCharOfNextCharOfNBSP =
@@ -2176,25 +2194,22 @@ nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
     // need to replace it with same character.
     if (!atNextCharOfNextCharOfNBSP.IsEndOfContainer() &&
         atNextCharOfNextCharOfNBSP.IsCharASCIISpace()) {
-      return NS_OK;
+      return EditorDOMPointInText();
     }
-  }
-  // If the NBSP is last character in the hard line, we don't need to
-  // replace it because it's required to render multiple white-spaces.
-  else if (!aVisibleWhiteSpacesData.EndsByNormalText() &&
-           !aVisibleWhiteSpacesData.EndsBySpecialContent() &&
-           !aVisibleWhiteSpacesData.EndsByBRElement()) {
-    return NS_OK;
+    return atNextChar;
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                    .ReplaceTextWithTransaction(
-                        MOZ_KnownLive(*atNextChar.ContainerAsText()),
-                        atNextChar.Offset(), 1, u" "_ns);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::ReplaceTextWithTransaction() failed");
-  return rv;
+  // If the NBSP is last character in the hard line, we don't need to
+  // replace it because it's required to render multiple white-spaces.
+  Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
+      CreateVisibleWhiteSpacesData();
+  if (!visibleWhiteSpaces.ref().EndsByNormalText() &&
+      !visibleWhiteSpaces.ref().EndsBySpecialContent() &&
+      !visibleWhiteSpaces.ref().EndsByBRElement()) {
+    return EditorDOMPointInText();
+  }
+
+  return atNextChar;
 }
 
 nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpacesInternal() {
