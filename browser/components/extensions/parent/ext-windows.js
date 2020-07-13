@@ -53,6 +53,69 @@ function WindowEventManager(context, name, event, listener) {
   return new EventManager({ context, name, register }).api();
 }
 
+function sanitizePositionParams(params, window = null, positionOffset = 0) {
+  if (params.left === null && params.top === null) {
+    return;
+  }
+
+  if (params.left === null) {
+    const baseLeft = window ? window.screenX : 0;
+    params.left = baseLeft + positionOffset;
+  }
+  if (params.top === null) {
+    const baseTop = window ? window.screenY : 0;
+    params.top = baseTop + positionOffset;
+  }
+
+  // boundary check: don't put window out of visible area
+  const baseWidth = window ? window.outerWidth : 0;
+  const baseHeight = window ? window.outerHeight : 0;
+  // Secure minimum size of an window should be same to the one
+  // defined at nsGlobalWindowOuter::CheckSecurityWidthAndHeight.
+  const minWidth = 100;
+  const minHeight = 100;
+  const width = Math.max(
+    minWidth,
+    params.width !== null ? params.width : baseWidth
+  );
+  const height = Math.max(
+    minHeight,
+    params.height !== null ? params.height : baseHeight
+  );
+  const screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
+    Ci.nsIScreenManager
+  );
+  const screen = screenManager.screenForRect(
+    params.left,
+    params.top,
+    width,
+    height
+  );
+  const availDeviceLeft = {};
+  const availDeviceTop = {};
+  const availDeviceWidth = {};
+  const availDeviceHeight = {};
+  screen.GetAvailRect(
+    availDeviceLeft,
+    availDeviceTop,
+    availDeviceWidth,
+    availDeviceHeight
+  );
+  const factor = screen.defaultCSSScaleFactor;
+  const availLeft = Math.floor(availDeviceLeft.value / factor);
+  const availTop = Math.floor(availDeviceTop.value / factor);
+  const availWidth = Math.floor(availDeviceWidth.value / factor);
+  const availHeight = Math.floor(availDeviceHeight.value / factor);
+  params.left = Math.min(
+    availLeft + availWidth - width,
+    Math.max(availLeft, params.left)
+  );
+  params.top = Math.min(
+    availTop + availHeight - height,
+    Math.max(availTop, params.top)
+  );
+}
+
 this.windows = class extends ExtensionAPI {
   getAPI(context) {
     let { extension } = context;
@@ -304,10 +367,12 @@ this.windows = class extends ExtensionAPI {
               "dialog",
               "resizable",
               "minimizable",
-              "centerscreen",
               "titlebar",
               "close"
             );
+            if (createData.left === null && createData.top === null) {
+              features.push("centerscreen");
+            }
           }
 
           if (createData.incognito !== null) {
@@ -329,6 +394,10 @@ this.windows = class extends ExtensionAPI {
             allowScriptsToClose =
               typeof url === "string" && url.startsWith("moz-extension://");
           }
+
+          const baseWindow = windowTracker.getTopNormalWindow(context);
+          // 10px offset is same to Chromium
+          sanitizePositionParams(createData, baseWindow, 10);
 
           let window = Services.ww.openWindow(
             null,
@@ -411,6 +480,7 @@ this.windows = class extends ExtensionAPI {
             win.window.getAttention();
           }
 
+          sanitizePositionParams(updateInfo, win.window);
           win.updateGeometry(updateInfo);
 
           if (updateInfo.titlePreface !== null) {
