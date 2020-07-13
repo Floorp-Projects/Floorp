@@ -3925,7 +3925,7 @@ printing:
       For the most part, the 'unknown' count will be prints to a physical
       printer, but we can't know for sure since third party drivers could also
       be print to file drivers that we don't otherwise catch in the other
-      counts.  
+      counts.
     keyed: true
     keys:
       - 'pdf_file'
@@ -4309,6 +4309,22 @@ browser.searchinit:
           Whether the list of engines in the search cache was found to be corrupt during initialization.
     expires: "85"
     kind: boolean
+    notification_emails:
+      - fx-search@mozilla.com
+      - mbanner@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  init_result_status_code:
+    bug_numbers:
+      - 1651194
+    description: >-
+          Status code (nsresult) for the search service initialization routine.
+          Stored as a string due to issues with large uint scalars when the scalar was created.
+    expires: "87"
+    kind: string
     notification_emails:
       - fx-search@mozilla.com
       - mbanner@mozilla.com

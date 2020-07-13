@@ -560,7 +560,7 @@ SearchService.prototype = {
       this._addObservers();
     } catch (ex) {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
-      logConsole.error("_init: failure initializing search:", ex);
+      logConsole.error("_init: failure initializing search:", ex.result);
     }
     gInitialized = true;
     if (Components.isSuccessCode(this._initRV)) {
@@ -2145,16 +2145,21 @@ SearchService.prototype = {
       await this._init();
       TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
     } catch (ex) {
-      if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
-        // No need to pursue asynchronous because synchronous fallback was
-        // called and has finished.
-        TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
-      } else {
-        this._initObservers.reject(ex.result);
-        TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
-        throw ex;
-      }
+      Services.telemetry.scalarSet(
+        "browser.searchinit.init_result_status_code",
+        // Scalar is a string due to bug 1651210 when the scalar was created.
+        ex.result?.toString(10)
+      );
+      TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
+      this._initObservers.reject(ex.result);
+      throw ex;
     }
+    Services.telemetry.scalarSet(
+      "browser.searchinit.init_result_status_code",
+      // Scalar is a string due to bug 1651210 when the scalar was created.
+      this._initRV?.toString(10)
+    );
+
     if (!Components.isSuccessCode(this._initRV)) {
       throw Components.Exception(
         "SearchService initialization failed",
