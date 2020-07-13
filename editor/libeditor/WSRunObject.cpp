@@ -296,13 +296,22 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
       // XXX If the DOM tree has been changed above, pointToInsert` and/or
       //     `visibleWhiteSpaces` may be invalid.  So, we may do
       //     something wrong here.
-      nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-          visibleWhiteSpaces.ref(), pointToInsert);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace() "
-            "failed");
-        return nullptr;
+      EditorDOMPointInText atNBSPReplacedWithASCIIWhiteSpace =
+          textFragmentData
+              .GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+                  pointToInsert);
+      if (atNBSPReplacedWithASCIIWhiteSpace.IsSet()) {
+        AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+        nsresult rv =
+            MOZ_KnownLive(mHTMLEditor)
+                .ReplaceTextWithTransaction(
+                    MOZ_KnownLive(
+                        *atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+                    atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
+          return nullptr;
+        }
       }
     }
   }
@@ -448,13 +457,22 @@ nsresult WSRunObject::InsertText(Document& aDocument,
       // XXX If the DOM tree has been changed above, pointToInsert` and/or
       //     `visibleWhiteSpaces` may be invalid.  So, we may do
       //     something wrong here.
-      nsresult rv = MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-          visibleWhiteSpacesAtStart.ref(), pointToInsert);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace() "
-            "failed");
-        return rv;
+      EditorDOMPointInText atNBSPReplacedWithASCIIWhiteSpace =
+          textFragmentDataAtStart
+              .GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+                  pointToInsert);
+      if (atNBSPReplacedWithASCIIWhiteSpace.IsSet()) {
+        AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+        nsresult rv =
+            MOZ_KnownLive(mHTMLEditor)
+                .ReplaceTextWithTransaction(
+                    MOZ_KnownLive(
+                        *atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+                    atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
+          return rv;
+        }
       }
     }
 
@@ -2089,47 +2107,51 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(
   return rv;
 }
 
-nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-    const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
-    const EditorDOMPoint& aPoint) {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
+EditorDOMPointInText WSRunScanner::TextFragmentData::
+    GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+        const EditorDOMPoint& aPointToInsert) const {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+  MOZ_ASSERT(CreateVisibleWhiteSpacesData().isSome());
+  NS_ASSERTION(
+      CreateVisibleWhiteSpacesData().ref().ComparePoint(aPointToInsert) ==
+              PointPosition::MiddleOfFragment ||
+          CreateVisibleWhiteSpacesData().ref().ComparePoint(aPointToInsert) ==
+              PointPosition::EndOfFragment,
+      "Previous char of aPoint should be in the visible white-spaces");
 
   // Try to change an NBSP to a space, if possible, just to prevent NBSP
   // proliferation.  This routine is called when we are about to make this
   // point in the ws abut an inserted break or text, so we don't have to worry
   // about what is after it.  What is after it now will end up after the
   // inserted object.
-  EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
+  EditorDOMPointInText atPreviousChar =
+      GetPreviousEditableCharPoint(aPointToInsert);
   if (!atPreviousChar.IsSet() || atPreviousChar.IsEndOfContainer() ||
       !atPreviousChar.IsCharNBSP()) {
-    return NS_OK;
+    return EditorDOMPointInText();
   }
 
   EditorDOMPointInText atPreviousCharOfPreviousChar =
       GetPreviousEditableCharPoint(atPreviousChar);
   if (atPreviousCharOfPreviousChar.IsSet()) {
-    // If the previous char of the NBSP at previous position of aPoint is
-    // an ASCII white-space, we don't need to replace it with same character.
+    // If the previous char of the NBSP at previous position of aPointToInsert
+    // is an ASCII white-space, we don't need to replace it with same character.
     if (!atPreviousCharOfPreviousChar.IsEndOfContainer() &&
         atPreviousCharOfPreviousChar.IsCharASCIISpace()) {
-      return NS_OK;
+      return EditorDOMPointInText();
     }
-  }
-  // If previous content of the NBSP is block boundary, we cannot replace the
-  // NBSP with an ASCII white-space to keep it rendered.
-  else if (!aVisibleWhiteSpacesData.StartsFromNormalText() &&
-           !aVisibleWhiteSpacesData.StartsFromSpecialContent()) {
-    return NS_OK;
+    return atPreviousChar;
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                    .ReplaceTextWithTransaction(
-                        MOZ_KnownLive(*atPreviousChar.ContainerAsText()),
-                        atPreviousChar.Offset(), 1, u" "_ns);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::ReplaceTextWithTransaction() failed");
-  return rv;
+  // If previous content of the NBSP is block boundary, we cannot replace the
+  // NBSP with an ASCII white-space to keep it rendered.
+  Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
+      CreateVisibleWhiteSpacesData();
+  if (!visibleWhiteSpaces.ref().StartsFromNormalText() &&
+      !visibleWhiteSpaces.ref().StartsFromSpecialContent()) {
+    return EditorDOMPointInText();
+  }
+  return atPreviousChar;
 }
 
 nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
