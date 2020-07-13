@@ -34,7 +34,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrincipal.h"
 #include "nsIURIMutator.h"
-#include "nsIWritablePropertyBag2.h"
 #include "nsReadLine.h"
 #include "nsToolkitCompsCID.h"
 
@@ -612,7 +611,7 @@ void PermissionManager::Startup() {
 // PermissionManager Implementation
 
 NS_IMPL_ISUPPORTS(PermissionManager, nsIPermissionManager, nsIObserver,
-                  nsISupportsWeakReference, nsIAsyncShutdownBlocker)
+                  nsISupportsWeakReference)
 
 PermissionManager::PermissionManager()
     : mMonitor("PermissionManager::mMonitor"),
@@ -629,6 +628,12 @@ PermissionManager::~PermissionManager() {
     }
   }
   mPermissionKeyPromiseMap.Clear();
+
+  RemoveAllFromMemory();
+  if (gPermissionManager) {
+    MOZ_ASSERT(gPermissionManager == this);
+    gPermissionManager = nullptr;
+  }
 
   if (mThread) {
     mThread->Shutdown();
@@ -650,7 +655,9 @@ already_AddRefed<nsIPermissionManager> PermissionManager::GetXPCOMSingleton() {
   // See bug 209571.
   auto permManager = MakeRefPtr<PermissionManager>();
   if (NS_SUCCEEDED(permManager->Init())) {
+    // Note: This is cleared in the PermissionManager destructor.
     gPermissionManager = permManager.get();
+    ClearOnShutdown(&gPermissionManager);
     return permManager.forget();
   }
 
@@ -685,15 +692,12 @@ nsresult PermissionManager::Init() {
     // Stop here; we don't need the DB in the child process. Instead we will be
     // sent permissions as we need them by our parent process.
     mState = eReady;
-
-    // We use ClearOnShutdown on the content process only because on the parent
-    // process we need to block the shutdown for the final closeDB() call.
-    ClearOnShutdown(&gPermissionManager);
     return NS_OK;
   }
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
+    observerService->AddObserver(this, "profile-before-change", true);
     observerService->AddObserver(this, "profile-do-change", true);
     observerService->AddObserver(this, "testonly-reload-permissions-from-disk",
                                  true);
@@ -1915,6 +1919,8 @@ PermissionManager::RemoveAllSince(int64_t aSince) {
 
 template <class T>
 nsresult PermissionManager::RemovePermissionEntries(T aCondition) {
+  EnsureReadCompleted();
+
   Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> array;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
@@ -1989,19 +1995,20 @@ PermissionManager::RemoveByTypeSince(const nsACString& aType,
       });
 }
 
-void PermissionManager::CloseDB(CloseDBNextOp aNextOp) {
+void PermissionManager::CloseDB(bool aRebuildOnSuccess) {
   EnsureReadCompleted();
 
   mState = eClosed;
 
   nsCOMPtr<nsIInputStream> defaultsInputStream;
-  if (aNextOp == eRebuldOnSuccess) {
+  if (aRebuildOnSuccess) {
     defaultsInputStream = GetDefaultsInputStream();
   }
 
   RefPtr<PermissionManager> self = this;
   mThread->Dispatch(NS_NewRunnableFunction(
-      "PermissionManager::CloseDB", [self, aNextOp, defaultsInputStream] {
+      "PermissionManager::CloseDB",
+      [self, aRebuildOnSuccess, defaultsInputStream] {
         auto data = self->mThreadBoundData.Access();
         // Null the statements, this will finalize them.
         data->mStmtInsert = nullptr;
@@ -2012,15 +2019,9 @@ void PermissionManager::CloseDB(CloseDBNextOp aNextOp) {
           MOZ_ASSERT(NS_SUCCEEDED(rv));
           data->mDBConn = nullptr;
 
-          if (aNextOp == eRebuldOnSuccess) {
+          if (aRebuildOnSuccess) {
             self->TryInitDB(true, defaultsInputStream);
           }
-        }
-
-        if (aNextOp == eShutdown) {
-          NS_DispatchToMainThread(NS_NewRunnableFunction(
-              "PermissionManager::MaybeCompleteShutdown",
-              [self] { self->MaybeCompleteShutdown(); }));
         }
       }));
 }
@@ -2075,7 +2076,7 @@ nsresult PermissionManager::RemoveAllInternal(bool aNotifyObservers) {
         if (NS_WARN_IF(NS_FAILED(rv))) {
           NS_DispatchToMainThread(NS_NewRunnableFunction(
               "PermissionManager::RemoveAllInternal-Failure",
-              [self] { self->CloseDB(eRebuldOnSuccess); }));
+              [self] { self->CloseDB(true); }));
         }
       }));
 
@@ -2356,16 +2357,15 @@ NS_IMETHODIMP PermissionManager::Observe(nsISupports* aSubject,
                                          const char16_t* someData) {
   ENSURE_NOT_CHILD_PROCESS;
 
-  if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
+  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+    // The profile is about to change,
+    // or is going away because the application is shutting down.
+    RemoveIdleDailyMaintenanceJob();
+    RemoveAllFromMemory();
+    CloseDB(false);
+  } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(false);
-
-    nsAutoString blockerName;
-    MOZ_ALWAYS_SUCCEEDS(GetName(blockerName));
-
-    Unused << NS_WARN_IF(NS_FAILED(GetShutdownPhase()->AddBlocker(
-        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-        blockerName)));
   } else if (!nsCRT::strcmp(aTopic, "testonly-reload-permissions-from-disk")) {
     // Testing mechanism to reload all permissions from disk. Because the
     // permission manager automatically initializes itself at startup, tests
@@ -2375,7 +2375,7 @@ NS_IMETHODIMP PermissionManager::Observe(nsISupports* aSubject,
     // always being initialized. This is not guarded by a pref because it's not
     // dangerous to reload permissions from disk, just bad for performance.
     RemoveAllFromMemory();
-    CloseDB(eNone);
+    CloseDB(false);
     InitDB(false);
   } else if (!nsCRT::strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
     PerformIdleDailyMaintenance();
@@ -2406,6 +2406,8 @@ PermissionManager::RemovePermissionsWithAttributes(const nsAString& aPattern) {
 
 nsresult PermissionManager::RemovePermissionsWithAttributes(
     OriginAttributesPattern& aPattern) {
+  EnsureReadCompleted();
+
   Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
@@ -3542,58 +3544,6 @@ nsresult PermissionManager::TestPermissionWithoutDefaultsFromPrincipal(
   return CommonTestPermission(aPrincipal, -1, aType, aPermission,
                               nsIPermissionManager::UNKNOWN_ACTION, true, false,
                               true);
-}
-
-void PermissionManager::MaybeCompleteShutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  DebugOnly<nsresult> rv = GetShutdownPhase()->RemoveBlocker(this);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-}
-
-// Async shutdown blocker methods
-
-NS_IMETHODIMP PermissionManager::GetName(nsAString& aName) {
-  aName = u"PermissionManager: Flushing data"_ns;
-  return NS_OK;
-}
-
-NS_IMETHODIMP PermissionManager::BlockShutdown(
-    nsIAsyncShutdownClient* aClient) {
-  RemoveIdleDailyMaintenanceJob();
-  RemoveAllFromMemory();
-  CloseDB(eShutdown);
-
-  gPermissionManager = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PermissionManager::GetState(nsIPropertyBag** aBagOut) {
-  nsCOMPtr<nsIWritablePropertyBag2> propertyBag =
-      do_CreateInstance("@mozilla.org/hash-property-bag;1");
-
-  nsresult rv = propertyBag->SetPropertyAsInt32(u"state"_ns, mState);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  propertyBag.forget(aBagOut);
-
-  return NS_OK;
-}
-
-nsCOMPtr<nsIAsyncShutdownClient> PermissionManager::GetShutdownPhase() const {
-  nsresult rv;
-  nsCOMPtr<nsIAsyncShutdownService> svc =
-      do_GetService("@mozilla.org/async-shutdown-service;1", &rv);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-  nsCOMPtr<nsIAsyncShutdownClient> client;
-  rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-  return client;
 }
 
 }  // namespace mozilla
