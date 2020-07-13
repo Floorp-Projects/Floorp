@@ -86,26 +86,6 @@ class BustedProvider(MachCommandBase):
         webbrowser.open_new_tab(uri)
 
 
-@CommandProvider
-class UUIDProvider(object):
-    @Command('uuid', category='misc',
-             description='Generate a uuid.')
-    @CommandArgument('--format', '-f', choices=['idl', 'cpp', 'c++'],
-                     help='Output format for the generated uuid.')
-    def uuid(self, format=None):
-        import uuid
-        u = uuid.uuid4()
-        if format in [None, 'idl']:
-            print(u)
-            if format is None:
-                print('')
-        if format in [None, 'cpp', 'c++']:
-            u = u.hex
-            print('{ 0x%s, 0x%s, 0x%s, \\' % (u[0:8], u[8:12], u[12:16]))
-            pairs = tuple(map(lambda n: u[n:n+2], range(16, 32, 2)))
-            print(('  { ' + '0x%s, ' * 7 + '0x%s } }') % pairs)
-
-
 MACH_PASTEBIN_DURATIONS = {
     'onetime': 'onetime',
     'hour': '3600',
