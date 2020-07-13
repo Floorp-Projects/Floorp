@@ -234,7 +234,9 @@ class CommandBar extends Component<Props> {
         }
         onClick={toggleSkipPausing}
       >
-        <AccessibleImage className="disable-pausing" />
+        <AccessibleImage
+          className={skipPausing ? "enable-pausing" : "disable-pausing"}
+        />
       </button>
     );
   }

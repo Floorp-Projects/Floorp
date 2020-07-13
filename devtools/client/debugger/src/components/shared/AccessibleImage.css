@@ -71,6 +71,11 @@ html[dir="rtl"] .img.arrow {
   mask-image: url(resource://devtools/client/debugger/images/disable-pausing.svg);
 }
 
+.img.enable-pausing {
+  mask-image: url(resource://devtools/client/debugger/images/enable-pausing.svg);
+  background-color: var(--theme-icon-checked-color);
+}
+
 .img.globe {
   mask-image: url(resource://devtools/client/debugger/images/globe.svg);
 }
