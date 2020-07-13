@@ -32,7 +32,7 @@
   function test_importScript() {
     var worker = new Worker("worker_referrer.js");
     worker.onmessage = function(e) {
-      is(e.data, location.href.replace("test_referrer.html", "worker_referrer.js"), "The referrer has been sent.");
+      is(e.data, location.href.replace("test_referrer.html", "worker_referrer.js").split("?")[0], "The referrer has been sent.");
       next();
     }
     worker.postMessage(42);
