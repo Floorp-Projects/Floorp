@@ -31,8 +31,8 @@
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
 
-namespace mozilla {
-namespace dom {
+using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMPL_ADDREF_INHERITED(PresentationRequest, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(PresentationRequest, DOMEventTargetHelper)
@@ -524,6 +524,3 @@ bool PresentationRequest::IsAllURLAuthenticated() {
 
   return true;
 }
-
-// namespace mozilla
-// namespace dom
