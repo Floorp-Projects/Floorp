@@ -3303,19 +3303,12 @@ static void AccumulateFrameBounds(nsIFrame* aContainerFrame, nsIFrame* aFrame,
       if (aLines) {
         int32_t index = aLines->FindLineContaining(prevFrame, aCurLine);
         if (index >= 0) {
-          aCurLine = index;
-          nsIFrame* trash1;
-          int32_t trash2;
-          nsRect lineBounds;
-
-          if (NS_SUCCEEDED(
-                  aLines->GetLine(index, &trash1, &trash2, lineBounds))) {
-            frameBounds += frame->GetOffsetTo(f);
-            frame = f;
-            if (lineBounds.y < frameBounds.y) {
-              frameBounds.height = frameBounds.YMost() - lineBounds.y;
-              frameBounds.y = lineBounds.y;
-            }
+          auto line = aLines->GetLine(index).unwrap();
+          frameBounds += frame->GetOffsetTo(f);
+          frame = f;
+          if (line.mLineBounds.y < frameBounds.y) {
+            frameBounds.height = frameBounds.YMost() - line.mLineBounds.y;
+            frameBounds.y = line.mLineBounds.y;
           }
         }
       }

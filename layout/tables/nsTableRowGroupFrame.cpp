@@ -1700,41 +1700,33 @@ bool nsTableRowGroupFrame::GetDirection() {
           GetTableFrame()->StyleVisibility()->mDirection);
 }
 
-NS_IMETHODIMP
-nsTableRowGroupFrame::GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                              int32_t* aNumFramesOnLine,
-                              nsRect& aLineBounds) const {
-  NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
-  NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
-
+Result<nsILineIterator::LineInfo, nsresult> nsTableRowGroupFrame::GetLine(
+    int32_t aLineNumber) const {
+  if ((aLineNumber < 0) || (aLineNumber >= GetRowCount())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  LineInfo structure;
   nsTableFrame* table = GetTableFrame();
   nsTableCellMap* cellMap = table->GetCellMap();
-
-  *aFirstFrameOnLine = nullptr;
-  *aNumFramesOnLine = 0;
-  aLineBounds.SetRect(0, 0, 0, 0);
-
-  if ((aLineNumber < 0) || (aLineNumber >= GetRowCount())) {
-    return NS_OK;
-  }
   aLineNumber += GetStartRowIndex();
 
-  *aNumFramesOnLine = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
-  if (*aNumFramesOnLine == 0) {
-    return NS_OK;
+  structure.mNumFramesOnLine =
+      cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+  if (structure.mNumFramesOnLine == 0) {
+    return structure;
   }
   int32_t colCount = table->GetColCount();
   for (int32_t i = 0; i < colCount; i++) {
     CellData* data = cellMap->GetDataAt(aLineNumber, i);
     if (data && data->IsOrig()) {
-      *aFirstFrameOnLine = (nsIFrame*)data->GetCellFrame();
-      nsIFrame* parent = (*aFirstFrameOnLine)->GetParent();
-      aLineBounds = parent->GetRect();
-      return NS_OK;
+      structure.mFirstFrameOnLine = (nsIFrame*)data->GetCellFrame();
+      nsIFrame* parent = structure.mFirstFrameOnLine->GetParent();
+      structure.mLineBounds = parent->GetRect();
+      return structure;
     }
   }
-  NS_ERROR("cellmap is lying");
-  return NS_ERROR_FAILURE;
+  MOZ_ASSERT_UNREACHABLE("cellmap is lying");
+  return Err(NS_ERROR_FAILURE);
 }
 
 int32_t nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame,

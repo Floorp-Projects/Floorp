@@ -607,24 +607,17 @@ int32_t nsLineIterator::GetNumLines() const { return mNumLines; }
 
 bool nsLineIterator::GetDirection() { return mRightToLeft; }
 
-NS_IMETHODIMP
-nsLineIterator::GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                        int32_t* aNumFramesOnLine, nsRect& aLineBounds) const {
-  NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
-  NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
-
+Result<nsILineIterator::LineInfo, nsresult> nsLineIterator::GetLine(
+    int32_t aLineNumber) const {
   if ((aLineNumber < 0) || (aLineNumber >= mNumLines)) {
-    *aFirstFrameOnLine = nullptr;
-    *aNumFramesOnLine = 0;
-    aLineBounds.SetRect(0, 0, 0, 0);
-    return NS_OK;
+    return Err(NS_ERROR_FAILURE);
   }
+  LineInfo structure;
   nsLineBox* line = mLines[aLineNumber];
-  *aFirstFrameOnLine = line->mFirstChild;
-  *aNumFramesOnLine = line->GetChildCount();
-  aLineBounds = line->GetPhysicalBounds();
-
-  return NS_OK;
+  structure.mFirstFrameOnLine = line->mFirstChild;
+  structure.mNumFramesOnLine = line->GetChildCount();
+  structure.mLineBounds = line->GetPhysicalBounds();
+  return structure;
 }
 
 int32_t nsLineIterator::FindLineContaining(nsIFrame* aFrame,

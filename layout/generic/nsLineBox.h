@@ -1647,9 +1647,9 @@ class nsLineIterator final : public nsILineIterator {
 
   virtual int32_t GetNumLines() const override;
   virtual bool GetDirection() override;
-  NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                     int32_t* aNumFramesOnLine,
-                     nsRect& aLineBounds) const override;
+
+  mozilla::Result<LineInfo, nsresult> GetLine(
+      int32_t aLineNumber) const override;
   virtual int32_t FindLineContaining(nsIFrame* aFrame,
                                      int32_t aStartLine = 0) override;
   NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,

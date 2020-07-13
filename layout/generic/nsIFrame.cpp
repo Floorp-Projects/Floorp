@@ -7933,7 +7933,6 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
     // we need to jump to new block frame.
     return NS_ERROR_FAILURE;
   }
-  int32_t lineFrameCount;
   nsIFrame* resultFrame = nullptr;
   nsIFrame* farStoppingFrame = nullptr;  // we keep searching until we find a
                                          // "this" frame then we go to next line
@@ -7941,7 +7940,6 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                           // stop here
   nsIFrame* firstFrame;
   nsIFrame* lastFrame;
-  nsRect rect;
   bool isBeforeFirstFrame, isAfterLastFrame;
   bool found = false;
 
@@ -7956,39 +7954,41 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       // we need to jump to new block frame.
       return NS_ERROR_FAILURE;
     }
-    result = it->GetLine(searchingLine, &firstFrame, &lineFrameCount, rect);
-    if (!lineFrameCount) continue;
-    if (NS_SUCCEEDED(result)) {
-      lastFrame = firstFrame;
-      for (; lineFrameCount > 1; lineFrameCount--) {
-        // result = lastFrame->GetNextSibling(&lastFrame, searchingLine);
-        result = it->GetNextSiblingOnLine(lastFrame, searchingLine);
-        if (NS_FAILED(result) || !lastFrame) {
-          NS_ERROR("GetLine promised more frames than could be found");
-          return NS_ERROR_FAILURE;
-        }
+    auto line = it->GetLine(searchingLine).unwrap();
+    if (!line.mNumFramesOnLine) {
+      continue;
+    }
+    lastFrame = firstFrame = line.mFirstFrameOnLine;
+    for (int32_t lineFrameCount = line.mNumFramesOnLine; lineFrameCount > 1;
+         lineFrameCount--) {
+      result = it->GetNextSiblingOnLine(lastFrame, searchingLine);
+      if (NS_FAILED(result) || !lastFrame) {
+        NS_ERROR("GetLine promised more frames than could be found");
+        return NS_ERROR_FAILURE;
       }
-      GetLastLeaf(&lastFrame);
+    }
+    GetLastLeaf(&lastFrame);
 
-      if (aPos->mDirection == eDirNext) {
-        nearStoppingFrame = firstFrame;
-        farStoppingFrame = lastFrame;
-      } else {
-        nearStoppingFrame = lastFrame;
-        farStoppingFrame = firstFrame;
-      }
-      nsPoint offset;
-      nsView* view;  // used for call of get offset from view
-      aBlockFrame->GetOffsetFromView(offset, &view);
-      nsPoint newDesiredPos =
-          aPos->mDesiredCaretPos -
-          offset;  // get desired position into blockframe coords
-      result = it->FindFrameAt(searchingLine, newDesiredPos, &resultFrame,
-                               &isBeforeFirstFrame, &isAfterLastFrame);
-      if (NS_FAILED(result)) continue;
+    if (aPos->mDirection == eDirNext) {
+      nearStoppingFrame = firstFrame;
+      farStoppingFrame = lastFrame;
+    } else {
+      nearStoppingFrame = lastFrame;
+      farStoppingFrame = firstFrame;
+    }
+    nsPoint offset;
+    nsView* view;  // used for call of get offset from view
+    aBlockFrame->GetOffsetFromView(offset, &view);
+    nsPoint newDesiredPos =
+        aPos->mDesiredCaretPos -
+        offset;  // get desired position into blockframe coords
+    result = it->FindFrameAt(searchingLine, newDesiredPos, &resultFrame,
+                             &isBeforeFirstFrame, &isAfterLastFrame);
+    if (NS_FAILED(result)) {
+      continue;
     }
 
-    if (NS_SUCCEEDED(result) && resultFrame) {
+    if (resultFrame) {
       // check to see if this is ANOTHER blockframe inside the other one if so
       // then call into its lines
       nsAutoLineIterator newIt = resultFrame->GetLineIterator();
@@ -8567,13 +8567,11 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   nsAutoLineIterator it = blockFrame->GetLineIterator();
   MOZ_ASSERT(it, "GetLineNumber() succeeded but no block frame?");
 
-  int32_t lineFrameCount;
-  nsIFrame* firstFrame;
-  nsRect usedRect;
   nsIFrame* baseFrame = nullptr;
   bool endOfLine = (eSelectEndLine == aPos->mAmount);
 
   if (aPos->mVisual && PresContext()->BidiEnabled()) {
+    nsIFrame* firstFrame;
     bool lineIsRTL = it->GetDirection();
     bool isReordered;
     nsIFrame* lastFrame;
@@ -8591,18 +8589,18 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
       }
     }
   } else {
-    it->GetLine(thisLine, &firstFrame, &lineFrameCount, usedRect);
+    auto line = it->GetLine(thisLine).unwrap();
 
-    nsIFrame* frame = firstFrame;
+    nsIFrame* frame = line.mFirstFrameOnLine;
     bool lastFrameWasEditable = false;
-    for (int32_t count = lineFrameCount; count;
+    for (int32_t count = line.mNumFramesOnLine; count;
          --count, frame = frame->GetNextSibling()) {
       if (frame->IsGeneratedContentFrame()) {
         continue;
       }
       // When jumping to the end of the line with the "end" key,
       // try to skip over brFrames
-      if (endOfLine && lineFrameCount > 1 && frame->IsBrFrame() &&
+      if (endOfLine && line.mNumFramesOnLine > 1 && frame->IsBrFrame() &&
           lastFrameWasEditable == frame->GetContent()->IsEditable()) {
         continue;
       }
@@ -8830,22 +8828,19 @@ Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
 
 Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
     nsILineIterator* aLineIterator, int32_t aLine, nsDirection aDirection) {
-  nsIFrame* firstFrame;
-  nsIFrame* lastFrame;
-  nsRect nonUsedRect;
-  int32_t lineFrameCount;
-
   nsAutoLineIterator it = aLineIterator;
-  MOZ_TRY(it->GetLine(aLine, &firstFrame, &lineFrameCount, nonUsedRect));
+  auto line = it->GetLine(aLine).unwrap();
 
   if (aDirection == eDirPrevious) {
+    nsIFrame* firstFrame = line.mFirstFrameOnLine;
     nsIFrame::GetFirstLeaf(&firstFrame);
     return firstFrame == this;
   }
 
   // eDirNext
-  lastFrame = firstFrame;
-  for (; lineFrameCount > 1; lineFrameCount--) {
+  nsIFrame* lastFrame = line.mFirstFrameOnLine;
+  for (int32_t lineFrameCount = line.mNumFramesOnLine; lineFrameCount > 1;
+       lineFrameCount--) {
     MOZ_TRY(it->GetNextSiblingOnLine(lastFrame, aLine));
     if (!lastFrame) {
       NS_ERROR("should not be reached nsIFrame");
@@ -10004,19 +9999,14 @@ nsIFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
     nsAutoLineIterator lines = GetLineIterator();
     if (lines) {
       metrics->mBlockMinSize.height = 0;
-      int count = 0;
-      nsIFrame* firstFrame = nullptr;
-      int32_t framesOnLine;
-      nsRect lineBounds;
+      int32_t lineCount = lines->GetNumLines();
+      for (int32_t i = 0; i < lineCount; ++i) {
+        auto line = lines->GetLine(i).unwrap();
 
-      do {
-        lines->GetLine(count, &firstFrame, &framesOnLine, lineBounds);
-
-        if (lineBounds.height > metrics->mBlockMinSize.height)
-          metrics->mBlockMinSize.height = lineBounds.height;
-
-        count++;
-      } while (firstFrame);
+        if (line.mLineBounds.height > metrics->mBlockMinSize.height) {
+          metrics->mBlockMinSize.height = line.mLineBounds.height;
+        }
+      }
     } else {
       metrics->mBlockMinSize.height = desiredSize.Height();
     }
