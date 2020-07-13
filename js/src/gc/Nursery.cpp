@@ -230,6 +230,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateBigInts_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
+      smoothedGrowthFactor(1.0),
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
       ,
@@ -319,7 +320,7 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   poisonAndInitCurrentChunk();
 
   // Clear any information about previous collections.
-  smoothedGrowthFactor.reset();
+  clearRecentGrowthData();
 
   return true;
 }
@@ -1535,14 +1536,17 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
   // memory situations.
   if (kind == GC_SHRINK || gc::IsOOMReason(reason) ||
       gc->systemHasLowMemory()) {
-    smoothedGrowthFactor.reset();
+    clearRecentGrowthData();
     return 0;
   }
 
   // Don't resize the nursery during shutdown.
   if (gc::IsShutdownReason(reason)) {
+    clearRecentGrowthData();
     return capacity();
   }
+
+  TimeStamp now = ReallyNow();
 
   // Calculate the fraction of the nursery promoted out of its entire
   // capacity. This gives better results than using the promotion rate (based on
@@ -1561,12 +1565,16 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
   static const double GrowthRange = 2.0;
   growthFactor = ClampDouble(growthFactor, 1.0 / GrowthRange, GrowthRange);
 
+#ifndef JS_MORE_DETERMINISTIC
   // Use exponential smoothing on the desired growth rate to take into account
-  // the promotion rate from previous collections, if any.
-  if (smoothedGrowthFactor) {
-    growthFactor = 0.75 * smoothedGrowthFactor.value() + 0.25 * growthFactor;
+  // the promotion rate from recent previous collections.
+  if (lastResizeTime &&
+      now - lastResizeTime < TimeDuration::FromMilliseconds(200)) {
+    growthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
   }
-  smoothedGrowthFactor = mozilla::Some(growthFactor);
+  lastResizeTime = now;
+  smoothedGrowthFactor = growthFactor;
+#endif
 
   // Leave size untouched if we are close to the promotion goal.
   static const double GoalWidth = 1.5;
@@ -1580,6 +1588,13 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
   MOZ_ASSERT(capacity() < SIZE_MAX / 2);
 
   return roundSize(size_t(double(capacity()) * growthFactor));
+}
+
+void js::Nursery::clearRecentGrowthData() {
+#ifndef JS_MORE_DETERMINISTIC
+  lastResizeTime = TimeStamp();
+  smoothedGrowthFactor = 1.0;
+#endif
 }
 
 /* static */
