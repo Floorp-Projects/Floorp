@@ -41,6 +41,8 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   MIRGenerator& mirGen_;
   TempAllocator& alloc_;
   HandleScript script_;
+  const CompileInfo* info_;
+  ICScript* icScript_;
 
   // Index of the next ICEntry for getICEntry. This assumes the script's
   // bytecode is processed from first to last instruction.
@@ -59,12 +61,15 @@ class MOZ_STACK_CLASS WarpScriptOracle {
                                            uint8_t* stubDataCopy);
 
  public:
-  WarpScriptOracle(JSContext* cx, WarpOracle* oracle, HandleScript script)
+  WarpScriptOracle(JSContext* cx, WarpOracle* oracle, HandleScript script,
+                   const CompileInfo* info, ICScript* icScript)
       : cx_(cx),
         oracle_(oracle),
         mirGen_(oracle->mirGen()),
         alloc_(mirGen_.alloc()),
-        script_(script) {}
+        script_(script),
+        info_(info),
+        icScript_(icScript) {}
 
   AbortReasonOr<WarpScriptSnapshot*> createScriptSnapshot();
 
@@ -107,7 +112,10 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
           outerScript_->getWarmUpCount(),
           OptimizationLevelString(mirGen_.optimizationInfo().level()));
 
-  WarpScriptOracle scriptOracle(cx_, this, outerScript_);
+  MOZ_ASSERT(outerScript_->hasJitScript());
+  ICScript* icScript = outerScript_->jitScript()->icScript();
+  WarpScriptOracle scriptOracle(cx_, this, outerScript_, &mirGen_.outerInfo(),
+                                icScript);
 
   WarpScriptSnapshot* scriptSnapshot;
   MOZ_TRY_VAR(scriptSnapshot, scriptOracle.createScriptSnapshot());
@@ -174,7 +182,7 @@ const ICEntry& WarpScriptOracle::getICEntry(BytecodeLocation loc) {
 
   const ICEntry* entry;
   do {
-    entry = &script_->jitScript()->icEntry(icEntryIndex_);
+    entry = &icScript_->icEntry(icEntryIndex_);
     icEntryIndex_++;
   } while (entry->pcOffset() < offset);
 
