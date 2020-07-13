@@ -6,7 +6,6 @@
 
 const { Cc, Ci, Cr, Cu } = require("chrome");
 const Services = require("Services");
-const flags = require("devtools/shared/flags");
 const {
   wildcardToRegExp,
 } = require("devtools/server/actors/network-monitor/utils/wildcard-to-regexp");
@@ -82,7 +81,6 @@ function matchRequest(channel, filters) {
   // Ignore requests from chrome or add-on code when we are monitoring
   // content.
   if (
-    !flags.wantAllNetworkRequests &&
     channel.loadInfo &&
     channel.loadInfo.loadingDocument === null &&
     (channel.loadInfo.loadingPrincipal ===
