@@ -214,6 +214,9 @@ void ClientSource::WorkerExecutionReady(WorkerPrivate* aWorkerPrivate) {
   if (mController.isSome()) {
     MOZ_DIAGNOSTIC_ASSERT(
         aWorkerPrivate->StorageAccess() > StorageAccess::ePrivateBrowsing ||
+        (ShouldPartitionStorage(aWorkerPrivate->StorageAccess()) &&
+         StoragePartitioningEnabled(aWorkerPrivate->StorageAccess(),
+                                    aWorkerPrivate->CookieJarSettings())) ||
         StringBeginsWith(aWorkerPrivate->ScriptURL(), u"blob:"_ns));
   }
 
