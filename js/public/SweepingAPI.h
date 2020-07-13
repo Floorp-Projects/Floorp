@@ -90,6 +90,14 @@ class WeakCache : protected detail::WeakCacheBase,
   T& get() { return cache; }
 
   size_t sweep(js::gc::StoreBuffer* sbToLock) override {
+    // Take the store buffer lock in case sweeping triggers any generational
+    // post barriers. This is not always required and WeakCache specializations
+    // may delay or skip taking the lock as appropriate.
+    mozilla::Maybe<js::gc::AutoLockStoreBuffer> lock;
+    if (sbToLock) {
+      lock.emplace(sbToLock);
+    }
+
     GCPolicy<T>::sweep(&cache);
     return 0;
   }
