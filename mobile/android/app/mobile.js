@@ -684,3 +684,6 @@ pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
 // Allow Web Authentication
 pref("security.webauth.webauthn_enable_android_fido2", true);
 pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+
+// Enable deprecated TLS only in GV 79
+pref("security.tls.version.enable-deprecated", true);
