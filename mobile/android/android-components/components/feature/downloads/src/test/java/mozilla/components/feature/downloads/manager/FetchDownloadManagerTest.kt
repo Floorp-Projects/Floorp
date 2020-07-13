@@ -26,7 +26,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
@@ -51,7 +50,7 @@ class FetchDownloadManagerTest {
         download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "", "application/zip", 5242880,
-            "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
+            userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
         downloadManager = FetchDownloadManager(testContext, store, MockDownloadService::class, broadcastManager)
     }
@@ -135,7 +134,7 @@ class FetchDownloadManagerTest {
     @Test
     fun `sendBroadcast with valid downloadID must call onDownloadStopped after download`() {
         var downloadStopped = false
-        var downloadStatus: DownloadJobStatus? = null
+        var downloadStatus: DownloadState.Status? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
 
         grantPermissions()
@@ -153,12 +152,12 @@ class FetchDownloadManagerTest {
 
         notifyDownloadCompleted(id)
         assertTrue(downloadStopped)
-        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
+        assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
     }
 
     @Test
     fun `sendBroadcast with completed download removes queued download from store`() {
-        var downloadStatus: DownloadJobStatus? = null
+        var downloadStatus: DownloadState.Status? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
         grantPermissions()
 
@@ -175,14 +174,14 @@ class FetchDownloadManagerTest {
 
         notifyDownloadCompleted(id)
         store.waitUntilIdle()
-        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
+        assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
         assertTrue(store.state.queuedDownloads.isEmpty())
     }
 
     @Test
     fun `onReceive properly gets download object form sendBroadcast`() {
         var downloadStopped = false
-        var downloadStatus: DownloadJobStatus? = null
+        var downloadStatus: DownloadState.Status? = null
         var downloadName = ""
         var downloadSize = 0L
         val downloadWithFileName = download.copy(fileName = "5MB.zip", contentLength = 5L)
@@ -203,20 +202,20 @@ class FetchDownloadManagerTest {
         assertTrue(downloadStopped)
         assertEquals("5MB.zip", downloadName)
         assertEquals(5L, downloadSize)
-        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
+        assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
     }
 
     private fun notifyDownloadFailed(id: Long) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
-        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadJobStatus.FAILED)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.FAILED)
         broadcastManager.sendBroadcast(intent)
     }
 
     private fun notifyDownloadCompleted(id: Long) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
-        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadJobStatus.COMPLETED)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.COMPLETED)
 
         broadcastManager.sendBroadcast(intent)
     }
