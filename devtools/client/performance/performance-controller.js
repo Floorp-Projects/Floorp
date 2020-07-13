@@ -435,6 +435,12 @@ const PerformanceController = {
     return this.front.traits;
   },
 
+  viewSourceInDebugger(url, line, column) {
+    // Currently, the line and column values are strings, so we have to convert
+    // them to numbers before passing them on to the toolbox.
+    return this.toolbox.viewSourceInDebugger(url, +line, +column);
+  },
+
   /**
    * Utility method taking a string or an array of strings of feature names (like
    * "withAllocations" or "withMarkers"), and returns whether or not the current

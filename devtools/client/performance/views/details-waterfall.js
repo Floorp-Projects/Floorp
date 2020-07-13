@@ -165,7 +165,7 @@ const WaterfallView = extend(DetailsSubview, {
    * Called when MarkerDetails view emits an event to view source.
    */
   _onViewSource: function(data) {
-    PerformanceController.toolbox.viewSourceInDebugger(
+    PerformanceController.viewSourceInDebugger(
       data.url,
       data.line,
       data.column
