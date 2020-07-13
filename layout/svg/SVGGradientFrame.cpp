@@ -248,8 +248,8 @@ already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
   }
 
   if (nStops == 1 || GradientVectorLengthIsZero()) {
-    auto lastStopFrame = stopFrames[nStops - 1];
-    auto svgReset = lastStopFrame->StyleSVGReset();
+    auto* lastStopFrame = stopFrames[nStops - 1];
+    const auto* svgReset = lastStopFrame->StyleSVGReset();
     // The gradient paints a single colour, using the stop-color of the last
     // gradient step if there are more than one.
     float stopOpacity = svgReset->mStopOpacity;

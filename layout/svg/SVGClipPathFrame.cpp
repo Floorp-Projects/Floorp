@@ -475,7 +475,7 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
 
 bool SVGClipPathFrame::IsSVGTransformed(Matrix* aOwnTransforms,
                                         Matrix* aFromParentTransforms) const {
-  auto e = static_cast<SVGElement const*>(GetContent());
+  const auto* e = static_cast<SVGElement const*>(GetContent());
   Matrix m = ToMatrix(e->PrependLocalTransformsTo({}, eUserSpaceToParent));
 
   if (m.IsIdentity()) {

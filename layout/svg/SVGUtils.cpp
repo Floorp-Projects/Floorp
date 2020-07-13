@@ -933,7 +933,7 @@ gfxRect SVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
     return gfxRect(aX, aY, aWidth, aHeight);
   }
 
-  auto& rect = effects->mClip.AsRect();
+  const auto& rect = effects->mClip.AsRect();
   nsRect coordClipRect = rect.ToLayoutRect();
   nsIntRect clipPxRect = coordClipRect.ToOutsidePixels(
       aFrame->PresContext()->AppUnitsPerDevPixel());
