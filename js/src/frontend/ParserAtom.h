@@ -7,6 +7,7 @@
 #ifndef frontend_ParserAtom_h
 #define frontend_ParserAtom_h
 
+#include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
 #include "mozilla/HashFunctions.h"  // HashString
 #include "mozilla/Variant.h"        // mozilla::Variant
 
@@ -115,14 +116,8 @@ class ParserAtomId {
  protected:
   const ParserAtomEntry* entry_;
 
-  struct InitInvalid {};
-
-  explicit ParserAtomId(InitInvalid) : entry_(nullptr) {}
-
  public:
-  explicit ParserAtomId(const ParserAtomEntry* entry) : entry_(entry) {
-    MOZ_ASSERT(entry_ != nullptr);
-  }
+  explicit ParserAtomId(const ParserAtomEntry* entry) : entry_(entry) {}
   ParserAtomId() = default;
 
   bool isValid() const { return entry_ != nullptr; }
@@ -132,7 +127,7 @@ class ParserAtomId {
   }
   MOZ_IMPLICIT operator bool() const { return isValid(); }
 
-  static ParserAtomId Invalid() { return ParserAtomId(InitInvalid{}); }
+  static ParserAtomId Invalid() { return ParserAtomId(nullptr); }
 
   // As the "unchecked" tag signifies, this method should only be called
   // after it has been confirmed that this atom is a name and not an index.
@@ -163,17 +158,17 @@ class ParserAtomId {
 };
 
 class ParserNameId : public ParserAtomId {
-  explicit ParserNameId(InitInvalid) : ParserAtomId(InitInvalid{}) {}
-
  public:
   ParserNameId() = default;
   explicit ParserNameId(const ParserAtomEntry* entry) : ParserAtomId(entry) {}
   ParserNameId(const ParserNameId& other) = default;
 
-  static ParserNameId Invalid() { return ParserNameId(InitInvalid{}); }
+  static ParserNameId Invalid() { return ParserNameId(nullptr); }
 };
 
 inline ParserNameId ParserAtomId::toNameIdUnchecked() const {
+  mozilla::DebugOnly<uint32_t> idx;
+  MOZ_ASSERT(!entry_ || !isIndex(&idx));
   return ParserNameId(entry_);
 }
 
@@ -214,9 +209,13 @@ struct ParserAtomLookupHasher {
 class WellKnownParserAtoms {
  public:
   /* Various built-in or commonly-used names. */
-#define PROPERTYNAME_FIELD(idpart, id, text) ParserNameId id{};
-  FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD)
-#undef PROPERTYNAME_FIELD
+#define PROPERTYNAME_FIELD_(idpart, id, text) ParserNameId id{};
+  FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD_)
+#undef PROPERTYNAME_FIELD_
+
+#define PROPERTYNAME_FIELD_(name, clasp) ParserNameId name{};
+  JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
+#undef PROPERTYNAME_FIELD_
 
  private:
   using EntrySet = HashSet<UniquePtr<ParserAtomEntry>, ParserAtomLookupHasher,
