@@ -154,9 +154,7 @@ static bool URIUsesDocChannel(nsIURI* aURI) {
          !spec.EqualsLiteral("about:crashcontent");
 }
 
-bool DocumentChannel::CanUseDocumentChannel(nsDocShellLoadState* aLoadState) {
-  MOZ_ASSERT(aLoadState);
-
+bool DocumentChannel::CanUseDocumentChannel(nsIURI* aURI, uint32_t aLoadFlags) {
   if (XRE_IsParentProcess() &&
       !StaticPrefs::browser_tabs_documentchannel_ppdc()) {
     return false;
@@ -168,8 +166,8 @@ bool DocumentChannel::CanUseDocumentChannel(nsDocShellLoadState* aLoadState) {
   // outer document (and must load in the same process), which breaks if we
   // serialize to the parent process.
   return StaticPrefs::browser_tabs_documentchannel() &&
-         !aLoadState->HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
-         URIUsesDocChannel(aLoadState->URI());
+         !(aLoadFlags & nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
+         URIUsesDocChannel(aURI);
 }
 
 /* static */
