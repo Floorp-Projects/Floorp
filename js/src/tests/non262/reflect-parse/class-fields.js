@@ -15,6 +15,12 @@ function testClassFields() {
     assertExpr("(class C { x; })", classExpr(ident("C"), null, [classField(ident("x"), null), genConstructor]))
     assertExpr("(class C { x; y = 2; })", classExpr(ident("C"), null, [classField(ident("x"), null), classField(ident("y"), lit(2)), genConstructor]))
     assertExpr("(class C { x = 2; constructor(){} })", classExpr(ident("C"), null, [classField(ident("x"), lit(2)), genConstructor]))
+
+    if (getRealmConfiguration().privateFields) {
+        assertExpr("(class C { #x = 2; })", classExpr(ident("C"), null, [classField(ident("#x"), lit(2)), genConstructor]));
+        assertExpr("(class C { #x; })", classExpr(ident("C"), null, [classField(ident("#x"), null), genConstructor]))
+        assertExpr("(class C { #x; #y = 2; })", classExpr(ident("C"), null, [classField(ident("#x"), null), classField(ident("#y"), lit(2)), genConstructor]))
+    }
 }
 
 runtest(testClassFields);
