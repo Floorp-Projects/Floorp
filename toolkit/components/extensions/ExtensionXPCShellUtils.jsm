@@ -192,7 +192,15 @@ class ContentPage {
     userContextId = undefined
   ) {
     this.remote = remote;
-    this.remoteSubframes = remote && remoteSubframes;
+
+    // If an extension has been passed, overwrite remote
+    // with extension.remote to be sure that the ContentPage
+    // will have the same remoteness of the extension.
+    if (extension) {
+      this.remote = extension.remote;
+    }
+
+    this.remoteSubframes = this.remote && remoteSubframes;
     this.extension = extension;
     this.privateBrowsing = privateBrowsing;
     this.userContextId = userContextId;
@@ -247,8 +255,7 @@ class ContentPage {
       browser.setAttribute("usercontextid", this.userContextId);
     }
 
-    if (this.extension && this.extension.remote) {
-      this.remote = true;
+    if (this.extension?.remote) {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", "extension");
       browser.sameProcessAsFrameLoader = this.extension.groupFrameLoader;
