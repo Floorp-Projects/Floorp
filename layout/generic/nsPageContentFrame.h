@@ -26,18 +26,18 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
   friend class nsPageFrame;
 
   // nsIFrame
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return ViewportFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eCanContainOverflowContainers));
   }
 
   void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
-  virtual bool HasTransformGetter() const override { return true; }
+  bool HasTransformGetter() const override { return true; }
 
   /**
    * Return our canvas frame.
@@ -46,7 +46,7 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   // Debugging
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
  protected:
