@@ -49,6 +49,7 @@ interface nsIDragSession : nsISupports
     * drag originated outside the application. Useful for determining if a drop
     * originated in the same document.
     */
+  [infallible]
   readonly attribute Document sourceDocument;
 
   /**
