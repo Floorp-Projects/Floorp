@@ -237,13 +237,7 @@ raptor-youtube-playback-av1-sfr-geckoview:
     description: "Raptor YouTube Playback AV1 SFR on GeckoView"
     try-name: raptor-youtube-playback-av1-sfr-geckoview
     treeherder-symbol: Rap(ytp-av1-sfr)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            android-hw-g5.*-shippable/opt: ['mozilla-central']
-            default: []
+    run-on-projects: []
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -256,13 +250,7 @@ raptor-youtube-playback-h264-sfr-geckoview:
     description: "Raptor YouTube Playback H264 SFR on GeckoView"
     try-name: raptor-youtube-playback-h264-sfr-geckoview
     treeherder-symbol: Rap(ytp-h264-sfr)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            android-hw-g5.*-shippable/opt: ['mozilla-central']
-            default: []
+    run-on-projects: []
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -275,13 +263,7 @@ raptor-youtube-playback-h264-geckoview:
     description: "Raptor YouTube Playback H264 on GeckoView"
     try-name: raptor-youtube-playback-h264-geckoview
     treeherder-symbol: Rap(ytp-h264)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            android-hw-g5.*-shippable/opt: ['mozilla-central']
-            default: []
+    run-on-projects: []
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -294,11 +276,7 @@ raptor-youtube-playback-vp9-sfr-geckoview:
     description: "Raptor YouTube Playback VP9 SFR on GeckoView"
     try-name: raptor-youtube-playback-vp9-sfr-geckoview
     treeherder-symbol: Rap(ytp-vp9-sfr)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            default: []
+    run-on-projects: []
     max-run-time: 3600
     mozharness:
         extra-options:
