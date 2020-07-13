@@ -146,7 +146,7 @@ function messageRemove(id) {
   };
 }
 
-function networkMessageUpdate(packet, idGenerator = null) {
+function networkMessageUpdate(packet, idGenerator = null, response) {
   if (idGenerator == null) {
     idGenerator = defaultIdGenerator;
   }
@@ -156,6 +156,7 @@ function networkMessageUpdate(packet, idGenerator = null) {
   return {
     type: NETWORK_MESSAGE_UPDATE,
     message,
+    response,
   };
 }
 

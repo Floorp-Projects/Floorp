@@ -50,9 +50,12 @@ function enableNetProvider(webConsoleUI) {
         const updates = getAllNetworkMessagesUpdateById(newState);
         const message = updates[action.id];
         if (message && !message.openedOnce && message.source == "network") {
-          dataProvider.onNetworkResourceAvailable(message);
+          dataProvider.onNetworkEvent(message);
           message.updates.forEach(updateType => {
-            dataProvider.onNetworkResourceUpdated({ ...message, updateType });
+            dataProvider.onNetworkEventUpdate({
+              packet: { updateType: updateType },
+              networkInfo: message,
+            });
           });
         }
       }
@@ -61,15 +64,18 @@ function enableNetProvider(webConsoleUI) {
       // Network event update packets are sent in batches from:
       // `WebConsoleOutputWrapper.dispatchMessageUpdate` using
       // NETWORK_MESSAGE_UPDATE action.
-      // Make sure to call `dataProvider.onNetworkResourceUpdated`
+      // Make sure to call `dataProvider.onNetworkEventUpdate`
       // to fetch data from the backend.
       if (type == NETWORK_MESSAGE_UPDATE) {
-        const { actor } = action.message;
+        const { actor } = action.response.networkInfo;
         const open = getAllMessagesUiById(state).includes(actor);
         if (open) {
           const message = getMessage(state, actor);
           message.updates.forEach(updateType => {
-            dataProvider.onNetworkResourceUpdated({ ...message, updateType });
+            dataProvider.onNetworkEventUpdate({
+              packet: { updateType },
+              networkInfo: message,
+            });
           });
         }
       }

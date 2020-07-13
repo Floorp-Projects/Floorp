@@ -168,7 +168,9 @@ class WebConsoleWrapper {
     // since we can receive updates even if the message isn't rendered yet.
     const messages = [...getAllMessagesById(store.getState()).values()];
     this.queuedMessageUpdates = this.queuedMessageUpdates.filter(
-      ({ actor }) => {
+      ({ networkInfo }) => {
+        const { actor } = networkInfo;
+
         const queuedNetworkMessage = this.queuedMessageAdds.find(
           p => p.actor === actor
         );
@@ -208,24 +210,24 @@ class WebConsoleWrapper {
     store.dispatch(actions.privateMessagesClear());
   }
 
-  dispatchMessageUpdate(message) {
+  dispatchMessageUpdate(message, res) {
     // network-message-updated will emit when all the update message arrives.
     // Since we can't ensure the order of the network update, we check
-    // that message.updates has all we need.
+    // that networkInfo.updates has all we need.
     // Note that 'requestPostData' is sent only for POST requests, so we need
     // to count with that.
     const NUMBER_OF_NETWORK_UPDATE = 8;
 
     let expectedLength = NUMBER_OF_NETWORK_UPDATE;
-    if (message.updates.includes("responseCache")) {
+    if (res.networkInfo.updates.includes("responseCache")) {
       expectedLength++;
     }
-    if (message.updates.includes("requestPostData")) {
+    if (res.networkInfo.updates.includes("requestPostData")) {
       expectedLength++;
     }
 
-    if (message.updates.length === expectedLength) {
-      this.batchedMessageUpdates(message);
+    if (res.networkInfo.updates.length === expectedLength) {
+      this.batchedMessageUpdates({ res, message });
     }
   }
 
@@ -255,6 +257,7 @@ class WebConsoleWrapper {
       packet.timeStamp = Date.now();
       this.dispatchMessageAdd(packet);
     } else {
+      this.webConsoleUI.clearNetworkRequests();
       this.dispatchMessagesClear();
       store.dispatch({
         type: Constants.WILL_NAVIGATE,
@@ -262,8 +265,8 @@ class WebConsoleWrapper {
     }
   }
 
-  batchedMessageUpdates(message) {
-    this.queuedMessageUpdates.push(message);
+  batchedMessageUpdates(info) {
+    this.queuedMessageUpdates.push(info);
     this.setTimeoutIfNeeded();
   }
 
@@ -342,9 +345,11 @@ class WebConsoleWrapper {
         this.queuedMessageAdds = [];
 
         if (this.queuedMessageUpdates.length > 0) {
-          for (const message of this.queuedMessageUpdates) {
-            await store.dispatch(actions.networkMessageUpdate(message, null));
-            this.webConsoleUI.emitForTests("network-message-updated", message);
+          for (const { message, res } of this.queuedMessageUpdates) {
+            await store.dispatch(
+              actions.networkMessageUpdate(message, null, res)
+            );
+            this.webConsoleUI.emitForTests("network-message-updated", res);
           }
           this.queuedMessageUpdates = [];
         }
