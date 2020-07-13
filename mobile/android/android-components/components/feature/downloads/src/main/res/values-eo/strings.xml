@@ -22,11 +22,21 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Ne eblis malfermi la dosieron</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">Neniu programo trovita por malfermi dosierojn %1$s</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Paŭzigi</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Daŭrigi</string>
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">Nuligi</string>
 
     <!-- Button that opens the downloaded file when pressed -->
     <string name="mozac_feature_downloads_button_open">Malfermi</string>
+
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Klopodi denove</string>
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Fermi</string>

@@ -84,6 +84,9 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ຫນ້າເວັບນີ້ມີການປ່ຽນເສັ້ນທາງທີ່ບໍ່ຖືກຕ້ອງ</string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ໂໝດອັອບໄລ</string>
 
@@ -96,6 +99,9 @@
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
         <li>ກະລູນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງບັນຫານີ້ໃຫ້ພວກເຂົາຮູ້.</li>
       </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">ຂໍ້ຜິດພາດເນື້ອຫາທີ່ເສີຍຫາຍ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">ເນື້ອຫາຂັດຂ້ອງ</string>

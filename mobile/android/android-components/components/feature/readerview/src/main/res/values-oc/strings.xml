@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Sans serif</string>
+
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Fosc</string>
     <!-- Accessible description for the color option -->

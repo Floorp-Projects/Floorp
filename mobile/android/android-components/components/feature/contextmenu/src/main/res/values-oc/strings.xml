@@ -10,12 +10,16 @@
     <string name="mozac_feature_contextmenu_download_link">Telecargar lo ligam</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Partejar lo ligam</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Partejar l’imatge</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Copiar lo ligam</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_image_location">Copiar l’adreça de l’imatge</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Enregistrar l’imatge</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">Enregistrar lo fichièr sul periferic</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Onglet novèl dobèrt</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
@@ -24,6 +28,8 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Copiat dins lo quichapapièrs</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Bascular</string>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Dobrir lo ligam dins una aplicacion extèrna</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">Recercar amb %s</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->

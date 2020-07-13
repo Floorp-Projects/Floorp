@@ -132,6 +132,12 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">Ouzhpennañ %1$s ha %2$s e %3$s</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Ouzhpennañ anezho e %1$s</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">O pellgargañ hag o wiriañ an askouezh…</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 askouezh</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">Gouzout hirocʼh</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
     <string name="mozac_feature_addons_updater_status_no_update_available">Hizivadenn ebet hegerz</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->

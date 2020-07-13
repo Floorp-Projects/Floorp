@@ -2,10 +2,16 @@
 <resources>
     <!-- Text for context menu item to open the link in a new tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">లంకెను కొత్త ట్యాబులో తెరువు</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">లంకెను అంతరంగిక ట్యాబులో తెరువు</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">బొమ్మను కొత్త ట్యాబులో తెరువు</string>
     <!-- Text for context menu item to save / download the link. -->
     <string name="mozac_feature_contextmenu_download_link">లంకెను దించుకో</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">లంకెను పంచుకోండి</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">బొమ్మని పంచుకోండి</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">లంకెను కాపీచేయి</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
@@ -24,4 +30,6 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">మారు</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">లంకెని బయటి అనువర్తనంలో తెరువు</string>
-    </resources>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">పంచుకోండి</string>
+</resources>

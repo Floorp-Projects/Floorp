@@ -10,6 +10,11 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">Fonte Serif</string>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Amenorgamientu del tamañu de la fonte</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Aumentu del tamañu de la fonte</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Escuridá</string>
     <!-- Accessible description for the color option -->

@@ -52,28 +52,120 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Diamzeret eo ar cʼhennask</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Nʼhe deus ket respontet al lecʼhienn azgoulennet dʼan azgoulenn kennaskañ ha ne cʼhortoz ket mui ar merdeer evit ar respont.</p>
+ <ul>
+ <li>Marteze eo soulgarget pe sacʼhet an dafariad ? Klaskit diwezhatocʼh.</li> <li>Nʼocʼh ket evit gweladenniñ lecʼhiennoù all ? Gwiriañ ar cʼhennaskañ ouzh ar rouedad.</li>
+<li>Ha gwarezet eo hocʼh urzhiataer gant un tanvoger pe ur proksi? Arventennoù fall a cʼhallfe gwallemellout gant ho merdeiñ.</li><li>Trubuilhoù cʼhoazh? Kit e darempred gant ardoer ho reizhiad pe ho pourchaser internet evit kaout skoazell.</li></ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Nʼhaller ket kennaskañ</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul> 
+ <li>Marteze ez eo al lecʼhienn dihegerz pe re acʼhubet evit poent. Klaskit tuchant.</li>
+ <li>Ma nʼocʼh ket evit pellgargañ pajennad ebet, gwiriit da vezañ sur ez eus ur cʼhennask dre Wi-Fi ha roadennoù o vont en-dro.</li> 
+ </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Respont dicʼhortoz a-berzh an dafariad</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Gant un doare dicʼhortozet he deus respontet al lecʼhienn da azgoulenn ar rouedad hag ar merdeer nʼeo ket evit kendercʼhel.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Adheñchañ ar bajenn nʼeo ket dereat</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Ne glask ket mui ar merdeer kavout an ergorenn azgoulennet. Emañ al lecʼhienn ocʼh adheñchañ an azgoulenn ken na vo biken echuet.</p>
+ <ul>
+ <li>Ha diweredekaet pe cʼhennet hocʼh eus an toupinoù azgoulennet gant al lecʼhienn-mañ ?</li>
+ <li>Ma nʼeo ket diskoulmet ar gudenn ur wech bet degemeret an toupinoù ez eus ur gudenn gant kefluniadur an dafariad ha nʼeus ket gant hocʼh urzhiataer.</li>
+ </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Mod ezlinenn</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Emañ ar merdeer o labourat gant e vod ezlinenn ha n&apos;hall ket kennaskañ ouzh an ergorenn bet goulennet.</p>
+ <ul><li>Ha kennasket eo an trevnad ouzh ur rouedad oberiant ?</li>
+ <li>Pouezit war "Klask en-dro" evit trecʼhaoliñ etrezek ar mod enlinenn hag adkargañ ar bajennad.</li>
+ </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Dindan strishadurioù emañ ar porzh-mañ</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Gant ar chomlecʼh goulennet ez eus bet erspizet ur porzh (d.l.e. <q>mozilla.org:80</q> evit ar porzh 80 war mozilla.org) arveret dre voaz evit palioù <em>all</em> eget ar merdeiñ war internet. Dilezet eo bet an azgoulenn gant ar merdeer evit ho kwarez hag ho tiogelroez.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Ehanet eo bet ar cʼhennaskañ</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Harzet eo bet al liamm rouedad en ur glask krouiñ ur cʼhennask. Klaskit en-dro mar plij.</p>
+      <ul>
+        <li>Gallout a rafe al lecʼhienn-mañ bezañ sacʼhet pe acʼhubet. Klaskit en-dro benn nebeut.</li>
+        <li>Ma nʼhocʼh ket gouest da gargañ pajenn ebet, gwiriekait ho kennask Wi-Fi pe roadennoù.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Rizh restr arvarus</string>
 
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul> <li>Kit e darempred gant percʼhenned al lecʼhienn evit kas keloù dezho a-zivout ar gudenn-mañ.</li> </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Fazi a-fet endalcʼhad bet kontronet</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Ar bajenn emaocʼh o klask gweladenniñ nʼhall ket bezañ skrammet rak degouezhet ez eus bet ur fazi e-pad treuzkas ar roadennoù.</p><ul><li>Mar plij, kit e darempred gant percʼhenned al lecʼhienn a-benn kelaouiñ anezho eus ar gudenn-mañ.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Sacʼhet eo an endalcʼhad</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Ar bajenn emaocʼh o klask gweladenniñ nʼhall ket bezañ skrammet rak degouezhet ez eus bet ur fazi e-pad treuzkas ar roadennoù.</p><ul><li>Mar plij, kit e darempred gant percʼhenned al lecʼhienn a-benn kelaouiñ anezho eus ar gudenn-mañ.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Fazi enrinegañ an endalcʼhad</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ar bajennad emaocʼh o klask gwelout nʼhall ket bezañ diskouezet rak un doare koazhañ anskor pe didalvoudek zo arveret ganti.</p><ul><li>Kit e darempred gant percʼhenned al lecʼhienn evit kas keloù dezho a-zivout ar gudenn-mañ.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Nʼeo ket bet kavet ar chomlecʼh</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Nʼeo ket ar merdeer evit kavout an dafariad ostiz evit ar chomlecʼh roet.</p>
+ <ul>
+ <li>Gwiriekait ar chomlecʼh evit fazioù biziata evel
+ <strong>ww</strong>.skouer.bzh e plas
+ <strong>www</strong>.skouer.bzh</li>
+ <li>Ma nʼhocʼh ket gouest da gargañ pajennoù, gwiriekait kennask roadennoù pe Wi-Fi ho trevnad.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Kennask internet ebet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Gwiriekait ho kennask ouzh ar rouedad pe klaskit adkargañ ar bajenn a-benn nebeud.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Adkargañ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Nʼeo ket talvoudek ar chomlecʼh</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Nʼeo ket anavezet mentrezh ar chomlecʼh pourvezet. Gwiriit barrenn al lecʼhiadur evit kavout ur fazi ha klaskit en-dro.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Nʼeo ket talvoudek ar chomlecʼh</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Komenad dianav</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Restr dianav</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Nacʼhet eo bet haeziñ dʼar restr</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Dafariad ar proksi en deus nacʼhet ar cʼhennaskañ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nʼeo ket bet kavet an dafariad proksi</string>
 
     </resources>

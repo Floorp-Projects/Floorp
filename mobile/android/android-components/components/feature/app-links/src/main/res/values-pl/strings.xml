@@ -3,7 +3,7 @@
     <!-- The tile for the list of external apps to open the link in -->
     <string name="mozac_feature_applinks_open_in">Otwórz w…</string>
     <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">Otworzyć w aplikacji? Działania użytkownika mogą nie być już prywatne.</string>
+    <string name="mozac_feature_applinks_confirm_dialog_title">Otworzyć w aplikacji? Twoje działania mogą nie być już prywatne.</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Otwórz</string>
     <!-- Cancels the prompt -->

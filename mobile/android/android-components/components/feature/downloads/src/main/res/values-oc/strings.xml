@@ -3,8 +3,13 @@
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">Telecargaments</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Lo telecargament es en pausa</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">Telecargament acabat</string>
+
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">Lo telecargament a fracassat</string>
 
     <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
     <string name="mozac_feature_downloads_dialog_title2">Telecargar (%1$s)</string>
@@ -13,9 +18,14 @@
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Anullar</string>
 
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s pòt pas telecargar aqueste tipe de fichièr</string>
+
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Dubertura impossibla del fichièr</string>
 
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Pausa</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">Reprendre</string>
     <!-- Button that cancels the download when pressed -->

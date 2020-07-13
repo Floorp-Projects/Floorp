@@ -27,6 +27,12 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">రక్షిత అనుసంధానం విఫలమైంది</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>ఇది స్వరరు స్వరూపణంలో సమస్య కావచ్చు, లేదా ఎవరో సర్వరును అనుకరించడానికి ప్రయత్నిస్తూండవచ్చు.</li>
+        <li>మీరు ఇంతకుముందు ఈ సర్వరుకి విజయవంతంగా అనుసంధానమైతే, ఈ తప్పిదం తాత్కాలికం కావచ్చు, మీరు కాసేపు ఆగి మళ్ళీ ప్రయత్నించవచ్చు.</li>
+      </ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">ఉన్నతం…</string>
 
@@ -86,6 +92,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ఫైలు కనబడలేదు</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ఫైలుకి ప్రాప్యత నిరాకరించబడింది</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">ప్రాక్రీ సర్వరు అనుసంధానాన్ని తిరస్కరించింది</string>
