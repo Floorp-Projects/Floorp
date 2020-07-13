@@ -9,6 +9,7 @@
 #include "nscore.h"
 #include "nsPoint.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Result.h"
 
 class nsIFrame;
 struct nsRect;
@@ -45,18 +46,22 @@ class nsILineIterator {
    */
   virtual bool GetDirection() = 0;
 
-  // Return structural information about a line. aFirstFrameOnLine is
-  // the first frame on the line and aNumFramesOnLine is the number of
-  // frames that are on the line. If the line-number is invalid then
-  // aFirstFrameOnLine will be nullptr and aNumFramesOnLine will be
-  // zero.
-  //
-  // For valid line numbers, aLineBounds is set to the bounding box of
-  // the line (which is based on the in-flow position of the frames on
-  // the line; if a frame was moved because of relative positioning
-  // then its coordinates may be outside the line bounds).
-  NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                     int32_t* aNumFramesOnLine, nsRect& aLineBounds) const = 0;
+  struct LineInfo {
+    /** The first frame on the line. */
+    nsIFrame* mFirstFrameOnLine = nullptr;
+    /** The numbers of frames on the line. */
+    int32_t mNumFramesOnLine = 0;
+    /**
+     * The bounding box of the line (which is based on the in-flow position of
+     * the frames on the line; if a frame was moved because of relative
+     * positioning then its coordinates may be outside the line bounds)
+     */
+    nsRect mLineBounds;
+  };
+
+  // Return miscellaneous information about a line.
+  virtual mozilla::Result<LineInfo, nsresult> GetLine(
+      int32_t aLineNumber) const = 0;
 
   /**
    * Given a frame that's a child of the block, find which line its on

@@ -202,20 +202,8 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    */
   virtual bool GetDirection() override;
 
-  /** Return structural information about a line.
-   * @param aLineNumber       - the index of the row relative to the row group
-   *                            If the line-number is invalid then
-   *                            aFirstFrameOnLine will be nullptr and
-   *                            aNumFramesOnLine will be zero.
-   * @param aFirstFrameOnLine - the first cell frame that originates in row
-   *                            with a rowindex that matches a line number
-   * @param aNumFramesOnLine  - return the numbers of cells originating in
-   *                            this row
-   * @param aLineBounds       - rect of the row
-   */
-  NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
-                     int32_t* aNumFramesOnLine,
-                     nsRect& aLineBounds) const override;
+  /** Return structural information about a line. */
+  Result<LineInfo, nsresult> GetLine(int32_t aLineNumber) const override;
 
   /** Given a frame that's a child of the rowgroup, find which line its on.
    * @param aFrame       - frame, should be a row
