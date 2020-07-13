@@ -1229,7 +1229,7 @@ const browsingContextTargetPrototype = {
           continue;
         }
         // Reparse the sheet so that we see the existing errors.
-        const onStyleSheetParsed = getSheetText(sheet, this._consoleActor)
+        const onStyleSheetParsed = getSheetText(sheet)
           .then(text => {
             InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
           })
