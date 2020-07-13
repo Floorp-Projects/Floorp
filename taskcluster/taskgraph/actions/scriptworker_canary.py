@@ -13,7 +13,7 @@ from .registry import register_callback_action
 
 
 @register_callback_action(
-    title="",
+    title="Push scriptworker canaries.",
     name="scriptworker-canary",
     symbol="scriptworker-canary",
     description="Trigger scriptworker-canary pushes for the given scriptworkers.",
