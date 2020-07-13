@@ -456,6 +456,11 @@ class MOZ_STACK_CLASS WSRunScanner {
           mRightWSType(WSType::NotInitialized) {}
 
    public:
+    bool IsInitialized() const {
+      return mLeftWSType != WSType::NotInitialized ||
+             mRightWSType != WSType::NotInitialized;
+    }
+
     EditorDOMPoint StartPoint() const {
       return EditorDOMPoint(mStartNode, mStartOffset);
     }
@@ -986,29 +991,28 @@ class MOZ_STACK_CLASS WSRunScanner {
 
       // If the point is in visible white-spaces and ends with an ASCII
       // white-space, it may be collapsed even if it won't be end of line.
-      Maybe<VisibleWhiteSpacesData> visibleWhiteSpaces =
-          CreateVisibleWhiteSpacesData();
-      if (visibleWhiteSpaces.isNothing()) {
+      const VisibleWhiteSpacesData& visibleWhiteSpaces =
+          VisibleWhiteSpacesDataRef();
+      if (!visibleWhiteSpaces.IsInitialized()) {
         return false;
       }
       // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
-      if (!visibleWhiteSpaces.ref().StartPoint().IsSet()) {
+      if (!visibleWhiteSpaces.StartPoint().IsSet()) {
         return true;
       }
-      if (!visibleWhiteSpaces.ref().StartPoint().EqualsOrIsBefore(aPoint)) {
+      if (!visibleWhiteSpaces.StartPoint().EqualsOrIsBefore(aPoint)) {
         return false;
       }
       // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
-      if (visibleWhiteSpaces.ref().EndsByTrailingWhiteSpaces()) {
+      if (visibleWhiteSpaces.EndsByTrailingWhiteSpaces()) {
         return true;
       }
       // XXX Must be a bug.  This claims that the caller needs additional
       // check even when there is no white-spaces.
-      if (visibleWhiteSpaces.ref().StartPoint() ==
-          visibleWhiteSpaces.ref().EndPoint()) {
+      if (visibleWhiteSpaces.StartPoint() == visibleWhiteSpaces.EndPoint()) {
         return true;
       }
-      return aPoint.IsBefore(visibleWhiteSpaces.ref().EndPoint());
+      return aPoint.IsBefore(visibleWhiteSpaces.EndPoint());
     }
 
     /**
@@ -1017,8 +1021,8 @@ class MOZ_STACK_CLASS WSRunScanner {
      * inserting text into aPointToInsert. Note that this is a helper method for
      * the traditional white-space normalizer.  Don't use this with the new
      * white-space normalizer.
-     * Must be called only when CreateVisibleWhiteSpacesData() returns some
-     * and previous character of aPointToInsert is in the range.
+     * Must be called only when VisibleWhiteSpacesDataRef() returns initialized
+     * instance and previous character of aPointToInsert is in the range.
      */
     EditorDOMPointInText GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
         const EditorDOMPoint& aPointToInsert) const;
@@ -1029,18 +1033,21 @@ class MOZ_STACK_CLASS WSRunScanner {
      * the caller inserts text into aPointToInsert.
      * Note that this is a helper method for the traditional white-space
      * normalizer.  Don't use this with the new white-space normalizer.
-     * Must be called only when CreateVisibleWhiteSpacesData() returns some,
-     * and inclusive next char of aPointToInsert is in the range.
+     * Must be called only when VisibleWhiteSpacesDataRef() returns initialized
+     * instance, and inclusive next char of aPointToInsert is in the range.
      */
     EditorDOMPointInText
     GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
         const EditorDOMPoint& aPointToInsert) const;
 
     /**
-     * CreateVisibleWhiteSpacesData() creates VisibleWhiteSpacesData.
-     * That is zero or more white-spaces which are visible.
+     * VisibleWhiteSpacesDataRef() returns reference to visible white-spaces
+     * data. That is zero or more white-spaces which are visible.
+     * Note that when there is no visible content, it's not initialized.
+     * Otherwise, even if there is no white-spaces, it's initialized and
+     * the range is collapsed in such case.
      */
-    Maybe<VisibleWhiteSpacesData> CreateVisibleWhiteSpacesData() const;
+    const VisibleWhiteSpacesData& VisibleWhiteSpacesDataRef() const;
 
    private:
     /**
@@ -1062,6 +1069,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     RefPtr<const Element> mEditingHost;
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
+    mutable Maybe<VisibleWhiteSpacesData> mVisibleWhiteSpacesData;
     // XXX Currently we set mIsPreformatted to `WSRunScanner::mPRE` value
     //     even if some text nodes between mStart and mEnd are different styled
     //     nodes.  This caused some bugs actually, but we now keep traditional
