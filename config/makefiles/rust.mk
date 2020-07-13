@@ -343,7 +343,7 @@ force-cargo-host-library-build:
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
 
-$(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build
+$(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build ;
 
 force-cargo-host-library-check:
 	$(call CARGO_CHECK) --lib $(cargo_host_flag) $(host_rust_features_flag)
@@ -360,7 +360,7 @@ force-cargo-program-build: $(RESFILE)
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(if $(RESFILE),-C link-arg=$(CURDIR)/$(RESFILE))
 
-$(RUST_PROGRAMS): force-cargo-program-build
+$(RUST_PROGRAMS): force-cargo-program-build ;
 
 force-cargo-program-check:
 	$(call CARGO_CHECK) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
@@ -376,7 +376,7 @@ force-cargo-host-program-build:
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 
-$(HOST_RUST_PROGRAMS): force-cargo-host-program-build
+$(HOST_RUST_PROGRAMS): force-cargo-host-program-build ;
 
 force-cargo-host-program-check:
 	$(REPORT_BUILD)
