@@ -21,6 +21,7 @@ DevToolsModules(
     'column-marker.svg',
     'command-chevron.svg',
     'disable-pausing.svg',
+    'enable-pausing.svg',
     'file-small.svg',
     'folder.svg',
     'globe-small.svg',
