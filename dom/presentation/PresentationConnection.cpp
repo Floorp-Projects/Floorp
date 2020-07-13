@@ -24,8 +24,8 @@
 #include "PresentationConnectionList.h"
 #include "PresentationLog.h"
 
-namespace mozilla {
-namespace dom {
+using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationConnection)
 
@@ -750,6 +750,3 @@ void PresentationConnection::AsyncCloseConnectionWithErrorMsg(
 
   Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(r)));
 }
-
-}  // namespace dom
-}  // namespace mozilla
