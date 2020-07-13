@@ -799,7 +799,8 @@ nsresult WSRunObject::NormalizeWhiteSpacesAround(
 template <typename EditorDOMPointType>
 WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointType& aPoint, const Element* aEditingHost)
-    : mIsPreformatted(
+    : mEditingHost(aEditingHost),
+      mIsPreformatted(
           aPoint.IsInContentNode() &&
           EditorUtils::IsContentPreformatted(*aPoint.ContainerAsContent())) {
   if (!aPoint.IsSetAndValid()) {
@@ -814,30 +815,32 @@ WSRunScanner::TextFragmentData::TextFragmentData(
     return;
   }
 
-  NS_ASSERTION(EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
-                                              EditorType::HTML),
+  mScanStartPoint = aPoint;
+  NS_ASSERTION(EditorUtils::IsEditableContent(
+                   *mScanStartPoint.ContainerAsContent(), EditorType::HTML),
                "Given content is not editable");
-  NS_ASSERTION(aPoint.ContainerAsContent()->GetAsElementOrParentElement(),
-               "Given content is not an element and an orphan node");
+  NS_ASSERTION(
+      mScanStartPoint.ContainerAsContent()->GetAsElementOrParentElement(),
+      "Given content is not an element and an orphan node");
   nsIContent* editableBlockParentOrTopmotEditableInlineContent =
-      EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
+      EditorUtils::IsEditableContent(*mScanStartPoint.ContainerAsContent(),
                                      EditorType::HTML)
           ? HTMLEditUtils::
                 GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-                    *aPoint.ContainerAsContent())
+                    *mScanStartPoint.ContainerAsContent())
           : nullptr;
   if (!editableBlockParentOrTopmotEditableInlineContent) {
-    // Meaning that the container of `aPoint` is not editable.
+    // Meaning that the container of `mScanStartPoint` is not editable.
     editableBlockParentOrTopmotEditableInlineContent =
-        aPoint.ContainerAsContent();
+        mScanStartPoint.ContainerAsContent();
   }
 
   mStart = BoundaryData::ScanWhiteSpaceStartFrom(
-      aPoint, *editableBlockParentOrTopmotEditableInlineContent, aEditingHost,
-      &mNBSPData);
+      mScanStartPoint, *editableBlockParentOrTopmotEditableInlineContent,
+      mEditingHost, &mNBSPData);
   mEnd = BoundaryData::ScanWhiteSpaceEndFrom(
-      aPoint, *editableBlockParentOrTopmotEditableInlineContent, aEditingHost,
-      &mNBSPData);
+      mScanStartPoint, *editableBlockParentOrTopmotEditableInlineContent,
+      mEditingHost, &mNBSPData);
 }
 
 // static
@@ -1496,7 +1499,8 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
 }
 
 template <typename PT, typename CT>
-EditorDOMPointInText WSRunScanner::GetInclusiveNextEditableCharPoint(
+EditorDOMPointInText
+WSRunScanner::TextFragmentData::GetInclusiveNextEditableCharPoint(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
@@ -1528,7 +1532,7 @@ EditorDOMPointInText WSRunScanner::GetInclusiveNextEditableCharPoint(
     return EditorDOMPointInText(point.ContainerAsText(), point.Offset());
   }
 
-  if (point.GetContainer() == TextFragmentDataAtStart().GetEndReasonContent()) {
+  if (point.GetContainer() == GetEndReasonContent()) {
     return EditorDOMPointInText();
   }
 
@@ -1561,7 +1565,7 @@ EditorDOMPointInText WSRunScanner::GetInclusiveNextEditableCharPoint(
            *nextContent, *editableBlockParentOrTopmotEditableInlineContent,
            mEditingHost)) {
     if (!nextContent->IsText() || !nextContent->IsEditable()) {
-      if (nextContent == TextFragmentDataAtStart().GetEndReasonContent()) {
+      if (nextContent == GetEndReasonContent()) {
         break;  // Reached end of current runs.
       }
       continue;
@@ -1572,7 +1576,8 @@ EditorDOMPointInText WSRunScanner::GetInclusiveNextEditableCharPoint(
 }
 
 template <typename PT, typename CT>
-EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
+EditorDOMPointInText
+WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
@@ -1607,8 +1612,7 @@ EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
     return EditorDOMPointInText(point.ContainerAsText(), point.Offset() - 1);
   }
 
-  if (point.GetContainer() ==
-      TextFragmentDataAtStart().GetStartReasonContent()) {
+  if (point.GetContainer() == GetStartReasonContent()) {
     return EditorDOMPointInText();
   }
 
@@ -1643,8 +1647,7 @@ EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
                *editableBlockParentOrTopmotEditableInlineContent,
                mEditingHost)) {
     if (!previousContent->IsText() || !previousContent->IsEditable()) {
-      if (previousContent ==
-          TextFragmentDataAtStart().GetStartReasonContent()) {
+      if (previousContent == GetStartReasonContent()) {
         break;  // Reached start of current runs.
       }
       continue;

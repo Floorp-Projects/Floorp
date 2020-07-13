@@ -563,7 +563,9 @@ class MOZ_STACK_CLASS WSRunScanner {
    */
   template <typename PT, typename CT>
   EditorDOMPointInText GetInclusiveNextEditableCharPoint(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
+    return TextFragmentDataAtStart().GetInclusiveNextEditableCharPoint(aPoint);
+  }
 
   /**
    * GetPreviousEditableCharPoint() returns previous editable point in a
@@ -574,7 +576,9 @@ class MOZ_STACK_CLASS WSRunScanner {
    */
   template <typename PT, typename CT>
   EditorDOMPointInText GetPreviousEditableCharPoint(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
+    return TextFragmentDataAtStart().GetPreviousEditableCharPoint(aPoint);
+  }
 
   /**
    * GetEndOfCollapsibleASCIIWhiteSpaces() returns the next visible char
@@ -794,6 +798,13 @@ class MOZ_STACK_CLASS WSRunScanner {
 
     bool IsPreformatted() const { return mIsPreformatted; }
 
+    template <typename PT, typename CT>
+    EditorDOMPointInText GetInclusiveNextEditableCharPoint(
+        const EditorDOMPointBase<PT, CT>& aPoint) const;
+    template <typename PT, typename CT>
+    EditorDOMPointInText GetPreviousEditableCharPoint(
+        const EditorDOMPointBase<PT, CT>& aPoint) const;
+
     /**
      * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
      * of the line and first visible point or end of the hard line.  When
@@ -1008,9 +1019,11 @@ class MOZ_STACK_CLASS WSRunScanner {
                EndsByBRElement()));
     }
 
+    EditorDOMPoint mScanStartPoint;
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;
+    RefPtr<const Element> mEditingHost;
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     // XXX Currently we set mIsPreformatted to `WSRunScanner::mPRE` value
