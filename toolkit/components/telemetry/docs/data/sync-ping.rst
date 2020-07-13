@@ -295,6 +295,8 @@ client. This is logically the "other end" of ``sendcommand``.
   - streamID: A GUID which uniquely identifies this command invocation's
               specific target. The value for this GUID will be the same as the
               streamID sent to the client via ``sendcommand`` (new in Firefox 79).
+  - reason: A string value of either ``"poll"``, ``"push"``, or ``"push-missed"``
+            representing an explanation for why the command is being processed.
   - serverTime: (optional) Most recent server timestamp, as described above.
 
 The ``migrations`` Array
