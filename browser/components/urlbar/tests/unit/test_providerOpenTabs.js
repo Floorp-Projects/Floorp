@@ -24,7 +24,10 @@ add_task(async function test_openTabs() {
   let matchCount = 0;
   let callback = function(provider, match) {
     matchCount++;
-    Assert.equal(provider, UrlbarProviderOpenTabs, "Got the expected provider");
+    Assert.ok(
+      provider instanceof UrlbarProviderOpenTabs,
+      "Got the expected provider"
+    );
     Assert.equal(
       match.type,
       UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
@@ -34,13 +37,10 @@ add_task(async function test_openTabs() {
     Assert.equal(match.payload.title, undefined, "Got the expected title");
   };
 
-  await UrlbarProviderOpenTabs.startQuery(context, callback);
+  let provider = new UrlbarProviderOpenTabs();
+  await provider.startQuery(context, callback);
   Assert.equal(matchCount, 1, "Found the expected number of matches");
   // Sanity check that this doesn't throw.
-  UrlbarProviderOpenTabs.cancelQuery(context);
-  Assert.equal(
-    UrlbarProviderOpenTabs.queries.size,
-    0,
-    "All the queries have been removed"
-  );
+  provider.cancelQuery(context);
+  Assert.equal(provider.queries.size, 0, "All the queries have been removed");
 });
