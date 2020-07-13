@@ -23,13 +23,14 @@
 using namespace js;
 using namespace js::jit;
 
-WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen)
+WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen,
+                         WarpCompilation* warpCompilation)
     : WarpBuilderShared(snapshot, mirGen, nullptr),
+      warpCompilation_(warpCompilation),
       graph_(mirGen.graph()),
       info_(mirGen.outerInfo()),
       script_(snapshot.script()->script()),
-      loopStack_(mirGen.alloc()),
-      iterators_(mirGen.alloc()) {
+      loopStack_(mirGen.alloc()) {
   opSnapshotIter_ = snapshot.script()->opSnapshots().getFirst();
 }
 
@@ -61,7 +62,7 @@ void WarpBuilder::initBlock(MBasicBlock* block) {
   graph().addBlock(block);
 
   // TODO: set block hit count (for branch pruning pass)
-  block->setLoopDepth(loopDepth_);
+  block->setLoopDepth(loopDepth());
 
   current = block;
 }
@@ -282,13 +283,13 @@ bool WarpBuilder::build() {
     return false;
   }
 
-  if (!MPhi::markIteratorPhis(iterators_)) {
+  if (!MPhi::markIteratorPhis(*iterators())) {
     return false;
   }
 
   MOZ_ASSERT_IF(info().osrPc(), graph().osrBlock());
   MOZ_ASSERT(loopStack_.empty());
-  MOZ_ASSERT(loopDepth_ == 0);
+  MOZ_ASSERT(loopDepth() == 0);
 
   return true;
 }
@@ -551,8 +552,7 @@ bool WarpBuilder::buildBody() {
       if (loc.isBackedge() && !loopStack_.empty()) {
         BytecodeLocation loopHead(script_, loopStack_.back().header()->pc());
         if (loc.isBackedgeForLoophead(loopHead)) {
-          MOZ_ASSERT(loopDepth_ > 0);
-          loopDepth_--;
+          decLoopDepth();
           loopStack_.popBack();
         }
       }
@@ -1158,13 +1158,13 @@ bool WarpBuilder::addIteratorLoopPhis(BytecodeLocation loopHead) {
     switch (tn.kind()) {
       case TryNoteKind::Destructuring:
       case TryNoteKind::ForIn: {
-        // For for-in loops we add the iterator object to iterators_. For
+        // For for-in loops we add the iterator object to iterators(). For
         // destructuring loops we add the "done" value that's on top of the
         // stack and used in the exception handler.
         MOZ_ASSERT(tn.stackDepth >= 1);
         uint32_t slot = info().stackSlot(tn.stackDepth - 1);
         MPhi* phi = current->getSlot(slot)->toPhi();
-        if (!iterators_.append(phi)) {
+        if (!iterators()->append(phi)) {
           return false;
         }
         break;
@@ -1201,7 +1201,7 @@ bool WarpBuilder::build_LoopHead(BytecodeLocation loc) {
     }
   }
 
-  loopDepth_++;
+  incLoopDepth();
 
   MBasicBlock* pred = current;
   if (!startNewLoopHeaderBlock(loc)) {
@@ -1267,7 +1267,7 @@ bool WarpBuilder::buildTestOp(BytecodeLocation loc) {
 bool WarpBuilder::buildTestBackedge(BytecodeLocation loc) {
   JSOp op = loc.getOp();
   MOZ_ASSERT(op == JSOp::IfNe);
-  MOZ_ASSERT(loopDepth_ > 0);
+  MOZ_ASSERT(loopDepth() > 0);
 
   MDefinition* value = current->pop();
 
@@ -1336,8 +1336,7 @@ bool WarpBuilder::build_Coalesce(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::buildBackedge() {
-  MOZ_ASSERT(loopDepth_ > 0);
-  loopDepth_--;
+  decLoopDepth();
 
   MBasicBlock* header = loopStack_.popCopy().header();
   current->end(MGoto::New(alloc(), header));
