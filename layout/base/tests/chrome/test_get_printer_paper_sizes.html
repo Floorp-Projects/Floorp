@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="run()">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  try {
+    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
+      Ci.nsIPrinterList
+    );
+    if (printerList.printers.length == 0) {
+      ok(true, "There were no printers to iterate through.");
+    }
+    printerList.printers.forEach(printer => {
+      isnot(printer.name, null, "Printer name should never be null.");
+      isnot(printer.name, "", "Printer name should never be empty.");
+      printer.paperList.forEach(paper => {
+        isnot(paper.name, null, "Paper name should never be null.");
+        isnot(paper.name, "", "Paper name should never be empty.");
+
+        isnot(paper.width, null, "Paper width should never be null.");
+        ok(paper.width > 0.0, "Paper width should be greater than zero.");
+
+        isnot(paper.height, null, "Paper height should never be null.");
+        ok(paper.height > 0.0, "Paper height should be greater than zero.");
+      });
+    })
+  } catch (e) {
+    Cu.reportError(e);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
