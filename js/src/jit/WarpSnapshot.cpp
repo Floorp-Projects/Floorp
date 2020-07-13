@@ -182,6 +182,12 @@ void WarpCacheIR::dumpData(GenericPrinter& out) const {
   out.printf("(CacheIR spew unavailable)\n");
 #  endif
 }
+
+void WarpInlinedCall::dumpData(GenericPrinter& out) const {
+  out.printf("    scriptSnapshot: 0x%p\n", scriptSnapshot_);
+  cacheIRSnapshot_->dumpData(out);
+  // TODO: dump callInfo
+}
 #endif  // JS_JITSPEW
 
 template <typename T>
@@ -294,4 +300,9 @@ void WarpCacheIR::traceData(JSTracer* trc) {
 
   // TODO: trace pointers in stub data. Beware of nursery indexes in the stub
   // data. See WarpObjectField.
+}
+
+void WarpInlinedCall::traceData(JSTracer* trc) {
+  // Note: scriptSnapshot_ is traced through WarpSnapshot.
+  cacheIRSnapshot_->trace(trc);
 }
