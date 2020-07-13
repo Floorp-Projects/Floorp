@@ -36,6 +36,7 @@
   "peerDependencies": {
     "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-fetch-options": "^0.0.5",
+    "eslint-plugin-html": "^6.0.0",
     "eslint-plugin-no-unsanitized": "^3.0.0",
     "eslint-plugin-prettier": "^3.0.1",
     "eslint": "^6.1.0",
