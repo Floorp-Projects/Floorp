@@ -56,6 +56,8 @@ ac_add_options --with-libclang-path="$MOZ_FETCHES_DIR/clang/lib"
 CXXFLAGS="-fms-extensions"
 AR=llvm-ar
 RANLIB=llvm-ranlib
+CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 
 # For Stylo
 BINDGEN_CFLAGS="-I$MOZ_FETCHES_DIR/clang/i686-w64-mingw32/include/c++/v1 -I$MOZ_FETCHES_DIR/clang/i686-w64-mingw32/include"
