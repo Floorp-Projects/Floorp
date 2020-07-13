@@ -11,6 +11,11 @@ const {
 } = require("devtools/client/application/src/actions/workers.js");
 
 const {
+  START_WORKER,
+  UNREGISTER_WORKER,
+} = require("devtools/client/application/src/constants.js");
+
+const {
   workersReducer,
   WorkersState,
 } = require("devtools/client/application/src/reducers/workers-state.js");
@@ -93,4 +98,20 @@ add_task(async function() {
   const action = updateWorkers(rawData);
   const newState = workersReducer(state, action);
   deepEqual(newState.list, expectedData, "workers contains the expected list");
+});
+
+add_task(async function() {
+  info("Test workers reducer: START_WORKER action");
+  const state = WorkersState();
+  const action = { type: START_WORKER };
+  const newState = workersReducer(state, action);
+  deepEqual(state, newState, "workers state stays the same");
+});
+
+add_task(async function() {
+  info("Test workers reducer: UNREGISTER_WORKER action");
+  const state = WorkersState();
+  const action = { type: UNREGISTER_WORKER };
+  const newState = workersReducer(state, action);
+  deepEqual(state, newState, "workers state stays the same");
 });
