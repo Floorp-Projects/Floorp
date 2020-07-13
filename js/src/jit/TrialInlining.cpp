@@ -13,6 +13,8 @@
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 
+using mozilla::Maybe;
+
 namespace js {
 namespace jit {
 
@@ -67,6 +69,69 @@ ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
     return nullptr;
   }
   return stub;
+}
+
+Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
+  InlinableCallData data;
+
+  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
+  const uint8_t* stubData = stub->cacheIRStubData();
+
+  ObjOperandId calleeGuardOperand;
+  CallFlags flags;
+  uint32_t targetOffset = 0;
+  bool foundCall = false;
+
+  CacheIRReader reader(stubInfo);
+  while (reader.more()) {
+    const uint8_t* opStart = reader.currentPosition();
+
+    CacheOp op = reader.readOp();
+    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+
+    switch (op) {
+      case CacheOp::GuardSpecificFunction:
+        // If we see a guard, remember which operand we are guarding.
+        MOZ_ASSERT(!foundCall);
+        calleeGuardOperand = reader.objOperandId();
+        targetOffset = reader.stubOffset();
+        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+        break;
+      case CacheOp::CallScriptedFunction: {
+        // If we see a call, check if `callee` is the previously guarded
+        // operand. If it is, we know the target and can inline.
+        ObjOperandId calleeOperand = reader.objOperandId();
+        mozilla::DebugOnly<Int32OperandId> argcId = reader.int32OperandId();
+        CallFlags flags = reader.callFlags();
+
+        if (calleeOperand == calleeGuardOperand) {
+          MOZ_ASSERT(!foundCall);
+          MOZ_ASSERT(static_cast<OperandId&>(argcId).id() == 0);
+          foundCall = true;
+          data.calleeOperand = calleeOperand;
+          data.callFlags = flags;
+          data.endOfSharedPrefix = opStart;
+          uintptr_t rawTarget =
+              stubInfo->getStubRawWord(stubData, targetOffset);
+          data.target = reinterpret_cast<JSFunction*>(rawTarget);
+        }
+        break;
+      }
+      default:
+        if (foundCall) {
+          MOZ_ASSERT(op == CacheOp::ReturnFromIC ||
+                     op == CacheOp::TypeMonitorResult);
+        }
+        reader.skip(argLength);
+        break;
+    }
+    MOZ_ASSERT(opStart + 1 + argLength == reader.currentPosition());
+  }
+
+  if (!foundCall) {
+    return mozilla::Nothing();
+  }
+  return mozilla::Some(data);
 }
 
 bool TrialInliner::shouldInline(JSFunction* target) {
@@ -128,88 +193,38 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
   if (!stub) {
     return true;
   }
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
-
-  ObjOperandId calleeGuardOperand;
-  CallFlags callFlags;
-  uint32_t targetOffset = 0;
-  bool isInlinableCall = false;
-  const uint8_t* endOfSharedPrefix = nullptr;
 
   // Look for a CallScriptedFunction with a known target.
-  CacheIRReader reader(stubInfo);
-  while (reader.more()) {
-    const uint8_t* opStart = reader.currentPosition();
-
-    CacheOp op = reader.readOp();
-    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
-
-    switch (op) {
-      case CacheOp::GuardSpecificFunction:
-        // If we see a guard, remember which operand we are guarding.
-        MOZ_ASSERT(!isInlinableCall && !calleeGuardOperand.valid());
-        calleeGuardOperand = reader.objOperandId();
-        targetOffset = reader.stubOffset();
-        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
-        break;
-      case CacheOp::CallScriptedFunction: {
-        // If we see a call, check if `callee` is the previously guarded
-        // operand. If it is, we know the target and can inline.
-        ObjOperandId calleeOperand = reader.objOperandId();
-        mozilla::DebugOnly<Int32OperandId> argcId = reader.int32OperandId();
-        callFlags = reader.callFlags();
-        if (calleeOperand == calleeGuardOperand) {
-          MOZ_ASSERT(!isInlinableCall);
-          MOZ_ASSERT(static_cast<OperandId&>(argcId).id() == 0);
-          isInlinableCall = true;
-          endOfSharedPrefix = opStart;
-        }
-        break;
-      }
-      default:
-        if (isInlinableCall) {
-          MOZ_ASSERT(op == CacheOp::ReturnFromIC ||
-                     op == CacheOp::TypeMonitorResult);
-        }
-        reader.skip(argLength);
-        break;
-    }
-    MOZ_ASSERT(opStart + 1 + argLength == reader.currentPosition());
-  }
-
-  if (!isInlinableCall) {
+  Maybe<InlinableCallData> data = FindInlinableCallData(stub);
+  if (data.isNothing()) {
     return true;
   }
 
-  const uint8_t* stubData = stub->cacheIRStubData();
-  uintptr_t rawTarget = stubInfo->getStubRawWord(stubData, targetOffset);
-  JSFunction* target = reinterpret_cast<JSFunction*>(rawTarget);
-
   JitSpew(JitSpew_WarpTrialInlining,
           "Inlining candidate JSOp::%s: callee function %p",
-          CodeName(loc.getOp()), target);
+          CodeName(loc.getOp()), data->target);
 
   // Decide whether to inline the target.
-  if (!shouldInline(target)) {
+  if (!shouldInline(data->target)) {
     return true;
   }
 
   // TODO: The arguments rectifier is not yet supported.
-  if (loc.getCallArgc() < target->nargs()) {
+  if (loc.getCallArgc() < data->target->nargs()) {
     return true;
   }
 
-  ICScript* newICScript = createInlinedICScript(target);
+  ICScript* newICScript = createInlinedICScript(data->target);
   if (!newICScript) {
     return false;
   }
 
   CacheIRWriter writer(cx());
   Int32OperandId argcId(writer.setInputOperandId(0));
-  cloneSharedPrefix(stub, endOfSharedPrefix, writer);
+  cloneSharedPrefix(stub, data->endOfSharedPrefix, writer);
 
-  writer.callInlinedFunction(calleeGuardOperand, argcId, newICScript,
-                             callFlags);
+  writer.callInlinedFunction(data->calleeOperand, argcId, newICScript,
+                             data->callFlags);
   writer.returnFromIC();
 
   replaceICStub(entry, writer, CacheKind::Call);
