@@ -1205,15 +1205,11 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       nsIEditor::EDirection aSelect);
 
   /**
-   * InsertText() inserts aStringToInsert to mScanStartPoint and makes any
-   * needed adjustments to white-spaces around both mScanStartPoint and
-   * mScanEndPoint. E.g., trailing white-spaces before mScanStartPoint needs to
-   * be removed.  This calls EditorBase::InsertTextWithTransaction() after
-   * adjusting white-spaces.  So, please refer the method's explanation to know
-   * what this method exactly does.
+   * InsertText() inserts aStringToInsert to aPointToInsert and makes any needed
+   * adjustments to white-spaces around the insertion point.
    *
-   * @param aDocument       The document of this editor.
-   * @param aStringToInsert The string to insert.
+   * @param aStringToInsert     The string to insert.
+   * @param aRangeToBeReplaced  The range to be deleted.
    * @param aPointAfterInsertedString
    *                        The point after inserted aStringToInsert.
    *                        So, when this method actually inserts string,
@@ -1223,9 +1219,36 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    *                        does nothing during composition, returns NS_OK.
    *                        Otherwise, an error code.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  InsertText(dom::Document& aDocument, const nsAString& aStringToInsert,
-             EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
+  template <typename EditorDOMPointType>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult InsertText(
+      HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
+      const EditorDOMPointType& aPointToInsert,
+      EditorRawDOMPoint* aPointAfterInsertedString = nullptr) {
+    return WSRunObject::ReplaceText(aHTMLEditor, aStringToInsert,
+                                    EditorDOMRange(aPointToInsert),
+                                    aPointAfterInsertedString);
+  }
+
+  /**
+   * ReplaceText() repaces aRangeToReplace with aStringToInsert and makes any
+   * needed adjustments to white-spaces around both start of the range and
+   * end of the range.
+   *
+   * @param aStringToInsert     The string to insert.
+   * @param aRangeToBeReplaced  The range to be deleted.
+   * @param aPointAfterInsertedString
+   *                        The point after inserted aStringToInsert.
+   *                        So, when this method actually inserts string,
+   *                        this is set to a point in the text node.
+   *                        Otherwise, this may be set to mScanStartPoint.
+   * @return                When this succeeds to insert the string or
+   *                        does nothing during composition, returns NS_OK.
+   *                        Otherwise, an error code.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult ReplaceText(
+      HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
+      const EditorDOMRange& aRangeToBeReplaced,
+      EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
 
   // DeleteWSBackward deletes a single visible piece of ws before the ws
   // point (the point to create the wsRunObject, passed to its constructor).

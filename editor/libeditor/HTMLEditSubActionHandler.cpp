@@ -1494,13 +1494,11 @@ EditActionResult HTMLEditor::HandleInsertText(
     if (!compositionEndPoint.IsSet()) {
       compositionEndPoint = compositionStartPoint;
     }
-    WSRunObject wsObj(*this, compositionStartPoint, compositionEndPoint);
-    nsresult rv = wsObj.InsertText(*document, aInsertionString);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
+    nsresult rv = WSRunObject::ReplaceText(
+        *this, aInsertionString,
+        EditorDOMRange(compositionStartPoint, compositionEndPoint));
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::InsertText() failed");
+      NS_WARNING("WSRunObject::ReplaceText() failed");
       return EditActionHandled(rv);
     }
 
@@ -1634,16 +1632,12 @@ EditActionResult HTMLEditor::HandleInsertText(
         }
 
         nsDependentSubstring subStr(insertionString, oldPos, subStrLen);
-        WSRunObject wsObj(*this, currentPoint);
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
           EditorRawDOMPoint pointAfterInsertedSpaces;
-          nsresult rv =
-              wsObj.InsertText(*document, spacesStr, &pointAfterInsertedSpaces);
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-          }
+          nsresult rv = WSRunObject::InsertText(*this, spacesStr, currentPoint,
+                                                &pointAfterInsertedSpaces);
           if (NS_FAILED(rv)) {
             NS_WARNING("WSRunObject::InsertText() failed");
             return EditActionHandled(rv);
@@ -1655,6 +1649,7 @@ EditActionResult HTMLEditor::HandleInsertText(
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
+          WSRunObject wsObj(*this, currentPoint);
           RefPtr<Element> newBRElement =
               wsObj.InsertBreak(MOZ_KnownLive(*SelectionRefPtr()), currentPoint,
                                 nsIEditor::eNone);
@@ -1683,11 +1678,8 @@ EditActionResult HTMLEditor::HandleInsertText(
               "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          nsresult rv =
-              wsObj.InsertText(*document, subStr, &pointAfterInsertedString);
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-          }
+          nsresult rv = WSRunObject::InsertText(*this, subStr, currentPoint,
+                                                &pointAfterInsertedString);
           if (NS_FAILED(rv)) {
             NS_WARNING("WSRunObject::InsertText() failed");
             return EditActionHandled(rv);
