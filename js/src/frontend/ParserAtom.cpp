@@ -84,10 +84,16 @@ UniqueChars ParserAtomToPrintableString(JSContext* cx, ParserAtomId atom) {
 }
 
 bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
-  if (hasLatin1Chars()) {
-    return js::CheckStringIsIndex(latin1Chars(), length(), indexp);
+  size_t len = length();
+  if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {
+    return false;
   }
-  return js::CheckStringIsIndex(twoByteChars(), length(), indexp);
+  if (hasLatin1Chars()) {
+    return mozilla::IsAsciiDigit(*latin1Chars()) &&
+           js::CheckStringIsIndex(latin1Chars(), len, indexp);
+  }
+  return mozilla::IsAsciiDigit(*twoByteChars()) &&
+         js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
 JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(JSContext* cx) const {
@@ -397,12 +403,20 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, ParserNameId* name,
 }
 
 bool WellKnownParserAtoms::init(JSContext* cx) {
-#define COMMON_NAME_INIT(idpart, id, text) \
-  if (!initSingle(cx, &(id), text)) {      \
-    return false;                          \
+#define COMMON_NAME_INIT_(idpart, id, text) \
+  if (!initSingle(cx, &(id), text)) {       \
+    return false;                           \
   }
-  FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INIT)
-#undef COMMON_NAME_INIT
+  FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
+#undef COMMON_NAME_INIT_
+
+#define COMMON_NAME_INIT_(name, clasp)   \
+  if (!initSingle(cx, &(name), #name)) { \
+    return false;                        \
+  }
+  JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
+#undef COMMON_NAME_INIT_
+
   return true;
 }
 
