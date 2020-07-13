@@ -50,7 +50,7 @@ this.ServiceWorkerCleanUp = {
         i,
         Ci.nsIServiceWorkerRegistrationInfo
       );
-      if (sw.principal.URI.host == aHost) {
+      if (sw.principal.host == aHost) {
         promises.push(unregisterServiceWorker(sw));
       }
     }
