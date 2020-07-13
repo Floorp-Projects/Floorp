@@ -34,7 +34,6 @@ class ResourceWatcher {
     this._onResourceDestroyed = this._onResourceDestroyed.bind(this);
 
     this._availableListeners = new EventEmitter();
-    this._updatedListeners = new EventEmitter();
     this._destroyedListeners = new EventEmitter();
 
     // Cache for all resources by the order that the resource was taken.
@@ -73,7 +72,6 @@ class ResourceWatcher {
   async watchResources(resources, options) {
     const {
       onAvailable,
-      onUpdated,
       onDestroyed,
       ignoreExistingResources = false,
     } = options;
@@ -107,9 +105,7 @@ class ResourceWatcher {
         await this._startListening(resource);
       }
       this._availableListeners.on(resource, onAvailable);
-      if (onUpdated) {
-        this._updatedListeners.on(resource, onUpdated);
-      }
+
       if (onDestroyed) {
         this._destroyedListeners.on(resource, onDestroyed);
       }
@@ -125,12 +121,9 @@ class ResourceWatcher {
    * See `watchResources` for the arguments as both methods receive the same.
    */
   unwatchResources(resources, options) {
-    const { onAvailable, onUpdated, onDestroyed } = options;
+    const { onAvailable, onDestroyed } = options;
 
     for (const resource of resources) {
-      if (onUpdated) {
-        this._updatedListeners.off(resource, onUpdated);
-      }
       if (onDestroyed) {
         this._destroyedListeners.off(resource, onDestroyed);
       }
@@ -303,27 +296,6 @@ class ResourceWatcher {
   }
 
   /**
-   * Method called either by:
-   * - the backward compatibility code (LegacyListeners)
-   * - target actors RDP events
-   * Called everytime a resource is updated in the remote target.
-   *
-   * @param {Front} targetFront
-   *        The Target Front from which this resource comes from.
-   * @param {Array<json/Front>} resources
-   *        Depending on the resource Type, it can be an Array composed of either JSON objects or Fronts,
-   *        which describes the updated resource.
-   */
-  _onResourceUpdated(targetFront, resource) {
-    const { resourceType } = resource;
-    this._updatedListeners.emit(resourceType, {
-      resourceType,
-      targetFront,
-      resource,
-    });
-  }
-
-  /**
    * Called everytime a resource is destroyed in the remote target.
    * See _onResourceAvailable for the argument description.
    *
@@ -412,13 +384,11 @@ class ResourceWatcher {
    */
   _watchResourcesForTarget(targetFront, resourceType) {
     const onAvailable = this._onResourceAvailable.bind(this, { targetFront });
-    const onUpdated = this._onResourceUpdated.bind(this, { targetFront });
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
       isFissionEnabledOnContentToolbox: gDevTools.isFissionContentToolboxEnabled(),
       onAvailable,
-      onUpdated,
     });
   }
 
@@ -486,7 +456,6 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   DOCUMENT_EVENT: "document-event",
   ROOT_NODE: "root-node",
   STYLESHEET: "stylesheet",
-  NETWORK_EVENT: "network-event",
 };
 module.exports = { ResourceWatcher };
 
@@ -525,8 +494,6 @@ const LegacyListeners = {
     .ROOT_NODE]: require("devtools/shared/resources/legacy-listeners/root-node"),
   [ResourceWatcher.TYPES
     .STYLESHEET]: require("devtools/shared/resources/legacy-listeners/stylesheet"),
-  [ResourceWatcher.TYPES
-    .NETWORK_EVENT]: require("devtools/shared/resources/legacy-listeners/network-events"),
 };
 
 // Optional transformers for each type of resource.
