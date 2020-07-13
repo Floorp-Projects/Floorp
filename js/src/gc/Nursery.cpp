@@ -953,7 +953,7 @@ static inline bool IsFullStoreBufferReason(JS::GCReason reason,
          reason == JS::GCReason::FULL_SHAPE_BUFFER;
 }
 
-void js::Nursery::collect(JS::GCReason reason) {
+void js::Nursery::collect(JSGCInvocationKind kind, JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
@@ -1013,7 +1013,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   }
 
   // Resize the nursery.
-  maybeResizeNursery(reason);
+  maybeResizeNursery(kind, reason);
 
   // Poison/initialise the first chunk.
   if (previousGC.nurseryUsedBytes) {
@@ -1493,7 +1493,8 @@ MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
   currentStartPosition_ = position();
 }
 
-void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
+void js::Nursery::maybeResizeNursery(JSGCInvocationKind kind,
+                                     JS::GCReason reason) {
 #ifdef JS_GC_ZEAL
   // This zeal mode disabled nursery resizing.
   if (gc->hasZealMode(ZealMode::GenerationalGC)) {
@@ -1502,7 +1503,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 #endif
 
   size_t newCapacity =
-      mozilla::Clamp(targetSize(reason), tunables().gcMinNurseryBytes(),
+      mozilla::Clamp(targetSize(kind, reason), tunables().gcMinNurseryBytes(),
                      tunables().gcMaxNurseryBytes());
 
   MOZ_ASSERT(roundSize(newCapacity) == newCapacity);
@@ -1529,9 +1530,11 @@ static inline double ClampDouble(double value, double min, double max) {
   return value;
 }
 
-size_t js::Nursery::targetSize(JS::GCReason reason) {
-  // Shrink the nursery as much as possible in low memory situations.
-  if (gc::IsOOMReason(reason) || gc->systemHasLowMemory()) {
+size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
+  // Shrink the nursery as much as possible if shrinking was requested or in low
+  // memory situations.
+  if (kind == GC_SHRINK || gc::IsOOMReason(reason) ||
+      gc->systemHasLowMemory()) {
     smoothedGrowthFactor.reset();
     return 0;
   }
