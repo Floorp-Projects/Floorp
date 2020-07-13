@@ -30,6 +30,7 @@
 #include "gtest/gtest.h"
 
 #include <cstring>
+#include <thread>
 
 // Note: profiler_init() has already been called in XRE_main(), so we can't
 // test it here. Likewise for profiler_shutdown(), and AutoProfilerInit
@@ -334,6 +335,58 @@ TEST(GeckoProfiler, EnsureStarted)
     profiler_stop();
 
     InactiveFeaturesAndParamsCheck();
+  }
+}
+
+TEST(GeckoProfiler, MultiRegistration)
+{
+  // This whole test only checks that function calls don't crash, they don't
+  // actually verify that threads get profiled or not.
+  char top;
+  profiler_register_thread("Main thread again", &top);
+
+  {
+    std::thread thread([]() {
+      char top;
+      profiler_register_thread("thread, no unreg", &top);
+    });
+    thread.join();
+  }
+
+  {
+    std::thread thread([]() { profiler_unregister_thread(); });
+    thread.join();
+  }
+
+  {
+    std::thread thread([]() {
+      char top;
+      profiler_register_thread("thread 1st", &top);
+      profiler_unregister_thread();
+      profiler_register_thread("thread 2nd", &top);
+      profiler_unregister_thread();
+    });
+    thread.join();
+  }
+
+  {
+    std::thread thread([]() {
+      char top;
+      profiler_register_thread("thread once", &top);
+      profiler_register_thread("thread again", &top);
+      profiler_unregister_thread();
+    });
+    thread.join();
+  }
+
+  {
+    std::thread thread([]() {
+      char top;
+      profiler_register_thread("thread to unreg twice", &top);
+      profiler_unregister_thread();
+      profiler_unregister_thread();
+    });
+    thread.join();
   }
 }
 
