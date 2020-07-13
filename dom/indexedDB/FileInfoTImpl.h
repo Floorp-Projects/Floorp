@@ -30,9 +30,7 @@ FileInfoT<FileManager>::FileInfoT(
 
 template <typename FileManager>
 void FileInfoT<FileManager>::AddRef() {
-  AutoLock lock(FileManager::Mutex());
-
-  LockedAddRef();
+  UpdateReferences(mRefCnt, 1);
 }
 
 template <typename FileManager>
@@ -104,13 +102,6 @@ void FileInfoT<FileManager>::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
   }
 
   delete this;
-}
-
-template <typename FileManager>
-void FileInfoT<FileManager>::LockedAddRef() {
-  FileManager::Mutex().AssertCurrentThreadOwns();
-
-  ++mRefCnt;
 }
 
 template <typename FileManager>
