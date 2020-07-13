@@ -73,6 +73,12 @@ class LoadInfo final : public nsILoadInfo {
       nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
       nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
+  // Use for non-{TYPE_DOCUMENT|TYPE_FRAME|TYPE_IFRAME} load.
+  static already_AddRefed<LoadInfo> CreateForNonDocument(
+      dom::WindowGlobalParent* aParentWGP, nsIPrincipal* aTriggeringPrincipal,
+      uint64_t aFrameOuterWindowID, nsContentPolicyType aContentPolicyType,
+      nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
+
   // aLoadingPrincipal MUST NOT BE NULL.
   LoadInfo(nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
            nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,
@@ -90,12 +96,6 @@ class LoadInfo final : public nsILoadInfo {
            nsISupports* aContextForTopLevelLoad, nsSecurityFlags aSecurityFlags,
            uint32_t aSandboxFlags);
 
-  // Used for loads initiated by DocumentLoadListener.
-  LoadInfo(dom::WindowGlobalParent* aParentWGP,
-           nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
-           nsContentPolicyType aContentPolicyType,
-           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
-
  private:
   // Use factory function CreateForDocument
   // Used for TYPE_DOCUMENT load.
@@ -108,6 +108,13 @@ class LoadInfo final : public nsILoadInfo {
   // Used for TYPE_FRAME or TYPE_IFRAME load.
   LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
            nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
+           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
+
+  // Used for loads initiated by DocumentLoadListener that are not TYPE_DOCUMENT
+  // | TYPE_FRAME | TYPE_FRAME.
+  LoadInfo(dom::WindowGlobalParent* aParentWGP,
+           nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
+           nsContentPolicyType aContentPolicyType,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
  public:
@@ -131,6 +138,12 @@ class LoadInfo final : public nsILoadInfo {
   // separate request. I.e. not for a redirect or an inner channel, but
   // when a separate request is made with the same security properties.
   already_AddRefed<nsILoadInfo> CloneForNewRequest() const;
+
+  // The `nsContentPolicyType GetExternalContentPolicyType()` version in the
+  // base class is hidden by the implementation of
+  // `GetExternalContentPolicyType(nsContentPolicyType* aResult)` in
+  // LoadInfo.cpp. Explicit mark it visible.
+  using nsILoadInfo::GetExternalContentPolicyType;
 
   void SetIsPreflight();
   void SetUpgradeInsecureRequests(bool aValue);

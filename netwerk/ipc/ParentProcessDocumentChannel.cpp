@@ -129,8 +129,10 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
 NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
     nsIStreamListener* aListener) {
   LOG(("ParentProcessDocumentChannel AsyncOpen [this=%p]", this));
-  mDocumentLoadListener = new DocumentLoadListener(
-      GetDocShell()->GetBrowsingContext()->Canonical());
+  auto docShell = RefPtr<nsDocShell>(GetDocShell());
+  MOZ_ASSERT(docShell);
+  mDocumentLoadListener = MakeRefPtr<DocumentLoadListener>(
+      docShell->GetBrowsingContext()->Canonical());
   LOG(("Created PPDocumentChannel with listener=%p",
        mDocumentLoadListener.get()));
 
@@ -144,18 +146,47 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
 
   gHttpHandler->OnOpeningDocumentRequest(this);
 
-  GetDocShell()->GetBrowsingContext()->SetCurrentLoadIdentifier(
-      Some(mLoadState->GetLoadIdentifier()));
+  switch (mLoadInfo->GetExternalContentPolicyType()) {
+    case nsIContentPolicy::TYPE_DOCUMENT:
+    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+      GetDocShell()->GetBrowsingContext()->SetCurrentLoadIdentifier(
+          Some(mLoadState->GetLoadIdentifier()));
+      break;
+
+    default:
+      break;
+  }
 
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
-  auto promise = mDocumentLoadListener->Open(
-      mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
-      std::move(initialClientInfo), GetDocShell()->GetOuterWindowID(),
-      GetDocShell()
-          ->GetBrowsingContext()
-          ->HasValidTransientUserGestureActivation(),
-      Some(mUriModified), Some(mIsXFOError), 0 /* ProcessId */, &rv);
+
+  const bool hasValidTransientUserGestureActivation =
+      docShell->GetBrowsingContext()->HasValidTransientUserGestureActivation();
+
+  RefPtr<DocumentLoadListener::OpenPromise> promise;
+  switch (mLoadInfo->GetExternalContentPolicyType()) {
+    case nsIContentPolicy::TYPE_DOCUMENT:
+    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+      promise = mDocumentLoadListener->OpenDocument(
+          mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
+          std::move(initialClientInfo), docShell->GetOuterWindowID(),
+          hasValidTransientUserGestureActivation, Some(mUriModified),
+          Some(mIsXFOError), 0 /* ProcessId */, &rv);
+      break;
+
+    case nsIContentPolicy::TYPE_OBJECT:
+      promise = mDocumentLoadListener->OpenObject(
+          mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
+          std::move(initialClientInfo), InnerWindowIDForExtantDoc(docShell),
+          mLoadFlags, mLoadInfo->InternalContentPolicyType(),
+          hasValidTransientUserGestureActivation,
+          UserActivation::IsHandlingUserInput(), 0 /* ProcessId */, &rv);
+      break;
+
+    default:
+      MOZ_CRASH("Unhandled content policy type.");
+  }
+
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!promise);
     mDocumentLoadListener = nullptr;
