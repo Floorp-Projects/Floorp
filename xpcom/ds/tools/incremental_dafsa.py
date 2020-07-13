@@ -17,37 +17,15 @@ class Node:
     children: Dict[str, "Node"]
     parents: Dict[str, List["Node"]]
     character: str
-    _is_root_node: bool
-    _is_end_node: bool
+    is_root_node: bool
+    is_end_node: bool
 
     def __init__(self, character, is_root_node=False, is_end_node=False):
         self.children = {}
         self.parents = {}
         self.character = character
-        self._is_root_node = is_root_node
-        self._is_end_node = is_end_node
-
-    def to_tuple_format(self, word, cache):
-        """Convert this node to the legacy format.
-
-        When converting individual nodes to the legacy format, a single instance of the
-        cache must be provided for all nodes converted.
-        """
-        cached = cache.get(id(self))
-        if cached:
-            return cached
-
-        if self._is_end_node:
-            legacy_node = None
-        else:
-            legacy_node = (
-                self.character,
-                [
-                    node.to_tuple_format(word + self.character, cache)
-                    for node in self.children.values()
-                ])
-        cache[id(self)] = legacy_node
-        return legacy_node
+        self.is_root_node = is_root_node
+        self.is_end_node = is_end_node
 
     def __str__(self):
         """Produce a helpful string representation of this node.
@@ -64,9 +42,9 @@ class Node:
          Current node character
         """
 
-        if self._is_root_node:
+        if self.is_root_node:
             return "<root>"
-        elif self._is_end_node:
+        elif self.is_end_node:
             return "<end>"
 
         first_potential_match = ""
@@ -500,13 +478,6 @@ class Dafsa:
         self.root_node = Node(None, is_root_node=True)
         self.end_node = Node(None, is_end_node=True)
 
-    def _to_tuple_format(self):
-        # The tuple format doesn't have root node, just a list of top-level children
-        top_nodes = list(self.root_node.children.values())
-        legacy_node_cache = {}
-        dafsa = [node.to_tuple_format("", legacy_node_cache) for node in top_nodes]
-        return dafsa
-
     @classmethod
     def from_tld_data(cls, lines):
         """Create a dafsa for TLD data.
@@ -527,7 +498,7 @@ class Dafsa:
 
             word = "%s%s" % (word[:-1], raw_domain_number)
             dafsa.append(word)
-        return dafsa._to_tuple_format()
+        return dafsa
 
     def append(self, word):
         state_machine = DafsaAppendStateMachine(word, self.root_node, self.end_node)
