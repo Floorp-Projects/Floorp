@@ -515,7 +515,10 @@ class Nursery {
   };
   PreviousGC previousGC;
 
-  mozilla::Maybe<double> smoothedGrowthFactor;
+#ifndef JS_MORE_DETERMINISTIC
+  mozilla::TimeStamp lastResizeTime;
+  double smoothedGrowthFactor;
+#endif
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
@@ -722,6 +725,7 @@ class Nursery {
   // Change the allocable space provided by the nursery.
   void maybeResizeNursery(JSGCInvocationKind kind, JS::GCReason reason);
   size_t targetSize(JSGCInvocationKind kind, JS::GCReason reason);
+  void clearRecentGrowthData();
   void growAllocableSpace(size_t newCapacity);
   void shrinkAllocableSpace(size_t newCapacity);
   void minimizeAllocableSpace();
