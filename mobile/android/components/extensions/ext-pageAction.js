@@ -51,7 +51,8 @@ class PageAction extends PageActionBase {
   }
 
   openPopup() {
-    const action = this.getContextData(tabTracker.activeTab);
+    const actionObject = this.getContextData(tabTracker.activeTab);
+    const action = this.helper.extractProperties(actionObject);
     this.helper.sendRequest(tabTracker.activeTab.id, {
       action,
       type: "GeckoView:PageAction:OpenPopup",

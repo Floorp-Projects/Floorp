@@ -52,7 +52,8 @@ class BrowserAction extends BrowserActionBase {
 
   openPopup() {
     const tab = tabTracker.activeTab;
-    const action = this.getContextData(tab);
+    const actionObject = this.getContextData(tab);
+    const action = this.helper.extractProperties(actionObject);
     this.helper.sendRequest(tab.id, {
       action,
       type: "GeckoView:BrowserAction:OpenPopup",
