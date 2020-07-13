@@ -69,15 +69,15 @@ const MemoryCallTreeView = extend(DetailsSubview, {
    */
   _onLink: function(treeItem) {
     const { url, line, column } = treeItem.frame.getInfo();
-    PerformanceController.toolbox
-      .viewSourceInDebugger(url, line, column)
-      .then(success => {
+    PerformanceController.viewSourceInDebugger(url, line, column).then(
+      success => {
         if (success) {
           this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
         } else {
           this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
         }
-      });
+      }
+    );
   },
 
   /**
