@@ -170,13 +170,15 @@ class Tainted {
   (MOZ_IS_VALID(tainted_value, condition) ? tainted_value.Coerce() \
                                           : alternate_value)
 
+// This allows unsafe removal of the Taint wrapper.
+// A justification string is required to explain why this is acceptable
+#define MOZ_NO_VALIDATE(tainted_value, justification) tainted_value.Coerce()
+
 /*
  TODO:
 
   - Figure out if there are helpers that would be useful for Strings and
  Principals
-  - Create an unsafe getter that allows passing a string explanation, similar to
- rlbox
   - Write static analysis to enforce invariants:
     - No use of .Coerce() except in the header file.
     - No constant passed to the condition of MOZ_VALIDATE_AND_GET

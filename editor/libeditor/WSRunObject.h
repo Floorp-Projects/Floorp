@@ -563,7 +563,9 @@ class MOZ_STACK_CLASS WSRunScanner {
    */
   template <typename PT, typename CT>
   EditorDOMPointInText GetInclusiveNextEditableCharPoint(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
+    return TextFragmentDataAtStart().GetInclusiveNextEditableCharPoint(aPoint);
+  }
 
   /**
    * GetPreviousEditableCharPoint() returns previous editable point in a
@@ -574,7 +576,9 @@ class MOZ_STACK_CLASS WSRunScanner {
    */
   template <typename PT, typename CT>
   EditorDOMPointInText GetPreviousEditableCharPoint(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
+      const EditorDOMPointBase<PT, CT>& aPoint) const {
+    return TextFragmentDataAtStart().GetPreviousEditableCharPoint(aPoint);
+  }
 
   /**
    * GetEndOfCollapsibleASCIIWhiteSpaces() returns the next visible char
@@ -584,7 +588,10 @@ class MOZ_STACK_CLASS WSRunScanner {
    * aPointAtASCIIWhiteSpace.
    */
   EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
-      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
+    return TextFragmentDataAtStart().GetEndOfCollapsibleASCIIWhiteSpaces(
+        aPointAtASCIIWhiteSpace);
+  }
 
   /**
    * GetFirstASCIIWhiteSpacePointCollapsedTo() returns the first ASCII
@@ -595,7 +602,10 @@ class MOZ_STACK_CLASS WSRunScanner {
    * aPointAtASCIIWhiteSpace.
    */
   EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
-      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
+    return TextFragmentDataAtStart().GetFirstASCIIWhiteSpacePointCollapsedTo(
+        aPointAtASCIIWhiteSpace);
+  }
 
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
@@ -794,6 +804,18 @@ class MOZ_STACK_CLASS WSRunScanner {
 
     bool IsPreformatted() const { return mIsPreformatted; }
 
+    template <typename PT, typename CT>
+    EditorDOMPointInText GetInclusiveNextEditableCharPoint(
+        const EditorDOMPointBase<PT, CT>& aPoint) const;
+    template <typename PT, typename CT>
+    EditorDOMPointInText GetPreviousEditableCharPoint(
+        const EditorDOMPointBase<PT, CT>& aPoint) const;
+
+    EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
+        const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+    EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
+        const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+
     /**
      * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
      * of the line and first visible point or end of the hard line.  When
@@ -990,6 +1012,31 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
+     * GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace() may return an
+     * NBSP point which should be replaced with an ASCII white-space when we're
+     * inserting text into aPointToInsert. Note that this is a helper method for
+     * the traditional white-space normalizer.  Don't use this with the new
+     * white-space normalizer.
+     * Must be called only when CreateVisibleWhiteSpacesData() returns some
+     * and previous character of aPointToInsert is in the range.
+     */
+    EditorDOMPointInText GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+        const EditorDOMPoint& aPointToInsert) const;
+
+    /**
+     * GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace() may return
+     * an NBSP point which should be replaced with an ASCII white-space when
+     * the caller inserts text into aPointToInsert.
+     * Note that this is a helper method for the traditional white-space
+     * normalizer.  Don't use this with the new white-space normalizer.
+     * Must be called only when CreateVisibleWhiteSpacesData() returns some,
+     * and inclusive next char of aPointToInsert is in the range.
+     */
+    EditorDOMPointInText
+    GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+        const EditorDOMPoint& aPointToInsert) const;
+
+    /**
      * CreateVisibleWhiteSpacesData() creates VisibleWhiteSpacesData.
      * That is zero or more white-spaces which are visible.
      */
@@ -1008,9 +1055,11 @@ class MOZ_STACK_CLASS WSRunScanner {
                EndsByBRElement()));
     }
 
+    EditorDOMPoint mScanStartPoint;
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;
+    RefPtr<const Element> mEditingHost;
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     // XXX Currently we set mIsPreformatted to `WSRunScanner::mPRE` value
@@ -1213,34 +1262,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult NormalizeWhiteSpacesAtEndOf(
       const VisibleWhiteSpacesData& aVisibleWhiteSpacesData);
-
-  /**
-   * MaybeReplacePreviousNBSPWithASCIIWhiteSpace() replaces previous character
-   * of aPoint if it's a NBSP and it's unnecessary.
-   *
-   * @param aVisibleWhiteSpacesData
-   *                    The visible whitespaces.  aPoint must be in this.
-   * @param aPoint      Current insertion point.  Its previous character is
-   *                    unnecessary NBSP will be checked.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
-      const EditorDOMPoint& aPoint);
-
-  /**
-   * MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() replaces an NBSP at
-   * the point with an ASCII white-space only when the point is an NBSP and
-   * it's replaceable with an ASCII white-space.
-   *
-   * @param aPoint      If point in a text node, the character is checked
-   *                    whether it's an NBSP or not.  Otherwise, first
-   *                    character of next editable text node is checked.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
-      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
-      const EditorDOMPoint& aPoint);
 
   /**
    * See explanation of the static method for this.
