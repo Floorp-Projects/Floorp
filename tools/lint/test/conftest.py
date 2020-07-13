@@ -53,6 +53,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("config", configs, ids=ids)
 
 
+@pytest.fixture(scope="module")
 def root(request):
     """Return the root directory for the files of the linter under test.
 
