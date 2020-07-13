@@ -59,12 +59,15 @@ tabmodalprompt label[value=""] {
   display: flex;
   flex-direction: column;
   position: absolute;
+  /* TODO: figure out which element is preventing this from showing */
+  z-index: 1;
+  width: 100%;
 }
 
 .paymentDialogContainer > div {
   align-self: center;
   box-sizing: border-box;
-  height: 500px;
+  height: 600px;
   /* By setting `inset-inline` to `auto` with `position: absolute`, the
    * horizontal position from the `align-self: center` is used.
    * See https://developer.mozilla.org/en-US/docs/Web/CSS/right#Values. */
