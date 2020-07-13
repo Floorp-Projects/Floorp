@@ -21,6 +21,7 @@
 #include "nsTArray.h"
 #include "nsIPrintSettingsWin.h"
 
+#include "nsPaper.h"
 #include "nsPrinter.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -511,6 +512,10 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
 //  Printer List
 //***********************************************************
 
+nsPrinterListWin::~nsPrinterListWin() {
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+}
+
 NS_IMPL_ISUPPORTS(nsPrinterListWin, nsIPrinterList)
 
 NS_IMETHODIMP
@@ -595,17 +600,14 @@ nsPrinterListWin::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   }
 
   uint32_t numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsTArray<nsString>* printers = new nsTArray<nsString>(numPrinters);
-  if (!printers) return NS_ERROR_OUT_OF_MEMORY;
-
   for (uint32_t printerInx = 0; printerInx < numPrinters; ++printerInx) {
-    LPWSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx);
     // wchar_t (used in LPWSTR) is 16 bits on Windows.
     // https://docs.microsoft.com/en-us/cpp/cpp/char-wchar-t-char16-t-char32-t?view=vs-2019
+    LPWSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx);
     nsAutoString printerName;
     printerName.Assign(name);
-    RefPtr<nsIPrinter> printer = new nsPrinter(printerName);
-    aPrinters.AppendElement(std::move(printer));
+    nsTArray<RefPtr<nsIPaper>> paperList;
+    aPrinters.AppendElement(new nsPrinter(printerName, paperList));
   }
 
   return NS_OK;
