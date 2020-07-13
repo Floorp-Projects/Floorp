@@ -599,6 +599,9 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
   if (str) {
     toStringResultBytesStorage = JS_EncodeStringToUTF8(cx, str);
     utf8Message = toStringResultBytesStorage.get();
+    if (!utf8Message) {
+      cx->clearPendingException();
+    }
   }
   if (!utf8Message) {
     utf8Message = "unknown (can't convert to string)";
