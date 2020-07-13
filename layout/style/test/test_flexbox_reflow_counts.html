@@ -91,14 +91,14 @@ function addNChildren(parent, childCount)
   }
 }
 
-// Remove contents of inner block, and remove manual styling:
+// Undoes whatever styling customizations and DOM insertions that a given
+// testcase has done, to prepare for running the next testcase.
 function cleanup()
 {
-  outerFlex.style = midFlex.style = innerBlock.style = "";
-  removeChildrenExcept(innerBlock);
-  removeChildrenExcept(midFlex, innerBlock);
-  removeChildrenExcept(outerFlex, midFlex);
-  removeChildrenExcept(content, outerFlex);
+  gOuterFlex.style = gMidFlex.style = gInnerBlock.style = "";
+  removeChildrenExcept(gInnerBlock);
+  removeChildrenExcept(gMidFlex, gInnerBlock);
+  removeChildrenExcept(gOuterFlex, gMidFlex);
 }
 
 // Each testcase here has a label (used in test output), a function to set up
@@ -107,19 +107,19 @@ let gTestcases = [
  {
     label : "border on flex items",
     addTestStyle : function() {
-      midFlex.style.border = innerBlock.style.border = "3px solid black";
+      gMidFlex.style.border = gInnerBlock.style.border = "3px solid black";
     },
  },
  {
     label : "padding on flex items",
     addTestStyle : function() {
-      midFlex.style.padding = innerBlock.style.padding = "5px";
+      gMidFlex.style.padding = gInnerBlock.style.padding = "5px";
     },
  },
  {
     label : "margin on flex items",
     addTestStyle : function() {
-      midFlex.style.margin = innerBlock.style.margin = "2px";
+      gMidFlex.style.margin = gInnerBlock.style.margin = "2px";
     },
  },
  {
@@ -130,10 +130,10 @@ let gTestcases = [
 
     // Compare 5 bonus flex items vs. 1 bonus flex item:
     addTestStyle : function() {
-      addNChildren(outerFlex, 5);
+      addNChildren(gOuterFlex, 5);
     },
     addReferenceStyle : function() {
-      addNChildren(outerFlex, 1);
+      addNChildren(gOuterFlex, 1);
     },
  },
  {
@@ -141,10 +141,10 @@ let gTestcases = [
     // on the nested flex container rather than the outer one)
     label : "additional flex items in nested flex container",
     addTestStyle : function() {
-      addNChildren(midFlex, 5);
+      addNChildren(gMidFlex, 5);
     },
     addReferenceStyle : function() {
-      addNChildren(midFlex, 1);
+      addNChildren(gMidFlex, 1);
     },
  },
 ];
