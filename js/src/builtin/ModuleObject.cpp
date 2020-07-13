@@ -1217,45 +1217,52 @@ ModuleBuilder::ModuleBuilder(JSContext* cx,
       requestedModules_(cx, RequestedModuleVector(cx)),
       importEntries_(cx, ImportEntryMap(cx)),
       exportEntries_(cx, ExportEntryVector(cx)),
-      exportNames_(cx, AtomSet(cx)),
-      localExportEntries_(cx, ExportEntryVector(cx)),
-      indirectExportEntries_(cx, ExportEntryVector(cx)),
-      starExportEntries_(cx, ExportEntryVector(cx)) {}
+      exportNames_(cx, AtomSet(cx)) {}
 
-bool ModuleBuilder::buildTables() {
-  for (const auto& e : exportEntries_) {
-    RootedExportEntryObject exp(cx_, e);
-    if (!exp->moduleRequest()) {
-      RootedImportEntryObject importEntry(cx_,
-                                          importEntryFor(exp->localName()));
+bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
+  // https://tc39.es/ecma262/#sec-parsemodule
+  // 15.2.1.17.1 ParseModule, Steps 4-11.
+
+  // Step 4.
+  metadata.requestedModules = std::move(requestedModules_.get());
+
+  // Step 5.
+  if (!metadata.importEntries.reserve(importEntries_.count())) {
+    return false;
+  }
+  for (auto r = importEntries_.all(); !r.empty(); r.popFront()) {
+    frontend::StencilModuleEntry& entry = r.front().value();
+    metadata.importEntries.infallibleAppend(entry);
+  }
+
+  // Steps 6-11.
+  for (const frontend::StencilModuleEntry& exp : exportEntries_) {
+    if (!exp.specifier) {
+      frontend::StencilModuleEntry* importEntry = importEntryFor(exp.localName);
       if (!importEntry) {
-        if (!localExportEntries_.append(exp)) {
+        if (!metadata.localExportEntries.append(exp)) {
           return false;
         }
       } else {
-        if (importEntry->importName() == cx_->names().star) {
-          if (!localExportEntries_.append(exp)) {
+        if (importEntry->importName == cx_->names().star) {
+          if (!metadata.localExportEntries.append(exp)) {
             return false;
           }
         } else {
-          RootedAtom exportName(cx_, exp->exportName());
-          RootedAtom moduleRequest(cx_, importEntry->moduleRequest());
-          RootedAtom importName(cx_, importEntry->importName());
-          RootedExportEntryObject exportEntry(cx_);
-          exportEntry = ExportEntryObject::create(
-              cx_, exportName, moduleRequest, importName, nullptr,
-              exp->lineNumber(), exp->columnNumber());
-          if (!exportEntry || !indirectExportEntries_.append(exportEntry)) {
+          auto entry = frontend::StencilModuleEntry::exportFromEntry(
+              importEntry->specifier, importEntry->importName, exp.exportName,
+              exp.lineno, exp.column);
+          if (!metadata.indirectExportEntries.append(entry)) {
             return false;
           }
         }
       }
-    } else if (exp->importName() == cx_->names().star) {
-      if (!starExportEntries_.append(exp)) {
+    } else if (exp.importName == cx_->names().star) {
+      if (!metadata.starExportEntries.append(exp)) {
         return false;
       }
     } else {
-      if (!indirectExportEntries_.append(exp)) {
+      if (!metadata.indirectExportEntries.append(exp)) {
         return false;
       }
     }
@@ -1264,39 +1271,106 @@ bool ModuleBuilder::buildTables() {
   return true;
 }
 
-bool ModuleBuilder::initModule(JS::Handle<ModuleObject*> module) {
-  RootedArrayObject requestedModules(cx_,
-                                     js::CreateArray(cx_, requestedModules_));
-  if (!requestedModules) {
+enum class ModuleArrayType {
+  ImportEntryObject,
+  ExportEntryObject,
+  RequestedModuleObject,
+};
+
+static ArrayObject* ModuleBuilderInitArray(
+    JSContext* cx, ModuleArrayType arrayType,
+    const frontend::StencilModuleMetadata::EntryVector& vector) {
+  RootedArrayObject resultArray(
+      cx, NewDenseFullyAllocatedArray(cx, vector.length()));
+  if (!resultArray) {
+    return nullptr;
+  }
+
+  RootedAtom specifier(cx);
+  RootedAtom localName(cx);
+  RootedAtom importName(cx);
+  RootedAtom exportName(cx);
+  RootedObject req(cx);
+
+  for (uint32_t i = 0; i < vector.length(); ++i) {
+    const frontend::StencilModuleEntry& entry = vector[i];
+    specifier = entry.specifier;
+    localName = entry.localName;
+    importName = entry.importName;
+    exportName = entry.exportName;
+
+    switch (arrayType) {
+      case ModuleArrayType::ImportEntryObject:
+        MOZ_ASSERT(localName && importName);
+        req = ImportEntryObject::create(cx, specifier, importName, localName,
+                                        entry.lineno, entry.column);
+        break;
+      case ModuleArrayType::ExportEntryObject:
+        MOZ_ASSERT(localName || importName || exportName);
+        req = ExportEntryObject::create(cx, exportName, specifier, importName,
+                                        localName, entry.lineno, entry.column);
+        break;
+      case ModuleArrayType::RequestedModuleObject:
+        req = RequestedModuleObject::create(cx, specifier, entry.lineno,
+                                            entry.column);
+        // TODO: Make this consistent with other object types.
+        if (req && !FreezeObject(cx, req)) {
+          return nullptr;
+        }
+        break;
+    }
+    if (!req) {
+      return nullptr;
+    }
+    if (!JS_SetElement(cx, resultArray, i, req)) {
+      return nullptr;
+    }
+  }
+
+  return resultArray;
+}
+
+// Use StencilModuleMetadata data to fill in ModuleObject
+bool frontend::StencilModuleMetadata::initModule(
+    JSContext* cx, JS::Handle<ModuleObject*> module) {
+  RootedArrayObject requestedModulesObject(
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::RequestedModuleObject,
+                                 requestedModules));
+  if (!requestedModulesObject) {
     return false;
   }
 
-  RootedArrayObject importEntries(cx_, createArrayFromHashMap(importEntries_));
-  if (!importEntries) {
+  RootedArrayObject importEntriesObject(
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ImportEntryObject,
+                                 importEntries));
+  if (!importEntriesObject) {
     return false;
   }
 
-  RootedArrayObject localExportEntries(
-      cx_, js::CreateArray(cx_, localExportEntries_));
-  if (!localExportEntries) {
+  RootedArrayObject localExportEntriesObject(
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ExportEntryObject,
+                                 localExportEntries));
+  if (!localExportEntriesObject) {
     return false;
   }
 
-  RootedArrayObject indirectExportEntries(
-      cx_, js::CreateArray(cx_, indirectExportEntries_));
-  if (!indirectExportEntries) {
+  RootedArrayObject indirectExportEntriesObject(
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ExportEntryObject,
+                                 indirectExportEntries));
+  if (!indirectExportEntriesObject) {
     return false;
   }
 
-  RootedArrayObject starExportEntries(cx_,
-                                      js::CreateArray(cx_, starExportEntries_));
-  if (!starExportEntries) {
+  RootedArrayObject starExportEntriesObject(
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ExportEntryObject,
+                                 starExportEntries));
+  if (!starExportEntriesObject) {
     return false;
   }
 
-  module->initImportExportData(requestedModules, importEntries,
-                               localExportEntries, indirectExportEntries,
-                               starExportEntries);
+  module->initImportExportData(
+      requestedModulesObject, importEntriesObject, localExportEntriesObject,
+      indirectExportEntriesObject, starExportEntriesObject);
 
   return true;
 }
@@ -1335,21 +1409,14 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
     eitherParser_.computeLineAndColumn(importNameNode->pn_pos.begin, &line,
                                        &column);
 
-    RootedImportEntryObject importEntry(cx_);
-    importEntry = ImportEntryObject::create(cx_, module, importName, localName,
-                                            line, column);
-    if (!importEntry || !appendImportEntryObject(importEntry)) {
+    auto entry = frontend::StencilModuleEntry::importEntry(
+        module, localName, importName, line, column);
+    if (!importEntries_.put(localName, entry)) {
       return false;
     }
   }
 
   return true;
-}
-
-bool ModuleBuilder::appendImportEntryObject(
-    HandleImportEntryObject importEntry) {
-  MOZ_ASSERT(importEntry->localName());
-  return importEntries_.put(importEntry->localName(), importEntry);
 }
 
 bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
@@ -1568,14 +1635,15 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   return true;
 }
 
-ImportEntryObject* ModuleBuilder::importEntryFor(JSAtom* localName) const {
+frontend::StencilModuleEntry* ModuleBuilder::importEntryFor(
+    JSAtom* localName) const {
   MOZ_ASSERT(localName);
   auto ptr = importEntries_.lookup(localName);
   if (!ptr) {
     return nullptr;
   }
 
-  return ptr->value();
+  return &ptr->value();
 }
 
 bool ModuleBuilder::hasExportedName(JSAtom* name) const {
@@ -1592,10 +1660,19 @@ bool ModuleBuilder::appendExportEntry(HandleAtom exportName,
     eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
   }
 
-  Rooted<ExportEntryObject*> exportEntry(cx_);
-  exportEntry = ExportEntryObject::create(cx_, exportName, nullptr, nullptr,
-                                          localName, line, column);
-  return exportEntry && appendExportEntryObject(exportEntry);
+  auto entry = frontend::StencilModuleEntry::exportAsEntry(
+      localName, exportName, line, column);
+  if (!exportEntries_.append(entry)) {
+    return false;
+  }
+
+  if (exportName) {
+    if (!exportNames_.put(exportName)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool ModuleBuilder::appendExportFromEntry(HandleAtom exportName,
@@ -1606,19 +1683,12 @@ bool ModuleBuilder::appendExportFromEntry(HandleAtom exportName,
   uint32_t column;
   eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
 
-  Rooted<ExportEntryObject*> exportEntry(cx_);
-  exportEntry = ExportEntryObject::create(cx_, exportName, moduleRequest,
-                                          importName, nullptr, line, column);
-  return exportEntry && appendExportEntryObject(exportEntry);
-}
-
-bool ModuleBuilder::appendExportEntryObject(
-    HandleExportEntryObject exportEntry) {
-  if (!exportEntries_.append(exportEntry)) {
+  auto entry = frontend::StencilModuleEntry::exportFromEntry(
+      moduleRequest, importName, exportName, line, column);
+  if (!exportEntries_.append(entry)) {
     return false;
   }
 
-  JSAtom* exportName = exportEntry->exportName();
   return !exportName || exportNames_.put(exportName);
 }
 
@@ -1632,15 +1702,13 @@ bool ModuleBuilder::maybeAppendRequestedModule(HandleAtom specifier,
   uint32_t column;
   eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
 
-  JSContext* cx = cx_;
-  RootedRequestedModuleObject req(
-      cx, RequestedModuleObject::create(cx, specifier, line, column));
-  if (!req) {
+  auto entry =
+      frontend::StencilModuleEntry::moduleRequest(specifier, line, column);
+  if (!requestedModules_.append(entry)) {
     return false;
   }
 
-  return FreezeObject(cx, req) && requestedModules_.append(req) &&
-         requestedModuleSpecifiers_.put(specifier);
+  return requestedModuleSpecifiers_.put(specifier);
 }
 
 template <typename T>
@@ -1655,25 +1723,6 @@ ArrayObject* js::CreateArray(JSContext* cx,
   array->setDenseInitializedLength(length);
   for (uint32_t i = 0; i < length; i++) {
     array->initDenseElement(i, ObjectValue(*vector[i]));
-  }
-
-  return array;
-}
-
-template <typename K, typename V>
-ArrayObject* ModuleBuilder::createArrayFromHashMap(
-    const JS::Rooted<GCHashMap<K, V>>& map) {
-  uint32_t length = map.count();
-  RootedArrayObject array(cx_, NewDenseFullyAllocatedArray(cx_, length));
-  if (!array) {
-    return nullptr;
-  }
-
-  array->setDenseInitializedLength(length);
-
-  uint32_t i = 0;
-  for (auto r = map.all(); !r.empty(); r.popFront()) {
-    array->initDenseElement(i++, ObjectValue(*r.front().value()));
   }
 
   return array;
