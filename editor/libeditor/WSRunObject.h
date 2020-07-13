@@ -372,41 +372,63 @@ class MOZ_STACK_CLASS WSRunScanner {
    * MOZ_ASSERT_IF()s in WSScanResult::AssertIfInvalidData() for the detail.
    */
   nsIContent* GetStartReasonContent() const {
-    return mStart.GetReasonContent();
+    return TextFragmentDataAtStart().GetStartReasonContent();
   }
-  nsIContent* GetEndReasonContent() const { return mEnd.GetReasonContent(); }
+  nsIContent* GetEndReasonContent() const {
+    return TextFragmentDataAtStart().GetEndReasonContent();
+  }
 
-  bool StartsFromNormalText() const { return mStart.IsNormalText(); }
-  bool StartsFromSpecialContent() const { return mStart.IsSpecialContent(); }
-  bool StartsFromBRElement() const { return mStart.IsBRElement(); }
+  bool StartsFromNormalText() const {
+    return TextFragmentDataAtStart().StartsFromNormalText();
+  }
+  bool StartsFromSpecialContent() const {
+    return TextFragmentDataAtStart().StartsFromSpecialContent();
+  }
+  bool StartsFromBRElement() const {
+    return TextFragmentDataAtStart().StartsFromBRElement();
+  }
   bool StartsFromCurrentBlockBoundary() const {
-    return mStart.IsCurrentBlockBoundary();
+    return TextFragmentDataAtStart().StartsFromCurrentBlockBoundary();
   }
   bool StartsFromOtherBlockElement() const {
-    return mStart.IsOtherBlockBoundary();
+    return TextFragmentDataAtStart().StartsFromOtherBlockElement();
   }
-  bool StartsFromBlockBoundary() const { return mStart.IsBlockBoundary(); }
-  bool StartsFromHardLineBreak() const { return mStart.IsHardLineBreak(); }
-  bool EndsByNormalText() const { return mEnd.IsNormalText(); }
-  bool EndsBySpecialContent() const { return mEnd.IsSpecialContent(); }
-  bool EndsByBRElement() const { return mEnd.IsBRElement(); }
+  bool StartsFromBlockBoundary() const {
+    return TextFragmentDataAtStart().StartsFromBlockBoundary();
+  }
+  bool StartsFromHardLineBreak() const {
+    return TextFragmentDataAtStart().StartsFromHardLineBreak();
+  }
+  bool EndsByNormalText() const {
+    return TextFragmentDataAtStart().EndsByNormalText();
+  }
+  bool EndsBySpecialContent() const {
+    return TextFragmentDataAtStart().EndsBySpecialContent();
+  }
+  bool EndsByBRElement() const {
+    return TextFragmentDataAtStart().EndsByBRElement();
+  }
   bool EndsByCurrentBlockBoundary() const {
-    return mEnd.IsCurrentBlockBoundary();
+    return TextFragmentDataAtStart().EndsByCurrentBlockBoundary();
   }
-  bool EndsByOtherBlockElement() const { return mEnd.IsOtherBlockBoundary(); }
-  bool EndsByBlockBoundary() const { return mEnd.IsBlockBoundary(); }
+  bool EndsByOtherBlockElement() const {
+    return TextFragmentDataAtStart().EndsByOtherBlockElement();
+  }
+  bool EndsByBlockBoundary() const {
+    return TextFragmentDataAtStart().EndsByBlockBoundary();
+  }
 
   MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr() const {
-    return mStart.OtherBlockElementPtr();
+    return TextFragmentDataAtStart().StartReasonOtherBlockElementPtr();
   }
   MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* StartReasonBRElementPtr() const {
-    return mStart.BRElementPtr();
+    return TextFragmentDataAtStart().StartReasonBRElementPtr();
   }
   MOZ_NEVER_INLINE_DEBUG dom::Element* EndReasonOtherBlockElementPtr() const {
-    return mEnd.OtherBlockElementPtr();
+    return TextFragmentDataAtStart().EndReasonOtherBlockElementPtr();
   }
   MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* EndReasonBRElementPtr() const {
-    return mEnd.BRElementPtr();
+    return TextFragmentDataAtStart().EndReasonBRElementPtr();
   }
 
   /**
@@ -575,8 +597,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
       const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
 
-  nsresult GetWSNodes();
-
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
 
@@ -713,30 +733,64 @@ class MOZ_STACK_CLASS WSRunScanner {
   };
 
   /**
-   * TextFragmentData stores the information of text nodes which are in a
-   * hard line.
+   * TextFragmentData stores the information of white-space sequence which
+   * contains `aPoint` of the constructor.
    */
   class MOZ_STACK_CLASS TextFragmentData final {
    public:
     TextFragmentData() = delete;
-    TextFragmentData(const BoundaryData& aStartBoundaryData,
-                     const BoundaryData& aEndBoundaryData,
-                     const NoBreakingSpaceData& aNBSPData, bool aIsPreformatted)
-        : mStart(aStartBoundaryData),
-          mEnd(aEndBoundaryData),
-          mNBSPData(aNBSPData),
-          mIsPreformatted(aIsPreformatted) {}
+    template <typename EditorDOMPointType>
+    TextFragmentData(const EditorDOMPointType& aPoint,
+                     const Element* aEditingHost);
+
+    nsIContent* GetStartReasonContent() const {
+      return mStart.GetReasonContent();
+    }
+    nsIContent* GetEndReasonContent() const { return mEnd.GetReasonContent(); }
 
     bool StartsFromNormalText() const { return mStart.IsNormalText(); }
     bool StartsFromSpecialContent() const { return mStart.IsSpecialContent(); }
+    bool StartsFromBRElement() const { return mStart.IsBRElement(); }
+    bool StartsFromCurrentBlockBoundary() const {
+      return mStart.IsCurrentBlockBoundary();
+    }
+    bool StartsFromOtherBlockElement() const {
+      return mStart.IsOtherBlockBoundary();
+    }
+    bool StartsFromBlockBoundary() const { return mStart.IsBlockBoundary(); }
     bool StartsFromHardLineBreak() const { return mStart.IsHardLineBreak(); }
     bool EndsByNormalText() const { return mEnd.IsNormalText(); }
     bool EndsBySpecialContent() const { return mEnd.IsSpecialContent(); }
     bool EndsByBRElement() const { return mEnd.IsBRElement(); }
+    bool EndsByCurrentBlockBoundary() const {
+      return mEnd.IsCurrentBlockBoundary();
+    }
+    bool EndsByOtherBlockElement() const { return mEnd.IsOtherBlockBoundary(); }
     bool EndsByBlockBoundary() const { return mEnd.IsBlockBoundary(); }
+
+    WSType StartRawReason() const { return mStart.RawReason(); }
+    WSType EndRawReason() const { return mEnd.RawReason(); }
+
+    MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr()
+        const {
+      return mStart.OtherBlockElementPtr();
+    }
+    MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* StartReasonBRElementPtr() const {
+      return mStart.BRElementPtr();
+    }
+    MOZ_NEVER_INLINE_DEBUG dom::Element* EndReasonOtherBlockElementPtr() const {
+      return mEnd.OtherBlockElementPtr();
+    }
+    MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* EndReasonBRElementPtr() const {
+      return mEnd.BRElementPtr();
+    }
 
     const EditorDOMPoint& StartRef() const { return mStart.PointRef(); }
     const EditorDOMPoint& EndRef() const { return mEnd.PointRef(); }
+
+    const NoBreakingSpaceData& NoBreakingSpaceDataRef() const {
+      return mNBSPData;
+    }
 
     bool IsPreformatted() const { return mIsPreformatted; }
 
@@ -966,6 +1020,10 @@ class MOZ_STACK_CLASS WSRunScanner {
     bool mIsPreformatted;
   };
 
+  const TextFragmentData& TextFragmentDataAtStart() const {
+    return mTextFragmentDataAtStart;
+  }
+
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;
   EditorDOMPoint mScanEndPoint;
@@ -975,16 +1033,11 @@ class MOZ_STACK_CLASS WSRunScanner {
   // The editing host when the instance is created.
   RefPtr<dom::Element> mEditingHost;
 
-  // true if we are in preformatted white-space context.
-  bool mPRE;
-
   // Non-owning.
   const HTMLEditor* mHTMLEditor;
 
- protected:
-  BoundaryData mStart;
-  BoundaryData mEnd;
-  NoBreakingSpaceData mNBSPData;
+ private:
+  TextFragmentData mTextFragmentDataAtStart;
 };
 
 class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
