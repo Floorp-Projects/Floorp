@@ -12,7 +12,7 @@ const { KEYS: defaultVisitorKeys } = require("eslint-visitor-keys");
 const estraverse = require("estraverse");
 const path = require("path");
 const fs = require("fs");
-const ini = require("ini-parser");
+const ini = require("multi-ini");
 const recommendedConfig = require("./configs/recommended");
 
 var gModules = null;
@@ -52,6 +52,13 @@ const imports = [
 const workerImportFilenameMatch = /(.*\/)*((.*?)\.jsm?)/;
 
 module.exports = {
+  get iniParser() {
+    if (!this._iniParser) {
+      this._iniParser = new ini.Parser();
+    }
+    return this._iniParser;
+  },
+
   get modulesGlobalData() {
     if (!gModules) {
       if (this.isMozillaCentralBased()) {
@@ -612,8 +619,9 @@ module.exports = {
       }
 
       try {
-        let manifest = ini.parse(fs.readFileSync(path.join(dir, name), "utf8"));
-
+        let manifest = this.iniParser.parse(
+          fs.readFileSync(path.join(dir, name), "utf8").split("\n")
+        );
         manifests.push({
           file: path.join(dir, name),
           manifest,
