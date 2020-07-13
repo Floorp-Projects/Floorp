@@ -2365,7 +2365,7 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
 
 bool WebrtcVideoConduit::AddFrameHistory(
     dom::Sequence<dom::RTCVideoFrameHistoryInternal>* outHistories) const {
-  ASSERT_ON_THREAD(mStsThread);
+  ReentrantMonitorAutoEnter enter(mTransportMonitor);
   if (!outHistories->AppendElement(mReceivedFrameHistory, fallible)) {
     mozalloc_handle_oom(0);
     return false;
