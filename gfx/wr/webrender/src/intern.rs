@@ -40,13 +40,12 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::{mem, ops, u64};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::util::VecHelper;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
-struct Epoch(u64);
+struct Epoch(u32);
 
 /// A list of updates to be applied to the data store,
 /// provided by the interning structure.
@@ -94,26 +93,17 @@ impl<S> UpdateList<S> {
     }
 }
 
-lazy_static! {
-    static ref NEXT_UID: AtomicUsize = AtomicUsize::new(0);
-}
-
 /// A globally, unique identifier
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq)]
 pub struct ItemUid {
-    uid: usize,
+    uid: u64,
 }
 
 impl ItemUid {
-    pub fn next_uid() -> ItemUid {
-        let uid = NEXT_UID.fetch_add(1, Ordering::Relaxed);
-        ItemUid { uid }
-    }
-
     // Intended for debug usage only
-    pub fn get_uid(&self) -> usize {
+    pub fn get_uid(&self) -> u64 {
         self.uid
     }
 }
@@ -124,7 +114,6 @@ impl ItemUid {
 pub struct Handle<I> {
     index: u32,
     epoch: Epoch,
-    uid: ItemUid,
     _marker: PhantomData<I>,
 }
 
@@ -133,7 +122,6 @@ impl<I> Clone for Handle<I> {
         Handle {
             index: self.index,
             epoch: self.epoch,
-            uid: self.uid,
             _marker: self._marker,
         }
     }
@@ -143,7 +131,11 @@ impl<I> Copy for Handle<I> {}
 
 impl<I> Handle<I> {
     pub fn uid(&self) -> ItemUid {
-        self.uid
+        ItemUid {
+            // The index in the freelist + the epoch it was interned generates a stable
+            // unique id for an interned element.
+            uid: ((self.index as u64) << 32) | self.epoch.0 as u64
+        }
     }
 }
 
@@ -207,6 +199,31 @@ impl<I: Internable> ops::IndexMut<Handle<I>> for DataStore<I> {
     }
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
+struct ItemDetails<I> {
+    /// Frame that this element was first interned
+    interned_epoch: Epoch,
+    /// Last frame this element was referenced (used to GC intern items)
+    last_used_epoch: Epoch,
+    /// Index into the freelist this item is located
+    index: usize,
+    /// Type marker for create_handle method
+    _marker: PhantomData<I>,
+}
+
+impl<I> ItemDetails<I> {
+    /// Construct a stable handle value from the item details
+    fn create_handle(&self) -> Handle<I> {
+        Handle {
+            index: self.index as u32,
+            epoch: self.interned_epoch,
+            _marker: PhantomData,
+        }
+    }
+}
+
 /// The main interning data structure. This lives in the
 /// scene builder thread, and handles hashing and interning
 /// unique data structures. It also manages a free-list for
@@ -217,7 +234,7 @@ impl<I: Internable> ops::IndexMut<Handle<I>> for DataStore<I> {
 #[derive(MallocSizeOf)]
 pub struct Interner<I: Internable> {
     /// Uniquely map an interning key to a handle
-    map: FastHashMap<I::Key, Handle<I>>,
+    map: FastHashMap<I::Key, ItemDetails<I>>,
     /// List of free slots in the data store for re-use.
     free_list: Vec<usize>,
     /// Pending list of updates that need to be applied.
@@ -257,9 +274,11 @@ impl<I: Internable> Interner<I> {
         // Use get_mut rather than entry here to avoid
         // cloning the (sometimes large) key in the common
         // case, where the data already exists in the interner.
-        if let Some(handle) = self.map.get_mut(data) {
-            handle.epoch = self.current_epoch;
-            return *handle;
+        if let Some(details) = self.map.get_mut(data) {
+            // Update the last referenced frame for this element
+            details.last_used_epoch = self.current_epoch;
+            // Return a stable handle value for dependency checking
+            return details.create_handle();
         }
 
         // We need to intern a new data item. First, find out
@@ -270,7 +289,14 @@ impl<I: Internable> Interner<I> {
             None => self.local_data.len(),
         };
 
-        let uid = ItemUid::next_uid();
+        // Generate a handle for access via the data store.
+        let handle = Handle {
+            index: index as u32,
+            epoch: self.current_epoch,
+            _marker: PhantomData,
+        };
+
+        let uid = handle.uid();
 
         // Add a pending update to insert the new data.
         self.update_list.insertions.push(Insertion {
@@ -279,20 +305,17 @@ impl<I: Internable> Interner<I> {
             value: data.clone(),
         });
 
-        // Generate a handle for access via the data store.
-        let handle = Handle {
-            index: index as u32,
-            epoch: self.current_epoch,
-            uid,
-            _marker: PhantomData,
-        };
-
         #[cfg(debug_assertions)]
-        data.on_interned(handle.uid);
+        data.on_interned(uid);
 
         // Store this handle so the next time it is
         // interned, it gets re-used.
-        self.map.insert(data.clone(), handle);
+        self.map.insert(data.clone(), ItemDetails {
+            interned_epoch: self.current_epoch,
+            last_used_epoch: self.current_epoch,
+            index,
+            _marker: PhantomData,
+        });
 
         // Create the local data for this item that is
         // being interned.
@@ -317,16 +340,16 @@ impl<I: Internable> Interner<I> {
         // map each frame). It also might make sense in the
         // future to adjust how long items remain in the cache
         // based on the current size of the list.
-        self.map.retain(|_, handle| {
-            if handle.epoch.0 + 10 < current_epoch {
+        self.map.retain(|_, details| {
+            if details.last_used_epoch.0 + 10 < current_epoch {
                 // To expire an item:
                 //  - Add index to the free-list for re-use.
                 //  - Add an update to the data store to invalidate this slot.
                 //  - Remove from the hash map.
-                free_list.push(handle.index as usize);
+                free_list.push(details.index);
                 update_list.removals.push(Removal {
-                    index: handle.index as usize,
-                    uid: handle.uid,
+                    index: details.index,
+                    uid: details.create_handle().uid(),
                 });
                 return false;
             }
