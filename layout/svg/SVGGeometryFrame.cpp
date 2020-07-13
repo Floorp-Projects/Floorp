@@ -93,7 +93,7 @@ void DisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
 void DisplaySVGGeometry::ComputeInvalidationRegion(
     nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
     nsRegion* aInvalidRegion) const {
-  auto geometry =
+  const auto* geometry =
       static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
 
   if (aBuilder->ShouldSyncDecodeImages() &&
@@ -141,7 +141,7 @@ void SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     SVGGeometryElement* element =
         static_cast<SVGGeometryElement*>(GetContent());
 
-    auto* oldStyleSVG = aOldComputedStyle->StyleSVG();
+    const auto* oldStyleSVG = aOldComputedStyle->StyleSVG();
     if (!SVGContentUtils::ShapeTypeHasNoCorners(GetContent())) {
       if (StyleSVG()->mStrokeLinecap != oldStyleSVG->mStrokeLinecap &&
           element->IsSVGElement(nsGkAtoms::path)) {
@@ -729,7 +729,7 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
 void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
                                     const gfxMatrix& aTransform,
                                     imgDrawingParams& aImgParams) {
-  auto element = static_cast<SVGGeometryElement*>(GetContent());
+  auto* element = static_cast<SVGGeometryElement*>(GetContent());
 
   if (element->IsMarkable()) {
     SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
