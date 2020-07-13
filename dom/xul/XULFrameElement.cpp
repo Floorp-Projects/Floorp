@@ -70,8 +70,10 @@ Document* XULFrameElement::GetContentDocument() {
 }
 
 uint64_t XULFrameElement::BrowserId() {
-  if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
-    return bc->GetBrowserId();
+  if (mFrameLoader) {
+    if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
+      return bc->GetBrowserId();
+    }
   }
   return 0;
 }
