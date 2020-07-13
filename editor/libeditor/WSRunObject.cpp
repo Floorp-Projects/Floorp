@@ -1661,7 +1661,8 @@ WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
   return EditorDOMPointInText();
 }
 
-EditorDOMPointInText WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces(
+EditorDOMPointInText
+WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
     const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhiteSpace.IsEndOfContainer());
@@ -1721,7 +1722,8 @@ EditorDOMPointInText WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces(
   }
 }
 
-EditorDOMPointInText WSRunScanner::GetFirstASCIIWhiteSpacePointCollapsedTo(
+EditorDOMPointInText
+WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
     const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhiteSpace.IsEndOfContainer());

@@ -588,7 +588,10 @@ class MOZ_STACK_CLASS WSRunScanner {
    * aPointAtASCIIWhiteSpace.
    */
   EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
-      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
+    return TextFragmentDataAtStart().GetEndOfCollapsibleASCIIWhiteSpaces(
+        aPointAtASCIIWhiteSpace);
+  }
 
   /**
    * GetFirstASCIIWhiteSpacePointCollapsedTo() returns the first ASCII
@@ -599,7 +602,10 @@ class MOZ_STACK_CLASS WSRunScanner {
    * aPointAtASCIIWhiteSpace.
    */
   EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
-      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
+    return TextFragmentDataAtStart().GetFirstASCIIWhiteSpacePointCollapsedTo(
+        aPointAtASCIIWhiteSpace);
+  }
 
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
@@ -804,6 +810,11 @@ class MOZ_STACK_CLASS WSRunScanner {
     template <typename PT, typename CT>
     EditorDOMPointInText GetPreviousEditableCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint) const;
+
+    EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
+        const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+    EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
+        const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
 
     /**
      * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
