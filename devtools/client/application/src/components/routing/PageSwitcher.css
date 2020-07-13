@@ -26,3 +26,20 @@
   font-weight: var(--title-20-font-weight);
   margin: 0;
 }
+
+.app-page__icon-container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-column-gap: calc(var(--base-unit) * 4);
+}
+
+.app-page__icon {
+  width: calc(var(--base-unit) * 10);
+  height: calc(var(--base-unit) * 10);
+
+  fill: var(--dimmed-icon-color);
+  -moz-context-properties: fill;
+
+  /* alignment fix for text to compensate for low baseline */
+  margin-block-start: var(--base-unit);
+}

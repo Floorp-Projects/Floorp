@@ -13,7 +13,10 @@ const {
 const {
   a,
   article,
+  aside,
+  div,
   h1,
+  img,
   p,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -35,18 +38,41 @@ class ManifestEmpty extends PureComponent {
 
   render() {
     return article(
-      { className: "manifest-empty js-manifest-empty" },
-      Localized(
-        {
-          id: "manifest-empty-intro",
-          a: a({
-            className: "external-link",
-            onClick: () => this.openDocumentation(),
-          }),
-        },
-        h1({ className: "app-page__title" })
+      { className: "app-page__icon-container js-manifest-empty" },
+      aside(
+        {},
+        Localized(
+          {
+            id: "sidebar-item-manifest",
+            attrs: {
+              alt: true,
+            },
+          },
+          img({
+            className: "app-page__icon",
+            src: "chrome://devtools/skin/images/application-manifest.svg",
+          })
+        )
       ),
-      Localized({ id: "manifest-non-existing" }, p({}))
+      div(
+        {},
+        Localized(
+          {
+            id: "manifest-empty-intro2",
+          },
+          h1({ className: "app-page__title" })
+        ),
+        p(
+          {},
+          Localized(
+            { id: "manifest-empty-intro-link" },
+            a({
+              onClick: () => this.openDocumentation(),
+            })
+          )
+        ),
+        Localized({ id: "manifest-non-existing" }, p({}))
+      )
     );
   }
 }
