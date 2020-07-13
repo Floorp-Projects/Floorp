@@ -69,6 +69,25 @@ static nsContentPolicyType InternalContentPolicyTypeForFrame(
              : nsIContentPolicy::TYPE_INTERNAL_FRAME;
 }
 
+/* static */ already_AddRefed<LoadInfo> LoadInfo::CreateForDocument(
+    dom::CanonicalBrowsingContext* aBrowsingContext,
+    nsIPrincipal* aTriggeringPrincipal,
+    const OriginAttributes& aOriginAttributes, uint64_t aOuterWindowID,
+    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags) {
+  return MakeAndAddRef<LoadInfo>(aBrowsingContext, aTriggeringPrincipal,
+                                 aOriginAttributes, aOuterWindowID,
+                                 aSecurityFlags, aSandboxFlags);
+}
+
+/* static */ already_AddRefed<LoadInfo> LoadInfo::CreateForFrame(
+    dom::CanonicalBrowsingContext* aBrowsingContext,
+    nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
+    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags) {
+  return MakeAndAddRef<LoadInfo>(aBrowsingContext, aTriggeringPrincipal,
+                                 aFrameOuterWindowID, aSecurityFlags,
+                                 aSandboxFlags);
+}
+
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
     nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,
@@ -544,6 +563,7 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
   }
 }
 
+// Used for TYPE_FRAME or TYPE_IFRAME load.
 LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
                    nsIPrincipal* aTriggeringPrincipal,
                    uint64_t aFrameOuterWindowID, nsSecurityFlags aSecurityFlags,
