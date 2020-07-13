@@ -42,9 +42,9 @@ class nsPageFrame final : public nsContainerFrame {
   //////////////////
 
   // Tell the page which page number it is out of how many
-  virtual void SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages);
+  void SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages);
 
-  virtual void SetSharedPageData(nsSharedPageData* aPD);
+  void SetSharedPageData(nsSharedPageData* aPD);
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings
