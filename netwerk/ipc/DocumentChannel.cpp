@@ -97,16 +97,22 @@ void DocumentChannel::ShutdownListeners(nsresult aStatusCode) {
   mIsPending = false;
 
   listener = mListener;  // it might have changed!
-  if (listener) {
-    listener->OnStopRequest(this, aStatusCode);
-  }
+  nsCOMPtr<nsILoadGroup> loadGroup = mLoadGroup;
+
   mListener = nullptr;
+  mLoadGroup = nullptr;
   mCallbacks = nullptr;
 
-  if (mLoadGroup) {
-    mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);
-    mLoadGroup = nullptr;
-  }
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "DocumentChannel::ShutdownListeners", [=, self = RefPtr{this}] {
+        if (listener) {
+          listener->OnStopRequest(self, aStatusCode);
+        }
+
+        if (loadGroup) {
+          loadGroup->RemoveRequest(self, nullptr, aStatusCode);
+        }
+      }));
 
   DeleteIPDL();
 }
@@ -171,7 +177,7 @@ bool DocumentChannel::CanUseDocumentChannel(nsIURI* aURI, uint32_t aLoadFlags) {
 }
 
 /* static */
-already_AddRefed<DocumentChannel> DocumentChannel::CreateDocumentChannel(
+already_AddRefed<DocumentChannel> DocumentChannel::CreateForDocument(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks,
     uint32_t aCacheKey, bool aUriModified, bool aIsXFOError) {
@@ -186,6 +192,14 @@ already_AddRefed<DocumentChannel> DocumentChannel::CreateDocumentChannel(
   }
   channel->SetNotificationCallbacks(aNotificationCallbacks);
   return channel.forget();
+}
+
+/* static */
+already_AddRefed<DocumentChannel> DocumentChannel::CreateForObject(
+    nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+    nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks) {
+  return CreateForDocument(aLoadState, aLoadInfo, aLoadFlags,
+                           aNotificationCallbacks, 0, false, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -290,9 +304,17 @@ DocumentChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 }
 
 NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
-  NS_ERROR(
-      "DocumentChannel::SetLoadFlags: "
-      "Don't set flags after creation");
+  auto contentPolicy = mLoadInfo->GetExternalContentPolicyType();
+  // Setting load flags for TYPE_OBJECT is permissible before channel to parent
+  // is opened.
+  if (contentPolicy != nsIContentPolicy::TYPE_OBJECT || mWasOpened) {
+    MOZ_CRASH("DocumentChannel::SetLoadFlags: Don't set flags after creation");
+    NS_ERROR(
+        "DocumentChannel::SetLoadFlags: "
+        "Don't set flags after creation");
+  } else {
+    mLoadFlags = aLoadFlags;
+  }
   return NS_OK;
 }
 
@@ -430,6 +452,23 @@ NS_IMETHODIMP
 DocumentChannel::SetChannelId(uint64_t aChannelId) {
   mChannelId = aChannelId;
   return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Helpers
+//-----------------------------------------------------------------------------
+
+uint64_t InnerWindowIDForExtantDoc(nsDocShell* docShell) {
+  if (!docShell) {
+    return 0;
+  }
+
+  Document* doc = docShell->GetExtantDocument();
+  if (!doc) {
+    return 0;
+  }
+
+  return doc->InnerWindowID();
 }
 
 }  // namespace net
