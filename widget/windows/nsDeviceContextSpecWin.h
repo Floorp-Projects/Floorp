@@ -88,9 +88,6 @@ class nsPrinterListWin final : public nsIPrinterList {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTERLIST
   nsPrinterListWin() = default;
-
- private:
-  ~nsPrinterListWin() = default;
 };
 
 #endif
