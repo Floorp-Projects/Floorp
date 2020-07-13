@@ -8691,8 +8691,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   // Similar check will be performed by the ParentProcessDocumentChannel if in
   // use.
   if (XRE_IsE10sParentProcess() &&
-      !DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
-                                              aLoadState->LoadFlags()) &&
+      !DocumentChannel::CanUseDocumentChannel(aLoadState) &&
       !CanLoadInParentProcess(aLoadState->URI())) {
     return NS_ERROR_FAILURE;
   }
@@ -9253,26 +9252,9 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel)) {
     timedChannel->SetTimingEnabled(true);
 
-    nsString initiatorType;
-    switch (aLoadInfo->InternalContentPolicyType()) {
-      case nsIContentPolicy::TYPE_INTERNAL_EMBED:
-        initiatorType = u"embed"_ns;
-        break;
-      case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
-        initiatorType = u"object"_ns;
-        break;
-      default: {
-        const auto& embedderElementType =
-            aBrowsingContext->GetEmbedderElementType();
-        if (embedderElementType) {
-          initiatorType = *embedderElementType;
-        }
-        break;
-      }
-    }
-
-    if (!initiatorType.IsEmpty()) {
-      timedChannel->SetInitiatorType(initiatorType);
+    auto& embedderElementType = aBrowsingContext->GetEmbedderElementType();
+    if (embedderElementType) {
+      timedChannel->SetInitiatorType(*embedderElementType);
     }
   }
 
@@ -9589,11 +9571,10 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       mBrowsingContext, Some(uriModified), Some(isXFOError));
 
   nsCOMPtr<nsIChannel> channel;
-  if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
-                                             aLoadState->LoadFlags())) {
-    channel = DocumentChannel::CreateForDocument(aLoadState, loadInfo,
-                                                 loadFlags, this, cacheKey,
-                                                 uriModified, isXFOError);
+  if (DocumentChannel::CanUseDocumentChannel(aLoadState)) {
+    channel = DocumentChannel::CreateDocumentChannel(aLoadState, loadInfo,
+                                                     loadFlags, this, cacheKey,
+                                                     uriModified, isXFOError);
     MOZ_ASSERT(channel);
 
     // Disable keyword fixup when using DocumentChannel, since
