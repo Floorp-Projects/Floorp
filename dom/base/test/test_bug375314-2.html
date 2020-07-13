@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375314
 -->
 <head>
   <title>Test for Bug 375314</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375314">Mozilla Bug 375314</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -114,6 +114,14 @@ function requestSubdocument() {
   content.appendChild(frame);
 }
 
+function requestObject() {
+  var content = $("content");
+
+  var object = document.createElement("embed");
+  object.setAttribute("src", testURL);
+  content.appendChild(object);
+}
+
 add_task(async function() {
   let chromeScript = SpecialPowers.loadChromeScript(createChromeScript);
   await chromeScript.promiseOneMessage("setupComplete");
@@ -125,8 +133,11 @@ add_task(async function() {
 
   requestSubdocument();
   result = await chromeScript.promiseOneMessage("loadBlocked");
-  
   is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_SUBDOCUMENT, "Content policies triggered for TYPE_SUBDOCUMENT");
+
+  requestObject();
+  result = await chromeScript.promiseOneMessage("loadBlocked");
+  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_OBJECT, "Content policies triggered for TYPE_OBJECT");
 
   chromeScript.sendAsyncMessage("shutdown");
   chromeScript.destroy();
