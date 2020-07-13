@@ -1012,6 +1012,18 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
     /**
+     * GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace() may return an
+     * NBSP point which should be replaced with an ASCII white-space when we're
+     * inserting text into aPointToInsert. Note that this is a helper method for
+     * the traditional white-space normalizer.  Don't use this with the new
+     * white-space normalizer.
+     * Must be called only when CreateVisibleWhiteSpacesData() returns some
+     * and previous character of aPointToInsert is in the range.
+     */
+    EditorDOMPointInText GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
+        const EditorDOMPoint& aPointToInsert) const;
+
+    /**
      * CreateVisibleWhiteSpacesData() creates VisibleWhiteSpacesData.
      * That is zero or more white-spaces which are visible.
      */
@@ -1237,20 +1249,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult NormalizeWhiteSpacesAtEndOf(
       const VisibleWhiteSpacesData& aVisibleWhiteSpacesData);
-
-  /**
-   * MaybeReplacePreviousNBSPWithASCIIWhiteSpace() replaces previous character
-   * of aPoint if it's a NBSP and it's unnecessary.
-   *
-   * @param aVisibleWhiteSpacesData
-   *                    The visible whitespaces.  aPoint must be in this.
-   * @param aPoint      Current insertion point.  Its previous character is
-   *                    unnecessary NBSP will be checked.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
-      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData,
-      const EditorDOMPoint& aPoint);
 
   /**
    * MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() replaces an NBSP at
