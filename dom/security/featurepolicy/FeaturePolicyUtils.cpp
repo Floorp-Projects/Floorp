@@ -186,10 +186,6 @@ bool FeaturePolicyUtils::IsFeatureAllowed(Document* aDocument,
     return true;
   }
 
-  if (!aDocument->IsHTMLDocument()) {
-    return true;
-  }
-
   FeaturePolicy* policy = aDocument->FeaturePolicy();
   MOZ_ASSERT(policy);
 
