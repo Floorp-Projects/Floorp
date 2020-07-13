@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs create Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+async function test_query(query) {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "current-window@tests.mozilla.org",
+        }
+      },
+      permissions: ["tabs"],
+      browser_action: {
+        default_popup: "popup.html",
+      },
+    },
+
+    useAddonManager: "permanent",
+
+    background: async function() {
+      let query = await new Promise(resolve => {
+        browser.test.onMessage.addListener(message => {
+          resolve(message);
+        });
+      });
+      let tab = await browser.tabs.create({ url: "http://www.example.com", active: true });
+      browser.runtime.onMessage.addListener(message => {
+        if (message === "popup-loaded") {
+          browser.runtime.sendMessage({ tab, query });
+        }
+      });
+      browser.test.withHandlingUserInput(() =>
+          browser.browserAction.openPopup()
+      );
+    },
+
+    files: {
+      "popup.html": `<!DOCTYPE html><meta charset="utf-8"><script src="popup.js"><\/script>`,
+      "popup.js"() {
+        browser.runtime.onMessage.addListener(async function({ tab, query }) {
+          let tabs = await browser.tabs.query(query);
+          browser.test.assertEq(tabs.length, 1, `Got one tab`);
+          browser.test.assertEq(tabs[0].id, tab.id, "The tab is the right one");
+
+          // Create a new tab and verify that we still see the right result
+          let newTab = await browser.tabs.create({ url: "http://www.example.com", active: true });
+          tabs = await browser.tabs.query(query);
+          browser.test.assertEq(tabs.length, 1, `Got one tab`);
+          browser.test.assertEq(tabs[0].id, newTab.id, "Got the newly-created tab");
+
+          await browser.tabs.remove(newTab.id);
+
+          // Remove the tab and verify that we see the old tab
+          tabs = await browser.tabs.query(query);
+          browser.test.assertEq(tabs.length, 1, `Got one tab`);
+          browser.test.assertEq(tabs[0].id, tab.id, "Got the tab that was active before");
+
+          // Cleanup
+          await browser.tabs.remove(tab.id);
+
+          browser.test.notifyPass("tabs.query");
+        });
+        browser.runtime.sendMessage("popup-loaded");
+      },
+    },
+  });
+
+  await extension.startup();
+  extension.sendMessage(query);
+  await extension.awaitFinish("tabs.query");
+  await extension.unload();
+}
+
+add_task(function test_query_currentWindow_from_popup() {
+  return test_query({ currentWindow: true, active: true });
+});
+
+add_task(function test_query_lastActiveWindow_from_popup() {
+  return test_query({ lastFocusedWindow: true, active: true });
+});
+</script>
+
+</body>
+</html>
