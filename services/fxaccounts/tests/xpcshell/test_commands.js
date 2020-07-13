@@ -180,6 +180,7 @@ add_task(async function test_sendtab_receive() {
   };
   const tab = { title: "tab title", url: "http://example.com" };
   const to = [{ id: "devid", name: "The Device" }];
+  const reason = "push";
 
   await sendTab.send(to, tab);
   Assert.equal(commands._invokes.length, 1);
@@ -191,7 +192,7 @@ add_task(async function test_sendtab_receive() {
     Assert.ok(!payload.hasOwnProperty("flowID"));
     // change it - ensure we still get what we expect in telemetry later.
     payload.flowID = "ignore-me";
-    Assert.deepEqual(await sendTab.handle(device.id, payload), {
+    Assert.deepEqual(await sendTab.handle(device.id, payload, reason), {
       title: "tab title",
       uri: "http://example.com",
     });
@@ -208,7 +209,7 @@ add_task(async function test_sendtab_receive() {
       object: "command-received",
       method: COMMAND_SENDTAB_TAIL,
       value: "devid-san",
-      extra: { flowID: "1", streamID: "2" },
+      extra: { flowID: "1", streamID: "2", reason },
     },
   ]);
 });
@@ -227,7 +228,8 @@ add_task(async function test_sendtab_receive_old_client() {
     flowID: "flow-id",
     encrypted: new TextEncoder("utf8").encode(JSON.stringify(data)),
   };
-  await sendTab.handle("sender-id", payload);
+  const reason = "push";
+  await sendTab.handle("sender-id", payload, reason);
   Assert.deepEqual(fxai.telemetry._events, [
     {
       object: "command-received",
@@ -235,9 +237,42 @@ add_task(async function test_sendtab_receive_old_client() {
       value: "sender-id-san",
       // deepEqual doesn't ignore undefined, but our telemetry code and
       // JSON.stringify() do...
-      extra: { flowID: undefined, streamID: undefined },
+      extra: { flowID: undefined, streamID: undefined, reason },
     },
   ]);
+});
+
+add_task(function test_commands_getReason() {
+  const fxAccounts = {
+    async withCurrentAccountState(cb) {
+      await cb({});
+    },
+  };
+  const commands = new FxAccountsCommands(fxAccounts);
+  const testCases = [
+    {
+      receivedIndex: 0,
+      currentIndex: 0,
+      expectedReason: "poll",
+      message: "should return reason 'poll'",
+    },
+    {
+      receivedIndex: 7,
+      currentIndex: 3,
+      expectedReason: "push-missed",
+      message: "should return reason 'push-missed'",
+    },
+    {
+      receivedIndex: 2,
+      currentIndex: 8,
+      expectedReason: "push",
+      message: "should return reason 'push'",
+    },
+  ];
+  for (const tc of testCases) {
+    const reason = commands._getReason(tc.receivedIndex, tc.currentIndex);
+    Assert.equal(reason, tc.expectedReason, tc.message);
+  }
 });
 
 add_task(async function test_commands_pollDeviceCommands_push() {
@@ -288,7 +323,7 @@ add_task(async function test_commands_pollDeviceCommands_push() {
   mockCommands
     .expects("_handleCommands")
     .once()
-    .withArgs(remoteMessages);
+    .withArgs(remoteMessages, pushIndexReceived);
   await commands.pollDeviceCommands(pushIndexReceived);
 
   mockCommands.verify();
@@ -328,6 +363,55 @@ add_task(
     Assert.equal(accountState.data.device.lastCommandIndex, 12);
   }
 );
+
+add_task(async function test_commands_handleCommands() {
+  // This test ensures that `_getReason` is being called by
+  // `_handleCommands` with the expected parameters.
+  const pushIndexReceived = 12;
+  const senderID = "6d09f6c4-89b2-41b3-a0ac-e4c2502b5485";
+  const remoteMessageIndex = 8;
+  const remoteMessages = [
+    {
+      index: remoteMessageIndex,
+      data: {
+        command: COMMAND_SENDTAB,
+        payload: {
+          encrypted: {},
+        },
+        sender: senderID,
+      },
+    },
+  ];
+
+  const fxAccounts = {
+    async withCurrentAccountState(cb) {
+      await cb({});
+    },
+  };
+  const commands = new FxAccountsCommands(fxAccounts);
+  commands.sendTab.handle = (sender, data, reason) => {
+    return {
+      title: "testTitle",
+      uri: "testURI",
+    };
+  };
+  commands._fxai.device = {
+    refreshDeviceList: () => {},
+    recentDeviceList: [
+      {
+        id: senderID,
+      },
+    ],
+  };
+  const mockCommands = sinon.mock(commands);
+  mockCommands
+    .expects("_getReason")
+    .once()
+    .withExactArgs(pushIndexReceived, remoteMessageIndex);
+
+  await commands._handleCommands(remoteMessages, pushIndexReceived);
+  mockCommands.verify();
+});
 
 add_task(
   async function test_commands_pollDeviceCommands_push_local_state_empty() {
@@ -376,7 +460,7 @@ add_task(
     mockCommands
       .expects("_handleCommands")
       .once()
-      .withArgs(remoteMessages);
+      .withArgs(remoteMessages, pushIndexReceived);
     await commands.pollDeviceCommands(pushIndexReceived);
 
     mockCommands.verify();
@@ -397,7 +481,7 @@ add_task(async function test_commands_pollDeviceCommands_scheduled_local() {
     },
   ];
   const remoteIndex = 12;
-
+  const pushIndexReceived = 0;
   // Local state.
   const accountState = {
     data: {
@@ -431,7 +515,7 @@ add_task(async function test_commands_pollDeviceCommands_scheduled_local() {
   mockCommands
     .expects("_handleCommands")
     .once()
-    .withArgs(remoteMessages);
+    .withArgs(remoteMessages, pushIndexReceived);
   await commands.pollDeviceCommands();
 
   mockCommands.verify();
@@ -452,7 +536,7 @@ add_task(
       },
     ];
     const remoteIndex = 12;
-
+    const pushIndexReceived = 0;
     // Local state.
     const accountState = {
       data: {
@@ -484,7 +568,7 @@ add_task(
     mockCommands
       .expects("_handleCommands")
       .once()
-      .withArgs(remoteMessages);
+      .withArgs(remoteMessages, pushIndexReceived);
     await commands.pollDeviceCommands();
 
     mockCommands.verify();
