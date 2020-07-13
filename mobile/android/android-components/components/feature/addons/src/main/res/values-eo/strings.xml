@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Ŝaltita</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Malŝaltita</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permesi en privata retumo</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Ŝalti en privata retumo</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Aktiva</string>
     <!-- Indicates the add-on is disabled. -->
@@ -94,6 +98,8 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Nuligi</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Instali aldonaĵon</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">Nuligi</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">Uzantoj: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->

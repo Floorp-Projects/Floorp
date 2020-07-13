@@ -24,6 +24,9 @@
     <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
     <string name="mozac_lib_crash_activity_title">ລາຍງານຂໍ້ຂັດຂ້ອງ</string>
 
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">ຍັງບໍ່ເຄີຍສົ່ງລາຍງານຂໍ້ຜິດພາດຈັກເທື່ອ.</string>
+
     <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
     <string name="mozac_lib_crash_share">ແບ່ງປັນ</string>
 </resources>

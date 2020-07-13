@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Title of a dialog for a notification permission request. -->
+    <string name="mozac_feature_sitepermissions_notification_title">గమనింపులను పంపడానికి %1$s‌ని అనుమతించాలా?</string>
     <!-- Title of a dialog for a camera permission request. -->
     <string name="mozac_feature_sitepermissions_camera_title">మీ కెమెరా వాడటానికి %1$s‌ని అనుమతించాలా?</string>
+    <!-- Title of a dialog for a microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_microfone_title">మీ మైక్రోఫోను వాడటానికి %1$s‌ని అనుమతించాలా?</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">మీ స్థానాన్ని చూడటానికి %1$s‌ని అనుమతించాలా?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
     <string name="mozac_feature_sitepermissions_camera_and_microphone">మీ కెమెరా, మైక్రోఫోన్లనూ వాడటానికి %1$sను అనుమతిస్తారా?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to

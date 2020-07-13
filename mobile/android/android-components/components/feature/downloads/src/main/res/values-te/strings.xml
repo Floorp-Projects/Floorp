@@ -3,6 +3,8 @@
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">దింపుకోళ్ళు</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">దింపుకోలు నిలిపివేయబడింది</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">దింపుకోలు పూర్తయ్యింది</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
@@ -24,6 +26,8 @@
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
     <string name="mozac_feature_downloads_open_not_supported1">%1$s ఫైళ్ళను తెరవడానికి తగ్గ అనువర్తనం కనబడలేదు</string>
 
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">నిలిపివేయి</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">కొనసాగించు</string>
     <!-- Button that cancels the download when pressed -->

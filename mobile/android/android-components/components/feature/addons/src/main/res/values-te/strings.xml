@@ -20,6 +20,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">క్లిప్‌బోర్డు నుండి డేటాను పొందటం</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">క్లిప్‌బోర్డులో డేటాను పెట్టడం</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">ఫైళ్లను దించుకోవడం, విహారిణి దింపుకోలు చరిత్రను చూడడం సవరించడం</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">మీ కంప్యూటరులోని దింపుకున్న దస్త్రాలను తెరవడం</string>
     <!-- Description for find permission. -->
@@ -30,6 +32,8 @@
     <string name="mozac_feature_addons_permissions_history_description">విహరణ చరిత్రను చూడటం</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">పొడగింతల వాడుకను పర్యవేక్షించడం, అలంకారాలను నిర్వహించడం</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ఇతర అనువర్తనాలతో సందేశాలను ఇచ్చిపుచ్చుకోవడం</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">మీకు గమనింపులను చూపించడం</string>
     <!-- Description for pkcs11 permission. -->
@@ -116,6 +120,14 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">కొత్త అనుమతి కావాలి</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">పొడగింత తాజాకరణలు</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">కొత్త పొడగింత అందుబాటులో ఉంది</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">కొత్త పొడగింతలు అందుబాటులో ఉన్నాయి</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%1$s‌ను %2$s‌కి చేర్చు</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">వాటిని %1$sకు చేర్చు</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">పొడగింతను దించుకుంటుంది, తనిఖీ చేస్తుంది…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
