@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from io import StringIO
-from incremental_dafsa import Dafsa
+from incremental_dafsa import Dafsa, Node
 import mozunit
 import unittest
 
 
-def _node_to_string(node, prefix, buffer, cache):
-    if node:
-        prefix += str(ord(node[0])) if ord(node[0]) < 10 else node[0]
+def _node_to_string(node: Node, prefix, buffer, cache):
+    if not node.is_end_node:
+        prefix += str(ord(node.character)) if ord(node.character) < 10 else node.character
     else:
         prefix += "$"
     cached = cache.get(id(node))
@@ -19,13 +19,11 @@ def _node_to_string(node, prefix, buffer, cache):
     if not cached:
         cache[id(node)] = node
         if node:
-            children = node[1]
-            children.sort(key=lambda n: n[0] if n else None)
-            for node in children:
+            for node in sorted(node.children.values(), key=lambda n: n.character):
                 _node_to_string(node, prefix, buffer, cache)
 
 
-def _dafsa_to_string(dafsa):
+def _dafsa_to_string(dafsa: Dafsa):
     """Encodes the dafsa into a string notation.
 
     Each node is printed on its own line with all the nodes that precede it.
@@ -53,10 +51,9 @@ def _dafsa_to_string(dafsa):
     bc= <- joins with the "ac" prefix
     """
     buffer = StringIO()
-    dafsa.sort(key=lambda n: n[0])
     cache = {}
 
-    for node in dafsa:
+    for node in sorted(dafsa.root_node.children.values(), key=lambda n: n.character):
         _node_to_string(node, "", buffer, cache)
     return buffer.getvalue().strip()
 
@@ -67,11 +64,11 @@ def _to_words(data):
 
 def _assert_dafsa(data, expected):
     words = _to_words(data)
-    new_dafsa = Dafsa.from_tld_data(words)
+    dafsa = Dafsa.from_tld_data(words)
 
     expected = expected.strip()
     expected = "\n".join([line.strip() for line in expected.split("\n")])
-    as_string = _dafsa_to_string(new_dafsa)
+    as_string = _dafsa_to_string(dafsa)
     assert as_string == expected
 
 

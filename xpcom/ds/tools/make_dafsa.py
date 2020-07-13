@@ -18,15 +18,9 @@ The input strings are assumed to consist of printable 7-bit ASCII characters
 and the return values are assumed to be one digit integers.
 
 In this program a DAFSA is a diamond shaped graph starting at a common
-source node and ending at a common sink node. All internal nodes contain
-a label and each word is represented by the labels in one path from
-the source node to the sink node.
-
-The following python representation is used for nodes:
-
-  Source node: [ children ]
-  Internal node: (label, [ children ])
-  Sink node: None
+root node and ending at a common end node. All internal nodes contain
+a character and each word is represented by the characters in one path from
+the root node to the end node.
 
 The order of the operations is crucial since lookups will be performed
 starting from the source with no backtracking. Thus a node must have at
@@ -111,21 +105,11 @@ a, 2
 The input is first parsed to a list of words:
 ["aa1", "a2"]
 
-A fully expanded graph is created from the words:
-source = [node1, node4]
-node1 = ("a", [node2])
-node2 = ("a", [node3])
-node3 = ("\x01", [sink])
-node4 = ("a", [node5])
-node5 = ("\x02", [sink])
-sink = None
-
-Compression results in the following graph:
-source = [node1]
-node1 = ("a", [node2, node3])
-node2 = ("\x02", [sink])
-node3 = ("a\x01", [sink])
-sink = None
+This produces the following graph:
+[root] --- a --- 0x02 --- [end]
+            |              /
+             |           /
+              - a --- 0x01
 
 A C++ representation of the compressed graph is generated:
 
@@ -157,12 +141,11 @@ baa, 1
 The input is first parsed to a list of words:
 ["aa1", "bbb2", "baa1"]
 
-Compression results in the following graph:
-source = [node1, node2]
-node1 = ("b", [node2, node3])
-node2 = ("aa\x01", [sink])
-node3 = ("bb\x02", [sink])
-sink = None
+This produces the following graph:
+[root] --- a --- a --- 0x01 --- [end]
+ |       /           /         /
+  |    /           /         /
+   - b --- b --- b --- 0x02
 
 A C++ representation of the compressed graph is generated:
 
@@ -190,57 +173,57 @@ The bytes in the generated array has the following meaning:
 import sys
 import struct
 
-from incremental_dafsa import Dafsa
+from incremental_dafsa import Dafsa, Node
 
 
 class InputError(Exception):
     """Exception raised for errors in the input file."""
 
 
-def top_sort(dafsa):
+def top_sort(dafsa: Dafsa):
     """Generates list of nodes in topological sort order."""
     incoming = {}
 
-    def count_incoming(node):
+    def count_incoming(node: Node):
         """Counts incoming references."""
-        if node:
+        if not node.is_end_node:
             if id(node) not in incoming:
                 incoming[id(node)] = 1
-                for child in node[1]:
+                for child in node.children.values():
                     count_incoming(child)
             else:
                 incoming[id(node)] += 1
 
-    for node in dafsa:
+    for node in dafsa.root_node.children.values():
         count_incoming(node)
 
-    for node in dafsa:
+    for node in dafsa.root_node.children.values():
         incoming[id(node)] -= 1
 
-    waiting = [node for node in dafsa if incoming[id(node)] == 0]
+    waiting = [node for node in dafsa.root_node.children.values() if incoming[id(node)] == 0]
     nodes = []
 
     while waiting:
         node = waiting.pop()
         assert incoming[id(node)] == 0
         nodes.append(node)
-        for child in node[1]:
-            if child:
+        for child in node.children.values():
+            if not child.is_end_node:
                 incoming[id(child)] -= 1
                 if incoming[id(child)] == 0:
                     waiting.append(child)
     return nodes
 
 
-def encode_links(children, offsets, current):
+def encode_links(node: Node, offsets, current):
     """Encodes a list of children as one, two or three byte offsets."""
-    if not children[0]:
+    if next(iter(node.children.values())).is_end_node:
         # This is an <end_label> node and no links follow such nodes
-        assert len(children) == 1
         return []
-    guess = 3 * len(children)
-    assert children
-    children = sorted(children, key=lambda x: -offsets[id(x)])
+    guess = 3 * len(node.children)
+    assert node.children
+
+    children = sorted(node.children.values(), key=lambda x: -offsets[id(x)])
     while True:
         offset = current + guess
         buf = []
@@ -293,21 +276,21 @@ def encode_label(label):
     return buf
 
 
-def encode(dafsa):
+def encode(dafsa: Dafsa):
     """Encodes a DAFSA to a list of bytes"""
     output = []
     offsets = {}
 
     for node in reversed(top_sort(dafsa)):
-        if (len(node[1]) == 1 and node[1][0] and
-                (offsets[id(node[1][0])] == len(output))):
-            output.extend(encode_prefix(node[0]))
+        if (len(node.children) == 1 and not next(iter(node.children.values())).is_end_node and
+                (offsets[id(next(iter(node.children.values())))] == len(output))):
+            output.extend(encode_prefix(node.character))
         else:
-            output.extend(encode_links(node[1], offsets, len(output)))
-            output.extend(encode_label(node[0]))
+            output.extend(encode_links(node, offsets, len(output)))
+            output.extend(encode_label(node.character))
         offsets[id(node)] = len(output)
 
-    output.extend(encode_links(dafsa, offsets, len(output)))
+    output.extend(encode_links(dafsa.root_node, offsets, len(output)))
     output.reverse()
     return output
 
