@@ -39,6 +39,7 @@ public class TestRunnerActivity extends Activity {
 
     static GeckoRuntime sRuntime;
 
+    private GeckoSession mPopupSession;
     private GeckoSession mActiveSession;
     private GeckoSession mSession;
     private GeckoView mView;
@@ -147,6 +148,22 @@ public class TestRunnerActivity extends Activity {
         return createSession(null);
     }
 
+    private WebExtension.ActionDelegate mActionDelegate = new WebExtension.ActionDelegate() {
+        @Nullable
+        @Override
+        public GeckoResult<GeckoSession> onOpenPopup(@NonNull WebExtension extension,
+                                                     @NonNull WebExtension.Action action) {
+            if (mPopupSession != null) {
+                mPopupSession.close();
+            }
+
+            mPopupSession = createBackgroundSession(null);
+            mPopupSession.open(sRuntime);
+
+            return GeckoResult.fromValue(mPopupSession);
+        }
+    };
+
     private WebExtension.SessionTabDelegate mSessionTabDelegate = new WebExtension.SessionTabDelegate() {
         @NonNull
         @Override
@@ -178,6 +195,7 @@ public class TestRunnerActivity extends Activity {
         final WebExtension.SessionController sessionController =
                 session.getWebExtensionController();
         for (final WebExtension extension : mExtensions) {
+            sessionController.setActionDelegate(extension, mActionDelegate);
             sessionController.setTabDelegate(extension, mSessionTabDelegate);
         }
 
@@ -276,6 +294,7 @@ public class TestRunnerActivity extends Activity {
         webExtensionController().list().accept(extensions -> {
             mExtensions = extensions;
             for (WebExtension extension : mExtensions) {
+                extension.setActionDelegate(mActionDelegate);
                 extension.setTabDelegate(new WebExtension.TabDelegate() {
                     @Override
                     public GeckoResult<GeckoSession> onNewTab(WebExtension source,
@@ -297,8 +316,10 @@ public class TestRunnerActivity extends Activity {
                 });
 
                 for (final GeckoSession session : mOwnedSessions) {
-                    session.getWebExtensionController()
-                            .setTabDelegate(extension, mSessionTabDelegate);
+                    final WebExtension.SessionController controller =
+                            session.getWebExtensionController();
+                    controller.setActionDelegate(extension, mActionDelegate);
+                    controller.setTabDelegate(extension, mSessionTabDelegate);
                 }
             }
         });
