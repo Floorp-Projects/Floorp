@@ -2048,7 +2048,7 @@ pictureinpicture:
     expiry_version: "86"
     release_channel_collection: opt-out
 
-security.doh.heuristics:
+doh:
   evaluate:
     methods: ["evaluate"]
     objects: ["heuristics"]
