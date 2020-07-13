@@ -45,10 +45,8 @@ function printpreview(hasMozPrintCallback) {
       throw Components.Exception("", Cr.NS_NOINTERFACE);
     }
   }
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Ci.nsIPrefBranch);
-  prefs.setBoolPref('print.show_print_progress', false);
-  let settings = gWbp.globalPrintSettings;
+  var settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                       .getService(Ci.nsIPrintSettingsService).globalPrintSettings;
   settings.showPrintProgress = false;
   var before = 0;
   var after = 0;
