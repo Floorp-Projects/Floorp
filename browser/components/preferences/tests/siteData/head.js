@@ -232,7 +232,7 @@ async function addTestData(data) {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       site.origin
     );
-    hosts.push(principal.URI.host);
+    hosts.push(principal.host);
   }
 
   return hosts;
