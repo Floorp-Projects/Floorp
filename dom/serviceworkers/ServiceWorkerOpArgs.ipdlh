@@ -59,7 +59,7 @@ struct ServiceWorkerNotificationEventOpArgs {
 
 struct ServiceWorkerMessageEventOpArgs {
   ClientInfoAndState clientInfoAndState;
-  ClonedMessageData clonedData;
+  ClonedOrErrorMessageData clonedData;
 };
 
 struct ServiceWorkerFetchEventOpArgs {

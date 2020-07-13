@@ -291,7 +291,7 @@ class Nursery {
   static const size_t MaxNurseryBufferSize = 1024;
 
   // Do a minor collection.
-  void collect(JS::GCReason reason);
+  void collect(JSGCInvocationKind kind, JS::GCReason reason);
 
   // If the thing at |*ref| in the Nursery has been forwarded, set |*ref| to
   // the new location and return true. Otherwise return false and leave
@@ -515,7 +515,10 @@ class Nursery {
   };
   PreviousGC previousGC;
 
-  mozilla::Maybe<double> smoothedGrowthFactor;
+#ifndef JS_MORE_DETERMINISTIC
+  mozilla::TimeStamp lastResizeTime;
+  double smoothedGrowthFactor;
+#endif
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
@@ -720,8 +723,9 @@ class Nursery {
   void sweepMapAndSetObjects();
 
   // Change the allocable space provided by the nursery.
-  void maybeResizeNursery(JS::GCReason reason);
-  size_t targetSize(JS::GCReason reason);
+  void maybeResizeNursery(JSGCInvocationKind kind, JS::GCReason reason);
+  size_t targetSize(JSGCInvocationKind kind, JS::GCReason reason);
+  void clearRecentGrowthData();
   void growAllocableSpace(size_t newCapacity);
   void shrinkAllocableSpace(size_t newCapacity);
   void minimizeAllocableSpace();

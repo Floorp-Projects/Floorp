@@ -3137,36 +3137,20 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-
-  // if we are printing another URL, then exit
-  // the reason we check here is because this method can be called while
-  // another is still in here (the printing dialog is a good example).
-  // the only time we can print more than one job at a time is the regression
-  // tests
-  if (GetIsPrinting()) {
-    // Let the user know we are not ready to print.
-    rv = NS_ERROR_NOT_AVAILABLE;
-
-    if (mPrintJob) {
-      mPrintJob->FirePrintingErrorEvent(rv);
-    }
-
-    return rv;
-  }
-
-  NS_ENSURE_STATE(!GetIsPrinting());
   // If we are hosting a full-page plugin, tell it to print
   // first. It shows its own native print UI.
   nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(mDocument));
-  if (pDoc) return pDoc->Print();
+  if (pDoc) {
+    return pDoc->Print();
+  }
+
+  nsresult rv;
 
   // Our call to nsPrintJob::Print() may cause mPrintJob to be
   // Release()'d in Destroy().  Therefore, we need to grab the instance with
   // a local variable, so that it won't be deleted during its own method.
   RefPtr<nsPrintJob> printJob = mPrintJob;
   if (!printJob) {
-    NS_ENSURE_STATE(mDeviceContext);
     printJob = new nsPrintJob();
 
     rv = printJob->Initialize(this, mContainer, mDocument,
@@ -3177,7 +3161,17 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
       return rv;
     }
     mPrintJob = printJob;
+  } else if (printJob->GetIsPrinting()) {
+    // if we are printing another URL, then exit
+    // the reason we check here is because this method can be called while
+    // another is still in here (the printing dialog is a good example).
+    // the only time we can print more than one job at a time is the regression
+    // tests
+    rv = NS_ERROR_NOT_AVAILABLE;
+    printJob->FirePrintingErrorEvent(rv);
+    return rv;
   }
+
   rv = printJob->Print(mDocument, aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();

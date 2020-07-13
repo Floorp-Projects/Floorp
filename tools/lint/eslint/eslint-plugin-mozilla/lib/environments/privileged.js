@@ -740,6 +740,8 @@ module.exports = {
     WebrtcGlobalInformation: false,
     WheelEvent: false,
     Window: false,
+    WindowGlobalChild: false,
+    WindowGlobalParent: false,
     WindowRoot: false,
     Worker: false,
     Worklet: false,

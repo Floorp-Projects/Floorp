@@ -6980,7 +6980,7 @@ JSObject* jit::NewWrapperWithObjectShape(JSContext* cx,
   {
     AutoRealm ar(cx, obj);
     wrapper = NewBuiltinClassInstance(cx, &shapeContainerClass);
-    if (!obj) {
+    if (!wrapper) {
       return nullptr;
     }
     wrapper->as<NativeObject>().setSlot(

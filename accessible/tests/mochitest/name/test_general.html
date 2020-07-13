@@ -243,6 +243,9 @@
       testName("grouping", null);
       testName("requested_name_from_grouping", "label");
       testName("listitem_containing_block_tbody", "label");
+      // Groupings shouldn't be included when calculating from the subtree of
+      // a treeitem.
+      testName("treeitem_containing_grouping", "root");
 
       // Name from subtree of grouping labelled by an ancestor.
       testName("grouping_labelledby_ancestor", "label");
@@ -685,6 +688,12 @@
         <tr><td>label</td></tr>
       </tbody>
     </table>
+  </div>
+  <!-- Name from subtree of treeitem containing grouping -->
+  <div id="treeitem_containing_grouping" role="treeitem" aria-level="1" aria-expanded="true">root
+    <div role="group">
+      <div role="treeitem" aria-level="2">sub</div>
+    </div>
   </div>
 
   <!-- Name from subtree of grouping labelled by an ancestor. -->

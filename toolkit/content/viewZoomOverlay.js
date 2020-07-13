@@ -36,11 +36,21 @@ var ZoomManager = {
     return this.getZoomForBrowser(gBrowser);
   },
 
+  useFullZoomForBrowser: function ZoomManager_useFullZoomForBrowser(aBrowser) {
+    return this.useFullZoom || aBrowser.isSyntheticDocument;
+  },
+
+  getFullZoomForBrowser: function ZoomManager_getFullZoomForBrowser(aBrowser) {
+    if (!this.useFullZoomForBrowser(aBrowser)) {
+      return 1.0;
+    }
+    return this.getZoomForBrowser(aBrowser);
+  },
+
   getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
-    let zoom =
-      this.useFullZoom || aBrowser.isSyntheticDocument
-        ? aBrowser.fullZoom
-        : aBrowser.textZoom;
+    let zoom = this.useFullZoomForBrowser(aBrowser)
+      ? aBrowser.fullZoom
+      : aBrowser.textZoom;
     // Round to remove any floating-point error.
     return Number(zoom ? zoom.toFixed(2) : 1);
   },
@@ -55,7 +65,7 @@ var ZoomManager = {
       throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    if (this.useFullZoom || aBrowser.isSyntheticDocument) {
+    if (this.useFullZoomForBrowser(aBrowser)) {
       aBrowser.textZoom = 1;
       aBrowser.fullZoom = aVal;
     } else {

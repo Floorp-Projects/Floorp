@@ -235,7 +235,8 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
-  static bool FindTargetNode(nsINode& aStart, nsCOMPtr<nsINode>& aResult);
+  static bool FindTargetNodeOfContextForPastedHTML(nsINode& aStart,
+                                                   nsCOMPtr<nsINode>& aResult);
 
   /**
    * @return nullptr, if there's no invisible `<br>`.
@@ -282,10 +283,16 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                 dom::DocumentFragment** aFragment,
                                 bool aTrustedInput);
 
-  static void RemoveBodyAndHead(nsINode& aNode);
+  static void RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode);
 
-  static nsresult StripFormattingNodes(nsIContent& aNode,
-                                       bool aOnlyList = false);
+  enum class NodesToRemove {
+    eAll,
+    eOnlyListItems /*!< List items are always block-level elements, hence such
+                     whitespace-only nodes are always invisible. */
+  };
+  static nsresult
+  RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+      nsIContent& aNode, NodesToRemove aNodesToRemove);
 
   HTMLEditor& mHTMLEditor;
 };
@@ -975,12 +982,16 @@ Element* HTMLEditor::GetLinkElement(nsINode* aNode) {
 }
 
 // static
-nsresult HTMLEditor::HTMLWithContextInserter::StripFormattingNodes(
-    nsIContent& aNode, bool aListOnly) {
+nsresult HTMLEditor::HTMLWithContextInserter::
+    RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+        nsIContent& aNode, NodesToRemove aNodesToRemove) {
   if (aNode.TextIsOnlyWhitespace()) {
     nsCOMPtr<nsINode> parent = aNode.GetParentNode();
+    // TODO: presumably, if the parent is a `<pre>` element, the node
+    // shouldn't be removed.
     if (parent) {
-      if (!aListOnly || HTMLEditUtils::IsAnyListElement(parent)) {
+      if (aNodesToRemove == NodesToRemove::eAll ||
+          HTMLEditUtils::IsAnyListElement(parent)) {
         ErrorResult error;
         parent->RemoveChild(aNode, error);
         NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
@@ -994,11 +1005,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::StripFormattingNodes(
     nsCOMPtr<nsIContent> child = aNode.GetLastChild();
     while (child) {
       nsCOMPtr<nsIContent> previous = child->GetPreviousSibling();
-      nsresult rv =
-          HTMLWithContextInserter::StripFormattingNodes(*child, aListOnly);
+      nsresult rv = HTMLWithContextInserter::
+          RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+              *child, aNodesToRemove);
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "HTMLEditor::HTMLWithContextInserter::StripFormattingNodes() "
+            "HTMLEditor::HTMLWithContextInserter::"
+            "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces"
+            "() "
             "failed");
         return rv;
       }
@@ -3011,7 +3025,8 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   return NS_OK;
 }
 
-void HTMLEditor::HTMLWithContextInserter::RemoveBodyAndHead(nsINode& aNode) {
+void HTMLEditor::HTMLWithContextInserter::
+    RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode) {
   nsCOMPtr<nsIContent> body, head;
   // find the body and head nodes if any.
   // look only at immediate children of aNode.
@@ -3049,7 +3064,7 @@ void HTMLEditor::HTMLWithContextInserter::RemoveBodyAndHead(nsINode& aNode) {
  * the magical comment node containing kInsertCookie or, failing that, the
  * firstChild of the firstChild (until we reach a leaf).
  */
-bool HTMLEditor::HTMLWithContextInserter::FindTargetNode(
+bool HTMLEditor::HTMLWithContextInserter::FindTargetNodeOfContextForPastedHTML(
     nsINode& aStart, nsCOMPtr<nsINode>& aResult) {
   nsIContent* firstChild = aStart.GetFirstChild();
   if (!firstChild) {
@@ -3079,7 +3094,7 @@ bool HTMLEditor::HTMLWithContextInserter::FindTargetNode(
       }
     }
 
-    if (FindTargetNode(*child, aResult)) {
+    if (FindTargetNodeOfContextForPastedHTML(*child, aResult)) {
       return true;
     }
   }
@@ -3124,18 +3139,24 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
       return NS_ERROR_FAILURE;
     }
 
-    rv = HTMLWithContextInserter::StripFormattingNodes(
-        *documentFragmentForContext);
+    // The context is expected to contain text nodes only in block level
+    // elements. Hence, if they contain only whitespace, they're invisible.
+    rv = HTMLWithContextInserter::
+        RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+            *documentFragmentForContext, NodesToRemove::eAll);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::HTMLWithContextInserter::StripFormattingNodes() failed");
+          "HTMLEditor::HTMLWithContextInserter::"
+          "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
+          " failed");
       return rv;
     }
 
-    HTMLWithContextInserter::RemoveBodyAndHead(*documentFragmentForContext);
+    HTMLWithContextInserter::RemoveHeadChildAndStealBodyChildsChildren(
+        *documentFragmentForContext);
 
-    HTMLWithContextInserter::FindTargetNode(*documentFragmentForContext,
-                                            targetNode);
+    HTMLWithContextInserter::FindTargetNodeOfContextForPastedHTML(
+        *documentFragmentForContext, targetNode);
   }
 
   nsCOMPtr<nsIContent> targetContent = nsIContent::FromNodeOrNull(targetNode);
@@ -3168,7 +3189,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     return NS_ERROR_FAILURE;
   }
 
-  HTMLWithContextInserter::RemoveBodyAndHead(*documentFragmentToInsert);
+  HTMLWithContextInserter::RemoveHeadChildAndStealBodyChildsChildren(
+      *documentFragmentToInsert);
 
   if (targetNode) {
     // unite the two trees
@@ -3179,11 +3201,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     documentFragmentToInsert = documentFragmentForContext;
   }
 
-  rv = HTMLWithContextInserter::StripFormattingNodes(*documentFragmentToInsert,
-                                                     true);
+  rv = HTMLWithContextInserter::
+      RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+          *documentFragmentToInsert, NodesToRemove::eOnlyListItems);
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "HTMLEditor::HTMLWithContextInserter::StripFormattingNodes() failed");
+        "HTMLEditor::HTMLWithContextInserter::"
+        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces() "
+        "failed");
     return rv;
   }
 

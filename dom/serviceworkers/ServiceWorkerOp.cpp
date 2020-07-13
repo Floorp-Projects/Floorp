@@ -54,6 +54,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/net/MozURL.h"
 
 namespace mozilla {
 namespace dom {
@@ -953,10 +954,15 @@ class MessageEventOp final : public ExtendableEventOp {
     JS::Rooted<JS::Value> messageData(aCx);
     nsCOMPtr<nsIGlobalObject> sgo = aWorkerPrivate->GlobalScope();
     ErrorResult rv;
-    mData->Read(aCx, &messageData, rv);
+    if (!mData->IsErrorMessageData()) {
+      mData->Read(aCx, &messageData, rv);
+    }
 
-    // If deserialization fails, we will fire a messageerror event
-    const bool deserializationFailed = rv.Failed();
+    // If mData is an error message data, then it means that it failed to
+    // serialize on the caller side because it contains a shared memory object.
+    // If deserialization fails, we will fire a messageerror event.
+    const bool deserializationFailed =
+        rv.Failed() || mData->IsErrorMessageData();
 
     Sequence<OwningNonNull<MessagePort>> ports;
     if (!mData->TakeTransferredPortsAsSequence(ports)) {
@@ -976,6 +982,23 @@ class MessageEventOp final : public ExtendableEventOp {
       init.mData = messageData;
       init.mPorts = std::move(ports);
     }
+
+    RefPtr<net::MozURL> mozUrl;
+    nsresult result = net::MozURL::Init(
+        getter_AddRefs(mozUrl), mArgs.get_ServiceWorkerMessageEventOpArgs()
+                                    .clientInfoAndState()
+                                    .info()
+                                    .url());
+    if (NS_WARN_IF(NS_FAILED(result))) {
+      RejectAll(result);
+      rv.SuppressException();
+      return true;
+    }
+
+    nsCString origin;
+    mozUrl->Origin(origin);
+
+    init.mOrigin = NS_ConvertUTF8toUTF16(origin);
 
     init.mSource.SetValue().SetAsClient() = new Client(
         sgo, mArgs.get_ServiceWorkerMessageEventOpArgs().clientInfoAndState());
