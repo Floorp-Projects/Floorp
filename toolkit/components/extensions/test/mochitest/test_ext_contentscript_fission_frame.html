@@ -18,6 +18,7 @@ add_task(async function test_content_script_cross_origin_frame() {
         all_frames: true,
         js: ["cs.js"],
       }],
+      permissions: ["http://example.net/"],
     },
 
     background() {
@@ -27,6 +28,26 @@ add_task(async function test_content_script_cross_origin_frame() {
 
           browser.test.assertTrue(frameId > 0, "sender frameId is ok");
           browser.test.assertTrue(url.endsWith("file_sample.html"), "url is ok");
+
+          let shared = await browser.tabs.executeScript(tab.id, {
+            allFrames: true,
+            code: `window.sharedVal`,
+          });
+          browser.test.assertEq(shared[0], 357, "CS runs in a shared Sandbox");
+
+          let code = "does.not.exist";
+          await browser.test.assertRejects(
+            browser.tabs.executeScript(tab.id, { allFrames: true, code }),
+            /does is not defined/,
+            "Got the expected rejection from tabs.executeScript"
+          );
+
+          code = "() => {}";
+          await browser.test.assertRejects(
+            browser.tabs.executeScript(tab.id, { allFrames: true, code }),
+            /Script .* result is non-structured-clonable data/,
+            "Got the expected rejection from tabs.executeScript"
+          );
 
           let result = await browser.tabs.sendMessage(tab.id, num);
           port.postMessage(result);
@@ -50,6 +71,8 @@ add_task(async function test_content_script_cross_origin_frame() {
         })
 
         let response;
+        window.sharedVal = 357;
+
         let port = browser.runtime.connect();
         port.onMessage.addListener(num => {
           response = num;
