@@ -28,7 +28,7 @@ class ApplicationServices {
 
   selectTool(toolId) {
     this._assertInit();
-    return this._toolbox.selectTool(toolId);
+    return this._toolbox.selectTool(toolId, "application");
   }
 
   async openWorkerInDebugger(workerTargetFront) {

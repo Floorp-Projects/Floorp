@@ -16,7 +16,7 @@ Array [
     <ul
       className="registrations-container__list"
     >
-      <Registration
+      <Connect(Registration)
         className="registrations-container__item"
         isDebugEnabled={true}
         key="id-reg-1-example"
@@ -74,7 +74,7 @@ Array [
     <ul
       className="registrations-container__list"
     >
-      <Registration
+      <Connect(Registration)
         className="registrations-container__item"
         isDebugEnabled={true}
         key="id-reg-1-example"
@@ -95,7 +95,7 @@ Array [
           }
         }
       />
-      <Registration
+      <Connect(Registration)
         className="registrations-container__item"
         isDebugEnabled={true}
         key="id-reg-1-example"
@@ -116,7 +116,7 @@ Array [
           }
         }
       />
-      <Registration
+      <Connect(Registration)
         className="registrations-container__item"
         isDebugEnabled={true}
         key="id-reg-3-example"

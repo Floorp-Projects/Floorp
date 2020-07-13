@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
+const eventTelemetryMiddleware = require("devtools/client/application/src/middleware/event-telemetry");
+
 const {
   applyMiddleware,
   createStore,
@@ -26,7 +28,7 @@ const {
   UiState,
 } = require("devtools/client/application/src/reducers/ui-state");
 
-function configureStore() {
+function configureStore(telemetry, sessionId) {
   // Prepare initial state.
   const initialState = {
     manifest: new ManifestState(),
@@ -35,7 +37,10 @@ function configureStore() {
     workers: new WorkersState(),
   };
 
-  const middleware = applyMiddleware(thunk);
+  const middleware = applyMiddleware(
+    thunk,
+    eventTelemetryMiddleware(telemetry, sessionId)
+  );
 
   return createStore(rootReducer, initialState, middleware);
 }

@@ -29,6 +29,7 @@ const {
 const actions = require("devtools/client/application/src/actions/index");
 
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 const {
   services,
@@ -63,7 +64,8 @@ window.Application = {
     // though we get it from toolbox.target
     this.client = toolbox.target.client;
 
-    this.store = configureStore();
+    this.telemetry = new Telemetry();
+    this.store = configureStore(this.telemetry, toolbox.sessionId);
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
     services.init(this.toolbox);

@@ -36,7 +36,7 @@ exports[`Registration Renders the expected snapshot for a registration with a wo
         className="registration__workers-item"
         key="id-worker-1-example"
       >
-        <Worker
+        <Connect(Worker)
           isDebugEnabled={true}
           worker={
             Object {
@@ -90,7 +90,7 @@ exports[`Registration Renders the expected snapshot for a registration with mult
         className="registration__workers-item"
         key="id-worker-1-example"
       >
-        <Worker
+        <Connect(Worker)
           isDebugEnabled={true}
           worker={
             Object {
@@ -107,7 +107,7 @@ exports[`Registration Renders the expected snapshot for a registration with mult
         className="registration__workers-item"
         key="id-worker-2-example"
       >
-        <Worker
+        <Connect(Worker)
           isDebugEnabled={true}
           worker={
             Object {
@@ -161,7 +161,7 @@ exports[`Registration Renders the expected snapshot when sw debugging is disable
         className="registration__workers-item"
         key="id-worker-1-example"
       >
-        <Worker
+        <Connect(Worker)
           isDebugEnabled={false}
           worker={
             Object {

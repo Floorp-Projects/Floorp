@@ -12,6 +12,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
   dd,
@@ -32,6 +33,10 @@ const {
 } = require("devtools/client/application/src/modules/application-services");
 const Types = require("devtools/client/application/src/types/index");
 
+const {
+  startWorker,
+} = require("devtools/client/application/src/actions/workers");
+
 const UIButton = createFactory(
   require("devtools/client/application/src/components/ui/UIButton")
 );
@@ -47,6 +52,8 @@ class Worker extends PureComponent {
     return {
       isDebugEnabled: PropTypes.bool.isRequired,
       worker: PropTypes.shape(Types.worker).isRequired,
+      // this prop get automatically injected via `connect`
+      dispatch: PropTypes.func.isRequired,
     };
   }
 
@@ -77,8 +84,7 @@ class Worker extends PureComponent {
       return;
     }
 
-    const { registrationFront } = this.props.worker;
-    registrationFront.start();
+    this.props.dispatch(startWorker(this.props.worker));
   }
 
   isRunning() {
@@ -219,4 +225,5 @@ class Worker extends PureComponent {
   }
 }
 
-module.exports = Worker;
+const mapDispatchToProps = dispatch => ({ dispatch });
+module.exports = connect(mapDispatchToProps)(Worker);

@@ -11,6 +11,7 @@ const {
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const {
@@ -30,6 +31,10 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const Types = require("devtools/client/application/src/types/index");
+
+const {
+  unregisterWorker,
+} = require("devtools/client/application/src/actions/workers");
 
 const UIButton = createFactory(
   require("devtools/client/application/src/components/ui/UIButton")
@@ -51,6 +56,8 @@ class Registration extends PureComponent {
       className: PropTypes.string,
       isDebugEnabled: PropTypes.bool.isRequired,
       registration: PropTypes.shape(Types.registration).isRequired,
+      // this prop get automatically injected via `connect`
+      dispatch: PropTypes.func.isRequired,
     };
   }
 
@@ -61,8 +68,7 @@ class Registration extends PureComponent {
   }
 
   unregister() {
-    const { registrationFront } = this.props.registration;
-    registrationFront.unregister();
+    this.props.dispatch(unregisterWorker(this.props.registration));
   }
 
   isActive() {
@@ -141,4 +147,5 @@ class Registration extends PureComponent {
   }
 }
 
-module.exports = Registration;
+const mapDispatchToProps = dispatch => ({ dispatch });
+module.exports = connect(mapDispatchToProps)(Registration);
