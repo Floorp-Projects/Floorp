@@ -1320,7 +1320,6 @@ Document::Document(const char* aContentType)
       mParserAborted(false),
       mReportedUseCounters(false),
       mHasReportedShadowDOMUsage(false),
-      mDocTreeHadPlayRevoked(false),
       mHasDelayedRefreshEvent(false),
       mLoadEventFiring(false),
       mSkipLoadEventAfterClose(false),
@@ -15273,13 +15272,6 @@ void Document::SetDocTreeHadAudibleMedia() {
   RefPtr<WindowContext> topWc = GetTopLevelWindowContext();
   if (topWc && !topWc->GetDocTreeHadAudibleMedia()) {
     topWc->SetDocTreeHadAudibleMedia(true);
-  }
-}
-
-void Document::SetDocTreeHadPlayRevoked() {
-  Document* topLevelDoc = GetTopLevelContentDocument();
-  if (topLevelDoc) {
-    topLevelDoc->mDocTreeHadPlayRevoked = true;
   }
 }
 
