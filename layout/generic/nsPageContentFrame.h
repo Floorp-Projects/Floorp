@@ -35,7 +35,7 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
         aFlags & ~(nsIFrame::eCanContainOverflowContainers));
   }
 
-  virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
+  void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
   virtual bool HasTransformGetter() const override { return true; }
 
