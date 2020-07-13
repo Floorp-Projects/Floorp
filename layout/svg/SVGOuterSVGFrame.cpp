@@ -674,7 +674,7 @@ void nsDisplayOuterSVG::ComputeInvalidationRegion(
   nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
   aInvalidRegion->Or(*aInvalidRegion, result);
 
-  auto geometry =
+  const auto* geometry =
       static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
 
   if (aBuilder->ShouldSyncDecodeImages() &&

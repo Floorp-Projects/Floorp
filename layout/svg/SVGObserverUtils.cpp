@@ -50,11 +50,11 @@ class URLAndReferrerInfoHashKey : public PLDHashEntryHdr {
   using KeyType = const URLAndReferrerInfo*;
   using KeyTypePointer = const URLAndReferrerInfo*;
 
-  explicit URLAndReferrerInfoHashKey(const URLAndReferrerInfo* aKey)
+  explicit URLAndReferrerInfoHashKey(const URLAndReferrerInfo* aKey) noexcept
       : mKey(aKey) {
     MOZ_COUNT_CTOR(URLAndReferrerInfoHashKey);
   }
-  URLAndReferrerInfoHashKey(URLAndReferrerInfoHashKey&& aToMove)
+  URLAndReferrerInfoHashKey(URLAndReferrerInfoHashKey&& aToMove) noexcept
       : PLDHashEntryHdr(std::move(aToMove)), mKey(std::move(aToMove.mKey)) {
     MOZ_COUNT_CTOR(URLAndReferrerInfoHashKey);
   }
