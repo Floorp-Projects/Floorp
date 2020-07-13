@@ -416,7 +416,7 @@ abstract class EngineSession(
      * @param url the url to load.
      * @param parent the parent (referring) [EngineSession] i.e. the session that
      * triggered creating this one.
-     * @param flags the [LoadUrlFlags] to use when loading the provider url.
+     * @param flags the [LoadUrlFlags] to use when loading the provided url.
      * @param additionalHeaders the extra headers to use when loading the provided url.
      */
     abstract fun loadUrl(
@@ -452,8 +452,10 @@ abstract class EngineSession(
 
     /**
      * Reloads the current URL.
+     *
+     * @param flags the [LoadUrlFlags] to use when reloading the current url.
      */
-    abstract fun reload()
+    abstract fun reload(flags: LoadUrlFlags = LoadUrlFlags.none())
 
     /**
      * Navigates back in the history of this session.

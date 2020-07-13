@@ -109,19 +109,26 @@ class SessionUseCases(
          * selected session if none is provided).
          *
          * @param session the session for which reload should be triggered.
+         * @param flags the [LoadUrlFlags] to use when reloading the given session.
          */
-        operator fun invoke(session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(
+            session: Session? = sessionManager.selectedSession,
+            flags: LoadUrlFlags = LoadUrlFlags.none()
+        ) {
             if (session != null) {
-                sessionManager.getOrCreateEngineSession(session).reload()
+                sessionManager.getOrCreateEngineSession(session).reload(flags)
             }
         }
 
         /**
          * Reloads the current page of the tab with the given [tabId].
+         *
+         * @param tabId id of the tab that should be reloaded
+         * @param flags the [LoadUrlFlags] to use when reloading the given tabId.
          */
-        operator fun invoke(tabId: String) {
+        operator fun invoke(tabId: String, flags: LoadUrlFlags = LoadUrlFlags.none()) {
             sessionManager.findSessionById(tabId)?.let {
-                invoke(it)
+                invoke(it, flags)
             }
         }
     }

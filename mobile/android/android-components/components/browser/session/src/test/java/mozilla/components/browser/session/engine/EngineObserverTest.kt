@@ -55,7 +55,7 @@ class EngineObserverTest {
             override fun goBack() {}
             override fun goForward() {}
             override fun goToHistoryIndex(index: Int) {}
-            override fun reload() {}
+            override fun reload(flags: LoadUrlFlags) {}
             override fun stopLoading() {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
@@ -112,7 +112,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun goToHistoryIndex(index: Int) {}
             override fun stopLoading() {}
-            override fun reload() {}
+            override fun reload(flags: LoadUrlFlags) {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
@@ -157,7 +157,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun goToHistoryIndex(index: Int) {}
             override fun stopLoading() {}
-            override fun reload() {}
+            override fun reload(flags: LoadUrlFlags) {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
                 notifyObservers { onTrackerBlockingEnabledChange(true) }

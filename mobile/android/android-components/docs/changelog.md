@@ -24,12 +24,14 @@ permalink: /changelog/
 * **feature-session**
   * Added `SessionFeature.release()`: Calling this method stops the feature from rendering sessions on the `EngineView` (until explicitly started again) and releases an already rendering session from the `EngineView`.
   * Added `SessionUseCases.goToHistoryIndex` to allow consumers to jump to a specific index in a session's history.
+  * Added `flags` parameter to `ReloadUrlUseCase`.
 
 * **support-ktx**
   * Adds `Bundle.contentEquals` function to check if two bundles are equal.
 
 * **concept-engine**
   * Added `EngineSession.goToHistoryIndex` to jump to a specific index in a session's history.
+  * Adds `flags` parameter to `reload`.
 
 * **service-location**
   * `LocationService.hasRegionCached()` is introduced to query if the region is already cached and a long running operation to fetch the region is not needed.

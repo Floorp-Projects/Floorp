@@ -103,8 +103,9 @@ class SystemEngineSession(
 
     /**
      * See [EngineSession.reload]
+     * @param flags currently not supported in `SystemEngineSession`.
      */
-    override fun reload() {
+    override fun reload(flags: LoadUrlFlags) {
         webView.reload()
     }
 

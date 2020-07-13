@@ -132,8 +132,8 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.reload]
      */
-    override fun reload() {
-        geckoSession.reload()
+    override fun reload(flags: LoadUrlFlags) {
+        geckoSession.reload(flags.value)
     }
 
     /**

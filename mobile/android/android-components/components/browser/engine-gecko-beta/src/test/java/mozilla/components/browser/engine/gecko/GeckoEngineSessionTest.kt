@@ -467,7 +467,18 @@ class GeckoEngineSessionTest {
 
         engineSession.reload()
 
-        verify(geckoSession).reload()
+        verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_NONE)
+    }
+
+    @Test
+    fun reloadBypassingCache() {
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+        engineSession.loadUrl("http://mozilla.org")
+
+        engineSession.reload(flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE))
+
+        verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
     }
 
     @Test
@@ -2319,7 +2330,7 @@ class GeckoEngineSessionTest {
 
         // reload()
         engineSession.reload()
-        verify(geckoSession).reload()
+        verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_NONE)
         fakePageLoad(false)
 
         fakePageLoad(true)
@@ -2341,7 +2352,7 @@ class GeckoEngineSessionTest {
         // toggleDesktopMode()
         engineSession.toggleDesktopMode(false, reload = true)
         // This is the second time in this test, so we actually want two invocations.
-        verify(geckoSession, times(2)).reload()
+        verify(geckoSession, times(2)).reload(GeckoSession.LOAD_FLAGS_NONE)
         fakePageLoad(false)
 
         fakePageLoad(true)
