@@ -279,7 +279,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const DEFAULT_SITES = ["youtube-com", "facebook-com", "amazon", "reddit-com", "wikipedia-org", "twitter-com"].map(site => ({
-  icon: `resource://activity-stream/data/content/tippytop/images/${site}@2x.png`
+  icon: `resource://activity-stream/data/content/tippytop/images/${site}@2x.png`,
+  title: site.split("-")[0]
 }));
 const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0);
@@ -459,10 +460,13 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           className: "tiles-topsites-section"
         }, this.props.topSites.slice(0, 5).map(({
           icon,
-          label
+          label,
+          title
         }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "site",
-          key: icon + label
+          key: icon + label,
+          "aria-label": title ? title : label,
+          role: "img"
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "icon",
           style: icon ? {
