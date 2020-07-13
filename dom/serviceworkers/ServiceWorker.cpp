@@ -204,10 +204,35 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
+  // Window-to-SW messages do not allow memory sharing since they are not in the
+  // same agent cluster group, but we do not want to throw an error during the
+  // serialization. Because of this, ServiceWorkerCloneData will propagate an
+  // error message data if the SameProcess serialization is required. So that
+  // the receiver (service worker) knows that it needs to throw while
+  // deserialization and sharing memory objects are not propagated to the other
+  // process.
+  JS::CloneDataPolicy clonePolicy;
+  if (nsGlobalWindowInner::Cast(window)->IsSharedMemoryAllowed()) {
+    clonePolicy.allowSharedMemoryObjects();
+  }
+
   RefPtr<ServiceWorkerCloneData> data = new ServiceWorkerCloneData();
-  data->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), aRv);
+  data->Write(aCx, aMessage, transferable, clonePolicy, aRv);
   if (aRv.Failed()) {
     return;
+  }
+
+  // The value of CloneScope() is set while StructuredCloneData::Write(). If the
+  // aValue contiains a shared memory object, then the scope will be restricted
+  // and thus return SameProcess. If not, it will return DifferentProcess.
+  //
+  // When we postMessage a shared memory object from a window to a service
+  // worker, the object must be sent from a cross-origin isolated process to
+  // another one. So, we mark mark this data as an error message data if the
+  // scope is limited to same process.
+  if (data->CloneScope() ==
+      StructuredCloneHolder::StructuredCloneScope::SameProcess) {
+    data->SetAsErrorMessageData();
   }
 
   mInner->PostMessage(std::move(data), clientInfo.ref(), clientState.ref());
