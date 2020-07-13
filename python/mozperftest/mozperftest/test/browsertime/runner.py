@@ -20,7 +20,7 @@ from mozperftest.test.browsertime.script import ScriptInfo
 
 
 BROWSERTIME_SRC_ROOT = Path(__file__).parent
-PILLOW_VERSION = "6.0.0"
+PILLOW_VERSION = "6.2.1"
 PYSSIM_VERSION = "0.4"
 
 
@@ -60,6 +60,7 @@ class BrowsertimeRunner(NodeRunner):
     arguments = {
         "cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
         "iterations": {"type": int, "default": 1, "help": "Number of iterations"},
+        "node": {"type": str, "default": None, "help": "Path to Node.js"},
         "geckodriver": {"type": str, "default": None, "help": "Path to geckodriver"},
         "binary": {
             "type": str,
@@ -125,6 +126,10 @@ class BrowsertimeRunner(NodeRunner):
     def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package.
         """
+        node = self.get_arg("node")
+        if node is not None:
+            os.environ["NODEJS"] = node
+
         super(BrowsertimeRunner, self).setup()
         install_url = self.get_arg("install-url")
 
@@ -138,7 +143,7 @@ class BrowsertimeRunner(NodeRunner):
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
-            install_package(self.virtualenv_manager, dep)
+            install_package(self.virtualenv_manager, dep, ignore_failure=True)
 
         # check if the browsertime package has been deployed correctly
         # for this we just check for the browsertime directory presence
@@ -236,21 +241,25 @@ class BrowsertimeRunner(NodeRunner):
             extra_args.append("--skipHar")
 
         if not matches(args, "--android"):
-            # If --firefox.binaryPath is not specified, default to the objdir binary
-            # Note: --firefox.release is not a real browsertime option, but it will
-            #       silently ignore it instead and default to a release installation.
-            if (
-                not matches(
-                    args,
-                    "--firefox.binaryPath",
-                    "--firefox.release",
-                    "--firefox.nightly",
-                    "--firefox.beta",
-                    "--firefox.developer",
-                )
-                and extract_browser_name(args) != "chrome"
-            ):
-                extra_args.extend(("--firefox.binaryPath", self.get_binary_path()))
+            binary = self.get_arg("binary")
+            if binary is not None:
+                extra_args.extend(("--firefox.binaryPath", binary))
+            else:
+                # If --firefox.binaryPath is not specified, default to the objdir binary
+                # Note: --firefox.release is not a real browsertime option, but it will
+                #       silently ignore it instead and default to a release installation.
+                if (
+                    not matches(
+                        args,
+                        "--firefox.binaryPath",
+                        "--firefox.release",
+                        "--firefox.nightly",
+                        "--firefox.beta",
+                        "--firefox.developer",
+                    )
+                    and extract_browser_name(args) != "chrome"
+                ):
+                    extra_args.extend(("--firefox.binaryPath", self.get_binary_path()))
 
         geckodriver = self.get_arg("geckodriver")
         if geckodriver is not None:

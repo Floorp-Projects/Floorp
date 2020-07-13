@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: t-linux-talos
+    fetches:
+        toolchain:
+            - linux64-node-10
+            - linux64-geckodriver
+        build:
+            - artifact: target.perftests.tests.tar.gz
+            - artifact: target.tar.bz2
+    platform: linux64-shippable/opt
+    require-build:
+        linux64-shippable/opt: build-linux64-shippable/opt
+
+domcount:
+    description: Run DOM test
+    treeherder:
+        symbol: perftest(linux-dom)
+    attributes:
+        batch: false
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            browser/base/content/test/perftest_browser_xhtml_dom.js
+            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics name:totalDOMCount,unit:count name:panelMenuCount,unit:count name:lightDOMCount,unit:count name:lightDOMDetails,unit:count
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts

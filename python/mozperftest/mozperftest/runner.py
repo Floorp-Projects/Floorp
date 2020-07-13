@@ -47,6 +47,7 @@ SEARCH_PATHS = [
     "testing/mozbase/mozprofile",
     "testing/mozbase/mozproxy",
     "third_party/python/attrs/src",
+    "third_party/python/distro",
     "third_party/python/dlmanager",
     "third_party/python/esprima",
     "third_party/python/importlib_metadata",

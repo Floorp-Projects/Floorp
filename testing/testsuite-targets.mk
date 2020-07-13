@@ -123,6 +123,7 @@ TEST_PKGS_TARGZ := \
   updater-dep \
   jsreftest \
   jittest \
+  perftests \
   $(NULL)
 
 ifdef LINK_GTEST_DURING_COMPILE
