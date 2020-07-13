@@ -99,16 +99,6 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onCanGoBack(GeckoSession session, boolean canGoBack) {
-
-        }
-
-        @Override
-        public void onCanGoForward(GeckoSession session, boolean canGoForward) {
-
-        }
-
-        @Override
         public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession session,
                                                   LoadRequest request) {
             // Allow Gecko to load all URIs
@@ -138,33 +128,8 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onTitleChange(GeckoSession session, String title) {
-
-        }
-
-        @Override
-        public void onFocusRequest(GeckoSession session) {
-
-        }
-
-        @Override
         public void onCloseRequest(GeckoSession session) {
             closeSession(session);
-        }
-
-        @Override
-        public void onFullScreen(GeckoSession session, boolean fullScreen) {
-
-        }
-
-        @Override
-        public void onContextMenu(GeckoSession session, int screenX, int screenY,
-                                  ContextElement element) {
-
-        }
-
-        @Override
-        public void onExternalResponse(GeckoSession session, GeckoSession.WebResponseInfo request) {
         }
 
         @Override
@@ -175,14 +140,6 @@ public class TestRunnerActivity extends Activity {
         @Override
         public void onKill(GeckoSession session) {
             onContentProcessGone();
-        }
-
-        @Override
-        public void onFirstComposite(final GeckoSession session) {
-        }
-
-        @Override
-        public void onWebAppManifest(final GeckoSession session, final JSONObject manifest) {
         }
     };
 
