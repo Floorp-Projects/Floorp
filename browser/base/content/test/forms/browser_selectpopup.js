@@ -1181,25 +1181,32 @@ add_task(async function test_zoom() {
 
   info("Hid the popup");
 
-  FullZoom.setZoom(2.0, tab.linkedBrowser);
+  for (let i = 0; i < 2; ++i) {
+    info("Testing with full zoom: " + ZoomManager.useFullZoom);
 
-  info("Opening popup again");
-  await openSelectPopup(selectPopup, "click");
+    // This is confusing, but does the right thing.
+    FullZoom.setZoom(2.0, tab.linkedBrowser);
 
-  let zoomedFontSize = parseFloat(
-    getComputedStyle(selectPopup.querySelector("menuitem")).fontSize,
-    10
-  );
-  info("Zoomed font-size is " + zoomedFontSize);
+    info("Opening popup again");
+    await openSelectPopup(selectPopup, "click");
 
-  ok(
-    Math.abs(zoomedFontSize - nonZoomedFontSize * 2.0) < 0.01,
-    `Zoom should affect menu popup size, got ${zoomedFontSize}, ` +
-      `expected ${nonZoomedFontSize * 2.0}`
-  );
+    let zoomedFontSize = parseFloat(
+      getComputedStyle(selectPopup.querySelector("menuitem")).fontSize,
+      10
+    );
+    info("Zoomed font-size is " + zoomedFontSize);
 
-  await hideSelectPopup(selectPopup);
-  info("Hid the popup again");
+    ok(
+      Math.abs(zoomedFontSize - nonZoomedFontSize * 2.0) < 0.01,
+      `Zoom should affect menu popup size, got ${zoomedFontSize}, ` +
+        `expected ${nonZoomedFontSize * 2.0}`
+    );
+
+    await hideSelectPopup(selectPopup);
+    info("Hid the popup again");
+
+    ZoomManager.toggleZoom();
+  }
 
   BrowserTestUtils.removeTab(tab);
 });
