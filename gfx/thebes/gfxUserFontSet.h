@@ -402,7 +402,7 @@ class gfxUserFontSet {
         PLDHashNumber principalHash =
             aKey->mPrincipal ? aKey->mPrincipal->Hash() : 0;
         return mozilla::HashGeneric(
-            principalHash, aKey->mURI->Hash(),
+            principalHash + int(aKey->mPrivate), aKey->mURI->Hash(),
             HashFeatures(aKey->mFontEntry->mFeatureSettings),
             HashVariations(aKey->mFontEntry->mVariationSettings),
             mozilla::HashString(aKey->mFontEntry->mFamilyName),
