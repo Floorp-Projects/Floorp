@@ -1104,8 +1104,6 @@ bool gfxUserFontSet::UserFontCache::Entry::KeyEquals(
     if (!mPrincipal->Equals(aKey->mPrincipal)) {
       return false;
     }
-    MOZ_DIAGNOSTIC_ASSERT(mPrivate == aKey->mPrivate,
-                          "private mode should be checked by principal");
   }
 
   if (mPrivate != aKey->mPrivate) {
