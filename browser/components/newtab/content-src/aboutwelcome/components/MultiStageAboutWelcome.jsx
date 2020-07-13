@@ -304,7 +304,14 @@ export class WelcomeScreen extends React.PureComponent {
         {content.secondary_button && content.secondary_button.position !== "top"
           ? this.renderSecondaryCTA()
           : null}
-        <div className="steps">{this.renderStepsIndicator()}</div>
+        <nav
+          className="steps"
+          data-l10n-id={"onboarding-welcome-steps-indicator"}
+          data-l10n-args={`{"current": ${parseInt(this.props.order, 10) +
+            1}, "total": ${this.props.totalNumberOfScreens}}`}
+        >
+          {this.renderStepsIndicator()}
+        </nav>
       </main>
     );
   }
