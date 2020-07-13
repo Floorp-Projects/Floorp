@@ -29,11 +29,12 @@ function test_deprecatedInterface() {
       is(
         report.body.sourceFile,
         location.href
+          .split("?")[0]
           .replace("test_deprecated.html", "common_deprecated.js")
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
       );
-      is(report.body.lineNumber, 47, "We have a lineNumber");
+      is(report.body.lineNumber, 48, "We have a lineNumber");
       is(report.body.columnNumber, 23, "We have a columnNumber");
 
       obs.disconnect();
@@ -80,11 +81,12 @@ function test_deprecatedMethod() {
       is(
         report.body.sourceFile,
         location.href
+          .split("?")[0]
           .replace("test_deprecated.html", "common_deprecated.js")
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
       );
-      is(report.body.lineNumber, 98, "We have a lineNumber");
+      is(report.body.lineNumber, 100, "We have a lineNumber");
       is(report.body.columnNumber, 21, "We have a columnNumber");
 
       obs.disconnect();
@@ -131,11 +133,12 @@ function test_deprecatedAttribute() {
       is(
         report.body.sourceFile,
         location.href
+          .split("?")[0]
           .replace("test_deprecated.html", "common_deprecated.js")
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
       );
-      is(report.body.lineNumber, 149, "We have a lineNumber");
+      is(report.body.lineNumber, 152, "We have a lineNumber");
       is(report.body.columnNumber, 4, "We have a columnNumber");
 
       obs.disconnect();
