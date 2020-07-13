@@ -17,6 +17,7 @@
 #include "nspr/prio.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
+#include "nsLocalFile.h"
 
 namespace mozilla {
 
@@ -50,6 +51,11 @@ class IOUtils final {
   static already_AddRefed<Promise> WriteAtomic(
       GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
       const WriteAtomicOptions& aOptions);
+
+  static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
+                                        const nsAString& aSourcePath,
+                                        const nsAString& aDestPath,
+                                        const MoveOptions& aOptions);
 
  private:
   ~IOUtils() = default;
@@ -96,12 +102,19 @@ class IOUtils final {
   static nsresult WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
                             uint32_t& aResult);
 
+  static nsresult MoveSync(const nsAString& aSource, const nsAString& aDest,
+                           bool noOverwrite);
+
   using IOReadMozPromise =
       mozilla::MozPromise<nsTArray<uint8_t>, const nsCString,
                           /* IsExclusive */ true>;
 
   using IOWriteMozPromise =
       mozilla::MozPromise<uint32_t, const nsCString, /* IsExclusive */ true>;
+
+  using IOMoveMozPromise =
+      mozilla::MozPromise<bool /* ignored */, const nsresult,
+                          /* IsExclusive */ true>;
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {

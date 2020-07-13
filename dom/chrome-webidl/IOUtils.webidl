@@ -25,6 +25,17 @@ namespace IOUtils {
    * @param data    Data to write to the file at path.
    */
   Promise<unsigned long long> writeAtomic(DOMString path, Uint8Array data, optional WriteAtomicOptions options = {});
+  /**
+   * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
+   * If |destPath| is a directory, then the source file will be moved into the
+   * destination directory.
+   *
+   * @param sourcePath An absolute file path identifying the file or directory
+   *                   to move.
+   * @param destPath   An absolute file path identifying the destination
+   *                   directory and/or file name.
+   */
+  Promise<void> move(DOMString sourcePath, DOMString destPath, optional MoveOptions options = {});
 };
 
 /**
@@ -51,4 +62,14 @@ dictionary WriteAtomicOptions {
    * disconnection before the buffers are flushed.
    */
   boolean flush = false;
+};
+
+/**
+ * Options to be passed to the |IOUtils.move| method.
+ */
+dictionary MoveOptions {
+  /**
+   * If true, fail if the destination already exists.
+   */
+  boolean noOverwrite = false;
 };
