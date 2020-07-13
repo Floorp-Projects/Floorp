@@ -8,6 +8,7 @@
 #define mozilla_PermissionManager_h
 
 #include "nsIPermissionManager.h"
+#include "nsIAsyncShutdown.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
@@ -46,7 +47,8 @@ class ContentChild;
 
 class PermissionManager final : public nsIPermissionManager,
                                 public nsIObserver,
-                                public nsSupportsWeakReference {
+                                public nsSupportsWeakReference,
+                                public nsIAsyncShutdownBlocker {
   friend class dom::ContentChild;
 
  public:
@@ -158,6 +160,7 @@ class PermissionManager final : public nsIPermissionManager,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPERMISSIONMANAGER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   PermissionManager();
   static already_AddRefed<nsIPermissionManager> GetXPCOMSingleton();
@@ -445,8 +448,12 @@ class PermissionManager final : public nsIPermissionManager,
   void NotifyObservers(nsIPermission* aPermission, const char16_t* aData);
 
   // Finalize all statements, close the DB and null it.
-  // if aRebuildOnSuccess, reinitialize database
-  void CloseDB(bool aRebuildOnSuccess = false);
+  enum CloseDBNextOp {
+    eNone,
+    eRebuldOnSuccess,
+    eShutdown,
+  };
+  void CloseDB(CloseDBNextOp aNextOp);
 
   nsresult RemoveAllInternal(bool aNotifyObservers);
   nsresult RemoveAllFromMemory();
@@ -482,6 +489,10 @@ class PermissionManager final : public nsIPermissionManager,
                                       uint32_t aPermission,
                                       uint32_t aExpireType, int64_t aExpireTime,
                                       int64_t aModificationTime, int64_t aId);
+
+  nsCOMPtr<nsIAsyncShutdownClient> GetShutdownPhase() const;
+
+  void MaybeCompleteShutdown();
 
   nsRefPtrHashtable<nsCStringHashKey, GenericNonExclusivePromise::Private>
       mPermissionKeyPromiseMap;
