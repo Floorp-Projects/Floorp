@@ -64,6 +64,7 @@ class InlinableCallData {
   CallFlags callFlags;
   const uint8_t* endOfSharedPrefix = nullptr;
   JSFunction* target = nullptr;
+  ICScript* icScript = nullptr;
 };
 
 mozilla::Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub);

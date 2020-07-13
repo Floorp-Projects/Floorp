@@ -23,6 +23,8 @@ class ModuleEnvironmentObject;
 namespace jit {
 
 class CacheIRStubInfo;
+class CompileInfo;
+class WarpScriptSnapshot;
 
 #define WARP_OP_SNAPSHOT_LIST(_) \
   _(WarpArguments)               \
@@ -35,7 +37,8 @@ class CacheIRStubInfo;
   _(WarpNewArray)                \
   _(WarpNewObject)               \
   _(WarpBailout)                 \
-  _(WarpCacheIR)
+  _(WarpCacheIR)                 \
+  _(WarpInlinedCall)
 
 // Wrapper for GC things stored in WarpSnapshot. Asserts the GC pointer is not
 // nursery-allocated. These pointers must be traced using TraceWarpGCPtr.
@@ -335,6 +338,36 @@ class WarpObjectField {
     MOZ_ASSERT(!isNurseryIndex());
     return reinterpret_cast<JSObject*>(data_);
   }
+};
+
+// Information for inlining a scripted call IC.
+class WarpInlinedCall : public WarpOpSnapshot {
+  // Used for generating the correct guards.
+  WarpCacheIR* cacheIRSnapshot_;
+
+  // Used for generating the inlined code.
+  WarpScriptSnapshot* scriptSnapshot_;
+  CompileInfo* info_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpInlinedCall;
+
+  WarpInlinedCall(uint32_t offset, WarpCacheIR* cacheIRSnapshot,
+                  WarpScriptSnapshot* scriptSnapshot, CompileInfo* info)
+      : WarpOpSnapshot(ThisKind, offset),
+        cacheIRSnapshot_(cacheIRSnapshot),
+        scriptSnapshot_(scriptSnapshot),
+        info_(info) {}
+
+  WarpCacheIR* cacheIRSnapshot() const { return cacheIRSnapshot_; }
+  WarpScriptSnapshot* scriptSnapshot() const { return scriptSnapshot_; }
+  CompileInfo* info() const { return info_; }
+
+  void traceData(JSTracer* trc);
+
+#ifdef JS_JITSPEW
+  void dumpData(GenericPrinter& out) const;
+#endif
 };
 
 // Template object for JSOp::Rest.
