@@ -22,6 +22,7 @@
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
+#include "nsPaper.h"
 #include "nsPrinter.h"
 #include "nsPrintSettingsX.h"
 #include "nsQueryObject.h"
@@ -74,8 +75,8 @@ nsPrinterListX::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     NSString* name = [printerNames objectAtIndex:i];
     nsAutoString printerName;
     nsCocoaUtils::GetStringForNSString(name, printerName);
-    RefPtr<nsIPrinter> printer = new nsPrinter(printerName);
-    aPrinters.AppendElement(std::move(printer));
+    nsTArray<RefPtr<nsIPaper>> paperList;
+    aPrinters.AppendElement(new nsPrinter(printerName, paperList));
   }
 
   return NS_OK;

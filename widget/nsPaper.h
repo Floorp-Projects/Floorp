@@ -3,27 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrinter_h__
-#define nsPrinter_h__
+#ifndef nsPaper_h__
+#define nsPaper_h__
 
 #include "nsIPaper.h"
-#include "nsIPrinter.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 
-class nsPrinter final : public nsIPrinter {
+class nsPaper final : public nsIPaper {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTER
-  nsPrinter() = delete;
-  nsPrinter(const nsAString& aName,
-            const nsTArray<RefPtr<nsIPaper>>& aPaperList);
+  NS_DECL_NSIPAPER
+  nsPaper() = delete;
+  nsPaper(const nsAString& aName, double aWidth, double aHeight)
+      : mName(aName), mWidth(aWidth), mHeight(aHeight) {}
 
  private:
-  ~nsPrinter() = default;
+  ~nsPaper() = default;
 
   nsString mName;
-  nsTArray<RefPtr<nsIPaper>> mPaperList;
+  double mWidth;
+  double mHeight;
 };
 
-#endif /* nsPrinter_h__ */
+#endif /* nsPaper_h__ */
