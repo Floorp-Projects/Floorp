@@ -18,7 +18,7 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const BLANK_URI = location.href.replace("test_suspend.html", "blank.html");
+  const BLANK_URI = location.href.replace("test_suspend.html", "blank.html").split("?")[0];
 
   var lastCount;
 
@@ -107,7 +107,7 @@
 
     var newLocation = location.href.replace("test_suspend.html",
                                             "suspend_window.html");
-    is(testWin.location.href, newLocation, "Wrong url!");
+    is(testWin.location.href, newLocation.split("?")[0], "Wrong url!");
     is(resumed, true, "Got message before resumed!");
     is(lastCount, data - 1, "Missed a message, suspend failed!");
     finishTest();

@@ -29,6 +29,7 @@ function test_deprecatedInterface() {
       is(
         report.body.sourceFile,
         location.href
+          .split("?")[0]
           .replace("test_deprecated.html", "common_deprecated.js")
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
@@ -80,6 +81,7 @@ function test_deprecatedMethod() {
       is(
         report.body.sourceFile,
         location.href
+          .split("?")[0]
           .replace("test_deprecated.html", "common_deprecated.js")
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
@@ -131,6 +133,7 @@ function test_deprecatedAttribute() {
       is(
         report.body.sourceFile,
         location.href
+          .split("?")[0]
           .replace("test_deprecated.html", "common_deprecated.js")
           .replace("worker_deprecated.js", "common_deprecated.js"),
         "We have a sourceFile"
