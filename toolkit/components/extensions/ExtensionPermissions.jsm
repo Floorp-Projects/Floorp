@@ -134,8 +134,10 @@ class LegacyPermissionStore {
 
 class PermissionStore {
   async _init() {
-    const dir = FileUtils.getDir("ProfD", ["extension-store"], true);
-    this._store = await KeyValueService.getOrCreate(dir.path, "permissions");
+    const storePath = FileUtils.getDir("ProfD", ["extension-store"]).path;
+    // Make sure the folder exists
+    await OS.File.makeDir(storePath, { ignoreExisting: true });
+    this._store = await KeyValueService.getOrCreate(storePath, "permissions");
     if (!(await this._store.has(VERSION_KEY))) {
       await this.maybeMigrateData();
     }
