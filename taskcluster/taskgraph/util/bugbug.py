@@ -4,6 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import json
+import sys
 import time
 
 import requests
@@ -45,10 +48,31 @@ def get_session():
     return requests_retry_session(retries=5, session=s)
 
 
+def _write_perfherder_data(lower_is_better):
+    if os.environ.get("MOZ_AUTOMATION", "0") == "1":
+        perfherder_data = {
+            "framework": {"name": "build_metrics"},
+            "suites": [
+                {
+                    "name": suite,
+                    "value": value,
+                    "lowerIsBetter": True,
+                    "shouldAlert": False,
+                    "subtests": [],
+                }
+                for suite, value in lower_is_better.items()
+            ],
+        }
+        print(
+            "PERFHERDER_DATA: {}".format(json.dumps(perfherder_data)), file=sys.stderr
+        )
+
+
 @memoize
 def push_schedules(branch, rev):
     url = BUGBUG_BASE_URL + '/push/{branch}/{rev}/schedules'.format(branch=branch, rev=rev)
-
+    # TODO(py3): use time.monotonic()
+    start = time.clock()
     session = get_session()
     attempts = RETRY_TIMEOUT / RETRY_INTERVAL
     i = 0
@@ -61,6 +85,12 @@ def push_schedules(branch, rev):
 
         time.sleep(RETRY_INTERVAL)
         i += 1
+    end = time.clock()
+
+    _write_perfherder_data(lower_is_better={
+        'bugbug_push_schedules_time': end-start,
+        'bugbug_push_schedules_retries': i,
+    })
 
     data = r.json()
     if r.status_code == 202:

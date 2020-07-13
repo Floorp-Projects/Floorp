@@ -11,3 +11,15 @@ from responses import RequestsMock
 def responses():
     with RequestsMock() as rsps:
         yield rsps
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_prefherder(request):
+    from _pytest.monkeypatch import MonkeyPatch
+
+    m = MonkeyPatch()
+    m.setattr(
+        "taskgraph.util.bugbug._write_perfherder_data", lambda lower_is_better: None,
+    )
+    yield
+    m.undo()
