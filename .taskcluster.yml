@@ -200,6 +200,7 @@ tasks:
                             GECKO_HEAD_REV: '${push.revision}'
                             HG_STORE_PATH: /builds/worker/checkouts/hg-store
                             TASKCLUSTER_CACHES: /builds/worker/checkouts
+                            MOZ_AUTOMATION: '1'
                             # mach generates pyc files when reading `mach_commands.py`
                             # This causes cached_task digest generation to be random for
                             # some tasks. Disable bytecode generation to work around that.
