@@ -128,3 +128,25 @@ div.fold-trigger {
     display: none !important;
   }
 }
+
+.sdp-history {
+  display: flex;
+  height: 400px;
+}
+
+.sdp-history-link {
+  text-decoration: underline;
+}
+
+.sdp-history h5 {
+  background-color: #ddd;
+}
+
+.sdp-history div {
+  border: thin solid;
+  border-color: black;
+  flex: 1;
+  padding: 1em;
+  width: 50%;
+  overflow: scroll;
+}

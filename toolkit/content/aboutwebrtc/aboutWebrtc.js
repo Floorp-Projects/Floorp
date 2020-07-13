@@ -319,27 +319,61 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
     renderText("pre", remoteSdp),
     renderText("h4", string("sdp_history_heading")),
   ]);
+
+  // All SDP in sequential order. Add onclick handler to scroll the associated
+  // SDP into view below.
+  for (const { isLocal, timestamp } of sdpHistory) {
+    const histDiv = renderElement("div", {});
+    const text = renderText(
+      "h5",
+      format("sdp_set_at_timestamp", [
+        string(`${isLocal ? "local" : "remote"}_sdp_heading`),
+        timestamp,
+      ]),
+      { className: "sdp-history-link" }
+    );
+    text.onclick = () => {
+      const elem = document.getElementById("sdp-history: " + timestamp);
+      if (elem) {
+        elem.scrollIntoView();
+      }
+    };
+    histDiv.append(text);
+    statsDiv.append(histDiv);
+  }
+
+  // Render the SDP into separate columns for local and remote.
+  const section = renderElement("div", { className: "sdp-history" });
+  const localDiv = renderElements("div", {}, [
+    renderText("h4", `${string("local_sdp_heading")}`),
+  ]);
+  const remoteDiv = renderElements("div", {}, [
+    renderText("h4", `${string("remote_sdp_heading")}`),
+  ]);
+
+  let first = NaN;
   for (const { isLocal, timestamp, sdp, errors } of sdpHistory) {
-    const histDiv = renderElements("div", { className: "sdp-history" }, [
+    if (isNaN(first)) {
+      first = timestamp;
+    }
+    const histDiv = isLocal ? localDiv : remoteDiv;
+    histDiv.append(
       renderText(
         "h5",
-        format("sdp_set_at_timestamp", [
-          string(`${isLocal ? "local" : "remote"}_sdp_heading`),
-          timestamp,
-        ])
-      ),
-    ]);
-    const sdpSection = renderFoldableSection(histDiv);
+        format("sdp_set_timestamp", [timestamp, timestamp - first]),
+        { id: "sdp-history: " + timestamp }
+      )
+    );
     if (errors.length) {
       histDiv.append(renderElement("h5", string("sdp_parsing_errors_heading")));
     }
     for (const { lineNumber, error } of errors) {
       histDiv.append(renderElement("br"), `${lineNumber}: ${error}`);
     }
-    sdpSection.append(renderText("pre", sdp));
-    histDiv.append(sdpSection);
-    statsDiv.append(histDiv);
+    histDiv.append(renderText("pre", sdp));
   }
+  section.append(localDiv, remoteDiv);
+  statsDiv.append(section);
   return statsDiv;
 }
 
