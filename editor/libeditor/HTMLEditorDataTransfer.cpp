@@ -216,6 +216,7 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                   bool aClearStyle);
 
  private:
+  class FragmentParser;
   /**
    * CollectTopMostChildContentsCompletelyInRange() collects topmost child
    * contents which are completely in the given range.
@@ -277,11 +278,6 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
   [[nodiscard]] static nsresult MoveStartAndEndAccordingToHTMLInfo(
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
       nsCOMPtr<nsINode>* aOutEndNode);
-
-  static nsresult ParseFragment(const nsAString& aStr,
-                                nsAtom* aContextLocalName, Document* aTargetDoc,
-                                dom::DocumentFragment** aFragment,
-                                bool aTrustedInput);
 
   static void RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode);
 
@@ -3102,6 +3098,45 @@ bool HTMLEditor::HTMLWithContextInserter::FindTargetNodeOfContextForPastedHTML(
   return false;
 }
 
+class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter::FragmentParser
+    final {
+ public:
+  FragmentParser(Document& aDocument, bool aTrustedInput);
+
+  [[nodiscard]] nsresult ParseContext(const nsAString& aContextString,
+                                      DocumentFragment** aFragment);
+
+  [[nodiscard]] nsresult ParsePastedHTML(const nsAString& aInputString,
+                                         nsAtom* aContextLocalNameAtom,
+                                         DocumentFragment** aFragment);
+
+ private:
+  static nsresult ParseFragment(const nsAString& aStr,
+                                nsAtom* aContextLocalName, Document* aTargetDoc,
+                                dom::DocumentFragment** aFragment,
+                                bool aTrustedInput);
+
+  Document& mDocument;
+  const bool mTrustedInput;
+};
+
+HTMLEditor::HTMLWithContextInserter::FragmentParser::FragmentParser(
+    Document& aDocument, bool aTrustedInput)
+    : mDocument{aDocument}, mTrustedInput{aTrustedInput} {}
+
+nsresult HTMLEditor::HTMLWithContextInserter::FragmentParser::ParseContext(
+    const nsAString& aContextStr, DocumentFragment** aFragment) {
+  return FragmentParser::ParseFragment(aContextStr, nullptr, &mDocument,
+                                       aFragment, mTrustedInput);
+}
+
+nsresult HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML(
+    const nsAString& aInputString, nsAtom* aContextLocalNameAtom,
+    DocumentFragment** aFragment) {
+  return FragmentParser::ParseFragment(aInputString, aContextLocalNameAtom,
+                                       &mDocument, aFragment, mTrustedInput);
+}
+
 nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
@@ -3122,19 +3157,19 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
   // if we have context info, create a fragment for that
   nsCOMPtr<nsINode> targetNode;
   RefPtr<DocumentFragment> documentFragmentForContext;
+  FragmentParser fragmentParser{*document, aTrustedInput};
   if (!aContextStr.IsEmpty()) {
-    nsresult rv = HTMLWithContextInserter::ParseFragment(
-        aContextStr, nullptr, document,
-        getter_AddRefs(documentFragmentForContext), aTrustedInput);
+    nsresult rv = fragmentParser.ParseContext(
+        aContextStr, getter_AddRefs(documentFragmentForContext));
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::HTMLWithContextInserter::ParseFragment(aContextStr) "
+          "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParseContext() "
           "failed");
       return rv;
     }
     if (!documentFragmentForContext) {
       NS_WARNING(
-          "HTMLEditor::HTMLWithContextInserter::ParseFragment(aContextStr) "
+          "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParseContext() "
           "returned nullptr");
       return NS_ERROR_FAILURE;
     }
@@ -3173,19 +3208,19 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     contextLocalNameAtom = nsGkAtoms::body;
   }
   RefPtr<DocumentFragment> documentFragmentToInsert;
-  nsresult rv = HTMLWithContextInserter::ParseFragment(
-      aInputString, contextLocalNameAtom, document,
-      getter_AddRefs(documentFragmentToInsert), aTrustedInput);
+  nsresult rv =
+      fragmentParser.ParsePastedHTML(aInputString, contextLocalNameAtom,
+                                     getter_AddRefs(documentFragmentToInsert));
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "HTMLEditor::HTMLWithContextInserter::ParseFragment(aInputString) "
-        "failed");
+        "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML()"
+        " failed");
     return rv;
   }
   if (!documentFragmentToInsert) {
     NS_WARNING(
-        "HTMLEditor::HTMLWithContextInserter::ParseFragment(aInputString) "
-        "returned nullptr");
+        "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML()"
+        " returned nullptr");
     return NS_ERROR_FAILURE;
   }
 
@@ -3277,7 +3312,7 @@ HTMLEditor::HTMLWithContextInserter::MoveStartAndEndAccordingToHTMLInfo(
 }
 
 // static
-nsresult HTMLEditor::HTMLWithContextInserter::ParseFragment(
+nsresult HTMLEditor::HTMLWithContextInserter::FragmentParser::ParseFragment(
     const nsAString& aFragStr, nsAtom* aContextLocalName,
     Document* aTargetDocument, DocumentFragment** aFragment,
     bool aTrustedInput) {
