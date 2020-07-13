@@ -39,24 +39,6 @@ using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
 
 const char16_t kNBSP = 160;
 
-template WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
-                                    const EditorDOMPoint& aScanStartPoint,
-                                    const EditorDOMPoint& aScanEndPoint);
-template WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
-                                    const EditorRawDOMPoint& aScanStartPoint,
-                                    const EditorRawDOMPoint& aScanEndPoint);
-template WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
-                                    const EditorDOMPointInText& aScanStartPoint,
-                                    const EditorDOMPointInText& aScanEndPoint);
-template WSRunObject::WSRunObject(HTMLEditor& aHTMLEditor,
-                                  const EditorDOMPoint& aScanStartPoint,
-                                  const EditorDOMPoint& aScanEndPoint);
-template WSRunObject::WSRunObject(HTMLEditor& aHTMLEditor,
-                                  const EditorRawDOMPoint& aScanStartPoint,
-                                  const EditorRawDOMPoint& aScanEndPoint);
-template WSRunObject::WSRunObject(HTMLEditor& aHTMLEditor,
-                                  const EditorDOMPointInText& aScanStartPoint,
-                                  const EditorDOMPointInText& aScanEndPoint);
 template WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPoint& aPoint) const;
 template WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
@@ -65,6 +47,7 @@ template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPoint& aPoint) const;
 template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorRawDOMPoint& aPoint) const;
+
 template nsresult WSRunObject::NormalizeWhiteSpacesAround(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aScanStartPoint);
 template nsresult WSRunObject::NormalizeWhiteSpacesAround(
@@ -72,26 +55,12 @@ template nsresult WSRunObject::NormalizeWhiteSpacesAround(
 template nsresult WSRunObject::NormalizeWhiteSpacesAround(
     HTMLEditor& aHTMLEditor, const EditorDOMPointInText& aScanStartPoint);
 
-template <typename PT, typename CT>
-WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
-                           const EditorDOMPointBase<PT, CT>& aScanStartPoint,
-                           const EditorDOMPointBase<PT, CT>& aScanEndPoint)
-    : mScanStartPoint(aScanStartPoint),
-      mScanEndPoint(aScanEndPoint),
-      mEditingHost(aHTMLEditor->GetActiveEditingHost()),
-      mHTMLEditor(aHTMLEditor),
-      mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {
-  MOZ_ASSERT(
-      *nsContentUtils::ComparePoints(aScanStartPoint.ToRawRangeBoundary(),
-                                     aScanEndPoint.ToRawRangeBoundary()) <= 0);
-}
-
-template <typename PT, typename CT>
-WSRunObject::WSRunObject(HTMLEditor& aHTMLEditor,
-                         const EditorDOMPointBase<PT, CT>& aScanStartPoint,
-                         const EditorDOMPointBase<PT, CT>& aScanEndPoint)
-    : WSRunScanner(&aHTMLEditor, aScanStartPoint, aScanEndPoint),
-      mHTMLEditor(aHTMLEditor) {}
+template WSRunScanner::TextFragmentData::TextFragmentData(
+    const EditorDOMPoint& aPoint, const Element* aEditingHost);
+template WSRunScanner::TextFragmentData::TextFragmentData(
+    const EditorRawDOMPoint& aPoint, const Element* aEditingHost);
+template WSRunScanner::TextFragmentData::TextFragmentData(
+    const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
 // static
 nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
@@ -178,7 +147,7 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor& aHTMLEditor,
   AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), aSplitNode,
                             aSplitOffset);
 
-  WSRunObject wsObj(aHTMLEditor, MOZ_KnownLive(*aSplitNode), *aSplitOffset);
+  WSRunObject wsObj(aHTMLEditor, EditorRawDOMPoint(*aSplitNode, *aSplitOffset));
 
   nsresult rv = wsObj.PrepareToSplitAcrossBlocksPriv();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

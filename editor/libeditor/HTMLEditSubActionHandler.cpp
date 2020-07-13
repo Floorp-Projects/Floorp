@@ -8061,7 +8061,7 @@ Element* HTMLEditor::GetInvisibleBRElementAt(
     return nullptr;
   }
 
-  WSRunScanner wsScannerForPoint(this, aPoint);
+  WSRunScanner wsScannerForPoint(*this, aPoint);
   return wsScannerForPoint.StartsFromBRElement()
              ? wsScannerForPoint.StartReasonBRElementPtr()
              : nullptr;
@@ -8134,7 +8134,7 @@ HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
         break;
       }
       MOZ_ASSERT(backwardScanFromStartResult.GetContent() ==
-                 WSRunScanner(this, atStart).GetStartReasonContent());
+                 WSRunScanner(*this, atStart).GetStartReasonContent());
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
       if (HTMLEditUtils::IsAnyTableElement(
@@ -8156,7 +8156,7 @@ HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
       atEnd.GetContainer() != editingHost) {
     EditorDOMPoint atFirstInvisibleBRElement;
     for (;;) {
-      WSRunScanner wsScannerAtEnd(this, atEnd);
+      WSRunScanner wsScannerAtEnd(*this, atEnd);
       WSScanResult forwardScanFromEndResult =
           wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(atEnd);
       if (forwardScanFromEndResult.ReachedBRElement()) {
@@ -8272,7 +8272,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
 
   // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
-  WSRunScanner wsScannerAtEnd(this, endPoint);
+  WSRunScanner wsScannerAtEnd(*this, endPoint);
   if (wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint)
           .ReachedSomething()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
@@ -8301,7 +8301,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
 
   // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
-  WSRunScanner wsScannerAtStart(this, startPoint);
+  WSRunScanner wsScannerAtStart(*this, startPoint);
   if (wsScannerAtStart.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint)
           .ReachedSomething()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases

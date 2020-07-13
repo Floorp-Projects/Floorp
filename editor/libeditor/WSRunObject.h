@@ -269,37 +269,14 @@ class MOZ_STACK_CLASS WSScanResult final {
 class MOZ_STACK_CLASS WSRunScanner {
  public:
   using WSType = WSScanResult::WSType;
-  /**
-   * The constructors take 2 DOM points.  They represent a range in an editing
-   * host.  aScanEndPoint (aScanEndNode and aScanEndOffset) must be later
-   * point from aScanStartPoint (aScanStartNode and aScanStartOffset).
-   * The end point is currently used only with InsertText().  Therefore,
-   * currently, this assumes that the range does not cross block boundary.
-   *
-   * Actually, WSRunScanner scans white-space type at mScanStartPoint position
-   * only.
-   *
-   * If you use aScanEndPoint newly, please test enough.
-   */
-  template <typename PT, typename CT>
-  WSRunScanner(const HTMLEditor* aHTMLEditor,
-               const EditorDOMPointBase<PT, CT>& aScanStartPoint,
-               const EditorDOMPointBase<PT, CT>& aScanEndPoint);
-  template <typename PT, typename CT>
-  WSRunScanner(const HTMLEditor* aHTMLEditor,
-               const EditorDOMPointBase<PT, CT>& aScanStartPoint)
-      : WSRunScanner(aHTMLEditor, aScanStartPoint, aScanStartPoint) {}
-  WSRunScanner(const HTMLEditor* aHTMLEditor, nsINode* aScanStartNode,
-               int32_t aScanStartOffset, nsINode* aScanEndNode,
-               int32_t aScanEndOffset)
-      : WSRunScanner(aHTMLEditor,
-                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
-                     EditorRawDOMPoint(aScanEndNode, aScanEndOffset)) {}
-  WSRunScanner(const HTMLEditor* aHTMLEditor, nsINode* aScanStartNode,
-               int32_t aScanStartOffset)
-      : WSRunScanner(aHTMLEditor,
-                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
-                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
+
+  template <typename EditorDOMPointType>
+  WSRunScanner(const HTMLEditor& aHTMLEditor,
+               const EditorDOMPointType& aScanStartPoint)
+      : mScanStartPoint(aScanStartPoint),
+        mEditingHost(aHTMLEditor.GetActiveEditingHost()),
+        mHTMLEditor(&aHTMLEditor),
+        mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {}
 
   // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
   // node after aPoint.  If there is no visible nodes after aPoint, returns
@@ -311,7 +288,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   template <typename PT, typename CT>
   static WSScanResult ScanNextVisibleNodeOrBlockBoundary(
       const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
-    return WSRunScanner(&aHTMLEditor, aPoint)
+    return WSRunScanner(aHTMLEditor, aPoint)
         .ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
 
@@ -325,7 +302,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   template <typename PT, typename CT>
   static WSScanResult ScanPreviousVisibleNodeOrBlockBoundary(
       const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
-    return WSRunScanner(&aHTMLEditor, aPoint)
+    return WSRunScanner(aHTMLEditor, aPoint)
         .ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
 
@@ -341,7 +318,7 @@ class MOZ_STACK_CLASS WSRunScanner {
         HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
       return EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset());
     }
-    WSRunScanner scanner(&aHTMLEditor, aPoint);
+    WSRunScanner scanner(aHTMLEditor, aPoint);
     return scanner.GetInclusiveNextEditableCharPoint(aPoint);
   }
 
@@ -357,19 +334,19 @@ class MOZ_STACK_CLASS WSRunScanner {
       return EditorDOMPointInText(aPoint.ContainerAsText(),
                                   aPoint.Offset() - 1);
     }
-    WSRunScanner scanner(&aHTMLEditor, aPoint);
+    WSRunScanner scanner(aHTMLEditor, aPoint);
     return scanner.GetPreviousEditableCharPoint(aPoint);
   }
 
   /**
    * GetStartReasonContent() and GetEndReasonContent() return a node which
-   * was found by scanning from mScanStartPoint backward or mScanEndPoint
-   * forward.  If there was white-spaces or text from the point, returns the
-   * text node.  Otherwise, returns an element which is explained by the
-   * following methods.  Note that when the reason is
-   * WSType::CurrentBlockBoundary, In most cases, it's current block element
-   * which is editable, but also may be non-element and/or non-editable.  See
-   * MOZ_ASSERT_IF()s in WSScanResult::AssertIfInvalidData() for the detail.
+   * was found by scanning from mScanStartPoint backward or  forward.  If there
+   * was white-spaces or text from the point, returns the text node.  Otherwise,
+   * returns an element which is explained by the following methods.  Note that
+   * when the reason is WSType::CurrentBlockBoundary, In most cases, it's
+   * current block element which is editable, but also may be non-element and/or
+   * non-editable.  See MOZ_ASSERT_IF()s in WSScanResult::AssertIfInvalidData()
+   * for the detail.
    */
   nsIContent* GetStartReasonContent() const {
     return TextFragmentDataAtStart().GetStartReasonContent();
@@ -1083,7 +1060,6 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;
-  EditorDOMPoint mScanEndPoint;
   // Together, the above represent the point at which we are building up ws
   // info.
 
@@ -1105,39 +1081,10 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
  public:
   enum BlockBoundary { kBeforeBlock, kBlockStart, kBlockEnd, kAfterBlock };
 
-  /**
-   * The constructors take 2 DOM points.  They represent a range in an editing
-   * host.  aScanEndPoint (aScanEndNode and aScanEndOffset) must be later
-   * point from aScanStartPoint (aScanStartNode and aScanStartOffset).
-   * The end point is currently used only with InsertText().  Therefore,
-   * currently, this assumes that the range does not cross block boundary.  If
-   * you use aScanEndPoint newly, please test enough.
-   * TODO: PrepareToJoinBlocks(), PrepareToDeleteRange() and
-   *       PrepareToDeleteNode() should be redesigned with aScanEndPoint.
-   */
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT WSRunObject(
-      HTMLEditor& aHTMLEditor,
-      const EditorDOMPointBase<PT, CT>& aScanStartPoint,
-      const EditorDOMPointBase<PT, CT>& aScanEndPoint);
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT WSRunObject(
-      HTMLEditor& aHTMLEditor,
-      const EditorDOMPointBase<PT, CT>& aScanStartPoint)
-      : WSRunObject(aHTMLEditor, aScanStartPoint, aScanStartPoint) {}
+  template <typename EditorDOMPointType>
   MOZ_CAN_RUN_SCRIPT WSRunObject(HTMLEditor& aHTMLEditor,
-                                 nsINode* aScanStartNode,
-                                 int32_t aScanStartOffset,
-                                 nsINode* aScanEndNode, int32_t aScanEndOffset)
-      : WSRunObject(aHTMLEditor,
-                    EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
-                    EditorRawDOMPoint(aScanEndNode, aScanEndOffset)) {}
-  MOZ_CAN_RUN_SCRIPT WSRunObject(HTMLEditor& aHTMLEditor,
-                                 nsINode* aScanStartNode,
-                                 int32_t aScanStartOffset)
-      : WSRunObject(aHTMLEditor,
-                    EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
-                    EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
+                                 const EditorDOMPointType& aScanStartPoint)
+      : WSRunScanner(aHTMLEditor, aScanStartPoint), mHTMLEditor(aHTMLEditor) {}
 
   /**
    * DeleteInvisibleASCIIWhiteSpaces() removes invisible leading white-spaces
