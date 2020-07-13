@@ -612,10 +612,12 @@ class TestResolver(MozbuildObject):
         if not paths:
             paths = [None]
 
-        if flavor in ('', 'puppeteer') and any(self.is_puppeteer_path(p) for p in paths):
+        if (flavor in ('', 'puppeteer', None) and
+            (any(self.is_puppeteer_path(p) for p in paths) or paths == [None])):
             self.add_puppeteer_manifest_data()
 
-        if flavor in ('', 'web-platform-tests') and any(self.is_wpt_path(p) for p in paths):
+        if (flavor in ('', 'web-platform-tests', None) and
+            (any(self.is_wpt_path(p) for p in paths) or paths == [None])):
             self.add_wpt_manifest_data()
 
         candidate_paths = set()
