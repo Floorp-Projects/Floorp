@@ -3,3 +3,6 @@
 [include]
 path:tools/lint/eslint/
 path:testing/performance
+glob:**/perftest_*.js
+
+
