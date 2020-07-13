@@ -3718,6 +3718,9 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
     }
   }
 
+  // NOTE: The caller is responsible for linking ModuleObjects if this is a
+  //       module script.
+
 #ifdef JS_STRUCTURED_SPEW
   // We want this to happen after line number initialization to allow filtering
   // to work.
