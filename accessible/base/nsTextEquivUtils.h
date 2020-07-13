@@ -153,6 +153,12 @@ class nsTextEquivUtils {
    * Returns the rule (constant of ETextEquivRule) for a given role.
    */
   static uint32_t GetRoleRule(mozilla::a11y::roles::Role aRole);
+
+  /**
+   * Returns true if a given accessible should be included when calculating
+   * the text equivalent for the initiator's subtree.
+   */
+  static bool ShouldIncludeInSubtreeCalculation(Accessible* aAccessible);
 };
 
 #endif
