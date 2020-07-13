@@ -422,13 +422,15 @@ class StencilModuleMetadata {
   EntryVector localExportEntries;
   EntryVector indirectExportEntries;
   EntryVector starExportEntries;
+  FunctionDeclarationVector functionDecls;
 
   explicit StencilModuleMetadata(JSContext* cx)
       : requestedModules(cx),
         importEntries(cx),
         localExportEntries(cx),
         indirectExportEntries(cx),
-        starExportEntries(cx) {}
+        starExportEntries(cx),
+        functionDecls(cx) {}
 
   bool initModule(JSContext* cx, JS::Handle<ModuleObject*> module);
 

@@ -311,9 +311,6 @@ class ModuleObject : public NativeObject {
 
   void setMetaObject(JSObject* obj);
 
-  // For BytecodeEmitter.
-  bool noteFunctionDeclaration(JSContext* cx, uint32_t funIndex);
-
   // For intrinsic_InstantiateModuleFunctionDeclarations.
   static bool instantiateFunctionDeclarations(JSContext* cx,
                                               HandleModuleObject self);
@@ -330,6 +327,7 @@ class ModuleObject : public NativeObject {
   static bool createEnvironment(JSContext* cx, HandleModuleObject self);
 
   frontend::FunctionDeclarationVector* functionDeclarations();
+  void initFunctionDeclarations(frontend::FunctionDeclarationVector&& decls);
 
  private:
   static const JSClassOps classOps_;
