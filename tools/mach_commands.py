@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
+import logging
 import sys
 
 from mach.decorators import (
@@ -384,3 +386,46 @@ class MozregressionCommand(MachCommandBase):
         self._activate_virtualenv()
         mozregression = mozregression_import()
         mozregression.run(options)
+
+
+@CommandProvider
+class NodeCommands(MachCommandBase):
+    @Command(
+        "node",
+        category="devenv",
+        description="Run the NodeJS interpreter used for building.",
+    )
+    @CommandArgument("args", nargs=argparse.REMAINDER)
+    def node(self, args):
+        from mozbuild.nodeutil import find_node_executable
+
+        # Avoid logging the command
+        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+
+        node_path, _ = find_node_executable()
+
+        return self.run_process(
+            [node_path] + args,
+            pass_thru=True,  # Allow user to run Node interactively.
+            ensure_exit_code=False,  # Don't throw on non-zero exit code.
+        )
+
+    @Command(
+        "npm",
+        category="devenv",
+        description="Run the npm executable from the NodeJS used for building.",
+    )
+    @CommandArgument("args", nargs=argparse.REMAINDER)
+    def npm(self, args):
+        from mozbuild.nodeutil import find_npm_executable
+
+        # Avoid logging the command
+        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+
+        npm_path, _ = find_npm_executable()
+
+        return self.run_process(
+            [npm_path, "--scripts-prepend-node-path=auto"] + args,
+            pass_thru=True,  # Avoid eating npm output/error messages
+            ensure_exit_code=False,  # Don't throw on non-zero exit code.
+        )
