@@ -154,6 +154,20 @@ nsMapRuleToAttributesFunc HTMLIFrameElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
+bool HTMLIFrameElement::HasAllowFullscreenAttribute() const {
+  return GetBoolAttr(nsGkAtoms::allowfullscreen) ||
+         GetBoolAttr(nsGkAtoms::mozallowfullscreen);
+}
+
+bool HTMLIFrameElement::AllowFullscreen() const {
+  if (StaticPrefs::dom_security_featurePolicy_enabled()) {
+    // The feature policy check in Document::GetFullscreenError already accounts
+    // for the allow* attributes, so we're done.
+    return true;
+  }
+  return HasAllowFullscreenAttribute();
+}
+
 nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                          const nsAttrValue* aValue,
                                          const nsAttrValue* aOldValue,
@@ -173,8 +187,7 @@ nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                aName == nsGkAtoms::mozallowfullscreen) {
       if (mFrameLoader) {
         if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
-          // This could be simpler if we didn't support the prefixed
-          // attribute, then it could just use !!aValue.
+          // This can go away once we remove the featurePolicy pref.
           bc->SetFullscreenAllowedByOwner(AllowFullscreen());
         }
       }
@@ -316,7 +329,7 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
     mFeaturePolicy->MaybeSetAllowedPolicy(u"payment"_ns);
   }
 
-  if (AllowFullscreen()) {
+  if (HasAllowFullscreenAttribute()) {
     mFeaturePolicy->MaybeSetAllowedPolicy(u"fullscreen"_ns);
   }
 
