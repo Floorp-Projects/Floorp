@@ -45,7 +45,7 @@ PER_INSTANCE in vec4 aUvRect0;
 
 void main(void) {
 	// Get world position
-    vec2 world_pos = aDeviceRect.xy + aPosition.xy * aDeviceRect.zw;
+    vec2 world_pos = aDeviceRect.xy + quad_position() * aDeviceRect.zw;
 
     // Clip the position to the world space clip rect
     vec2 clipped_world_pos = clamp(world_pos, aDeviceClipRect.xy, aDeviceClipRect.xy + aDeviceClipRect.zw);

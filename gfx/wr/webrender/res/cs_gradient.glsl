@@ -23,7 +23,8 @@ PER_INSTANCE in vec4 aColor3;
 PER_INSTANCE in vec2 aStartStop;
 
 void main(void) {
-    vPos = mix(aStartStop.x, aStartStop.y, mix(aPosition.x, aPosition.y, aAxisSelect));
+    vec2 quad_pos = quad_position();
+    vPos = mix(aStartStop.x, aStartStop.y, mix(quad_pos.x, quad_pos.y, aAxisSelect));
 
     vStops = aStops;
     vColor0 = aColor0;
@@ -31,7 +32,7 @@ void main(void) {
     vColor2 = aColor2;
     vColor3 = aColor3;
 
-    gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * aPosition.xy, 0.0, 1.0);
+    gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * quad_pos, 0.0, 1.0);
 }
 #endif
 
