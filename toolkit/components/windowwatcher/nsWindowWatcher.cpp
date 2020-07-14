@@ -62,6 +62,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -515,7 +516,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   features.Tokenize(aFeatures);
 
   SizeSpec sizeSpec;
-  CalcSizeSpec(features, false, sizeSpec);
+  CalcSizeSpec(features, sizeSpec);
 
   uint32_t chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
 
@@ -685,8 +686,15 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
 
+  if (!hasChromeParent) {
+    bool outerSizeUsed =
+        features.Exists("outerwidth") || features.Exists("outerheight");
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::WINDOW_OPEN_OUTER_SIZE,
+                                   outerSizeUsed);
+  }
+
   SizeSpec sizeSpec;
-  CalcSizeSpec(features, hasChromeParent, sizeSpec);
+  CalcSizeSpec(features, sizeSpec);
 
   // Make sure we calculate the chromeFlags *before* we push the
   // callee context onto the context stack so that
@@ -2009,7 +2017,7 @@ already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
 
 // static
 void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
-                                   bool aHasChromeParent, SizeSpec& aResult) {
+                                   SizeSpec& aResult) {
   // https://drafts.csswg.org/cssom-view/#set-up-browsing-context-features
   // To set up browsing context features for a browsing context `target` given
   // a map `tokenizedFeatures`:
@@ -2067,8 +2075,8 @@ void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
   }
 
   // Non-standard extension.
-  // Not exposed to web content.
-  if (aHasChromeParent && aFeatures.Exists("outerwidth")) {
+  // See bug 1623826
+  if (aFeatures.Exists("outerwidth")) {
     int32_t width = aFeatures.GetInt("outerwidth");
     if (width) {
       aResult.mOuterWidth = width;
@@ -2107,8 +2115,8 @@ void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
   }
 
   // Non-standard extension.
-  // Not exposed to web content.
-  if (aHasChromeParent && aFeatures.Exists("outerheight")) {
+  // See bug 1623826
+  if (aFeatures.Exists("outerheight")) {
     int32_t height = aFeatures.GetInt("outerheight");
     if (height) {
       aResult.mOuterHeight = height;

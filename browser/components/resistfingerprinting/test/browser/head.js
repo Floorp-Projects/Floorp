@@ -220,6 +220,7 @@ async function testWindowOpen(
   aSettingHeight,
   aTargetWidth,
   aTargetHeight,
+  aTestOuter,
   aMaxAvailWidth,
   aMaxAvailHeight,
   aPopupChromeUIWidth,
@@ -236,7 +237,17 @@ async function testWindowOpen(
   }
 
   // Create the testing window features.
-  let winFeatures = "width=" + aSettingWidth + ",height=" + aSettingHeight;
+  let winFeatures;
+
+  if (aTestOuter) {
+    winFeatures =
+      "outerWidth=" +
+      (aSettingWidth + aPopupChromeUIWidth) +
+      ",outerHeight=" +
+      (aSettingHeight + aPopupChromeUIHeight);
+  } else {
+    winFeatures = "width=" + aSettingWidth + ",height=" + aSettingHeight;
+  }
 
   let testParams = {
     winFeatures,
@@ -481,13 +492,14 @@ class WindowSettingTest extends RoundedWindowTest {
 }
 
 class OpenTest extends RoundedWindowTest {
-  async doTest(test) {
+  async doTest(test, testOuter) {
     await testWindowOpen(
       this.tab.linkedBrowser,
       test.settingWidth,
       test.settingHeight,
       test.targetWidth,
       test.targetHeight,
+      testOuter,
       this.maxAvailWidth,
       this.maxAvailHeight,
       this.popupChromeUIWidth,
