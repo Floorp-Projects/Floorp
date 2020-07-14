@@ -9,17 +9,18 @@ import android.content.Context
 import android.view.MotionEvent
 import android.view.View
 import android.widget.PopupWindow
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import kotlinx.android.synthetic.main.top_site_item.*
 import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.view.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.utils.view.ViewHolder
 
 class TopSiteItemViewHolder(
     view: View,
@@ -42,12 +43,12 @@ class TopSiteItemViewHolder(
             interactor.onSelectTopSite(topSite.url, topSite.isDefault)
         }
 
-        top_site_item.setOnLongClickListener() {
+        top_site_item.setOnLongClickListener {
             val menu = topSiteMenu.menuBuilder.build(view.context).show(anchor = it.top_site_title)
             it.setOnTouchListener @SuppressLint("ClickableViewAccessibility") { v, event ->
                 onTouchEvent(v, event, menu)
             }
-            return@setOnLongClickListener true
+            true
         }
     }
 
@@ -56,7 +57,7 @@ class TopSiteItemViewHolder(
         top_site_title.text = topSite.title
         when (topSite.url) {
             SupportUtils.POCKET_TRENDING_URL -> {
-                favicon_image.setImageDrawable(itemView.context.getDrawable(R.drawable.ic_pocket))
+                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pocket))
             }
             else -> {
                 itemView.context.components.core.icons.loadIntoView(favicon_image, topSite.url)
