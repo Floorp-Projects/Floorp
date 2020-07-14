@@ -159,3 +159,10 @@ class RaptorGatherer(FrameworkGatherer):
 
     def build_test_description(self, title, test_description=""):
         return ["* " + title + " (" + test_description + ")"]
+
+
+class MozperftestGatherer(FrameworkGatherer):
+    '''
+    Gatherer for the Mozperftest framework.
+    '''
+    pass
