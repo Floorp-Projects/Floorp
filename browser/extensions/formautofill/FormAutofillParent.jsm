@@ -302,6 +302,7 @@ class FormAutofillParent extends JSWindowActorParent {
         return FormAutofillParent._getRecords(data);
       }
       case "FormAutofill:OnFormSubmit": {
+        this.notifyMessageObservers("onFormSubmitted", data);
         await this._onFormSubmit(data);
         break;
       }
@@ -371,7 +372,10 @@ class FormAutofillParent extends JSWindowActorParent {
     for (let observer of gMessageObservers) {
       try {
         if (callbackName in observer) {
-          observer[callbackName](data);
+          observer[callbackName](
+            data,
+            this.manager.browsingContext.topChromeWindow
+          );
         }
       } catch (ex) {
         Cu.reportError(ex);
