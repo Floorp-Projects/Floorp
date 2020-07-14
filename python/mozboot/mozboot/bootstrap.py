@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 import os
 import platform
+import re
 import sys
 import subprocess
 import time
@@ -807,19 +808,24 @@ def update_git_repo(git, url, dest):
 
 def configure_git(git, cinnabar, root_state_dir, top_src_dir):
     """Run the Git configuration steps."""
-    from mozversioncontrol import GitRepository
 
-    repository = GitRepository(top_src_dir)
-    git_version = LooseVersion(repository.tool_version)
+    match = re.search(r'(\d+\.\d+\.\d+)',
+                      subprocess.check_output([git, '--version'],
+                                              universal_newlines=True))
+    if not match:
+        raise Exception('Could not find git version')
+    git_version = LooseVersion(match.group(1))
 
     if git_version < MINIMUM_RECOMMENDED_GIT_VERSION:
         print(OLD_GIT_WARNING.format(
             old_version=git_version,
             minimum_recommended_version=MINIMUM_RECOMMENDED_GIT_VERSION))
 
-    if git_version >= LooseVersion('2.17'):
-        # "core.untrackedCache" has a bug before 2.17
-        repository.set_config('core.untrackedCache', 'true')
+    if top_src_dir and os.path.exists(top_src_dir):
+        if git_version >= LooseVersion('2.17'):
+            # "core.untrackedCache" has a bug before 2.17
+            subprocess.check_call(
+                [git, 'config', 'core.untrackedCache', 'true'], cwd=top_src_dir)
 
     cinnabar_dir = update_git_tools(git, root_state_dir, top_src_dir)
 
