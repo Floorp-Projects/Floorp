@@ -1822,7 +1822,7 @@ impl<T> VertexDataTexture<T> {
             data.len() * texels_per_item
         } else {
             MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)
-        }; 
+        };
 
         let rect = DeviceIntRect::new(
             DeviceIntPoint::zero(),
@@ -5937,6 +5937,44 @@ impl Renderer {
 
         self.bind_frame_data(frame);
 
+        // If we have a native OS compositor, then make use of that interface to
+        // specify how to composite each of the picture cache surfaces. First, we
+        // need to find each tile that may be bound and updated later in the frame
+        // and invalidate it so that the native render compositor knows that these
+        // tiles can't be composited early. Next, after all such tiles have been
+        // invalidated, then we queue surfaces for native composition by the render
+        // compositor before we actually update the tiles. This allows the render
+        // compositor to start early composition while the tiles are updating.
+        if let CompositorKind::Native { .. } = self.current_compositor_kind {
+            assert!(frame.composite_state.picture_caching_is_enabled);
+            let compositor = self.compositor_config.compositor().unwrap();
+            // Invalidate any native surface tiles that might be updated by passes.
+            if !frame.has_been_rendered {
+                for tile in frame.composite_state.opaque_tiles.iter().chain(frame.composite_state.alpha_tiles.iter()) {
+                    if !tile.dirty_rect.is_empty() {
+                        if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } =
+                            tile.surface {
+                            compositor.invalidate_tile(id);
+                        }
+                    }
+                }
+            }
+            // Ensure any external surfaces that might be used during early composition
+            // are invalidated first so that the native compositor can properly schedule
+            // composition to happen only when the external surface is updated.
+            // See update_external_native_surfaces for more details.
+            for surface in &frame.composite_state.external_surfaces {
+                if let Some((native_surface_id, _)) = surface.update_params {
+                    compositor.invalidate_tile(NativeTileId { surface_id: native_surface_id, x: 0, y: 0 });
+                }
+            }
+            // Finally queue native surfaces for early composition, if applicable. By now,
+            // we have already invalidated any tiles that such surfaces may depend upon, so
+            // the native render compositor can keep track of when to actually schedule
+            // composition as surfaces are updated.
+            frame.composite_state.composite_native(&mut **compositor);
+        }
+
         for (_pass_index, pass) in frame.passes.iter_mut().enumerate() {
             #[cfg(not(target_os = "android"))]
             let _gm = self.gpu_profile.start_marker(&format!("pass {}", _pass_index));
@@ -5998,12 +6036,13 @@ impl Renderer {
                             // to specify how to composite each of the picture cache surfaces.
                             match self.current_compositor_kind {
                                 CompositorKind::Native { .. } => {
+                                    // We have already queued surfaces for early native composition by this point.
+                                    // All that is left is to finally update any external native surfaces that were
+                                    // invalidated so that composition can complete.
                                     self.update_external_native_surfaces(
                                         &frame.composite_state.external_surfaces,
                                         results,
                                     );
-                                    let compositor = self.compositor_config.compositor().unwrap();
-                                    frame.composite_state.composite_native(&mut **compositor);
                                 }
                                 CompositorKind::Draw { max_partial_present_rects, draw_previous_partial_present_regions, .. } => {
                                     self.composite_simple(
