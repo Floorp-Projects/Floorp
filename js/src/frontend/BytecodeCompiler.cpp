@@ -638,8 +638,9 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     return nullptr;
   }
 
-  MOZ_ASSERT(funbox->function()->hasBytecode() ||
-             IsAsmJSModule(funbox->function()));
+  JSFunction* fun =
+      compilationInfo.functions[CompilationInfo::TopLevelFunctionIndex];
+  MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!compilationInfo.sourceObject->source()->tryCompressOffThread(
@@ -647,7 +648,7 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     return nullptr;
   }
 
-  return funbox->function();
+  return fun;
 }
 
 ScriptSourceObject* frontend::CreateScriptSourceObject(

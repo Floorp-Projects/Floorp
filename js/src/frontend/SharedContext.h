@@ -450,8 +450,6 @@ class FunctionBox : public SharedContext {
 
   void setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex);
 
-  JSFunction* function() const;
-
   bool isStandalone() const { return isStandalone_; }
   void setIsStandalone(bool isStandalone) {
     MOZ_ASSERT(!isFunctionFieldCopiedToStencil);

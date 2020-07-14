@@ -387,10 +387,6 @@ void FunctionBox::trace(JSTracer* trc) {
   }
 }
 
-JSFunction* FunctionBox::function() const {
-  return compilationInfo_.functions[funcDataIndex_];
-}
-
 ModuleSharedContext::ModuleSharedContext(JSContext* cx,
                                          CompilationInfo& compilationInfo,
                                          ModuleBuilder& builder,
