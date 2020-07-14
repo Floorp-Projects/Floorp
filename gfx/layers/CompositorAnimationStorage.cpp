@@ -87,24 +87,39 @@ OMTAValue CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const {
   return omtaValue;
 }
 
-void CompositorAnimationStorage::SetAnimatedValue(
+void CompositorAnimationStorage::SetAnimatedValueForWebRender(
     uint64_t aId, AnimatedValue* aPreviousValue,
-    gfx::Matrix4x4&& aTransformInDevSpace, gfx::Matrix4x4&& aFrameTransform,
-    const TransformData& aData) {
+    const gfx::Matrix4x4& aFrameTransform, const TransformData& aData) {
   mLock.AssertCurrentThreadOwns();
 
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
-    mAnimatedValues.Put(
-        aId, MakeUnique<AnimatedValue>(std::move(aTransformInDevSpace),
-                                       std::move(aFrameTransform), aData));
+    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(gfx::Matrix4x4(),
+                                                       aFrameTransform, aData));
     return;
   }
   MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
   MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
 
-  aPreviousValue->SetTransform(std::move(aTransformInDevSpace),
-                               std::move(aFrameTransform), aData);
+  aPreviousValue->SetTransformForWebRender(aFrameTransform, aData);
+}
+
+void CompositorAnimationStorage::SetAnimatedValue(
+    uint64_t aId, AnimatedValue* aPreviousValue,
+    const gfx::Matrix4x4& aTransformInDevSpace,
+    const gfx::Matrix4x4& aFrameTransform, const TransformData& aData) {
+  mLock.AssertCurrentThreadOwns();
+
+  if (!aPreviousValue) {
+    MOZ_ASSERT(!mAnimatedValues.Contains(aId));
+    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aTransformInDevSpace,
+                                                       aFrameTransform, aData));
+    return;
+  }
+  MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
+  MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
+
+  aPreviousValue->SetTransform(aTransformInDevSpace, aFrameTransform, aData);
 }
 
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
@@ -220,17 +235,12 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
             *animationStorageData->mTransformData;
         MOZ_ASSERT(transformData.origin() == nsPoint());
 
-        gfx::Matrix4x4 transform =
+        gfx::Matrix4x4 frameTransform =
             AnimationHelper::ServoAnimationValueToMatrix4x4(
                 animationValues, transformData,
                 animationStorageData->mCachedMotionPath);
-        gfx::Matrix4x4 frameTransform = transform;
-
-        transform.PostScale(transformData.inheritedXScale(),
-                            transformData.inheritedYScale(), 1);
-
-        SetAnimatedValue(iter.first, previousValue, std::move(transform),
-                         std::move(frameTransform), transformData);
+        SetAnimatedValueForWebRender(iter.first, previousValue, frameTransform,
+                                     transformData);
         break;
       }
       default:
@@ -251,7 +261,7 @@ WrAnimations CompositorAnimationStorage::CollectWebRenderAnimations() const {
     value->Value().match(
         [&](const AnimationTransform& aTransform) {
           animations.mTransformArrays.AppendElement(wr::ToWrTransformProperty(
-              iter.Key(), aTransform.mTransformInDevSpace));
+              iter.Key(), aTransform.mFrameTransform));
         },
         [&](const float& aOpacity) {
           animations.mOpacityArrays.AppendElement(
@@ -439,8 +449,7 @@ bool CompositorAnimationStorage::ApplyAnimatedValue(
       layerCompositor->SetShadowBaseTransform(transform);
       layerCompositor->SetShadowTransformSetByAnimation(true);
       SetAnimatedValue(aLayer->GetCompositorAnimationsId(), aPreviousValue,
-                       std::move(transform), std::move(frameTransform),
-                       transformData);
+                       transform, frameTransform, transformData);
 
       layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
       layerCompositor->SetShadowOpacitySetByAnimation(false);
