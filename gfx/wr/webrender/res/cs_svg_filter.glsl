@@ -78,7 +78,7 @@ vec3 compute_uv(RenderTaskCommonData task, vec2 texture_size) {
 
     vec2 uv0 = task_rect.p0 / texture_size;
     vec2 uv1 = floor(task_rect.p0 + task_rect.size) / texture_size;
-    uv.xy = mix(uv0, uv1, quad_position());
+    uv.xy = mix(uv0, uv1, aPosition.xy);
 
     return uv;
 }
@@ -87,7 +87,7 @@ void main(void) {
     FilterTask filter_task = fetch_filter_task(aFilterRenderTaskAddress);
     RectWithSize target_rect = filter_task.common_data.task_rect;
 
-    vec2 pos = target_rect.p0 + target_rect.size * quad_position();
+    vec2 pos = target_rect.p0 + target_rect.size * aPosition.xy;
 
     RenderTaskCommonData input_1_task;
     if (aFilterInputCount > 0) {
