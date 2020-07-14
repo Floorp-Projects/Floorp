@@ -33,8 +33,6 @@ class Client;
 
 void InitializeLocalStorage();
 
-bool GetCurrentNextGenPrefValue();
-
 PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const uint32_t& aPrivateBrowsingId, const uint64_t& aDatastoreId);
