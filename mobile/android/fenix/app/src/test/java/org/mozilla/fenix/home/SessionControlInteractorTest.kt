@@ -49,8 +49,8 @@ class SessionControlInteractorTest {
     fun onCollectionRemoveTab() {
         val collection: TabCollection = mockk(relaxed = true)
         val tab: Tab = mockk(relaxed = true)
-        interactor.onCollectionRemoveTab(collection, tab)
-        verify { controller.handleCollectionRemoveTab(collection, tab) }
+        interactor.onCollectionRemoveTab(collection, tab, false)
+        verify { controller.handleCollectionRemoveTab(collection, tab, false) }
     }
 
     @Test

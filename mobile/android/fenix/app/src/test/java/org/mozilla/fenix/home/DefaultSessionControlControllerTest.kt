@@ -32,7 +32,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -55,12 +54,17 @@ class DefaultSessionControlControllerTest {
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val topSiteStorage: TopSiteStorage = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val showTabTray: () -> Unit = mockk(relaxed = true)
-    private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit =
-        mockk(relaxed = true)
+    private val handleSwipedItemDeletionCancel: () -> Unit = mockk(relaxed = true)
+    private val showDeleteCollectionPrompt: (
+        tabCollection: TabCollection,
+        title: String?,
+        message: String,
+        wasSwiped: Boolean,
+        handleSwipedItemDeletionCancel: () -> Unit
+    ) -> Unit = mockk(relaxed = true)
     private val searchEngine = mockk<SearchEngine>(relaxed = true)
     private val searchEngineManager = mockk<SearchEngineManager>(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
@@ -102,7 +106,8 @@ class DefaultSessionControlControllerTest {
             hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             showDeleteCollectionPrompt = showDeleteCollectionPrompt,
-            showTabTray = showTabTray
+            showTabTray = showTabTray,
+            handleSwipedItemDeletionCancel = handleSwipedItemDeletionCancel
         )
     }
 
@@ -181,14 +186,16 @@ class DefaultSessionControlControllerTest {
             activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
         } returns "Deleting this tab will delete everything."
 
-        controller.handleCollectionRemoveTab(collection, tab)
+        controller.handleCollectionRemoveTab(collection, tab, false)
 
         verify { metrics.track(Event.CollectionTabRemoved) }
         verify {
             showDeleteCollectionPrompt(
                 collection,
                 "Delete Collection?",
-                "Deleting this tab will delete everything."
+                "Deleting this tab will delete everything.",
+                false,
+                handleSwipedItemDeletionCancel
             )
         }
     }
@@ -197,7 +204,7 @@ class DefaultSessionControlControllerTest {
     fun `handleCollectionRemoveTab multiple tabs`() {
         val collection: TabCollection = mockk(relaxed = true)
         val tab: ComponentTab = mockk(relaxed = true)
-        controller.handleCollectionRemoveTab(collection, tab)
+        controller.handleCollectionRemoveTab(collection, tab, false)
         verify { metrics.track(Event.CollectionTabRemoved) }
     }
 
@@ -231,7 +238,9 @@ class DefaultSessionControlControllerTest {
             showDeleteCollectionPrompt(
                 collection,
                 null,
-                "Are you sure you want to delete Collection?"
+                "Are you sure you want to delete Collection?",
+                false,
+                handleSwipedItemDeletionCancel
             )
         }
     }

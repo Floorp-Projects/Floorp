@@ -211,7 +211,8 @@ class HomeFragment : Fragment() {
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
-                showTabTray = ::openTabTray
+                showTabTray = ::openTabTray,
+                handleSwipedItemDeletionCancel = ::handleSwipedItemDeletionCancel
             )
         )
         updateLayout(view)
@@ -557,12 +558,21 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showDeleteCollectionPrompt(tabCollection: TabCollection, title: String?, message: String) {
+    private fun showDeleteCollectionPrompt(
+        tabCollection: TabCollection,
+        title: String?,
+        message: String,
+        wasSwiped: Boolean,
+        handleSwipedItemDeletionCancel: () -> Unit
+    ) {
         val context = context ?: return
         AlertDialog.Builder(context).apply {
             setTitle(title)
             setMessage(message)
             setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
+                if (wasSwiped) {
+                    handleSwipedItemDeletionCancel()
+                }
                 dialog.cancel()
             }
             setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
@@ -949,6 +959,10 @@ class HomeFragment : Fragment() {
 
         view?.tab_button?.setCountWithAnimation(tabCount)
         view?.add_tabs_to_collections_button?.isVisible = tabCount > 0
+    }
+
+    private fun handleSwipedItemDeletionCancel() {
+        view?.sessionControlRecyclerView?.adapter?.notifyDataSetChanged()
     }
 
     companion object {

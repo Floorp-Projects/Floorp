@@ -53,7 +53,7 @@ class TabInCollectionViewHolder(
 
         list_item_action_button.increaseTapArea(buttonIncreaseDps)
         list_item_action_button.setOnClickListener {
-            interactor.onCollectionRemoveTab(collection, tab)
+            interactor.onCollectionRemoveTab(collection, tab, wasSwiped = false)
         }
     }
 

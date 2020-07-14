@@ -54,7 +54,7 @@ interface CollectionInteractor {
      * @param collection The collection of tabs that will be modified.
      * @param tab The tab to remove from the tab collection.
      */
-    fun onCollectionRemoveTab(collection: TabCollection, tab: Tab)
+    fun onCollectionRemoveTab(collection: TabCollection, tab: Tab, wasSwiped: Boolean)
 
     /**
      * Shares the tabs in the given tab collection. Called when a user clicks on the Collection
@@ -189,8 +189,8 @@ class SessionControlInteractor(
         controller.handleCollectionOpenTabsTapped(collection)
     }
 
-    override fun onCollectionRemoveTab(collection: TabCollection, tab: Tab) {
-        controller.handleCollectionRemoveTab(collection, tab)
+    override fun onCollectionRemoveTab(collection: TabCollection, tab: Tab, wasSwiped: Boolean) {
+        controller.handleCollectionRemoveTab(collection, tab, wasSwiped)
     }
 
     override fun onCollectionShareTabsClicked(collection: TabCollection) {

@@ -63,7 +63,7 @@ interface SessionControlController {
     /**
      * @see [CollectionInteractor.onCollectionRemoveTab]
      */
-    fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab)
+    fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab, wasSwiped: Boolean)
 
     /**
      * @see [CollectionInteractor.onCollectionShareTabsClicked]
@@ -160,8 +160,15 @@ class DefaultSessionControlController(
     private val viewLifecycleScope: CoroutineScope,
     private val hideOnboarding: () -> Unit,
     private val registerCollectionStorageObserver: () -> Unit,
-    private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit,
-    private val showTabTray: () -> Unit
+    private val showDeleteCollectionPrompt: (
+        tabCollection: TabCollection,
+        title: String?,
+        message: String,
+        wasSwiped: Boolean,
+        handleSwipedItemDeletionCancel: () -> Unit
+    ) -> Unit,
+    private val showTabTray: () -> Unit,
+    private val handleSwipedItemDeletionCancel: () -> Unit
 ) : SessionControlController {
 
     override fun handleCollectionAddTabTapped(collection: TabCollection) {
@@ -206,7 +213,7 @@ class DefaultSessionControlController(
         metrics.track(Event.CollectionAllTabsRestored)
     }
 
-    override fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab) {
+    override fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab, wasSwiped: Boolean) {
         metrics.track(Event.CollectionTabRemoved)
 
         if (collection.tabs.size == 1) {
@@ -216,7 +223,7 @@ class DefaultSessionControlController(
             )
             val message =
                 activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
-            showDeleteCollectionPrompt(collection, title, message)
+            showDeleteCollectionPrompt(collection, title, message, wasSwiped, handleSwipedItemDeletionCancel)
         } else {
             viewLifecycleScope.launch(Dispatchers.IO) {
                 tabCollectionStorage.removeTabFromCollection(collection, tab)
@@ -232,7 +239,7 @@ class DefaultSessionControlController(
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
         val message =
             activity.resources.getString(R.string.tab_collection_dialog_message, collection.title)
-        showDeleteCollectionPrompt(collection, null, message)
+        showDeleteCollectionPrompt(collection, null, message, false, handleSwipedItemDeletionCancel)
     }
 
     override fun handleOpenInPrivateTabClicked(topSite: TopSite) {

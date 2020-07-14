@@ -29,7 +29,7 @@ class SwipeToDeleteCallback(
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         when (viewHolder) {
             is TabInCollectionViewHolder -> {
-                interactor.onCollectionRemoveTab(viewHolder.collection, viewHolder.tab)
+                interactor.onCollectionRemoveTab(viewHolder.collection, viewHolder.tab, wasSwiped = true)
             }
         }
     }
