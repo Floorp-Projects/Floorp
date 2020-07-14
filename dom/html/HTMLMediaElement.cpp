@@ -1533,17 +1533,20 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
   void NotifyAudioPlaybackChanged(AudibleChangedReasons aReason) {
     MOZ_ASSERT(!mIsShutDown);
-    if (!IsPlayingStarted()) {
-      return;
-    }
-
     AudibleState newAudibleState = IsOwnerAudible();
+    MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+            ("HTMLMediaElement::AudioChannelAgentCallback, "
+             "NotifyAudioPlaybackChanged, this=%p, current=%s, new=%s",
+             this, AudibleStateToStr(mIsOwnerAudible),
+             AudibleStateToStr(newAudibleState)));
     if (mIsOwnerAudible == newAudibleState) {
       return;
     }
 
     mIsOwnerAudible = newAudibleState;
-    mAudioChannelAgent->NotifyStartedAudible(mIsOwnerAudible, aReason);
+    if (IsPlayingStarted()) {
+      mAudioChannelAgent->NotifyStartedAudible(mIsOwnerAudible, aReason);
+    }
   }
 
   void Shutdown() {
