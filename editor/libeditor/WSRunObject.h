@@ -22,18 +22,6 @@
 
 namespace mozilla {
 
-// class WSRunObject represents the entire white-space situation
-// around a given point.
-
-// Throughout I refer to LeadingWS, NormalWS, TrailingWS.  LeadingWS &
-// TrailingWS are runs of ascii ws that are insignificant (do not render)
-// because they are adjacent to block boundaries, or after a break.  NormalWS is
-// ws that does cause soem rendering.  Note that not all the ws in a NormalWS
-// run need render.  For example, two ascii spaces surrounded by text on both
-// sides will only render as one space (in non-preformatted stlye html), yet
-// both spaces count as NormalWS.  Together, they render as the one visible
-// space.
-
 class WSRunScanner;
 
 /**
@@ -267,7 +255,7 @@ class MOZ_STACK_CLASS WSScanResult final {
   WSType mReason;
 };
 
-class WSRunObject;
+class WhiteSpaceVisibilityKeeper;
 
 class MOZ_STACK_CLASS WSRunScanner final {
  public:
@@ -1077,10 +1065,17 @@ class MOZ_STACK_CLASS WSRunScanner final {
  private:
   TextFragmentData mTextFragmentDataAtStart;
 
-  friend class WSRunObject;
+  friend class WhiteSpaceVisibilityKeeper;
 };
 
-class WSRunObject final {
+/**
+ * WhiteSpaceVisibilityKeeper class helps `HTMLEditor` modifying the DOM tree
+ * with keeps white-space sequence visibility automatically.  E.g., invisible
+ * leading/trailing white-spaces becomes visible, this class members delete
+ * them.  E.g., when splitting visible-white-space sequence, this class may
+ * replace ASCII white-spaces at split edges with NBSPs.
+ */
+class WhiteSpaceVisibilityKeeper final {
  private:
   using AutoTransactionsConserveSelection =
       EditorBase::AutoTransactionsConserveSelection;
@@ -1090,9 +1085,10 @@ class WSRunObject final {
   using VisibleWhiteSpacesData = WSRunScanner::VisibleWhiteSpacesData;
 
  public:
-  WSRunObject() = delete;
-  explicit WSRunObject(const WSRunObject& aOther) = delete;
-  WSRunObject(WSRunObject&& aOther) = delete;
+  WhiteSpaceVisibilityKeeper() = delete;
+  explicit WhiteSpaceVisibilityKeeper(
+      const WhiteSpaceVisibilityKeeper& aOther) = delete;
+  WhiteSpaceVisibilityKeeper(WhiteSpaceVisibilityKeeper&& aOther) = delete;
 
   /**
    * DeleteInvisibleASCIIWhiteSpaces() removes invisible leading white-spaces
@@ -1173,9 +1169,9 @@ class WSRunObject final {
       HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
       const EditorDOMPointType& aPointToInsert,
       EditorRawDOMPoint* aPointAfterInsertedString = nullptr) {
-    return WSRunObject::ReplaceText(aHTMLEditor, aStringToInsert,
-                                    EditorDOMRange(aPointToInsert),
-                                    aPointAfterInsertedString);
+    return WhiteSpaceVisibilityKeeper::ReplaceText(
+        aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert),
+        aPointAfterInsertedString);
   }
 
   /**
