@@ -5,7 +5,6 @@
 Test auto selector
 
   $ ./mach try auto $testargs
-  warning: 'mach try auto' is experimental, results may vary!
   Commit message:
   Tasks automatically selected.
   
@@ -26,7 +25,6 @@ Test auto selector
   
 
   $ ./mach try auto $testargs --closed-tree
-  warning: 'mach try auto' is experimental, results may vary!
   Commit message:
   Tasks automatically selected. ON A CLOSED TREE
   
@@ -46,7 +44,6 @@ Test auto selector
   }
   
   $ ./mach try auto $testargs --closed-tree -m "foo {msg} bar"
-  warning: 'mach try auto' is experimental, results may vary!
   Commit message:
   foo Tasks automatically selected. bar ON A CLOSED TREE
   
