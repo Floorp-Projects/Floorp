@@ -299,6 +299,8 @@ extern "C" {
 #[derive(Clone)]
 pub struct Context(*mut c_void);
 
+unsafe impl Send for Context {}
+
 impl Context {
     pub fn create() -> Self {
         Context(unsafe { CreateContext() })
