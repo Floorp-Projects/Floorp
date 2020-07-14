@@ -827,7 +827,7 @@ open class DummyEngineSession : EngineSession() {
 
     override fun stopLoading() {}
 
-    override fun reload() {}
+    override fun reload(flags: LoadUrlFlags) {}
 
     override fun goBack() {}
 

@@ -82,6 +82,21 @@ class SessionUseCasesTest {
     }
 
     @Test
+    fun reloadBypassCache() {
+        val engineSession = mock<EngineSession>()
+        val session = mock<Session>()
+        val flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE)
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.reload(session, flags = flags)
+        verify(engineSession).reload(flags = flags)
+
+        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.reload(flags = flags)
+        verify(selectedEngineSession).reload(flags = flags)
+    }
+
+    @Test
     fun stopLoading() {
         val engineSession = mock<EngineSession>()
         val session = mock<Session>()
