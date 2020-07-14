@@ -37,7 +37,6 @@ CONFIG_SCHEMA = {
     "properties": {
         "name": {"type": "string"},
         "manifest": {"type": "string"},
-        "static-only": {"type": "boolean"},
         "suites": {
             "type": "object",
             "properties": {
@@ -55,12 +54,7 @@ CONFIG_SCHEMA = {
             },
         },
     },
-    "required": [
-        "name",
-        "manifest",
-        "static-only",
-        "suites"
-    ]
+    "required": ["name", "manifest", "suites"],
 }
 
 
@@ -71,14 +65,15 @@ class Verifier(object):
     descriptions that can be used to build up a document.
     """
 
-    def __init__(self, workspace_dir):
+    def __init__(self, root_dir, workspace_dir):
         """
         Initialize the Verifier.
 
+        :param str root_dir: Path to the 'testing' directory.
         :param str workspace_dir: Path to the top-level checkout directory.
         """
         self.workspace_dir = workspace_dir
-        self._gatherer = Gatherer(workspace_dir)
+        self._gatherer = Gatherer(root_dir, workspace_dir)
 
     def validate_descriptions(self, framework_info):
         """
@@ -292,10 +287,8 @@ class Verifier(object):
 
             _valid_files = {
                 "yml": self.validate_yaml(matched_yml),
-                "rst": True
+                "rst": self.validate_rst_content(matched_rst),
             }
-            if not read_yaml(matched_yml)['static-only']:
-                _valid_files["rst"] = self.validate_rst_content(matched_rst)
 
             # Log independently the errors found for the matched files
             for file_format, valid in _valid_files.items():
