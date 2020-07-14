@@ -31,9 +31,8 @@ self.onmessage = async function(msg) {
   }
 
   async function test_full_read_and_write() {
-    // TODO: Stop using relative paths.
     // Write a file.
-    const tmpFileName = "test_ioutils_numbers.tmp";
+    const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_numbers.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
     const bytesWritten = await self.IOUtils.writeAtomic(tmpFileName, bytes);
     is(
