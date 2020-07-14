@@ -216,6 +216,7 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
                                   bool aClearStyle);
 
  private:
+  class FragmentFromPasteCreator;
   class FragmentParser;
   /**
    * CollectTopMostChildContentsCompletelyInRange() collects topmost child
@@ -3137,7 +3138,39 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML(
                                        &mDocument, aFragment, mTrustedInput);
 }
 
+class MOZ_STACK_CLASS
+    HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator final {
+ public:
+  explicit FragmentFromPasteCreator(HTMLEditor& aHTMLEditor);
+
+  nsresult Run(const nsAString& aInputString, const nsAString& aContextStr,
+               const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
+               nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
+               int32_t* aOutStartOffset, int32_t* aOutEndOffset,
+               bool aTrustedInput) const;
+
+ private:
+  HTMLEditor& mHTMLEditor;
+};
+
+HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
+    FragmentFromPasteCreator(HTMLEditor& aHTMLEditor)
+    : mHTMLEditor{aHTMLEditor} {}
+
 nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
+    const nsAString& aInputString, const nsAString& aContextStr,
+    const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
+    nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
+    int32_t* aOutStartOffset, int32_t* aOutEndOffset,
+    bool aTrustedInput) const {
+  FragmentFromPasteCreator fragmentFromPasteCreator{mHTMLEditor};
+
+  return fragmentFromPasteCreator.Run(
+      aInputString, aContextStr, aInfoStr, aOutFragNode, aOutStartNode,
+      aOutEndNode, aOutStartOffset, aOutEndOffset, aTrustedInput);
+}
+
+nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
     nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
