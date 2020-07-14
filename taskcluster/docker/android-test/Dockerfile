@@ -49,8 +49,8 @@ ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts
 ADD topsrcdir/taskcluster/docker/recipes/android-test-system-setup.sh /setup/system-setup.sh
 RUN     bash /setup/system-setup.sh
 
-# %include taskcluster/scripts/tester/test-linux.sh
-ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /builds/worker/bin/test-linux.sh
+# %include taskcluster/scripts/tester/test-android.sh
+ADD topsrcdir/taskcluster/scripts/tester/test-android.sh /builds/worker/bin/test-android.sh
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
@@ -59,7 +59,6 @@ ENV     SHELL           /bin/bash
 ENV     USER            worker
 ENV     LOGNAME         worker
 ENV     HOSTNAME        taskcluster-worker
-ENV     LANG            en_US.UTF-8
 ENV     PATH            $PATH:/builds/worker/bin
 
 # Bug 1345105 - Do not run periodical update checks and downloads
