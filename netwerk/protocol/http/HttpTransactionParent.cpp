@@ -487,9 +487,6 @@ void HttpTransactionParent::DoOnStartRequest(
       Unused << httpChannel->SetRequestHeader(
           nsDependentCString(nsHttp::Alternate_Service_Used), aAltSvcUsed.ref(),
           false);
-    } else {
-      Unused << httpChannel->SetEmptyRequestHeader(
-          nsDependentCString(nsHttp::Alternate_Service_Used));
     }
   }
 

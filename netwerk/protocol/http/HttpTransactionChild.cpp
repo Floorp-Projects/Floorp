@@ -416,7 +416,8 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   Maybe<nsCString> optionalAltSvcUsed;
   nsCString altSvcUsed;
   if (NS_SUCCEEDED(mTransaction->RequestHead()->GetHeader(
-          nsHttp::Alternate_Service_Used, altSvcUsed))) {
+          nsHttp::Alternate_Service_Used, altSvcUsed)) &&
+      !altSvcUsed.IsEmpty()) {
     optionalAltSvcUsed.emplace(altSvcUsed);
   }
 
