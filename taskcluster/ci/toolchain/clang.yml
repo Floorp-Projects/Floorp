@@ -167,14 +167,14 @@ linux64-clang-9-aarch64-cross:
             - linux64-gcc-7
 
 linux64-clang-9-macosx-cross:
-    description: "Clang 9 toolchain build with MacOS Compiler RT libs"
+    description: "Clang 9 toolchain repack with MacOS Compiler RT libs"
     treeherder:
         symbol: TL(clang9-macosx-cross)
     worker-type: b-linux
     worker:
         max-run-time: 600
     run:
-        script: build-clang-linux-macosx-cross.sh
+        script: repack-clang-linux-macosx-cross.sh
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
@@ -188,14 +188,14 @@ linux64-clang-9-macosx-cross:
               dest: clang-mac
 
 linux64-clang-9-win-cross:
-    description: "Clang 9 toolchain build with Windows Compiler RT libs"
+    description: "Clang 9 toolchain repack with Windows Compiler RT libs"
     treeherder:
         symbol: TL(clang9-win-cross)
     worker-type: b-linux
     worker:
         max-run-time: 600
     run:
-        script: build-clang-linux-win-cross.sh
+        script: repack-clang-linux-win-cross.sh
         toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
