@@ -321,8 +321,9 @@ var Impl = {
   // The activity state for the user. If false, don't count the next
   // active tick. Otherwise, increment the active ticks as usual.
   _isUserActive: true,
-  // The activity state for the user. Inits to false so that the initial
-  // activity doesn't cause a stopwatch error.
+  // The activity state for the user. Inits to false since, even though
+  // launching Firefox is user activity, the idle manager always starts with
+  // user-interaction-active.
   // Used to evaluate FOG user engagement.
   _fogUserActive: false,
   _startupIO: {},
@@ -1159,12 +1160,25 @@ var Impl = {
       error = !TelemetryStopwatch.start("FOG_EVAL_WINDOW_RAISED_S", aWindow, {
         inSeconds: true,
       });
+    } else if (
+      this._fogFirstWindowChange !== false &&
+      !TelemetryStopwatch.running("FOG_EVAL_WINDOW_RAISED_S", aWindow)
+    ) {
+      // First time the user went inactive in this session.
+      // Time from the beginning of this subsession.
+      let histogram = Telemetry.getHistogramById("FOG_EVAL_WINDOW_RAISED_S");
+      histogram.add(
+        Math.floor(
+          (Policy.monotonicNow() - this._subsessionStartTimeMonotonic) / 1000
+        )
+      );
     } else {
       error = !TelemetryStopwatch.finish("FOG_EVAL_WINDOW_RAISED_S", aWindow);
     }
     if (error) {
       Telemetry.scalarAdd("fog.eval.window_raised_error", 1);
     }
+    this._fogFirstWindowChange = false;
   },
 
   /**
