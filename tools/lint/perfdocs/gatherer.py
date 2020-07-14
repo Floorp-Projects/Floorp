@@ -4,16 +4,19 @@
 from __future__ import absolute_import
 
 import os
+import pathlib
+import re
 
 from perfdocs.logger import PerfDocLogger
 from perfdocs.utils import read_yaml
-from perfdocs.framework_gatherers import RaptorGatherer
+from perfdocs.framework_gatherers import RaptorGatherer, MozperftestGatherer
 
 logger = PerfDocLogger()
 
 # TODO: Implement decorator/searcher to find the classes.
 frameworks = {
     "raptor": RaptorGatherer,
+    "mozperftest": MozperftestGatherer,
 }
 
 
@@ -23,14 +26,12 @@ class Gatherer(object):
     and can obtain manifest-based test lists. Used by the Verifier.
     """
 
-    def __init__(self, root_dir, workspace_dir):
+    def __init__(self, workspace_dir):
         """
         Initialzie the Gatherer.
 
-        :param str root_dir: Path to the testing directory.
         :param str workspace_dir: Path to the gecko checkout.
         """
-        self.root_dir = root_dir
         self.workspace_dir = workspace_dir
         self._perfdocs_tree = []
         self._test_list = []
@@ -67,29 +68,30 @@ class Gatherer(object):
         This method doesn't return anything. The result can be found in
         the perfdocs_tree attribute.
         """
+        exclude_dir = ["tools/lint", ".hg", "testing/perfdocs"]
 
-        for dirpath, dirname, files in os.walk(self.root_dir):
-            # Walk through the testing directory tree
-            if dirpath.endswith("/perfdocs"):
-                matched = {"path": dirpath, "yml": "", "rst": "", "static": []}
-                for file in files:
-                    # Add the yml/rst/static file to its key if re finds the searched file
-                    if file == "config.yml" or file == "config.yaml":
-                        matched["yml"] = file
-                    elif file == "index.rst":
-                        matched["rst"] = file
-                    elif file.endswith(".rst"):
-                        matched["static"].append(file)
+        for path in pathlib.Path(self.workspace_dir).rglob("perfdocs"):
+            if any(re.search(d, str(path)) for d in exclude_dir):
+                continue
 
-                # Append to structdocs if all the searched files were found
-                if all(val for val in matched.values() if not type(val) == list):
-                    self._perfdocs_tree.append(matched)
+            files = [f for f in os.listdir(path)]
+            matched = {"path": str(path), "yml": "", "rst": "", "static": []}
 
-        logger.log(
-            "Found {} perfdocs directories in {}".format(
-                len(self._perfdocs_tree), self.root_dir
-            )
-        )
+            for file in files:
+                # Add the yml/rst/static file to its key if re finds the searched file
+                if file == "config.yml" or file == "config.yaml":
+                    matched["yml"] = file
+                elif file == "index.rst":
+                    matched["rst"] = file
+                elif file.endswith(".rst"):
+                    matched["static"].append(file)
+
+            # Append to structdocs if all the searched files were found
+            if all(val for val in matched.values() if not type(val) == list):
+                self._perfdocs_tree.append(matched)
+
+        logger.log("Found {} perfdocs directories in {}"
+                   .format(len(self._perfdocs_tree), [d['path'] for d in self._perfdocs_tree]))
 
     def get_test_list(self, sdt_entry):
         """
@@ -116,15 +118,16 @@ class Gatherer(object):
             "yml_content": yaml_content,
             "yml_path": yaml_path,
             "name": yaml_content["name"],
+            "test_list": {}
         }
 
         # Get and then store the frameworks tests
         self.framework_gatherers[framework["name"]] = frameworks[framework["name"]](
             framework["yml_path"], self.workspace_dir
         )
-        framework["test_list"] = self.framework_gatherers[
-            framework["name"]
-        ].get_test_list()
+
+        if not yaml_content["static-only"]:
+            framework["test_list"] = self.framework_gatherers[framework["name"]].get_test_list()
 
         self._test_list.append(framework)
         return framework
