@@ -174,3 +174,6 @@ typedef intptr_t GLintptr;
 #define GL_TRIANGLE_STRIP 0x0005
 #define GL_TRIANGLE_FAN 0x0006
 #define GL_QUADS 0x0007
+
+#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
+
