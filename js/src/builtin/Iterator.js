@@ -6,6 +6,20 @@ function IteratorIdentity() {
   return this;
 }
 
+/* ECMA262 7.2.7 */
+function IteratorNext(iteratorRecord, value) {
+  // Steps 1-2.
+  const result = (arguments.length < 2
+      ? callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator)
+      : callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator, value));
+  // Step 3.
+  if (!IsObject(result)) {
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, result);
+  }
+  // Step 4.
+  return result;
+}
+
 /* ECMA262 7.4.6 */
 function IteratorClose(iteratorRecord, value) {
   // Step 3.

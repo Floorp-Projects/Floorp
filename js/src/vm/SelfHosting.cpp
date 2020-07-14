@@ -2112,6 +2112,20 @@ static bool intrinsic_NewIteratorHelper(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_NewAsyncIteratorHelper(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+
+  JSObject* obj = NewAsyncIteratorHelper(cx);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2579,6 +2593,15 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("NewWrapForValidIterator", intrinsic_NewWrapForValidIterator, 0, 0),
     JS_FN("NewIteratorHelper", intrinsic_NewIteratorHelper, 0, 0),
+    JS_FN("NewAsyncIteratorHelper", intrinsic_NewAsyncIteratorHelper, 0, 0),
+    JS_INLINABLE_FN("GuardToAsyncIteratorHelper",
+                    intrinsic_GuardToBuiltin<AsyncIteratorHelperObject>, 1, 0,
+                    IntrinsicGuardToIteratorHelper),
+    JS_FN("CallAsyncIteratorHelperMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<AsyncIteratorHelperObject>>, 2, 0),
+    JS_FN("IntrinsicAsyncGeneratorNext", AsyncGeneratorNext, 1, 0),
+    JS_FN("IntrinsicAsyncGeneratorReturn", AsyncGeneratorReturn, 1, 0),
+    JS_FN("IntrinsicAsyncGeneratorThrow", AsyncGeneratorThrow, 1, 0),
 
     JS_FN("NewPrivateName", intrinsic_NewPrivateName, 1, 0),
 
