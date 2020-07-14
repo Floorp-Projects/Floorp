@@ -32,8 +32,8 @@ namespace dom = mozilla::dom;
 
 static uint32_t gEntryID = 0;
 
-nsSHEntry::nsSHEntry()
-    : mShared(new nsSHEntryShared()),
+nsSHEntry::nsSHEntry(nsISHistory* aSHistory)
+    : mShared(new nsSHEntryShared(aSHistory)),
       mLoadType(0),
       mID(gEntryID++),
       mScrollPositionX(0),
@@ -822,15 +822,6 @@ NS_IMETHODIMP
 nsSHEntry::GetShistory(nsISHistory** aSHistory) {
   nsCOMPtr<nsISHistory> shistory(do_QueryReferent(mShared->mSHistory));
   shistory.forget(aSHistory);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetShistory(nsISHistory* aSHistory) {
-  nsWeakPtr shistory = do_GetWeakReference(aSHistory);
-  // mSHistory can not be changed once it's set
-  MOZ_ASSERT(!mShared->mSHistory || (mShared->mSHistory == shistory));
-  mShared->mSHistory = shistory;
   return NS_OK;
 }
 
