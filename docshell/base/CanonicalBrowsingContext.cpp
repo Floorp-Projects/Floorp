@@ -268,9 +268,6 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
 UniquePtr<SessionHistoryInfo>
 CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
-  MOZ_ASSERT(GetSessionHistory(),
-             "Creating an entry but session history is not enabled for this "
-             "browsing context!");
   RefPtr<SessionHistoryEntry> entry =
       new SessionHistoryEntry(aLoadState, aChannel);
   mLoadingEntries.AppendElement(entry);
@@ -281,12 +278,18 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
     uint64_t aSessionHistoryEntryId) {
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i]->Info().Id() == aSessionHistoryEntryId) {
+      nsISHistory* shistory = GetSessionHistory();
+      if (!shistory) {
+        mLoadingEntries.RemoveElementAt(i);
+        return;
+      }
+
       RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry.forget();
       mActiveEntry = mLoadingEntries[i];
       mLoadingEntries.RemoveElementAt(i);
       if (IsTop()) {
-        GetSessionHistory()->AddEntry(mActiveEntry,
-                                      /* FIXME aPersist = */ true);
+        shistory->AddEntry(mActiveEntry,
+                           /* FIXME aPersist = */ true);
       } else {
         // FIXME Check if we're replacing before adding a child.
         // FIXME The old implementations adds it to the parent's mLSHE if there
@@ -294,8 +297,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
         //       doesn't think it would).
         if (oldActiveEntry) {
           // FIXME Need to figure out the right value for aCloneChildren.
-          GetSessionHistory()->AddChildSHEntryHelper(oldActiveEntry,
-                                                     mActiveEntry, Top(), true);
+          shistory->AddChildSHEntryHelper(oldActiveEntry, mActiveEntry, Top(),
+                                          true);
         } else {
           SessionHistoryEntry* parentEntry =
               static_cast<CanonicalBrowsingContext*>(GetParent())->mActiveEntry;
@@ -311,8 +314,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
       Group()->EachParent([&](ContentParent* aParent) {
         // FIXME Should we return the length to the one process that committed
         //       as an async return value? Or should this use synced fields?
-        Unused << aParent->SendHistoryCommitLength(
-            Top(), GetSessionHistory()->GetCount());
+        Unused << aParent->SendHistoryCommitLength(Top(), shistory->GetCount());
       });
       return;
     }
