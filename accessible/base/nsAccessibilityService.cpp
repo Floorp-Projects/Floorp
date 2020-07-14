@@ -57,6 +57,7 @@
 #include "nsImageFrame.h"
 #include "nsINamed.h"
 #include "nsIObserverService.h"
+#include "nsMenuPopupFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPluginFrame.h"
 #include "nsTreeBodyFrame.h"
