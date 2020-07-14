@@ -24,6 +24,5 @@ DevToolsModules(
     'rulers.js',
     'selector.js',
     'shapes.js',
-    'simple-outline.js',
-    'xul-accessible.js'
+    'simple-outline.js'
 )
