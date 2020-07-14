@@ -95,6 +95,7 @@ bool WorkerScriptTimeoutHandler::Call(const char* aExecutionReason) {
   JSContext* cx = aes.cx();
   JS::CompileOptions options(cx);
   options.setFileAndLine(mFileName.get(), mLineNo).setNoScriptRval(true);
+  options.setIntroductionType("domTimer");
 
   JS::Rooted<JS::Value> unused(cx);
   JS::SourceText<char16_t> srcBuf;

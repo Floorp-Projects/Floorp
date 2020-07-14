@@ -26,8 +26,7 @@ function getDebuggerSourceURL(source) {
     introType === "debugger eval" ||
     introType === "Function" ||
     introType === "eventHandler" ||
-    introType === "setTimeout" ||
-    introType === "setInterval"
+    introType === "domTimer"
   ) {
     return null;
   }
