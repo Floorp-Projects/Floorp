@@ -36,6 +36,7 @@ function RulersHighlighter(highlighterEnv) {
     highlighterEnv,
     this._buildMarkup.bind(this)
   );
+  this.isReady = this.markup.initialize();
 
   const { pageListenerTarget } = highlighterEnv;
   pageListenerTarget.addEventListener("scroll", this);

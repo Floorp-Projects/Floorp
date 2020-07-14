@@ -747,7 +747,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @param  {Object} win
    *         Window where highlighting happens.
    */
-  clearStyles(win) {
+  async clearStyles(win) {
     const requests = this._loadedSheets.get(win);
     if (requests != null) {
       this._loadedSheets.set(win, requests + 1);
@@ -760,7 +760,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     // taking a snapshot for contrast measurement).
     loadSheetForBackgroundCalculation(win);
     this._loadedSheets.set(win, 1);
-    this.hideHighlighter();
+    await this.hideHighlighter();
   },
 
   /**
@@ -771,7 +771,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @param  {Object} win
    *         Window where highlighting was happenning.
    */
-  restoreStyles(win) {
+  async restoreStyles(win) {
     const requests = this._loadedSheets.get(win);
     if (!requests) {
       return;
@@ -782,25 +782,27 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       return;
     }
 
-    this.showHighlighter();
+    await this.showHighlighter();
     removeSheetForBackgroundCalculation(win);
     this._loadedSheets.delete(win);
   },
 
-  hideHighlighter() {
+  async hideHighlighter() {
     // TODO: Fix this workaround that temporarily removes higlighter bounds
     // overlay that can interfere with the contrast ratio calculation.
     if (this._highlighter) {
       const highlighter = this._highlighter.instance;
+      await highlighter.isReady;
       highlighter.hideAccessibleBounds();
     }
   },
 
-  showHighlighter() {
+  async showHighlighter() {
     // TODO: Fix this workaround that temporarily removes higlighter bounds
     // overlay that can interfere with the contrast ratio calculation.
     if (this._highlighter) {
       const highlighter = this._highlighter.instance;
+      await highlighter.isReady;
       highlighter.showAccessibleBounds();
     }
   },
@@ -838,7 +840,13 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     const { name, role } = accessible;
-    const shown = this.highlighter.show(
+    const { highlighter } = this;
+    await highlighter.instance.isReady;
+    if (this._highlightingAccessible !== accessible) {
+      return false;
+    }
+
+    const shown = highlighter.show(
       { rawNode },
       { ...options, ...bounds, name, role, audit, isXUL: this.isXUL }
     );
