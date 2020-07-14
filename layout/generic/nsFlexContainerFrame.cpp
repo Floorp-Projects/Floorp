@@ -1891,6 +1891,7 @@ class nsFlexContainerFrame::CachedFlexItemData {
 
 void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
     nsIFrame* aItemFrame) {
+  MOZ_ASSERT(aItemFrame->IsFlexItem());
   if (auto* cache = aItemFrame->GetProperty(CachedFlexItemData::Prop())) {
     cache->mBAxisMeasurement.reset();
     cache->mFinalReflowSize.reset();
