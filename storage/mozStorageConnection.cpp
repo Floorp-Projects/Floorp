@@ -703,9 +703,9 @@ nsresult Connection::initializeInternal() {
   mConnectionClosed = false;
 
 #ifdef MOZ_SQLITE_FTS3_TOKENIZER
-  DebugOnly<int> srv =
+  DebugOnly<int> srv2 =
       ::sqlite3_db_config(mDBConn, SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER, 1, 0);
-  MOZ_ASSERT(srv == SQLITE_OK,
+  MOZ_ASSERT(srv2 == SQLITE_OK,
              "SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER should be enabled");
 #endif
 

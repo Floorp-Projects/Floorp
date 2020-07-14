@@ -193,15 +193,10 @@ const uint32_t kFlushTimeoutMs = 5000;
 
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
-const uint32_t kDefaultNextGen = false;
 const uint32_t kDefaultShadowWrites = true;
 const uint32_t kDefaultSnapshotPrefill = 16384;
 const uint32_t kDefaultSnapshotGradualPrefill = 4096;
 const uint32_t kDefaultClientValidation = true;
-/**
- *
- */
-const char kNextGenPref[] = "dom.storage.next_gen";
 /**
  * Should all mutations also be reflected in the "shadow" database, which is
  * the legacy webappsstore.sqlite database.  When this is enabled, users can
@@ -2989,7 +2984,6 @@ typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
 
 StaticAutoPtr<ObserverHashtable> gObservers;
 
-Atomic<bool> gNextGen(kDefaultNextGen);
 Atomic<bool> gShadowWrites(kDefaultShadowWrites);
 Atomic<int32_t, Relaxed> gSnapshotPrefill(kDefaultSnapshotPrefill);
 Atomic<int32_t, Relaxed> gSnapshotGradualPrefill(
@@ -3326,8 +3320,6 @@ void InitializeLocalStorage() {
     NS_WARNING("Failed to initialize quota client!");
   }
 
-  Preferences::AddAtomicBoolVarCache(&gNextGen, kNextGenPref, kDefaultNextGen);
-
   Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
                                        kShadowWritesPref);
 
@@ -3344,8 +3336,6 @@ void InitializeLocalStorage() {
   gLocalStorageInitialized = true;
 #endif
 }
-
-bool GetCurrentNextGenPrefValue() { return gNextGen; }
 
 PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,

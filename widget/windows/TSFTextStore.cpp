@@ -4821,11 +4821,12 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       break;
     // Some Traditional Chinese TIPs of Microsoft don't show candidate window
     // in e10s mode on Win8 or later.
-    case TextInputProcessorID::eMicrosoftChangJie:
     case TextInputProcessorID::eMicrosoftQuick:
       if (sAlllowToStopHackingIfFine) {
-        return false;
+        return false;  // MS Quick works fine with Win10 build 17643.
       }
+      [[fallthrough]];
+    case TextInputProcessorID::eMicrosoftChangJie:
       if (!IsWin8OrLater() ||
           !TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP()) {
         return false;
