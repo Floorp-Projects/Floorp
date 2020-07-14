@@ -585,141 +585,144 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
 
-  class NoBreakingSpaceData;
-
-  class MOZ_STACK_CLASS BoundaryData final {
-   public:
-    using NoBreakingSpaceData = WSRunScanner::NoBreakingSpaceData;
-
-    /**
-     * ScanWhiteSpaceStartFrom() returns start boundary data of white-spaces
-     * containing aPoint.  When aPoint is in a text node and points a
-     * non-white-space character, this returns the data at aPoint.
-     *
-     * @param aPoint            Scan start point.
-     * @param aEditableBlockParentOrTopmostEditableInlineContent
-     *                          Nearest editable block parent element of aPoint
-     *                          if there is.  Otherwise, inline editing host.
-     * @param aEditingHost      Active editing host.
-     * @param aNBSPData         Optional.  If set, this recodes first and last
-     *                          NBSP positions.
-     */
-    template <typename EditorDOMPointType>
-    static BoundaryData ScanWhiteSpaceStartFrom(
-        const EditorDOMPointType& aPoint,
-        const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
-        const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
-
-    /**
-     * ScanWhiteSpaceEndFrom() returns end boundary data of white-spaces
-     * containing aPoint.  When aPoint is in a text node and points a
-     * non-white-space character, this returns the data at aPoint.
-     *
-     * @param aPoint            Scan start point.
-     * @param aEditableBlockParentOrTopmostEditableInlineContent
-     *                          Nearest editable block parent element of aPoint
-     *                          if there is.  Otherwise, inline editing host.
-     * @param aEditingHost      Active editing host.
-     * @param aNBSPData         Optional.  If set, this recodes first and last
-     *                          NBSP positions.
-     */
-    template <typename EditorDOMPointType>
-    static BoundaryData ScanWhiteSpaceEndFrom(
-        const EditorDOMPointType& aPoint,
-        const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
-        const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
-
-    BoundaryData() : mReason(WSType::NotInitialized) {}
-    template <typename EditorDOMPointType>
-    BoundaryData(const EditorDOMPointType& aPoint, nsIContent& aReasonContent,
-                 WSType aReason)
-        : mReasonContent(&aReasonContent), mPoint(aPoint), mReason(aReason) {}
-    bool Initialized() const { return mReasonContent && mPoint.IsSet(); }
-
-    nsIContent* GetReasonContent() const { return mReasonContent; }
-    const EditorDOMPoint& PointRef() const { return mPoint; }
-    WSType RawReason() const { return mReason; }
-
-    bool IsNormalText() const { return mReason == WSType::NormalText; }
-    bool IsSpecialContent() const { return mReason == WSType::SpecialContent; }
-    bool IsBRElement() const { return mReason == WSType::BRElement; }
-    bool IsCurrentBlockBoundary() const {
-      return mReason == WSType::CurrentBlockBoundary;
-    }
-    bool IsOtherBlockBoundary() const {
-      return mReason == WSType::OtherBlockBoundary;
-    }
-    bool IsBlockBoundary() const {
-      return mReason == WSType::CurrentBlockBoundary ||
-             mReason == WSType::OtherBlockBoundary;
-    }
-    bool IsHardLineBreak() const {
-      return mReason == WSType::CurrentBlockBoundary ||
-             mReason == WSType::OtherBlockBoundary ||
-             mReason == WSType::BRElement;
-    }
-    MOZ_NEVER_INLINE_DEBUG dom::Element* OtherBlockElementPtr() const {
-      MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsElement());
-      return mReasonContent->AsElement();
-    }
-    MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* BRElementPtr() const {
-      MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsHTMLElement(nsGkAtoms::br));
-      return static_cast<dom::HTMLBRElement*>(mReasonContent.get());
-    }
-
-   private:
-    /**
-     * Helper methods of ScanWhiteSpaceStartFrom() and
-     * ScanWhiteSpaceEndFrom() when they need to scan in a text node.
-     */
-    template <typename EditorDOMPointType>
-    static Maybe<WSRunScanner::BoundaryData> ScanWhiteSpaceStartInTextNode(
-        const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
-    template <typename EditorDOMPointType>
-    static Maybe<WSRunScanner::BoundaryData> ScanWhiteSpaceEndInTextNode(
-        const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
-
-    nsCOMPtr<nsIContent> mReasonContent;
-    EditorDOMPoint mPoint;
-    // Must be one of WSType::NotInitialized, WSType::NormalText,
-    // WSType::SpecialContent, WSType::BRElement, WSType::CurrentBlockBoundary
-    // or WSType::OtherBlockBoundary.
-    WSType mReason;
-  };
-
-  class MOZ_STACK_CLASS NoBreakingSpaceData final {
-   public:
-    enum class Scanning { Forward, Backward };
-    void NotifyNBSP(const EditorDOMPointInText& aPoint,
-                    Scanning aScanningDirection) {
-      MOZ_ASSERT(aPoint.IsSetAndValid());
-      MOZ_ASSERT(aPoint.IsCharNBSP());
-      if (!mFirst.IsSet() || aScanningDirection == Scanning::Backward) {
-        mFirst = aPoint;
-      }
-      if (!mLast.IsSet() || aScanningDirection == Scanning::Forward) {
-        mLast = aPoint;
-      }
-    }
-
-    const EditorDOMPointInText& FirstPointRef() const { return mFirst; }
-    const EditorDOMPointInText& LastPointRef() const { return mLast; }
-
-    bool FoundNBSP() const {
-      MOZ_ASSERT(mFirst.IsSet() == mLast.IsSet());
-      return mFirst.IsSet();
-    }
-
-   private:
-    EditorDOMPointInText mFirst;
-    EditorDOMPointInText mLast;
-  };
-
   /**
    * TextFragmentData stores the information of white-space sequence which
    * contains `aPoint` of the constructor.
    */
   class MOZ_STACK_CLASS TextFragmentData final {
+   private:
+    class NoBreakingSpaceData;
+    class MOZ_STACK_CLASS BoundaryData final {
+     public:
+      using NoBreakingSpaceData =
+          WSRunScanner::TextFragmentData::NoBreakingSpaceData;
+
+      /**
+       * ScanWhiteSpaceStartFrom() returns start boundary data of white-spaces
+       * containing aPoint.  When aPoint is in a text node and points a
+       * non-white-space character, this returns the data at aPoint.
+       *
+       * @param aPoint            Scan start point.
+       * @param aEditableBlockParentOrTopmostEditableInlineContent
+       *                          Nearest editable block parent element of
+       * aPoint if there is.  Otherwise, inline editing host.
+       * @param aEditingHost      Active editing host.
+       * @param aNBSPData         Optional.  If set, this recodes first and last
+       *                          NBSP positions.
+       */
+      template <typename EditorDOMPointType>
+      static BoundaryData ScanWhiteSpaceStartFrom(
+          const EditorDOMPointType& aPoint,
+          const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
+          const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+
+      /**
+       * ScanWhiteSpaceEndFrom() returns end boundary data of white-spaces
+       * containing aPoint.  When aPoint is in a text node and points a
+       * non-white-space character, this returns the data at aPoint.
+       *
+       * @param aPoint            Scan start point.
+       * @param aEditableBlockParentOrTopmostEditableInlineContent
+       *                          Nearest editable block parent element of
+       * aPoint if there is.  Otherwise, inline editing host.
+       * @param aEditingHost      Active editing host.
+       * @param aNBSPData         Optional.  If set, this recodes first and last
+       *                          NBSP positions.
+       */
+      template <typename EditorDOMPointType>
+      static BoundaryData ScanWhiteSpaceEndFrom(
+          const EditorDOMPointType& aPoint,
+          const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
+          const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+
+      BoundaryData() : mReason(WSType::NotInitialized) {}
+      template <typename EditorDOMPointType>
+      BoundaryData(const EditorDOMPointType& aPoint, nsIContent& aReasonContent,
+                   WSType aReason)
+          : mReasonContent(&aReasonContent), mPoint(aPoint), mReason(aReason) {}
+      bool Initialized() const { return mReasonContent && mPoint.IsSet(); }
+
+      nsIContent* GetReasonContent() const { return mReasonContent; }
+      const EditorDOMPoint& PointRef() const { return mPoint; }
+      WSType RawReason() const { return mReason; }
+
+      bool IsNormalText() const { return mReason == WSType::NormalText; }
+      bool IsSpecialContent() const {
+        return mReason == WSType::SpecialContent;
+      }
+      bool IsBRElement() const { return mReason == WSType::BRElement; }
+      bool IsCurrentBlockBoundary() const {
+        return mReason == WSType::CurrentBlockBoundary;
+      }
+      bool IsOtherBlockBoundary() const {
+        return mReason == WSType::OtherBlockBoundary;
+      }
+      bool IsBlockBoundary() const {
+        return mReason == WSType::CurrentBlockBoundary ||
+               mReason == WSType::OtherBlockBoundary;
+      }
+      bool IsHardLineBreak() const {
+        return mReason == WSType::CurrentBlockBoundary ||
+               mReason == WSType::OtherBlockBoundary ||
+               mReason == WSType::BRElement;
+      }
+      MOZ_NEVER_INLINE_DEBUG dom::Element* OtherBlockElementPtr() const {
+        MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsElement());
+        return mReasonContent->AsElement();
+      }
+      MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* BRElementPtr() const {
+        MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsHTMLElement(nsGkAtoms::br));
+        return static_cast<dom::HTMLBRElement*>(mReasonContent.get());
+      }
+
+     private:
+      /**
+       * Helper methods of ScanWhiteSpaceStartFrom() and
+       * ScanWhiteSpaceEndFrom() when they need to scan in a text node.
+       */
+      template <typename EditorDOMPointType>
+      static Maybe<BoundaryData> ScanWhiteSpaceStartInTextNode(
+          const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
+      template <typename EditorDOMPointType>
+      static Maybe<BoundaryData> ScanWhiteSpaceEndInTextNode(
+          const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
+
+      nsCOMPtr<nsIContent> mReasonContent;
+      EditorDOMPoint mPoint;
+      // Must be one of WSType::NotInitialized, WSType::NormalText,
+      // WSType::SpecialContent, WSType::BRElement, WSType::CurrentBlockBoundary
+      // or WSType::OtherBlockBoundary.
+      WSType mReason;
+    };
+
+    class MOZ_STACK_CLASS NoBreakingSpaceData final {
+     public:
+      enum class Scanning { Forward, Backward };
+      void NotifyNBSP(const EditorDOMPointInText& aPoint,
+                      Scanning aScanningDirection) {
+        MOZ_ASSERT(aPoint.IsSetAndValid());
+        MOZ_ASSERT(aPoint.IsCharNBSP());
+        if (!mFirst.IsSet() || aScanningDirection == Scanning::Backward) {
+          mFirst = aPoint;
+        }
+        if (!mLast.IsSet() || aScanningDirection == Scanning::Forward) {
+          mLast = aPoint;
+        }
+      }
+
+      const EditorDOMPointInText& FirstPointRef() const { return mFirst; }
+      const EditorDOMPointInText& LastPointRef() const { return mLast; }
+
+      bool FoundNBSP() const {
+        MOZ_ASSERT(mFirst.IsSet() == mLast.IsSet());
+        return mFirst.IsSet();
+      }
+
+     private:
+      EditorDOMPointInText mFirst;
+      EditorDOMPointInText mLast;
+    };
+
    public:
     TextFragmentData() = delete;
     template <typename EditorDOMPointType>
@@ -773,8 +776,12 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
     const EditorDOMPoint& ScanStartRef() const { return mScanStartPoint; }
 
-    const NoBreakingSpaceData& NoBreakingSpaceDataRef() const {
-      return mNBSPData;
+    bool FoundNoBreakingWhiteSpaces() const { return mNBSPData.FoundNBSP(); }
+    const EditorDOMPointInText& FirstNBSPPointRef() const {
+      return mNBSPData.FirstPointRef();
+    }
+    const EditorDOMPointInText& LastNBSPPointRef() const {
+      return mNBSPData.LastPointRef();
     }
 
     bool IsPreformatted() const { return mIsPreformatted; }
