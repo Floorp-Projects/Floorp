@@ -63,19 +63,6 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
 // static
-nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
-    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
-  MOZ_ASSERT(aPoint.IsSet());
-
-  WSRunObject wsRunObject(aHTMLEditor, aPoint);
-  nsresult rv = wsRunObject.DeleteInvisibleASCIIWhiteSpacesInternal();
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "WSRunObject::DeleteInvisibleASCIIWhiteSpacesInternal() failed");
-  return rv;
-}
-
-// static
 nsresult WSRunObject::PrepareToJoinBlocks(HTMLEditor& aHTMLEditor,
                                           Element& aLeftBlockElement,
                                           Element& aRightBlockElement) {
@@ -2230,21 +2217,23 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   return atNextChar;
 }
 
-nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpacesInternal() {
-  TextFragmentData textFragment(TextFragmentDataAtStart());
+// static
+nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
+  MOZ_ASSERT(aPoint.IsSet());
+  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  TextFragmentData textFragmentData(aPoint, editingHost);
   EditorDOMRange leadingWhiteSpaceRange =
-      textFragment.GetInvisibleLeadingWhiteSpaceRange();
+      textFragmentData.GetInvisibleLeadingWhiteSpaceRange();
   // XXX Getting trailing white-space range now must be wrong because
   //     mutation event listener may invalidate it.
   EditorDOMRange trailingWhiteSpaceRange =
-      textFragment.GetInvisibleTrailingWhiteSpaceRange();
+      textFragmentData.GetInvisibleTrailingWhiteSpaceRange();
   DebugOnly<bool> leadingWhiteSpacesDeleted = false;
   if (leadingWhiteSpaceRange.IsPositioned() &&
       !leadingWhiteSpaceRange.Collapsed()) {
-    nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                      .DeleteTextAndTextNodesWithTransaction(
-                          leadingWhiteSpaceRange.StartRef(),
-                          leadingWhiteSpaceRange.EndRef());
+    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        leadingWhiteSpaceRange.StartRef(), leadingWhiteSpaceRange.EndRef());
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed to "
@@ -2259,10 +2248,8 @@ nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpacesInternal() {
     NS_ASSERTION(!leadingWhiteSpacesDeleted,
                  "We're trying to remove trailing white-spaces with maybe "
                  "outdated range");
-    nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                      .DeleteTextAndTextNodesWithTransaction(
-                          trailingWhiteSpaceRange.StartRef(),
-                          trailingWhiteSpaceRange.EndRef());
+    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        trailingWhiteSpaceRange.StartRef(), trailingWhiteSpaceRange.EndRef());
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed to "
