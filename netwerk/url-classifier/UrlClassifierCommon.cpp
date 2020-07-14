@@ -368,8 +368,9 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
       uri->GetAsciiSpec(spec);
       spec.Truncate(
           std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(("CreatePairwiseEntityListURI: No top-level URI associated with %s",
-              spec.get()));
+      UC_LOG(
+          ("CreatePairwiseEntityListURI: No top-level URI associated with %s",
+           spec.get()));
     }
 
     // Return success because we want to continue to look up even without

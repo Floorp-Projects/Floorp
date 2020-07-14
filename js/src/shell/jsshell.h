@@ -179,7 +179,7 @@ class NonshrinkingGCObjectVector
   void sweep() {
     for (JSObject*& obj : *this) {
       if (JS::GCPolicy<JSObject*>::needsSweep(&obj)) {
-          obj = nullptr;
+        obj = nullptr;
       }
     }
   }
