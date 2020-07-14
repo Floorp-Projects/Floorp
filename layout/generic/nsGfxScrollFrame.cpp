@@ -3428,6 +3428,48 @@ static void ClipListsExceptCaret(nsDisplayListCollection* aLists,
                        cache);
 }
 
+// This is similar to a "save-restore" RAII class for
+// DisplayListBuilder::ContainsBlendMode(), with a slight enhancement.
+// If this class is put on the stack and then unwound, the DL builder's
+// ContainsBlendMode flag will be effectively the same as if this class wasn't
+// put on the stack. However, if the CaptureContainsBlendMode method is called,
+// there will be a difference - the blend mode in the descendant display lists
+// will be "captured" and extracted.
+// The main goal here is to allow conditionally capturing the flag that
+// indicates whether or not a blend mode was encountered in the descendant part
+// of the display list.
+class MOZ_RAII AutoContainsBlendModeCapturer {
+  nsDisplayListBuilder& mBuilder;
+  bool mSavedContainsBlendMode;
+
+ public:
+  explicit AutoContainsBlendModeCapturer(nsDisplayListBuilder& aBuilder)
+      : mBuilder(aBuilder),
+        mSavedContainsBlendMode(aBuilder.ContainsBlendMode()) {
+    mBuilder.SetContainsBlendMode(false);
+  }
+
+  bool CaptureContainsBlendMode() {
+    // "Capture" the flag by extracting and clearing the ContainsBlendMode flag
+    // on the builder.
+    bool capturedBlendMode = mBuilder.ContainsBlendMode();
+    mBuilder.SetContainsBlendMode(false);
+    return capturedBlendMode;
+  }
+
+  ~AutoContainsBlendModeCapturer() {
+    // If CaptureContainsBlendMode() was called, the descendant blend mode was
+    // "captured" and so uncapturedContainsBlendMode will be false. If
+    // CaptureContainsBlendMode() wasn't called, then no capture occurred, and
+    // uncapturedContainsBlendMode may be true if there was a descendant blend
+    // mode. In that case, we set the flag on the DL builder so that we restore
+    // state to what it would have been without this RAII class on the stack.
+    bool uncapturedContainsBlendMode = mBuilder.ContainsBlendMode();
+    mBuilder.SetContainsBlendMode(mSavedContainsBlendMode ||
+                                  uncapturedContainsBlendMode);
+  }
+};
+
 void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayListSet& aLists) {
   SetAndNullOnExit<const nsIFrame> tmpBuilder(
@@ -3640,6 +3682,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   nsDisplayListCollection set(aBuilder);
+  AutoContainsBlendModeCapturer blendCapture(*aBuilder);
 
   bool willBuildAsyncZoomContainer =
       mWillBuildScrollableLayer && aBuilder->ShouldBuildAsyncZoomContainer() &&
@@ -3855,6 +3898,32 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     nsDisplayList resultList;
     set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
+
+    if (blendCapture.CaptureContainsBlendMode()) {
+      // The async zoom contents contain a mix-blend mode, so let's wrap all
+      // those contents into a blend container, and then wrap the blend
+      // container in the async zoom container. Otherwise the blend container
+      // ends up outside the zoom container which results in blend failure for
+      // WebRender.
+      nsDisplayItem* blendContainer =
+          nsDisplayBlendContainer::CreateForMixBlendMode(
+              aBuilder, mOuter, &resultList,
+              aBuilder->CurrentActiveScrolledRoot());
+      resultList.AppendToTop(blendContainer);
+
+      // Blend containers can be created or omitted during partial updates
+      // depending on the dirty rect. So we basically can't do partial updates
+      // if there's a blend container involved. There is equivalent code to this
+      // in the BuildDisplayListForStackingContext function as well, with a more
+      // detailed comment explaining things better.
+      if (aBuilder->IsRetainingDisplayList()) {
+        if (aBuilder->IsPartialUpdate()) {
+          aBuilder->SetPartialBuildFailed(true);
+        } else {
+          aBuilder->SetDisablePartialUpdates(true);
+        }
+      }
+    }
 
     mozilla::layers::FrameMetrics::ViewID viewID =
         nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
