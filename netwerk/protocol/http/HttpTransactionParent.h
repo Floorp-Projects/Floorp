@@ -53,9 +53,10 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed);
-  mozilla::ipc::IPCResult RecvOnTransportStatus(const nsresult& aStatus,
-                                                const int64_t& aProgress,
-                                                const int64_t& aProgressMax);
+  mozilla::ipc::IPCResult RecvOnTransportStatus(
+      const nsresult& aStatus, const int64_t& aProgress,
+      const int64_t& aProgressMax,
+      Maybe<NetworkAddressArg>&& aNetworkAddressArg);
   mozilla::ipc::IPCResult RecvOnDataAvailable(
       const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
       const bool& aDataSentToChildProcess);
@@ -66,9 +67,6 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const bool& aHasStickyConn,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
       const int64_t& aRequestSize);
-  mozilla::ipc::IPCResult RecvOnNetAddrUpdate(const NetAddr& aSelfAddr,
-                                              const NetAddr& aPeerAddr,
-                                              const bool& aResolvedByTRR);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
@@ -94,8 +92,6 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                         const int32_t& aProxyConnectResponseCode,
                         nsTArray<uint8_t>&& aDataForSniffer,
                         const Maybe<nsCString>& aAltSvcUsed);
-  void DoOnTransportStatus(const nsresult& aStatus, const int64_t& aProgress,
-                           const int64_t& aProgressMax);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
                          const uint32_t& aCount,
                          const bool& aDataSentToChildProcess);
