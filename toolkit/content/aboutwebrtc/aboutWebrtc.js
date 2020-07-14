@@ -303,20 +303,22 @@ function renderPeerConnection(report) {
 }
 
 function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
+  const trimNewlines = sdp => sdp.replaceAll("\r\n", "\n");
+
   const statsDiv = renderElements("div", {}, [
     renderText("h4", string("sdp_heading")),
     renderText(
       "h5",
       `${string("local_sdp_heading")} (${string(offerer ? "offer" : "answer")})`
     ),
-    renderText("pre", localSdp),
+    renderText("pre", trimNewlines(localSdp)),
     renderText(
       "h5",
       `${string("remote_sdp_heading")} (${string(
         offerer ? "answer" : "offer"
       )})`
     ),
-    renderText("pre", remoteSdp),
+    renderText("pre", trimNewlines(remoteSdp)),
     renderText("h4", string("sdp_history_heading")),
   ]);
 
@@ -370,7 +372,7 @@ function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
     for (const { lineNumber, error } of errors) {
       histDiv.append(renderElement("br"), `${lineNumber}: ${error}`);
     }
-    histDiv.append(renderText("pre", sdp));
+    histDiv.append(renderText("pre", trimNewlines(sdp)));
   }
   section.append(localDiv, remoteDiv);
   statsDiv.append(section);
