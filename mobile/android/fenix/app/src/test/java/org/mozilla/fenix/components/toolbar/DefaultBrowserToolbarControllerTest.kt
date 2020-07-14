@@ -6,7 +6,6 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
@@ -32,6 +31,7 @@ import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -46,6 +46,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -61,6 +62,7 @@ import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -384,12 +386,20 @@ class DefaultBrowserToolbarControllerTest {
         val item = ToolbarMenu.Item.Share
 
         every { currentSession.url } returns "https://mozilla.org"
+        every { currentSession.title } returns "Mozilla"
 
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SHARE)) }
-        verify { navController.navigate(any<NavDirections>()) }
+        verify {
+            navController.navigate(
+                directionsEq(NavGraphDirections.actionGlobalShareFragment(
+                    data = arrayOf(ShareData(url = "https://mozilla.org", title = "Mozilla")),
+                    showPage = true
+                ))
+            )
+        }
     }
 
     @Test

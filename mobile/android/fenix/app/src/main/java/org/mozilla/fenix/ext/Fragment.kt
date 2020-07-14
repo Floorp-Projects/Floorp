@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
-import androidx.navigation.Navigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
 import org.mozilla.fenix.NavHostActivity
@@ -23,15 +22,7 @@ import org.mozilla.fenix.components.Components
 val Fragment.requireComponents: Components
     get() = requireContext().components
 
-fun Fragment.nav(@IdRes id: Int?, directions: NavDirections) {
-    findNavController(this).nav(id, directions)
-}
-
-fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, extras: Navigator.Extras) {
-    findNavController(this).nav(id, directions, extras)
-}
-
-fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, options: NavOptions) {
+fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, options: NavOptions? = null) {
     findNavController(this).nav(id, directions, options)
 }
 

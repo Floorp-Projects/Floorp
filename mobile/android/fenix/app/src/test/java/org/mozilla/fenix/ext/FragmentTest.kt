@@ -57,16 +57,6 @@ class FragmentTest {
     }
 
     @Test
-    fun `Test nav fun with ID, directions, and extras`() {
-        every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockExtras)) } just Runs
-
-        mockFragment.nav(mockId, navDirections, mockExtras)
-        verify { (NavHostFragment.findNavController(mockFragment).currentDestination) }
-        verify { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockExtras)) }
-        confirmVerified(mockFragment)
-    }
-
-    @Test
     fun `Test nav fun with ID, directions, and options`() {
         every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockOptions)) } just Runs
 

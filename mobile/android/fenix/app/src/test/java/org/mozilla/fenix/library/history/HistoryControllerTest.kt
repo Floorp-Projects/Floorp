@@ -8,7 +8,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.res.Resources
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
@@ -24,7 +23,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -189,8 +187,6 @@ class HistoryControllerTest {
     @Test
     @Suppress("UNCHECKED_CAST")
     fun onShareItem() {
-        val directions = slot<NavDirections>()
-
         controller.handleShare(historyItem)
 
         // `verify` checks for referential equality.
@@ -198,17 +194,11 @@ class HistoryControllerTest {
         // Capture the NavDirections and `assert` for structural equality after.
         verify {
             navController.navigate(
-                capture(directions)
+                HistoryFragmentDirections.actionGlobalShareFragment(
+                    data = arrayOf(ShareData(url = historyItem.url, title = historyItem.title))
+                )
             )
         }
-
-        assertEquals(
-            directions.captured.actionId,
-            R.id.action_global_shareFragment
-        )
-        assertEquals(1, (directions.captured.arguments["data"] as Array<ShareData>).size)
-        assertEquals(historyItem.title, (directions.captured.arguments["data"] as Array<ShareData>)[0].title)
-        assertEquals(historyItem.url, (directions.captured.arguments["data"] as Array<ShareData>)[0].url)
     }
 
     @Test

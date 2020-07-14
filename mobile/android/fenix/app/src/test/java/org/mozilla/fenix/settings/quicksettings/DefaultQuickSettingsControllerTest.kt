@@ -27,6 +27,7 @@ import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.PermissionStorage
+import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
@@ -136,7 +137,9 @@ class DefaultQuickSettingsControllerTest {
         invalidSitePermissionsController.handlePermissionToggled(websitePermission)
 
         verify {
-            navController.navigate(any<NavDirections>())
+            navController.navigate(directionsEq(
+                QuickSettingsSheetDialogFragmentDirections.actionGlobalSitePermissionsManagePhoneFeature(PhoneFeature.CAMERA)
+            ))
         }
     }
 
