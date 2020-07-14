@@ -179,7 +179,7 @@ menuitem.bookmark-item {
   font-size: 1.05em;
 }
 
-@supports -moz-bool-pref("browser.urlbar.update2.expandTextOnFocus") {
+@supports -moz-bool-pref("browser.urlbar.experimental.expandTextOnFocus") {
   #urlbar[breakout-extend] {
     font-size: 1.14em;
   }
