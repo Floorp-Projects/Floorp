@@ -19,9 +19,9 @@ pytestmark = pytest.mark.slow
 def tgg(create_tgg):
     params = TRY_AUTO_PARAMETERS.copy()
     params.update(
-        {"head_repository": "https://hg.mozilla.org/try", "project": "try"}
+        {"head_repository": "https://hg.mozilla.org/try", "project": "try", "target_kind": "test"}
     )
-    tgg = create_tgg(overrides=params, target_kind="test")
+    tgg = create_tgg(overrides=params)
     return tgg
 
 

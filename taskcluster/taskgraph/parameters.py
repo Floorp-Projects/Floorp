@@ -96,6 +96,8 @@ base_schema = Schema({
     Required('release_product'): Any(None, text_type),
     Required('required_signoffs'): [text_type],
     Required('signoff_urls'): dict,
+    # target-kind is not included, since it should never be
+    # used at run-time
     Required('target_tasks_method'): text_type,
     Required('tasks_for'): text_type,
     Required('test_manifest_loader'): text_type,
