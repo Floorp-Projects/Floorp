@@ -111,15 +111,24 @@ EventTree* NotificationController::QueueMutation(Accessible* aContainer) {
 }
 
 bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
-  // We have to allow there to be a hide and then a show event for a target
-  // because of targets getting moved.  However we need to coalesce a show and
-  // then a hide for a target which means we need to check for that here.
-  if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE &&
-      aEvent->GetAccessible()->ShowEventTarget()) {
-    AccTreeMutationEvent* showEvent =
-        mMutationMap.GetEvent(aEvent->GetAccessible(), EventMap::ShowEvent);
-    DropMutationEvent(showEvent);
-    return false;
+  if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE) {
+    // We have to allow there to be a hide and then a show event for a target
+    // because of targets getting moved.  However we need to coalesce a show and
+    // then a hide for a target which means we need to check for that here.
+    if (aEvent->GetAccessible()->ShowEventTarget()) {
+      AccTreeMutationEvent* showEvent =
+          mMutationMap.GetEvent(aEvent->GetAccessible(), EventMap::ShowEvent);
+      DropMutationEvent(showEvent);
+      return false;
+    }
+
+    // If this is an additional hide event, the accessible may be hidden, or
+    // moved again after a move. Preserve the original hide event since
+    // its properties are consistent with the tree that existed before
+    // the next batch of mutation events is processed.
+    if (aEvent->GetAccessible()->HideEventTarget()) {
+      return false;
+    }
   }
 
   AccMutationEvent* mutEvent = downcast_accEvent(aEvent);
