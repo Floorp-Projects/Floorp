@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace layers {
 class Animation;
-class Layers;
+class Layer;
 class CompositorBridgeParent;
 
 typedef nsTArray<layers::Animation> AnimationArray;
