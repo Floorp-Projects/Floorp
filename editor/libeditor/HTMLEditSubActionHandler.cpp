@@ -2542,8 +2542,8 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
   }
 
   if (scanFromStartPointResult.InNormalWhiteSpaces()) {
-    EditActionResult result =
-        HandleDeleteCollapsedSelectionAtWhiteSpaces(aDirectionAndAmount, wsObj);
+    EditActionResult result = HandleDeleteCollapsedSelectionAtWhiteSpaces(
+        aDirectionAndAmount, startPoint, wsObj);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "HTMLEditor::HandleDelectCollapsedSelectionAtWhiteSpaces() failed");
@@ -2612,7 +2612,7 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
 
 EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
     nsIEditor::EDirection aDirectionAndAmount,
-    WSRunObject& aWSRunObjectAtCaret) {
+    const EditorDOMPoint& aPointToDelete, WSRunObject& aWSRunObjectAtCaret) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (aDirectionAndAmount == nsIEditor::eNext) {
@@ -2625,12 +2625,9 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
       return EditActionHandled(rv);
     }
   } else {
-    nsresult rv = aWSRunObjectAtCaret.DeleteWSBackward();
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
+    nsresult rv = WSRunObject::DeletePreviousWhiteSpace(*this, aPointToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::DeleteWSBackward() failed");
+      NS_WARNING("WSRunObject::DeletePreviousWhiteSpace() failed");
       return EditActionHandled(rv);
     }
   }
