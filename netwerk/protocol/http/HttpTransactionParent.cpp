@@ -494,21 +494,15 @@ void HttpTransactionParent::DoOnStartRequest(
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnTransportStatus(
     const nsresult& aStatus, const int64_t& aProgress,
-    const int64_t& aProgressMax) {
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus, aProgress,
-             aProgressMax]() {
-        self->DoOnTransportStatus(aStatus, aProgress, aProgressMax);
-      }));
-  return IPC_OK();
-}
-
-void HttpTransactionParent::DoOnTransportStatus(const nsresult& aStatus,
-                                                const int64_t& aProgress,
-                                                const int64_t& aProgressMax) {
-  LOG(("HttpTransactionParent::DoOnTransportStatus [this=%p]\n", this));
-  AutoEventEnqueuer ensureSerialDispatch(mEventQ);
+    const int64_t& aProgressMax,
+    Maybe<NetworkAddressArg>&& aNetworkAddressArg) {
+  if (aNetworkAddressArg) {
+    mSelfAddr = aNetworkAddressArg->selfAddr();
+    mPeerAddr = aNetworkAddressArg->peerAddr();
+    mResolvedByTRR = aNetworkAddressArg->resolvedByTRR();
+  }
   mEventsink->OnTransportStatus(nullptr, aStatus, aProgress, aProgressMax);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
@@ -643,15 +637,6 @@ void HttpTransactionParent::DoOnStopRequest(
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   Unused << mChannel->OnStopRequest(this, mStatus);
   mOnStopRequestCalled = true;
-}
-
-mozilla::ipc::IPCResult HttpTransactionParent::RecvOnNetAddrUpdate(
-    const NetAddr& aSelfAddr, const NetAddr& aPeerAddr,
-    const bool& aResolvedByTRR) {
-  mSelfAddr = aSelfAddr;
-  mPeerAddr = aPeerAddr;
-  mResolvedByTRR = aResolvedByTRR;
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnInitFailed(
