@@ -230,7 +230,9 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateBigInts_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
+#ifndef JS_MORE_DETERMINISTIC
       smoothedGrowthFactor(1.0),
+#endif
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
       ,
