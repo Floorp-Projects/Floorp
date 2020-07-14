@@ -25,6 +25,9 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">Адкрытых картак: %1$s. Націсніце, каб пераключыць карткі.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s распрацаваны Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Вы ў прыватным сеансе</string>
@@ -202,6 +205,10 @@
     <string name="preferences_add_private_browsing_shortcut">Дадаць ярлык прыватнага аглядання</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Даступнасць</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Уласны сервер уліковых запісаў Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Уласны сервер сінхранізацыі</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Уліковы запіс</string>
     <!-- Preference shown on banner to sign into account -->
@@ -302,13 +309,19 @@
     <string name="preferences_tracking_protection_exceptions">Выключэнні</string>
     <!-- Preference description for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions_description">Ахова ад сачэння выключана на гэтых сайтах</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Уключыць для ўсіх сайтаў</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Даведацца больш</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Тэлеметрыя</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Выкарыстанне і тэхнічныя дадзеныя</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Дзяліцца звесткамі пра прадукцыйнасць, выкарыстанне, апаратнае забеспячэнне і налады вашага браўзера з Mozilla, каб дапамагчы ўдасканаліць %1$s</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Маркетынгавыя дадзеныя</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Доследы</string>
 

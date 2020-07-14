@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s prevez</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (prevez)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Dibarzhioù ouzhpenn</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Gweredekaat ar Merdeiñ Prevez</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Diweredekaat ar Merdeiñ Prevez</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Klask pe chomlecʼh</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù digoret</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù prevez</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 ivinell digor. Stokit evit mont dʼun ivinell all.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s ivinell digor. Stokit evit mont dʼun ivinell all.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">Gant Mozilla eo produet %1$s.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">En un estez prevez emaocʼh</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s a skarzh ho roll istor klask ha merdeiñ eus an ivinelloù prevez pa guitait anezho pe pa guitait an arload. Daoust ma ne lak ket acʼhanocʼh da vezañ dizanv evit al lecʼhiennoù pe evit ho pourchaser kenrouedad e vo aesocʼh da zercʼhel prevez ar pezh a rit enlinenn evit an dud all a implij an trevnad-mañ.</string>
+    <string name="private_browsing_common_myths">Mojennoù a vez alies diwar-benn ar merdeiñ prevez</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Dilemel an estez</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Ouzhpennañ ur verradenn evit digeriñ ivinelloù prevez adalek ho skramm degemer.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Ouzhpennañ ur verradenn</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Ket, trugarez</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Kit buanocʼh war Firefox. Ouzhpennit ur widjet war ho skramm degemer.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Ouzhpennañ ur widjet</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ket bremañ</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Ivinell nevez</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Ivinell prevez nevez</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Lecʼhiennoù gwellañ</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Ivinelloù digor</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Distreiñ</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">War-lercʼh</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Azbevaat</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Paouez</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Sined</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Embann ar sined</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Askouezhioù</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Nʼeus tamm enlugellad ebet amañ</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Skoazell</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Petra nevez</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Arventennoù</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Levraoueg</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Lecʼhienn urzhiataer</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Ouzhpennañ dʼar skramm degemer</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Staliañ</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Ivinelloù goubredet</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Kavout er bajennad</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Roadennoù prevez</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Ivinell nevez</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Enrollañ en dastumad</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Rannañ</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Rannañ gant...</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Digeriñ e %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">LUSKET GANT %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Lusket gant %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Mod Lenn</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Serriñ ar mod lenn</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Digeriñ en arload</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Neuz</string>
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Ne cʼhaller ket kennaskañ. Steuñv URL dianav.</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Yezh dibabet</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Klask</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Ober gant yezh ar benveg</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Klask ur yezh</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Cʼhwilerviñ</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Berradennoù</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Arventennoù al lusker klask</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Klask gant</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Evit ar wech-mañ, klask gant:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Leuniañ diwar ar golver</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Aotren</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Na aotren</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Aotren alioù klask er merdeiñ prevez?</string>
+
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s a ranno ar pezh a vizskrivit er varrenn chomlecʼhioù gant ho lusker enklask dre ziouer.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Gouzout hirocʼh</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Klask</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Klask er web</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Klask dre vouezh</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Arventennoù</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Diazez</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Hollek</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">A-zivout</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Keflusker enklask dre ziouer</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Klask</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Barrenn chomlecʼhioù</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Skoazell</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Notennit anezhañ war Google Play</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Reiñ evezhiadennoù</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">A-zivout %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Ho kwirioù</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Gerioù-tremen</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Kartennoù kred ha chomlecʼhioù</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Lakaat evel merdeer dre ziouer</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Kempleshocʼh</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Buhez prevez</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Buhez prevez ha diogelroez</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Aotreoù al lecʼhiennoù</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Merdeiñ prevez</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Digeriñ an ereoù en un ivinell brevez</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Aotren an tapadennoù-skramm er merdeiñ prevez</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Ouzhpennañ ur verradenn merdeiñ prevez</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Haezadusted</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Dafariad kont Firefox personelaet</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Dafariad Sync personelaet</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Dafariad kont Firefox/Sync kemmet. Kuitaet e vo an arload evit arloañ ar cʼhemmoù…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Kont</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Kennaskañ</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Barrenn ostilhoù</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Neuz</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Personelaat</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Goubredit sinedoù, ar roll istor, ha muiocʼh cʼhoazh gant ho kont Firefox.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Kont Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Adkennaskit evit kendercʼhel gant ar goubredañ</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Yezh</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Dibaboù roadennoù</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Dastum roadennoù</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Evezhiadennoù a-fet buhez prevez</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Ostilhoù an diorroer</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Diveugañ a-bell dre USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Berradennoù klask</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Diskouez kinnigoù ar cʼhlask</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Diskouez ar cʼhlask dre vouezh</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Diskouez er estezioù prevez</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Diskouez kinnigoù ar golver</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Klask er roll istor</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Klask er sinedoù</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Arventennoù ar gont</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Digeriñ ereoù en arloadoù</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Askouezhioù</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Goubredañ bremañ</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Dibabit petra vo goubredet</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Roll istor</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Sinedoù</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Titouroù kennaskañ</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Ivinelloù digor</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Digennaskañ</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Anv an trevnad</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Anv an trevnad nʼhall ket bezañ goullo.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">O goubredañ...</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Goubredañ cʼhwitet. Berzh diwezhañ: %s</string>
+
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Goubredañ cʼhwitet. Goubredañ diwezhañ: morse</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Goubredañ diwezhañ : %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Goubredañ diwezhañ : morse</string>
+
+    </resources>

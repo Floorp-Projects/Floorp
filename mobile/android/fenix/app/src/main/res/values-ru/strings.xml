@@ -398,7 +398,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[Отсканируйте QR-код, показанный на <b>firefox.com/pair</b>]]></string>
+    <string name="pair_instructions_2"><![CDATA[Отсканируйте QR-код на <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Открыть камеру</string>
     <!-- Button to cancel pairing -->
@@ -955,7 +955,7 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly переехал</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Это приложение больше не будет получать обновлений безопасности. Получите новый Nightly и прекратите использование этого приложения.
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Это приложение больше не будет получать обновлений безопасности. Загрузите новый Nightly и прекратите использование этого приложения.
         \n\nЧтобы переместить ваши закладки, логины и историю в другое приложение, создайте аккаунт Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Получить новый Nightly</string>

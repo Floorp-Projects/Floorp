@@ -809,6 +809,8 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Contengut utilizat pel seguiment</string>
 
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Quand l’escut es violet, %s a blocat de traçadors sus aqueste site. Tocatz aquí per ne saber mai.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las proteccions son activadas per aqueste site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -982,6 +984,13 @@
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Per l’autorizar :</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Anar als paramètres Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tocar <b>Permissions</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Bascular <b>%1$s</b> sus ACTIVAT]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Connexion segura</string>
