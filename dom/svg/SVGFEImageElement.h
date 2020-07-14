@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGFEImageElement_h
-#define mozilla_dom_SVGFEImageElement_h
+#ifndef DOM_SVG_SVGFEIMAGEELEMENT_H_
+#define DOM_SVG_SVGFEIMAGEELEMENT_H_
 
 #include "SVGFilters.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -105,4 +105,4 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
 }  // namespace dom
 }  // namespace mozilla
 
-#endif
+#endif  // DOM_SVG_SVGFEIMAGEELEMENT_H_

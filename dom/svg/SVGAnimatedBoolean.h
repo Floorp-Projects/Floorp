@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGBOOLEAN_H__
-#define __NS_SVGBOOLEAN_H__
+#ifndef DOM_SVG_SVGANIMATEDBOOLEAN_H_
+#define DOM_SVG_SVGANIMATEDBOOLEAN_H_
 
 #include "nsError.h"
 #include "mozilla/SMILAttr.h"
@@ -78,4 +78,4 @@ class SVGAnimatedBoolean {
 
 }  // namespace mozilla
 
-#endif  //__NS_SVGBOOLEAN_H__
+#endif  // DOM_SVG_SVGANIMATEDBOOLEAN_H_

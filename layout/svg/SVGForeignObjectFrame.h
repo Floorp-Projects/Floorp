@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSSVGFOREIGNOBJECTFRAME_H__
-#define NSSVGFOREIGNOBJECTFRAME_H__
+#ifndef LAYOUT_SVG_SVGFOREIGNOBJECTFRAME_H_
+#define LAYOUT_SVG_SVGFOREIGNOBJECTFRAME_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ISVGDisplayableFrame.h"
@@ -105,4 +105,4 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
 
 }  // namespace mozilla
 
-#endif
+#endif  // LAYOUT_SVG_SVGFOREIGNOBJECTFRAME_H_

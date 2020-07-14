@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SMILTimedElement_h
-#define mozilla_SMILTimedElement_h
+#ifndef DOM_SMIL_SMILTIMEDELEMENT_H_
+#define DOM_SMIL_SMILTIMEDELEMENT_H_
 
 #include <utility>
 
@@ -646,4 +646,4 @@ inline void ImplCycleCollectionTraverse(
 
 }  // namespace mozilla
 
-#endif  // mozilla_SMILTimedElement_h
+#endif  // DOM_SMIL_SMILTIMEDELEMENT_H_

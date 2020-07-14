@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGFRAGMENTIDENTIFIER_H__
-#define MOZILLA_SVGFRAGMENTIDENTIFIER_H__
+#ifndef DOM_SVG_SVGFRAGMENTIDENTIFIER_H_
+#define DOM_SVG_SVGFRAGMENTIDENTIFIER_H_
 
 #include "nsString.h"
 
@@ -45,4 +45,4 @@ class SVGFragmentIdentifier {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGFRAGMENTIDENTIFIER_H__
+#endif  // DOM_SVG_SVGFRAGMENTIDENTIFIER_H_

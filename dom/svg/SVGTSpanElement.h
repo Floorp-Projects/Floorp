@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGTSpanElement_h
-#define mozilla_dom_SVGTSpanElement_h
+#ifndef DOM_SVG_SVGTSPANELEMENT_H_
+#define DOM_SVG_SVGTSPANELEMENT_H_
 
 #include "mozilla/dom/SVGTextPositioningElement.h"
 
@@ -51,4 +51,4 @@ class SVGTSpanElement final : public SVGTSpanElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGTSpanElement_h
+#endif  // DOM_SVG_SVGTSPANELEMENT_H_

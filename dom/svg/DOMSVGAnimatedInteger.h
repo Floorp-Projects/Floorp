@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_DOMSVGAnimatedInteger_h
-#define mozilla_dom_DOMSVGAnimatedInteger_h
+#ifndef DOM_SVG_DOMSVGANIMATEDINTEGER_H_
+#define DOM_SVG_DOMSVGANIMATEDINTEGER_H_
 
 #include "nsWrapperCache.h"
 
@@ -38,4 +38,4 @@ class DOMSVGAnimatedInteger : public nsISupports, public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_DOMSVGAnimatedInteger_h
+#endif  // DOM_SVG_DOMSVGANIMATEDINTEGER_H_

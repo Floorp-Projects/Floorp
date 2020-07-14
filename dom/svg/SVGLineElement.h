@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGLineElement_h
-#define mozilla_dom_SVGLineElement_h
+#ifndef DOM_SVG_SVGLINEELEMENT_H_
+#define DOM_SVG_SVGLINEELEMENT_H_
 
 #include "SVGAnimatedLength.h"
 #include "SVGGeometryElement.h"
@@ -64,4 +64,4 @@ class SVGLineElement final : public SVGLineElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGLineElement_h
+#endif  // DOM_SVG_SVGLINEELEMENT_H_
