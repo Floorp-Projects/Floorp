@@ -665,7 +665,10 @@ def set_defaults(config, tasks):
         task.setdefault('loopback-audio', False)
         task.setdefault('loopback-video', False)
         task.setdefault('limit-platforms', [])
-        task.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
+        if build_platform.startswith('android'):
+            task.setdefault('docker-image', {'in-tree': 'android-test'})
+        else:
+            task.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
         task.setdefault('checkout', False)
         task.setdefault('require-signed-extensions', False)
         task.setdefault('variants', [])
