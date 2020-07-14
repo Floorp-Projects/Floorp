@@ -28,17 +28,12 @@ uint64_t gSHEntrySharedID = 0;
 namespace mozilla {
 namespace dom {
 
-SHEntrySharedParentState::SHEntrySharedParentState(nsISHistory* aSHistory)
-    : SHEntrySharedParentState(
-          nsWeakPtr(do_GetWeakReference(aSHistory)).get()) {}
-
-SHEntrySharedParentState::SHEntrySharedParentState(nsIWeakReference* aSHistory)
+SHEntrySharedParentState::SHEntrySharedParentState()
     : mDocShellID({0}),
       mViewerBounds(0, 0, 0, 0),
       mCacheKey(0),
       mLastTouched(0),
       mID(++gSHEntrySharedID),
-      mSHistory(aSHistory),
       mIsFrameNavigation(false),
       mSticky(true),
       mDynamicallyCreated(false),
@@ -101,7 +96,7 @@ NS_IMPL_ADDREF_INHERITED(nsSHEntryShared, dom::SHEntrySharedParentState)
 NS_IMPL_RELEASE_INHERITED(nsSHEntryShared, dom::SHEntrySharedParentState)
 
 already_AddRefed<nsSHEntryShared> nsSHEntryShared::Duplicate() {
-  RefPtr<nsSHEntryShared> newEntry = new nsSHEntryShared(this);
+  RefPtr<nsSHEntryShared> newEntry = new nsSHEntryShared();
 
   newEntry->dom::SHEntrySharedParentState::CopyFrom(this);
   newEntry->dom::SHEntrySharedChildState::CopyFrom(this);

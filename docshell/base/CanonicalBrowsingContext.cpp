@@ -272,7 +272,7 @@ CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
              "Creating an entry but session history is not enabled for this "
              "browsing context!");
   RefPtr<SessionHistoryEntry> entry =
-      new SessionHistoryEntry(GetSessionHistory(), aLoadState, aChannel);
+      new SessionHistoryEntry(aLoadState, aChannel);
   mLoadingEntries.AppendElement(entry);
   return MakeUnique<SessionHistoryInfo>(entry->Info());
 }
