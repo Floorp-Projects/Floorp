@@ -63,14 +63,16 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
     // lives in a different process.
     if (XRE_IsContentProcess()) {
       RootAccessible* root = mAccessible->RootAccessible();
-      MOZ_ASSERT(root);
-      DocAccessibleChild* ipcDoc = root->IPCDoc();
-      if (ipcDoc) {
-        RefPtr<IAccessible> topDoc = ipcDoc->GetTopLevelDocIAccessible();
-        // topDoc will be null if this isn't an OOP iframe document.
-        if (topDoc) {
-          topDoc.forget(aInstancePtr);
-          return S_OK;
+      // root will be null if mAccessible is the ApplicationAccessible.
+      if (root) {
+        DocAccessibleChild* ipcDoc = root->IPCDoc();
+        if (ipcDoc) {
+          RefPtr<IAccessible> topDoc = ipcDoc->GetTopLevelDocIAccessible();
+          // topDoc will be null if this isn't an OOP iframe document.
+          if (topDoc) {
+            topDoc.forget(aInstancePtr);
+            return S_OK;
+          }
         }
       }
     }
