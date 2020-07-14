@@ -128,6 +128,8 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
   }
 #endif
 
+  LogTask::LogDispatch(task);
+
   auto insertion = mMainThreadTasks.insert(std::move(task));
   MOZ_ASSERT(insertion.second);
   (*insertion.first)->mIterator = insertion.first;
@@ -492,7 +494,11 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
                 task->GetPerformanceCounter(), TimeStamp::Now(),
                 manager == mIdleTaskManager);
 
-        result = task->Run();
+        {
+          LogTask::Run log(task);
+          result = task->Run();
+        }
+
         // Task itself should keep manager alive.
         if (manager) {
           manager->DidRunTask();

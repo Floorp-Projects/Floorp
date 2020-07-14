@@ -689,6 +689,7 @@ template class LogTaskBase<nsIRunnable>;
 template class LogTaskBase<MicroTaskRunnable>;
 template class LogTaskBase<IPC::Message>;
 template class LogTaskBase<nsTimerImpl>;
+template class LogTaskBase<Task>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;
