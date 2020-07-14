@@ -203,15 +203,7 @@ loader.lazyServiceGetter(
 // Minimum delay between two "new-mutations" events.
 const MUTATIONS_THROTTLING_DELAY = 100;
 // List of mutation types that should -not- be throttled.
-const IMMEDIATE_MUTATIONS = [
-  "documentUnload",
-  "frameLoad",
-  "pseudoClassLock",
-
-  // These should be delivered right away in order to be sure that the
-  // fronts have not been removed due to other non-throttled mutations.
-  "mutationBreakpoints",
-];
+const IMMEDIATE_MUTATIONS = ["documentUnload", "frameLoad", "pseudoClassLock"];
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
