@@ -824,8 +824,8 @@ WSRunScanner::TextFragmentData::TextFragmentData(
 
 // static
 template <typename EditorDOMPointType>
-Maybe<WSRunScanner::BoundaryData>
-WSRunScanner::BoundaryData::ScanWhiteSpaceStartInTextNode(
+Maybe<WSRunScanner::TextFragmentData::BoundaryData>
+WSRunScanner::TextFragmentData::BoundaryData::ScanWhiteSpaceStartInTextNode(
     const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
@@ -856,7 +856,8 @@ WSRunScanner::BoundaryData::ScanWhiteSpaceStartInTextNode(
 
 // static
 template <typename EditorDOMPointType>
-WSRunScanner::BoundaryData WSRunScanner::BoundaryData::ScanWhiteSpaceStartFrom(
+WSRunScanner::TextFragmentData::BoundaryData
+WSRunScanner::TextFragmentData::BoundaryData::ScanWhiteSpaceStartFrom(
     const EditorDOMPointType& aPoint,
     const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
     const Element* aEditingHost, NoBreakingSpaceData* aNBSPData) {
@@ -935,8 +936,8 @@ WSRunScanner::BoundaryData WSRunScanner::BoundaryData::ScanWhiteSpaceStartFrom(
 
 // static
 template <typename EditorDOMPointType>
-Maybe<WSRunScanner::BoundaryData>
-WSRunScanner::BoundaryData::ScanWhiteSpaceEndInTextNode(
+Maybe<WSRunScanner::TextFragmentData::BoundaryData>
+WSRunScanner::TextFragmentData::BoundaryData::ScanWhiteSpaceEndInTextNode(
     const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
@@ -965,7 +966,8 @@ WSRunScanner::BoundaryData::ScanWhiteSpaceEndInTextNode(
 
 // static
 template <typename EditorDOMPointType>
-WSRunScanner::BoundaryData WSRunScanner::BoundaryData::ScanWhiteSpaceEndFrom(
+WSRunScanner::TextFragmentData::BoundaryData
+WSRunScanner::TextFragmentData::BoundaryData::ScanWhiteSpaceEndFrom(
     const EditorDOMPointType& aPoint,
     const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
     const Element* aEditingHost, NoBreakingSpaceData* aNBSPData) {
@@ -1872,7 +1874,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
   // this routine examines a run of ws and tries to get rid of some unneeded
   // nbsp's, replacing them with regular ascii space if possible.  Keeping
   // things simple for now and just trying to fix up the trailing ws in the run.
-  if (!textFragmentData.NoBreakingSpaceDataRef().FoundNBSP()) {
+  if (!textFragmentData.FoundNoBreakingWhiteSpaces()) {
     // nothing to do!
     return NS_OK;
   }
