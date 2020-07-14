@@ -13,7 +13,9 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 
+#include <algorithm>
 #include <wchar.h>
+#include <windef.h>
 #include <winspool.h>
 
 #include "nsIWidget.h"
@@ -53,6 +55,8 @@ using namespace mozilla::widget;
 #endif
 
 static const wchar_t kDriverName[] = L"WINSPOOL";
+static const float kTenthMMToPoint =
+    (POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT) / 10;
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterList and the
@@ -589,6 +593,88 @@ nsPrinterListWin::InitPrintSettingsFromPrinter(
   return NS_OK;
 }
 
+template <class T>
+static nsTArray<T> GetDeviceCapabilityArray(const wchar_t* aPrinterName,
+                                            WORD aCapabilityID) {
+  nsTArray<T> caps;
+
+  // We only want to access printer drivers in the parent process.
+  if (!XRE_IsParentProcess()) {
+    return caps;
+  }
+
+  // Passing nullptr as the port here seems to work. Given that we would have to
+  // OpenPrinter with just the name anyway to get the port that makes sense.
+  // Also, the printer set-up seems to stop you from having two printers with
+  // the same name.
+  int count = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
+                                    nullptr, nullptr);
+  if (count <= 0) {
+    return caps;
+  }
+
+  caps.SetLength(count);
+  count =
+      ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
+                            reinterpret_cast<LPWSTR>(caps.Elements()), nullptr);
+  if (count <= 0) {
+    caps.Clear();
+    return caps;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      count <= caps.Length(),
+      "DeviceCapabilitiesW returned more than buffer could hold.");
+
+  caps.SetLength(count);
+  return caps;
+}
+
+static nsTArray<RefPtr<nsIPaper>> GetPaperListForPrinter(LPWSTR aPrinterName) {
+  nsTArray<RefPtr<nsIPaper>> paperList;
+
+  // Paper names are returned in 64 long character buffers.
+  auto paperNames =
+      GetDeviceCapabilityArray<Array<wchar_t, 64>>(aPrinterName, DC_PAPERNAMES);
+
+  // Paper sizes are returned as POINT structs with a tenth of a millimeter as
+  // the unit.
+  auto paperSizes = GetDeviceCapabilityArray<POINT>(aPrinterName, DC_PAPERSIZE);
+
+  // If no papers or if lengths don't match, return the empty array.
+  if (!paperNames.Length() || paperNames.Length() != paperSizes.Length()) {
+    return paperList;
+  }
+
+  paperList.SetCapacity(paperNames.Length());
+  for (size_t i = 0; i < paperNames.Length(); ++i) {
+    // Paper names are null terminated unless they are 64 characters long.
+    auto firstNull =
+        std::find(paperNames[i].cbegin(), paperNames[i].cend(), L'\0');
+    auto nameLength = firstNull - paperNames[i].cbegin();
+    double width = paperSizes[i].x * kTenthMMToPoint;
+    double height = paperSizes[i].y * kTenthMMToPoint;
+
+    // Skip if no name or invalid size.
+    if (!nameLength || width <= 0 || height <= 0) {
+      continue;
+    }
+
+    nsAutoString paperName;
+    paperName.Assign(paperNames[i].cbegin(), nameLength);
+    paperList.AppendElement(new nsPaper(paperName, width, height));
+  }
+
+  return paperList;
+}
+
+static RefPtr<nsPrinter> CreatePrinter(LPWSTR aPrinterName) {
+  nsAutoString printerName;
+  printerName.Assign(aPrinterName);
+  nsTArray<RefPtr<nsIPaper>> paperList = GetPaperListForPrinter(aPrinterName);
+  return MakeAndAddRef<nsPrinter>(printerName, paperList);
+}
+
 NS_IMETHODIMP
 nsPrinterListWin::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   nsresult rv = GlobalPrinters::GetInstance()->EnumeratePrinterList();
@@ -604,10 +690,8 @@ nsPrinterListWin::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     // wchar_t (used in LPWSTR) is 16 bits on Windows.
     // https://docs.microsoft.com/en-us/cpp/cpp/char-wchar-t-char16-t-char32-t?view=vs-2019
     LPWSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx);
-    nsAutoString printerName;
-    printerName.Assign(name);
-    nsTArray<RefPtr<nsIPaper>> paperList;
-    aPrinters.AppendElement(new nsPrinter(printerName, paperList));
+
+    aPrinters.AppendElement(CreatePrinter(name));
   }
 
   return NS_OK;
