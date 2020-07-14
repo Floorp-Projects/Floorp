@@ -942,7 +942,8 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
                                      Handle<AbstractScopePtr> enclosing,
                                      ScopeIndex* index) {
     return ScopeCreationData::create(cx, bce->compilationInfo,
-                                     modulesc->bindings, enclosing, index);
+                                     modulesc->bindings, modulesc->module(),
+                                     enclosing, index);
   };
   if (!internBodyScopeCreationData(bce, createScope)) {
     return false;
