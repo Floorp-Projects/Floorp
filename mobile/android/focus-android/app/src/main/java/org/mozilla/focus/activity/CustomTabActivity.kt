@@ -35,6 +35,7 @@ class CustomTabActivity : MainActivity() {
         // have a session with us to restore. It's safer to finish the activity instead.
         if (components.sessionManager.findSessionById(customTabId) == null) {
             finish()
+            return
         }
 
         super.onCreate(savedInstanceState)
