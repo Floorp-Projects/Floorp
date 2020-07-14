@@ -526,11 +526,12 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   compilationInfo.module = module;
 
   ModuleBuilder builder(cx, parser.ptr());
+  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
 
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, compilationInfo.options);
-  ModuleSharedContext modulesc(cx, module, compilationInfo, builder, extent);
+  ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -546,13 +547,14 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
+  builder.finishFunctionDecls(moduleMetadata);
+
   if (!compilationInfo.instantiateStencils()) {
     return nullptr;
   }
 
   MOZ_ASSERT(compilationInfo.script);
 
-  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
   if (!moduleMetadata.initModule(cx, module)) {
     return nullptr;
   }
