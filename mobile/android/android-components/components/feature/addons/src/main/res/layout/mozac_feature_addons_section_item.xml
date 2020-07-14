@@ -11,7 +11,7 @@
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
         android:paddingTop="16dp"
-        android:paddingStart="16dp"
+        android:paddingStart="72dp"
         android:paddingEnd="16dp"
         tools:text="Recommended"
         android:textStyle="bold" />
