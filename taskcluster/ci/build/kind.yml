@@ -20,6 +20,7 @@ jobs-from:
     - android.yml
     - android-stuff.yml
     - linux.yml
+    - linux-base-toolchains.yml
     - macosx.yml
     - windows.yml
     - windows-mingw.yml
