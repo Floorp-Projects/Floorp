@@ -287,6 +287,9 @@ static ArrayObject* IterableToArray(JSContext* cx, HandleValue iterable) {
   }
 
   RootedArrayObject array(cx, NewDenseEmptyArray(cx));
+  if (!array) {
+    return nullptr;
+  }
 
   RootedValue nextValue(cx);
   while (true) {
