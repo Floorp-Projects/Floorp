@@ -254,6 +254,12 @@ bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when);
 #define HTTP_ATOM(_name, _value) extern nsHttpAtom _name;
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
+
+nsCString ConvertRequestHeadToString(nsHttpRequestHead& aRequestHead,
+                                     bool aHasRequestBody,
+                                     bool aRequestBodyHasHeaders,
+                                     bool aUsingConnect);
+
 }  // namespace nsHttp
 
 //-----------------------------------------------------------------------------
