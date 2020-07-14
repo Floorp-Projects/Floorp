@@ -4,16 +4,16 @@
 
 package org.mozilla.fenix.library.bookmarks
 
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkFolderViewHolder
@@ -68,9 +68,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkNodeViewHolder {
-        val view = LibrarySiteItemView(parent.context).apply {
-            layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        }
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.bookmark_list_item, parent, false) as LibrarySiteItemView
 
         return when (viewType) {
             LibrarySiteItemView.ItemType.SITE.ordinal -> BookmarkItemViewHolder(view, interactor, this)

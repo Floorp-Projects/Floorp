@@ -25,7 +25,10 @@ class BookmarkFolderViewHolder(
     private val selectionHolder: SelectionHolder<BookmarkNode>
 ) : BookmarkNodeViewHolder(view, interactor) {
 
+    override var item: BookmarkNode? = null
+
     override fun bind(item: BookmarkNode) {
+        this.item = item
 
         containerView.displayAs(LibrarySiteItemView.ItemType.FOLDER)
 

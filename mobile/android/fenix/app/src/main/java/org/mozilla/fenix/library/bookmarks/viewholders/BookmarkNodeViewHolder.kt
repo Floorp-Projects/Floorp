@@ -18,8 +18,9 @@ import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 abstract class BookmarkNodeViewHolder(
     override val containerView: LibrarySiteItemView,
     private val interactor: BookmarkViewInteractor
-) :
-    RecyclerView.ViewHolder(containerView), LayoutContainer {
+) : RecyclerView.ViewHolder(containerView), LayoutContainer {
+
+    abstract var item: BookmarkNode?
 
     abstract fun bind(item: BookmarkNode)
 
