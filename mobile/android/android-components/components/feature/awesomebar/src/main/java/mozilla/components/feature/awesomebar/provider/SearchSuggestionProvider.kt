@@ -26,39 +26,21 @@ import java.util.concurrent.TimeUnit
  * A [AwesomeBar.SuggestionProvider] implementation that provides a suggestion containing search engine suggestions (as
  * chips) from the passed in [SearchEngine].
  */
-class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
+@Suppress("LongParameterList")
+class SearchSuggestionProvider private constructor(
+    @VisibleForTesting internal val client: SearchSuggestionClient,
+    private val searchUseCase: SearchUseCases.SearchUseCase,
+    private val limit: Int = 15,
+    private val mode: Mode = Mode.SINGLE_SUGGESTION,
+    @VisibleForTesting internal val engine: Engine? = null,
+    private val icon: Bitmap? = null,
+    private val showDescription: Boolean = true,
+    private val filterExactMatch: Boolean = false
+) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
-    @VisibleForTesting
-    internal val client: SearchSuggestionClient
-
-    private val searchUseCase: SearchUseCases.SearchUseCase
-    private val limit: Int
-    private val mode: Mode
-    private val icon: Bitmap?
-    private val showDescription: Boolean
-
-    @VisibleForTesting
-    internal val engine: Engine?
-
-    private constructor(
-        client: SearchSuggestionClient,
-        searchUseCase: SearchUseCases.SearchUseCase,
-        limit: Int = 15,
-        mode: Mode = Mode.SINGLE_SUGGESTION,
-        engine: Engine? = null,
-        icon: Bitmap? = null,
-        showDescription: Boolean = true
-    ) {
+    init {
         require(limit >= 1) { "limit needs to be >= 1" }
-
-        this.client = client
-        this.searchUseCase = searchUseCase
-        this.limit = limit
-        this.mode = mode
-        this.icon = icon
-        this.showDescription = showDescription
-        this.engine = engine
     }
 
     /**
@@ -73,6 +55,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
      * highest scored search suggestion URL.
      * @param icon The image to display next to the result. If not specified, the engine icon is used.
      * @param showDescription whether or not to add the search engine name as description.
+     * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      */
     constructor(
         searchEngine: SearchEngine,
@@ -82,7 +65,8 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         mode: Mode = Mode.SINGLE_SUGGESTION,
         engine: Engine? = null,
         icon: Bitmap? = null,
-        showDescription: Boolean = true
+        showDescription: Boolean = true,
+        filterExactMatch: Boolean = false
     ) : this (
         SearchSuggestionClient(searchEngine) { url -> fetch(fetchClient, url) },
         searchUseCase,
@@ -90,7 +74,8 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         mode,
         engine,
         icon,
-        showDescription
+        showDescription,
+        filterExactMatch
     )
 
     /**
@@ -107,6 +92,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
      * highest scored search suggestion URL.
      * @param icon The image to display next to the result. If not specified, the engine icon is used.
      * @param showDescription whether or not to add the search engine name as description.
+     * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      */
     constructor(
         context: Context,
@@ -117,7 +103,8 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         mode: Mode = Mode.SINGLE_SUGGESTION,
         engine: Engine? = null,
         icon: Bitmap? = null,
-        showDescription: Boolean = true
+        showDescription: Boolean = true,
+        filterExactMatch: Boolean = false
     ) : this (
         SearchSuggestionClient(context, searchEngineManager) { url -> fetch(fetchClient, url) },
         searchUseCase,
@@ -125,7 +112,8 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         mode,
         engine,
         icon,
-        showDescription
+        showDescription,
+        filterExactMatch
     )
 
     @Suppress("ReturnCount")
@@ -172,8 +160,12 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
         val list = (result ?: listOf(text)).toMutableList()
-        if (!list.contains(text)) {
+        if (!list.contains(text) && !filterExactMatch) {
             list.add(0, text)
+        }
+
+        if (filterExactMatch && list.contains(text)) {
+            list.remove(text)
         }
 
         val description = if (showDescription) {
@@ -190,7 +182,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
                 title = item,
                 description = description,
                 icon = icon ?: client.searchEngine?.icon,
-                score = Int.MAX_VALUE - index,
+                score = Int.MAX_VALUE - (index + 1),
                 onSuggestionClicked = {
                     searchUseCase.invoke(item)
                 }
@@ -200,16 +192,19 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         return suggestions
     }
 
+    @Suppress("ComplexCondition")
     private fun createSingleSearchSuggestion(text: String, result: List<String>?): List<AwesomeBar.Suggestion> {
         val chips = mutableListOf<AwesomeBar.Suggestion.Chip>()
 
-        if (result == null || result.isEmpty() || !result.contains(text)) {
+        if ((result == null || result.isEmpty() || !result.contains(text)) && !filterExactMatch) {
             // Add the entered text as first suggestion if needed
             chips.add(AwesomeBar.Suggestion.Chip(text))
         }
 
         result?.take(limit - chips.size)?. forEach { title ->
-            chips.add(AwesomeBar.Suggestion.Chip(title))
+            if (!filterExactMatch || title != text) {
+                chips.add(AwesomeBar.Suggestion.Chip(title))
+            }
         }
 
         return listOf(AwesomeBar.Suggestion(

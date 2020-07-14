@@ -9,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
@@ -54,6 +56,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         TabsToolbarFeature(layout.toolbar, components.sessionManager, sessionId, ::showTabs)
 
+        val applicationContext = requireContext().applicationContext
+
         AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView, components.icons)
             .addHistoryProvider(
                 components.historyStorage,
@@ -65,13 +69,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.store,
                 components.tabsUseCases.selectTab
             )
+            .addSearchActionProvider(
+                searchEngine = GlobalScope.async {
+                    components.searchEngineManager.getDefaultSearchEngine(applicationContext)
+                },
+                searchUseCase = components.searchUseCases.defaultSearch
+            )
             .addSearchProvider(
                 requireContext(),
                 components.searchEngineManager,
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                engine = components.engine
+                engine = components.engine,
+                filterExactMatch = true
             )
             .addClipboardProvider(
                 requireContext(),

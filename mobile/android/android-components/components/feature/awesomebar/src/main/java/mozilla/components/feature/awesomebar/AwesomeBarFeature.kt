@@ -6,7 +6,9 @@ package mozilla.components.feature.awesomebar
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.view.View
+import kotlinx.coroutines.Deferred
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
@@ -20,6 +22,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
@@ -72,6 +75,7 @@ class AwesomeBarFeature(
      * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
      * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
      * highest scored search suggestion URL.
+     * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      */
     @Suppress("LongParameterList")
     fun addSearchProvider(
@@ -80,9 +84,18 @@ class AwesomeBarFeature(
         fetchClient: Client,
         limit: Int = 15,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION,
-        engine: Engine? = null
+        engine: Engine? = null,
+        filterExactMatch: Boolean = false
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, limit, mode, engine))
+        awesomeBar.addProviders(SearchSuggestionProvider(
+            searchEngine,
+            searchUseCase,
+            fetchClient,
+            limit,
+            mode,
+            engine,
+            filterExactMatch = filterExactMatch
+        ))
         return this
     }
 
@@ -100,6 +113,7 @@ class AwesomeBarFeature(
      * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
      * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
      * highest scored search suggestion URL.
+     * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      */
     @Suppress("LongParameterList")
     fun addSearchProvider(
@@ -109,11 +123,43 @@ class AwesomeBarFeature(
         fetchClient: Client,
         limit: Int = 15,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION,
-        engine: Engine? = null
+        engine: Engine? = null,
+        filterExactMatch: Boolean = false
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(
-            SearchSuggestionProvider(context, searchEngineManager, searchUseCase, fetchClient, limit, mode, engine)
-        )
+        awesomeBar.addProviders(SearchSuggestionProvider(
+            context,
+            searchEngineManager,
+            searchUseCase,
+            fetchClient,
+            limit,
+            mode,
+            engine,
+            filterExactMatch = filterExactMatch
+        ))
+        return this
+    }
+
+    /**
+     * Adds an [AwesomeBar.SuggestionProvider] implementation that always returns a suggestion that
+     * mirrors the entered text and invokes a search with the given [SearchEngine] if clicked.
+     *
+     * @param searchEngine The search engine to search with.
+     * @param searchUseCase The use case to invoke for searches.
+     * @param icon The image to display next to the result. If not specified, the engine icon is used.
+     * @param showDescription whether or not to add the search engine name as description.
+     */
+    fun addSearchActionProvider(
+        searchEngine: Deferred<SearchEngine>,
+        searchUseCase: SearchUseCases.SearchUseCase,
+        icon: Bitmap? = null,
+        showDescription: Boolean = false
+    ): AwesomeBarFeature {
+        awesomeBar.addProviders(SearchActionProvider(
+            searchEngine,
+            searchUseCase,
+            icon,
+            showDescription
+        ))
         return this
     }
 

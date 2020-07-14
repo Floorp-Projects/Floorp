@@ -535,4 +535,95 @@ class SearchSuggestionProviderTest {
             }
         }
     }
+
+    @Test
+    fun `Provider filters exact match from multiple suggestions`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                .`when`(searchEngine).buildSuggestionsURL("firefox")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+
+            val useCase: SearchUseCases.SearchUseCase = mock()
+
+            val provider = SearchSuggestionProvider(
+                searchEngine,
+                useCase,
+                HttpURLConnectionClient(),
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                filterExactMatch = true
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("firefox")
+                assertEquals(10, suggestions.size)
+                assertEquals("firefox for mac", suggestions[1].title)
+                assertEquals("firefox quantum", suggestions[2].title)
+                assertEquals("firefox update", suggestions[3].title)
+                assertEquals("firefox esr", suggestions[4].title)
+                assertEquals("firefox focus", suggestions[5].title)
+                assertEquals("firefox addons", suggestions[6].title)
+                assertEquals("firefox extensions", suggestions[7].title)
+                assertEquals("firefox nightly", suggestions[8].title)
+                assertEquals("firefox clear cache", suggestions[9].title)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider filters chips with exact match`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                .`when`(searchEngine).buildSuggestionsURL("firefox")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+
+            val useCase: SearchUseCases.SearchUseCase = mock()
+
+            val provider = SearchSuggestionProvider(
+                searchEngine,
+                useCase,
+                HttpURLConnectionClient(),
+                filterExactMatch = true
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("firefox")
+                assertEquals(1, suggestions.size)
+
+                val suggestion = suggestions[0]
+                assertEquals(9, suggestion.chips.size)
+
+                assertEquals("firefox for mac", suggestion.chips[0].title)
+                assertEquals("firefox quantum", suggestion.chips[1].title)
+                assertEquals("firefox update", suggestion.chips[2].title)
+                assertEquals("firefox esr", suggestion.chips[3].title)
+                assertEquals("firefox focus", suggestion.chips[4].title)
+                assertEquals("firefox addons", suggestion.chips[5].title)
+                assertEquals("firefox extensions", suggestion.chips[6].title)
+                assertEquals("firefox nightly", suggestion.chips[7].title)
+                assertEquals("firefox clear cache", suggestion.chips[8].title)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
 }
