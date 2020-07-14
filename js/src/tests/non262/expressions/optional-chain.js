@@ -252,6 +252,7 @@ shouldBe(({a : {b: undefined}}).a.b?.()?.()(), undefined);
 shouldBe(({a : {b: () => undefined}}).a.b?.()?.(), undefined);
 shouldThrowTypeError(() => delete ({a : {b: undefined}}).a?.b.b.c, '(intermediate value).a.b is undefined');
 shouldBe(delete ({a : {b: undefined}}).a?.["b"]?.["b"], true);
+shouldBe(delete undefined ?.x[y+1], true);
 shouldThrowTypeError(() => (({a : {b: () => undefined}}).a.b?.())(), 'undefined is not a function');
 shouldThrowTypeError(() => (delete[1]?.r[delete[1]?.r1]), "[...].r is undefined");
 shouldThrowTypeError(() => (delete[1]?.r[[1]?.r1]), "[...].r is undefined");

@@ -469,12 +469,14 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *        true; If constant folding occurs, Elem expr may become Dot expr.
  *        OptionalElemExpr does not get folded into OptionalDot.
  * OptionalChain (UnaryNode)
- *   kid: expression that is evaluated. Contains optional nodes such as
- *        OptionalElemExpr, OptionalDotExpr, and OptionalCall, which
- *        shortcircuit and return Undefined without evaluating the rest of the
- *        expression of the node is nullish. Also can contain nodes such as
- *        DotExpr, ElemExpr, NameExpr CallExpr, etc. These are evaluated
- *        normally.
+ *   kid: expression that is evaluated as a chain. An Optional chain contains
+ *        one or more optional nodes. It's first node (kid) is always an
+ *        optional node, for example: an OptionalElemExpr, OptionalDotExpr, or
+ *        OptionalCall.  An OptionalChain will shortcircuit and return
+ *        Undefined without evaluating the rest of the expression if any of the
+ *        optional nodes it contains are nullish. An optionalChain also can
+ *        contain nodes such as DotExpr, ElemExpr, NameExpr CallExpr, etc.
+ *        These are evaluated normally.
  *          * OptionalDotExpr: Dot expr with jump
  *          * OptionalElemExpr: Elem expr with jump
  *          * OptionalCallExpr: Call expr with jump
@@ -486,11 +488,23 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * DotExpr (PropertyAccess)
  *   left: MEMBER expr to left of '.'
  *   right: PropertyName to right of '.'
+ * OptionalDotExpr (OptionalPropertyAccess)
+ *   left: MEMBER expr to left of '.', short circuits back to OptionalChain
+ *        if nullish.
+ *   right: PropertyName to right of '.'
  * ElemExpr (PropertyByValue)
  *   left: MEMBER expr to left of '['
  *   right: expr between '[' and ']'
+ * OptionalElemExpr (OptionalPropertyByValue)
+ *   left: MEMBER expr to left of '[', short circuits back to OptionalChain
+ *         if nullish.
+ *   right: expr between '[' and ']'
  * CallExpr (BinaryNode)
  *   left: callee expression on the left of the '('
+ *   right: Arguments
+ * OptionalCallExpr (BinaryNode)
+ *   left: callee expression on the left of the '(', short circuits back to
+ *         OptionalChain if nullish.
  *   right: Arguments
  * Arguments (ListNode)
  *   head: list of arg1, arg2, ... argN

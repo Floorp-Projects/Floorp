@@ -7013,7 +7013,7 @@ bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
     return false;
   }
 
-  if (!emitOptionalTree(&elemExpr->key(), oe)) {
+  if (!emitTree(&elemExpr->key())) {
     //              [stack] OBJ KEY
     return false;
   }
@@ -8012,12 +8012,7 @@ bool BytecodeEmitter::emitOptionalTree(
       bool isCallExpression = kind == ParseNodeKind::SetThis ||
                               kind == ParseNodeKind::CallImportExpr;
 
-      // These should be handled through the main parse tree
-      bool isOptionalExpression =
-          kind == ParseNodeKind::OptionalChain ||
-          kind == ParseNodeKind::DeleteOptionalChainExpr;
-
-      MOZ_ASSERT(isMemberExpression || isCallExpression || isOptionalExpression,
+      MOZ_ASSERT(isMemberExpression || isCallExpression,
                  "Unknown ParseNodeKind for OptionalChain");
 #endif
       return emitTree(pn);
