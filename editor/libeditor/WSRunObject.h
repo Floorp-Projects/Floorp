@@ -1224,7 +1224,13 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
       HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete);
 
-  MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
+  /**
+   * MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit() replaces ASCII white-
+   * spaces which becomes invisible after split with NBSPs.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
+      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToSplit);
 
   /**
    * ReplaceASCIIWhiteSpacesWithOneNBSP() replaces the range between
