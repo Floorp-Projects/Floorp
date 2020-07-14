@@ -388,7 +388,8 @@ async function onNonMediaPageInfoLoad(browser, pageInfoData, imageInfo) {
   await makeGeneralTab(pageInfoData.metaViewRows, docInfo);
   if (
     uri.spec.startsWith("about:neterror") ||
-    uri.spec.startsWith("about:certerror")
+    uri.spec.startsWith("about:certerror") ||
+    uri.spec.startsWith("about:httpsonlyerror")
   ) {
     uri = browser.currentURI;
     principal = Services.scriptSecurityManager.createContentPrincipal(

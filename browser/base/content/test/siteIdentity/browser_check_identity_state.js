@@ -407,6 +407,49 @@ add_task(async function test_about_net_error_uri() {
   await noCertErrorTest(false);
 });
 
+add_task(async function httpsOnlyErrorTest() {
+  let oldTab = await loadNewTab("about:robots");
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_only_mode", true]],
+  });
+  let newTab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = newTab;
+
+  let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(gBrowser, "http://nocert.example.com/");
+  await promise;
+  is(
+    getIdentityMode(),
+    "httpsOnlyErrorPage",
+    "Identity should be the https-only mode error page."
+  );
+  is(
+    getConnectionState(),
+    "https-only-error-page",
+    "Connection should be the https-only mode error page."
+  );
+
+  gBrowser.selectedTab = oldTab;
+  is(getIdentityMode(), "localResource", "Identity should be localResource");
+
+  gBrowser.selectedTab = newTab;
+  is(
+    getIdentityMode(),
+    "httpsOnlyErrorPage",
+    "Identity should be the https-only mode error page."
+  );
+  is(
+    getConnectionState(),
+    "https-only-error-page",
+    "Connection should be the https-only mode page."
+  );
+
+  gBrowser.removeTab(newTab);
+  gBrowser.removeTab(oldTab);
+
+  await SpecialPowers.popPrefEnv();
+});
+
 async function noCertErrorFromNavigationTest(secureCheck) {
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
