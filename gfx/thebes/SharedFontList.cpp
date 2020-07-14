@@ -982,7 +982,7 @@ Pointer FontList::ToSharedPointer(const void* aPtr) {
       return Pointer(i, p - blockAddr);
     }
   }
-  MOZ_ASSERT_UNREACHABLE("invalid shared-memory pointer");
+  MOZ_DIAGNOSTIC_ASSERT(false, "invalid shared-memory pointer");
   return Pointer::Null();
 }
 
