@@ -304,12 +304,8 @@ class PackageFrontend(MachCommandBase):
                          'should be determined in the decision task.')
                 return 1
             from taskgraph.optimize.strategies import IndexSearch
-            from taskgraph.parameters import Parameters
             from taskgraph.generator import load_tasks_for_kind
-            params = Parameters(
-                level=six.ensure_text(os.environ.get('MOZ_SCM_LEVEL', '3')),
-                strict=False,
-            )
+            params = {'level': six.ensure_text(os.environ.get('MOZ_SCM_LEVEL', '3'))}
 
             root_dir = mozpath.join(self.topsrcdir, 'taskcluster/ci')
             toolchains = load_tasks_for_kind(params, 'toolchain', root_dir=root_dir)

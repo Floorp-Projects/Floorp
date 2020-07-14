@@ -16,6 +16,7 @@ from .taskgraph import TaskGraph
 from .task import Task
 from .optimize import optimize_task_graph
 from .morph import morph
+from .parameters import Parameters
 from .util.python_path import find_object
 from .transforms.base import TransformSequence, TransformConfig
 from .util.verify import (
@@ -421,6 +422,7 @@ def load_tasks_for_kind(parameters, kind, root_dir=None):
     # make parameters read-write
     parameters = dict(parameters)
     parameters['target-kind'] = kind
+    parameters = Parameters(strict=False, **parameters)
     tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
     return {
         task.task['metadata']['name']: task

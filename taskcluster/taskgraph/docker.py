@@ -8,10 +8,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import six
 import tarfile
 from io import BytesIO
 
-from taskgraph.parameters import Parameters
 from taskgraph.optimize.strategies import IndexSearch
 from taskgraph.util import docker
 from taskgraph.util.taskcluster import (
@@ -23,10 +23,7 @@ from . import GECKO
 
 
 def load_image_by_name(image_name, tag=None):
-    params = Parameters(
-        level=os.environ.get('MOZ_SCM_LEVEL', '3'),
-        strict=False,
-    )
+    params = {'level': six.ensure_text(os.environ.get('MOZ_SCM_LEVEL', '3'))}
     tasks = load_tasks_for_kind(params, 'docker-image')
     task = tasks['build-docker-image-{}'.format(image_name)]
     task_id = IndexSearch().should_replace_task(
