@@ -137,6 +137,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::GuardObjectGroup:
     case MDefinition::Opcode::GuardObjectIdentity:
     case MDefinition::Opcode::GuardProto:
+    case MDefinition::Opcode::GuardNullProto:
     case MDefinition::Opcode::LoadDynamicSlot:
     case MDefinition::Opcode::StoreDynamicSlot:
     case MDefinition::Opcode::InArray:
