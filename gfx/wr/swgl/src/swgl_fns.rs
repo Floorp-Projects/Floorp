@@ -14,8 +14,9 @@ macro_rules! debug {
     ($($x:tt)*) => {};
 }
 
-extern "C" {}
-
+#[repr(C)]
+struct LockedTexture { _private: [u8; 0] }
+ 
 extern "C" {
     fn ActiveTexture(texture: GLenum);
     fn BindTexture(target: GLenum, texture: GLuint);
@@ -280,8 +281,13 @@ extern "C" {
     fn DeleteQuery(n: GLuint);
     fn DeleteShader(shader: GLuint);
     fn DeleteProgram(program: GLuint);
+    fn LockFramebuffer(fbo: GLuint) -> *mut LockedTexture;
+    fn LockTexture(tex: GLuint) -> *mut LockedTexture;
+    fn LockResource(resource: *mut LockedTexture);
+    fn UnlockResource(resource: *mut LockedTexture);
     fn Composite(
-        src_id: GLuint,
+        locked_dst: *mut LockedTexture,
+        locked_src: *mut LockedTexture,
         src_x: GLint,
         src_y: GLint,
         src_width: GLsizei,
@@ -298,8 +304,6 @@ extern "C" {
 
 #[derive(Clone)]
 pub struct Context(*mut c_void);
-
-unsafe impl Send for Context {}
 
 impl Context {
     pub fn create() -> Self {
@@ -359,30 +363,25 @@ impl Context {
         }
     }
 
-    pub fn composite(
-        &self,
-        src_id: GLuint,
-        src_x: GLint,
-        src_y: GLint,
-        src_width: GLsizei,
-        src_height: GLint,
-        dst_x: GLint,
-        dst_y: GLint,
-        opaque: bool,
-        flip: bool,
-    ) {
+    pub fn lock_framebuffer(&self, fbo: GLuint) -> Option<LockedResource> {
         unsafe {
-            Composite(
-                src_id,
-                src_x,
-                src_y,
-                src_width,
-                src_height,
-                dst_x,
-                dst_y,
-                opaque as GLboolean,
-                flip as GLboolean,
-            );
+            let resource = LockFramebuffer(fbo);
+            if resource != ptr::null_mut() {
+                Some(LockedResource(resource))
+            } else {
+                None
+            }
+        }
+    }
+
+    pub fn lock_texture(&self, tex: GLuint) -> Option<LockedResource> {
+        unsafe {
+            let resource = LockTexture(tex);
+            if resource != ptr::null_mut() {
+                Some(LockedResource(resource))
+            } else {
+                None
+            }
         }
     }
 }
@@ -2259,3 +2258,58 @@ impl Gl for Context {
         unimplemented!("Not supported by SWGL");
     }
 }
+
+/// A resource that is intended for sharing between threads.
+/// Locked resources such as textures or framebuffers will
+/// not allow any further modifications while it remains
+/// locked. The resource will be unlocked when LockedResource
+/// is dropped.
+pub struct LockedResource(*mut LockedTexture);
+
+unsafe impl Send for LockedResource {}
+unsafe impl Sync for LockedResource {}
+
+impl LockedResource {
+    /// Composites from a locked resource to another locked resource
+    pub fn composite(
+        &self,
+        locked_src: &LockedResource,
+        src_x: GLint,
+        src_y: GLint,
+        src_width: GLsizei,
+        src_height: GLint,
+        dst_x: GLint,
+        dst_y: GLint,
+        opaque: bool,
+        flip: bool,
+    ) {
+        unsafe {
+            Composite(
+                self.0,
+                locked_src.0,
+                src_x,
+                src_y,
+                src_width,
+                src_height,
+                dst_x,
+                dst_y,
+                opaque as GLboolean,
+                flip as GLboolean,
+            );
+        }
+    }
+}
+
+impl Clone for LockedResource {
+    fn clone(&self) -> Self {
+        unsafe { LockResource(self.0); }
+        LockedResource(self.0)
+    }
+}
+
+impl Drop for LockedResource {
+    fn drop(&mut self) {
+        unsafe { UnlockResource(self.0); }
+    }
+}
+

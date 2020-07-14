@@ -230,6 +230,10 @@ struct Texture {
   uint8_t buf_bpp = 0;
   GLenum min_filter = GL_NEAREST;
   GLenum mag_filter = GL_LINEAR;
+  // The number of active locks on this texture. If this texture has any active
+  // locks, we need to disallow modifying or destroying the texture as it may
+  // be accessed by other threads where modifications could lead to races.
+  int32_t locked = 0;
 
   enum FLAGS {
     SHOULD_FREE = 1 << 1,
@@ -298,6 +302,7 @@ struct Texture {
   }
 
   bool allocate(bool force = false, int min_width = 0, int min_height = 0) {
+    assert(!locked); // Locked textures shouldn't be reallocated
     // Check if there is either no buffer currently or if we forced validation
     // of the buffer size because some dimension might have changed.
     if ((!buf || force) && should_free()) {
@@ -329,6 +334,7 @@ struct Texture {
   }
 
   void cleanup() {
+    assert(!locked); // Locked textures shouldn't be destroyed
     if (buf && should_free()) {
       free(buf);
       buf = nullptr;
@@ -2013,6 +2019,7 @@ void Clear(GLbitfield mask) {
   Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER);
   if ((mask & GL_COLOR_BUFFER_BIT) && fb.color_attachment) {
     Texture& t = ctx->textures[fb.color_attachment];
+    assert(!t.locked);
     if (t.internal_format == GL_RGBA8) {
       uint32_t color = ctx->clearcolor;
       // If the clear would require a scissor, force clear anything outside
@@ -2132,6 +2139,7 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,
   prepare_texture(srctex);
   Texture& dsttex = ctx->textures[dstName];
   if (!dsttex.buf) return;
+  assert(!dsttex.locked);
   IntRect skip = {dstX, dstY, dstX + srcWidth, dstY + srcHeight};
   prepare_texture(dsttex, &skip);
   assert(srctex.internal_format == dsttex.internal_format);
@@ -3677,6 +3685,7 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
   if (!colortex.buf) {
     return;
   }
+  assert(!colortex.locked);
   assert(colortex.internal_format == GL_RGBA8 ||
          colortex.internal_format == GL_R8);
   Texture& depthtex = ctx->textures[ctx->depthtest ? fb.depth_attachment : 0];
@@ -3915,6 +3924,7 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   if (!srctex.buf || srcfb->layer >= max(srctex.depth, 1)) return;
   Texture& dsttex = ctx->textures[dstfb->color_attachment];
   if (!dsttex.buf || dstfb->layer >= max(dsttex.depth, 1)) return;
+  assert(!dsttex.locked);
   if (srctex.internal_format != dsttex.internal_format) {
     assert(false);
     return;
@@ -3971,18 +3981,63 @@ void DestroyContext(void* ctx_ptr) {
   delete (Context*)ctx_ptr;
 }
 
-void Composite(GLuint srcId, GLint srcX, GLint srcY, GLsizei srcWidth,
-               GLsizei srcHeight, GLint dstX, GLint dstY, GLboolean opaque,
-               GLboolean flip) {
-  Framebuffer& fb = ctx->framebuffers[0];
-  if (!fb.color_attachment) {
+typedef Texture LockedTexture;
+
+// Lock the given texture to prevent modification.
+LockedTexture* LockTexture(GLuint texId) {
+  Texture& tex = ctx->textures[texId];
+  if (!tex.buf) {
+    return nullptr;
+  }
+  if (__sync_fetch_and_add(&tex.locked, 1) == 0) {
+    // If this is the first time locking the texture, flush any delayed clears.
+    prepare_texture(tex);
+  }
+  return (LockedTexture*)&tex;
+}
+
+// Lock the given framebuffer's color attachment to prevent modification.
+LockedTexture* LockFramebuffer(GLuint fboId) {
+  Framebuffer& fb = ctx->framebuffers[fboId];
+  // Only allow locking a framebuffer if it has a valid color attachment and
+  // only if targeting the first layer.
+  if (!fb.color_attachment || fb.layer > 0) {
+    return nullptr;
+  }
+  return LockTexture(fb.color_attachment);
+}
+
+// Reference an already locked resource
+void LockResource(LockedTexture* resource) {
+  if (!resource) {
     return;
   }
-  Texture& srctex = ctx->textures[srcId];
-  if (!srctex.buf) return;
-  prepare_texture(srctex);
-  Texture& dsttex = ctx->textures[fb.color_attachment];
-  if (!dsttex.buf) return;
+  __sync_fetch_and_add(&resource->locked, 1);
+}
+
+// Remove a lock on a texture that has been previously locked
+void UnlockResource(LockedTexture* resource) {
+  if (!resource) {
+    return;
+  }
+  if (__sync_fetch_and_add(&resource->locked, -1) <= 0) {
+    // The lock should always be non-zero before unlocking.
+    assert(0);
+  }
+}
+
+// Extension for optimized compositing of textures or framebuffers that may be
+// safely used across threads. The source and destination must be locked to
+// ensure that they can be safely accessed while the SWGL context might be used
+// by another thread.
+void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
+               GLint srcY, GLsizei srcWidth, GLsizei srcHeight, GLint dstX,
+               GLint dstY, GLboolean opaque, GLboolean flip) {
+  if (!lockedDst || !lockedSrc) {
+    return;
+  }
+  Texture& srctex = *lockedSrc;
+  Texture& dsttex = *lockedDst;
   assert(srctex.bpp() == 4);
   const int bpp = 4;
   size_t src_stride = srctex.stride();
@@ -4003,10 +4058,7 @@ void Composite(GLuint srcId, GLint srcX, GLint srcY, GLsizei srcWidth,
   if (dstY + srcHeight > dsttex.height) {
     srcHeight = dsttex.height - dstY;
   }
-  IntRect skip = {dstX, dstY, dstX + srcWidth, dstY + srcHeight};
-  prepare_texture(dsttex, &skip);
-  char* dest = dsttex.sample_ptr(dstX, flip ? dsttex.height - 1 - dstY : dstY,
-                                 fb.layer);
+  char* dest = dsttex.sample_ptr(dstX, flip ? dsttex.height - 1 - dstY : dstY);
   char* src = srctex.sample_ptr(srcX, srcY);
   if (flip) {
     dest_stride = -dest_stride;
