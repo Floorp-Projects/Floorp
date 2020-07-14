@@ -301,7 +301,7 @@ bool FunctionEmitter::emitTopLevelFunction(unsigned index) {
 
     JS::Rooted<ModuleObject*> module(bce_->cx,
                                      bce_->sc->asModuleContext()->module());
-    if (!module->noteFunctionDeclaration(bce_->cx, name_, index)) {
+    if (!module->noteFunctionDeclaration(bce_->cx, index)) {
       return false;
     }
     return true;
