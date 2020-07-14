@@ -56,7 +56,7 @@ class Runnable;
 class SplitNodeTransaction;
 class SplitRangeOffFromNodeResult;
 class SplitRangeOffResult;
-class WSRunObject;
+class WhiteSpaceVisibilityKeeper;
 class WSRunScanner;
 class WSScanResult;
 enum class EditSubAction : int32_t;
@@ -704,8 +704,8 @@ class HTMLEditor final : public TextEditor,
   /**
    * DeleteParentBlocksIfEmpty() removes parent block elements if they
    * don't have visible contents.  Note that due performance issue of
-   * WSRunObject, this call may be expensive.  And also note that this
-   * removes a empty block with a transaction.  So, please make sure that
+   * WhiteSpaceVisibilityKeeper, this call may be expensive.  And also note that
+   * this removes a empty block with a transaction.  So, please make sure that
    * you've already created `AutoPlaceholderBatch`.
    *
    * @param aPoint      The point whether this method climbing up the DOM
@@ -5015,7 +5015,7 @@ class HTMLEditor final : public TextEditor,
   friend class SlurpBlobEventListener;
   friend class SplitNodeTransaction;
   friend class TextEditor;
-  friend class WSRunObject;
+  friend class WhiteSpaceVisibilityKeeper;
   friend class WSRunScanner;
   friend class WSScanResult;
 };

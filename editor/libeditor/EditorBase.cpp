@@ -3716,8 +3716,8 @@ nsresult EditorBase::DeleteSelectionAsAction(
   // TODO: If we're an HTMLEditor instance, we need to compute delete ranges
   //       here.  However, it means that we need to pick computation codes
   //       which are in `HandleDeleteSelection()`, its helper methods and
-  //       `WSRunObject` so that we need to redesign `HandleDeleteSelection()`
-  //       in bug 1618457.
+  //       `WhiteSpaceVisibilityKeeper` so that we need to redesign
+  //       `HandleDeleteSelection()` in bug 1618457.
 
   nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {

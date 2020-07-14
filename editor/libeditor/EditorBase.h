@@ -95,7 +95,7 @@ class TextEditor;
 class TextInputListener;
 class TextServicesDocument;
 class TypeInState;
-class WSRunObject;
+class WhiteSpaceVisibilityKeeper;
 
 template <typename NodeType>
 class CreateNodeResultBase;
@@ -2556,7 +2556,7 @@ class EditorBase : public nsIEditor,
   friend class ReplaceTextTransaction;
   friend class SplitNodeTransaction;
   friend class TypeInState;
-  friend class WSRunObject;
+  friend class WhiteSpaceVisibilityKeeper;
   friend class WSRunScanner;
   friend class nsIEditor;
 };

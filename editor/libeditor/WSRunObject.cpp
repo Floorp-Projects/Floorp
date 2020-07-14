@@ -48,11 +48,11 @@ template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
 template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorRawDOMPoint& aPoint) const;
 
-template nsresult WSRunObject::NormalizeVisibleWhiteSpacesAt(
+template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aScanStartPoint);
-template nsresult WSRunObject::NormalizeVisibleWhiteSpacesAt(
+template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aScanStartPoint);
-template nsresult WSRunObject::NormalizeVisibleWhiteSpacesAt(
+template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPointInText& aScanStartPoint);
 
 template WSRunScanner::TextFragmentData::TextFragmentData(
@@ -63,24 +63,24 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
 // static
-nsresult WSRunObject::PrepareToJoinBlocks(HTMLEditor& aHTMLEditor,
-                                          Element& aLeftBlockElement,
-                                          Element& aRightBlockElement) {
-  nsresult rv =
-      WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+nsresult WhiteSpaceVisibilityKeeper::PrepareToJoinBlocks(
+    HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+    Element& aRightBlockElement) {
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
           aHTMLEditor,
           EditorDOMRange(EditorRawDOMPoint::AtEndOf(aLeftBlockElement),
                          EditorRawDOMPoint(&aRightBlockElement, 0)));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange("
-      ") failed");
+      "WhiteSpaceVisibilityKeeper::"
+      "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
   return rv;
 }
 
-nsresult WSRunObject::PrepareToDeleteRange(HTMLEditor& aHTMLEditor,
-                                           EditorDOMPoint* aStartPoint,
-                                           EditorDOMPoint* aEndPoint) {
+nsresult WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+    HTMLEditor& aHTMLEditor, EditorDOMPoint* aStartPoint,
+    EditorDOMPoint* aEndPoint) {
   MOZ_ASSERT(aStartPoint);
   MOZ_ASSERT(aEndPoint);
 
@@ -91,18 +91,18 @@ nsresult WSRunObject::PrepareToDeleteRange(HTMLEditor& aHTMLEditor,
   AutoTrackDOMPoint trackerStart(aHTMLEditor.RangeUpdaterRef(), aStartPoint);
   AutoTrackDOMPoint trackerEnd(aHTMLEditor.RangeUpdaterRef(), aEndPoint);
 
-  nsresult rv =
-      WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
           aHTMLEditor, EditorDOMRange(*aStartPoint, *aEndPoint));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange("
-      ") failed");
+      "WhiteSpaceVisibilityKeeper::"
+      "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
   return rv;
 }
 
-nsresult WSRunObject::PrepareToDeleteNode(HTMLEditor& aHTMLEditor,
-                                          nsIContent* aContent) {
+nsresult WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
+    HTMLEditor& aHTMLEditor, nsIContent* aContent) {
   if (NS_WARN_IF(!aContent)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -113,19 +113,19 @@ nsresult WSRunObject::PrepareToDeleteNode(HTMLEditor& aHTMLEditor,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv =
-      WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
           aHTMLEditor, EditorDOMRange(atContent, atContent.NextPoint()));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange("
-      ") failed");
+      "WhiteSpaceVisibilityKeeper::"
+      "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
   return rv;
 }
 
-nsresult WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor& aHTMLEditor,
-                                                 nsCOMPtr<nsINode>* aSplitNode,
-                                                 int32_t* aSplitOffset) {
+nsresult WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
+    HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
+    int32_t* aSplitOffset) {
   if (NS_WARN_IF(!aSplitNode) || NS_WARN_IF(!*aSplitNode) ||
       NS_WARN_IF(!aSplitOffset)) {
     return NS_ERROR_INVALID_ARG;
@@ -134,17 +134,18 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor& aHTMLEditor,
   AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), aSplitNode,
                             aSplitOffset);
 
-  nsresult rv = WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
-      aHTMLEditor, EditorDOMPoint(*aSplitNode, *aSplitOffset));
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit() "
-      "failed");
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
+          aHTMLEditor, EditorDOMPoint(*aSplitNode, *aSplitOffset));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "WhiteSpaceVisibilityKeeper::"
+                       "MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit() "
+                       "failed");
   return rv;
 }
 
 // static
-Result<RefPtr<Element>, nsresult> WSRunObject::InsertBRElement(
+Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return Err(NS_ERROR_INVALID_ARG);
@@ -217,12 +218,14 @@ Result<RefPtr<Element>, nsresult> WSRunObject::InsertBRElement(
               textFragmentDataAtInsertionPoint
                   .GetEndOfCollapsibleASCIIWhiteSpaces(
                       atNextCharOfInsertionPoint);
-          nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-              aHTMLEditor, atNextCharOfInsertionPoint,
-              endOfCollapsibleASCIIWhiteSpaces);
+          nsresult rv =
+              WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+                  aHTMLEditor, atNextCharOfInsertionPoint,
+                  endOfCollapsibleASCIIWhiteSpaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
-                "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+                "WhiteSpaceVisibilityKeeper::"
+                "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
             return Err(rv);
           }
         }
@@ -242,7 +245,8 @@ Result<RefPtr<Element>, nsresult> WSRunObject::InsertBRElement(
             invisibleLeadingWhiteSpaceRangeOfNewLine.EndRef());
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "WSRunObject::DeleteTextAndTextNodesWithTransaction() failed");
+              "WhiteSpaceVisibilityKeeper::"
+              "DeleteTextAndTextNodesWithTransaction() failed");
           return Err(rv);
         }
       }
@@ -286,7 +290,7 @@ Result<RefPtr<Element>, nsresult> WSRunObject::InsertBRElement(
 }
 
 // static
-nsresult WSRunObject::ReplaceText(
+nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
     HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
     const EditorDOMRange& aRangeToBeReplaced,
     EditorRawDOMPoint* aPointAfterInsertedString /* = nullptr */) {
@@ -535,7 +539,8 @@ nsresult WSRunObject::ReplaceText(
   //     modify it and make each caller of this method decide whether it should
   //     keep or stop handling the edit action.
   if (!aHTMLEditor.GetDocument()) {
-    NS_WARNING("WSRunObject::ReplaceText() lost proper document");
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::ReplaceText() lost proper document");
     return NS_ERROR_UNEXPECTED;
   }
   OwningNonNull<Document> document = *aHTMLEditor.GetDocument();
@@ -558,8 +563,8 @@ nsresult WSRunObject::ReplaceText(
 }
 
 // static
-nsresult WSRunObject::DeletePreviousWhiteSpace(HTMLEditor& aHTMLEditor,
-                                               const EditorDOMPoint& aPoint) {
+nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
   Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
   EditorDOMPointInText atPreviousCharOfStart =
@@ -592,10 +597,10 @@ nsresult WSRunObject::DeletePreviousWhiteSpace(HTMLEditor& aHTMLEditor,
     EditorDOMPoint endToDelete =
         textFragmentDataAtDeletion.GetEndOfCollapsibleASCIIWhiteSpaces(
             atPreviousCharOfStart);
-    nsresult rv = WSRunObject::PrepareToDeleteRange(aHTMLEditor, &startToDelete,
-                                                    &endToDelete);
+    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+        aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::PrepareToDeleteRange() failed");
+      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
       return rv;
     }
 
@@ -611,10 +616,10 @@ nsresult WSRunObject::DeletePreviousWhiteSpace(HTMLEditor& aHTMLEditor,
   if (atPreviousCharOfStart.IsCharNBSP()) {
     EditorDOMPoint startToDelete(atPreviousCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
-    nsresult rv = WSRunObject::PrepareToDeleteRange(aHTMLEditor, &startToDelete,
-                                                    &endToDelete);
+    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+        aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::PrepareToDeleteRange() failed");
+      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
       return rv;
     }
 
@@ -631,7 +636,7 @@ nsresult WSRunObject::DeletePreviousWhiteSpace(HTMLEditor& aHTMLEditor,
 }
 
 // static
-nsresult WSRunObject::DeleteInclusiveNextWhiteSpace(
+nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
   Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
@@ -664,10 +669,10 @@ nsresult WSRunObject::DeleteInclusiveNextWhiteSpace(
     EditorDOMPoint endToDelete =
         textFragmentDataAtDeletion.GetEndOfCollapsibleASCIIWhiteSpaces(
             atNextCharOfStart);
-    nsresult rv = WSRunObject::PrepareToDeleteRange(aHTMLEditor, &startToDelete,
-                                                    &endToDelete);
+    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+        aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::PrepareToDeleteRange() failed");
+      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
       return rv;
     }
 
@@ -683,10 +688,10 @@ nsresult WSRunObject::DeleteInclusiveNextWhiteSpace(
   if (atNextCharOfStart.IsCharNBSP()) {
     EditorDOMPoint startToDelete(atNextCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
-    nsresult rv = WSRunObject::PrepareToDeleteRange(aHTMLEditor, &startToDelete,
-                                                    &endToDelete);
+    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+        aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::PrepareToDeleteRange() failed");
+      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
       return rv;
     }
 
@@ -1226,9 +1231,9 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 }
 
 // static
-nsresult
-WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
-    HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete) {
+nsresult WhiteSpaceVisibilityKeeper::
+    MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+        HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete) {
   // this routine adjust white-space before *this* and after aEndObject
   // in preperation for the two areas to become adjacent after the
   // intervening content is deleted.  It's overly agressive right
@@ -1349,12 +1354,14 @@ WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
           EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
               textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
                   nextCharOfStartOfEnd);
-          nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-              aHTMLEditor, nextCharOfStartOfEnd,
-              endOfCollapsibleASCIIWhiteSpaces);
+          nsresult rv =
+              WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+                  aHTMLEditor, nextCharOfStartOfEnd,
+                  endOfCollapsibleASCIIWhiteSpaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
-                "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+                "WhiteSpaceVisibilityKeeper::"
+                "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
             return rv;
           }
         }
@@ -1410,12 +1417,14 @@ WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
         EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
             textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
                 atPreviousCharOfStart);
-        nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-            aHTMLEditor, atPreviousCharOfStart,
-            endOfCollapsibleASCIIWhiteSpaces);
+        nsresult rv =
+            WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+                aHTMLEditor, atPreviousCharOfStart,
+                endOfCollapsibleASCIIWhiteSpaces);
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+              "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP()"
+              " failed");
           return rv;
         }
       }
@@ -1425,7 +1434,8 @@ WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
 }
 
 // static
-nsresult WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
+nsresult
+WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToSplit) {
   TextFragmentData textFragmentDataAtSplitPoint(
       aPointToSplit, aHTMLEditor.GetActiveEditingHost());
@@ -1469,10 +1479,13 @@ nsresult WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
       EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
           textFragmentDataAtSplitPoint.GetEndOfCollapsibleASCIIWhiteSpaces(
               atNextCharOfStart);
-      nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-          aHTMLEditor, atNextCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+      nsresult rv =
+          WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+              aHTMLEditor, atNextCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+        NS_WARNING(
+            "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP() "
+            "failed");
         return rv;
       }
     }
@@ -1497,10 +1510,14 @@ nsresult WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
       EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
           textFragmentDataAtSplitPoint.GetEndOfCollapsibleASCIIWhiteSpaces(
               atPreviousCharOfStart);
-      nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-          aHTMLEditor, atPreviousCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+      nsresult rv =
+          WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+              aHTMLEditor, atPreviousCharOfStart,
+              endOfCollapsibleASCIIWhiteSpaces);
       if (NS_FAILED(rv)) {
-        NS_WARNING("WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+        NS_WARNING(
+            "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP() "
+            "failed");
         return rv;
       }
     }
@@ -1793,7 +1810,7 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
 }
 
 // static
-nsresult WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
+nsresult WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
     HTMLEditor& aHTMLEditor,
     const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
     const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces) {
@@ -1848,7 +1865,7 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
 
 // static
 template <typename EditorDOMPointType>
-nsresult WSRunObject::NormalizeVisibleWhiteSpacesAt(
+nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPointType& aPoint) {
   Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentData(aPoint, editingHost);
@@ -2204,7 +2221,7 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
 }
 
 // static
-nsresult WSRunObject::DeleteInvisibleASCIIWhiteSpaces(
+nsresult WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
   MOZ_ASSERT(aPoint.IsSet());
   Element* editingHost = aHTMLEditor.GetActiveEditingHost();
