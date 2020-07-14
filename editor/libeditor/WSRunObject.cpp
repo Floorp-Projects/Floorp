@@ -570,24 +570,26 @@ nsresult WSRunObject::ReplaceText(
   return NS_OK;
 }
 
-nsresult WSRunObject::DeleteWSBackward() {
+// static
+nsresult WSRunObject::DeletePreviousWhiteSpace(HTMLEditor& aHTMLEditor,
+                                               const EditorDOMPoint& aPoint) {
+  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
   EditorDOMPointInText atPreviousCharOfStart =
-      GetPreviousEditableCharPoint(mScanStartPoint);
+      textFragmentDataAtDeletion.GetPreviousEditableCharPoint(aPoint);
   if (!atPreviousCharOfStart.IsSet() ||
       atPreviousCharOfStart.IsEndOfContainer()) {
     return NS_OK;
   }
 
   // Easy case, preformatted ws.
-  if (TextFragmentDataAtStart().IsPreformatted()) {
+  if (textFragmentDataAtDeletion.IsPreformatted()) {
     if (!atPreviousCharOfStart.IsCharASCIISpace() &&
         !atPreviousCharOfStart.IsCharNBSP()) {
       return NS_OK;
     }
-    nsresult rv =
-        MOZ_KnownLive(mHTMLEditor)
-            .DeleteTextAndTextNodesWithTransaction(
-                atPreviousCharOfStart, atPreviousCharOfStart.NextPoint());
+    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        atPreviousCharOfStart, atPreviousCharOfStart.NextPoint());
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -598,19 +600,21 @@ nsresult WSRunObject::DeleteWSBackward() {
   // ws, we need to delete the whole run.
   if (atPreviousCharOfStart.IsCharASCIISpace()) {
     EditorDOMPoint startToDelete =
-        GetFirstASCIIWhiteSpacePointCollapsedTo(atPreviousCharOfStart);
+        textFragmentDataAtDeletion.GetFirstASCIIWhiteSpacePointCollapsedTo(
+            atPreviousCharOfStart);
     EditorDOMPoint endToDelete =
-        GetEndOfCollapsibleASCIIWhiteSpaces(atPreviousCharOfStart);
-    nsresult rv = WSRunObject::PrepareToDeleteRange(
-        MOZ_KnownLive(mHTMLEditor), &startToDelete, &endToDelete);
+        textFragmentDataAtDeletion.GetEndOfCollapsibleASCIIWhiteSpaces(
+            atPreviousCharOfStart);
+    nsresult rv = WSRunObject::PrepareToDeleteRange(aHTMLEditor, &startToDelete,
+                                                    &endToDelete);
     if (NS_FAILED(rv)) {
       NS_WARNING("WSRunObject::PrepareToDeleteRange() failed");
       return rv;
     }
 
     // finally, delete that ws
-    rv = MOZ_KnownLive(mHTMLEditor)
-             .DeleteTextAndTextNodesWithTransaction(startToDelete, endToDelete);
+    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(startToDelete,
+                                                           endToDelete);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -620,16 +624,16 @@ nsresult WSRunObject::DeleteWSBackward() {
   if (atPreviousCharOfStart.IsCharNBSP()) {
     EditorDOMPoint startToDelete(atPreviousCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
-    nsresult rv = WSRunObject::PrepareToDeleteRange(
-        MOZ_KnownLive(mHTMLEditor), &startToDelete, &endToDelete);
+    nsresult rv = WSRunObject::PrepareToDeleteRange(aHTMLEditor, &startToDelete,
+                                                    &endToDelete);
     if (NS_FAILED(rv)) {
       NS_WARNING("WSRunObject::PrepareToDeleteRange() failed");
       return rv;
     }
 
     // finally, delete that ws
-    rv = MOZ_KnownLive(mHTMLEditor)
-             .DeleteTextAndTextNodesWithTransaction(startToDelete, endToDelete);
+    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(startToDelete,
+                                                           endToDelete);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
