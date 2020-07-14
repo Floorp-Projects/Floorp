@@ -131,12 +131,14 @@ void BackgroundChildImpl::ProcessingError(Result aCode, const char* aReason) {
   nsAutoCString abortMessage;
 
   switch (aCode) {
+    case MsgDropped:
+      return;
+
 #define HANDLE_CASE(_result)              \
   case _result:                           \
     abortMessage.AssignLiteral(#_result); \
     break
 
-    HANDLE_CASE(MsgDropped);
     HANDLE_CASE(MsgNotKnown);
     HANDLE_CASE(MsgNotAllowed);
     HANDLE_CASE(MsgPayloadError);
