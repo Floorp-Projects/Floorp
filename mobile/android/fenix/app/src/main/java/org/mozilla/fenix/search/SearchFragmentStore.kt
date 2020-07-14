@@ -96,9 +96,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
         is SearchFragmentAction.UpdateQuery ->
             state.copy(query = action.query)
         is SearchFragmentAction.SelectNewDefaultSearchEngine ->
-            state.copy(
-                searchEngineSource = SearchEngineSource.Default(action.engine)
-            )
+            state.copy(searchEngineSource = SearchEngineSource.Default(action.engine))
         is SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt ->
             state.copy(showSearchSuggestionsHint = action.show)
         is SearchFragmentAction.SetShowSearchSuggestions ->

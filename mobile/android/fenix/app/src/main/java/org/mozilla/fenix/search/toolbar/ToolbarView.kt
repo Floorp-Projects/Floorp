@@ -22,24 +22,24 @@ import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
- * to respond to user interaction on the [BrowserToolbarView]
+ * to respond to user interaction on the [ToolbarView]
  */
 interface ToolbarInteractor {
 
     /**
-     * Called when a user hits the return key while [BrowserToolbarView] has focus.
-     * @param url the text inside the [BrowserToolbarView] when committed
+     * Called when a user hits the return key while [ToolbarView] has focus.
+     * @param url the text inside the [ToolbarView] when committed
      */
     fun onUrlCommitted(url: String)
 
     /**
-     * Called when a user removes focus from the [BrowserToolbarView]
+     * Called when a user removes focus from the [ToolbarView]
      */
     fun onEditingCanceled()
 
     /**
-     * Called whenever the text inside the [BrowserToolbarView] changes
-     * @param text the current text displayed by [BrowserToolbarView]
+     * Called whenever the text inside the [ToolbarView] changes
+     * @param text the current text displayed by [ToolbarView]
      */
     fun onTextChanged(text: String)
 }
@@ -103,7 +103,7 @@ class ToolbarView(
 
                 override fun onTextChanged(text: String) {
                     url = text
-                    this@ToolbarView.interactor.onTextChanged(text)
+                    interactor.onTextChanged(text)
                 }
             })
         }

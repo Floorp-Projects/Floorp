@@ -34,16 +34,15 @@ class ShortcutsSuggestionProvider(
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
-        searchEngineProvider.installedSearchEngines(context).list.forEach {
-            suggestions.add(
-                AwesomeBar.Suggestion(
-                    provider = this,
-                    id = it.identifier,
-                    icon = it.icon,
-                    title = it.name,
-                    onSuggestionClicked = {
-                        selectShortcutEngine(it)
-                    })
+        searchEngineProvider.installedSearchEngines(context).list.mapTo(suggestions) {
+            AwesomeBar.Suggestion(
+                provider = this,
+                id = it.identifier,
+                icon = it.icon,
+                title = it.name,
+                onSuggestionClicked = {
+                    selectShortcutEngine(it)
+                }
             )
         }
 
@@ -55,7 +54,8 @@ class ShortcutsSuggestionProvider(
                 title = context.getString(R.string.search_shortcuts_engine_settings),
                 onSuggestionClicked = {
                     selectShortcutEngineSettings()
-                })
+                }
+            )
         )
         return suggestions
     }

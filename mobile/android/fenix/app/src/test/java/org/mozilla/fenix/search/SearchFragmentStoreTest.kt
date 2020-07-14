@@ -5,13 +5,17 @@
 package org.mozilla.fenix.search
 
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 
+@ExperimentalCoroutinesApi
 class SearchFragmentStoreTest {
 
     @Test
@@ -55,6 +59,43 @@ class SearchFragmentStoreTest {
         store.dispatch(SearchFragmentAction.UpdateShortcutsAvailability(false)).join()
         assertNotSame(initialState, store.state)
         assertEquals(false, store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun showSearchSuggestions() = runBlocking {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+
+        store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true)).join()
+        assertNotSame(initialState, store.state)
+        assertTrue(store.state.showSearchSuggestions)
+
+        store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(false)).join()
+        assertFalse(store.state.showSearchSuggestions)
+    }
+
+    @Test
+    fun allowSearchInPrivateMode() = runBlocking {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+
+        store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(true)).join()
+        assertNotSame(initialState, store.state)
+        assertTrue(store.state.showSearchSuggestionsHint)
+
+        store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false)).join()
+        assertFalse(store.state.showSearchSuggestionsHint)
+    }
+
+    @Test
+    fun selectNewDefaultEngine() = runBlocking {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+        val engine = mockk<SearchEngine>()
+
+        store.dispatch(SearchFragmentAction.SelectNewDefaultSearchEngine(engine)).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.Default(engine), store.state.searchEngineSource)
     }
 
     private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
