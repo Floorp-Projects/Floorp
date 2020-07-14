@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.searchengine
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -33,14 +32,16 @@ import java.util.Locale
 open class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
-    private val locationService: LocationService = if (Config.channel.isDebug) {
-        LocationService.dummy()
-    } else {
-        MozillaLocationService(
-            context,
-            context.components.core.client,
-            BuildConfig.MLS_TOKEN
-        )
+    private val locationService = with(MozillaLocationService(
+        context,
+        context.components.core.client,
+        BuildConfig.MLS_TOKEN
+    )) {
+        if (Config.channel.isDebug || !this.hasRegionCached()) {
+            LocationService.dummy()
+        } else {
+            this
+        }
     }
 
     // We have two search engine types: one based on MLS reported region, one based only on Locale.
@@ -93,17 +94,6 @@ open class FenixSearchEngineProvider(
 
     private var loadedSearchEngines = refreshAsync()
 
-    // https://github.com/mozilla-mobile/fenix/issues/9935
-    // Create new getter that will return the fallback SearchEngineList if
-    // the main one hasn't completed yet
-    private val searchEngines: Deferred<SearchEngineList>
-        get() =
-            if (isRegionCachedByLocationService) {
-                loadedSearchEngines
-            } else {
-                fallbackEngines
-            }
-
     fun getDefaultEngine(context: Context): SearchEngine {
         val engines = installedSearchEngines(context)
         val selectedName = context.settings().defaultSearchEngineName
@@ -117,7 +107,7 @@ open class FenixSearchEngineProvider(
      */
     fun installedSearchEngines(context: Context): SearchEngineList = runBlocking {
         val installedIdentifiers = installedSearchEngineIdentifiers(context)
-        val engineList = searchEngines.await()
+        val engineList = loadedSearchEngines.await()
 
         engineList.copy(
             list = engineList.list.filter {
@@ -188,7 +178,11 @@ open class FenixSearchEngineProvider(
     }
 
     private fun refreshAsync() = async {
-        val engineList = baseSearchEngines.await()
+        val engineList = if (isRegionCachedByLocationService) {
+            baseSearchEngines.await()
+        } else {
+            fallbackEngines.await()
+        }
         val bundledList = bundledSearchEngines.await().list
         val customList = customSearchEngines.await().list
 
