@@ -190,9 +190,7 @@ void RemoteDecoderManagerChild::OpenForGPUProcess(
   sRecreateTasks->Clear();
 }
 
-void RemoteDecoderManagerChild::InitIPDL() {
-  mIPDLSelfRef = this;
-}
+void RemoteDecoderManagerChild::InitIPDL() { mIPDLSelfRef = this; }
 
 void RemoteDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 

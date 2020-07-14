@@ -1965,8 +1965,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
     ResetPreviousSampleTime();
     TimeStamp now = TimeStamp::Now();
     PROFILER_ADD_TEXT_MARKER("SkippedComposite",
-                             mPaused ? "Paused"_ns
-                                     : "No display list"_ns,
+                             mPaused ? "Paused"_ns : "No display list"_ns,
                              JS::ProfilingCategoryPair::GRAPHICS, now, now);
     return;
   }
@@ -1987,8 +1986,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
     }
 
     TimeStamp now = TimeStamp::Now();
-    PROFILER_ADD_TEXT_MARKER("SkippedComposite",
-                             "Too many pending frames"_ns,
+    PROFILER_ADD_TEXT_MARKER("SkippedComposite", "Too many pending frames"_ns,
                              JS::ProfilingCategoryPair::GRAPHICS, now, now);
     return;
   }
@@ -2013,10 +2011,9 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     // Skip WR render during paused state.
     if (cbp->IsPaused()) {
       TimeStamp now = TimeStamp::Now();
-      PROFILER_ADD_TEXT_MARKER(
-          "SkippedComposite",
-          "CompositorBridgeParent is paused"_ns,
-          JS::ProfilingCategoryPair::GRAPHICS, now, now);
+      PROFILER_ADD_TEXT_MARKER("SkippedComposite",
+                               "CompositorBridgeParent is paused"_ns,
+                               JS::ProfilingCategoryPair::GRAPHICS, now, now);
       cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, VsyncId(), now, now,
                                   now);
       return;

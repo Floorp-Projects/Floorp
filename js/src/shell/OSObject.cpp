@@ -323,8 +323,7 @@ static bool osfile_readRelativeToScript(JSContext* cx, unsigned argc,
 }
 
 static bool ListDir(JSContext* cx, unsigned argc, Value* vp,
-                    PathResolutionMode resolveMode)
-{
+                    PathResolutionMode resolveMode) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() != 1) {
@@ -417,14 +416,14 @@ static bool ListDir(JSContext* cx, unsigned argc, Value* vp,
   return true;
 }
 
-  static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
-    return ListDir(cx, argc, vp, RootRelative);
-  }
+static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
+  return ListDir(cx, argc, vp, RootRelative);
+}
 
-  static bool osfile_listDirRelativeToScript(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-    return ListDir(cx, argc, vp, ScriptRelative);
-  }
+static bool osfile_listDirRelativeToScript(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  return ListDir(cx, argc, vp, ScriptRelative);
+}
 
 static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
                                          Value* vp) {

@@ -96,12 +96,12 @@ UrlClassifierFeatureCryptominingProtection::MaybeCreate(nsIChannel* aChannel) {
         nsCString spec = chanURI->GetSpecOrDefault();
         spec.Truncate(
             std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-        UC_LOG(
-            ("UrlClassifierFeatureCryptominingProtection: Skipping cryptomining "
-             "checks "
-             "for first party or top-level load channel[%p] "
-             "with uri %s",
-             aChannel, spec.get()));
+        UC_LOG((
+            "UrlClassifierFeatureCryptominingProtection: Skipping cryptomining "
+            "checks "
+            "for first party or top-level load channel[%p] "
+            "with uri %s",
+            aChannel, spec.get()));
       }
     }
     return nullptr;
