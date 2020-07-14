@@ -13,6 +13,7 @@
 #include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
@@ -1129,27 +1130,21 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       int32_t* aSplitOffset);
 
   /**
-   * InsertBreak() inserts a <br> node at (before) aPointToInsert and delete
+   * InsertBRElement() inserts a <br> node at (before) aPointToInsert and delete
    * unnecessary white-spaces around there and/or replaces white-spaces with
    * non-breaking spaces.  Note that if the point is in a text node, the
    * text node will be split and insert new <br> node between the left node
    * and the right node.
    *
-   * @param aSelection      The selection for the editor.
    * @param aPointToInsert  The point to insert new <br> element.  Note that
    *                        it'll be inserted before this point.  I.e., the
    *                        point will be the point of new <br>.
-   * @param aSelect         If eNone, this won't change selection.
-   *                        If eNext, selection will be collapsed after the
-   *                        <br> element.
-   *                        If ePrevious, selection will be collapsed at the
-   *                        <br> element.
    * @return                The new <br> node.  If failed to create new <br>
    *                        node, returns nullptr.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<dom::Element> InsertBreak(
-      dom::Selection& aSelection, const EditorDOMPoint& aPointToInsert,
-      nsIEditor::EDirection aSelect);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<Element>, nsresult>
+  InsertBRElement(HTMLEditor& aHTMLEditor,
+                  const EditorDOMPoint& aPointToInsert);
 
   /**
    * InsertText() inserts aStringToInsert to aPointToInsert and makes any needed

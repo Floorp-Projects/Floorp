@@ -155,28 +155,30 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor& aHTMLEditor,
   return rv;
 }
 
-already_AddRefed<Element> WSRunObject::InsertBreak(
-    Selection& aSelection, const EditorDOMPoint& aPointToInsert,
-    nsIEditor::EDirection aSelect) {
+// static
+Result<RefPtr<Element>, nsresult> WSRunObject::InsertBRElement(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return nullptr;
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in HandleInsertText() in
   // HTMLEditSubActionHandler.cpp
 
-  TextFragmentData textFragmentData(TextFragmentDataAtStart());
+  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  TextFragmentData textFragmentDataAtInsertionPoint(aPointToInsert,
+                                                    editingHost);
   const EditorDOMRange invisibleLeadingWhiteSpaceRangeOfNewLine =
-      textFragmentData.GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
-          aPointToInsert);
+      textFragmentDataAtInsertionPoint
+          .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(aPointToInsert);
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeOfCurrentLine =
-      textFragmentData.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
-          aPointToInsert);
+      textFragmentDataAtInsertionPoint
+          .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(aPointToInsert);
   const Maybe<const VisibleWhiteSpacesData> visibleWhiteSpaces =
       !invisibleLeadingWhiteSpaceRangeOfNewLine.IsPositioned() ||
               !invisibleTrailingWhiteSpaceRangeOfCurrentLine.IsPositioned()
-          ? Some(textFragmentData.VisibleWhiteSpacesDataRef())
+          ? Some(textFragmentDataAtInsertionPoint.VisibleWhiteSpacesDataRef())
           : Nothing();
   const PointPosition pointPositionWithVisibleWhiteSpaces =
       visibleWhiteSpaces.isSome() && visibleWhiteSpaces.ref().IsInitialized()
@@ -187,22 +189,20 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
   {
     // Some scoping for AutoTrackDOMPoint.  This will track our insertion
     // point while we tweak any surrounding white-space
-    AutoTrackDOMPoint tracker(mHTMLEditor.RangeUpdaterRef(), &pointToInsert);
+    AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToInsert);
 
     if (invisibleTrailingWhiteSpaceRangeOfCurrentLine.IsPositioned()) {
       if (!invisibleTrailingWhiteSpaceRangeOfCurrentLine.Collapsed()) {
         // XXX Why don't we remove all of the invisible white-spaces?
         MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeOfCurrentLine.StartRef() ==
                    pointToInsert);
-        nsresult rv =
-            MOZ_KnownLive(mHTMLEditor)
-                .DeleteTextAndTextNodesWithTransaction(
-                    invisibleTrailingWhiteSpaceRangeOfCurrentLine.StartRef(),
-                    invisibleTrailingWhiteSpaceRangeOfCurrentLine.EndRef());
+        nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+            invisibleTrailingWhiteSpaceRangeOfCurrentLine.StartRef(),
+            invisibleTrailingWhiteSpaceRangeOfCurrentLine.EndRef());
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-          return nullptr;
+          return Err(rv);
         }
       }
     }
@@ -213,25 +213,29 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
              pointPositionWithVisibleWhiteSpaces ==
                  PointPosition::MiddleOfFragment) {
       EditorDOMPointInText atNextCharOfInsertionPoint =
-          GetInclusiveNextEditableCharPoint(pointToInsert);
+          textFragmentDataAtInsertionPoint.GetInclusiveNextEditableCharPoint(
+              pointToInsert);
       if (atNextCharOfInsertionPoint.IsSet() &&
           !atNextCharOfInsertionPoint.IsEndOfContainer() &&
           atNextCharOfInsertionPoint.IsCharASCIISpace()) {
         EditorDOMPointInText atPreviousCharOfNextCharOfInsertionPoint =
-            GetPreviousEditableCharPoint(atNextCharOfInsertionPoint);
+            textFragmentDataAtInsertionPoint.GetPreviousEditableCharPoint(
+                atNextCharOfInsertionPoint);
         if (!atPreviousCharOfNextCharOfInsertionPoint.IsSet() ||
             atPreviousCharOfNextCharOfInsertionPoint.IsEndOfContainer() ||
             !atPreviousCharOfNextCharOfInsertionPoint.IsCharASCIISpace()) {
           // We are at start of non-nbsps.  Convert to a single nbsp.
           EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-              GetEndOfCollapsibleASCIIWhiteSpaces(atNextCharOfInsertionPoint);
+              textFragmentDataAtInsertionPoint
+                  .GetEndOfCollapsibleASCIIWhiteSpaces(
+                      atNextCharOfInsertionPoint);
           nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-              MOZ_KnownLive(mHTMLEditor), atNextCharOfInsertionPoint,
+              aHTMLEditor, atNextCharOfInsertionPoint,
               endOfCollapsibleASCIIWhiteSpaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
-            return nullptr;
+            return Err(rv);
           }
         }
       }
@@ -245,15 +249,13 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
         // XXX If the DOM tree has been changed above,
         //     invisibleLeadingWhiteSpaceRangeOfNewLine may be invalid now.
         //     So, we may do something wrong here.
-        nsresult rv =
-            MOZ_KnownLive(mHTMLEditor)
-                .DeleteTextAndTextNodesWithTransaction(
-                    invisibleLeadingWhiteSpaceRangeOfNewLine.StartRef(),
-                    invisibleLeadingWhiteSpaceRangeOfNewLine.EndRef());
+        nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+            invisibleLeadingWhiteSpaceRangeOfNewLine.StartRef(),
+            invisibleLeadingWhiteSpaceRangeOfNewLine.EndRef());
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "WSRunObject::DeleteTextAndTextNodesWithTransaction() failed");
-          return nullptr;
+          return Err(rv);
         }
       }
     }
@@ -267,31 +269,32 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
       //     `visibleWhiteSpaces` may be invalid.  So, we may do
       //     something wrong here.
       EditorDOMPointInText atNBSPReplacedWithASCIIWhiteSpace =
-          textFragmentData
+          textFragmentDataAtInsertionPoint
               .GetPreviousNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
                   pointToInsert);
       if (atNBSPReplacedWithASCIIWhiteSpace.IsSet()) {
-        AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-        nsresult rv =
-            MOZ_KnownLive(mHTMLEditor)
-                .ReplaceTextWithTransaction(
-                    MOZ_KnownLive(
-                        *atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
-                    atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
+        nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
+            MOZ_KnownLive(*atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+            atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
         if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
-          return nullptr;
+          return Err(rv);
         }
       }
     }
   }
 
-  RefPtr<Element> newBRElement =
-      MOZ_KnownLive(mHTMLEditor)
-          .InsertBRElementWithTransaction(pointToInsert, aSelect);
-  NS_WARNING_ASSERTION(newBRElement,
-                       "HTMLEditor::InsertBRElementWithTransaction() failed");
-  return newBRElement.forget();
+  RefPtr<Element> newBRElement = aHTMLEditor.InsertBRElementWithTransaction(
+      pointToInsert, nsIEditor::eNone);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (!newBRElement) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return Err(NS_ERROR_FAILURE);
+  }
+  return newBRElement;
 }
 
 // static
