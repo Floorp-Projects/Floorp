@@ -143,6 +143,9 @@
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ປັນຫາເວັບໄຊທ Malware</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ບັນຫາໃນເວັບໄຊທທີ່ບໍ່ເພິງປະສົງ</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">ເວບໄຊທທີ່ເປັນອັນຕະລາຍ</string>
 
     <!-- The document title and heading of an error page. -->
