@@ -235,3 +235,10 @@ Code Review
 ``phabricator_diff``
    The code review process needs to know the Phabricator Differential diff that
    started the analysis. This parameter must start with `PHID-DIFF-`
+
+Local configuration
+-------------------
+
+``target-kind``
+  Generate only the given kind and its kind-dependencies. This is used for local inspection of the graph
+  and is not supported at run-time.
