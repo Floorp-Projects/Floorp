@@ -760,6 +760,13 @@
   value: true
   mirror: always
 
+# Disk cache capacity in kilobytes. It's used only when
+# browser.cache.disk.smart_size.enabled == false
+- name: browser.cache.disk.capacity
+  type: RelaxedAtomicUint32
+  value: 256000
+  mirror: always
+
 # Enable/Disable Origin based cache isolation
 - name: browser.cache.cache_isolation
   type: RelaxedAtomicBool
