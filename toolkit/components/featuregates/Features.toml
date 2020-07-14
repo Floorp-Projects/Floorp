@@ -68,3 +68,13 @@ type = "boolean"
 bug-numbers = [1651119]
 is-public = true
 default-value = {default = false, nightly = true}
+
+[serviceworker-debugger-support]
+title = "experimental-features-serviceworker-debugger-support"
+description = "experimental-features-serviceworker-debugger-support-description"
+restart-required = true
+preference = "devtools.debugger.features.windowless-service-workers"
+type = "boolean"
+bug-numbers = [1651607]
+is-public = true
+default-value = false
