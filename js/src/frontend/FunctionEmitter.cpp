@@ -19,7 +19,6 @@
 #include "frontend/SharedContext.h"        // SharedContext
 #include "vm/AsyncFunctionResolveKind.h"   // AsyncFunctionResolveKind
 #include "vm/JSScript.h"                   // JSScript
-#include "vm/ModuleBuilder.h"              // ModuleBuilder
 #include "vm/Opcodes.h"                    // JSOp
 #include "vm/Scope.h"                      // BindingKind
 #include "wasm/AsmJS.h"                    // IsAsmJSModule
@@ -299,8 +298,13 @@ bool FunctionEmitter::emitTopLevelFunction(unsigned index) {
   if (bce_->sc->isModuleContext()) {
     // For modules, we record the function and instantiate the binding
     // during ModuleInstantiate(), before the script is run.
-    return bce_->sc->asModuleContext()->builder.noteFunctionDeclaration(
-        bce_->cx, index);
+
+    JS::Rooted<ModuleObject*> module(bce_->cx,
+                                     bce_->sc->asModuleContext()->module());
+    if (!module->noteFunctionDeclaration(bce_->cx, name_, index)) {
+      return false;
+    }
+    return true;
   }
 
   MOZ_ASSERT(bce_->sc->isGlobalContext() || bce_->sc->isEvalContext());

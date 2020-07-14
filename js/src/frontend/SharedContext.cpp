@@ -391,12 +391,13 @@ JSFunction* FunctionBox::function() const {
   return compilationInfo_.functions[funcDataIndex_];
 }
 
-ModuleSharedContext::ModuleSharedContext(JSContext* cx,
+ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
                                          CompilationInfo& compilationInfo,
                                          ModuleBuilder& builder,
                                          SourceExtent extent)
     : SharedContext(cx, Kind::Module, compilationInfo, Directives(true),
                     extent),
+      module_(cx, module),
       bindings(cx),
       builder(builder) {
   thisBinding_ = ThisBinding::Module;
