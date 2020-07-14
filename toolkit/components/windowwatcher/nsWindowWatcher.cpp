@@ -62,7 +62,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -685,13 +684,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
-
-  if (!hasChromeParent) {
-    bool outerSizeUsed =
-        features.Exists("outerwidth") || features.Exists("outerheight");
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::WINDOW_OPEN_OUTER_SIZE,
-                                   outerSizeUsed);
-  }
 
   SizeSpec sizeSpec;
   CalcSizeSpec(features, sizeSpec);
