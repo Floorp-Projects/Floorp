@@ -123,6 +123,9 @@ inline void NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
 
 inline void NativeObject::markDenseElementsNotPacked(JSContext* cx) {
   MOZ_ASSERT(isNative());
+
+  getElementsHeader()->markNonPacked();
+
   if (IsTypeInferenceEnabled()) {
     MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
   }
@@ -827,18 +830,33 @@ inline bool ThrowIfNotConstructing(JSContext* cx, const CallArgs& args,
 }
 
 inline bool IsPackedArray(JSObject* obj) {
-  if (!IsTypeInferenceEnabled()) {
+  if (!obj->is<ArrayObject>()) {
     return false;
   }
-  if (!obj->is<ArrayObject>() || obj->hasLazyGroup()) {
+
+  ArrayObject* arr = &obj->as<ArrayObject>();
+  if (arr->getDenseInitializedLength() != arr->length()) {
     return false;
   }
-  AutoSweepObjectGroup sweep(obj->group());
-  if (obj->group()->hasAllFlags(sweep, OBJECT_FLAG_NON_PACKED)) {
+
+  if (!arr->denseElementsArePacked()) {
+    // Assert TI agrees the elements are not packed.
+    MOZ_ASSERT_IF(
+        !arr->hasLazyGroup(),
+        arr->group()->hasAllFlagsDontCheckGeneration(OBJECT_FLAG_NON_PACKED));
     return false;
   }
-  return obj->as<ArrayObject>().getDenseInitializedLength() ==
-         obj->as<ArrayObject>().length();
+
+#ifdef DEBUG
+  // Assert correctness of the NON_PACKED flag by checking the first few
+  // elements don't contain holes.
+  uint32_t numToCheck = std::min<uint32_t>(5, arr->getDenseInitializedLength());
+  for (uint32_t i = 0; i < numToCheck; i++) {
+    MOZ_ASSERT(!arr->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE));
+  }
+#endif
+
+  return true;
 }
 
 }  // namespace js

@@ -4170,6 +4170,20 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0> {
   const LAllocation* value() { return getOperand(2); }
 };
 
+class LStoreHoleValueElement : public LInstructionHelper<0, 2, 0> {
+ public:
+  LIR_HEADER(StoreHoleValueElement)
+
+  LStoreHoleValueElement(const LAllocation& elements, const LAllocation& index)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+  }
+
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+};
+
 // Like LStoreElementV, but supports indexes >= initialized length.
 class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 1> {
  public:

@@ -3540,6 +3540,15 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (nobj->isIndexed()) {
       out.put(" indexed");
     }
+    if (nobj->denseElementsAreCopyOnWrite()) {
+      out.put(" copy_on_write_elements");
+    }
+    if (!nobj->denseElementsArePacked()) {
+      out.put(" non_packed_elements");
+    }
+    if (nobj->denseElementsAreSealed()) {
+      out.put(" sealed_elements");
+    }
     if (nobj->denseElementsAreFrozen()) {
       out.put(" frozen_elements");
     }

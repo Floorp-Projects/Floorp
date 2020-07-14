@@ -3875,6 +3875,9 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
     return AttachDecision::NoAction;
   }
 
+  // Setting holes requires extra code for marking the elements non-packed.
+  MOZ_ASSERT(!rhsVal_.isMagic(JS_ELEMENTS_HOLE));
+
   // Don't optimize InitElem (DefineProperty) on non-extensible objects: when
   // the elements are sealed, we have to throw an exception. Note that we have
   // to check !isExtensible instead of denseElementsAreSealed because sealing
@@ -3946,7 +3949,12 @@ static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
 AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId, ValOperandId rhsId) {
-  if (!obj->isNative() || rhsVal_.isMagic(JS_ELEMENTS_HOLE)) {
+  if (!obj->isNative()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Setting holes requires extra code for marking the elements non-packed.
+  if (rhsVal_.isMagic(JS_ELEMENTS_HOLE)) {
     return AttachDecision::NoAction;
   }
 
