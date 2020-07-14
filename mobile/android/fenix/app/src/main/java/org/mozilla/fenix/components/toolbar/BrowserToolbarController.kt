@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionFeature
@@ -177,7 +178,15 @@ class DefaultBrowserToolbarController(
                     sessionUseCases.goForward.invoke(currentSession)
                 }
             }
-            ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke(currentSession)
+            is ToolbarMenu.Item.Reload -> {
+                val flags = if (item.bypassCache) {
+                    LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE)
+                } else {
+                    LoadUrlFlags.none()
+                }
+
+                sessionUseCases.reload.invoke(currentSession, flags = flags)
+            }
             ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(currentSession)
             ToolbarMenu.Item.Settings -> browserAnimator.captureEngineViewAndDrawStatically {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
@@ -340,7 +349,7 @@ class DefaultBrowserToolbarController(
         val eventItem = when (item) {
             ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
             is ToolbarMenu.Item.Forward -> Event.BrowserMenuItemTapped.Item.FORWARD
-            ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
+            is ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
             ToolbarMenu.Item.Stop -> Event.BrowserMenuItemTapped.Item.STOP
             ToolbarMenu.Item.Settings -> Event.BrowserMenuItemTapped.Item.SETTINGS
             is ToolbarMenu.Item.RequestDesktop ->

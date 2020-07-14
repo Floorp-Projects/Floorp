@@ -30,6 +30,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.search.SearchUseCases
@@ -235,7 +236,7 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarReloadPress() = runBlockingTest {
-        val item = ToolbarMenu.Item.Reload
+        val item = ToolbarMenu.Item.Reload(false)
 
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
 
@@ -244,6 +245,24 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.RELOAD)) }
         verify { sessionUseCases.reload(currentSession) }
+    }
+
+    @Test
+    fun handleToolbarReloadLongPress() = runBlockingTest {
+        val item = ToolbarMenu.Item.Reload(true)
+
+        every { activity.components.useCases.sessionUseCases } returns sessionUseCases
+
+        val controller = createController(scope = this)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.RELOAD)) }
+        verify {
+            sessionUseCases.reload(
+                currentSession,
+                EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.BYPASS_CACHE)
+            )
+        }
     }
 
     @Test

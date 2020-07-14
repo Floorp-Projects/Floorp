@@ -98,12 +98,13 @@ class DefaultToolbarMenu(
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
             secondaryImageTintResource = primaryTextColor(),
-            disableInSecondaryState = false
+            disableInSecondaryState = false,
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = true)) }
         ) {
             if (session?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.Item.Stop)
             } else {
-                onItemTapped.invoke(ToolbarMenu.Item.Reload)
+                onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = false))
             }
         }
 

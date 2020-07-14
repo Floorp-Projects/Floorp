@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -156,6 +157,7 @@ class BrowserToolbarView(
                     customTabSession?.id,
                     shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
                     onItemTapped = {
+                        it.performHapticIfNeeded(view)
                         interactor.onBrowserToolbarMenuItemTapped(it)
                     }
                 )
@@ -164,7 +166,10 @@ class BrowserToolbarView(
                     context = this,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
                     shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
-                    onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) },
+                    onItemTapped = {
+                        it.performHapticIfNeeded(view)
+                        interactor.onBrowserToolbarMenuItemTapped(it)
+                    },
                     lifecycleOwner = lifecycleOwner,
                     sessionManager = sessionManager,
                     store = components.core.store,
@@ -243,5 +248,13 @@ class BrowserToolbarView(
 
     companion object {
         private const val TOOLBAR_ELEVATION = 16
+    }
+
+    private fun ToolbarMenu.Item.performHapticIfNeeded(view: View) {
+        (this as? ToolbarMenu.Item.Reload)?.also { reload ->
+            if (reload.bypassCache) {
+                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            }
+        }
     }
 }

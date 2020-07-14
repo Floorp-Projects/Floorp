@@ -15,7 +15,7 @@ interface ToolbarMenu {
         object Share : Item()
         object Back : Item()
         data class Forward(val viewHistory: Boolean) : Item()
-        object Reload : Item()
+        data class Reload(val bypassCache: Boolean) : Item()
         object Stop : Item()
         object OpenInFenix : Item()
         object SaveToCollection : Item()
