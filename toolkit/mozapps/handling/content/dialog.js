@@ -92,7 +92,7 @@ var dialog = {
   initialize: function initialize() {
     this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
     this._URI = window.arguments[8].QueryInterface(Ci.nsIURI);
-    let principal = window.arguments[9].QueryInterface(Ci.nsIPrincipal);
+    let principal = window.arguments[9]?.QueryInterface(Ci.nsIPrincipal);
     this._browsingContext = window.arguments[10];
     let usePrivateBrowsing = false;
     if (this._browsingContext) {
