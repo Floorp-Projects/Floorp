@@ -5744,6 +5744,7 @@ bool WindowScriptTimeoutHandler::Call(const char* aExecutionReason) {
   JS::CompileOptions options(aes.cx());
   options.setFileAndLine(mFileName.get(), mLineNo);
   options.setNoScriptRval(true);
+  options.setIntroductionType("domTimer");
   JS::Rooted<JSObject*> global(aes.cx(), mGlobal->GetGlobalJSObject());
   {
     nsJSUtils::ExecutionContext exec(aes.cx(), global);

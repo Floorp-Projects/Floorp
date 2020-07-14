@@ -205,9 +205,7 @@ one of the following values:
 
 * `"javascriptURL"`, for code presented in `javascript:` URLs.
 
-* `"setTimeout"`, for code passed to `setTimeout` as a string.
-
-* `"setInterval"`, for code passed to `setInterval` as a string.
+* `"domTimer"`, for code passed to `setTimeout`/`setInterval` as a string.
 
 * `undefined`, if the implementation doesn't know how the code was
   introduced.
