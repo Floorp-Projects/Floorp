@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def add_command(config, tasks):
     config_tasks = {}
-    for dep in config.kind_dependencies_tasks:
+    for dep in config.kind_dependencies_tasks.values():
         if 'update-verify-config' in dep.kind or 'update-verify-next-config' in dep.kind:
             config_tasks[dep.name] = dep
 

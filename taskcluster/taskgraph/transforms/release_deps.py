@@ -25,7 +25,7 @@ def add_dependencies(config, jobs):
             continue
 
         required_signoffs = set(job.setdefault('attributes', {}).get('required_signoffs', []))
-        for dep_task in config.kind_dependencies_tasks:
+        for dep_task in config.kind_dependencies_tasks.values():
             # Weed out unwanted tasks.
             # XXX we have run-on-projects which specifies the on-push behavior;
             # we need another attribute that specifies release promotion,
