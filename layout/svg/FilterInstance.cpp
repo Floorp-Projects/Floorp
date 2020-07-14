@@ -52,8 +52,7 @@ FilterDescription FilterInstance::GetFilterDescription(
 }
 
 static UniquePtr<UserSpaceMetrics> UserSpaceMetricsForFrame(nsIFrame* aFrame) {
-  if (aFrame->GetContent()->IsSVGElement()) {
-    SVGElement* element = static_cast<SVGElement*>(aFrame->GetContent());
+  if (auto* element = SVGElement::FromNodeOrNull(aFrame->GetContent())) {
     return MakeUnique<SVGElementMetrics>(element);
   }
   return MakeUnique<NonSVGFrameUserSpaceMetrics>(aFrame);

@@ -969,7 +969,7 @@ void SVGUtils::SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,
 
 gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
                           const gfxMatrix* aToBoundsSpace) {
-  if (aFrame->GetContent()->IsText()) {
+  if (aFrame->IsTextFrame()) {
     aFrame = aFrame->GetParent();
   }
 
@@ -1008,10 +1008,10 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
 
   MOZ_ASSERT(svg);
 
-  nsIContent* content = aFrame->GetContent();
-  if (content->IsSVGElement() &&
-      !static_cast<const SVGElement*>(content)->HasValidDimensions()) {
-    return gfxRect();
+  if (auto* element = SVGElement::FromNodeOrNull(aFrame->GetContent())) {
+    if (!element->HasValidDimensions()) {
+      return gfxRect();
+    }
   }
 
   // Clean out flags which have no effects on returning bbox from now, so that
@@ -1043,8 +1043,8 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
     // needs investigation to check that we won't break too much content.
     // NOTE: When changing this to apply to other frame types, make sure to
     // also update SVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
-    MOZ_ASSERT(content->IsSVGElement(), "bad cast");
-    SVGElement* element = static_cast<SVGElement*>(content);
+    MOZ_ASSERT(aFrame->GetContent()->IsSVGElement(), "bad cast");
+    SVGElement* element = static_cast<SVGElement*>(aFrame->GetContent());
     matrix = element->PrependLocalTransformsTo(matrix, eChildToUserSpace);
   }
   gfxRect bbox =
