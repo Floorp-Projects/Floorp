@@ -1125,7 +1125,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 #ifdef DEBUG
   static bool isChildJSObject(JSObject* obj);
 #endif
-  static Debugger* fromChildJSObject(JSObject* obj);
 
   Zone* zone() const { return toJSObject()->zone(); }
 
