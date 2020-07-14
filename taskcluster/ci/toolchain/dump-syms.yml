@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    attributes:
+        local-toolchain: true
     description: "dump_syms toolchain build"
     worker:
         max-run-time: 1800
@@ -26,8 +28,6 @@ linux64-dump-syms:
             - linux64-rust
 
 win64-dump-syms:
-    attributes:
-        local-toolchain: true
     treeherder:
         symbol: TW64(dump_syms)
     worker-type: b-win2012
