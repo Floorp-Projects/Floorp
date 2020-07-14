@@ -65,8 +65,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       const bool& aHasStickyConn,
-      Maybe<TransactionObserverResult>&& aTransactionObserverResult,
-      const int64_t& aRequestSize);
+      Maybe<TransactionObserverResult>&& aTransactionObserverResult);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
@@ -100,8 +99,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       const bool& aHasStickyConn,
-      Maybe<TransactionObserverResult>&& aTransactionObserverResult,
-      const int64_t& aRequestSize);
+      Maybe<TransactionObserverResult>&& aTransactionObserverResult);
   void DoNotifyListener();
   void ContinueDoNotifyListener();
   // Get event target for ODA.

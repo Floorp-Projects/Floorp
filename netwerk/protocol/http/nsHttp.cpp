@@ -523,6 +523,43 @@ bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when) {
          gHttpHandler->IsBeforeLastActiveTabLoadOptimization(when);
 }
 
+nsCString ConvertRequestHeadToString(nsHttpRequestHead& aRequestHead,
+                                     bool aHasRequestBody,
+                                     bool aRequestBodyHasHeaders,
+                                     bool aUsingConnect) {
+  // Make sure that there is "Content-Length: 0" header in the requestHead
+  // in case of POST and PUT methods when there is no requestBody and
+  // requestHead doesn't contain "Transfer-Encoding" header.
+  //
+  // RFC1945 section 7.2.2:
+  //   HTTP/1.0 requests containing an entity body must include a valid
+  //   Content-Length header field.
+  //
+  // RFC2616 section 4.4:
+  //   For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
+  //   containing a message-body MUST include a valid Content-Length header
+  //   field unless the server is known to be HTTP/1.1 compliant.
+  if ((aRequestHead.IsPost() || aRequestHead.IsPut()) && !aHasRequestBody &&
+      !aRequestHead.HasHeader(nsHttp::Transfer_Encoding)) {
+    DebugOnly<nsresult> rv =
+        aRequestHead.SetHeader(nsHttp::Content_Length, "0"_ns);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
+  nsCString reqHeaderBuf;
+  reqHeaderBuf.Truncate();
+
+  // make sure we eliminate any proxy specific headers from
+  // the request if we are using CONNECT
+  aRequestHead.Flatten(reqHeaderBuf, aUsingConnect);
+
+  if (!aRequestBodyHasHeaders || !aHasRequestBody) {
+    reqHeaderBuf.AppendLiteral("\r\n");
+  }
+
+  return reqHeaderBuf;
+}
+
 void NotifyActiveTabLoadOptimization() {
   if (gHttpHandler) {
     gHttpHandler->NotifyActiveTabLoadOptimization();

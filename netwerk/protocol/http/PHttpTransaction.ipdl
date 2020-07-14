@@ -59,8 +59,7 @@ parent:
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
                       bool hasStickyConn,
-                      TransactionObserverResult? transactionObserverResult,
-                      int64_t requestSize);
+                      TransactionObserverResult? transactionObserverResult);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,
                        nsCString resourceUrl,
