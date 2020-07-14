@@ -866,10 +866,15 @@ class TextInputDelegateTest : BaseSessionTest() {
          """)
 
         setComposingText(ic, "b", 1)
-        setComposingText(ic, "a", 1)
-        pressKey(ic, KeyEvent.KEYCODE_R)
+        assertTextAndSelectionAt("Don't change caret position after calling blur and focus",
+                                 ic, "b", 1)
 
-        assertText("Can set composition string after calling blur and focus",
+        setComposingText(ic, "a", 1)
+        assertTextAndSelectionAt("Can set composition string after calling blur and focus",
+                                 ic, "ba", 2)
+
+        pressKey(ic, KeyEvent.KEYCODE_R)
+        assertText("Can set input string by keypress after calling blur and focus",
                    ic, "bar")
     }
 }
