@@ -83,7 +83,7 @@ class UrlbarInput {
     );
     this.panel = this.textbox.querySelector(".urlbarView");
 
-    this.searchButton = UrlbarPrefs.get("update2.searchButton");
+    this.searchButton = UrlbarPrefs.get("experimental.searchButton");
     if (this.searchButton) {
       this.textbox.classList.add("searchButton");
     }
