@@ -39,7 +39,19 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
   mWrappedTextureHost =
       VideoBridgeParent::GetSingleton(sd.source())->LookupTexture(sd.handle());
 
-  if (mWrappedTextureHost && mExternalImageId.isSome()) {
+  if (!mWrappedTextureHost) {
+    return nullptr;
+  }
+
+  if (mWrappedTextureHost->AsBufferTextureHost()) {
+    // TODO(miko): This code path is taken when WebRenderTextureHost wraps
+    // GPUVideoTextureHost, which wraps BufferTextureHost.
+    // Because this creates additional copies of the texture data, we should not
+    // do this.
+    mWrappedTextureHost->AsBufferTextureHost()->DisableExternalTextures();
+  }
+
+  if (mExternalImageId.isSome()) {
     // External image id is allocated by mWrappedTextureHost.
     mWrappedTextureHost->EnsureRenderTexture(Nothing());
     MOZ_ASSERT(mWrappedTextureHost->mExternalImageId.isSome());
