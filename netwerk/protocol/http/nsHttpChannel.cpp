@@ -6784,6 +6784,8 @@ nsresult nsHttpChannel::BeginConnect() {
       host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,
       originAttributes, isHttps);
   mAllowAltSvc = (mAllowAltSvc && !gHttpHandler->IsSpdyBlacklisted(connInfo));
+  bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
+                      !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative;
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && mAllowAltSvc &&  // per channel
@@ -6792,8 +6794,7 @@ nsresult nsHttpChannel::BeginConnect() {
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) &&
       (mapping = gHttpHandler->GetAltServiceMapping(
            scheme, host, port, mPrivateBrowsing, IsIsolated(),
-           GetTopWindowOrigin(), originAttributes,
-           !mUpgradeProtocolCallback && !mProxyInfo))) {
+           GetTopWindowOrigin(), originAttributes, http3Allowed))) {
     LOG(("nsHttpChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n", this,
          scheme.get(), mapping->AlternateHost().get(), mapping->AlternatePort(),
          mapping->HashKey().get()));
