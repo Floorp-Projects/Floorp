@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SMILMilestone_h
-#define mozilla_SMILMilestone_h
+#ifndef DOM_SMIL_SMILMILESTONE_H_
+#define DOM_SMIL_SMILMILESTONE_H_
 
 #include "mozilla/SMILTypes.h"
 
@@ -72,4 +72,4 @@ class SMILMilestone {
 
 }  // namespace mozilla
 
-#endif  // mozilla_SMILMilestone_h
+#endif  // DOM_SMIL_SMILMILESTONE_H_

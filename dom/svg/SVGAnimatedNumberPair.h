@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGNUMBERPAIR_H__
-#define __NS_SVGNUMBERPAIR_H__
+#ifndef DOM_SVG_SVGANIMATEDNUMBERPAIR_H_
+#define DOM_SVG_SVGANIMATEDNUMBERPAIR_H_
 
 #include "DOMSVGAnimatedNumber.h"
 #include "nsCycleCollectionParticipant.h"
@@ -123,4 +123,4 @@ class SVGAnimatedNumberPair {
 
 }  // namespace mozilla
 
-#endif  //__NS_SVGNUMBERPAIR_H__
+#endif  // DOM_SVG_SVGANIMATEDNUMBERPAIR_H_

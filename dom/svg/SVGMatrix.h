@@ -34,8 +34,8 @@
  * up.
  */
 
-#ifndef mozilla_dom_SVGMatrix_h
-#define mozilla_dom_SVGMatrix_h
+#ifndef DOM_SVG_SVGMATRIX_H_
+#define DOM_SVG_SVGMATRIX_H_
 
 #include "DOMSVGTransform.h"
 #include "gfxMatrix.h"
@@ -128,4 +128,4 @@ class SVGMatrix final : public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGMatrix_h
+#endif  // DOM_SVG_SVGMATRIX_H_

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGFILTERINSTANCE_H__
-#define __NS_SVGFILTERINSTANCE_H__
+#ifndef LAYOUT_SVG_SVGFILTERINSTANCE_H_
+#define LAYOUT_SVG_SVGFILTERINSTANCE_H_
 
 #include "gfxMatrix.h"
 #include "gfxRect.h"
@@ -264,4 +264,4 @@ class SVGFilterInstance {
 
 }  // namespace mozilla
 
-#endif
+#endif  // LAYOUT_SVG_SVGFILTERINSTANCE_H_

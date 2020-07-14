@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGCONTEXT_H_
-#define MOZILLA_SVGCONTEXT_H_
+#ifndef LAYOUT_SVG_SVGIMAGECONTEXT_H_
+#define LAYOUT_SVG_SVGIMAGECONTEXT_H_
 
 #include "mozilla/Maybe.h"
 #include "mozilla/SVGContextPaint.h"
@@ -118,4 +118,4 @@ class SVGImageContext {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGCONTEXT_H_
+#endif  // LAYOUT_SVG_SVGIMAGECONTEXT_H_

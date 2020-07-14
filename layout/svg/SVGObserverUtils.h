@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSSVGEFFECTS_H_
-#define NSSVGEFFECTS_H_
+#ifndef LAYOUT_SVG_SVGOBSERVERUTILS_H_
+#define LAYOUT_SVG_SVGOBSERVERUTILS_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDTracker.h"
@@ -415,4 +415,4 @@ class SVGObserverUtils {
 
 }  // namespace mozilla
 
-#endif /*NSSVGEFFECTS_H_*/
+#endif  // LAYOUT_SVG_SVGOBSERVERUTILS_H_

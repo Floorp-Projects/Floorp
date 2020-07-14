@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SMILValue_h
-#define mozilla_SMILValue_h
+#ifndef DOM_SMIL_SMILVALUE_H_
+#define DOM_SMIL_SMILVALUE_H_
 
 #include "mozilla/SMILNullType.h"
 #include "mozilla/SMILType.h"
@@ -72,4 +72,4 @@ class SMILValue {
 
 }  // namespace mozilla
 
-#endif  // mozilla_SMILValue_h
+#endif  // DOM_SMIL_SMILVALUE_H_

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SVGTRANSFORMLISTSMILTYPE_H_
-#define SVGTRANSFORMLISTSMILTYPE_H_
+#ifndef DOM_SVG_SVGTRANSFORMLISTSMILTYPE_H_
+#define DOM_SVG_SVGTRANSFORMLISTSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILType.h"
@@ -121,4 +121,4 @@ class SVGTransformListSMILType : public SMILType {
 
 }  // end namespace mozilla
 
-#endif  // SVGLISTTRANSFORMSMILTYPE_H_
+#endif  // DOM_SVG_SVGTRANSFORMLISTSMILTYPE_H_

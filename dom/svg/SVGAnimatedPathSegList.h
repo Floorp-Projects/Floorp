@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGANIMATEDPATHSEGLIST_H__
-#define MOZILLA_SVGANIMATEDPATHSEGLIST_H__
+#ifndef DOM_SVG_SVGANIMATEDPATHSEGLIST_H_
+#define DOM_SVG_SVGANIMATEDPATHSEGLIST_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -120,4 +120,4 @@ class SVGAnimatedPathSegList final {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGANIMATEDPATHSEGLIST_H__
+#endif  // DOM_SVG_SVGANIMATEDPATHSEGLIST_H_

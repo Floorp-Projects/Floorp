@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SMILAttr_h
-#define mozilla_SMILAttr_h
+#ifndef DOM_SMIL_SMILATTR_H_
+#define DOM_SMIL_SMILATTR_H_
 
 #include "nscore.h"
 #include "nsStringFwd.h"
@@ -97,4 +97,4 @@ class SMILAttr {
 
 }  // namespace mozilla
 
-#endif  // mozilla_SMILAttr_h
+#endif  // DOM_SMIL_SMILATTR_H_

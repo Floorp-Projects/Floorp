@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGPathElement_h
-#define mozilla_dom_SVGPathElement_h
+#ifndef DOM_SVG_SVGPATHELEMENT_H_
+#define DOM_SVG_SVGPATHELEMENT_H_
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
@@ -119,4 +119,4 @@ class SVGPathElement final : public SVGPathElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGPathElement_h
+#endif  // DOM_SVG_SVGPATHELEMENT_H_

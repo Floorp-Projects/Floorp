@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGFETurbulenceElement_h
-#define mozilla_dom_SVGFETurbulenceElement_h
+#ifndef DOM_SVG_SVGFETURBULENCEELEMENT_H_
+#define DOM_SVG_SVGFETURBULENCEELEMENT_H_
 
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedInteger.h"
@@ -89,4 +89,4 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGFETurbulenceElement_h
+#endif  // DOM_SVG_SVGFETURBULENCEELEMENT_H_

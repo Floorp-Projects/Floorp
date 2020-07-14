@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGFEOffsetElement_h
-#define mozilla_dom_SVGFEOffsetElement_h
+#ifndef DOM_SVG_SVGFEOFFSETELEMENT_H_
+#define DOM_SVG_SVGFEOFFSETELEMENT_H_
 
 #include "SVGAnimatedNumber.h"
 #include "SVGAnimatedString.h"
@@ -66,4 +66,4 @@ class SVGFEOffsetElement : public SVGFEOffsetElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGFEOffsetElement_h
+#endif  // DOM_SVG_SVGFEOFFSETELEMENT_H_
