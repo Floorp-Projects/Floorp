@@ -551,7 +551,8 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
 
   MOZ_ASSERT(compilationInfo.script);
 
-  if (!builder.initModule(module)) {
+  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
+  if (!moduleMetadata.initModule(cx, module)) {
     return nullptr;
   }
 
