@@ -31,18 +31,17 @@
     });
 
     add_task(async function test_read_failure() {
-      // TODO: Stop using relative paths.
+      const doesNotExist = OS.Path.join(tmpDir, "does_not_exist.tmp");
       await Assert.rejects(
-        window.IOUtils.read("does_not_exist.txt"),
+        window.IOUtils.read(doesNotExist),
         /Could not open file/,
         "IOUtils::read rejects when file does not exist"
       );
     });
 
     add_task(async function test_write_no_overwrite() {
-      // TODO: Stop using relative paths.
       // Make a new file, and try to write to it with overwrites disabled.
-      const tmpFileName = "test_ioutils_overwrite.tmp";
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_overwrite.tmp");
       const untouchableContents = new TextEncoder().encode("Can't touch this!\n");
       await window.IOUtils.writeAtomic(tmpFileName, untouchableContents);
 
@@ -51,8 +50,12 @@
         window.IOUtils.writeAtomic(tmpFileName, newContents, {
           noOverwrite: true,
         }),
-        /Refusing to overwrite file/,
+        /Refusing to overwrite the file at */,
         "IOUtils::writeAtomic rejects writing to existing file if overwrites are disabled"
+      );
+      ok(
+        await fileHasBinaryContents(tmpFileName, untouchableContents),
+        "IOUtils::writeAtomic doesn't change target file when overwrite is refused"
       );
 
       const bytesWritten = await window.IOUtils.writeAtomic(
@@ -69,9 +72,107 @@
       await cleanup(tmpFileName);
     });
 
+    add_task(async function test_write_with_backup() {
+      info("Test backup file option with non-existing file");
+      let fileContents = new TextEncoder().encode("Original file contents");
+      let destFileName = OS.Path.join(tmpDir, "test_write_with_backup_option.tmp");
+      let backupFileName = destFileName + ".backup";
+      let bytesWritten =
+        await window.IOUtils.writeAtomic(destFileName, fileContents, {
+          backupFile: backupFileName,
+        });
+      ok(
+        await fileHasTextContents(destFileName, "Original file contents"),
+        "IOUtils::writeAtomic creates a new file with the correct contents"
+      );
+      ok(
+        !await fileExists(backupFileName),
+        "IOUtils::writeAtomic does not create a backup if the target file does not exist"
+      );
+      is(
+        bytesWritten,
+        fileContents.length,
+        "IOUtils::writeAtomic correctly writes to a new file without performing a backup"
+      );
+
+      info("Test backup file option with existing destination");
+      let newFileContents = new TextEncoder().encode("New file contents");
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
+      bytesWritten =
+        await window.IOUtils.writeAtomic(destFileName, newFileContents, {
+          backupFile: backupFileName,
+        });
+      ok(
+        await fileHasTextContents(backupFileName, "Original file contents"),
+        "IOUtils::writeAtomic can backup an existing file before writing"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::writeAtomic can create the target with the correct contents"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::writeAtomic correctly writes to the target after taking a backup"
+      );
+
+      await cleanup(destFileName, backupFileName);
+    });
+
+    add_task(async function test_write_with_backup_and_tmp() {
+      info("Test backup with tmp and backup file options, non-existing destination");
+      let fileContents = new TextEncoder().encode("Original file contents");
+      let destFileName = OS.Path.join(tmpDir, "test_write_with_backup_and_tmp_options.tmp");
+      let backupFileName = destFileName + ".backup";
+      let tmpFileName = OS.Path.join(tmpDir, "temp_file.tmp");
+      let bytesWritten =
+        await window.IOUtils.writeAtomic(destFileName, fileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+      ok(!await fileExists(tmpFileName), "IOUtils::writeAtomic cleans up the tmpFile");
+      ok(
+        !await fileExists(backupFileName),
+        "IOUtils::writeAtomic does not create a backup if the target file does not exist"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "Original file contents"),
+        "IOUtils::writeAtomic can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        fileContents.length,
+        "IOUtils::writeAtomic can copy tmp file to destination without performing a backup"
+      );
+
+      info("Test backup with tmp and backup file options, existing destination");
+      let newFileContents = new TextEncoder().encode("New file contents");
+      bytesWritten =
+        await window.IOUtils.writeAtomic(destFileName, newFileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+
+      ok(!await fileExists(tmpFileName), "IOUtils::writeAtomic cleans up the tmpFile");
+      ok(
+        await fileHasTextContents(backupFileName, "Original file contents"),
+        "IOUtils::writeAtomic can create a backup if the target file exists"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::writeAtomic can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::writeAtomic IOUtils::writeAtomic can move tmp file to destination after performing a backup"
+      );
+
+      await cleanup(destFileName, backupFileName);
+    });
+
     add_task(async function test_partial_read() {
-      // TODO: Stop using relative paths.
-      const tmpFileName = "test_ioutils_partial_read.tmp";
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_partial_read.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
       const bytesWritten = await window.IOUtils.writeAtomic(tmpFileName, bytes);
       is(
@@ -97,10 +198,9 @@
     });
 
     add_task(async function test_empty_read_and_write() {
-      // TODO: Stop using relative paths.
       // Trying to write an empty file isn't very useful, but it should still
       // succeed.
-      const tmpFileName = "test_ioutils_empty.tmp";
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_empty.tmp");
       const emptyByteArray = new Uint8Array(0);
       const bytesWritten = await window.IOUtils.writeAtomic(
         tmpFileName,
@@ -121,10 +221,9 @@
     });
 
     add_task(async function test_full_read_and_write() {
-      // TODO: Stop using relative paths.
       // Write a file.
       info("Test writing to a new binary file");
-      const tmpFileName = "test_ioutils_numbers.tmp";
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_numbers.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
       const bytesWritten = await window.IOUtils.writeAtomic(tmpFileName, bytes);
       is(
@@ -313,6 +412,8 @@
       const srcDir = OS.Path.join(tmpDir, "test_move_failure_src.tmp.d");
       await createFile(destFile);
       await OS.File.makeDir(srcDir);
+      ok(await OS.File.exists(srcDir), "Expected directory to exist");
+      ok(await OS.File.exists(destFile), "Expected file to exist");
       // Test.
       await Assert.rejects(
         window.IOUtils.move(srcDir, destFile),
@@ -328,6 +429,11 @@
 
     // Utility functions.
 
+    Uint8Array.prototype.equals = function equals(other) {
+      if (this.byteLength !== other.byteLength) return false;
+      return this.every((val, i) => val === other[i]);
+    }
+
     async function createFile(location, contents = "") {
       if (typeof contents === "string") {
         contents = new TextEncoder().encode(contents);
@@ -335,6 +441,15 @@
       await window.IOUtils.writeAtomic(location, contents);
       const exists = await fileExists(location);
       ok(exists, `Created temporary file at: ${location}`);
+    }
+
+    async function fileHasBinaryContents(location, expectedContents) {
+      if (!(expectedContents instanceof Uint8Array)) {
+        throw new TypeError("expectedContents must be a byte array");
+      }
+      info(`opening ${location} for reading`);
+      const bytes = await window.IOUtils.read(location);
+      return bytes.equals(expectedContents);
     }
 
     async function fileHasTextContents(location, expectedContents) {

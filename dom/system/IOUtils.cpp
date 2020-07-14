@@ -19,6 +19,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsThreadManager.h"
@@ -72,6 +73,23 @@ static bool IsFileNotFound(nsresult aResult) {
   }
 }
 
+/**
+ * Formats an error message and appends the error name to the end.
+ */
+template <typename... Args>
+static nsCString FormatErrorMessage(nsresult aError, const char* const aMessage,
+                                    Args... aArgs) {
+  nsPrintfCString msg(aMessage, aArgs...);
+
+  if (const char* errName = GetStaticErrorName(aError)) {
+    msg.AppendPrintf(": %s", errName);
+  } else {
+    msg.AppendPrintf(": 0x%x", aError);
+  }
+
+  return std::move(msg);
+}
+
 static nsCString FormatErrorMessage(nsresult aError,
                                     const char* const aMessage) {
   const char* errName = GetStaticErrorName(aError);
@@ -115,52 +133,58 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     }
   }
 
-  NS_ConvertUTF16toUTF8 path(aPath);
+  InvokeAsync(bg, __func__,
+              [path = nsAutoString(aPath), toRead]() {
+                MOZ_ASSERT(!NS_IsMainThread());
 
-  InvokeAsync(
-      bg, __func__,
-      [path, toRead]() {
-        MOZ_ASSERT(!NS_IsMainThread());
+                UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+                    OpenExistingSync(path, PR_RDONLY);
+                if (!fd) {
+                  return IOReadMozPromise::CreateAndReject(
+                      nsPrintfCString("Could not open file at %s",
+                                      NS_ConvertUTF16toUTF8(path).get()),
+                      __func__);
+                }
+                uint32_t bufSize;
+                if (toRead == 0) {  // maxBytes was unspecified.
+                  // Limitation: We cannot read files that are larger than the
+                  //    max size of a TypedArray (UINT32_MAX bytes).
+                  //    Reject if the file is too big to be read.
+                  PRFileInfo64 info;
+                  if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
+                    return IOReadMozPromise::CreateAndReject(
+                        nsPrintfCString("Could not get info for file at %s",
+                                        NS_ConvertUTF16toUTF8(path).get()),
+                        __func__);
+                  }
+                  uint32_t fileSize = info.size;
+                  if (fileSize > UINT32_MAX) {
+                    return IOReadMozPromise::CreateAndReject(
+                        nsPrintfCString("File at %s is too large to read",
+                                        NS_ConvertUTF16toUTF8(path).get()),
+                        __func__);
+                  }
+                  bufSize = fileSize;
+                } else {
+                  bufSize = toRead;
+                }
+                nsTArray<uint8_t> fileContents;
+                nsresult rv =
+                    IOUtils::ReadSync(fd.get(), bufSize, fileContents);
 
-        UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-            OpenExistingSync(path.get(), PR_RDONLY);
-        if (!fd) {
-          return IOReadMozPromise::CreateAndReject(
-              nsLiteralCString("Could not open file"), __func__);
-        }
-        uint32_t bufSize;
-        if (toRead == 0) {  // maxBytes was unspecified.
-          // Limitation: We cannot read files that are larger than the max size
-          //    of a TypedArray (UINT32_MAX bytes). Reject if the file is too
-          //    big to be read.
-          PRFileInfo64 info;
-          if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
-            return IOReadMozPromise::CreateAndReject(
-                nsLiteralCString("Could not get file info"), __func__);
-          }
-          uint32_t fileSize = info.size;
-          if (fileSize > UINT32_MAX) {
-            return IOReadMozPromise::CreateAndReject(
-                nsLiteralCString("File is too large to read"), __func__);
-          }
-          bufSize = fileSize;
-        } else {
-          bufSize = toRead;
-        }
-        nsTArray<uint8_t> fileContents;
-        nsresult er = IOUtils::ReadSync(fd.get(), bufSize, fileContents);
-
-        if (NS_SUCCEEDED(er)) {
-          return IOReadMozPromise::CreateAndResolve(std::move(fileContents),
-                                                    __func__);
-        }
-        if (er == NS_ERROR_OUT_OF_MEMORY) {
-          return IOReadMozPromise::CreateAndReject(
-              nsLiteralCString("Out of memory"), __func__);
-        }
-        return IOReadMozPromise::CreateAndReject(
-            nsLiteralCString("Unexpected error reading file"), __func__);
-      })
+                if (NS_SUCCEEDED(rv)) {
+                  return IOReadMozPromise::CreateAndResolve(
+                      std::move(fileContents), __func__);
+                }
+                if (rv == NS_ERROR_OUT_OF_MEMORY) {
+                  return IOReadMozPromise::CreateAndReject("Out of memory"_ns,
+                                                           __func__);
+                }
+                return IOReadMozPromise::CreateAndReject(
+                    nsPrintfCString("Unexpected error reading file at %s",
+                                    NS_ConvertUTF16toUTF8(path).get()),
+                    __func__);
+              })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const nsTArray<uint8_t>& aBuf) {
@@ -199,53 +223,100 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
     return promise.forget();
   }
 
-  // TODO: Implement tmpPath and backupFile options.
-  // The data to be written to file might be larger than can be written in any
-  // single call, so we must truncate the file and set the write mode to append
-  // to the file.
-  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
-  bool noOverwrite = false;
-  if (aOptions.IsAnyMemberPresent()) {
-    if (aOptions.mBackupFile.WasPassed() || aOptions.mTmpPath.WasPassed()) {
-      promise->MaybeRejectWithNotSupportedError(
-          "Unsupported options were passed");
-      return promise.forget();
-    }
-    if (aOptions.mFlush) {
-      flags |= PR_SYNC;
-    }
-    noOverwrite = aOptions.mNoOverwrite;
-  }
+  InvokeAsync(
+      bg, __func__,
+      [destPath = nsString(aPath), toWrite = std::move(toWrite), aOptions]() {
+        MOZ_ASSERT(!NS_IsMainThread());
 
-  NS_ConvertUTF16toUTF8 path(aPath);
+        // Check if the file exists and test it against the noOverwrite option.
+        const bool& noOverwrite = aOptions.mNoOverwrite;
+        bool exists = false;
+        {
+          UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+              OpenExistingSync(destPath, PR_RDONLY);
+          exists = !!fd;
+        }
 
-  InvokeAsync(bg, __func__,
-              [path, flags, noOverwrite, toWrite = std::move(toWrite)]() {
-                MOZ_ASSERT(!NS_IsMainThread());
+        if (noOverwrite && exists) {
+          return IOWriteMozPromise::CreateAndReject(
+              nsPrintfCString("Refusing to overwrite the file at %s",
+                              NS_ConvertUTF16toUTF8(destPath).get()),
+              __func__);
+        }
 
-                UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-                    OpenExistingSync(path.get(), flags);
-                if (noOverwrite && fd) {
-                  return IOWriteMozPromise::CreateAndReject(
-                      nsLiteralCString("Refusing to overwrite file"), __func__);
-                }
-                if (!fd) {
-                  fd = CreateFileSync(path.get(), flags);
-                }
-                if (!fd) {
-                  return IOWriteMozPromise::CreateAndReject(
-                      nsLiteralCString("Could not open file"), __func__);
-                }
-                uint32_t result;
-                nsresult er = IOUtils::WriteSync(fd.get(), toWrite, result);
+        // If backupFile was specified, perform the backup as a move.
+        if (exists && aOptions.mBackupFile.WasPassed()) {
+          const nsString& backupFile(aOptions.mBackupFile.Value());
+          nsresult rv = MoveSync(destPath, backupFile, noOverwrite);
+          if (NS_FAILED(rv)) {
+            return IOWriteMozPromise::CreateAndReject(
+                FormatErrorMessage(rv,
+                                   "Failed to back up the file from %s to %s",
+                                   NS_ConvertUTF16toUTF8(destPath).get(),
+                                   NS_ConvertUTF16toUTF8(backupFile).get()),
+                __func__);
+          }
+        }
 
-                if (NS_SUCCEEDED(er)) {
-                  return IOWriteMozPromise::CreateAndResolve(result, __func__);
-                }
-                return IOWriteMozPromise::CreateAndReject(
-                    nsLiteralCString("Unexpected error writing file"),
-                    __func__);
-              })
+        // If tmpPath was specified, we will write to there first, then perform
+        // a move to ensure the file ends up at the final requested destination.
+        nsString tmpPath = destPath;
+        if (aOptions.mTmpPath.WasPassed()) {
+          tmpPath = aOptions.mTmpPath.Value();
+        }
+        // The data to be written to file might be larger than can be
+        // written in any single call, so we must truncate the file and
+        // set the write mode to append to the file.
+        int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
+        if (aOptions.mFlush) {
+          flags |= PR_SYNC;
+        }
+
+        // Try to perform the write and ensure that the file is closed before
+        // continuing.
+        uint32_t result = 0;
+        {
+          UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+              OpenExistingSync(tmpPath, flags);
+          if (!fd) {
+            fd = CreateFileSync(tmpPath, flags);
+          }
+          if (!fd) {
+            return IOWriteMozPromise::CreateAndReject(
+                nsPrintfCString("Could not open the file at %s",
+                                NS_ConvertUTF16toUTF8(tmpPath).get()),
+                __func__);
+          }
+
+          nsresult rv = IOUtils::WriteSync(fd.get(), toWrite, result);
+          if (NS_FAILED(rv)) {
+            return IOWriteMozPromise::CreateAndReject(
+                FormatErrorMessage(
+                    rv,
+                    "Unexpected error occurred while writing to the file at %s",
+                    NS_ConvertUTF16toUTF8(tmpPath).get()),
+                __func__);
+          }
+        }
+
+        // The requested destination was written to, so there is nothing left to
+        // do.
+        if (destPath == tmpPath) {
+          return IOWriteMozPromise::CreateAndResolve(result, __func__);
+        }
+        // Otherwise, if tmpPath was specified and different from the destPath,
+        // then the operation is finished by performing a move.
+        nsresult rv = MoveSync(tmpPath, destPath, false);
+        if (NS_FAILED(rv)) {
+          return IOWriteMozPromise::CreateAndReject(
+              FormatErrorMessage(
+                  rv, "Error moving temporary file at %s to destination at %s",
+                  NS_ConvertUTF16toUTF8(tmpPath).get(),
+                  NS_ConvertUTF16toUTF8(destPath).get()),
+              __func__);
+        }
+        return IOWriteMozPromise::CreateAndResolve(result, __func__);
+      })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const uint32_t& aBytesWritten) {
@@ -411,20 +482,38 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 
 /* static */
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
-    const char* aPath, int32_t aFlags) {
+    const nsAString& aPath, int32_t aFlags) {
   // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
   // want to create a new file.
   MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
 
-  return UniquePtr<PRFileDesc, PR_CloseDelete>(PR_Open(aPath, aFlags, 0));
+  // We open the file descriptor through an nsLocalFile to ensure that the paths
+  // are interpreted/encoded correctly on all platforms.
+  RefPtr<nsLocalFile> file = new nsLocalFile();
+  nsresult rv = file->InitWithPath(aPath);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  PRFileDesc* fd;
+  rv = file->OpenNSPRFileDesc(aFlags, /* mode */ 0, &fd);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
 }
 
 /* static */
-UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(const char* aPath,
-                                                              int32_t aFlags,
-                                                              int32_t aMode) {
-  return UniquePtr<PRFileDesc, PR_CloseDelete>(
-      PR_Open(aPath, aFlags | PR_CREATE_FILE | PR_EXCL, aMode));
+UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
+    const nsAString& aPath, int32_t aFlags, int32_t aMode) {
+  // We open the file descriptor through an nsLocalFile to ensure that the paths
+  // are interpreted/encoded correctly on all platforms.
+  RefPtr<nsLocalFile> file = new nsLocalFile();
+  nsresult rv = file->InitWithPath(aPath);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  PRFileDesc* fd;
+  rv = file->OpenNSPRFileDesc(aFlags | PR_CREATE_FILE | PR_EXCL, aMode, &fd);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
 }
 
 /* static */
@@ -586,8 +675,8 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
               *lockedBackgroundET = nullptr;
               IOUtils::sBarrier = nullptr;
             });
-        nsresult er = NS_DispatchToMainThread(mainThreadRunnable.forget());
-        NS_ENSURE_SUCCESS_VOID(er);
+        nsresult rv = NS_DispatchToMainThread(mainThreadRunnable.forget());
+        NS_ENSURE_SUCCESS_VOID(rv);
       });
 
   return et->Dispatch(backgroundRunnable.forget(),
