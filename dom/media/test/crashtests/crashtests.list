@@ -136,3 +136,4 @@ pref(media.autoplay.default,0) load 1587248.html
 load 1594466.html
 load 1604941.html
 skip-if(!winWidget) load 1608286.html
+load channel-count-in-metadata-different-than-in-content.mp4 # Bug 1584959
