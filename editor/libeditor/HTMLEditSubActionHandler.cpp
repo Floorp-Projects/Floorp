@@ -2543,7 +2543,7 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
 
   if (scanFromStartPointResult.InNormalWhiteSpaces()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtWhiteSpaces(
-        aDirectionAndAmount, startPoint, wsObj);
+        aDirectionAndAmount, startPoint);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "HTMLEditor::HandleDelectCollapsedSelectionAtWhiteSpaces() failed");
@@ -2612,16 +2612,14 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
 
 EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
     nsIEditor::EDirection aDirectionAndAmount,
-    const EditorDOMPoint& aPointToDelete, WSRunObject& aWSRunObjectAtCaret) {
+    const EditorDOMPoint& aPointToDelete) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (aDirectionAndAmount == nsIEditor::eNext) {
-    nsresult rv = aWSRunObjectAtCaret.DeleteWSForward();
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
+    nsresult rv =
+        WSRunObject::DeleteInclusiveNextWhiteSpace(*this, aPointToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::DeleteWSForward() failed");
+      NS_WARNING("WSRunObject::DeleteInclusiveNextWhiteSpace() failed");
       return EditActionHandled(rv);
     }
   } else {

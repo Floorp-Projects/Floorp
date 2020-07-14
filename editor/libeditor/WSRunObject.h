@@ -1202,10 +1202,14 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult DeletePreviousWhiteSpace(
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint);
 
-  // DeleteWSForward deletes a single visible piece of ws after the ws point
-  // (the point to create the wsRunObject, passed to its constructor).  It
-  // makes any needed conversion to adjacent ws to retain its significance.
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteWSForward();
+  /**
+   * DeleteInclusiveNextWhiteSpace() delete inclusive next white-space of
+   * aPoint.  This automatically keeps visiblity of white-spaces around aPoint.
+   * E.g., may remove invisible trailing white-spaces.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  DeleteInclusiveNextWhiteSpace(HTMLEditor& aHTMLEditor,
+                                const EditorDOMPoint& aPoint);
 
   /**
    * NormalizeWhiteSpacesAround() tries to normalize white-space sequence
