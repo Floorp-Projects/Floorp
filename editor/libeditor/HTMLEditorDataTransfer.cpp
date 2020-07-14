@@ -3146,7 +3146,6 @@ class MOZ_STACK_CLASS
   nsresult Run(const nsAString& aInputString, const nsAString& aContextStr,
                const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
                nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-               int32_t* aOutStartOffset, int32_t* aOutEndOffset,
                bool aTrustedInput) const;
 
  private:
@@ -3163,24 +3162,32 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
     int32_t* aOutStartOffset, int32_t* aOutEndOffset,
     bool aTrustedInput) const {
+  if (NS_WARN_IF(!aOutFragNode) || NS_WARN_IF(!aOutStartNode) ||
+      NS_WARN_IF(!aOutEndNode) || NS_WARN_IF(!aOutStartOffset) ||
+      NS_WARN_IF(!aOutEndOffset)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   FragmentFromPasteCreator fragmentFromPasteCreator{mHTMLEditor};
 
-  return fragmentFromPasteCreator.Run(
+  const nsresult rv = fragmentFromPasteCreator.Run(
       aInputString, aContextStr, aInfoStr, aOutFragNode, aOutStartNode,
-      aOutEndNode, aOutStartOffset, aOutEndOffset, aTrustedInput);
+      aOutEndNode, aTrustedInput);
+
+  *aOutStartOffset = 0;
+  *aOutEndOffset = (*aOutEndNode)->Length();
+
+  return rv;
 }
 
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
     nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-    int32_t* aOutStartOffset, int32_t* aOutEndOffset,
     bool aTrustedInput) const {
-  if (NS_WARN_IF(!aOutFragNode) || NS_WARN_IF(!aOutStartNode) ||
-      NS_WARN_IF(!aOutEndNode) || NS_WARN_IF(!aOutStartOffset) ||
-      NS_WARN_IF(!aOutEndOffset)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  MOZ_ASSERT(aOutFragNode);
+  MOZ_ASSERT(aOutStartNode);
+  MOZ_ASSERT(aOutEndNode);
 
   RefPtr<Document> document = mHTMLEditor.GetDocument();
   if (NS_WARN_IF(!document)) {
@@ -3289,7 +3296,6 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
   }
 
   *aOutFragNode = std::move(documentFragmentToInsert);
-  *aOutStartOffset = 0;
 
   if (!aInfoStr.IsEmpty()) {
     const nsresult rv =
@@ -3303,7 +3309,6 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
     }
   }
 
-  *aOutEndOffset = (*aOutEndNode)->Length();
   return NS_OK;
 }
 
