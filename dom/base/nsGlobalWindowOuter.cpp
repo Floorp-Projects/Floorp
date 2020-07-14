@@ -5181,27 +5181,22 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return;
   }
 
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-  if (!printSettingsService) {
-    // we currently return here in headless mode - should we?
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
+  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
+  if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint),
+                                getter_AddRefs(webBrowserPrint)))) {
+    nsAutoSyncOperation sync(GetCurrentInnerWindowInternal()
+                                 ? GetCurrentInnerWindowInternal()->mDoc.get()
+                                 : nullptr);
 
-  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
-      do_GetInterface(static_cast<nsIInterfaceRequestor*>(this));
-  if (!webBrowserPrint) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
+    nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+        do_GetService("@mozilla.org/gfx/printsettings-service;1");
 
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal()
-                               ? GetCurrentInnerWindowInternal()->mDoc.get()
-                               : nullptr);
-  EnterModalState();
-  webBrowserPrint->Print(nullptr, nullptr);
-  LeaveModalState();
+    if (printSettingsService) {
+      EnterModalState();
+      webBrowserPrint->Print(nullptr, nullptr);
+      LeaveModalState();
+    }
+  }
 #endif  // NS_PRINTING
 }
 
