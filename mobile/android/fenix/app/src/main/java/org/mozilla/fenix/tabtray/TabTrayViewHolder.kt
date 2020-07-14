@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnNextLayout
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
@@ -20,7 +21,7 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ext.loadIntoView
 import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
@@ -72,7 +73,10 @@ class TabTrayViewHolder(
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         } else {
-            imageLoader.loadIntoView(thumbnailView, ImageRequest(tab.id))
+            // Make sure we have the view's dimensions so we can load the image at the correct size
+            thumbnailView.doOnNextLayout {
+                imageLoader.loadIntoView(thumbnailView, tab.id)
+            }
         }
 
         // Media state
