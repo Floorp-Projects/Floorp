@@ -37,6 +37,7 @@ class FileInfoT final {
 
   nsCOMPtr<nsIFile> GetFileForFileInfo() const;
 
+  void LockedAddRef();
   bool LockedClearDBRefs(const typename FileManager::FileManagerGuard& aGuard);
 
  private:
