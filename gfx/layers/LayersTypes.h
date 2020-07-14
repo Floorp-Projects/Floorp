@@ -118,6 +118,10 @@ struct BaseTransactionId {
   bool operator==(const BaseTransactionId<T>& aOther) const {
     return mId == aOther.mId;
   }
+
+  bool operator!=(const BaseTransactionId<T>& aOther) const {
+    return mId != aOther.mId;
+  }
 };
 
 class TransactionIdType {};
