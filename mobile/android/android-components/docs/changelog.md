@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 50.0.0-SNAPSHOT (In Development)
+# 51.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/109?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/110?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+
+# 50.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...v50.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/109?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v50.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v50.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v50.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-session**
   * Added `SessionFeature.release()`: Calling this method stops the feature from rendering sessions on the `EngineView` (until explicitly started again) and releases an already rendering session from the `EngineView`.
