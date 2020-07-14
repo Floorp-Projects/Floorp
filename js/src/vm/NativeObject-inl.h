@@ -68,6 +68,8 @@ inline void NativeObject::clearShouldConvertDoubleElements() {
 
 inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
                                               const Value& val) {
+  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
+
   if (!IsTypeInferenceEnabled()) {
     return;
   }
@@ -83,6 +85,8 @@ inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
 
 inline void NativeObject::setDenseElementWithType(JSContext* cx, uint32_t index,
                                                   const Value& val) {
+  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
+
   addDenseElementType(cx, index, val);
   if (val.isInt32() && shouldConvertDoubleElements()) {
     setDenseElement(index, DoubleValue(val.toInt32()));
@@ -103,7 +107,7 @@ inline void NativeObject::initDenseElementWithType(JSContext* cx,
 
 inline void NativeObject::setDenseElementHole(JSContext* cx, uint32_t index) {
   markDenseElementsNotPacked(cx);
-  setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
+  setDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
 inline void NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
