@@ -521,6 +521,11 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
        " aCount=%" PRIu32,
        this, aOffset, aCount));
 
+  // The final transfer size is updated in OnStopRequest ipc message, but in the
+  // case that the socket process is crashed or something went wrong, we might
+  // not get the OnStopRequest. So, let's update the transfer size here.
+  mTransferSize += aCount;
+
   if (mCanceled) {
     return IPC_OK();
   }
