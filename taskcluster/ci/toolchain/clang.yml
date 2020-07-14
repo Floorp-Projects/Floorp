@@ -172,27 +172,20 @@ linux64-clang-9-macosx-cross:
         symbol: TL(clang9-macosx-cross)
     worker-type: b-linux
     worker:
-        max-run-time: 3600
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+        max-run-time: 600
     run:
         script: build-clang-linux-macosx-cross.sh
-        arguments:
-            - 'build/build-clang/clang-macosx64.json'
-        resources:
-            - 'build/build-clang/clang-macosx64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.zst
-        tooltool-downloads: internal
+    dependencies:
+        macosx64-clang-9: toolchain-macosx64-clang-9
     fetches:
-        fetch:
-            - clang-9
         toolchain:
-            - linux64-binutils
-            - linux64-cctools-port-clang-9
             - linux64-clang-9
-            - linux64-gcc-7
+        macosx64-clang-9:
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-mac
 
 linux64-clang-9-win-cross:
     description: "Clang 9 toolchain build with Windows Compiler RT libs"
