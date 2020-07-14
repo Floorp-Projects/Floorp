@@ -309,15 +309,6 @@ class TabBase {
   }
 
   /**
-   * @property {BrowsingContext} browsingContext
-   *        Returns the BrowsingContext for the given tab.
-   *        @readonly
-   */
-  get browsingContext() {
-    return this.browser?.browsingContext;
-  }
-
-  /**
    * @property {FrameLoader} frameLoader
    *        Returns the frameloader for the given tab.
    *        @readonly
@@ -687,62 +678,6 @@ class TabBase {
   }
 
   /**
-   * Query each content process hosting subframes of the tab, return results.
-   * @param {string} message
-   * @param {object} options
-   * @param {number} options.frameID
-   * @param {boolean} options.allFrames
-   * @returns {Promise[]}
-   */
-  async queryContent(message, options) {
-    let { allFrames, frameID } = options;
-
-    /** @type {Map<nsIDOMProcessParent, innerWindowId[]>} */
-    let byProcess = new DefaultMap(() => []);
-
-    // Recursively walk the tab's BC tree, find all frames, group by process.
-    function visit(bc) {
-      let win = bc.currentWindowGlobal;
-      if (win?.domProcess && (!frameID || frameID === bc.id)) {
-        byProcess.get(win.domProcess).push(win.innerWindowId);
-      }
-      if (allFrames || (frameID && !byProcess.size)) {
-        bc.children.forEach(visit);
-      }
-    }
-    visit(this.browsingContext);
-
-    let promises = Array.from(byProcess.entries(), ([proc, windows]) =>
-      proc.getActor("ExtensionContent").sendQuery(message, { windows, options })
-    );
-
-    let results = await Promise.all(promises).catch(err => {
-      if (err.name === "DataCloneError") {
-        let fileName = options.jsPaths.slice(-1)[0] || "<anonymous code>";
-        let message = `Script '${fileName}' result is non-structured-clonable data`;
-        return Promise.reject({ message, fileName });
-      }
-      throw err;
-    });
-    results = results.flat();
-
-    if (!results.length) {
-      if (frameID) {
-        throw new ExtensionError("Frame not found, or missing host permission");
-      }
-
-      let frames = allFrames ? ", and any iframes" : "";
-      throw new ExtensionError(`Missing host permission for the tab${frames}`);
-    }
-
-    if (!allFrames && results.length > 1) {
-      throw new ExtensionError("Internal error: multiple windows matched");
-    }
-
-    return results;
-  }
-
-  /**
    * Inserts a script or stylesheet in the given tab, and returns a promise
    * which resolves when the operation has completed.
    *
@@ -766,7 +701,6 @@ class TabBase {
       jsPaths: [],
       cssPaths: [],
       removeCSS: method == "removeCSS",
-      extensionId: context.extension.id,
     };
 
     // We require a `code` or a `file` property, but we can't accept both.
@@ -820,7 +754,8 @@ class TabBase {
     }
 
     options.wantReturnValue = true;
-    return this.queryContent("Execute", options);
+
+    return this.sendMessage(context, "Extension:Execute", { options });
   }
 
   /**
