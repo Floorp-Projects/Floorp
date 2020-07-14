@@ -23,10 +23,11 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
-        isDirectNavigation: Boolean
+        isDirectNavigation: Boolean,
+        isSubframeRequest: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         return appContext.components.services.accountsAuthFeature.interceptor.onLoadRequest(
-            engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation
+            engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation, isSubframeRequest
         )
     }
 }

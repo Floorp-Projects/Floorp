@@ -22,10 +22,13 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
-        isDirectNavigation: Boolean
+        isDirectNavigation: Boolean,
+        isSubframeRequest: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         return context.components.services.appLinksInterceptor
-            .onLoadRequest(engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation)
+            .onLoadRequest(
+                engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation, isSubframeRequest
+            )
     }
 
     override fun onErrorRequest(
