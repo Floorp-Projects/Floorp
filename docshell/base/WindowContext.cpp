@@ -12,7 +12,9 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsIScriptError.h"
 #include "nsRefPtrHashtable.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -177,6 +179,26 @@ bool WindowContext::CanSet(
     const PermissionDelegateHandler::DelegatedPermissionList& aValue,
     ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+void WindowContext::DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>,
+                           bool aOldValue) {
+  if (!aOldValue && GetHasReportedShadowDOMUsage() && IsInProcess()) {
+    MOZ_ASSERT(TopWindowContext() == this);
+    if (mBrowsingContext) {
+      Document* topLevelDoc = mBrowsingContext->GetDocument();
+      if (topLevelDoc) {
+        nsAutoString uri;
+        Unused << topLevelDoc->GetDocumentURI(uri);
+        if (!uri.IsEmpty()) {
+          nsAutoString msg = u"Shadow DOM used in ["_ns + uri +
+                             u"] or in some of its subdocuments."_ns;
+          nsContentUtils::ReportToConsoleNonLocalized(
+              msg, nsIScriptError::infoFlag, "DOM"_ns, topLevelDoc);
+        }
+      }
+    }
+  }
 }
 
 void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
