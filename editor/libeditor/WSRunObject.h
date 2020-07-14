@@ -781,6 +781,8 @@ class MOZ_STACK_CLASS WSRunScanner {
     const EditorDOMPoint& StartRef() const { return mStart.PointRef(); }
     const EditorDOMPoint& EndRef() const { return mEnd.PointRef(); }
 
+    const EditorDOMPoint& ScanStartRef() const { return mScanStartPoint; }
+
     const NoBreakingSpaceData& NoBreakingSpaceDataRef() const {
       return mNBSPData;
     }
@@ -1212,7 +1214,16 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       HTMLEditor& aHTMLEditor, const EditorDOMPointType& aSacnStartPoint);
 
  protected:
-  MOZ_CAN_RUN_SCRIPT nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
+  /**
+   * MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() may delete
+   * invisible white-spaces for keeping make them invisible and/or may replace
+   * ASCII white-spaces with NBSPs for making visible white-spaces to keep
+   * visible.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+      HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete);
+
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
 
   /**
