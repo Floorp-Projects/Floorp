@@ -227,7 +227,7 @@ interface nsISHEntry : nsISupports
     /**
      * The session history it belongs to.
      */
-    [infallible] readonly attribute nsISHistory shistory;
+    [noscript, infallible] attribute nsISHistory shistory;
 
     /**
      * A number that is assigned by the sHistory when the entry is activated

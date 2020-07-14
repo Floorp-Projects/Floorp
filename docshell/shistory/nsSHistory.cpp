@@ -655,13 +655,15 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   NS_ENSURE_ARG(aSHEntry);
 
   nsCOMPtr<nsISHistory> shistoryOfEntry = aSHEntry->GetShistory();
-  if (shistoryOfEntry != this) {
+  if (shistoryOfEntry && shistoryOfEntry != this) {
     NS_WARNING(
         "The entry has been associated to another nsISHistory instance. "
         "Try nsISHEntry.clone() and nsISHEntry.abandonBFCacheEntry() "
         "first if you're copying an entry from another nsISHistory.");
     return NS_ERROR_FAILURE;
   }
+
+  aSHEntry->SetShistory(this);
 
   // If we have a root docshell, update the docshell id of the root shentry to
   // match the id of that docshell
@@ -866,13 +868,15 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
   }
 
   nsCOMPtr<nsISHistory> shistoryOfEntry = aReplaceEntry->GetShistory();
-  if (shistoryOfEntry != this) {
+  if (shistoryOfEntry && shistoryOfEntry != this) {
     NS_WARNING(
         "The entry has been associated to another nsISHistory instance. "
         "Try nsISHEntry.clone() and nsISHEntry.abandonBFCacheEntry() "
         "first if you're copying an entry from another nsISHistory.");
     return NS_ERROR_FAILURE;
   }
+
+  aReplaceEntry->SetShistory(this);
 
   NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
 
@@ -1700,7 +1704,7 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 
 NS_IMETHODIMP
 nsSHistory::CreateEntry(nsISHEntry** aEntry) {
-  nsCOMPtr<nsISHEntry> entry = new nsSHEntry(this);
+  nsCOMPtr<nsISHEntry> entry = new nsSHEntry();
   entry.forget(aEntry);
   return NS_OK;
 }
