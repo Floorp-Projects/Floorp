@@ -22,6 +22,8 @@ add_task(async function test_ui_state_notification_calls_updateAllUI() {
 });
 
 add_task(async function test_ui_state_signedin() {
+  await openTabAndPanel();
+
   const relativeDateAnchor = new Date();
   let state = {
     status: UIState.STATUS_SIGNED_IN,
@@ -70,6 +72,7 @@ add_task(async function test_ui_state_signedin() {
   });
   checkFxAAvatar("signedin");
   gSync.relativeTimeFormat = origRelativeTimeFormat;
+  await closeTabAndPanel();
 });
 
 add_task(async function test_ui_state_syncing() {
@@ -100,6 +103,8 @@ add_task(async function test_ui_state_syncing() {
 });
 
 add_task(async function test_ui_state_unconfigured() {
+  await openTabAndPanel();
+
   let state = {
     status: UIState.STATUS_NOT_CONFIGURED,
   };
@@ -130,9 +135,12 @@ add_task(async function test_ui_state_unconfigured() {
     ],
   });
   checkFxAAvatar("not_configured");
+  await closeTabAndPanel();
 });
 
 add_task(async function test_ui_state_syncdisabled() {
+  await openTabAndPanel();
+
   let state = {
     status: UIState.STATUS_SIGNED_IN,
     syncEnabled: false,
@@ -170,9 +178,12 @@ add_task(async function test_ui_state_syncdisabled() {
     ],
   });
   checkFxAAvatar("signedin");
+  await closeTabAndPanel();
 });
 
 add_task(async function test_ui_state_unverified() {
+  await openTabAndPanel();
+
   let state = {
     status: UIState.STATUS_NOT_VERIFIED,
     email: "foo@bar.com",
@@ -210,9 +221,12 @@ add_task(async function test_ui_state_unverified() {
     ],
   });
   checkFxAAvatar("unverified");
+  await closeTabAndPanel();
 });
 
 add_task(async function test_ui_state_loginFailed() {
+  await openTabAndPanel();
+
   let state = {
     status: UIState.STATUS_LOGIN_FAILED,
     email: "foo@bar.com",
@@ -249,6 +263,7 @@ add_task(async function test_ui_state_loginFailed() {
     ],
   });
   checkFxAAvatar("login-failed");
+  await closeTabAndPanel();
 });
 
 function checkPanelUIStatusBar({ label, fxastatus, syncing }) {
@@ -433,4 +448,31 @@ function promiseObserver(topic) {
     };
     Services.obs.addObserver(obs, topic);
   });
+}
+
+async function openTabAndPanel() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
+
+  let fxaButton = document.getElementById("fxa-toolbar-menu-button");
+  fxaButton.click();
+
+  let fxaView = document.getElementById("PanelUI-fxa");
+  await BrowserTestUtils.waitForEvent(fxaView, "ViewShown");
+
+  let remoteTabsButton = document.getElementById(
+    "PanelUI-fxa-menu-remotetabs-button"
+  );
+  remoteTabsButton.click();
+
+  let remoteTabsView = document.getElementById("PanelUI-remotetabs");
+  await BrowserTestUtils.waitForEvent(remoteTabsView, "ViewShown");
+}
+
+async function closeTabAndPanel() {
+  let fxaView = document.getElementById("PanelUI-fxa");
+  let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
+  fxaView.closest("panel").hidePopup();
+  await hidden;
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }

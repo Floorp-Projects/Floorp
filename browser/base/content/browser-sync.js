@@ -183,7 +183,10 @@ var gSync = {
     // "setup sync" state, that function assumes we are already in it and
     // doesn't re-initialize the UI elements.
     document.getElementById("sync-setup").hidden = false;
-    document.getElementById("PanelUI-remotetabs-setupsync").hidden = false;
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-remotetabs-setupsync"
+    ).hidden = false;
 
     for (let topic of this._obs) {
       Services.obs.addObserver(this, topic, true);
@@ -672,7 +675,8 @@ var gSync = {
         "PanelUI-remotetabs-main",
       ],
     ]) {
-      document.getElementById(menuId).hidden = document.getElementById(
+      document.getElementById(menuId).hidden = PanelMultiView.getViewNode(
+        document,
         boxId
       ).hidden = !shown;
     }
@@ -1450,7 +1454,10 @@ var gSync = {
 
   onClientsSynced() {
     // Note that this element is only shown if Sync is enabled.
-    let element = document.getElementById("PanelUI-remotetabs-main");
+    let element = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-remotetabs-main"
+    );
     if (element) {
       if (Weave.Service.clientsEngine.stats.numClients > 1) {
         element.setAttribute("devices-status", "multi");

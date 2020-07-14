@@ -108,9 +108,9 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   let tabsUpdatedPromise = promiseObserverNotified(
     "synced-tabs-menu:test:tabs-updated"
   );
+  syncButton.click();
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
-  syncButton.click();
   await Promise.all([tabsUpdatedPromise, viewShownPromise]);
   ok(syncPanel.getAttribute("visible"), "Sync Panel is in view");
 
