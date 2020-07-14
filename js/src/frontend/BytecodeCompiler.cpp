@@ -523,6 +523,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   if (!module) {
     return nullptr;
   }
+  compilationInfo.module = module;
 
   ModuleBuilder builder(cx, parser.ptr());
 
