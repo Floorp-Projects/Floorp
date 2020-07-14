@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Variant.h"
 
+#include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
 #include "frontend/ParserAtom.h"
 #include "frontend/SharedContext.h"
@@ -166,6 +167,9 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   JS::Rooted<JSScript*> script;
   JS::Rooted<BaseScript*> lazy;
 
+  // The resulting module object if there is one.
+  JS::Rooted<ModuleObject*> module;
+
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
 
@@ -232,6 +236,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         scopeContext(enclosingScope, enclosingEnv),
         script(cx),
         lazy(cx),
+        module(cx),
         usedNames(cx),
         allocScope(alloc),
         regExpData(cx),
