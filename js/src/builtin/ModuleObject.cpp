@@ -828,6 +828,11 @@ frontend::FunctionDeclarationVector* ModuleObject::functionDeclarations() {
   return static_cast<frontend::FunctionDeclarationVector*>(value.toPrivate());
 }
 
+void ModuleObject::initFunctionDeclarations(
+    frontend::FunctionDeclarationVector&& decls) {
+  *functionDeclarations() = std::move(decls);
+}
+
 void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
@@ -988,10 +993,6 @@ void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
   if (module.hasImportBindings()) {
     module.importBindings().trace(trc);
   }
-}
-
-bool ModuleObject::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
-  return functionDeclarations()->emplaceBack(funIndex);
 }
 
 /* static */
@@ -1200,7 +1201,12 @@ ModuleBuilder::ModuleBuilder(JSContext* cx,
       requestedModules_(cx, RequestedModuleVector(cx)),
       importEntries_(cx, ImportEntryMap(cx)),
       exportEntries_(cx, ExportEntryVector(cx)),
-      exportNames_(cx, AtomSet(cx)) {}
+      exportNames_(cx, AtomSet(cx)),
+      functionDecls_(cx) {}
+
+bool ModuleBuilder::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
+  return functionDecls_.emplaceBack(funIndex);
+}
 
 bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
   // https://tc39.es/ecma262/#sec-parsemodule
@@ -1252,6 +1258,11 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
   }
 
   return true;
+}
+
+void ModuleBuilder::finishFunctionDecls(
+    frontend::StencilModuleMetadata& metadata) {
+  metadata.functionDecls = std::move(functionDecls_);
 }
 
 enum class ModuleArrayType {
@@ -1350,6 +1361,9 @@ bool frontend::StencilModuleMetadata::initModule(
   if (!starExportEntriesObject) {
     return false;
   }
+
+  // Transfer the vector of declarations to the ModuleObject.
+  module->initFunctionDeclarations(std::move(functionDecls));
 
   module->initImportExportData(
       requestedModulesObject, importEntriesObject, localExportEntriesObject,
