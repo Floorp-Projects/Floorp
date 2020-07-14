@@ -253,6 +253,29 @@
       await cleanup(tmpFileName);
     });
 
+    add_task(async function test_write_relative_path() {
+      const tmpFileName = "test_ioutils_write_relative_path.tmp";
+      const bytes = Uint8Array.of(...new Array(50).keys());
+
+      info("Test writing a file at a relative destination");
+      await Assert.rejects(
+        window.IOUtils.writeAtomic(tmpFileName, bytes),
+        /Only absolute file paths are permitted/,
+        "IOUtils::writeAtomic only works with absolute paths"
+      );
+    });
+
+    add_task(async function test_read_relative_path() {
+      const tmpFileName = "test_ioutils_read_relative_path.tmp";
+
+      info("Test reading a file at a relative destination");
+      await Assert.rejects(
+        window.IOUtils.read(tmpFileName),
+        /Only absolute file paths are permitted/,
+        "IOUtils::writeAtomic only works with absolute paths"
+      );
+    });
+
     add_task(async function test_move_relative_path() {
       const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_move_relative_path.tmp");
       const dest = "relative_to_cwd.tmp";
