@@ -1028,7 +1028,7 @@ extern "C" {
     fn wr_register_thread_local_arena();
 }
 
-struct GeckoProfilerThreadListener {}
+pub struct GeckoProfilerThreadListener {}
 
 impl GeckoProfilerThreadListener {
     pub fn new() -> GeckoProfilerThreadListener {
