@@ -10,6 +10,7 @@ import android.app.Activity.RESULT_OK
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -62,6 +63,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -1116,6 +1118,43 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdateUrlAction(tabId, "mozilla.org")).joinBlocking()
         verify(fragment, times(1)).dismiss()
+    }
+
+    @Test
+    fun `prompt will always start the save login dialog with an icon`() {
+        val feature = PromptFeature(
+            activity = mock(),
+            store = store,
+            fragmentManager = fragmentManager,
+            shareDelegate = mock(),
+            isSaveLoginEnabled = { true },
+            loginValidationDelegate = mock()
+        ) { }
+        val loginUsername = "username"
+        val loginPassword = "password"
+        val login: Login = mock()
+        `when`(login.username).thenReturn(loginUsername)
+        `when`(login.password).thenReturn(loginPassword)
+        val loginsPrompt = PromptRequest.SaveLoginPrompt(2, listOf(login), { }, { })
+        val websiteIcon: Bitmap = mock()
+        val contentState: ContentState = mock()
+        val session: TabSessionState = mock()
+        val sessionId = "sessionId"
+        `when`(contentState.icon).thenReturn(websiteIcon)
+        `when`(session.content).thenReturn(contentState)
+        `when`(session.id).thenReturn(sessionId)
+
+        feature.handleDialogsRequest(
+            loginsPrompt, session
+        )
+
+        // Only interested in the icon, but it doesn't hurt to be sure we show a properly configured dialog.
+        assertTrue(feature.activePrompt!!.get() is SaveLoginDialogFragment)
+        val dialogFragment = feature.activePrompt!!.get() as SaveLoginDialogFragment
+        assertEquals(loginUsername, dialogFragment.username)
+        assertEquals(loginPassword, dialogFragment.password)
+        assertEquals(websiteIcon, dialogFragment.icon)
+        assertEquals(sessionId, dialogFragment.sessionId)
     }
 
     @Test

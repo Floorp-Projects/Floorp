@@ -475,7 +475,8 @@ class PromptFeature private constructor(
                     sessionId = session.id,
                     hint = promptRequest.hint,
                     // For v1, we only handle a single login and drop all others on the floor
-                    login = promptRequest.logins[0]
+                    login = promptRequest.logins[0],
+                    icon = session.content.icon
                 )
             }
 

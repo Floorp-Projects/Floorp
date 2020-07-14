@@ -31,6 +31,9 @@ permalink: /changelog/
   * Added `ContainerToolbarFeature` to update the toolbar with the container page action whenever
     the selected tab changes.
 
+* **feature-prompts**
+  * Replaced generic icon in `LoginDialogFragment` with site icon (keep the generic one as fallback)
+
 # 56.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v55.0.0...v56.0.0)

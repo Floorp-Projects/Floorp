@@ -6,6 +6,8 @@ package mozilla.components.feature.prompts.dialog
 
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -14,8 +16,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
@@ -36,6 +41,7 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.onDone
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.toScope
 import java.util.concurrent.CopyOnWriteArrayList
@@ -49,6 +55,7 @@ private const val KEY_LOGIN_GUID = "KEY_LOGIN_GUID"
 private const val KEY_LOGIN_ORIGIN = "KEY_LOGIN_ORIGIN"
 private const val KEY_LOGIN_FORM_ACTION_ORIGIN = "KEY_LOGIN_FORM_ACTION_ORIGIN"
 private const val KEY_LOGIN_HTTP_REALM = "KEY_LOGIN_HTTP_REALM"
+@VisibleForTesting internal const val KEY_LOGIN_ICON = "KEY_LOGIN_ICON"
 
 /**
  * [android.support.v4.app.DialogFragment] implementation to display a
@@ -70,9 +77,13 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
     private val origin by lazy { safeArguments.getString(KEY_LOGIN_ORIGIN)!! }
     private val formActionOrigin by lazy { safeArguments.getString(KEY_LOGIN_FORM_ACTION_ORIGIN) }
     private val httpRealm by lazy { safeArguments.getString(KEY_LOGIN_HTTP_REALM) }
+    @VisibleForTesting
+    internal val icon by lazy { safeArguments.getParcelable<Bitmap>(KEY_LOGIN_ICON) }
 
-    private var username by SafeArgString(KEY_LOGIN_USERNAME)
-    private var password by SafeArgString(KEY_LOGIN_PASSWORD)
+    @VisibleForTesting
+    internal var username by SafeArgString(KEY_LOGIN_USERNAME)
+    @VisibleForTesting
+    internal var password by SafeArgString(KEY_LOGIN_PASSWORD)
 
     private var validateStateUpdate: Job? = null
 
@@ -122,7 +133,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
             }
         }
 
-        return inflateRootView(container)
+        return setupRootView(container)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -174,15 +185,22 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         dismiss()
     }
 
-    private fun inflateRootView(container: ViewGroup? = null): View {
-        val rootView = LayoutInflater.from(requireContext()).inflate(
+    @VisibleForTesting
+    internal fun setupRootView(container: ViewGroup? = null): View {
+        val rootView = inflateRootView(container)
+        bindUsername(rootView)
+        bindPassword(rootView)
+        bindIcon(rootView)
+        return rootView
+    }
+
+    @VisibleForTesting
+    internal fun inflateRootView(container: ViewGroup? = null): View {
+        return LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_feature_prompt_save_login_prompt,
             container,
             false
         )
-        bindUsername(rootView)
-        bindPassword(rootView)
-        return rootView
     }
 
     private fun bindUsername(view: View) {
@@ -249,6 +267,24 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                 clearFocus()
             }
         }
+    }
+
+    private fun bindIcon(view: View) {
+        val iconView = view.findViewById<ImageView>(R.id.host_icon)
+        if (icon != null) {
+            iconView.setImageBitmap(icon)
+        } else {
+            setImageViewTint(iconView)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setImageViewTint(imageView: ImageView) {
+        val tintColor = ContextCompat.getColor(
+            requireContext(),
+            requireContext().theme.resolveAttribute(android.R.attr.textColorPrimary)
+        )
+        ImageViewCompat.setImageTintList(imageView, ColorStateList.valueOf(tintColor))
     }
 
     /**
@@ -357,7 +393,8 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         fun newInstance(
             sessionId: String,
             hint: Int,
-            login: Login
+            login: Login,
+            icon: Bitmap? = null
         ): SaveLoginDialogFragment {
 
             val fragment = SaveLoginDialogFragment()
@@ -372,6 +409,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                 putString(KEY_LOGIN_ORIGIN, login.origin)
                 putString(KEY_LOGIN_FORM_ACTION_ORIGIN, login.formActionOrigin)
                 putString(KEY_LOGIN_HTTP_REALM, login.httpRealm)
+                putParcelable(KEY_LOGIN_ICON, icon)
             }
 
             fragment.arguments = arguments
