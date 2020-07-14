@@ -139,6 +139,16 @@ var gIdentityHandler = {
     );
   },
 
+  get _isAboutHttpsOnlyErrorPage() {
+    return (
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith(
+        "httpsonlyerror"
+      )
+    );
+  },
+
   get _isPotentiallyTrustworthy() {
     return (
       !this._isBrokenConnection &&
@@ -756,6 +766,9 @@ var gIdentityHandler = {
     } else if (this._isAboutCertErrorPage) {
       // We show a warning lock icon for 'about:certerror' page.
       this._identityBox.className = "certErrorPage";
+    } else if (this._isAboutHttpsOnlyErrorPage) {
+      // We show a not secure lock icon for 'about:httpsonlyerror' page.
+      this._identityBox.className = "httpsOnlyErrorPage";
     } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
       // Network errors and blocked pages get a more neutral icon
       this._identityBox.className = "unknownIdentity";
@@ -940,6 +953,8 @@ var gIdentityHandler = {
       customRoot = this._hasCustomRoot();
     } else if (this._isAboutCertErrorPage) {
       connection = "cert-error-page";
+    } else if (this._isAboutHttpsOnlyErrorPage) {
+      connection = "https-only-error-page";
     } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
       connection = "not-secure";
     } else if (this._isPotentiallyTrustworthy) {
