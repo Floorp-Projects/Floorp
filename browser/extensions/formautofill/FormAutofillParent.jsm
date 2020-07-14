@@ -597,9 +597,7 @@ class FormAutofillParent extends JSWindowActorParent {
       creditCard.record["cc-type"] = "";
     }
 
-    // We'll show the credit card doorhanger if:
-    //   - User applys autofill and changed
-    //   - User fills form manually and the filling data is not duplicated to storage
+    // If `guid` is present, the form has been autofilled.
     if (creditCard.guid) {
       // Indicate that the user has used Credit Card Autofill to fill in a form.
       setUsedStatus(3);
@@ -647,26 +645,48 @@ class FormAutofillParent extends JSWindowActorParent {
         timeStartedFillingMS
       );
     } else {
-      // Indicate that the user neither sees the doorhanger nor uses Autofill
-      // but somehow has a duplicate record in the storage. Will be reset to 2
-      // if the doorhanger actually shows below.
-      setUsedStatus(1);
-
       // Add the probe to record credit card manual filling.
       Services.telemetry.scalarAdd(
         "formautofill.creditCards.fill_type_manual",
         1
       );
       this._recordFormFillingTime("creditCard", "manual", timeStartedFillingMS);
-    }
 
-    // Early return if it's a duplicate data
-    let dupGuid = await gFormAutofillStorage.creditCards.getDuplicateGuid(
-      creditCard.record
-    );
-    if (dupGuid) {
-      gFormAutofillStorage.creditCards.notifyUsed(dupGuid);
-      return false;
+      let existingGuid = await gFormAutofillStorage.creditCards.getDuplicateGuid(
+        creditCard.record
+      );
+
+      if (existingGuid) {
+        creditCard.guid = existingGuid;
+
+        let originalCCData = await gFormAutofillStorage.creditCards.get(
+          creditCard.guid
+        );
+
+        gFormAutofillStorage.creditCards._normalizeRecord(creditCard.record);
+
+        // If the credit card record is a duplicate, check if the fields match the
+        // record.
+        let recordUnchanged = true;
+        for (let field in creditCard.record) {
+          if (field == "cc-number") {
+            continue;
+          }
+          if (creditCard.record[field] != originalCCData[field]) {
+            recordUnchanged = false;
+            break;
+          }
+        }
+
+        if (recordUnchanged) {
+          // Indicate that the user neither sees the doorhanger nor uses Autofill
+          // but somehow has a duplicate record in the storage. Will be reset to 2
+          // if the doorhanger actually shows below.
+          setUsedStatus(1);
+          gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
+          return false;
+        }
+      }
     }
 
     // Indicate that the user has seen the doorhanger.
