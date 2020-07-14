@@ -36,7 +36,7 @@ class TabsTouchHelper(observable: Observable<TabsTray.Observer>) :
             )!!
             val background = AppCompatResources.getDrawable(
                 recyclerView.context,
-                R.drawable.tab_tray_background
+                R.drawable.swipe_delete_background
             )!!
             val itemView = viewHolder.itemView
             val iconLeft: Int
