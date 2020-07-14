@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/MozURL.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 namespace dom {
@@ -29,7 +30,10 @@ bool NextGenLocalStorageEnabled() {
     StaticMutexAutoLock lock(gNextGenLocalStorageMutex);
 
     if (gNextGenLocalStorageEnabled == -1) {
-      bool enabled = GetCurrentNextGenPrefValue();
+      // Ideally all this Mutex stuff would be replaced with just using
+      // an AtStartup StaticPref, but there are concerns about this causing
+      // deadlocks if this access needs to init the AtStartup cache.
+      bool enabled = StaticPrefs::dom_storage_next_gen_DoNotUseDirectly();
       gNextGenLocalStorageEnabled = enabled ? 1 : 0;
     }
 
