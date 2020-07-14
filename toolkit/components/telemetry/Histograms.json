@@ -14996,7 +14996,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["opettay@mozilla.com" ],
     "bug_numbers": [1554292, 1566485, 1606208],
-    "expires_in_version": "80",
+    "expires_in_version": "85",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
