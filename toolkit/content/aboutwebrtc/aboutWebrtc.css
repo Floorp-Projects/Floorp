@@ -99,10 +99,12 @@ table {
   background-color: #ddd;
 }
 
-.ice-trickled { background-color: hsla(210, 66%, 75%, 1); }
-.ice-succeeded { background-color: hsla(120, 66%, 75%, 1); }
-.ice-failed { background-color: hsla(0, 66%, 75%, 1); }
-.ice-cancelled { background-color: hsla(60, 66%, 75%, 1); }
+/* This is the pale colour scheme from:
+   https://personal.sron.nl/~pault/#sec:qualitative */
+.ice-trickled { background-color: #cceeff; }
+.ice-succeeded { background-color: #ccddaa; }
+.ice-failed { background-color: #ffcccc; }
+.ice-cancelled { background-color: #eeeebb; }
 
 .info-label {
   font-weight: bold;
