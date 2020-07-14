@@ -19,5 +19,5 @@ OpenTest.run(
       targetHeight: 100,
     },
   ],
-  false
+  true
 );

@@ -15145,6 +15145,16 @@
     "n_buckets": 50,
     "description": "Time in milliseconds spent in the layout system per Refresh Driver tick."
   },
+  "WINDOW_OPEN_OUTER_SIZE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["tfujisawa.birchill@mozilla.com"],
+    "expires_in_version": "80",
+    "kind": "boolean",
+    "bug_numbers": [1624150],
+    "releaseChannelCollection": "opt-out",
+    "description": "Flag indicating consumer of non-standard outerWidth/outerHeight features in window.open"
+  },
   "WINDOW_REMOTE_SUBFRAMES_ENABLED_STATUS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
