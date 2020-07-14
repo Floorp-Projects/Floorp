@@ -4132,7 +4132,7 @@ nsresult CacheFileIOManager::UpdateSmartCacheSize(int64_t aFreeSpace) {
     return NS_OK;
   }
 
-  CacheObserver::SetDiskCacheCapacity(smartSize);
+  CacheObserver::SetSmartDiskCacheCapacity(smartSize);
 
   return NS_OK;
 }
