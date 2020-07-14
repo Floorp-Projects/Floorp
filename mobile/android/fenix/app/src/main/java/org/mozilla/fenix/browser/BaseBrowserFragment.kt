@@ -77,6 +77,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.OnBackLongPressedListener
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
@@ -116,7 +117,8 @@ import java.lang.ref.WeakReference
  */
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
-abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer {
+abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer,
+    OnBackLongPressedListener {
     private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
 
@@ -755,6 +757,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 fullScreenFeature.onBackPressed() ||
                 sessionFeature.onBackPressed() ||
                 removeSessionIfNeeded()
+    }
+
+    override fun onBackLongPressed(): Boolean {
+        findNavController().navigate(R.id.action_global_tabHistoryDialogFragment)
+        return true
     }
 
     /**

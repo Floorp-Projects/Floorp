@@ -170,7 +170,13 @@ class DefaultBrowserToolbarController(
 
         Do exhaustive when (item) {
             ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke(currentSession)
-            ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke(currentSession)
+            is ToolbarMenu.Item.Forward -> {
+                if (item.viewHistory) {
+                    navController.navigate(R.id.action_global_tabHistoryDialogFragment)
+                } else {
+                    sessionUseCases.goForward.invoke(currentSession)
+                }
+            }
             ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke(currentSession)
             ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(currentSession)
             ToolbarMenu.Item.Settings -> browserAnimator.captureEngineViewAndDrawStatically {
@@ -333,7 +339,7 @@ class DefaultBrowserToolbarController(
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
         val eventItem = when (item) {
             ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
-            ToolbarMenu.Item.Forward -> Event.BrowserMenuItemTapped.Item.FORWARD
+            is ToolbarMenu.Item.Forward -> Event.BrowserMenuItemTapped.Item.FORWARD
             ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
             ToolbarMenu.Item.Stop -> Event.BrowserMenuItemTapped.Item.STOP
             ToolbarMenu.Item.Settings -> Event.BrowserMenuItemTapped.Item.SETTINGS

@@ -14,7 +14,7 @@ interface ToolbarMenu {
         object FindInPage : Item()
         object Share : Item()
         object Back : Item()
-        object Forward : Item()
+        data class Forward(val viewHistory: Boolean) : Item()
         object Reload : Item()
         object Stop : Item()
         object OpenInFenix : Item()

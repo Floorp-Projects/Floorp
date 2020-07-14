@@ -102,6 +102,9 @@
     <action
         android:id="@+id/action_global_savedLoginsAuthFragment"
         app:destination="@id/savedLoginsAuthFragment" />
+    <action
+        android:id="@+id/action_global_tabHistoryDialogFragment"
+        app:destination="@id/tabHistoryDialogFragment" />
 
     <dialog
         android:id="@+id/tabTrayDialogFragment"
@@ -859,4 +862,7 @@
             app:argType="string"
             app:nullable="true" />
     </fragment>
+    <dialog
+        android:id="@+id/tabHistoryDialogFragment"
+        android:name="org.mozilla.fenix.tabhistory.TabHistoryDialogFragment" />
 </navigation>

@@ -220,13 +220,24 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarForwardPress() = runBlockingTest {
-        val item = ToolbarMenu.Item.Forward
+        val item = ToolbarMenu.Item.Forward(false)
 
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.FORWARD)) }
         verify { sessionUseCases.goForward(currentSession) }
+    }
+
+    @Test
+    fun handleToolbarForwardLongPress() = runBlockingTest {
+        val item = ToolbarMenu.Item.Forward(true)
+
+        val controller = createController(scope = this)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.FORWARD)) }
+        verify { navController.navigate(R.id.action_global_tabHistoryDialogFragment) }
     }
 
     @Test
