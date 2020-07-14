@@ -160,17 +160,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
     this._extraActors.threadActor = this.threadActor;
     this.makeDebugger = makeDebugger.bind(null, {
       findDebuggees: () => [this._global],
-      shouldAddNewGlobalAsDebuggee: g => {
-        if (gAllowNewThreadGlobals) {
-          return true;
-        }
-
-        return (
-          g.hostAnnotations &&
-          g.hostAnnotations.type == "document" &&
-          g.hostAnnotations.element === this._global
-        );
-      },
+      shouldAddNewGlobalAsDebuggee: g => gAllowNewThreadGlobals,
     });
     this.dbg = this.makeDebugger();
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);

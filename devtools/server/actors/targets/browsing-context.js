@@ -636,14 +636,6 @@ const browsingContextTargetPrototype = {
    * be added as a debuggee, false otherwise.
    */
   _shouldAddNewGlobalAsDebuggee(wrappedGlobal) {
-    if (
-      wrappedGlobal.hostAnnotations &&
-      wrappedGlobal.hostAnnotations.type == "document" &&
-      wrappedGlobal.hostAnnotations.element === this.window
-    ) {
-      return true;
-    }
-
     // Otherwise, check if it is a WebExtension content script sandbox
     const global = unwrapDebuggerObjectGlobal(wrappedGlobal);
     if (!global) {
