@@ -1649,18 +1649,15 @@ EditActionResult HTMLEditor::HandleInsertText(
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
-          WSRunObject wsObj(*this, currentPoint);
-          RefPtr<Element> newBRElement =
-              wsObj.InsertBreak(MOZ_KnownLive(*SelectionRefPtr()), currentPoint,
-                                nsIEditor::eNone);
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (!newBRElement) {
-            NS_WARNING("WSRunObject::InsertBreak(eNone) failed");
-            return EditActionHandled(NS_ERROR_FAILURE);
+          Result<RefPtr<Element>, nsresult> result =
+              WSRunObject::InsertBRElement(*this, currentPoint);
+          if (result.isErr()) {
+            NS_WARNING("WSRunObject::InsertBRElement() failed");
+            return EditActionHandled(result.inspectErr());
           }
           pos++;
+          RefPtr<Element> newBRElement = result.unwrap();
+          MOZ_DIAGNOSTIC_ASSERT(newBRElement);
           if (newBRElement->GetNextSibling()) {
             pointToInsert.Set(newBRElement->GetNextSibling());
           } else {
@@ -2079,15 +2076,14 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
       }
       pointToBreak = splitLinkNodeResult.SplitPoint();
     }
-    brElement = wsObj.InsertBreak(MOZ_KnownLive(*SelectionRefPtr()),
-                                  pointToBreak, nsIEditor::eNone);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    Result<RefPtr<Element>, nsresult> result =
+        WSRunObject::InsertBRElement(*this, pointToBreak);
+    if (result.isErr()) {
+      NS_WARNING("WSRunObject::InsertBRElement() failed");
+      return result.inspectErr();
     }
-    if (!brElement) {
-      NS_WARNING("WSRunObject::InsertBreak(eNone) failed");
-      return NS_ERROR_FAILURE;
-    }
+    brElement = result.unwrap();
+    MOZ_ASSERT(brElement);
   }
 
   // If the <br> element has already been removed from the DOM tree by a
