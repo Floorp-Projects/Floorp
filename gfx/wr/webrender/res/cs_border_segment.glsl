@@ -195,8 +195,6 @@ void main(void) {
             break;
     }
 
-    vec2 quad_pos = quad_position();
-
     vConfig = ivec4(
         segment,
         style0 | (style1 << 8),
@@ -204,7 +202,7 @@ void main(void) {
         clip_mode
     );
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
-    vPos = aRect.zw * quad_pos;
+    vPos = aRect.zw * aPosition.xy;
 
     vec4[2] color0 = get_colors_for_side(aColor0, style0);
     vColor00 = color0[0];
@@ -229,7 +227,7 @@ void main(void) {
         if (radius > 0.5)
             radius += 2.0;
 
-        vPos = vClipParams1.xy + radius * (2.0 * quad_pos - 1.0);
+        vPos = vClipParams1.xy + radius * (2.0 * aPosition.xy - 1.0);
         vPos = clamp(vPos, vec2(0.0), aRect.zw);
     } else if (clip_mode == CLIP_DASH_CORNER) {
         vec2 center = (aClipParams1.xy + aClipParams2.xy) * 0.5;

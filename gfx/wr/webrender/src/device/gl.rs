@@ -3305,7 +3305,7 @@ impl Device {
         );
     }
 
-    pub fn draw_triangles_u16(&mut self, first_index: i32, index_count: i32) {
+    pub fn draw_triangles_u16(&mut self, first_vertex: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
@@ -3314,11 +3314,11 @@ impl Device {
             gl::TRIANGLES,
             index_count,
             gl::UNSIGNED_SHORT,
-            first_index as u32 * 2,
+            first_vertex as u32 * 2,
         );
     }
 
-    pub fn draw_triangles_u32(&mut self, first_index: i32, index_count: i32) {
+    pub fn draw_triangles_u32(&mut self, first_vertex: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
@@ -3327,7 +3327,7 @@ impl Device {
             gl::TRIANGLES,
             index_count,
             gl::UNSIGNED_INT,
-            first_index as u32 * 4,
+            first_vertex as u32 * 4,
         );
     }
 
