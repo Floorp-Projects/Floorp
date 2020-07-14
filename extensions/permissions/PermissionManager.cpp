@@ -2432,6 +2432,8 @@ PermissionManager::RemovePermissionsWithAttributes(const nsAString& aPattern) {
 
 nsresult PermissionManager::RemovePermissionsWithAttributes(
     OriginAttributesPattern& aPattern) {
+  EnsureReadCompleted();
+
   Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
