@@ -47,6 +47,8 @@ class TabDrawerRobot {
     fun verifyNoTabsOpened() = assertNoTabsOpenedText()
     fun verifyPrivateModeSelected() = assertPrivateModeSelected()
     fun verifyNormalModeSelected() = assertNormalModeSelected()
+    fun verifyNewTabButton() = assertNewTabButton()
+    fun verifyTabTrayOverflowMenu(visibility: Boolean) = assertTabTrayOverflowButton(visibility)
 
     fun closeTab() {
         closeTabButton().click()
@@ -117,6 +119,18 @@ class TabDrawerRobot {
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun closeTabDrawer(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.waitForIdle(waitingTime)
+
+            // Dismisses the tab tray bottom sheet with 2 handle clicks
+            onView(withId(R.id.handle)).perform(
+                click(),
+                click()
+            )
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
 
         fun openHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -196,6 +210,10 @@ private fun assertNoTabsOpenedText() =
     onView(withId(R.id.tab_tray_empty_view))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
+private fun assertNewTabButton() =
+    onView(withId(R.id.new_tab_button))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
 private fun assertNormalModeSelected() =
     normalBrowsingButton()
         .check(matches(ViewMatchers.isSelected()))
@@ -203,6 +221,10 @@ private fun assertNormalModeSelected() =
 private fun assertPrivateModeSelected() =
     privateBrowsingButton()
         .check(matches(ViewMatchers.isSelected()))
+
+private fun assertTabTrayOverflowButton(visible: Boolean) =
+    onView(withId(R.id.tab_tray_overflow))
+        .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
 
 private fun tab(title: String) =
     onView(
@@ -213,3 +235,6 @@ private fun tab(title: String) =
     )
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
+
+private fun visibleOrGone(visibility: Boolean) =
+    if (visibility) ViewMatchers.Visibility.VISIBLE else ViewMatchers.Visibility.GONE

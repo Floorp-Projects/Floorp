@@ -18,8 +18,8 @@ import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -390,6 +390,17 @@ class BrowserRobot {
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
+            mDevice.waitForIdle(waitingTime)
+
+            tabsCounter().perform(
+                ViewActions.longClick()
+            )
+
+            NavigationToolbarRobot().interact()
+            return NavigationToolbarRobot.Transition()
         }
 
         fun openNotificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot.Transition {

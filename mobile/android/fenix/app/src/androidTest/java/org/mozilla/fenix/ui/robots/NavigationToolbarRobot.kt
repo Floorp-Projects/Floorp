@@ -7,13 +7,16 @@
 package org.mozilla.fenix.ui.robots
 
 import android.net.Uri
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -46,6 +49,8 @@ class NavigationToolbarRobot {
         assertSuggestionsAreEqualTo(suggestionSize, searchTerm)
 
     fun verifyNoHistoryBookmarks() = assertNoHistoryBookmarks()
+
+    fun verifyTabButtonShortcutMenuItems() = assertTabButtonShortcutMenuItems()
 
     class Transition {
 
@@ -113,12 +118,25 @@ class NavigationToolbarRobot {
             return ThreeDotMenuMainRobot.Transition()
         }
 
+        fun openTabTray(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+            onView(withId(R.id.tab_button))
+                .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+            tabTrayButton().click()
+
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
+        }
+
         fun openNewTabAndEnterToBrowser(
             url: Uri,
             interact: BrowserRobot.() -> Unit
         ): BrowserRobot.Transition {
             sessionLoadedIdlingResource = SessionLoadedIdlingResource()
-            mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/toolbar")), waitingTime)
+            mDevice.waitNotNull(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/toolbar")),
+                waitingTime
+            )
 
             urlBar().click()
             awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
@@ -165,6 +183,54 @@ class NavigationToolbarRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun closeTabFromShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
+            mDevice.waitForIdle(waitingTime)
+
+            onView(withId(R.id.mozac_browser_menu_recyclerView))
+                .perform(
+                    RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+                        hasDescendant(
+                            withText("Close tab")
+                        ), ViewActions.click()
+                    )
+                )
+
+            NavigationToolbarRobot().interact()
+            return NavigationToolbarRobot.Transition()
+        }
+
+        fun openTabFromShortcutsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.waitForIdle(waitingTime)
+
+            onView(withId(R.id.mozac_browser_menu_recyclerView))
+                .perform(
+                    RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+                        hasDescendant(
+                            withText("New tab")
+                        ), ViewActions.click()
+                    )
+                )
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
+        fun openNewPrivateTabFromShortcutsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.waitForIdle(waitingTime)
+
+            onView(withId(R.id.mozac_browser_menu_recyclerView))
+                .perform(
+                    RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+                        hasDescendant(
+                            withText("New private tab")
+                        ), ViewActions.click()
+                    )
+                )
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 
@@ -196,10 +262,18 @@ private fun assertNoHistoryBookmarks() {
         .check(matches(not(hasDescendant(withText("Test_Page_3")))))
 }
 
+private fun assertTabButtonShortcutMenuItems() {
+    onView(withId(R.id.mozac_browser_menu_recyclerView))
+        .check(matches(hasDescendant(withText("Close tab"))))
+        .check(matches(hasDescendant(withText("New private tab"))))
+        .check(matches(hasDescendant(withText("New tab"))))
+}
+
 private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
 private fun urlBar() = onView(withId(R.id.toolbar))
 private fun awesomeBar() = onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
 private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
+private fun tabTrayButton() = onView(withId(R.id.tab_button))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBar() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
 private fun goBackButton() = mDevice.pressBack()

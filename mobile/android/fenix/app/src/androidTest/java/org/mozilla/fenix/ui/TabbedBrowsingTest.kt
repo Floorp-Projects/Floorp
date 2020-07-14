@@ -32,7 +32,9 @@ import org.mozilla.fenix.ui.robots.notificationShade
  *  - Swipe to close tab (temporarily disabled)
  *  - Undo close tab
  *  - Close private tabs persistent notification
- *
+ *  - Empty tab tray state
+ *  - Tab tray details
+ *  - Shortcut context menu navigation
  */
 
 class TabbedBrowsingTest {
@@ -222,6 +224,88 @@ class TabbedBrowsingTest {
             // Tap an empty spot on the app homescreen to make sure it's into focus
             sendSingleTapToScreen(20, 20)
             verifyHomeScreen()
+        }
+    }
+
+    @Test
+    fun verifyEmptyTabTray() {
+        homeScreen { }.dismissOnboarding()
+
+        navigationToolbar {
+        }.openTabTray {
+            verifyNoTabsOpened()
+            verifyNewTabButton()
+            verifyTabTrayOverflowMenu(false)
+        }.toggleToPrivateTabs {
+            verifyNoTabsOpened()
+            verifyNewTabButton()
+            verifyTabTrayOverflowMenu(false)
+        }
+    }
+
+    @Test
+    fun verifyOpenTabDetails() {
+        homeScreen { }.dismissOnboarding()
+
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            // verifyPageContent(defaultWebPage.content)
+        }.openTabDrawer {
+            verifyExistingTabList()
+            verifyNewTabButton()
+            verifyTabTrayOverflowMenu(true)
+            verifyExistingOpenTabs(defaultWebPage.title)
+            verifyCloseTabsButton(defaultWebPage.title)
+        }.openHomeScreen {
+        }
+    }
+
+    @Test
+    fun verifyContextMenuShortcuts() {
+        homeScreen { }.dismissOnboarding()
+
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            // verifyPageContent(defaultWebPage.content)
+        }.openTabDrawer {
+            verifyExistingTabList()
+            verifyNewTabButton()
+            verifyTabTrayOverflowMenu(true)
+            verifyExistingOpenTabs(defaultWebPage.title)
+            verifyCloseTabsButton(defaultWebPage.title)
+        }.closeTabDrawer {
+        }.openTabButtonShortcutsMenu {
+            verifyTabButtonShortcutMenuItems()
+        }.closeTabFromShortcutsMenu {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabButtonShortcutsMenu {
+        }.openNewPrivateTabFromShortcutsMenu {
+            verifyHomeScreen()
+            verifyNavigationToolbar()
+            verifyHomePrivateBrowsingButton()
+            verifyHomeMenu()
+            verifyHomeWordmark()
+            verifyTabButton()
+            verifyPrivateSessionMessage()
+            verifyHomeToolbar()
+            verifyHomeComponent()
+        }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+
+        }.openTabButtonShortcutsMenu {
+        }.openTabFromShortcutsMenu {
+            verifyHomeScreen()
+            verifyNavigationToolbar()
+            verifyHomeMenu()
+            verifyHomeWordmark()
+            verifyTabButton()
+            verifyHomeToolbar()
+            verifyHomeComponent()
         }
     }
 }
