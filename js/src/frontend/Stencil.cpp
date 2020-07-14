@@ -229,6 +229,29 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
   MOZ_CRASH("Not an enclosing intra-frame scope");
 }
 
+void StencilModuleEntry::trace(JSTracer* trc) {
+  if (specifier) {
+    TraceManuallyBarrieredEdge(trc, &specifier, "module specifier");
+  }
+  if (localName) {
+    TraceManuallyBarrieredEdge(trc, &localName, "module local name");
+  }
+  if (importName) {
+    TraceManuallyBarrieredEdge(trc, &importName, "module import name");
+  }
+  if (exportName) {
+    TraceManuallyBarrieredEdge(trc, &exportName, "module export name");
+  }
+}
+
+void StencilModuleMetadata::trace(JSTracer* trc) {
+  requestedModules.trace(trc);
+  importEntries.trace(trc);
+  localExportEntries.trace(trc);
+  indirectExportEntries.trace(trc);
+  starExportEntries.trace(trc);
+}
+
 void ScriptStencil::trace(JSTracer* trc) {
   for (ScriptThingVariant& thing : gcThings) {
     if (thing.is<ScriptAtom>()) {
