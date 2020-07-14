@@ -1212,12 +1212,13 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
                                 const EditorDOMPoint& aPoint);
 
   /**
-   * NormalizeWhiteSpacesAround() tries to normalize white-space sequence
-   * around aScanStartPoint.
+   * NormalizeVisibleWhiteSpacesAt() tries to normalize visible white-space
+   * sequence around aPoint.
    */
   template <typename EditorDOMPointType>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult NormalizeWhiteSpacesAround(
-      HTMLEditor& aHTMLEditor, const EditorDOMPointType& aSacnStartPoint);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  NormalizeVisibleWhiteSpacesAt(HTMLEditor& aHTMLEditor,
+                                const EditorDOMPointType& aPoint);
 
  protected:
   /**
@@ -1257,9 +1258,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       HTMLEditor& aHTMLEditor,
       const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
       const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces);
-
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult NormalizeWhiteSpacesAtEndOf(
-      const VisibleWhiteSpacesData& aVisibleWhiteSpacesData);
 
   // Because of MOZ_CAN_RUN_SCRIPT constructors, each instanciater of this class
   // guarantees the lifetime of the HTMLEditor.
