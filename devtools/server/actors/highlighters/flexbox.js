@@ -86,6 +86,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       this.highlighterEnv,
       this._buildMarkup.bind(this)
     );
+    this.isReady = this.markup.initialize();
 
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);

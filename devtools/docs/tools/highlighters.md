@@ -118,12 +118,13 @@ Because of the way content is inserted into the page, it isn't wanted to give co
 
 In order to help with the API described in the previous section, the `CanvasFrameAnonymousContentHelper` class was introduced.
 
-Its goal is to provide a simple way for highlighters to insert their content into the page and modify it dynamically later. One of its goal is also to re-insert the highlighters' content on page navigation. Indeed, the frame tree is destroyed when the page is navigated away from since it represents the document element.
+Its goal is to provide a simple way for highlighters to insert their content into the page and modify it dynamically later. One of its goal is also to re-insert the highlighters' content on page navigation. Indeed, the frame tree is destroyed when the page is navigated away from since it represents the document element. One thing to note is that highlighter content insertion is asynchronous and `CanvasFrameAnonymousContentHelper` users must call and wait for its `initialize` method to resolve.
 
 Using this helper is quite simple:
 
 ```js
 let helper = new CanvasFrameAnonymousContentHelper(targetActor, this.buildMarkup.bind(this));
+await helper.initialize();
 ```
 
 It only requires a `targetActor`, which highlighters get when they are instantiated, and a callback function that will be used to create and insert the content the first time the highlighter is shown, and every time there's a page navigation.

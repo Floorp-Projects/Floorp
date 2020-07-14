@@ -52,6 +52,7 @@ function MeasuringToolHighlighter(highlighterEnv) {
     highlighterEnv,
     this._buildMarkup.bind(this)
   );
+  this.isReady = this.markup.initialize();
 
   this.coords = {
     x: 0,
