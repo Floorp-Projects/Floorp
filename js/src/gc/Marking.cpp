@@ -1437,7 +1437,9 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
 
       case ScopeKind::Module: {
         ModuleScope::Data& data = scope->as<ModuleScope>().data();
-        traverseObjectEdge(scope, data.module);
+        if (data.module) {
+          traverseObjectEdge(scope, data.module);
+        }
         names = &data.trailingNames;
         length = data.length;
         break;
