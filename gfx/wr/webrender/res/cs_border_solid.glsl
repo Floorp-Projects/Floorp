@@ -103,7 +103,7 @@ void main(void) {
     }
 
     vMixColors = mix_colors;
-    vPos = aRect.zw * quad_position();
+    vPos = aRect.zw * aPosition.xy;
 
     vColor0 = aColor0;
     vColor1 = aColor1;
