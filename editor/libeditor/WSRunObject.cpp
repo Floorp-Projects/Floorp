@@ -147,11 +147,12 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor& aHTMLEditor,
   AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), aSplitNode,
                             aSplitOffset);
 
-  WSRunObject wsObj(aHTMLEditor, EditorRawDOMPoint(*aSplitNode, *aSplitOffset));
-
-  nsresult rv = wsObj.PrepareToSplitAcrossBlocksPriv();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "WSRunObject::PrepareToSplitAcrossBlocksPriv() failed");
+  nsresult rv = WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
+      aHTMLEditor, EditorDOMPoint(*aSplitNode, *aSplitOffset));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit() "
+      "failed");
   return rv;
 }
 
@@ -1453,19 +1454,24 @@ WSRunObject::MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
   return NS_OK;
 }
 
-nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
+// static
+nsresult WSRunObject::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToSplit) {
+  TextFragmentData textFragmentDataAtSplitPoint(
+      aPointToSplit, aHTMLEditor.GetActiveEditingHost());
+
   // used to prepare white-space sequence to be split across two blocks.
   // The main issue here is make sure white-spaces around the split point
   // doesn't end up becoming non-significant leading or trailing ws after
   // the split.
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
-      TextFragmentDataAtStart().VisibleWhiteSpacesDataRef();
+      textFragmentDataAtSplitPoint.VisibleWhiteSpacesDataRef();
   if (!visibleWhiteSpaces.IsInitialized()) {
     return NS_OK;  // No visible white-space sequence.
   }
 
   PointPosition pointPositionWithVisibleWhiteSpaces =
-      visibleWhiteSpaces.ComparePoint(mScanStartPoint);
+      visibleWhiteSpaces.ComparePoint(aPointToSplit);
 
   // XXX If we split white-space sequence, the following code modify the DOM
   //     tree twice.  This is not reasonable and the latter change may touch
@@ -1473,25 +1479,28 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
 
   // If we insert block boundary to start or middle of the white-space sequence,
   // the character at the insertion point needs to be an NBSP.
+  EditorDOMPoint pointToSplit(aPointToSplit);
   if (pointPositionWithVisibleWhiteSpaces == PointPosition::StartOfFragment ||
       pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment) {
     EditorDOMPointInText atNextCharOfStart =
-        GetInclusiveNextEditableCharPoint(mScanStartPoint);
+        textFragmentDataAtSplitPoint.GetInclusiveNextEditableCharPoint(
+            pointToSplit);
     if (atNextCharOfStart.IsSet() && !atNextCharOfStart.IsEndOfContainer() &&
         atNextCharOfStart.IsCharASCIISpace()) {
-      // mScanStartPoint will be referred bellow so that we need to keep
+      // pointToSplit will be referred bellow so that we need to keep
       // it a valid point.
-      AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
+      AutoEditorDOMPointChildInvalidator forgetChild(pointToSplit);
       if (atNextCharOfStart.IsStartOfContainer() ||
           atNextCharOfStart.IsPreviousCharASCIISpace()) {
         atNextCharOfStart =
-            GetFirstASCIIWhiteSpacePointCollapsedTo(atNextCharOfStart);
+            textFragmentDataAtSplitPoint
+                .GetFirstASCIIWhiteSpacePointCollapsedTo(atNextCharOfStart);
       }
       EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-          GetEndOfCollapsibleASCIIWhiteSpaces(atNextCharOfStart);
+          textFragmentDataAtSplitPoint.GetEndOfCollapsibleASCIIWhiteSpaces(
+              atNextCharOfStart);
       nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-          MOZ_KnownLive(mHTMLEditor), atNextCharOfStart,
-          endOfCollapsibleASCIIWhiteSpaces);
+          aHTMLEditor, atNextCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
         return rv;
@@ -1505,20 +1514,21 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
   if (pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment ||
       pointPositionWithVisibleWhiteSpaces == PointPosition::EndOfFragment) {
     EditorDOMPointInText atPreviousCharOfStart =
-        GetPreviousEditableCharPoint(mScanStartPoint);
+        textFragmentDataAtSplitPoint.GetPreviousEditableCharPoint(pointToSplit);
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
         atPreviousCharOfStart.IsCharASCIISpace()) {
       if (atPreviousCharOfStart.IsStartOfContainer() ||
           atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
         atPreviousCharOfStart =
-            GetFirstASCIIWhiteSpacePointCollapsedTo(atPreviousCharOfStart);
+            textFragmentDataAtSplitPoint
+                .GetFirstASCIIWhiteSpacePointCollapsedTo(atPreviousCharOfStart);
       }
       EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-          GetEndOfCollapsibleASCIIWhiteSpaces(atPreviousCharOfStart);
+          textFragmentDataAtSplitPoint.GetEndOfCollapsibleASCIIWhiteSpaces(
+              atPreviousCharOfStart);
       nsresult rv = WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
-          MOZ_KnownLive(mHTMLEditor), atPreviousCharOfStart,
-          endOfCollapsibleASCIIWhiteSpaces);
+          aHTMLEditor, atPreviousCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
         return rv;
