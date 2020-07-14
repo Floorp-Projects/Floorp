@@ -30,7 +30,7 @@ class AutoParser(BaseTryParser):
     ]
 
 
-def run(message='{msg}', push=True, closed_tree=False, try_config=None):
+def run(message='{msg}', push=True, closed_tree=False, try_config=None, **ignored):
     msg = message.format(msg='Tasks automatically selected.')
 
     # XXX Remove once an intelligent scheduling algorithm is running on
