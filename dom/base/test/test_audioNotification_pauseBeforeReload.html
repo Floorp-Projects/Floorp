@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Should receive 'active' notification when pausing and then reloading a media</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<audio id="testAudio" loop controls>
+<script type="application/javascript">
+/**
+ * This test is used to ensure that we would reset the media interal audible
+ * state if we pause media element before resetting its `src` attribute.
+ * Then, play media again should generate correct `audio-playback` notification.
+ */
+const observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                     .getService(SpecialPowers.Ci.nsIObserverService);
+const audioPlaybackObserver = {
+  observe(subject, topic, data) {
+    is(topic, "audio-playback", "audio-playback received");
+    info(`received ${data}`);
+    if (data == this._expectedNotification) {
+      ok(true, `received ${this._expectedNotification}`);
+      this._resolve();
+    }
+  },
+  waitFor(expectedNotification) {
+    return new Promise((resolve) => {
+      info(`waiting for the notification "${expectedNotification}"`);
+      this._resolve = resolve;
+      this._expectedNotification = expectedNotification;
+    });
+  }
+};
+
+SimpleTest.waitForExplicitFinish();
+
+async function startTest() {
+  info(`start media and should receive 'active' notification`);
+  await loadAndStartMediaPlayback();
+
+  info(`pause media and should receive 'inactive' notification`);
+  await pauseMediaPlayback();
+
+  info(`abort current media`);
+  await abortPlaybackByUnsetSrc();
+
+  info(`start media and should receive 'active' notification again`);
+  await loadAndStartMediaPlayback();
+
+  finishTest();
+}
+
+onload = addObserver;
+
+/**
+ * The following are helper functions.
+ */
+function addObserver() {
+  observerService.addObserver(audioPlaybackObserver, "audio-playback");
+  info("Observer set");
+  startTest();
+}
+
+function removeObserver() {
+  observerService.removeObserver(audioPlaybackObserver, "audio-playback");
+  info("Observer removed");
+}
+
+function waitUntilMediaBecomesActive() {
+  return audioPlaybackObserver.waitFor("active");
+}
+
+function waitUntilMediaBecomesInactive() {
+  return audioPlaybackObserver.waitFor("inactive-pause");
+}
+
+async function loadAndStartMediaPlayback() {
+  const activePromise = waitUntilMediaBecomesActive();
+  const audio = document.getElementById("testAudio");
+  audio.src = "audio.ogg";
+  audio.play();
+  await activePromise;
+}
+
+async function pauseMediaPlayback() {
+  const inactivePromise = waitUntilMediaBecomesInactive();
+  const audio = document.getElementById("testAudio");
+  audio.pause();
+  await inactivePromise;
+}
+
+async function abortPlaybackByUnsetSrc() {
+  const audio = document.getElementById("testAudio");
+  audio.src = "";
+  audio.removeAttribute("src");
+}
+
+function finishTest() {
+  removeObserver();
+  document.getElementById("testAudio").remove();
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
