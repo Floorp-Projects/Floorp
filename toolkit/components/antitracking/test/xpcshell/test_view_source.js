@@ -45,7 +45,7 @@ add_task(async function() {
 
   info("Let's load a page");
   let contentPage = await CookieXPCShellUtils.loadContentPage(
-    "http://example.org/test"
+    "http://example.org/test?1"
   );
   await contentPage.close();
 
@@ -53,7 +53,7 @@ add_task(async function() {
 
   info("Let's load the source of the page");
   contentPage = await CookieXPCShellUtils.loadContentPage(
-    "view-source:http://example.org/test"
+    "view-source:http://example.org/test?2"
   );
   await contentPage.close();
 
