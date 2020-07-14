@@ -67,6 +67,9 @@ class DebuggerScript : public NativeObject {
     return getSlot(INSTRUMENTATION_ID_SLOT);
   }
 
+  bool isInstance() const;
+  Debugger* owner() const;
+
  private:
   static const JSClassOps classOps_;
 

@@ -167,8 +167,8 @@ DebuggerScript* DebuggerScript::check(JSContext* cx, HandleValue v) {
   DebuggerScript& scriptObj = thisobj->as<DebuggerScript>();
 
   // Check for Debugger.Script.prototype, which is of class
-  // DebuggerScript::class but whose script is null.
-  if (!scriptObj.getReferentCell()) {
+  // DebuggerScript::class.
+  if (!scriptObj.isInstance()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Script",
                               "method", "prototype object");
@@ -308,7 +308,7 @@ bool DebuggerScript::CallData::getDisplayName() {
     return false;
   }
   JSFunction* func = obj->getReferentScript()->function();
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   JSString* name = func ? func->displayAtom() : nullptr;
   if (!name) {
@@ -417,7 +417,7 @@ class DebuggerScript::GetSourceMatcher {
 };
 
 bool DebuggerScript::CallData::getSource() {
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   GetSourceMatcher matcher(cx, dbg);
   RootedDebuggerSource sourceObject(cx, referent.match(matcher));
@@ -457,7 +457,7 @@ bool DebuggerScript::CallData::getGlobal() {
   if (!ensureScript()) {
     return false;
   }
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   RootedValue v(cx, ObjectValue(script->global()));
   if (!dbg->wrapDebuggeeValue(cx, &v)) {
@@ -516,7 +516,7 @@ bool DebuggerScript::CallData::getChildScripts() {
   if (!ensureScriptMaybeLazy()) {
     return false;
   }
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   RootedObject result(cx, NewDenseEmptyArray(cx));
   if (!result) {
@@ -2076,7 +2076,7 @@ bool DebuggerScript::CallData::setBreakpoint() {
   if (!args.requireAtLeast(cx, "Debugger.Script.setBreakpoint", 2)) {
     return false;
   }
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   size_t offset;
   if (!ScriptOffset(cx, args[0], &offset)) {
@@ -2100,7 +2100,7 @@ bool DebuggerScript::CallData::getBreakpoints() {
   if (!ensureScript()) {
     return false;
   }
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   jsbytecode* pc;
   if (args.length() > 0) {
@@ -2197,7 +2197,7 @@ bool DebuggerScript::CallData::clearBreakpoint() {
   if (!args.requireAtLeast(cx, "Debugger.Script.clearBreakpoint", 1)) {
     return false;
   }
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
 
   JSObject* handler = RequireObject(cx, args[0]);
   if (!handler) {
@@ -2214,7 +2214,7 @@ bool DebuggerScript::CallData::clearBreakpoint() {
 }
 
 bool DebuggerScript::CallData::clearAllBreakpoints() {
-  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  Debugger* dbg = obj->owner();
   ClearBreakpointMatcher matcher(cx, dbg, nullptr);
   if (!referent.match(matcher)) {
     return false;

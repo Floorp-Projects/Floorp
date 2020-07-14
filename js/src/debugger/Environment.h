@@ -71,6 +71,9 @@ class DebuggerEnvironment : public NativeObject {
                                        HandleDebuggerEnvironment environment,
                                        HandleId id, HandleValue value);
 
+  bool isInstance() const;
+  Debugger* owner() const;
+
  private:
   static const JSClassOps classOps_;
 
@@ -82,8 +85,6 @@ class DebuggerEnvironment : public NativeObject {
     MOZ_ASSERT(env);
     return env;
   }
-
-  Debugger* owner() const;
 
   bool requireDebuggee(JSContext* cx) const;
 
