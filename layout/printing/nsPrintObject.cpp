@@ -21,10 +21,11 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 
-using mozilla::PresShell;
+using namespace mozilla;
 using mozilla::dom::BrowsingContext;
 using mozilla::dom::Document;
 using mozilla::dom::Element;
+using mozilla::dom::Selection;
 
 //---------------------------------------------------
 //-- nsPrintObject Class Impl

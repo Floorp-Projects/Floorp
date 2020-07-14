@@ -7,12 +7,11 @@
 #define nsILineIterator_h___
 
 #include "nscore.h"
-#include "nsPoint.h"
+#include "nsRect.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Result.h"
 
 class nsIFrame;
-struct nsRect;
 
 /**
  * Line iterator API.
