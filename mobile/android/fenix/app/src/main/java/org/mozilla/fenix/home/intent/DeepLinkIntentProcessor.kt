@@ -123,10 +123,4 @@ class DeepLinkIntentProcessor(
                 }
             }
         }
-        .apply {
-            when {
-                SDK_INT >= Build.VERSION_CODES.P ->
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        }
 }

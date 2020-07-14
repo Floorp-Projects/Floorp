@@ -5,13 +5,10 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.ActivityNotFoundException
-import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.fenix.BuildConfig.DEEP_LINK_SCHEME
-import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.ext.application
 
 class DeepLinkRobot {
     private fun openDeepLink(url: String) {
