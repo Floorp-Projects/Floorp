@@ -1622,17 +1622,13 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     return null();
   }
 
-  // Generate the Import/Export tables and store in CompilationInfo.
-  if (!modulesc->builder.buildTables(
-          this->compilationInfo_.moduleMetadata.get())) {
+  if (!modulesc->builder.buildTables()) {
     return null();
   }
 
   // Check exported local bindings exist and mark them as closed over.
-  StencilModuleMetadata& moduleMetadata =
-      this->compilationInfo_.moduleMetadata.get();
-  for (auto entry : moduleMetadata.localExportEntries) {
-    JSAtom* name = entry.localName;
+  for (auto entry : modulesc->builder.localExportEntries()) {
+    JSAtom* name = entry->localName();
     MOZ_ASSERT(name);
 
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(name);

@@ -2071,6 +2071,7 @@ bool ScopeCreationData::create(JSContext* cx,
 bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                Handle<ModuleScope::Data*> dataArg,
+                               HandleModuleObject module,
                                Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
@@ -2083,10 +2084,6 @@ bool ScopeCreationData::create(JSContext* cx,
   }
 
   MOZ_ASSERT(enclosing.get().is<GlobalScope>());
-
-  // We do not initialize the canonical module while the data is owned by the
-  // ScopeCreationData. It gets set in ScopeCreationData::releaseData.
-  RootedModuleObject module(cx, nullptr);
 
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -2145,16 +2142,6 @@ UniquePtr<FunctionScope::Data> ScopeCreationData::releaseData<FunctionScope>(
 
   return UniquePtr<FunctionScope::Data>(
       static_cast<FunctionScope::Data*>(data_.release()));
-}
-
-template <>
-UniquePtr<ModuleScope::Data> ScopeCreationData::releaseData<ModuleScope>(
-    CompilationInfo& compilationInfo) {
-  // Initialize the GCPtrs in the Scope::Data.
-  data<ModuleScope>().module = compilationInfo.module;
-
-  return UniquePtr<ModuleScope::Data>(
-      static_cast<ModuleScope::Data*>(data_.release()));
 }
 
 template <class SpecificScopeType>
