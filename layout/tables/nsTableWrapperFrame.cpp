@@ -382,10 +382,8 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
 
   // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
   auto flags = ComputeSizeFlags::eShrinkWrap;
-  auto parent = GetParent();
-  bool isGridItem = parent && parent->IsGridContainerFrame() &&
-                    !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
-  if (MOZ_UNLIKELY(isGridItem) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
+  if (MOZ_UNLIKELY(IsGridItem()) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
+    const auto* parent = GetParent();
     auto inlineAxisAlignment =
         aWM.IsOrthogonalTo(parent->GetWritingMode())
             ? StylePosition()->UsedAlignSelf(parent->Style())._0
