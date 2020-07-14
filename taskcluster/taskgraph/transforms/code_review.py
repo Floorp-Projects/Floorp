@@ -18,7 +18,7 @@ def add_dependencies(config, jobs):
         job.setdefault('soft-dependencies', [])
         job['soft-dependencies'] += [
             dep_task.label
-            for dep_task in config.kind_dependencies_tasks
+            for dep_task in config.kind_dependencies_tasks.values()
             if dep_task.attributes.get('code-review') is True
         ]
         yield job

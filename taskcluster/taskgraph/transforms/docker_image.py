@@ -82,13 +82,6 @@ transforms.add_validate(docker_image_schema)
 
 @transforms.add
 def fill_template(config, tasks):
-    available_packages = set()
-    for task in config.kind_dependencies_tasks:
-        if task.kind != 'packages':
-            continue
-        name = task.label.replace('packages-', '')
-        available_packages.add(name)
-
     if not taskgraph.fast and config.write_artifacts:
         if not os.path.isdir(CONTEXTS_DIR):
             os.makedirs(CONTEXTS_DIR)
@@ -102,7 +95,7 @@ def fill_template(config, tasks):
         parent = task.pop('parent', None)
 
         for p in packages:
-            if p not in available_packages:
+            if "packages-{}".format(p) not in config.kind_dependencies_tasks:
                 raise Exception('Missing package job for {}-{}: {}'.format(
                     config.kind, image_name, p))
 
