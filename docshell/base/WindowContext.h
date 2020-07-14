@@ -50,7 +50,8 @@ class BrowsingContextGroup;
   FIELD(DelegatedPermissions,                                          \
         PermissionDelegateHandler::DelegatedPermissionList)            \
   FIELD(DelegatedExactHostMatchPermissions,                            \
-        PermissionDelegateHandler::DelegatedPermissionList)
+        PermissionDelegateHandler::DelegatedPermissionList)            \
+  FIELD(HasReportedShadowDOMUsage, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -172,6 +173,12 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_DelegatedExactHostMatchPermissions>,
               const PermissionDelegateHandler::DelegatedPermissionList& aValue,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, const bool& aValue,
+              ContentParent* aSource) {
+    return true;
+  }
+  void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
 
   // Overload `DidSet` to get notifications for a particular field being set.
   //
