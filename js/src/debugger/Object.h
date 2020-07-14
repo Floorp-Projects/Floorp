@@ -177,6 +177,12 @@ class DebuggerObject : public NativeObject {
   bool isInstance() const;
   Debugger* owner() const;
 
+  JSObject* referent() const {
+    JSObject* obj = (JSObject*)getPrivate();
+    MOZ_ASSERT(obj);
+    return obj;
+  }
+
  private:
   enum { OWNER_SLOT };
 
@@ -187,12 +193,6 @@ class DebuggerObject : public NativeObject {
   static const JSPropertySpec properties_[];
   static const JSPropertySpec promiseProperties_[];
   static const JSFunctionSpec methods_[];
-
-  JSObject* referent() const {
-    JSObject* obj = (JSObject*)getPrivate();
-    MOZ_ASSERT(obj);
-    return obj;
-  }
 
   PromiseObject* promise() const;
 
