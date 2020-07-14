@@ -22,17 +22,12 @@ class ModuleBuilder;
 namespace frontend {
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
-  JS::Rooted<ModuleObject*> module_;
-
  public:
   JS::Rooted<ModuleScope::Data*> bindings;
   ModuleBuilder& builder;
 
-  ModuleSharedContext(JSContext* cx, ModuleObject* module,
-                      CompilationInfo& compilationInfo, ModuleBuilder& builder,
-                      SourceExtent extent);
-
-  JS::Handle<ModuleObject*> module() const { return module_; }
+  ModuleSharedContext(JSContext* cx, CompilationInfo& compilationInfo,
+                      ModuleBuilder& builder, SourceExtent extent);
 };
 
 inline ModuleSharedContext* SharedContext::asModuleContext() {
