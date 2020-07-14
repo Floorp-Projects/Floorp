@@ -57,7 +57,7 @@ class TryConfig(object):
         choices = Registrar.command_handlers['try'].subcommand_handlers.keys()
 
         return [
-            ('try.default', 'string', desc, 'syntax', {'choices': choices}),
+            ('try.default', 'string', desc, 'auto', {'choices': choices}),
             ('try.maxhistory', 'int', "Maximum number of pushes to save in history.", 10),
         ]
 
