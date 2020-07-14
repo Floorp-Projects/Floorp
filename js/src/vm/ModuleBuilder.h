@@ -51,6 +51,11 @@ class MOZ_STACK_CLASS ModuleBuilder {
 
   bool buildTables(frontend::StencilModuleMetadata& metadata);
 
+  // During BytecodeEmitter we note top-level functions, and afterwards we must
+  // call finishFunctionDecls on the list.
+  bool noteFunctionDeclaration(JSContext* cx, uint32_t funIndex);
+  void finishFunctionDecls(frontend::StencilModuleMetadata& metadata);
+
  private:
   using RequestedModuleVector = JS::GCVector<frontend::StencilModuleEntry>;
   using AtomSet = JS::GCHashSet<JSAtom*>;
@@ -64,11 +69,15 @@ class MOZ_STACK_CLASS ModuleBuilder {
   JSContext* cx_;
   frontend::EitherParser eitherParser_;
 
+  // These are populated while parsing.
   RootedAtomSet requestedModuleSpecifiers_;
   RootedRequestedModuleVector requestedModules_;
   RootedImportEntryMap importEntries_;
   RootedExportEntryVector exportEntries_;
   RootedAtomSet exportNames_;
+
+  // These are populated while emitting bytecode.
+  frontend::FunctionDeclarationVector functionDecls_;
 
   frontend::StencilModuleEntry* importEntryFor(JSAtom* localName) const;
 
