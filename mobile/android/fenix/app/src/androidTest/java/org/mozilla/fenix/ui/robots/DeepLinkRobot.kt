@@ -9,6 +9,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.test.platform.app.InstrumentationRegistry
+import org.mozilla.fenix.BuildConfig.DEEP_LINK_SCHEME
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.application
 
@@ -17,10 +18,8 @@ class DeepLinkRobot {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent().apply {
             action = Intent.ACTION_VIEW
-            data = Uri.parse(url)
+            data = Uri.parse("$DEEP_LINK_SCHEME://$url")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            component =
-                ComponentName(context.application.packageName, HomeActivity::class.java.name)
             addCategory(Intent.CATEGORY_BROWSABLE)
         }
         try {
@@ -32,7 +31,7 @@ class DeepLinkRobot {
     }
 
     fun openURL(url: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-        val deepLink = Uri.parse("fenix://open")
+        val deepLink = Uri.parse("open")
             .buildUpon()
             .appendQueryParameter("url", url)
             .build()
@@ -42,42 +41,42 @@ class DeepLinkRobot {
     }
 
     fun openHomeScreen(interact: HomeScreenRobot.() -> Unit) =
-        openDeepLink("fenix://home").run { homeScreen(interact) }
+        openDeepLink("home").run { homeScreen(interact) }
 
     fun openBookmarks(interact: BookmarksRobot.() -> Unit) =
-        openDeepLink("fenix://urls_bookmarks").run { bookmarksMenu(interact) }
+        openDeepLink("urls_bookmarks").run { bookmarksMenu(interact) }
 
     fun openHistory(interact: HistoryRobot.() -> Unit) =
-        openDeepLink("fenix://urls_history").run { historyMenu(interact) }
+        openDeepLink("urls_history").run { historyMenu(interact) }
 
     fun openCollections(interact: HomeScreenRobot.() -> Unit) =
-        openDeepLink("fenix://home_collections").run { homeScreen(interact) }
+        openDeepLink("home_collections").run { homeScreen(interact) }
 
     fun openSettings(interact: SettingsRobot.() -> Unit) =
-        openDeepLink("fenix://settings").run { settings(interact) }
+        openDeepLink("settings").run { settings(interact) }
 
     fun openSettingsPrivacy(interact: SettingsRobot.() -> Unit) =
-        openDeepLink("fenix://settings_privacy").run { settings(interact) }
+        openDeepLink("settings_privacy").run { settings(interact) }
 
     fun openSettingsLogins(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit) =
-        openDeepLink("fenix://settings_logins").run { settingsSubMenuLoginsAndPassword(interact) }
+        openDeepLink("settings_logins").run { settingsSubMenuLoginsAndPassword(interact) }
 
     fun openSettingsTrackingProtection(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit) =
-        openDeepLink("fenix://settings_tracking_protection").run {
+        openDeepLink("settings_tracking_protection").run {
             settingsSubMenuEnhancedTrackingProtection(interact)
         }
 
     fun openSettingsSearchEngine(interact: SettingsSubMenuSearchRobot.() -> Unit) =
-        openDeepLink("fenix://settings_search_engine").run {
+        openDeepLink("settings_search_engine").run {
             SettingsSubMenuSearchRobot().interact()
             SettingsSubMenuSearchRobot.Transition()
         }
 
     fun openSettingsNotification(interact: SystemSettingsRobot.() -> Unit) =
-        openDeepLink("fenix://settings_notifications").run { systemSettings(interact) }
+        openDeepLink("settings_notifications").run { systemSettings(interact) }
 
     fun openMakeDefaultBrowser(interact: SystemSettingsRobot.() -> Unit) =
-        openDeepLink("fenix://make_default_browser").run { systemSettings(interact) }
+        openDeepLink("make_default_browser").run { systemSettings(interact) }
 }
 
 private fun settings(interact: SettingsRobot.() -> Unit) =

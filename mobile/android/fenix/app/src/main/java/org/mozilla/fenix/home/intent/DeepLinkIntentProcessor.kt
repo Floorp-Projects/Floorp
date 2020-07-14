@@ -12,6 +12,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.provider.Settings
 import androidx.navigation.NavController
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GlobalDirections
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -26,7 +27,7 @@ class DeepLinkIntentProcessor(
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
-        val scheme = intent.scheme?.contains("fenix") ?: return false
+        val scheme = intent.scheme?.equals(BuildConfig.DEEP_LINK_SCHEME, ignoreCase = true) ?: return false
         return if (scheme) {
             intent.data?.let { handleDeepLink(it, navController) }
             true
