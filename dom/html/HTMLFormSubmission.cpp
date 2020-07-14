@@ -830,7 +830,7 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
     // If there isn't one, or if it does not have an open attribute, do
     // nothing.
     if (!dialog || !dialog->Open()) {
-      return NS_OK;
+      return NS_ERROR_FAILURE;
     }
 
     nsAutoString result;
