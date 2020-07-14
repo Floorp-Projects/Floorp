@@ -122,6 +122,11 @@ static int FuzzingRunURIParser(const uint8_t* data, size_t size) {
           break;
         }
       }
+
+      nsresult rv = mutator.Finalize(uri);
+      if (NS_FAILED(rv)) {
+        return 0;
+      }
     } else {
       nsAutoCString out;
 
