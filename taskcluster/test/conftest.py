@@ -35,9 +35,9 @@ def create_tgg(responses, datadir):
     lm = LoggingManager()
     lm.add_terminal_logging()
 
-    def inner(parameters=None, overrides=None, target_kind=None):
+    def inner(parameters=None, overrides=None):
         params = parameters_loader(parameters, strict=False, overrides=overrides)
-        tgg = TaskGraphGenerator(None, params, target_kind=target_kind)
+        tgg = TaskGraphGenerator(None, params)
 
         # Mock out certain requests as they may depend on a revision that does
         # not exist on hg.mozilla.org.

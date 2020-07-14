@@ -45,9 +45,18 @@ class VerificationSequence(object):
                 continue
             scratch_pad = {}
             graph.for_each_task(
-                verification.verify, scratch_pad=scratch_pad, graph_config=graph_config
+                verification.verify,
+                scratch_pad=scratch_pad,
+                graph_config=graph_config,
+                parameters=parameters,
             )
-            verification.verify(None, graph, scratch_pad=scratch_pad, graph_config=graph_config)
+            verification.verify(
+                None,
+                graph,
+                scratch_pad=scratch_pad,
+                graph_config=graph_config,
+                parameters=parameters,
+            )
         return graph_name, graph
 
     def add(self, graph_name, run_on_projects={"all"}):
@@ -128,7 +137,7 @@ def verify_docs(filename, identifiers, appearing_as):
 
 
 @verifications.add('full_task_graph')
-def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config):
+def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config, parameters):
     """
         This function verifies that tuple
         (collection.keys(), machine.platform, groupSymbol, symbol) is unique
@@ -169,7 +178,7 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_trust_domain_v2_routes(task, taskgraph, scratch_pad, graph_config):
+def verify_trust_domain_v2_routes(task, taskgraph, scratch_pad, graph_config, parameters):
     """
     This function ensures that any two tasks have distinct ``index.{trust-domain}.v2`` routes.
     """
@@ -191,7 +200,7 @@ def verify_trust_domain_v2_routes(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_routes_notification_filters(task, taskgraph, scratch_pad, graph_config):
+def verify_routes_notification_filters(task, taskgraph, scratch_pad, graph_config, parameters):
     """
         This function ensures that only understood filters for notifications are
         specified.
@@ -217,7 +226,7 @@ def verify_routes_notification_filters(task, taskgraph, scratch_pad, graph_confi
 
 
 @verifications.add('full_task_graph')
-def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config):
+def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config, parameters):
     tiers = scratch_pad
     if task is not None:
         tiers[task.label] = task.task.get('extra', {}) \
@@ -244,7 +253,7 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config):
+def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config, parameters):
     """
     Task with required signoffs can't be dependencies of tasks with less
     required signoffs.
@@ -271,7 +280,7 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config):
+def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config, parameters):
     """
         This function verifies that toolchain aliases are not reused.
     """
@@ -294,7 +303,7 @@ def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('optimized_task_graph')
-def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
+def verify_always_optimized(task, taskgraph, scratch_pad, graph_config, parameters):
     """
         This function ensures that always-optimized tasks have been optimized.
     """
@@ -305,7 +314,7 @@ def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph', run_on_projects=RELEASE_PROJECTS)
-def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config):
+def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config, parameters):
     if task and task.attributes.get('shippable'):
         if task.task.get('payload', {}).get('env', {}).get('USE_SCCACHE'):
             raise Exception(
@@ -313,8 +322,9 @@ def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
+def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters):
     if task is None:
+        has_target_kind = parameters.get('target-kind') is None
         exceptions = []
         for task in six.itervalues(taskgraph.tasks):
             if task.kind == 'build' and not task.attributes.get('skip-verify-test-packaging'):
@@ -342,11 +352,14 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
                     # With the caveat that we expect shippable jobs to always
                     # produce tests.
                     if not build_has_tests and not shippable:
-                        exceptions.append(
-                            'Build job {} has no tests, but specifies '
-                            'MOZ_AUTOMATION_PACKAGE_TESTS={} in the environment. '
-                            'Unset MOZ_AUTOMATION_PACKAGE_TESTS in the task definition '
-                            'to fix.'.format(task.label, package_tests))
+                        # If we have not generated all task kinds, we can't verify that
+                        # there are no dependent tests.
+                        if has_target_kind:
+                            exceptions.append(
+                                'Build job {} has no tests, but specifies '
+                                'MOZ_AUTOMATION_PACKAGE_TESTS={} in the environment. '
+                                'Unset MOZ_AUTOMATION_PACKAGE_TESTS in the task definition '
+                                'to fix.'.format(task.label, package_tests))
         if exceptions:
             raise Exception("\n".join(exceptions))
         return
@@ -356,7 +369,7 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_run_known_projects(task, taskgraph, scratch_pad, graph_config):
+def verify_run_known_projects(task, taskgraph, scratch_pad, graph_config, parameters):
     """ Validates the inputs in run-on-projects.
 
     We should never let 'try' (or 'try-comm-central') be in run-on-projects even though it
@@ -381,7 +394,7 @@ def verify_run_known_projects(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add('full_task_graph')
-def verify_local_toolchains(task, taskgraph, scratch_pad, graph_config):
+def verify_local_toolchains(task, taskgraph, scratch_pad, graph_config, parameters):
     """
     Toolchains that are used for local development need to be built on a
     level-3 branch to installable via `mach bootstrap`. We ensure here that all

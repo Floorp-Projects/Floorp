@@ -337,12 +337,15 @@ class MachCommands(MachCommandBase):
 
         try:
             self.setup_logging(quiet=options['quiet'], verbose=options['verbose'])
-            parameters = taskgraph.parameters.parameters_loader(options['parameters'])
+            parameters = taskgraph.parameters.parameters_loader(
+                options['parameters'],
+                overrides={'target-kind': options.get('target_kind')},
+                strict=False,
+            )
 
             tgg = taskgraph.generator.TaskGraphGenerator(
                 root_dir=options.get('root'),
                 parameters=parameters,
-                target_kind=options.get('target_kind'),
             )
 
             tg = getattr(tgg, graph_attr)
