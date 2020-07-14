@@ -513,6 +513,7 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
     return NS_OK;
   }
 
+  Maybe<NetworkAddressArg> arg;
   if (aStatus == NS_NET_STATUS_CONNECTED_TO ||
       aStatus == NS_NET_STATUS_WAITING_FOR) {
     NetAddr selfAddr;
@@ -529,10 +530,10 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
         socketTransport->ResolvedByTRR(&isTrr);
       }
     }
-    Unused << SendOnNetAddrUpdate(selfAddr, peerAddr, isTrr);
+    arg.emplace(selfAddr, peerAddr, isTrr);
   }
 
-  Unused << SendOnTransportStatus(aStatus, aProgress, aProgressMax);
+  Unused << SendOnTransportStatus(aStatus, aProgress, aProgressMax, arg);
   return NS_OK;
 }
 
