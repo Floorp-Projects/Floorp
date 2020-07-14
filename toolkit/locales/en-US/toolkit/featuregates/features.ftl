@@ -41,3 +41,9 @@ experimental-features-abouthome-startup-cache-description = A cache for the init
 experimental-features-cookie-samesite-schemeful =
     .label = Cookies: Schemeful SameSite
 experimental-features-cookie-samesite-schemeful-description = Treat cookies from the same domain, but with different schemes (e.g. http://example.com and https://example.com) as cross-site instead of same-site. Improves security, but potentially introduces breakage.
+
+# "Service Worker" is an API name and is usually not translated.
+experimental-features-serviceworker-debugger-support =
+    .label = DevTools: Service Worker debugging
+# "Service Worker" is an API name and is usually not translated.
+experimental-features-serviceworker-debugger-support-description = Enables experimental support for Service Workers in the DevTools Debugger panel. This feature may slow down DevTools and increase memory consumption.
