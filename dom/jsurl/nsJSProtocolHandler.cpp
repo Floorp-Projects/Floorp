@@ -294,6 +294,7 @@ nsresult nsJSThunk::EvaluateScript(
   // Finally, we have everything needed to evaluate the expression.
   JS::CompileOptions options(cx);
   options.setFileAndLine(mURL.get(), 1);
+  options.setIntroductionType("javascriptURL");
   {
     nsJSUtils::ExecutionContext exec(cx, globalJSObject);
     exec.SetCoerceToString(true);
