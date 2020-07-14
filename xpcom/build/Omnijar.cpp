@@ -265,6 +265,9 @@ const uint8_t* CacheAwareZipReader::GetData(
   }
 
   const uint8_t* zipItemData = mZip->GetData(aItem);
+  if (!zipItemData) {
+    return nullptr;
+  }
 
   // If the data is compressed, it is somewhat silly to store it in the startup
   // cache, as the startup cache will try to double compress it.
@@ -293,6 +296,10 @@ const uint8_t* CacheAwareZipReader::GetData(
     return nullptr;
   }
   const uint8_t* zipItemData = mZip->GetData(zipItem);
+  if (!zipItemData) {
+    return nullptr;
+  }
+
   *aResultSize = zipItem->Size();
 
   // If the data is compressed, it is somewhat silly to store it in the startup
@@ -346,6 +353,10 @@ uint8_t* CacheAwareZipCursor::ReadOrCopy(uint32_t* aBytesRead, bool aCopy) {
     buf = cursor.Read(aBytesRead);
   }
 
+  if (!buf) {
+    return nullptr;
+  }
+
   if (!cacheKey.IsEmpty() && *aBytesRead == mItem->RealSize()) {
     CacheAwareZipReader::PutBufferIntoCache(cacheKey, buf, *aBytesRead);
   }
@@ -385,7 +396,10 @@ nsresult CacheAwareZipReader::GetPersistentHandle(
   if (!aHandle->mDeferredCachingKey.IsEmpty() &&
       aItem->Compression() == STORED) {
     MOZ_ASSERT(aItem->RealSize() == aItem->Size());
-    aHandle->mDataToCache = MakeSpan(mZip->GetData(aItem), aItem->Size());
+    const uint8_t* data = mZip->GetData(aItem);
+    if (data) {
+      aHandle->mDataToCache = MakeSpan(data, aItem->Size());
+    }
   }
 
   return NS_OK;
