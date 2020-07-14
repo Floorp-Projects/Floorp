@@ -10654,8 +10654,7 @@ nsresult nsDocShell::AddToSessionHistory(
 
   // Create a new entry if necessary.
   if (!entry) {
-    RefPtr<ChildSHistory> shistory = GetRootSessionHistory();
-    entry = new nsSHEntry(shistory ? shistory->LegacySHistory() : nullptr);
+    entry = new nsSHEntry();
   }
 
   // Get the post data & referrer

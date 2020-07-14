@@ -607,7 +607,7 @@ var SessionHistoryInternal = {
             entry.children[i],
             idMap,
             childDocIdents,
-            shEntry.shistory
+            shistory
           ),
           i
         );
