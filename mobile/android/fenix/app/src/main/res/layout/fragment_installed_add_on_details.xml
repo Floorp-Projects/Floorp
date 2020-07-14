@@ -19,7 +19,7 @@
             android:visibility="gone"
             android:orientation="vertical">
 
-            <Switch
+            <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/enable_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
                 android:textColor="?primaryText"
                 android:textSize="16sp" />
 
-            <Switch
+            <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/allow_in_private_browsing_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -93,7 +93,7 @@
                 android:textSize="16sp"
                 app:drawableStartCompat="@drawable/ic_permission" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/remove_add_on"
                 style="@style/DestructiveButton"
                 android:layout_marginHorizontal="16dp"

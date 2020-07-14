@@ -8,13 +8,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Switch
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -301,7 +301,7 @@ class InstalledAddonDetailsFragment : Fragment() {
         view.remove_add_on.isClickable = clickable
     }
 
-    private fun Switch.setState(checked: Boolean) {
+    private fun SwitchMaterial.setState(checked: Boolean) {
         val text = if (checked) {
             R.string.mozac_feature_addons_enabled
         } else {
