@@ -4,7 +4,6 @@
 ---
 name: raptor
 manifest: testing/raptor/raptor/raptor.ini
-static-only: False
 suites:
     desktop:
         description: "Tests for page-load performance. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)"
