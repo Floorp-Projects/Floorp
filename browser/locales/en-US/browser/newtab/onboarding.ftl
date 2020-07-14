@@ -16,10 +16,6 @@ onboarding-button-label-get-started = Get Started
 ## Welcome modal dialog strings
 
 onboarding-welcome-header = Welcome to { -brand-short-name }
-
-# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
-# automatically added to the text inside it. { -brand-short-name } should stay inside the span.
-onboarding-multistage-welcome-header = Welcome to <span data-l10n-name="zap">{ -brand-short-name }</span>
 onboarding-welcome-body = You’ve got the browser.<br/>Meet the rest of { -brand-product-name }.
 onboarding-welcome-learn-more = Learn more about the benefits.
 onboarding-welcome-modal-get-body = You’ve got the browser.<br/>Now get the most out of { -brand-product-name }.
@@ -44,6 +40,33 @@ onboarding-start-browsing-button-label = Start Browsing
 onboarding-cards-dismiss =
     .title = Dismiss
     .aria-label = Dismiss
+
+## Multistage 3-screen onboarding flow strings (about:welcome pages)
+
+# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
+# automatically added to the text inside it. { -brand-short-name } should stay inside the span.
+onboarding-multistage-welcome-header = Welcome to <span data-l10n-name="zap">{ -brand-short-name }</span>
+onboarding-multistage-welcome-subtitle = The fast, safe, and private browser that’s backed by a non-profit.
+onboarding-multistage-welcome-primary-button-label = Start Setup
+onboarding-multistage-welcome-secondary-button-label = Sign in
+onboarding-multistage-welcome-secondary-button-text = Have an account?
+
+# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
+# automatically added to the text inside it. "more" should stay inside the span.
+onboarding-multistage-import-header = Import your passwords, bookmarks, and <span data-l10n-name="zap">more</span>
+onboarding-multistage-import-subtitle = Coming from another browser? It’s easy to bring everything to { -brand-short-name }.
+onboarding-multistage-import-primary-button-label = Start Import
+onboarding-multistage-import-secondary-button-label = Not now
+
+# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
+# automatically added to the text inside it. "look" should stay inside the span.
+onboarding-multistage-theme-header = Choose a <span data-l10n-name="zap">look</span>
+onboarding-multistage-theme-subtitle = Personalize { -brand-short-name } with a theme.
+onboarding-multistage-theme-primary-button-label = Save Theme
+onboarding-multistage-theme-secondary-button-label = Not now
+onboarding-multistage-theme-label-light = Light
+onboarding-multistage-theme-label-dark = Dark
+onboarding-multistage-theme-label-colorful = Colorful
 
 # Tooltip displayed on hover of top sites in import settings screen during onboarding flow.
 # This support welcome screen showing top sites imported from the user's default browser.
