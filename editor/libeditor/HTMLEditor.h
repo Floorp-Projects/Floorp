@@ -2626,13 +2626,15 @@ class HTMLEditor final : public TextEditor,
    * collapsed selection at white-spaces in a text node.
    *
    * @param aDirectionAndAmount Direction of the deletion.
+   * @param aPointToDelete      The point to delete.  I.e., typically, caret
+   *                            position.
    * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
    *                            the caret point.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteCollapsedSelectionAtWhiteSpaces(
       nsIEditor::EDirection aDirectionAndAmount,
-      WSRunObject& aWSRunObjectAtCaret);
+      const EditorDOMPoint& aPointToDelete, WSRunObject& aWSRunObjectAtCaret);
 
   /**
    * HandleDeleteCollapsedSelectionAtTextNode() handles deletion of
