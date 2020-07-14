@@ -3981,7 +3981,8 @@ bool DebuggerWeakMap<UnbarrieredKey, Wrapper,
     }
   }
 
-  return true;
+  // Add in edges for delegates, if relevant for the key type.
+  return Base::findSweepGroupEdges();
 }
 
 const JSClassOps DebuggerInstanceObject::classOps_ = {
