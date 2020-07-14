@@ -1261,12 +1261,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult NormalizeWhiteSpacesAtEndOf(
       const VisibleWhiteSpacesData& aVisibleWhiteSpacesData);
 
-  /**
-   * See explanation of the static method for this.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteInvisibleASCIIWhiteSpacesInternal();
-
   // Because of MOZ_CAN_RUN_SCRIPT constructors, each instanciater of this class
   // guarantees the lifetime of the HTMLEditor.
   HTMLEditor& mHTMLEditor;
