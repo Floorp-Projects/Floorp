@@ -8,6 +8,7 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
