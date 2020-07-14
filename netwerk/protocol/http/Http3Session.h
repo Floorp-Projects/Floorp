@@ -133,6 +133,7 @@ class Http3Session final : public nsAHttpTransaction,
   void CallCertVerification();
   void SetSecInfo();
 
+  void StreamReadyToWrite(Http3Stream* aStream);
   void MaybeResumeSend();
 
   void CloseConnectionTelemetry(CloseError& aError, bool aClosing);
