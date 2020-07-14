@@ -14553,6 +14553,11 @@ already_AddRefed<nsIAppWindow> Document::GetAppWindowIfToplevelChrome() const {
   return appWin.forget();
 }
 
+WindowContext* Document::GetTopLevelWindowContext() const {
+  WindowContext* windowContext = GetWindowContext();
+  return windowContext ? windowContext->TopWindowContext() : nullptr;
+}
+
 Document* Document::GetTopLevelContentDocument() {
   Document* parent;
 
@@ -15157,33 +15162,16 @@ void Document::ReportHasScrollLinkedEffect() {
 }
 
 void Document::SetSHEntryHasUserInteraction(bool aHasInteraction) {
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (NS_WARN_IF(!inner)) {
-    return;
+  if (RefPtr<WindowContext> topWc = GetTopLevelWindowContext()) {
+    topWc->SetSHEntryHasUserInteraction(aHasInteraction);
   }
-
-  WindowContext* wc = inner->GetWindowContext();
-  if (NS_WARN_IF(!wc)) {
-    return;
-  }
-
-  WindowContext* topWc = wc->TopWindowContext();
-  topWc->SetSHEntryHasUserInteraction(aHasInteraction);
 }
 
 bool Document::GetSHEntryHasUserInteraction() {
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (NS_WARN_IF(!inner)) {
-    return false;
+  if (RefPtr<WindowContext> topWc = GetTopLevelWindowContext()) {
+    return topWc->GetSHEntryHasUserInteraction();
   }
-
-  WindowContext* wc = inner->GetWindowContext();
-  if (NS_WARN_IF(!wc)) {
-    return false;
-  }
-
-  WindowContext* topWc = wc->TopWindowContext();
-  return topWc->GetSHEntryHasUserInteraction();
+  return false;
 }
 
 void Document::SetUserHasInteracted() {
