@@ -880,6 +880,15 @@ pub trait Compositor {
         id: NativeTileId,
     );
 
+    /// Mark a tile as invalid before any surfaces are queued for
+    /// composition and before it is updated with bind. This is useful
+    /// for early composition, allowing for dependency tracking of which
+    /// surfaces can be composited early while others are still updating.
+    fn invalidate_tile(
+        &mut self,
+        _id: NativeTileId,
+    ) {}
+
     /// Bind this surface such that WR can issue OpenGL commands
     /// that will target the surface. Returns an (x, y) offset
     /// where WR should draw into the surface. This can be set
