@@ -316,12 +316,33 @@ nsresult nsHttpTransaction::Init(
     mNoContent = true;
   }
 
+  // Make sure that there is "Content-Length: 0" header in the requestHead
+  // in case of POST and PUT methods when there is no requestBody and
+  // requestHead doesn't contain "Transfer-Encoding" header.
+  //
+  // RFC1945 section 7.2.2:
+  //   HTTP/1.0 requests containing an entity body must include a valid
+  //   Content-Length header field.
+  //
+  // RFC2616 section 4.4:
+  //   For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
+  //   containing a message-body MUST include a valid Content-Length header
+  //   field unless the server is known to be HTTP/1.1 compliant.
+  if ((requestHead->IsPost() || requestHead->IsPut()) && !requestBody &&
+      !requestHead->HasHeader(nsHttp::Transfer_Encoding)) {
+    rv = requestHead->SetHeader(nsHttp::Content_Length, "0"_ns);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
   // grab a weak reference to the request head
   mRequestHead = requestHead;
 
-  mReqHeaderBuf = nsHttp::ConvertRequestHeadToString(
-      *requestHead, !!requestBody, requestBodyHasHeaders,
-      cinfo->UsingConnect());
+  // make sure we eliminate any proxy specific headers from
+  // the request if we are using CONNECT
+  bool pruneProxyHeaders = cinfo->UsingConnect();
+
+  mReqHeaderBuf.Truncate();
+  requestHead->Flatten(mReqHeaderBuf, pruneProxyHeaders);
 
   if (LOG1_ENABLED()) {
     LOG1(("http request [\n"));
@@ -329,20 +350,19 @@ nsresult nsHttpTransaction::Init(
     LOG1(("]\n"));
   }
 
+  // If the request body does not include headers or if there is no request
+  // body, then we must add the header/body separator manually.
+  if (!requestBodyHasHeaders || !requestBody)
+    mReqHeaderBuf.AppendLiteral("\r\n");
+
   // report the request header
   if (mActivityDistributor) {
-    RefPtr<nsHttpTransaction> self = this;
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("ObserveActivityWithArgs", [self]() {
-          nsresult rv = self->mActivityDistributor->ObserveActivityWithArgs(
-              HttpActivityArgs(self->mChannelId),
-              NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
-              NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER, PR_Now(), 0,
-              self->mReqHeaderBuf);
-          if (NS_FAILED(rv)) {
-            LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
-          }
-        }));
+    rv = mActivityDistributor->ObserveActivityWithArgs(
+        HttpActivityArgs(mChannelId), NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+        NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER, PR_Now(), 0, mReqHeaderBuf);
+    if (NS_FAILED(rv)) {
+      LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+    }
   }
 
   // Create a string stream for the request header buf (the stream holds

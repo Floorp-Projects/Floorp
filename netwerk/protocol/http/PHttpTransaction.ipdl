@@ -26,12 +26,6 @@ struct H2PushedStreamArg {
   uint32_t pushedStreamId;
 };
 
-struct NetworkAddressArg {
-  NetAddr selfAddr;
-  NetAddr peerAddr;
-  bool resolvedByTRR;
-};
-
 refcounted protocol PHttpTransaction
 {
   manager PSocketProcess;
@@ -47,8 +41,7 @@ parent:
                        nsCString?                 altSvcUsed);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
-                          int64_t progressMax,
-                          NetworkAddressArg? networkAddressArg);
+                          int64_t progressMax);
   async OnDataAvailable(nsCString data,
                         uint64_t  offset,
                         uint32_t  count,
@@ -59,7 +52,9 @@ parent:
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
                       bool hasStickyConn,
-                      TransactionObserverResult? transactionObserverResult);
+                      TransactionObserverResult? transactionObserverResult,
+                      int64_t requestSize);
+  async OnNetAddrUpdate(NetAddr selfAddr, NetAddr peerAddr, bool resolvedByTRR);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,
                        nsCString resourceUrl,

@@ -110,13 +110,8 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
     }
   };
 
-  if (!NS_IsMainThread()) {
-    return NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "net::nsHttpActivityDistributor::ObserveActivityWithArgs", task));
-  }
-
-  task();
-  return NS_OK;
+  return NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "net::nsHttpActivityDistributor::ObserveActivityWithArgs", task));
 }
 
 NS_IMETHODIMP
