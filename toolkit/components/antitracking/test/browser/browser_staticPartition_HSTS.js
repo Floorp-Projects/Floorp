@@ -28,46 +28,51 @@ function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
 }
 
 add_task(async function() {
-  for (let prefValue of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["privacy.partition.network_state", prefValue]],
-    });
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+        ],
+      });
 
-    let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+      let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
-    // Let's load the secureURL as first-party in order to activate HSTS.
-    await promiseTabLoadEvent(tab, secureURL, secureURL);
+      // Let's load the secureURL as first-party in order to activate HSTS.
+      await promiseTabLoadEvent(tab, secureURL, secureURL);
 
-    // Let's test HSTS: unsecure -> secure.
-    await promiseTabLoadEvent(tab, unsecureURL, secureURL);
-    ok(true, "unsecure -> secure, first-party works!");
+      // Let's test HSTS: unsecure -> secure.
+      await promiseTabLoadEvent(tab, unsecureURL, secureURL);
+      ok(true, "unsecure -> secure, first-party works!");
 
-    // Let's load a first-party.
-    await promiseTabLoadEvent(tab, unsecureEmptyURL, unsecureEmptyURL);
+      // Let's load a first-party.
+      await promiseTabLoadEvent(tab, unsecureEmptyURL, unsecureEmptyURL);
 
-    let finalURL = await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [unsecureURL],
-      async url => {
-        return new content.Promise(resolve => {
-          let ifr = content.document.createElement("iframe");
-          ifr.onload = _ => {
-            resolve(ifr.contentWindow.location.href);
-          };
+      let finalURL = await SpecialPowers.spawn(
+        tab.linkedBrowser,
+        [unsecureURL],
+        async url => {
+          return new content.Promise(resolve => {
+            let ifr = content.document.createElement("iframe");
+            ifr.onload = _ => {
+              resolve(ifr.contentWindow.location.href);
+            };
 
-          content.document.body.appendChild(ifr);
-          ifr.src = url;
-        });
+            content.document.body.appendChild(ifr);
+            ifr.src = url;
+          });
+        }
+      );
+
+      if (networkIsolation) {
+        is(finalURL, unsecureURL, "HSTS doesn't work for 3rd parties");
+      } else {
+        is(finalURL, secureURL, "HSTS works for 3rd parties");
       }
-    );
 
-    if (prefValue) {
-      is(finalURL, unsecureURL, "HSTS doesn't work for 3rd parties");
-    } else {
-      is(finalURL, secureURL, "HSTS works for 3rd parties");
+      gBrowser.removeCurrentTab();
+      cleanupHSTS();
     }
-
-    gBrowser.removeCurrentTab();
-    cleanupHSTS();
   }
 });

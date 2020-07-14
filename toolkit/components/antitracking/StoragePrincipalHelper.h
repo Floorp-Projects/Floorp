@@ -268,6 +268,10 @@ class StoragePrincipalHelper final {
                                                  OriginAttributes& aAttributes);
   static void UpdateOriginAttributesForNetworkState(
       nsIURI* aFirstPartyURI, OriginAttributes& aAttributes);
+
+  // For HSTS we want to force 'HTTP' in the partition key.
+  static bool GetOriginAttributesForHSTS(nsIChannel* aChannel,
+                                         OriginAttributes& aAttributes);
 };
 
 }  // namespace mozilla
