@@ -42,7 +42,6 @@ pub extern "C" fn wr_swgl_init_default_framebuffer(
     swgl::Context::from(ctx).init_default_framebuffer(width, height, stride, buf);
 }
 
-#[derive(Debug)]
 pub struct SwTile {
     x: i32,
     y: i32,
@@ -283,11 +282,13 @@ impl DrawTileHelper {
 
 /// A tile composition job to be processed by the SwComposite thread.
 /// Stores relevant details about the tile and where to composite it.
-#[derive(Debug)]
 struct SwCompositeJob {
-    tex_id: gl::GLuint,
-    src: DeviceIntRect,
-    dst: DeviceIntPoint,
+    /// Locked texture that will be unlocked immediately following the job
+    locked_src: swgl::LockedResource,
+    /// Locked framebuffer that may be shared among many jobs
+    locked_dst: swgl::LockedResource,
+    src_rect: DeviceIntRect,
+    dst_offset: DeviceIntPoint,
     opaque: bool,
 }
 
@@ -310,7 +311,7 @@ unsafe impl Sync for SwCompositeThread {}
 impl SwCompositeThread {
     /// Create the SwComposite thread. Requires a SWGL context in which
     /// to do the composition.
-    fn new(gl: swgl::Context) -> Arc<SwCompositeThread> {
+    fn new() -> Arc<SwCompositeThread> {
         let (job_queue, job_rx) = mpsc::channel();
         let info = Arc::new(SwCompositeThread {
             job_queue,
@@ -326,18 +327,20 @@ impl SwCompositeThread {
             // result when the job queue is dropped, causing the thread
             // to eventually exit.
             while let Ok(job) = job_rx.recv() {
-                gl.composite(
-                    job.tex_id,
-                    job.src.origin.x,
-                    job.src.origin.y,
-                    job.src.size.width,
-                    job.src.size.height,
-                    job.dst.x,
-                    job.dst.y,
+                job.locked_dst.composite(
+                    &job.locked_src,
+                    job.src_rect.origin.x,
+                    job.src_rect.origin.y,
+                    job.src_rect.size.width,
+                    job.src_rect.size.height,
+                    job.dst_offset.x,
+                    job.dst_offset.y,
                     job.opaque,
                     false,
                 );
-                // Decrement the job count, if applicable, signal that all jobs
+                // Release locked resources before modifying job count
+                drop(job);
+                // Decrement the job count. If applicable, signal that all jobs
                 // have been completed.
                 let mut count = info.job_count.lock().unwrap();
                 *count -= 1;
@@ -353,18 +356,20 @@ impl SwCompositeThread {
     /// Queue a tile for composition by adding to the queue and increasing the job count.
     fn queue_composite(
         &self,
-        surface: &SwSurface,
-        tile: &SwTile,
-        src_rect: &DeviceIntRect,
-        dst_rect: &DeviceIntRect,
+        locked_src: swgl::LockedResource,
+        locked_dst: swgl::LockedResource,
+        src_rect: DeviceIntRect,
+        dst_rect: DeviceIntRect,
+        opaque: bool,
     ) {
         // There are still tile updates happening, so send the job to the SwComposite thread.
         *self.job_count.lock().unwrap() += 1;
         self.job_queue.send(SwCompositeJob {
-            tex_id: tile.color_id,
-            src: *src_rect,
-            dst: dst_rect.origin,
-            opaque: surface.is_opaque,
+            locked_src,
+            locked_dst,
+            src_rect,
+            dst_offset: dst_rect.origin,
+            opaque,
         }).expect("Failing queuing SwComposite job");
     }
 
@@ -395,6 +400,8 @@ pub struct SwCompositor {
     /// Instance of the SwComposite thread, only created if we are not relying
     /// on OpenGL compositing or a native RenderCompositor.
     composite_thread: Option<Arc<SwCompositeThread>>,
+    /// SWGL locked resource for sharing framebuffer with SwComposite thread
+    locked_framebuffer: Option<swgl::LockedResource>,
 }
 
 impl SwCompositor {
@@ -404,7 +411,7 @@ impl SwCompositor {
         // render compositor. Thus, we are compositing into the main software framebuffer, which in
         // that case benefits from compositing asynchronously while we are updating tiles.
         let composite_thread = if native_gl.is_none() && compositor.is_none() {
-            Some(SwCompositeThread::new(gl.clone()))
+            Some(SwCompositeThread::new())
         } else {
             None
         };
@@ -423,6 +430,7 @@ impl SwCompositor {
             max_tile_size: DeviceIntSize::zero(),
             depth_id,
             composite_thread,
+            locked_framebuffer: None,
         }
     }
 
@@ -492,15 +500,33 @@ impl SwCompositor {
         overlaps
     }
 
+    /// Helper function that queues a composite job to the current locked framebuffer
+    fn queue_composite(
+        &self,
+        surface: &SwSurface,
+        position: &DeviceIntPoint,
+        clip_rect: &DeviceIntRect,
+        tile: &SwTile,
+    ) {
+        if let Some(ref composite_thread) = self.composite_thread {
+            if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, position, clip_rect) {
+                if let Some(texture) = self.gl.lock_texture(tile.color_id) {
+                    let framebuffer = self.locked_framebuffer.clone().unwrap();
+                    composite_thread.queue_composite(texture, framebuffer, src_rect, dst_rect, surface.is_opaque);
+                }
+            }
+        }
+    }
+
     /// If using the SwComposite thread, we need to compute an overlap count for all tiles
     /// within the surface being queued for composition this frame. If the tile is immediately
     /// ready to composite, then queue that now. Otherwise, set its draw order index for later
     /// composition.
-    fn init_composites(&self, id: &NativeSurfaceId, position: &DeviceIntPoint, clip_rect: &DeviceIntRect) {
-        let composite_thread = match self.composite_thread {
-            Some(ref composite_thread) => composite_thread,
-            None => return,
-        };
+    fn init_composites(&mut self, id: &NativeSurfaceId, position: &DeviceIntPoint, clip_rect: &DeviceIntRect) {
+        if self.composite_thread.is_none() {
+            return;
+        }
+
         if let Some(surface) = self.surfaces.get(&id) {
             for tile in &surface.tiles {
                 if let Some(overlap_rect) = tile.overlap_rect(surface, position, clip_rect) {
@@ -512,9 +538,7 @@ impl SwCompositor {
                     }
                     if overlaps == 0 {
                         // Not dependent on any tiles, so go ahead and composite now.
-                        if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, position, clip_rect) {
-                            composite_thread.queue_composite(surface, tile, &src_rect, &dst_rect);
-                        }
+                        self.queue_composite(surface, position, clip_rect, tile);
                     } else {
                         // Has a dependency on some invalid tiles, so need to defer composition.
                         tile.overlaps.set(overlaps);
@@ -527,10 +551,9 @@ impl SwCompositor {
     /// Issue composites for any tiles that are no longer blocked following a tile update.
     /// We process all surfaces and tiles in the order they were queued.
     fn flush_composites(&self, tile_id: &NativeTileId, surface: &SwSurface, tile: &SwTile) {
-        let composite_thread = match self.composite_thread {
-            Some(ref composite_thread) => composite_thread,
-            None => return,
-        };
+        if self.composite_thread.is_none() {
+            return;
+        }
 
         // Look for the tile in the frame list and composite it if it has no dependencies.
         let mut frame_surfaces = self.frame_surfaces.iter().skip_while(|&(ref id, _, _)| *id != tile_id.surface_id);
@@ -542,9 +565,7 @@ impl SwCompositor {
                 }
                 // If it doesn't have any other remaining dependencies, composite it.
                 if tile.overlaps.get() == 0 {
-                    if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, position, clip_rect) {
-                        composite_thread.queue_composite(surface, tile, &src_rect, &dst_rect);
-                    }
+                    self.queue_composite(surface, position, clip_rect, tile);
                 }
                 // Get the tile's overlap rect used for tracking dependencies
                 match tile.overlap_rect(surface, position, clip_rect) {
@@ -571,9 +592,7 @@ impl SwCompositor {
                         // the dependency. If the count would hit zero, it is ready to composite.
                         tile.overlaps.set(overlaps - 1);
                         if overlaps == 1 {
-                            if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, position, clip_rect) {
-                                composite_thread.queue_composite(surface, tile, &src_rect, &dst_rect);
-                            }
+                            self.queue_composite(surface, position, clip_rect, tile);
                         }
                     }
                 }
@@ -882,7 +901,11 @@ impl Compositor for SwCompositor {
             compositor.begin_frame();
         }
         self.frame_surfaces.clear();
+
         self.reset_overlaps();
+        if self.composite_thread.is_some() {
+            self.locked_framebuffer = self.gl.lock_framebuffer(0);
+        }
     }
 
     fn add_surface(&mut self, id: NativeSurfaceId, position: DeviceIntPoint, clip_rect: DeviceIntRect) {
@@ -931,6 +954,7 @@ impl Compositor for SwCompositor {
         } else if let Some(ref composite_thread) = self.composite_thread {
             // Need to wait for the SwComposite thread to finish any queued jobs.
             composite_thread.wait_for_composites();
+            self.locked_framebuffer = None;
         }
     }
 
