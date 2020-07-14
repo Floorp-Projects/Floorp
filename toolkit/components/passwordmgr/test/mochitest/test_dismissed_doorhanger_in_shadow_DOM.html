@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test the password manager dismissed doorhanger can detect username and password fields in a Shadow DOM.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe></iframe>
+
+<script type="application/javascript">
+const { LoginManagerChild } = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerChild.jsm", {});
+
+add_task(async function setup() {
+  const readyPromise = registerRunTests();
+  info("Waiting for setup and page load");
+  await readyPromise;
+
+  // assert that there are no logins
+  const allLogins = await LoginManager.getAllLogins();
+  is(allLogins.length, 0, "There are no logins");
+});
+
+const IFRAME = document.querySelector("iframe");
+const PASSWORD_VALUE = "!@$*";
+const TESTCASES = [
+  // Check that the Shadow DOM version of form_basic.html works
+  {
+    name: "test_form_each_field_in_its_own_shadow_root",
+    filename: "form_basic_shadow_DOM_each_field_in_its_own_shadow_root.html",
+  },
+  // Check that the Shadow DOM version of formless_basic.html works
+  {
+    name: "test_formless_each_field_in_its_own_shadow_root",
+    filename: "formless_basic_shadow_DOM_each_field_in_its_own_shadow_root.html",
+  },
+  // Check that the nested Shadow DOM version of form_basic.html works
+  {
+    name: "test_form_nested_each_field_in_its_own_shadow_root",
+    filename: "form_nested_shadow_DOM_each_field_in_its_own_shadow_root.html",
+  }
+];
+
+async function editPasswordFieldInShadowDOM() {
+  info("Editing the input field in the form with a Shadow DOM");
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [PASSWORD_VALUE], function(val) {
+      const doc = this.content.document;
+      // Grab the wrapper element to get the shadow root containing the password field
+      let wrapper = doc.getElementById("wrapper-password");
+      if (!wrapper) {
+        // This is a nested Shadow DOM test case
+        const outerWrapper = doc.getElementById("outer-wrapper-password");
+        const outerShadowRoot = outerWrapper.openOrClosedShadowRoot;
+        wrapper = outerShadowRoot.querySelector("#wrapper-password");
+      }
+      // If the ShadowRoot's mode is "closed", it can only be accessed from a chrome-privileged
+      // (Bug 1421568) or addon context (Bug 1439153)
+      const shadowRoot = wrapper.openOrClosedShadowRoot;
+      const passwordField = shadowRoot.querySelector("[name='password']");
+      Assert.equal(passwordField.value, "", "Check password didn't get autofilled");
+      passwordField.setUserInput(val);
+      Assert.equal(passwordField.value, val, "Checking for filled password");
+    }
+  );
+}
+
+async function testForm(testcase) {
+  const iframeLoaded = new Promise(resolve => {
+    IFRAME.addEventListener(
+      "load",
+      function(e) {
+        resolve(true);
+      },
+      { once: true }
+    );
+  });
+
+  // This could complete before the page finishes loading.
+  const formsProcessed = promiseFormsProcessed();
+
+  IFRAME.src = testcase.filename;
+  info("Waiting for test page to load in the iframe");
+  await iframeLoaded;
+
+  info("Waiting for 'input' event listener to be added to the form before editing");
+  await formsProcessed;
+
+  const passwordEditProcessed = getPasswordEditedMessage();
+
+  await editPasswordFieldInShadowDOM();
+
+  info("Waiting for parent process to receive input field edit message from content");
+  await passwordEditProcessed;
+}
+
+for (let testcase of TESTCASES) {
+  const taskName = testcase.name;
+  const tmp = {
+    async [taskName]() {
+      await testForm(testcase);
+    }
+  }
+  add_task(tmp[taskName]);
+}
+</script>
+</body>
+</html>
