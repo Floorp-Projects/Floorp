@@ -17,7 +17,6 @@
 #include "nspr/prio.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
-#include "nsLocalFile.h"
 
 namespace mozilla {
 
@@ -52,13 +51,6 @@ class IOUtils final {
       GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
       const WriteAtomicOptions& aOptions);
 
-  static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
-                                        const nsAString& aSourcePath,
-                                        const nsAString& aDestPath,
-                                        const MoveOptions& aOptions);
-
-  static bool IsAbsolutePath(const nsAString& aPath);
-
  private:
   ~IOUtils() = default;
 
@@ -80,23 +72,23 @@ class IOUtils final {
   /**
    * Opens an existing file at |path|.
    *
-   * @param path  The location of the file as an absolute path string.
+   * @param path  The location of the file as a unix-style UTF-8 path string.
    * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
    */
   static UniquePtr<PRFileDesc, PR_CloseDelete> OpenExistingSync(
-      const nsAString& aPath, int32_t aFlags);
+      const char* aPath, int32_t aFlags);
 
   /**
    * Creates a new file at |path|.
    *
-   * @param aPath  The location of the file as an absolute path string.
+   * @param aPath  The location of the file as a unix-style UTF-8 path string.
    * @param aFlags PRIO flags to be used in addition to |PR_CREATE| and
    *               |PR_EXCL|.
    * @param aMode  Optional file mode. Defaults to 0666 to allow the system
    *               umask to compute the best mode for the new file.
    */
   static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
-      const nsAString& aPath, int32_t aFlags, int32_t aMode = 0666);
+      const char* aPath, int32_t aFlags, int32_t aMode = 0666);
 
   static nsresult ReadSync(PRFileDesc* aFd, const uint32_t aBufSize,
                            nsTArray<uint8_t>& aResult);
@@ -104,19 +96,12 @@ class IOUtils final {
   static nsresult WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
                             uint32_t& aResult);
 
-  static nsresult MoveSync(const nsAString& aSource, const nsAString& aDest,
-                           bool noOverwrite);
-
   using IOReadMozPromise =
       mozilla::MozPromise<nsTArray<uint8_t>, const nsCString,
                           /* IsExclusive */ true>;
 
   using IOWriteMozPromise =
       mozilla::MozPromise<uint32_t, const nsCString, /* IsExclusive */ true>;
-
-  using IOMoveMozPromise =
-      mozilla::MozPromise<bool /* ignored */, const nsresult,
-                          /* IsExclusive */ true>;
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
