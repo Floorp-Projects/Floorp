@@ -519,13 +519,17 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
   JSContext* cx = compilationInfo.cx;
 
+  Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
+  if (!module) {
+    return nullptr;
+  }
+
   ModuleBuilder builder(cx, parser.ptr());
-  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
 
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, compilationInfo.options);
-  ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
+  ModuleSharedContext modulesc(cx, module, compilationInfo, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -541,14 +545,22 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  builder.finishFunctionDecls(moduleMetadata);
-
   if (!compilationInfo.instantiateStencils()) {
     return nullptr;
   }
 
   MOZ_ASSERT(compilationInfo.script);
-  MOZ_ASSERT(compilationInfo.module);
+
+  if (!builder.initModule(module)) {
+    return nullptr;
+  }
+
+  module->initScriptSlots(compilationInfo.script);
+  module->initStatusSlot();
+
+  if (!ModuleObject::createEnvironment(cx, module)) {
+    return nullptr;
+  }
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
@@ -556,7 +568,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
-  return compilationInfo.module;
+  return module;
 }
 
 // Parse a standalone JS function, which might appear as the value of an

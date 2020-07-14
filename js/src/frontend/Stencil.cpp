@@ -229,29 +229,6 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
   MOZ_CRASH("Not an enclosing intra-frame scope");
 }
 
-void StencilModuleEntry::trace(JSTracer* trc) {
-  if (specifier) {
-    TraceManuallyBarrieredEdge(trc, &specifier, "module specifier");
-  }
-  if (localName) {
-    TraceManuallyBarrieredEdge(trc, &localName, "module local name");
-  }
-  if (importName) {
-    TraceManuallyBarrieredEdge(trc, &importName, "module import name");
-  }
-  if (exportName) {
-    TraceManuallyBarrieredEdge(trc, &exportName, "module export name");
-  }
-}
-
-void StencilModuleMetadata::trace(JSTracer* trc) {
-  requestedModules.trace(trc);
-  importEntries.trace(trc);
-  localExportEntries.trace(trc);
-  indirectExportEntries.trace(trc);
-  starExportEntries.trace(trc);
-}
-
 void ScriptStencil::trace(JSTracer* trc) {
   for (ScriptThingVariant& thing : gcThings) {
     if (thing.is<ScriptAtom>()) {
@@ -338,24 +315,6 @@ static JSFunction* CreateFunction(JSContext* cx,
   }
 
   return fun;
-}
-
-// Instantiate ModuleObject if this is a module compile.
-static bool MaybeInstantiateModule(JSContext* cx,
-                                   CompilationInfo& compilationInfo) {
-  if (compilationInfo.topLevel.get().isModule()) {
-    compilationInfo.module = ModuleObject::create(cx);
-    if (!compilationInfo.module) {
-      return false;
-    }
-
-    if (!compilationInfo.moduleMetadata.get().initModule(
-            cx, compilationInfo.module)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 // Instantiate JSFunctions for each FunctionBox.
@@ -491,21 +450,7 @@ static bool InstantiateTopLevel(JSContext* cx,
 
   compilationInfo.script =
       JSScript::fromStencil(cx, compilationInfo, stencil, fun);
-  if (!compilationInfo.script) {
-    return false;
-  }
-
-  // Finish initializing the ModuleObject if needed.
-  if (stencil.isModule()) {
-    compilationInfo.module->initScriptSlots(compilationInfo.script);
-    compilationInfo.module->initStatusSlot();
-
-    if (!ModuleObject::createEnvironment(cx, compilationInfo.module)) {
-      return false;
-    }
-  }
-
-  return true;
+  return !!compilationInfo.script;
 }
 
 // When a function is first referenced by enclosing script's bytecode, we need
@@ -606,10 +551,6 @@ bool CompilationInfo::instantiateStencils() {
   if (lazy) {
     FunctionsFromExistingLazy(*this);
   } else {
-    if (!MaybeInstantiateModule(cx, *this)) {
-      return false;
-    }
-
     if (!InstantiateFunctions(cx, *this)) {
       return false;
     }
