@@ -218,6 +218,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
 
     this._highlighterPromise = this.getWalker().then(async walker => {
       const highlighter = HighlighterActor(this, autohide);
+      await highlighter.initializeInstance();
       await highlighter.instance.isReady;
       this.manage(highlighter);
       return highlighter;
