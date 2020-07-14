@@ -717,7 +717,7 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
       TextFragmentDataAtStart().VisibleWhiteSpacesDataRef();
   if (visibleWhiteSpaces.IsInitialized() &&
-      visibleWhiteSpaces.RawStartPoint().IsBefore(aPoint)) {
+      visibleWhiteSpaces.StartRef().IsBefore(aPoint)) {
     EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
     // When it's a non-empty text node, return it.
     if (atPreviousChar.IsSet() && !atPreviousChar.IsContainerEmpty()) {
@@ -751,7 +751,7 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
       TextFragmentDataAtStart().VisibleWhiteSpacesDataRef();
   if (visibleWhiteSpaces.IsInitialized() &&
-      aPoint.EqualsOrIsBefore(visibleWhiteSpaces.RawEndPoint())) {
+      aPoint.EqualsOrIsBefore(visibleWhiteSpaces.EndRef())) {
     EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
     // When it's a non-empty text node, return it.
     if (atNextChar.IsSet() && !atNextChar.IsContainerEmpty()) {
@@ -1127,13 +1127,11 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
   if (IsPreformattedOrSurrondedByVisibleContent()) {
     VisibleWhiteSpacesData visibleWhiteSpaces;
     if (mStart.PointRef().IsSet()) {
-      visibleWhiteSpaces.mStartNode = mStart.PointRef().GetContainer();
-      visibleWhiteSpaces.mStartOffset = mStart.PointRef().Offset();
+      visibleWhiteSpaces.SetStartPoint(mStart.PointRef());
     }
     visibleWhiteSpaces.SetStartFrom(mStart.RawReason());
     if (mEnd.PointRef().IsSet()) {
-      visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
-      visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
+      visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
     }
     visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
     mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
@@ -1168,22 +1166,17 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
   if (!StartsFromHardLineBreak()) {
     VisibleWhiteSpacesData visibleWhiteSpaces;
     if (mStart.PointRef().IsSet()) {
-      visibleWhiteSpaces.mStartNode = mStart.PointRef().GetContainer();
-      visibleWhiteSpaces.mStartOffset = mStart.PointRef().Offset();
+      visibleWhiteSpaces.SetStartPoint(mStart.PointRef());
     }
     visibleWhiteSpaces.SetStartFrom(mStart.RawReason());
     if (!maybeHaveTrailingWhiteSpaces) {
-      visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
-      visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
+      visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
       visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
       mVisibleWhiteSpacesData = Some(visibleWhiteSpaces);
       return mVisibleWhiteSpacesData.ref();
     }
     if (trailingWhiteSpaceRange.StartRef().IsSet()) {
-      visibleWhiteSpaces.mEndNode =
-          trailingWhiteSpaceRange.StartRef().GetContainer();
-      visibleWhiteSpaces.mEndOffset =
-          trailingWhiteSpaceRange.StartRef().Offset();
+      visibleWhiteSpaces.SetEndPoint(trailingWhiteSpaceRange.StartRef());
     }
     visibleWhiteSpaces.SetEndByTrailingWhiteSpaces();
     mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
@@ -1195,16 +1188,13 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 
   VisibleWhiteSpacesData visibleWhiteSpaces;
   if (leadingWhiteSpaceRange.EndRef().IsSet()) {
-    visibleWhiteSpaces.mStartNode =
-        leadingWhiteSpaceRange.EndRef().GetContainer();
-    visibleWhiteSpaces.mStartOffset = leadingWhiteSpaceRange.EndRef().Offset();
+    visibleWhiteSpaces.SetStartPoint(leadingWhiteSpaceRange.EndRef());
   }
   visibleWhiteSpaces.SetStartFromLeadingWhiteSpaces();
   if (!EndsByBlockBoundary()) {
     // then no trailing ws.  this normal run ends the overall ws run.
     if (mEnd.PointRef().IsSet()) {
-      visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
-      visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
+      visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
     }
     visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
     mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
@@ -1215,17 +1205,14 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 
   if (!maybeHaveTrailingWhiteSpaces) {
     // normal ws runs right up to adjacent block (nbsp next to block)
-    visibleWhiteSpaces.mEndNode = mEnd.PointRef().GetContainer();
-    visibleWhiteSpaces.mEndOffset = mEnd.PointRef().Offset();
+    visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
     visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
     mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
     return mVisibleWhiteSpacesData.ref();
   }
 
   if (trailingWhiteSpaceRange.StartRef().IsSet()) {
-    visibleWhiteSpaces.mEndNode =
-        trailingWhiteSpaceRange.StartRef().GetContainer();
-    visibleWhiteSpaces.mEndOffset = trailingWhiteSpaceRange.StartRef().Offset();
+    visibleWhiteSpaces.SetEndPoint(trailingWhiteSpaceRange.StartRef());
   }
   visibleWhiteSpaces.SetEndByTrailingWhiteSpaces();
   mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
@@ -1888,7 +1875,8 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
   if (!StaticPrefs::editor_white_space_normalization_blink_compatible()) {
     // now check that what is to the left of it is compatible with replacing
     // nbsp with space
-    EditorDOMPoint atEndOfVisibleWhiteSpaces = visibleWhiteSpaces.EndPoint();
+    const EditorDOMPoint& atEndOfVisibleWhiteSpaces =
+        visibleWhiteSpaces.EndRef();
     EditorDOMPointInText atPreviousCharOfEndOfVisibleWhiteSpaces =
         textFragmentData.GetPreviousEditableCharPoint(
             atEndOfVisibleWhiteSpaces);
@@ -2087,7 +2075,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
 
   // First, check if the last character is an NBSP.  Otherwise, we don't need
   // to do nothing here.
-  EditorDOMPoint atEndOfVisibleWhiteSpaces = visibleWhiteSpaces.EndPoint();
+  const EditorDOMPoint& atEndOfVisibleWhiteSpaces = visibleWhiteSpaces.EndRef();
   EditorDOMPointInText atPreviousCharOfEndOfVisibleWhiteSpaces =
       textFragmentData.GetPreviousEditableCharPoint(atEndOfVisibleWhiteSpaces);
   if (!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() ||
