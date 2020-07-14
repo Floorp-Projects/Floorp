@@ -6059,8 +6059,7 @@ LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
 
   auto parentFrame = GetParent();
   auto alignCB = parentFrame;
-  bool isGridItem = parentFrame && parentFrame->IsGridContainerFrame() &&
-                    !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
+  bool isGridItem = IsGridItem();
   if (parentFrame && parentFrame->IsTableWrapperFrame() && IsTableFrame()) {
     // An inner table frame is sized as a grid item if its table wrapper is,
     // because they actually have the same CB (the wrapper's CB).
