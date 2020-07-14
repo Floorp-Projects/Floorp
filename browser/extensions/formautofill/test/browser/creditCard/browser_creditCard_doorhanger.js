@@ -282,7 +282,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
 
         name.focus();
         await new Promise(resolve => content.setTimeout(resolve, 1000));
-        name.setUserInput("");
+        name.setUserInput("Mark Smith");
 
         form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
@@ -302,11 +302,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
-  is(
-    creditCards[0]["cc-name"],
-    TEST_CREDIT_CARD_1["cc-name"],
-    "name field still exists"
-  );
+  is(creditCards[0]["cc-name"], "Mark Smith", "name field got updated");
   is(
     SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
     2,
