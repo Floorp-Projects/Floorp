@@ -117,7 +117,7 @@ import java.lang.ref.WeakReference
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer {
-    protected lateinit var browserFragmentStore: BrowserFragmentStore
+    private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
 
     private var _browserInteractor: BrowserToolbarViewInteractor? = null
@@ -195,7 +195,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             fragment = WeakReference(this),
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
-            viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
+            viewLifecycleScope = WeakReference(viewLifecycleOwner.lifecycleScope),
             arguments = requireArguments()
         ).apply {
             beginAnimateInIfNecessary()
@@ -514,7 +514,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             context.settings().setSitePermissionSettingListener(viewLifecycleOwner) {
                 // If the user connects to WIFI while on the BrowserFragment, this will update the
                 // SitePermissionsRules (specifically autoplay) accordingly
-                this.context?.let { assignSitePermissionsRules(it) }
+                assignSitePermissionsRules(context)
             }
             assignSitePermissionsRules(context)
 

@@ -32,7 +32,7 @@ class BrowserAnimator(
     private val fragment: WeakReference<Fragment>,
     private val engineView: WeakReference<EngineView>,
     private val swipeRefresh: WeakReference<View>,
-    private val viewLifecycleScope: LifecycleCoroutineScope,
+    private val viewLifecycleScope: WeakReference<LifecycleCoroutineScope>,
     private val arguments: Bundle
 ) {
 
@@ -83,7 +83,7 @@ class BrowserAnimator(
     fun beginAnimateInIfNecessary() {
         val shouldAnimate = arguments.getBoolean(SHOULD_ANIMATE_FLAG, false)
         if (shouldAnimate) {
-            viewLifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleScope.get()?.launch(Dispatchers.Main) {
                 delay(ANIMATION_DELAY)
                 captureEngineViewAndDrawStatically {
                     unwrappedSwipeRefresh?.alpha = 0f
@@ -101,7 +101,7 @@ class BrowserAnimator(
      * Triggers the *zoom out* browser animation to run.
      */
     fun beginAnimateOut() {
-        viewLifecycleScope.launch(Dispatchers.Main) {
+        viewLifecycleScope.get()?.launch(Dispatchers.Main) {
             captureEngineViewAndDrawStatically {
                 unwrappedEngineView?.asView()?.visibility = View.GONE
                 browserZoomInValueAnimator.reverse()
@@ -115,7 +115,7 @@ class BrowserAnimator(
      */
     fun captureEngineViewAndDrawStatically(onComplete: () -> Unit) {
         unwrappedEngineView?.asView()?.context.let {
-            viewLifecycleScope.launch {
+            viewLifecycleScope.get()?.launch {
                 // isAdded check is necessary because of a bug in viewLifecycleOwner. See AC#3828
                 if (!fragment.isAdded()) {
                     return@launch
