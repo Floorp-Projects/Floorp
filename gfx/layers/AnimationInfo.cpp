@@ -756,9 +756,6 @@ static Maybe<TransformData> CreateAnimationData(
   gfx::Point3D offsetToTransformOrigin =
       nsDisplayTransform::GetDeltaToTransformOrigin(aFrame, refBox, scale);
   nsPoint origin;
-  float scaleX = 1.0f;
-  float scaleY = 1.0f;
-  bool hasPerspectiveParent = false;
   if (aLayersBackend == layers::LayersBackend::LAYERS_WR) {
     // leave origin empty, because we are sending it separately on the
     // stacking context that we are pushing to WR, and WR will automatically
@@ -796,9 +793,9 @@ static Maybe<TransformData> CreateAnimationData(
     partialPrerenderData = Some(GetPartialPrerenderData(aFrame, aItem));
   }
 
-  return Some(TransformData(
-      origin, offsetToTransformOrigin, bounds, devPixelsToAppUnits, scaleX,
-      scaleY, hasPerspectiveParent, motionPathData, partialPrerenderData));
+  return Some(TransformData(origin, offsetToTransformOrigin, bounds,
+                            devPixelsToAppUnits, motionPathData,
+                            partialPrerenderData));
 }
 
 void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(

@@ -226,9 +226,6 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
                 animationStorageData->mCachedMotionPath);
         gfx::Matrix4x4 frameTransform = transform;
 
-        transform.PostScale(transformData.inheritedXScale(),
-                            transformData.inheritedYScale(), 1);
-
         SetAnimatedValue(iter.first, previousValue, std::move(transform),
                          std::move(frameTransform), transformData);
         break;
