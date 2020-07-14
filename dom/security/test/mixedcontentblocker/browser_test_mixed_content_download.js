@@ -50,6 +50,10 @@ function shouldConsoleError() {
 }
 
 async function runTest(url, link, checkFunction, decscription) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.block_download_insecure", true]],
+  });
+
   let tab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = tab;
 
@@ -68,6 +72,8 @@ async function runTest(url, link, checkFunction, decscription) {
 
   ok(true, decscription);
   BrowserTestUtils.removeTab(tab);
+
+  await SpecialPowers.popPrefEnv();
 }
 
 add_task(async function() {
