@@ -42,10 +42,11 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
 
 static uint32_t gEntryID;
 
-SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
+SessionHistoryEntry::SessionHistoryEntry(nsISHistory* aSessionHistory,
+                                         nsDocShellLoadState* aLoadState,
                                          nsIChannel* aChannel)
     : mInfo(new SessionHistoryInfo(aLoadState, aChannel)),
-      mSharedInfo(new SHEntrySharedParentState()),
+      mSharedInfo(new SHEntrySharedParentState(aSessionHistory)),
       mID(++gEntryID) {
   mSharedInfo->mTriggeringPrincipal = aLoadState->TriggeringPrincipal();
   mSharedInfo->mPrincipalToInherit = aLoadState->PrincipalToInherit();
@@ -459,15 +460,6 @@ NS_IMETHODIMP
 SessionHistoryEntry::GetShistory(nsISHistory** aShistory) {
   nsCOMPtr<nsISHistory> sHistory = do_QueryReferent(mSharedInfo->mSHistory);
   sHistory.forget(aShistory);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SessionHistoryEntry::SetShistory(nsISHistory* aShistory) {
-  nsWeakPtr shistory = do_GetWeakReference(aShistory);
-  // mSHistory can not be changed once it's set
-  MOZ_ASSERT(!mSharedInfo->mSHistory || (mSharedInfo->mSHistory == shistory));
-  mSharedInfo->mSHistory = shistory;
   return NS_OK;
 }
 

@@ -21,7 +21,7 @@ class nsIReferrerInfo;
 
 class nsSHEntry : public nsISHEntry {
  public:
-  nsSHEntry();
+  explicit nsSHEntry(nsISHistory* aSHistory);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
