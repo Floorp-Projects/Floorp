@@ -5,13 +5,17 @@
 package mozilla.components.support.webextensions
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -24,7 +28,9 @@ import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.webextensions.facts.emitWebExtensionsInitializedFact
 import java.util.concurrent.ConcurrentHashMap
 
@@ -290,6 +296,7 @@ object WebExtensionSupport {
             onSuccess = {
                 extensions -> extensions.forEach { registerInstalledExtension(store, it) }
                 emitWebExtensionsInitializedFact(extensions)
+                closeUnsupportedTabs(store, extensions)
                 initializationResult.complete(Unit)
                 onExtensionsLoaded?.invoke(extensions.filter { !it.isBuiltIn() })
             },
@@ -316,6 +323,40 @@ object WebExtensionSupport {
                     registerSessionHandlers(webExtension, store, session, tab.id)
                 }
             }
+    }
+
+    /**
+     * Closes any leftover extensions tabs from extensions that are no longer
+     * installed/registered. When an extension is uninstalled, all extension
+     * pages will be closed. So, in theory, there should never be any
+     * leftover tabs. However, since we support temporary registered
+     * extensions and also recently migrated built-in extensions from the
+     * transient registerWebExtensions to the persistent installBuiltIn, we
+     * should handle this case to make sure we don't have any unloadable tabs
+     * around.
+     */
+    private fun closeUnsupportedTabs(store: BrowserStore, extensions: List<WebExtension>) {
+        val supportedUrls = extensions.mapNotNull { it.getMetadata()?.baseUrl }
+
+        // We only need to do this a single time, once tabs are restored. We need to observe the
+        // store (instead of querying it directly), as tabs can be restored asynchronously on
+        // startup and might not be ready yet.
+        var scope: CoroutineScope? = null
+        scope = store.flowScoped { flow ->
+            flow.map { state -> state.tabs.filter { it.source == SessionState.Source.RESTORED }.size }
+                .ifChanged()
+                .collect { size ->
+                    if (size > 0) {
+                        store.state.tabs.forEach { tab ->
+                            val tabUrl = tab.content.url
+                            if (tabUrl.isExtensionUrl() && supportedUrls.none { tabUrl.startsWith(it) }) {
+                                closeTab(tab.id, store, onCloseTabOverride)
+                            }
+                        }
+                        scope?.cancel()
+                    }
+                }
+        }
     }
 
     /**
@@ -400,7 +441,7 @@ object WebExtensionSupport {
         id: String,
         store: BrowserStore,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
-        webExtension: WebExtension?
+        webExtension: WebExtension? = null
     ) {
         onCloseTabOverride?.invoke(webExtension, id) ?: store.dispatch(TabListAction.RemoveTabAction(id))
     }
