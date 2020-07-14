@@ -1795,7 +1795,7 @@ class Document : public nsINode,
   /**
    * Return WindowContext associated with the inner window.
    */
-  WindowContext* GetWindowContext() {
+  WindowContext* GetWindowContext() const {
     return GetInnerWindow() ? GetInnerWindow()->GetWindowContext() : nullptr;
   }
 
@@ -3203,6 +3203,8 @@ class Document : public nsINode,
     eAttributeChanged,
     eGetCustomInterface
   };
+
+  WindowContext* GetTopLevelWindowContext() const;
 
   Document* GetTopLevelContentDocument();
   const Document* GetTopLevelContentDocument() const;
