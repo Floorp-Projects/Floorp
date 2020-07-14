@@ -15,25 +15,28 @@ import org.mozilla.samples.browser.ext.components
 
 class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
 
-    override fun interceptsAppInitiatedRequests() = true
-
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
-        isDirectNavigation: Boolean
+        isDirectNavigation: Boolean,
+        isSubframeRequest: Boolean
     ): InterceptionResponse? {
         return when (uri) {
             "sample:about" -> InterceptionResponse.Content("<h1>I am the sample browser</h1>")
             else -> {
                 var response = context.components.appLinksInterceptor.onLoadRequest(
-                        engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation)
+                        engineSession, uri, hasUserGesture, isSameDomain, isRedirect,
+                        isDirectNavigation, isSubframeRequest
+                )
 
                 if (response == null && !isDirectNavigation) {
                     response = context.components.webAppInterceptor.onLoadRequest(
-                        engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation)
+                        engineSession, uri, hasUserGesture, isSameDomain, isRedirect,
+                        isDirectNavigation, isSubframeRequest
+                    )
                 }
 
                 response

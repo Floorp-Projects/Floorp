@@ -377,7 +377,7 @@ class GeckoEngineSession(
                 initialLoad = true
             }
 
-            return if (maybeInterceptRequest(request) != null) {
+            return if (maybeInterceptRequest(request, false) != null) {
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 notifyObservers {
@@ -400,7 +400,7 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
-            return if (maybeInterceptRequest(request) != null) {
+            return if (maybeInterceptRequest(request, true) != null) {
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 // Not notifying session observer because of performance concern and currently there
@@ -450,7 +450,8 @@ class GeckoEngineSession(
         }
 
         private fun maybeInterceptRequest(
-            request: NavigationDelegate.LoadRequest
+            request: NavigationDelegate.LoadRequest,
+            isSubframeRequest: Boolean
         ): InterceptionResponse? {
             val interceptor = settings.requestInterceptor
             return if (
@@ -464,7 +465,8 @@ class GeckoEngineSession(
                     request.hasUserGesture,
                     isSameDomain,
                     request.isRedirect,
-                    request.isDirectNavigation
+                    request.isDirectNavigation,
+                    isSubframeRequest
                 )?.apply {
                     when (this) {
                         is InterceptionResponse.Content -> loadData(data, mimeType, encoding)

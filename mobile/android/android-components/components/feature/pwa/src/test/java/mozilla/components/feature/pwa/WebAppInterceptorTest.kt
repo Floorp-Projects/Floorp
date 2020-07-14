@@ -44,7 +44,7 @@ class WebAppInterceptorTest {
         whenever(mockManifestStorage.getInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
         whenever(mockManifestStorage.getStartUrlForInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
 
-        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlWithWebApp, true, false, false, false)
+        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlWithWebApp, true, false, false, false, false)
 
         assert(response is RequestInterceptor.InterceptionResponse.Deny)
     }
@@ -54,7 +54,7 @@ class WebAppInterceptorTest {
         whenever(mockManifestStorage.getInstalledScope(webUrlOutOfScope)).thenReturn(null)
         whenever(mockManifestStorage.getStartUrlForInstalledScope(webUrlOutOfScope)).thenReturn(null)
 
-        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlOutOfScope, true, false, false, false)
+        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlOutOfScope, true, false, false, false, false)
 
         assertNull(response)
     }
@@ -64,7 +64,7 @@ class WebAppInterceptorTest {
         whenever(mockManifestStorage.getInstalledScope(webUrl)).thenReturn(null)
         whenever(mockManifestStorage.getStartUrlForInstalledScope(webUrl)).thenReturn(null)
 
-        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrl, true, false, false, false)
+        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrl, true, false, false, false, false)
 
         assertNull(response)
     }
@@ -80,7 +80,7 @@ class WebAppInterceptorTest {
         whenever(mockManifestStorage.getInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
         whenever(mockManifestStorage.getStartUrlForInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
 
-        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlWithWebApp, true, false, false, false)
+        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlWithWebApp, true, false, false, false, false)
 
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
@@ -95,7 +95,7 @@ class WebAppInterceptorTest {
         whenever(mockManifestStorage.getInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
         whenever(mockManifestStorage.getStartUrlForInstalledScope(webUrlWithWebApp)).thenReturn(webUrlWithWebApp)
 
-        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlWithWebApp, true, false, false, false)
+        val response = webAppInterceptor.onLoadRequest(mockEngineSession, webUrlWithWebApp, true, false, false, false, false)
 
         assert(response is RequestInterceptor.InterceptionResponse.Deny)
     }

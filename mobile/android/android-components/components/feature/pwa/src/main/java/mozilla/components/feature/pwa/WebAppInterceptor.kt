@@ -30,7 +30,8 @@ class WebAppInterceptor(
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
-        isDirectNavigation: Boolean
+        isDirectNavigation: Boolean,
+        isSubframeRequest: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         val scope = manifestStorage.getInstalledScope(uri) ?: return null
         val startUrl = manifestStorage.getStartUrlForInstalledScope(scope) ?: return null

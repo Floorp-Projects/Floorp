@@ -251,7 +251,8 @@ class SystemEngineView @JvmOverloads constructor(
                         request.hasGesture(),
                         session.currentUrl.tryGetHostFromUrl() == request.url.host,
                         isRedirect,
-                        false
+                        false,
+                        request.isForMainFrame
                     )?.apply {
                         return when (this) {
                             is InterceptionResponse.Content ->
