@@ -35,14 +35,14 @@ add_task(async function testSyncRemoteTabsButtonFunctionality() {
   info("The panel menu was opened");
 
   let syncRemoteTabsBtn = document.getElementById("sync-button");
-  let remoteTabsPanel = document.getElementById("PanelUI-remotetabs");
-  let viewShown = BrowserTestUtils.waitForEvent(remoteTabsPanel, "ViewShown");
   ok(
     syncRemoteTabsBtn,
     "The sync remote tabs button was added to the Panel Menu"
   );
   // click the button - the panel should open.
   syncRemoteTabsBtn.click();
+  let remoteTabsPanel = document.getElementById("PanelUI-remotetabs");
+  let viewShown = BrowserTestUtils.waitForEvent(remoteTabsPanel, "ViewShown");
   await viewShown;
   ok(remoteTabsPanel.getAttribute("visible"), "Sync Panel is in view");
 
