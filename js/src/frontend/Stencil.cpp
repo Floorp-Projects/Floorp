@@ -340,6 +340,24 @@ static JSFunction* CreateFunction(JSContext* cx,
   return fun;
 }
 
+// Instantiate ModuleObject if this is a module compile.
+static bool MaybeInstantiateModule(JSContext* cx,
+                                   CompilationInfo& compilationInfo) {
+  if (compilationInfo.topLevel.get().isModule()) {
+    compilationInfo.module = ModuleObject::create(cx);
+    if (!compilationInfo.module) {
+      return false;
+    }
+
+    if (!compilationInfo.moduleMetadata.get().initModule(
+            cx, compilationInfo.module)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Instantiate JSFunctions for each FunctionBox.
 static bool InstantiateFunctions(JSContext* cx,
                                  CompilationInfo& compilationInfo) {
@@ -473,7 +491,21 @@ static bool InstantiateTopLevel(JSContext* cx,
 
   compilationInfo.script =
       JSScript::fromStencil(cx, compilationInfo, stencil, fun);
-  return !!compilationInfo.script;
+  if (!compilationInfo.script) {
+    return false;
+  }
+
+  // Finish initializing the ModuleObject if needed.
+  if (stencil.isModule()) {
+    compilationInfo.module->initScriptSlots(compilationInfo.script);
+    compilationInfo.module->initStatusSlot();
+
+    if (!ModuleObject::createEnvironment(cx, compilationInfo.module)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 // When a function is first referenced by enclosing script's bytecode, we need
@@ -574,6 +606,10 @@ bool CompilationInfo::instantiateStencils() {
   if (lazy) {
     FunctionsFromExistingLazy(*this);
   } else {
+    if (!MaybeInstantiateModule(cx, *this)) {
+      return false;
+    }
+
     if (!InstantiateFunctions(cx, *this)) {
       return false;
     }
