@@ -262,8 +262,8 @@ class _MappableBuffer : public MappedPtr {
     void* buf =
         ::mmap(nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (buf != MAP_FAILED) {
-
-      DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR " in "
+      DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
+                " in "
 #ifdef ANDROID
                 "ashmem "
 #endif
