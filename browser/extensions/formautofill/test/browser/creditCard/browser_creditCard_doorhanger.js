@@ -302,11 +302,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
-  is(
-    creditCards[0]["cc-name"],
-    TEST_CREDIT_CARD_1["cc-name"],
-    "name field still exists"
-  );
+  is(creditCards[0]["cc-name"], undefined, "name field got cleared");
   is(
     SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
     2,
