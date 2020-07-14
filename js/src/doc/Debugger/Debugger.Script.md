@@ -335,18 +335,6 @@ this script. If <i>offset</i> is present, remove all breakpoints set at
 that offset in this script; if <i>offset</i> is not a valid bytecode
 offset in this script, throw an error.
 
-### `getSuccessorOffsets(offset)`
-**If the instance refers to a `JSScript`**, return an array
-containing the offsets of all bytecodes in the script which are
-immediate successors of <i>offset</i> via non-exceptional control
-flow paths.
-
-### `getPredecessorOffsets(offset)`
-**If the instance refers to a `JSScript`**, return an array
-containing the offsets of all bytecodes in the script for which
-<i>offset</i> is an immediate successor via non-exceptional
-control flow paths.
-
 ### `getEffectfulOffsets()`
 **If the instance refers to a `JSScript`**, return an array
 containing the offsets of all bytecodes in the script which can have direct
