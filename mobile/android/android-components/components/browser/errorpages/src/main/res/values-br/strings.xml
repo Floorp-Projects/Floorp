@@ -153,19 +153,52 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Nʼeo ket talvoudek ar chomlecʼh</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul> <li>Peurvuiañ e vez skrivet ar chomlecʼhioù web evel-mañ  <strong>http://www.example.com/</strong></li> <li>Gwiriekait e vez implijet barennoù stouet ganeocʼh (d.l.e <strong>/</strong>).</li> </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Komenad dianav</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Ur cʼhomenad (d.l.e. <q>wxyz://</q>) nad eo ket anavezet gant ar merdeer zo erspizet gant ar chomlecʼh, neuze nʼeo ket ar merdeer evit kennaskañ mat ouzh al lecʼhienn.</p><ul><li>Hag emaocʼh o klask tizhout liesvedia pe gwazerezhioù andestenn ? Gwiriit war al lecʼhienn mar bez ezhomm paramantadurioù all.</li><li>Goulennet e vez meziantoù ouzhpenn pe enlugelladoù gant komenadoù zo a-raok ma vo gouest ar merdeer dʼo anavezout.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Restr dianav</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul><li>Gwiriañ ha dilecʼhiet eo bet, adanvet pe dilamet an ergorenn.</li><li>Gwiriañ anv ar chomlecʼh rak marteze ez eus fazioù pennlizherennoù pe fazioù skrivañ all.</li><li>Hag an aotreoù hocʼh eus evit haeziñ an ergorenn goulennet ?</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Nacʼhet eo bet haeziñ dʼar restr</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul> <li>Gallout a ra bezañ dilamet, dilecʼhiet, pe nʼeus ket ar gwirioù a-zere evit an haeziñ.</li> </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Dafariad ar proksi en deus nacʼhet ar cʼhennaskañ</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Kefluniet eo ar merdeer evit ober gant un dafariad proksi, met nacʼhet eo bet ar cʼhennaskañ gant ar proksi.</p><ul><li>Ha kefluniet mat eo proksi ar merdeer ? Gwiriit an arventennoù ha klaskit en-dro.</li><li>Ha gwazerezh ar proksi a aotre kennaskadurioù diouzh ar rouedad-mañ ?</li><li>Trubuilhoù cʼhoazh ? Kit e darempred gant ardoer ar rouedad pe ho pourchaser internet a-benn kaout skoazell.</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nʼeo ket bet kavet an dafariad proksi</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Kefluniet eo ar merdeer evit ober gant un dafariad proksi, met nʼeo ket bet kavet ar proksi.</p><ul><li>Ha kefluniet mat eo proksi ar merdeer ? Gwiriit an arventennoù ha klaskit en-dro.</li><li>Ha kennasket eo an trevnad ouzh ur rouedad oberiant?</li><li>Trubuilhoù cʼhoazh ? Kit e darempred gant ardoer ar rouedad pe ho pourchaser internet a-benn kaout skoazell.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Kudenn lecʼhienn dagus</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Al lecʼhienn e %s zo bet marilhet evel ul lecʼhienn dagus ha harzet eo bet gant ho kwellvezioù diogelroez.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Kudenn lecʼhienn dicʼhoantaet</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[Al lecʼhienn e %s zo bet marilhet evel ul lecʼhienn o kinnig meziantoù dicʼhoantaet ha harzet eo bet gant ho kwellvezioù diogelroez.]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Fazi lecʼhienn noazus</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Al lecʼhienn e %s zo bet marilhet evel ul lecʼhienn a cʼhell bezañ noazus ha harzet eo bet gant ho kwellvezioù diogelroez.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Fazi lecʼhienn douellus</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[Al lecʼhienn e %s zo bet marilhet evel ul lecʼhienn douellus ha harzet eo bet gant ho kwellvezioù diogelroez.]]></string>
+</resources>

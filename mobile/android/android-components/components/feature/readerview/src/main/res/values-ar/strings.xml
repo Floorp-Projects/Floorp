@@ -12,4 +12,8 @@
     <string name="mozac_feature_readerview_font_size_increase_desc">زيادة حجم الخط</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">داكنة</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">بني داكن</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">فاتح</string>
     </resources>
