@@ -410,49 +410,20 @@ class MOZ_STACK_CLASS WSRunScanner final {
   class TextFragmentData;
 
   // VisibleWhiteSpacesData represents 0 or more visible white-spaces.
-  struct MOZ_STACK_CLASS VisibleWhiteSpacesData final {
-    nsCOMPtr<nsINode> mStartNode;  // node where ws run starts
-    nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
-    int32_t mStartOffset;          // offset where ws run starts
-    int32_t mEndOffset;            // offset where ws run ends
-
-   private:
-    VisibleWhiteSpacesData()
-        : mStartOffset(0),
-          mEndOffset(0),
-          mLeftWSType(WSType::NotInitialized),
-          mRightWSType(WSType::NotInitialized) {}
-
+  class MOZ_STACK_CLASS VisibleWhiteSpacesData final {
    public:
     bool IsInitialized() const {
       return mLeftWSType != WSType::NotInitialized ||
              mRightWSType != WSType::NotInitialized;
     }
 
-    EditorDOMPoint StartPoint() const {
-      return EditorDOMPoint(mStartNode, mStartOffset);
-    }
-    EditorDOMPoint EndPoint() const {
-      return EditorDOMPoint(mEndNode, mEndOffset);
-    }
-    EditorRawDOMPoint RawStartPoint() const {
-      return EditorRawDOMPoint(mStartNode, mStartOffset);
-    }
-    EditorRawDOMPoint RawEndPoint() const {
-      return EditorRawDOMPoint(mEndNode, mEndOffset);
-    }
+    EditorDOMPoint StartRef() const { return mStartPoint; }
+    EditorDOMPoint EndRef() const { return mEndPoint; }
 
     /**
      * Information why the white-spaces start from (i.e., this indicates the
      * previous content type of the fragment).
      */
-    void SetStartFrom(WSType aLeftWSType) { mLeftWSType = aLeftWSType; }
-    void SetStartFromLeadingWhiteSpaces() {
-      mLeftWSType = WSType::LeadingWhiteSpaces;
-    }
-    void SetStartFromNormalWhiteSpaces() {
-      mLeftWSType = WSType::NormalWhiteSpaces;
-    }
     bool StartsFromNormalText() const {
       return mLeftWSType == WSType::NormalText;
     }
@@ -464,13 +435,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
      * Information why the white-spaces end by (i.e., this indicates the
      * next content type of the fragment).
      */
-    void SetEndBy(WSType aRightWSType) { mRightWSType = aRightWSType; }
-    void SetEndByNormalWiteSpaces() {
-      mRightWSType = WSType::NormalWhiteSpaces;
-    }
-    void SetEndByTrailingWhiteSpaces() {
-      mRightWSType = WSType::TrailingWhiteSpaces;
-    }
     bool EndsByNormalText() const { return mRightWSType == WSType::NormalText; }
     bool EndsByTrailingWhiteSpaces() const {
       return mRightWSType == WSType::TrailingWhiteSpaces;
@@ -498,16 +462,14 @@ class MOZ_STACK_CLASS WSRunScanner final {
     template <typename EditorDOMPointType>
     PointPosition ComparePoint(const EditorDOMPointType& aPoint) const {
       MOZ_ASSERT(aPoint.IsSetAndValid());
-      const EditorRawDOMPoint start = RawStartPoint();
-      if (start == aPoint) {
+      if (StartRef() == aPoint) {
         return PointPosition::StartOfFragment;
       }
-      const EditorRawDOMPoint end = RawEndPoint();
-      if (end == aPoint) {
+      if (EndRef() == aPoint) {
         return PointPosition::EndOfFragment;
       }
-      const bool startIsBeforePoint = start.IsBefore(aPoint);
-      const bool pointIsBeforeEnd = aPoint.IsBefore(end);
+      const bool startIsBeforePoint = StartRef().IsBefore(aPoint);
+      const bool pointIsBeforeEnd = aPoint.IsBefore(EndRef());
       if (startIsBeforePoint && pointIsBeforeEnd) {
         return PointPosition::MiddleOfFragment;
       }
@@ -521,9 +483,38 @@ class MOZ_STACK_CLASS WSRunScanner final {
     }
 
    private:
-    WSType mLeftWSType, mRightWSType;
-
+    // Initializers should be accessible only from `TextFragmentData`.
     friend class WSRunScanner::TextFragmentData;
+    VisibleWhiteSpacesData()
+        : mLeftWSType(WSType::NotInitialized),
+          mRightWSType(WSType::NotInitialized) {}
+
+    template <typename EditorDOMPointType>
+    void SetStartPoint(const EditorDOMPointType& aStartPoint) {
+      mStartPoint = aStartPoint;
+    }
+    template <typename EditorDOMPointType>
+    void SetEndPoint(const EditorDOMPointType& aEndPoint) {
+      mEndPoint = aEndPoint;
+    }
+    void SetStartFrom(WSType aLeftWSType) { mLeftWSType = aLeftWSType; }
+    void SetStartFromLeadingWhiteSpaces() {
+      mLeftWSType = WSType::LeadingWhiteSpaces;
+    }
+    void SetStartFromNormalWhiteSpaces() {
+      mLeftWSType = WSType::NormalWhiteSpaces;
+    }
+    void SetEndBy(WSType aRightWSType) { mRightWSType = aRightWSType; }
+    void SetEndByNormalWiteSpaces() {
+      mRightWSType = WSType::NormalWhiteSpaces;
+    }
+    void SetEndByTrailingWhiteSpaces() {
+      mRightWSType = WSType::TrailingWhiteSpaces;
+    }
+
+    EditorDOMPoint mStartPoint;
+    EditorDOMPoint mEndPoint;
+    WSType mLeftWSType, mRightWSType;
   };
 
   using PointPosition = VisibleWhiteSpacesData::PointPosition;
@@ -974,10 +965,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
         return false;
       }
       // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
-      if (!visibleWhiteSpaces.StartPoint().IsSet()) {
+      if (!visibleWhiteSpaces.StartRef().IsSet()) {
         return true;
       }
-      if (!visibleWhiteSpaces.StartPoint().EqualsOrIsBefore(aPoint)) {
+      if (!visibleWhiteSpaces.StartRef().EqualsOrIsBefore(aPoint)) {
         return false;
       }
       // XXX Odd case, but keep traditional behavior of `FindNearestRun()`.
@@ -986,10 +977,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
       }
       // XXX Must be a bug.  This claims that the caller needs additional
       // check even when there is no white-spaces.
-      if (visibleWhiteSpaces.StartPoint() == visibleWhiteSpaces.EndPoint()) {
+      if (visibleWhiteSpaces.StartRef() == visibleWhiteSpaces.EndRef()) {
         return true;
       }
-      return aPoint.IsBefore(visibleWhiteSpaces.EndPoint());
+      return aPoint.IsBefore(visibleWhiteSpaces.EndRef());
     }
 
     /**
