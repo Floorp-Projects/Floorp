@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGTransform_h
-#define mozilla_dom_SVGTransform_h
+#ifndef DOM_SVG_DOMSVGTRANSFORM_H_
+#define DOM_SVG_DOMSVGTRANSFORM_H_
 
 #include "DOMSVGTransformList.h"
 #include "gfxMatrix.h"
@@ -172,4 +172,4 @@ class DOMSVGTransform final : public nsWrapperCache {
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
-#endif  // mozilla_dom_SVGTransform_h
+#endif  // DOM_SVG_DOMSVGTRANSFORM_H_

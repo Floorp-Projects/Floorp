@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_DOMSVGLENGTH_H__
-#define MOZILLA_DOMSVGLENGTH_H__
+#ifndef DOM_SVG_DOMSVGLENGTH_H_
+#define DOM_SVG_DOMSVGLENGTH_H_
 
 #include "DOMSVGLengthList.h"
 #include "nsCycleCollectionParticipant.h"
@@ -240,4 +240,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGLength, MOZILLA_DOMSVGLENGTH_IID)
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
-#endif  // MOZILLA_DOMSVGLENGTH_H__
+#endif  // DOM_SVG_DOMSVGLENGTH_H_

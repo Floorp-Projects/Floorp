@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGMOTIONSMILANIMATIONFUNCTION_H_
-#define MOZILLA_SVGMOTIONSMILANIMATIONFUNCTION_H_
+#ifndef DOM_SVG_SVGMOTIONSMILANIMATIONFUNCTION_H_
+#define DOM_SVG_SVGMOTIONSMILANIMATIONFUNCTION_H_
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
@@ -100,4 +100,4 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGMOTIONSMILANIMATIONFUNCTION_H_
+#endif  // DOM_SVG_SVGMOTIONSMILANIMATIONFUNCTION_H_

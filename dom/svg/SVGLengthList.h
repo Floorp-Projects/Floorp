@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGLENGTHLIST_H__
-#define MOZILLA_SVGLENGTHLIST_H__
+#ifndef DOM_SVG_SVGLENGTHLIST_H_
+#define DOM_SVG_SVGLENGTHLIST_H_
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -324,4 +324,4 @@ class MOZ_STACK_CLASS SVGUserUnitList {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGLENGTHLIST_H__
+#endif  // DOM_SVG_SVGLENGTHLIST_H_

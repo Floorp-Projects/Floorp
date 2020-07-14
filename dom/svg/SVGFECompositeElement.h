@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGFECompositeElement_h
-#define mozilla_dom_SVGFECompositeElement_h
+#ifndef DOM_SVG_SVGFECOMPOSITEELEMENT_H_
+#define DOM_SVG_SVGFECOMPOSITEELEMENT_H_
 
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedNumber.h"
@@ -77,4 +77,4 @@ class SVGFECompositeElement : public SVGFECompositeElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGFECompositeElement_h
+#endif  // DOM_SVG_SVGFECOMPOSITEELEMENT_H_

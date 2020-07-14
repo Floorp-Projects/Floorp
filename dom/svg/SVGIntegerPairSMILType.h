@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGINTEGERPAIRSMILTYPE_H_
-#define MOZILLA_SVGINTEGERPAIRSMILTYPE_H_
+#ifndef DOM_SVG_SVGINTEGERPAIRSMILTYPE_H_
+#define DOM_SVG_SVGINTEGERPAIRSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILType.h"
@@ -46,4 +46,4 @@ class SVGIntegerPairSMILType : public SMILType {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGINTEGERPAIRSMILTYPE_H_
+#endif  // DOM_SVG_SVGINTEGERPAIRSMILTYPE_H_

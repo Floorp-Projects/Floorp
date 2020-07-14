@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGDefsElement_h
-#define mozilla_dom_SVGDefsElement_h
+#ifndef DOM_SVG_SVGDEFSELEMENT_H_
+#define DOM_SVG_SVGDEFSELEMENT_H_
 
 #include "SVGGraphicsElement.h"
 
@@ -39,4 +39,4 @@ class SVGDefsElement final : public SVGGraphicsElement {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGDefsElement_h
+#endif  // DOM_SVG_SVGDEFSELEMENT_H_

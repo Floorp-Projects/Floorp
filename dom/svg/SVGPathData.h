@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGPATHDATA_H__
-#define MOZILLA_SVGPATHDATA_H__
+#ifndef DOM_SVG_SVGPATHDATA_H_
+#define DOM_SVG_SVGPATHDATA_H_
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -294,4 +294,4 @@ class SVGPathDataAndInfo final : public SVGPathData {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGPATHDATA_H__
+#endif  // DOM_SVG_SVGPATHDATA_H_

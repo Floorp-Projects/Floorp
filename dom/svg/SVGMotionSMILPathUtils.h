@@ -7,8 +7,8 @@
 /* Helper class to help with generating anonymous path elements for
    <animateMotion> elements to use. */
 
-#ifndef MOZILLA_SVGMOTIONSMILPATHUTILS_H_
-#define MOZILLA_SVGMOTIONSMILPATHUTILS_H_
+#ifndef DOM_SVG_SVGMOTIONSMILPATHUTILS_H_
+#define DOM_SVG_SVGMOTIONSMILPATHUTILS_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
@@ -101,4 +101,4 @@ class SVGMotionSMILPathUtils {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGMOTIONSMILPATHUTILS_H_
+#endif  // DOM_SVG_SVGMOTIONSMILPATHUTILS_H_

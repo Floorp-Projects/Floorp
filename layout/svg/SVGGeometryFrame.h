@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __SVGGEOMETRYFRAME_H__
-#define __SVGGEOMETRYFRAME_H__
+#ifndef LAYOUT_SVG_SVGGEOMETRYFRAME_H_
+#define LAYOUT_SVG_SVGGEOMETRYFRAME_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ISVGDisplayableFrame.h"
@@ -206,4 +206,4 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
 };
 }  // namespace mozilla
 
-#endif  // __SVGGEOMETRYFRAME_H__
+#endif  // LAYOUT_SVG_SVGGEOMETRYFRAME_H_

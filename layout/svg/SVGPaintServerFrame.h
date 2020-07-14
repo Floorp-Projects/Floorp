@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGPAINTSERVERFRAME_H__
-#define __NS_SVGPAINTSERVERFRAME_H__
+#ifndef LAYOUT_SVG_SVGPAINTSERVERFRAME_H_
+#define LAYOUT_SVG_SVGPAINTSERVERFRAME_H_
 
 #include "gfxRect.h"
 #include "mozilla/Attributes.h"
@@ -86,4 +86,4 @@ class SVGPaintServerFrame : public SVGContainerFrame {
 
 }  // namespace mozilla
 
-#endif  // __NS_SVGPAINTSERVERFRAME_H__
+#endif  // LAYOUT_SVG_SVGPAINTSERVERFRAME_H_

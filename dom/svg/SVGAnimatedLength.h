@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SVGAnimatedLength_h
-#define mozilla_SVGAnimatedLength_h
+#ifndef DOM_SVG_SVGANIMATEDLENGTH_H_
+#define DOM_SVG_SVGANIMATEDLENGTH_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
@@ -219,4 +219,4 @@ class SVGAnimatedLength {
 
 }  // namespace mozilla
 
-#endif  //  mozilla_SVGAnimatedLength_h
+#endif  // DOM_SVG_SVGANIMATEDLENGTH_H_

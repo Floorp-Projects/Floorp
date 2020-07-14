@@ -6,8 +6,8 @@
 
 /* implementation of SMILType for use by <animateMotion> element */
 
-#ifndef MOZILLA_SVGMOTIONSMILTYPE_H_
-#define MOZILLA_SVGMOTIONSMILTYPE_H_
+#ifndef DOM_SVG_SVGMOTIONSMILTYPE_H_
+#define DOM_SVG_SVGMOTIONSMILTYPE_H_
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Attributes.h"
@@ -76,4 +76,4 @@ class SVGMotionSMILType : public SMILType {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGMOTIONSMILTYPE_H_
+#endif  // DOM_SVG_SVGMOTIONSMILTYPE_H_

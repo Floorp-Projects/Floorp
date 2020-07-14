@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGStopElement_h
-#define mozilla_dom_SVGStopElement_h
+#ifndef DOM_SVG_SVGSTOPELEMENT_H_
+#define DOM_SVG_SVGSTOPELEMENT_H_
 
 #include "mozilla/dom/SVGElement.h"
 #include "SVGAnimatedNumber.h"
@@ -45,4 +45,4 @@ class SVGStopElement final : public SVGStopElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGStopElement_h
+#endif  // DOM_SVG_SVGSTOPELEMENT_H_

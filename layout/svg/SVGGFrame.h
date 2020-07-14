@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSSVGGFRAME_H
-#define NSSVGGFRAME_H
+#ifndef LAYOUT_SVG_SVGGFRAME_H_
+#define LAYOUT_SVG_SVGGFRAME_H_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SVGContainerFrame.h"
@@ -52,4 +52,4 @@ class SVGGFrame : public SVGDisplayContainerFrame {
 
 }  // namespace mozilla
 
-#endif
+#endif  // LAYOUT_SVG_SVGGFRAME_H_

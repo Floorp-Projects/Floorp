@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SMILInstanceTime_h
-#define mozilla_SMILInstanceTime_h
+#ifndef DOM_SMIL_SMILINSTANCETIME_H_
+#define DOM_SMIL_SMILINSTANCETIME_H_
 
 #include "nsISupportsImpl.h"
 #include "mozilla/SMILTimeValue.h"
@@ -163,4 +163,4 @@ class SMILInstanceTime final {
 
 }  // namespace mozilla
 
-#endif  // mozilla_SMILInstanceTime_h
+#endif  // DOM_SMIL_SMILINSTANCETIME_H_

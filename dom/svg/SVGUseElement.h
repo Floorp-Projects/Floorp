@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGUseElement_h
-#define mozilla_dom_SVGUseElement_h
+#ifndef DOM_SVG_SVGUSEELEMENT_H_
+#define DOM_SVG_SVGUSEELEMENT_H_
 
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/IDTracker.h"
@@ -169,4 +169,4 @@ class SVGUseElement final : public SVGUseElementBase,
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGUseElement_h
+#endif  // DOM_SVG_SVGUSEELEMENT_H_

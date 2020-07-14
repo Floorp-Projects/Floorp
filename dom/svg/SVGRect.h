@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGRect_h
-#define mozilla_dom_SVGRect_h
+#ifndef DOM_SVG_SVGRECT_H_
+#define DOM_SVG_SVGRECT_H_
 
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/gfx/Rect.h"
@@ -83,4 +83,4 @@ class SVGRect final : public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGRect_h
+#endif  // DOM_SVG_SVGRECT_H_

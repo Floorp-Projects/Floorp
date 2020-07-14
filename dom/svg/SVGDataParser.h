@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGDATAPARSER_H__
-#define __NS_SVGDATAPARSER_H__
+#ifndef DOM_SVG_SVGDATAPARSER_H_
+#define DOM_SVG_SVGDATAPARSER_H_
 
 #include <cctype>
 #include "mozilla/RangedPtr.h"
@@ -39,4 +39,4 @@ class SVGDataParser {
 
 }  // namespace mozilla
 
-#endif  // __NS_SVGDATAPARSER_H__
+#endif  // DOM_SVG_SVGDATAPARSER_H_

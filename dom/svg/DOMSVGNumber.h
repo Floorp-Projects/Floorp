@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_DOMSVGNUMBER_H__
-#define MOZILLA_DOMSVGNUMBER_H__
+#ifndef DOM_SVG_DOMSVGNUMBER_H_
+#define DOM_SVG_DOMSVGNUMBER_H_
 
 #include "DOMSVGNumberList.h"
 #include "nsCOMPtr.h"
@@ -163,4 +163,4 @@ class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
-#endif  // MOZILLA_DOMSVGNUMBER_H__
+#endif  // DOM_SVG_DOMSVGNUMBER_H_

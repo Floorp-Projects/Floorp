@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SVGUTILS_H
-#define NS_SVGUTILS_H
+#ifndef LAYOUT_SVG_SVGUTILS_H_
+#define LAYOUT_SVG_SVGUTILS_H_
 
 // include math.h to pick up definition of M_ maths defines e.g. M_PI
 #include <math.h>
@@ -598,4 +598,4 @@ class SVGUtils final {
 
 }  // namespace mozilla
 
-#endif
+#endif  // LAYOUT_SVG_SVGUTILS_H_

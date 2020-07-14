@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGFEMergeElement_h
-#define mozilla_dom_SVGFEMergeElement_h
+#ifndef DOM_SVG_SVGFEMERGEELEMENT_H_
+#define DOM_SVG_SVGFEMERGEELEMENT_H_
 
 #include "SVGFilters.h"
 
@@ -53,4 +53,4 @@ class SVGFEMergeElement : public SVGFEMergeElementBase {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGFEMergeElement_h
+#endif  // DOM_SVG_SVGFEMERGEELEMENT_H_

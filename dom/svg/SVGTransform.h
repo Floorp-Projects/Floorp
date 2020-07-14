@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGTRANSFORM_H__
-#define MOZILLA_SVGTRANSFORM_H__
+#ifndef DOM_SVG_SVGTRANSFORM_H_
+#define DOM_SVG_SVGTRANSFORM_H_
 
 #include "gfxMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
@@ -150,4 +150,4 @@ class SVGTransformSMILData {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGTRANSFORM_H__
+#endif  // DOM_SVG_SVGTRANSFORM_H_

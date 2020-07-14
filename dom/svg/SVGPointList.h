@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGPOINTLIST_H__
-#define MOZILLA_SVGPOINTLIST_H__
+#ifndef DOM_SVG_SVGPOINTLIST_H_
+#define DOM_SVG_SVGPOINTLIST_H_
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -205,4 +205,4 @@ class SVGPointListAndInfo : public SVGPointList {
 
 }  // namespace mozilla
 
-#endif  // MOZILLA_SVGPOINTLIST_H__
+#endif  // DOM_SVG_SVGPOINTLIST_H_
