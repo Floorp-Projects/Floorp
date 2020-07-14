@@ -212,6 +212,10 @@ class ObjectElements {
     // frozen elements. The ObjectElements flag is convenient for JIT code and
     // ObjectElements assertions.
     FROZEN = 0x20,
+
+    // If this flag is not set, the elements are guaranteed to contain no hole
+    // values (the JS_ELEMENTS_HOLE MagicValue) in [0, initializedLength).
+    NON_PACKED = 0x40,
   };
 
   // The flags word stores both the flags and the number of shifted elements.
@@ -309,6 +313,8 @@ class ObjectElements {
     MOZ_ASSERT(numShiftedElements() == 0);
   }
 
+  void markNonPacked() { flags |= NON_PACKED; }
+
   void seal() {
     MOZ_ASSERT(!isSealed());
     MOZ_ASSERT(!isFrozen());
@@ -380,6 +386,8 @@ class ObjectElements {
                                         IntegrityLevel level);
 
   bool isSealed() const { return flags & SEALED; }
+
+  bool isPacked() const { return !(flags & NON_PACKED); }
 
   uint8_t elementAttributes() const {
     if (isFrozen()) {
@@ -1310,7 +1318,7 @@ class NativeObject : public JSObject {
   inline void setShouldConvertDoubleElements();
   inline void clearShouldConvertDoubleElements();
 
-  bool denseElementsAreCopyOnWrite() {
+  bool denseElementsAreCopyOnWrite() const {
     return getElementsHeader()->isCopyOnWrite();
   }
 
@@ -1319,6 +1327,10 @@ class NativeObject : public JSObject {
   }
   bool denseElementsAreFrozen() const {
     return hasAllFlags(js::BaseShape::FROZEN_ELEMENTS);
+  }
+
+  bool denseElementsArePacked() const {
+    return getElementsHeader()->isPacked();
   }
 
   // Ensures that the object can hold at least index + extra elements. This

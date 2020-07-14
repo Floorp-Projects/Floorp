@@ -9998,6 +9998,7 @@ void CodeGenerator::emitStoreElementTyped(const LAllocation* value,
                                           MIRType elementType,
                                           Register elements,
                                           const LAllocation* index) {
+  MOZ_ASSERT(valueType != MIRType::MagicHole);
   ConstantOrRegister v = ToConstantOrRegister(value, valueType);
   if (index->isConstant()) {
     Address dest(elements, ToInt32(index) * sizeof(js::Value));
@@ -10044,6 +10045,17 @@ void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
     BaseObjectElementIndex dest(elements, ToRegister(lir->index()));
     masm.storeValue(value, dest);
   }
+}
+
+void CodeGenerator::visitStoreHoleValueElement(LStoreHoleValueElement* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register index = ToRegister(lir->index());
+
+  Address elementsFlags(elements, ObjectElements::offsetOfFlags());
+  masm.or32(Imm32(ObjectElements::NON_PACKED), elementsFlags);
+
+  BaseObjectElementIndex element(elements, index);
+  masm.storeValue(MagicValue(JS_ELEMENTS_HOLE), element);
 }
 
 template <typename T>

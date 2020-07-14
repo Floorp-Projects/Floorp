@@ -3358,6 +3358,15 @@ void LIRGenerator::visitStoreElement(MStoreElement* ins) {
   }
 }
 
+void LIRGenerator::visitStoreHoleValueElement(MStoreHoleValueElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LStoreHoleValueElement(useRegister(ins->elements()),
+                                                   useRegister(ins->index()));
+  add(lir, ins);
+}
+
 static bool BoundsCheckNeedsSpectreTemp() {
   // On x86, spectreBoundsCheck32 can emit better code if it has a scratch
   // register and index masking is enabled.

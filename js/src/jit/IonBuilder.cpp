@@ -7027,9 +7027,15 @@ AbortReasonOr<Ok> IonBuilder::initArrayElementFastPath(
   }
 
   // Store the value.
-  MStoreElement* store = MStoreElement::New(alloc(), elements, id, value,
-                                            /* needsHoleCheck = */ false);
-  current->add(store);
+  if (value->type() == MIRType::MagicHole) {
+    value->setImplicitlyUsedUnchecked();
+    auto* store = MStoreHoleValueElement::New(alloc(), elements, id);
+    current->add(store);
+  } else {
+    auto* store = MStoreElement::New(alloc(), elements, id, value,
+                                     /* needsHoleCheck = */ false);
+    current->add(store);
+  }
 
   if (addResumePointAndIncrementInitializedLength) {
     // Update the initialized length. (The template object for this

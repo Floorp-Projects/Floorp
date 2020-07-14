@@ -755,41 +755,39 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
       }
 
       case MDefinition::Opcode::StoreElement: {
-        MOZ_ASSERT(access->toStoreElement()->elements() == def);
+        MStoreElement* storeElem = access->toStoreElement();
+        MOZ_ASSERT(storeElem->elements() == def);
 
         // If we need hole checks, then the array cannot be escaped
         // as the array might refer to the prototype chain to look
         // for properties, thus it might do additional side-effects
         // which are not reflected by the alias set, is we are
         // bailing on holes.
-        if (access->toStoreElement()->needsHoleCheck()) {
+        if (storeElem->needsHoleCheck()) {
           JitSpewDef(JitSpew_Escape, "has a store element with a hole check\n",
-                     access);
+                     storeElem);
           return true;
         }
 
         // If the index is not a constant then this index can alias
         // all others. We do not handle this case.
         int32_t index;
-        if (!IndexOf(access, &index)) {
+        if (!IndexOf(storeElem, &index)) {
           JitSpewDef(JitSpew_Escape,
-                     "has a store element with a non-trivial index\n", access);
+                     "has a store element with a non-trivial index\n",
+                     storeElem);
           return true;
         }
         if (index < 0 || arraySize <= uint32_t(index)) {
           JitSpewDef(JitSpew_Escape,
                      "has a store element with an out-of-bound index\n",
-                     access);
+                     storeElem);
           return true;
         }
 
-        // We are not yet encoding magic hole constants in resume points.
-        if (access->toStoreElement()->value()->type() == MIRType::MagicHole) {
-          JitSpewDef(JitSpew_Escape,
-                     "has a store element with an magic-hole constant\n",
-                     access);
-          return true;
-        }
+        // Dense element holes are written using MStoreHoleValueElement instead
+        // of MStoreElement.
+        MOZ_ASSERT(storeElem->value()->type() != MIRType::MagicHole);
         break;
       }
 

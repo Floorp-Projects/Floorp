@@ -2420,11 +2420,16 @@ bool WarpBuilder::build_InitElemArray(BytecodeLocation loc) {
   auto* elements = MElements::New(alloc(), obj);
   current->add(elements);
 
-  current->add(MPostWriteBarrier::New(alloc(), obj, val));
-
-  auto* store = MStoreElement::New(alloc(), elements, indexConst, val,
-                                   /* needsHoleCheck = */ false);
-  current->add(store);
+  if (val->type() == MIRType::MagicHole) {
+    val->setImplicitlyUsedUnchecked();
+    auto* store = MStoreHoleValueElement::New(alloc(), elements, indexConst);
+    current->add(store);
+  } else {
+    current->add(MPostWriteBarrier::New(alloc(), obj, val));
+    auto* store = MStoreElement::New(alloc(), elements, indexConst, val,
+                                     /* needsHoleCheck = */ false);
+    current->add(store);
+  }
 
   auto* setLength = MSetInitializedLength::New(alloc(), elements, indexConst);
   current->add(setLength);

@@ -3847,6 +3847,7 @@ static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
       case MDefinition::Opcode::StoreFixedSlot:
       case MDefinition::Opcode::LoadElement:
       case MDefinition::Opcode::StoreElement:
+      case MDefinition::Opcode::StoreHoleValueElement:
       case MDefinition::Opcode::InitializedLength:
       case MDefinition::Opcode::ArrayLength:
       case MDefinition::Opcode::BoundsCheck:
