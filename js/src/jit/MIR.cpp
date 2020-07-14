@@ -2598,6 +2598,7 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
         [[fallthrough]];
       }
       case MDefinition::Opcode::StoreElement:
+      case MDefinition::Opcode::StoreHoleValueElement:
       case MDefinition::Opcode::LoadElement:
       case MDefinition::Opcode::LoadElementHole:
       case MDefinition::Opcode::LoadUnboxedScalar:
