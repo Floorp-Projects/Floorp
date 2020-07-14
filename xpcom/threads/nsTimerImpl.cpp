@@ -497,7 +497,7 @@ nsresult nsTimerImpl::SetTarget(nsIEventTarget* aTarget) {
   if (aTarget) {
     mEventTarget = aTarget;
   } else {
-    mEventTarget = mozilla::GetCurrentEventTarget();
+    mEventTarget = mozilla::GetCurrentSerialEventTarget();
   }
   return NS_OK;
 }
@@ -775,7 +775,7 @@ size_t nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
 /* static */
 RefPtr<nsTimer> nsTimer::WithEventTarget(nsIEventTarget* aTarget) {
   if (!aTarget) {
-    aTarget = mozilla::GetCurrentEventTarget();
+    aTarget = mozilla::GetCurrentSerialEventTarget();
   }
   return do_AddRef(new nsTimer(aTarget));
 }
