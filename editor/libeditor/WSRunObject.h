@@ -267,7 +267,9 @@ class MOZ_STACK_CLASS WSScanResult final {
   WSType mReason;
 };
 
-class MOZ_STACK_CLASS WSRunScanner {
+class WSRunObject;
+
+class MOZ_STACK_CLASS WSRunScanner final {
  public:
   using WSType = WSScanResult::WSType;
 
@@ -1074,20 +1076,23 @@ class MOZ_STACK_CLASS WSRunScanner {
 
  private:
   TextFragmentData mTextFragmentDataAtStart;
+
+  friend class WSRunObject;
 };
 
-class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
- protected:
-  typedef EditorBase::AutoTransactionsConserveSelection
-      AutoTransactionsConserveSelection;
+class WSRunObject final {
+ private:
+  using AutoTransactionsConserveSelection =
+      EditorBase::AutoTransactionsConserveSelection;
+  using EditorType = EditorBase::EditorType;
+  using PointPosition = WSRunScanner::PointPosition;
+  using TextFragmentData = WSRunScanner::TextFragmentData;
+  using VisibleWhiteSpacesData = WSRunScanner::VisibleWhiteSpacesData;
 
  public:
-  enum BlockBoundary { kBeforeBlock, kBlockStart, kBlockEnd, kAfterBlock };
-
-  template <typename EditorDOMPointType>
-  MOZ_CAN_RUN_SCRIPT WSRunObject(HTMLEditor& aHTMLEditor,
-                                 const EditorDOMPointType& aScanStartPoint)
-      : WSRunScanner(aHTMLEditor, aScanStartPoint), mHTMLEditor(aHTMLEditor) {}
+  WSRunObject() = delete;
+  explicit WSRunObject(const WSRunObject& aOther) = delete;
+  WSRunObject(WSRunObject&& aOther) = delete;
 
   /**
    * DeleteInvisibleASCIIWhiteSpaces() removes invisible leading white-spaces
@@ -1220,7 +1225,7 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   NormalizeVisibleWhiteSpacesAt(HTMLEditor& aHTMLEditor,
                                 const EditorDOMPointType& aPoint);
 
- protected:
+ private:
   /**
    * MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() may delete
    * invisible white-spaces for keeping make them invisible and/or may replace
@@ -1258,10 +1263,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       HTMLEditor& aHTMLEditor,
       const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
       const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces);
-
-  // Because of MOZ_CAN_RUN_SCRIPT constructors, each instanciater of this class
-  // guarantees the lifetime of the HTMLEditor.
-  HTMLEditor& mHTMLEditor;
 };
 
 }  // namespace mozilla
