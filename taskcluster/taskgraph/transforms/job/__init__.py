@@ -187,7 +187,7 @@ def use_fetches(config, jobs):
             if value:
                 aliases['{}-{}'.format(config.kind, value)] = label
 
-    for task in config.kind_dependencies_tasks:
+    for task in config.kind_dependencies_tasks.values():
         if task.kind in ('fetch', 'toolchain'):
             get_attribute(
                 artifact_names, task.label, task.attributes,
@@ -240,25 +240,17 @@ def use_fetches(config, jobs):
                 if dep_label in artifact_prefixes:
                     prefix = artifact_prefixes[dep_label]
                 else:
-                    dep_tasks = [
-                        task
-                        for task in config.kind_dependencies_tasks
-                        if task.label == dep_label
-                    ]
-                    if len(dep_tasks) != 1:
+                    if dep_label not in config.kind_dependencies_tasks:
                         raise Exception(
                             "{name} can't fetch {kind} artifacts because "
-                            "there are {tasks} with label {label} in kind dependencies!".format(
+                            "there are no tasks with label {label} in kind dependencies!".format(
                                 name=name,
                                 kind=kind,
                                 label=dependencies[kind],
-                                tasks="no tasks"
-                                if len(dep_tasks) == 0
-                                else "multiple tasks",
                             )
                         )
 
-                    prefix = get_artifact_prefix(dep_tasks[0])
+                    prefix = get_artifact_prefix(config.kind_dependencies_tasks[dep_label])
 
                 for artifact in artifacts:
                     if isinstance(artifact, text_type):
