@@ -347,6 +347,7 @@ package org.mozilla.geckoview {
     method public int getCookieLifetime();
     method public int getEnhancedTrackingProtectionLevel();
     method public int getSafeBrowsingCategories();
+    method public boolean getStrictSocialTrackingProtection();
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieLifetime(int);
@@ -363,6 +364,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings.Builder cookieLifetime(int);
     method @NonNull public ContentBlocking.Settings.Builder enhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings.Builder safeBrowsing(int);
+    method @NonNull public ContentBlocking.Settings.Builder strictSocialTrackingProtection(boolean);
     method @NonNull protected ContentBlocking.Settings newSettings(@Nullable ContentBlocking.Settings);
   }
 

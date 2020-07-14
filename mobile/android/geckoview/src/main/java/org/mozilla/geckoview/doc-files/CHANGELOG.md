@@ -16,6 +16,11 @@ exclude: true
 ## v80
 - Removed `GeckoSession.hashCode` and `GeckoSession.equals` overrides in favor
   of the default implementations. ([bug 1647883]({{bugzilla}}1647883))
+- Added `strictSocialTrackingProtection` to [`ContentBlocking.Settings.Builder`][80.1] and `getStrictSocialTrackingProtection`
+  to [`ContentBlocking.Settings`][80.2].
+
+[80.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
+[80.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
 
 ## v79
 - Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
@@ -747,4 +752,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 41921b808dd64b6d85929aa7f52031cc762605f9
+[api-version]: c86252550df86d5790603805a43ad5a313c20dc0
