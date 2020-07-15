@@ -6,32 +6,20 @@
 
 const { MESSAGES_ADD } = require("devtools/client/webconsole/constants");
 
-const ChromeUtils = require("ChromeUtils");
-const { Cu } = require("chrome");
+const {
+  createPerformanceMarkerMiddleware,
+} = require("devtools/client/shared/redux/middleware/performance-marker");
 
-/**
- * Performance marker middleware is responsible for recording markers visible
- * performance profiles.
- */
-function performanceMarkerMiddleware(sessionId, store) {
-  return next => action => {
-    const shouldAddProfileMarker = action.type === MESSAGES_ADD;
-
-    // Start the marker timer before calling next(action).
-    const startTime = shouldAddProfileMarker ? Cu.now() : null;
-    const state = next(action);
-
-    if (shouldAddProfileMarker) {
-      const { messages } = action;
-      const totalMessageCount = store.getState().messages.messagesById.size;
-      ChromeUtils.addProfilerMarker(
-        `WebconsoleAddMessages (${sessionId})`,
-        startTime,
-        `${messages.length} messages handled, store now has ${totalMessageCount} messages`
-      );
-    }
-    return state;
-  };
-}
-
-module.exports = performanceMarkerMiddleware;
+module.exports = function(sessionId) {
+  return createPerformanceMarkerMiddleware({
+    [MESSAGES_ADD]: {
+      label: "WebconsoleAddMessages",
+      sessionId,
+      getMarkerDescription: function({ action, state }) {
+        const { messages } = action;
+        const totalMessageCount = state.messages.messagesById.size;
+        return `${messages.length} messages handled, store now has ${totalMessageCount} messages`;
+      },
+    },
+  });
+};
