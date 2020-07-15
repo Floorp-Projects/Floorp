@@ -99,6 +99,10 @@ class GLXLibrary final {
           void fSwapBuffers(Display* display, GLXDrawable drawable) const
       VOID_WRAP(fSwapBuffers(display, drawable))
 
+          void fCopySubBufferMESA(Display* display, GLXDrawable drawable, int x,
+                                  int y, int width, int height) const
+      VOID_WRAP(fCopySubBufferMESA(display, drawable, x, y, width, height))
+
           const char* fQueryExtensionsString(Display* display, int screen) const
       WRAP(fQueryExtensionsString(display, screen))
 
@@ -173,6 +177,7 @@ class GLXLibrary final {
   bool HasRobustness() { return mHasRobustness; }
   bool HasVideoMemoryPurge() { return mHasVideoMemoryPurge; }
   bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
+  bool HasCopySubBuffer() const { return mHasCopySubBuffer; }
   bool SupportsTextureFromPixmap(gfxASurface* aSurface);
   bool SupportsVideoSync();
   bool SupportsSwapControl() const { return bool(mSymbols.fSwapIntervalEXT); }
@@ -195,6 +200,8 @@ class GLXLibrary final {
                                               GLXContext, Bool);
     int(GLAPIENTRY* fGetFBConfigAttrib)(Display*, GLXFBConfig, int, int*);
     void(GLAPIENTRY* fSwapBuffers)(Display*, GLXDrawable);
+    void(GLAPIENTRY* fCopySubBufferMESA)(Display*, GLXDrawable, int, int, int,
+                                         int);
     const char*(GLAPIENTRY* fQueryExtensionsString)(Display*, int);
     const char*(GLAPIENTRY* fGetClientString)(Display*, int);
     const char*(GLAPIENTRY* fQueryServerString)(Display*, int, int);
@@ -229,6 +236,7 @@ class GLXLibrary final {
   bool mHasVideoMemoryPurge = false;
   bool mHasCreateContextAttribs = false;
   bool mHasVideoSync = false;
+  bool mHasCopySubBuffer = false;
   bool mIsATI = false;
   bool mIsNVIDIA = false;
   bool mClientIsMesa = false;
