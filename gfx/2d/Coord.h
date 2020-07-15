@@ -85,12 +85,10 @@ struct CoordOperatorsHelper<true, coord, primitive> {
   // 'scale / coord' is intentionally omitted because it doesn't make sense.
 };
 
-// Note: 'IntCoordTyped<units>' and 'CoordTyped<units>' do not derive from
-// 'units' to work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61959.
-
 template <class units>
 struct IntCoordTyped
     : public BaseCoord<int32_t, IntCoordTyped<units> >,
+      public units,
       public CoordOperatorsHelper<true, IntCoordTyped<units>, float>,
       public CoordOperatorsHelper<true, IntCoordTyped<units>, double> {
   static_assert(IsPixel<units>::value,
@@ -104,6 +102,7 @@ struct IntCoordTyped
 
 template <class units, class F>
 struct CoordTyped : public BaseCoord<F, CoordTyped<units, F> >,
+                    public units,
                     public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
                                                 CoordTyped<units, F>, int32_t>,
                     public CoordOperatorsHelper<!std::is_same_v<F, uint32_t>,
