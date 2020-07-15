@@ -469,14 +469,13 @@ def av1(value):
 
 @depends(target, nasm_version, when=av1 & compile_environment)
 def dav1d_asm(target, nasm_version):
-    if target.os != 'Android':
-        if target.cpu == 'aarch64':
-            return True
-        elif target.cpu in ('x86', 'x86_64'):
-            if nasm_version < '2.14':
-                die('nasm 2.14 or greater is required for AV1 support. '
-                    'Either install nasm or add --disable-av1 to your configure options.')
-            return True
+    if target.cpu == 'aarch64':
+        return True
+    elif target.cpu in ('x86', 'x86_64'):
+        if nasm_version < '2.14':
+            die('nasm 2.14 or greater is required for AV1 support. '
+                'Either install nasm or add --disable-av1 to your configure options.')
+        return True
 
 
 set_config('MOZ_DAV1D_ASM', dav1d_asm)
