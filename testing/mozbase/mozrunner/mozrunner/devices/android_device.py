@@ -19,7 +19,7 @@ from distutils.spawn import find_executable
 from enum import Enum
 
 from mozbuild.base import MozbuildObject
-from mozdevice import ADBHost, ADBDevice
+from mozdevice import ADBHost, ADBDeviceFactory
 from six.moves import input, urllib
 
 EMULATOR_HOME_DIR = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-device')
@@ -35,7 +35,6 @@ MANIFEST_PATH = 'testing/config/tooltool-manifests'
 SHORT_TIMEOUT = 10
 
 verbose_logging = False
-devices = {}
 
 
 class InstallIntent(Enum):
@@ -86,15 +85,11 @@ AVD_DICT = {
 
 
 def _get_device(substs, device_serial=None):
-    global devices
-    if device_serial in devices:
-        device = devices[device_serial]
-    else:
-        adb_path = _find_sdk_exe(substs, 'adb', False)
-        if not adb_path:
-            adb_path = 'adb'
-        device = ADBDevice(adb=adb_path, verbose=verbose_logging, device=device_serial)
-        devices[device_serial] = device
+
+    adb_path = _find_sdk_exe(substs, 'adb', False)
+    if not adb_path:
+        adb_path = 'adb'
+    device = ADBDeviceFactory(adb=adb_path, verbose=verbose_logging, device=device_serial)
     return device
 
 
@@ -282,6 +277,8 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
                 "but I don't know how to install it.\n"
                 "Install it now, then hit Enter " % app)
 
+        device.run_as_package = app
+
     if device_verified and xre:
         # Check whether MOZ_HOST_BIN has been set to a valid xre; if not,
         # prompt to install one.
@@ -318,6 +315,7 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
         serial = device_serial or os.environ.get('DEVICE_SERIAL')
         if not serial or ('emulator' not in serial):
             device = _get_device(build_obj.substs, serial)
+            device.run_as_package = app
             try:
                 addr = device.get_ip_address()
                 if not addr:
@@ -349,6 +347,7 @@ def grant_runtime_permissions(build_obj, app, device_serial=None):
     (eg. org.mozilla.geckoview.test).
     """
     device = _get_device(build_obj.substs, device_serial)
+    device.run_as_package = app
     device.grant_runtime_permissions(app)
 
 
