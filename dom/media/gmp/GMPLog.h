@@ -6,6 +6,7 @@
 #ifndef DOM_MEDIA_GMPLOG_H_
 #define DOM_MEDIA_GMPLOG_H_
 
+#include "content_decryption_module.h"
 #include "mozilla/Logging.h"
 
 namespace mozilla {
@@ -22,6 +23,36 @@ extern LogModule* GetGMPLog();
   MOZ_LOG(GetGMPLog(), LogLevel::Debug, (msg, ##__VA_ARGS__))
 #define GMP_LOG_VERBOSE(msg, ...) \
   MOZ_LOG(GetGMPLog(), LogLevel::Verbose, (msg, ##__VA_ARGS__))
+
+// Helpers
+
+inline const char* CdmStatusToString(cdm::Status aStatus) {
+  switch (aStatus) {
+    case cdm::Status::kSuccess:
+      return "success";
+    case cdm::Status::kNeedMoreData:
+      return "need more data";
+    case cdm::Status::kNoKey:
+      return "no key";
+    case cdm::Status::kInitializationError:
+      return "initialization error";
+    case cdm::Status::kDecryptError:
+      return "decrypt error";
+    case cdm::Status::kDecodeError:
+      return "decode error";
+    case cdm::Status::kDeferredInitialization:
+      return "deferred initialization";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Should have coverage of entire enum");
+      return "unexpected status code";  // Gracefully handle disabled asserts.
+  }
+}
+
+inline const char* CdmStatusToString(uint32_t aStatus) {
+  return CdmStatusToString(cdm::Status(aStatus));
+}
+
+// End helpers
 
 }  // namespace mozilla
 
