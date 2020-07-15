@@ -14,3 +14,4 @@ fails print test-print-single-page.html test-print-single-page-noref.html
 print test-async-print.html test-text-ref.html
 fails print test-unexpected-text.html test-unexpected-text-noref.html
 fails print test-missing-text.html test-missing-text-noref.html
+test-pref(print.print_in_color,false) fails print test-color-text-01.html test-color-text-01.html

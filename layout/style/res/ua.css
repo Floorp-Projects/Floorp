@@ -306,6 +306,12 @@
   margin: 0.125in 0.25in;
 }
 
+@media (monochrome) {
+  *|*::-moz-page {
+    filter: grayscale(1);
+  }
+}
+
 *|*::-moz-pagecontent {
   display: block;
   margin: auto;
