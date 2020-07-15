@@ -192,6 +192,9 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
       ? this._form.authoredText
       : this._form.cssText;
   }
+  get compatibilityIssues() {
+    return this._form.compatibilityIssues || [];
+  }
   get declarations() {
     return this._form.declarations || [];
   }
