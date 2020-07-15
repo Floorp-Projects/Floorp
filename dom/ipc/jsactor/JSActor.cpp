@@ -17,6 +17,7 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
 #include "nsASCIIMask.h"

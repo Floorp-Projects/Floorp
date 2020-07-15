@@ -31,6 +31,7 @@
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "js/Wrapper.h"
 #include "mozilla/dom/IterableIteratorBinding.h"

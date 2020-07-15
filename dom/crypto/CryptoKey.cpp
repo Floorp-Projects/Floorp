@@ -8,6 +8,7 @@
 
 #include "cryptohi.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsNSSComponent.h"

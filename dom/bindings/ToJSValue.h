@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TypedArray.h"
 #include "jsapi.h"
