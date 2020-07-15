@@ -969,6 +969,11 @@ JSFunction* frontend::CompileStandaloneAsyncGenerator(
 }
 
 bool frontend::CompilationInfo::init(JSContext* cx) {
-  sourceObject = CreateScriptSourceObject(cx, options);
-  return !!sourceObject;
+  ScriptSource* ss = cx->new_<ScriptSource>();
+  if (!ss) {
+    return false;
+  }
+  setSource(ss);
+
+  return ss->initFromOptions(cx, options);
 }
