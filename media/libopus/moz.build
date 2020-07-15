@@ -131,7 +131,10 @@ if CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     DEFINES['OPUS_ARM_PRESUME_NEON_INTR'] = True
     SOURCES += celt_sources_arm_neon_intr
     SOURCES += silk_sources_arm_neon_intr
-    if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+    if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        DEFINES['OPUS_ARM_MAY_HAVE_NEON'] = True
+        DEFINES['OPUS_ARM_MAY_HAVE_NEON_INTR'] = True
+    else:
         SOURCES += silk_sources_fixed_arm_neon_intr
 
 # Suppress warnings in third-party code.
