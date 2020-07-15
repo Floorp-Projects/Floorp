@@ -16,7 +16,7 @@ macro_rules! debug {
 
 #[repr(C)]
 struct LockedTexture { _private: [u8; 0] }
- 
+
 extern "C" {
     fn ActiveTexture(texture: GLenum);
     fn BindTexture(target: GLenum, texture: GLuint);
