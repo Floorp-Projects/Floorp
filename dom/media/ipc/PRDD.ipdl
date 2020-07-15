@@ -11,7 +11,7 @@ include protocol PProfiler;
 include protocol PRemoteDecoderManager;
 include protocol PVideoBridge;
 
-using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using moveonly mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
 using moveonly mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
 using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";

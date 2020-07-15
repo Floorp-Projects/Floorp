@@ -17,6 +17,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "nsInputStreamPump.h"
 #include "nsHttpHandler.h"
+#include "nsNetUtil.h"
 #include "nsProxyInfo.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
