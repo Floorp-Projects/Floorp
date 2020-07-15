@@ -826,6 +826,10 @@ impl Compositor for SwCompositor {
                     return;
                 }
 
+                // get the color buffer even if we have a self.compositor, to make
+                // sure that any delayed clears are resolved
+                let (swbuf, _, _, stride) = self.gl.get_color_buffer(tile.fbo_id, true);
+
                 if let Some(compositor) = &mut self.compositor {
                     compositor.unmap_tile();
                     return;
@@ -842,7 +846,6 @@ impl Compositor for SwCompositor {
                     }
                 };
 
-                let (swbuf, _, _, stride) = self.gl.get_color_buffer(tile.fbo_id, true);
                 assert!(stride % 4 == 0);
                 let buf = if tile.pbo_id != 0 {
                     native_gl.unmap_buffer(gl::PIXEL_UNPACK_BUFFER);
