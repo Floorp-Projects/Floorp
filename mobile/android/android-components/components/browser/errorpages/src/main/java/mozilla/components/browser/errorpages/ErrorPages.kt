@@ -93,7 +93,7 @@ object ErrorPages {
          * Warning: When updating these params you WILL cause breaking changes that are undetected
          * by consumers. Update the README accordingly.
          */
-        return "resource://android/assets/$htmlResource?" +
+        var urlEncodedErrorPage = "resource://android/assets/$htmlResource?" +
             "&title=$title" +
             "&button=$button" +
             "&description=$description" +
@@ -103,6 +103,10 @@ object ErrorPages {
             "&badCertTechInfo=$badCertTechInfo" +
             "&badCertGoBack=$badCertGoBack" +
             "&badCertAcceptTemporary=$badCertAcceptTemporary"
+
+        urlEncodedErrorPage = urlEncodedErrorPage
+            .replace("<ul>", "<ul role=\"presentation\">")
+        return urlEncodedErrorPage
     }
 }
 
