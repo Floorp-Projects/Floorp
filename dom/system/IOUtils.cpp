@@ -8,15 +8,21 @@
 
 #include "mozilla/dom/IOUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/ErrorNames.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Span.h"
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
 #include "nspr/prtypes.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 #include "nsIGlobalObject.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsThreadManager.h"
+#include "SpecialSystemDirectory.h"
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #  include <fcntl.h>
@@ -45,6 +51,42 @@
 namespace mozilla {
 namespace dom {
 
+// static helper functions
+
+/**
+ * Platform-specific (e.g. Windows, Unix) implementations of XPCOM APIs may
+ * report I/O errors inconsistently. For convenience, this function will attempt
+ * to match a |nsresult| against known results which imply a file cannot be
+ * found.
+ *
+ * @see nsLocalFileWin.cpp
+ * @see nsLocalFileUnix.cpp
+ */
+static bool IsFileNotFound(nsresult aResult) {
+  switch (aResult) {
+    case NS_ERROR_FILE_NOT_FOUND:
+    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static nsCString FormatErrorMessage(nsresult aError,
+                                    const char* const aMessage) {
+  const char* errName = GetStaticErrorName(aError);
+  if (errName) {
+    return nsPrintfCString("%s: %s", aMessage, errName);
+  }
+  // In the exceptional case where there is no error name, print the literal
+  // integer value of the nsresult as an upper case hex value so it can be
+  // located easily in searchfox.
+  return nsPrintfCString("%s: 0x%" PRIX32, aMessage,
+                         static_cast<uint32_t>(aError));
+}
+
+// IOUtils implementation
+
 /* static */
 StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
     IOUtils::sBackgroundEventTarget("sBackgroundEventTarget");
@@ -61,6 +103,9 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
+
   // Process arguments.
   uint32_t toRead = 0;
   if (aMaxBytes.WasPassed()) {
@@ -75,10 +120,6 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   }
 
   NS_ConvertUTF16toUTF8 path(aPath);
-
-  // Do the IO on a background thread and return the result to this thread.
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   InvokeAsync(
       bg, __func__,
@@ -151,6 +192,9 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
+
   // Process arguments.
   aData.ComputeState();
   FallibleTArray<uint8_t> toWrite;
@@ -178,10 +222,6 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   }
 
   NS_ConvertUTF16toUTF8 path(aPath);
-
-  // Do the IO on a background thread and return the result to this thread.
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   InvokeAsync(bg, __func__,
               [path, flags, noOverwrite, toWrite = std::move(toWrite)]() {
@@ -222,6 +262,80 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
           },
           [promise = RefPtr(promise)](const nsACString& aMsg) {
             promise->MaybeRejectWithOperationError(aMsg);
+          });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
+                                        const nsAString& aSourcePath,
+                                        const nsAString& aDestPath,
+                                        const MoveOptions& aOptions) {
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
+
+  // Process arguments.
+  bool noOverwrite = false;
+  if (aOptions.IsAnyMemberPresent()) {
+    noOverwrite = aOptions.mNoOverwrite;
+  }
+
+  InvokeAsync(bg, __func__,
+              [srcPathString = nsAutoString(aSourcePath),
+               destPathString = nsAutoString(aDestPath), noOverwrite]() {
+                nsresult rv =
+                    MoveSync(srcPathString, destPathString, noOverwrite);
+                if (NS_FAILED(rv)) {
+                  return IOMoveMozPromise::CreateAndReject(rv, __func__);
+                }
+                return IOMoveMozPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const bool&) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            promise->MaybeResolveWithUndefined();
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_ACCESS_DENIED:
+                promise->MaybeRejectWithInvalidAccessError("Access denied");
+                break;
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Source file does not exist");
+                break;
+              case NS_ERROR_FILE_ALREADY_EXISTS:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    "Destination file exists and overwrites are not allowed");
+                break;
+              case NS_ERROR_FILE_READ_ONLY:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    "Destination is read only");
+                break;
+              case NS_ERROR_FILE_DESTINATION_NOT_DIR:
+                promise->MaybeRejectWithInvalidAccessError(
+                    "Source is a directory but destination is not");
+                break;
+              case NS_ERROR_FILE_UNRECOGNIZED_PATH:
+                promise->MaybeRejectWithOperationError(
+                    "Only absolute file paths are permitted");
+                break;
+              default: {
+                promise->MaybeRejectWithUnknownError(
+                    FormatErrorMessage(aError, "Unexpected error moving file"));
+              }
+            }
           });
 
   return promise.forget();
@@ -385,6 +499,68 @@ nsresult IOUtils::WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
 
   aResult = bytesWritten;
   return NS_OK;
+}
+
+/* static */
+nsresult IOUtils::MoveSync(const nsAString& aSourcePath,
+                           const nsAString& aDestPath, bool noOverwrite) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIFile> srcFile = new nsLocalFile();
+  MOZ_TRY(srcFile->InitWithPath(aSourcePath));  // Fails if not absolute.
+  MOZ_TRY(srcFile->Normalize());                // Fails if path does not exist.
+
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  MOZ_TRY(destFile->InitWithPath(aDestPath));
+  rv = destFile->Normalize();
+  // Normalize can fail for a number of reasons, including if the file doesn't
+  // exist. It is expected that the file might not exist for a number of calls
+  // (e.g. if we want to rename a file to a new location).
+  if (!IsFileNotFound(rv)) {  // Deliberately ignore "not found" errors.
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Case 1: Destination is an existing directory. Move source into dest.
+  bool destIsDir = false;
+  bool destExists = true;
+
+  rv = destFile->IsDirectory(&destIsDir);
+  if (NS_SUCCEEDED(rv) && destIsDir) {
+    return srcFile->MoveTo(destFile, EmptyString());
+  }
+  if (IsFileNotFound(rv)) {
+    // It's ok if the file doesn't exist. Case 2 handles this below.
+    destExists = false;
+  } else {
+    // Bail out early for any other kind of error though.
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Case 2: Destination is a file which may or may not exist. Try to rename the
+  //         source to the destination. This will fail if the source is a not a
+  //         regular file.
+  if (noOverwrite && destExists) {
+    return NS_ERROR_FILE_ALREADY_EXISTS;
+  }
+  if (destExists && !destIsDir) {
+    // If the source file is a directory, but the target is a file, abort early.
+    // Different implementations of |MoveTo| seem to handle this error case
+    // differently (or not at all), so we explicitly handle it here.
+    bool srcIsDir = false;
+    MOZ_TRY(srcFile->IsDirectory(&srcIsDir));
+    if (srcIsDir) {
+      return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+    }
+  }
+
+  nsCOMPtr<nsIFile> destDir;
+  nsAutoString destName;
+  MOZ_TRY(destFile->GetLeafName(destName));
+  MOZ_TRY(destFile->GetParent(getter_AddRefs(destDir)));
+
+  // NB: if destDir doesn't exist, then MoveTo will create it.
+  return srcFile->MoveTo(destDir, destName);
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
