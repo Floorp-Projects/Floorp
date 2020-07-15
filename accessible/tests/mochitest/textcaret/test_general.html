@@ -63,7 +63,9 @@
       turnCaretBrowsing(true);
 
       // test caret offsets
-      testCaretOffset(document, 15);
+      // This is one higher than expected because system principal documents
+      // automatically create a tooltip node.
+      testCaretOffset(document, 16);
       testCaretOffset("textbox", -1);
       testCaretOffset("textarea", -1);
       testCaretOffset("p", -1);
