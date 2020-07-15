@@ -712,12 +712,15 @@ static ModuleObject* InternalParseModule(
   }
   compilationInfo.setEnclosingScope(&cx->global()->emptyGlobalScope());
 
+  ModuleCompiler<Unit> compiler(srcBuf);
+  Rooted<ModuleObject*> module(cx, compiler.compile(compilationInfo));
+
+  // Even if compile fails, we may have generated some of the scripts so expose
+  // the ScriptSourceObject to the caller.
   if (sourceObjectOut) {
     *sourceObjectOut = compilationInfo.sourceObject;
   }
 
-  ModuleCompiler<Unit> compiler(srcBuf);
-  Rooted<ModuleObject*> module(cx, compiler.compile(compilationInfo));
   if (!module) {
     return nullptr;
   }
