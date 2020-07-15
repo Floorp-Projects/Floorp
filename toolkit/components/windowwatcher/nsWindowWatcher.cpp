@@ -515,7 +515,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   features.Tokenize(aFeatures);
 
   SizeSpec sizeSpec;
-  CalcSizeSpec(features, sizeSpec);
+  CalcSizeSpec(features, false, sizeSpec);
 
   uint32_t chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
 
@@ -686,7 +686,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
 
   SizeSpec sizeSpec;
-  CalcSizeSpec(features, sizeSpec);
+  CalcSizeSpec(features, hasChromeParent, sizeSpec);
 
   // Make sure we calculate the chromeFlags *before* we push the
   // callee context onto the context stack so that
@@ -2009,7 +2009,7 @@ already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
 
 // static
 void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
-                                   SizeSpec& aResult) {
+                                   bool aHasChromeParent, SizeSpec& aResult) {
   // https://drafts.csswg.org/cssom-view/#set-up-browsing-context-features
   // To set up browsing context features for a browsing context `target` given
   // a map `tokenizedFeatures`:
@@ -2067,8 +2067,8 @@ void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
   }
 
   // Non-standard extension.
-  // See bug 1623826
-  if (aFeatures.Exists("outerwidth")) {
+  // Not exposed to web content.
+  if (aHasChromeParent && aFeatures.Exists("outerwidth")) {
     int32_t width = aFeatures.GetInt("outerwidth");
     if (width) {
       aResult.mOuterWidth = width;
@@ -2107,8 +2107,8 @@ void nsWindowWatcher::CalcSizeSpec(const WindowFeatures& aFeatures,
   }
 
   // Non-standard extension.
-  // See bug 1623826
-  if (aFeatures.Exists("outerheight")) {
+  // Not exposed to web content.
+  if (aHasChromeParent && aFeatures.Exists("outerheight")) {
     int32_t height = aFeatures.GetInt("outerheight");
     if (height) {
       aResult.mOuterHeight = height;
