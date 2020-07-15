@@ -12,7 +12,8 @@ function CallModuleResolveHook(module, specifier, expectedMinimumStatus)
     return requestedModule;
 }
 
-// 15.2.1.16.2 GetExportedNames(exportStarSet)
+// https://tc39.es/ecma262/#sec-getexportednames
+// ES2020 15.2.1.17.2 GetExportedNames
 function ModuleGetExportedNames(exportStarSet = [])
 {
     if (!IsObject(this) || !IsModule(this)) {
@@ -20,35 +21,35 @@ function ModuleGetExportedNames(exportStarSet = [])
                             "ModuleGetExportedNames");
     }
 
-    // Step 1
+    // Step 3
     let module = this;
 
-    // Step 2
+    // Step 4
     if (callFunction(ArrayIncludes, exportStarSet, module))
         return [];
 
-    // Step 3
+    // Step 5
     _DefineDataProperty(exportStarSet, exportStarSet.length, module);
 
-    // Step 4
+    // Step 6
     let exportedNames = [];
     let namesCount = 0;
 
-    // Step 5
+    // Step 7
     let localExportEntries = module.localExportEntries;
     for (let i = 0; i < localExportEntries.length; i++) {
         let e = localExportEntries[i];
         _DefineDataProperty(exportedNames, namesCount++, e.exportName);
     }
 
-    // Step 6
+    // Step 8
     let indirectExportEntries = module.indirectExportEntries;
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
         _DefineDataProperty(exportedNames, namesCount++, e.exportName);
     }
 
-    // Step 7
+    // Step 9
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
@@ -82,7 +83,8 @@ function ModuleSetStatus(module, newStatus)
     UnsafeSetReservedSlot(module, MODULE_OBJECT_STATUS_SLOT, newStatus);
 }
 
-// 15.2.1.16.3 ResolveExport(exportName, resolveSet)
+// https://tc39.es/ecma262/#sec-getexportednames
+// ES2020 15.2.1.17.3 ResolveExport
 //
 // Returns an object describing the location of the resolved export or
 // indicating a failure.
@@ -104,10 +106,10 @@ function ModuleResolveExport(exportName, resolveSet = [])
                             "ModuleResolveExport");
     }
 
-    // Step 1
+    // Step 3
     let module = this;
 
-    // Step 2
+    // Step 4
     for (let i = 0; i < resolveSet.length; i++) {
         let r = resolveSet[i];
         if (r.module === module && r.exportName === exportName) {
@@ -116,10 +118,10 @@ function ModuleResolveExport(exportName, resolveSet = [])
         }
     }
 
-    // Step 3
+    // Step 5
     _DefineDataProperty(resolveSet, resolveSet.length, {module, exportName});
 
-    // Step 4
+    // Step 6
     let localExportEntries = module.localExportEntries;
     for (let i = 0; i < localExportEntries.length; i++) {
         let e = localExportEntries[i];
@@ -127,28 +129,31 @@ function ModuleResolveExport(exportName, resolveSet = [])
             return {module, bindingName: e.localName};
     }
 
-    // Step 5
+    // Step 7
     let indirectExportEntries = module.indirectExportEntries;
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
         if (exportName === e.exportName) {
             let importedModule = CallModuleResolveHook(module, e.moduleRequest,
                                                        MODULE_STATUS_UNLINKED);
+
+            // TODO: Step 7.a.ii
+
             return callFunction(importedModule.resolveExport, importedModule, e.importName,
                                 resolveSet);
         }
     }
 
-    // Step 6
+    // Step 8
     if (exportName === "default") {
         // A default export cannot be provided by an export *.
         return null;
     }
 
-    // Step 7
+    // Step 9
     let starResolution = null;
 
-    // Step 8
+    // Step 10
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
@@ -171,7 +176,7 @@ function ModuleResolveExport(exportName, resolveSet = [])
         }
     }
 
-    // Step 9
+    // Step 11
     return starResolution;
 }
 
@@ -182,7 +187,8 @@ function IsResolvedBinding(resolution)
     return typeof resolution === "object" && resolution !== null;
 }
 
-// 15.2.1.18 GetModuleNamespace(module)
+// https://tc39.es/ecma262/#sec-getmodulenamespace
+// ES2020 15.2.1.21 GetModuleNamespace
 function GetModuleNamespace(module)
 {
     // Step 1
@@ -212,19 +218,21 @@ function GetModuleNamespace(module)
     return namespace;
 }
 
-// 9.4.6.13 ModuleNamespaceCreate(module, exports)
+// https://tc39.es/ecma262/#sec-modulenamespacecreate
+// ES2020 9.4.6.11 ModuleNamespaceCreate
 function ModuleNamespaceCreate(module, exports)
 {
     callFunction(ArraySort, exports);
 
     let ns = NewModuleNamespace(module, exports);
 
-    // Pre-compute all bindings now rather than calling ResolveExport() on every
-    // access.
+    // Pre-compute all binding mappings now instead of on each access.
+    // See: ES2020 9.4.6.7 Module Namespace Exotic Object [[Get]]
     for (let i = 0; i < exports.length; i++) {
         let name = exports[i];
         let binding = callFunction(module.resolveExport, module, name);
         assert(IsResolvedBinding(binding), "Failed to resolve binding");
+        // TODO: ES2020 9.4.6.7 Module Namespace Exotic Object [[Get]], Step 10.
         AddModuleNamespaceBinding(ns, name, binding.module, binding.bindingName);
     }
 
@@ -330,9 +338,8 @@ function ModuleInstantiate()
     return undefined;
 }
 
-// rev b012019fea18f29737a67c36911340a3e25bfc63
 // https://tc39.es/ecma262/#sec-InnerModuleLinking
-// 15.2.1.16.1.1 InnerModuleLinking ( module, stack, index )
+// ES2020 15.2.1.16.1.1 InnerModuleLinking
 function InnerModuleLinking(module, stack, index)
 {
     // Step 1
@@ -341,7 +348,7 @@ function InnerModuleLinking(module, stack, index)
     //     a. Perform ? module.Link().
     //     b. Return index.
 
-    // Step 2.a
+    // Step 2
     if (module.status === MODULE_STATUS_LINKING ||
         module.status === MODULE_STATUS_LINKED ||
         module.status === MODULE_STATUS_EVALUATED ||
@@ -367,13 +374,14 @@ function InnerModuleLinking(module, stack, index)
     // Step 8. Append module to stack.
     _DefineDataProperty(stack, stack.length, module);
 
-		// Step 9. For each String required that is an element of module.[[RequestedModules]], do
+    // Step 9. For each String required that is an element of module.[[RequestedModules]], do
     let requestedModules = module.requestedModules;
     for (let i = 0; i < requestedModules.length; i++) {
-        // Step 9.a-9.b
+        // Step 9.a
         let required = requestedModules[i].moduleSpecifier;
         let requiredModule = CallModuleResolveHook(module, required, MODULE_STATUS_UNLINKED);
 
+        // Step 9.b
         index = InnerModuleLinking(requiredModule, stack, index);
 
         // TODO: Check if requiredModule is a Cyclic Module Record
@@ -426,9 +434,8 @@ function InnerModuleLinking(module, stack, index)
     return index;
 }
 
-// rev b012019fea18f29737a67c36911340a3e25bfc63
 // https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment
-// 15.2.1.17.4 InitializeEnvironment ( ) Concrete Method
+// ES2020 15.2.1.17.4 InitializeEnvironment
 function InitializeEnvironment()
 {
     // Step 1
@@ -448,17 +455,17 @@ function InitializeEnvironment()
     // Omitting steps 4-5, for practical purposes it is impossible for a realm to be
     // undefined at this point.
 
-    // Step 6-7
+    // Step 6-8
     // Note that we have already created the environment by this point.
     let env = GetModuleEnvironment(module);
 
-    // Step 8
+    // Step 9
     let importEntries = module.importEntries;
     for (let i = 0; i < importEntries.length; i++) {
         let imp = importEntries[i];
         let importedModule = CallModuleResolveHook(module, imp.moduleRequest,
                                                    MODULE_STATUS_LINKING);
-        // Step 8.c-8.d
+        // Step 9.c-9.d
         if (imp.importName === "*") {
             let namespace = GetModuleNamespace(importedModule);
             CreateNamespaceBinding(env, imp.localName, namespace);
@@ -470,17 +477,19 @@ function InitializeEnvironment()
                                      imp.lineNumber, imp.columnNumber);
             }
 
+            // TODO: Step 9.d.iii
+
             CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
         }
     }
 
-    // Steps 9-15
-    // Some of these do not need to happen for practical purposes. For steps 12-14, the bindings
+    // Steps 10-26
+    // Some of these do not need to happen for practical purposes. For steps 21-23, the bindings
     // that can be handled in a similar way to regulars scripts are done separately. Function
     // Declarations are special due to hoisting and are handled within this function.
     // See ModuleScope and ModuleEnvironmentObject for further details.
 
-    // Step 14.a.iii is handled here.
+    // Step 24.a.iii is handled here.
     // In order to have the functions correctly hoisted we need to do this separately.
     InstantiateModuleFunctionDeclarations(module);
 }
@@ -537,16 +546,17 @@ function RecordModuleEvaluationError(module, error)
     UnsafeSetReservedSlot(module, MODULE_OBJECT_EVALUATION_ERROR_SLOT, error);
 }
 
-// 15.2.1.16.5 ModuleEvaluate()
+// https://tc39.es/ecma262/#sec-moduleevaluation
+// ES2020 15.2.1.16.2 ModuleEvaluate
 function ModuleEvaluate()
 {
     if (!IsObject(this) || !IsModule(this))
         return callFunction(CallModuleMethodIfWrapped, this, "ModuleEvaluate");
 
-    // Step 1
+    // Step 2
     let module = this;
 
-    // Step 2
+    // Step 3
     if (module.status !== MODULE_STATUS_LINKED &&
         module.status !== MODULE_STATUS_EVALUATED &&
         module.status !== MODULE_STATUS_EVALUATED_ERROR)
@@ -554,10 +564,10 @@ function ModuleEvaluate()
         ThrowInternalError(JSMSG_BAD_MODULE_STATUS);
     }
 
-    // Step 3
+    // Step 4
     let stack = [];
 
-    // Steps 4-5
+    // Steps 5-6
     try {
         InnerModuleEvaluation(module, stack, 0);
     } catch (error) {
@@ -578,19 +588,22 @@ function ModuleEvaluate()
         throw error;
     }
 
+    // Steps 7-8
     assert(module.status === MODULE_STATUS_EVALUATED,
            "Bad module status after successful evaluation");
     assert(stack.length === 0,
            "Stack should be empty after successful evaluation");
 
+    // Step 9
     return undefined;
 }
 
-// 15.2.1.16.5.1 InnerModuleEvaluation(module, stack, index)
+// https://tc39.es/ecma262/#sec-innermoduleevaluation
+// ES2020 15.2.1.16.2.1 InnerModuleEvaluation
 function InnerModuleEvaluation(module, stack, index)
 {
     // Step 1
-    // TODO: Support module records other than source text module records.
+    // TODO: Support module records other than Cyclic Module Records.
 
     // Step 2
     if (module.status === MODULE_STATUS_EVALUATED_ERROR)
