@@ -17,6 +17,8 @@ from distutils.version import LooseVersion
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
 # the six module.
+from subprocess import CalledProcessError
+
 if sys.version_info < (3,):
     from ConfigParser import (
         Error as ConfigParserError,
@@ -431,18 +433,19 @@ class Bootstrapper(object):
             self.instance.ensure_dump_syms_packages(state_dir, checkout_root)
 
     def check_telemetry_opt_in(self, state_dir):
-        # We can't prompt the user.
-        if self.instance.no_interactive:
-            return
         # Don't prompt if the user already has a setting for this value.
         if self.mach_context is not None and 'telemetry' in self.mach_context.settings.build:
-            return
+            return self.mach_context.settings.build.telemetry
+        # We can't prompt the user.
+        if self.instance.no_interactive:
+            return False
         choice = self.instance.prompt_yesno(prompt=TELEMETRY_OPT_IN_PROMPT)
         if choice:
             cfg_file = os.path.join(state_dir, 'machrc')
             if update_or_create_build_telemetry_config(cfg_file):
                 print('\nThanks for enabling build telemetry! You can change this setting at ' +
                       'any time by editing the config file `{}`\n'.format(cfg_file))
+        return choice
 
     def bootstrap(self):
         if sys.version_info[0] < 3:
@@ -567,7 +570,10 @@ class Bootstrapper(object):
             print(SOURCE_ADVERTISE)
 
         if state_dir_available:
-            self.check_telemetry_opt_in(state_dir)
+            is_telemetry_enabled = self.check_telemetry_opt_in(state_dir)
+            if is_telemetry_enabled:
+                _install_glean()
+
         self.maybe_install_private_packages_or_exit(state_dir,
                                                     state_dir_available,
                                                     have_clone,
@@ -870,6 +876,33 @@ def git_clone_firefox(git, dest, watchman=None):
 
     print('Firefox source code available at %s' % dest)
     return True
+
+
+def _install_glean():
+    """Installs glean to the current python environment.
+
+    If the current python instance is a virtualenv, then glean is installed
+    directly.
+    If not, then glean is installed to the Python user install directory.
+    """
+    try:
+        import glean  # noqa: F401
+        return  # Glean is already installed, we can skip the installation
+    except ImportError:
+        pass
+
+    pip_call = [sys.executable, '-m', 'pip', 'install', 'glean_sdk']
+    if not os.environ.get('VIRTUAL_ENV'):
+        # If the user is already using a virtual environment before they invoked
+        # `mach bootstrap`, then we shouldn't add the "--user" flag. This is because
+        # virtual environments don't support the flags since they don't have a
+        # separate "user install directory".
+        pip_call.append('--user')
+
+    try:
+        subprocess.check_output(pip_call)
+    except CalledProcessError:
+        print("Failed to install glean, telemetry will not be gathered")
 
 
 def _warn_if_risky_revision(path):
