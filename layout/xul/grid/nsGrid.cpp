@@ -13,6 +13,7 @@
 
 #include "nsGrid.h"
 #include "nsGridRowGroupLayout.h"
+#include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsSprocketLayout.h"
 #include "nsGridLayout2.h"

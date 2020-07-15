@@ -29,6 +29,7 @@
 #include "mozilla/SVGUtils.h"
 #include "CSSFilterInstance.h"
 #include "SVGFilterPaintCallback.h"
+#include "SVGIntegrationUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;

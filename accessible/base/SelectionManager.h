@@ -6,7 +6,6 @@
 #ifndef mozilla_a11y_SelectionManager_h__
 #define mozilla_a11y_SelectionManager_h__
 
-#include "nsIFrame.h"
 #include "nsISelectionListener.h"
 #include "mozilla/WeakPtr.h"
 
@@ -106,6 +105,8 @@ class SelectionManager : public nsISelectionListener {
     mCaretOffset = -1;
     mAccWithCaret = nullptr;
   }
+
+  ~SelectionManager();
 
  protected:
   SelectionManager();

@@ -32,7 +32,6 @@ class gfxContext;
 class nsFrameList;
 class nsIContent;
 
-class nsIFrame;
 class nsPresContext;
 class nsTextFrame;
 

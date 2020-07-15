@@ -203,3 +203,5 @@ void SelectionManager::ProcessSelectionChanged(SelData* aSelData) {
         nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED, text);
   }
 }
+
+SelectionManager::~SelectionManager() = default;

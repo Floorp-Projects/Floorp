@@ -13,6 +13,7 @@
 #define nsFrameLoader_h_
 
 #include "nsDocShell.h"
+#include "nsIFrame.h"
 #include "nsStringFwd.h"
 #include "nsPoint.h"
 #include "nsSize.h"
@@ -28,7 +29,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "nsStubMutationObserver.h"
 #include "Units.h"
-#include "nsIFrame.h"
 #include "nsPluginTags.h"
 
 class nsIURI;

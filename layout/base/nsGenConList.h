@@ -10,12 +10,12 @@
 #define nsGenConList_h___
 
 #include "mozilla/LinkedList.h"
-#include "nsIFrame.h"
 #include "nsStyleStruct.h"
 #include "nsCSSPseudoElements.h"
 #include "nsTextNode.h"
 
 class nsGenConList;
+class nsIFrame;
 
 struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
   using StyleContentType = mozilla::StyleContentItem::Tag;
