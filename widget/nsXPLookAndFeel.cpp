@@ -10,6 +10,7 @@
 #include "nsXPLookAndFeel.h"
 #include "nsLookAndFeel.h"
 #include "HeadlessLookAndFeel.h"
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsFont.h"
 #include "nsIXULRuntime.h"
