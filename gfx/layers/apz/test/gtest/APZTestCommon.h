@@ -137,9 +137,10 @@ class MockContentController : public GeckoContentController {
                     const uint32_t& aScrollGeneration));
   MOCK_METHOD5(HandleTap, void(TapType, const LayoutDevicePoint&, Modifiers,
                                const ScrollableLayerGuid&, uint64_t));
-  MOCK_METHOD4(NotifyPinchGesture,
+  MOCK_METHOD5(NotifyPinchGesture,
                void(PinchGestureInput::PinchGestureType,
-                    const ScrollableLayerGuid&, LayoutDeviceCoord, Modifiers));
+                    const ScrollableLayerGuid&, const LayoutDevicePoint&,
+                    LayoutDeviceCoord, Modifiers));
   // Can't use the macros with already_AddRefed :(
   void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) {
     RefPtr<Runnable> task = aTask;

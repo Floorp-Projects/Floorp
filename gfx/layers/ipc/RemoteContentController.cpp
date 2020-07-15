@@ -144,7 +144,8 @@ void RemoteContentController::HandleTap(TapType aTapType,
 
 void RemoteContentController::NotifyPinchGestureOnCompositorThread(
     PinchGestureInput::PinchGestureType aType, const ScrollableLayerGuid& aGuid,
-    LayoutDeviceCoord aSpanChange, Modifiers aModifiers) {
+    const LayoutDevicePoint& aFocusPoint, LayoutDeviceCoord aSpanChange,
+    Modifiers aModifiers) {
   MOZ_ASSERT(mCompositorThread->IsOnCurrentThread());
 
   // The raw pointer to APZCTreeManagerParent is ok here because we are on the
@@ -152,14 +153,15 @@ void RemoteContentController::NotifyPinchGestureOnCompositorThread(
   APZCTreeManagerParent* apzctmp =
       CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
   if (apzctmp) {
-    Unused << apzctmp->SendNotifyPinchGesture(aType, aGuid, aSpanChange,
-                                              aModifiers);
+    Unused << apzctmp->SendNotifyPinchGesture(aType, aGuid, aFocusPoint,
+                                              aSpanChange, aModifiers);
   }
 }
 
 void RemoteContentController::NotifyPinchGesture(
     PinchGestureInput::PinchGestureType aType, const ScrollableLayerGuid& aGuid,
-    LayoutDeviceCoord aSpanChange, Modifiers aModifiers) {
+    const LayoutDevicePoint& aFocusPoint, LayoutDeviceCoord aSpanChange,
+    Modifiers aModifiers) {
   APZThreadUtils::AssertOnControllerThread();
 
   // For now we only ever want to handle this NotifyPinchGesture message in
@@ -169,17 +171,18 @@ void RemoteContentController::NotifyPinchGesture(
   // and send it there.
   if (XRE_IsGPUProcess()) {
     if (mCompositorThread->IsOnCurrentThread()) {
-      NotifyPinchGestureOnCompositorThread(aType, aGuid, aSpanChange,
-                                           aModifiers);
+      NotifyPinchGestureOnCompositorThread(aType, aGuid, aFocusPoint,
+                                           aSpanChange, aModifiers);
     } else {
       mCompositorThread->Dispatch(
           NewRunnableMethod<PinchGestureInput::PinchGestureType,
-                            ScrollableLayerGuid, LayoutDeviceCoord, Modifiers>(
+                            ScrollableLayerGuid, LayoutDevicePoint,
+                            LayoutDeviceCoord, Modifiers>(
               "layers::RemoteContentController::"
               "NotifyPinchGestureOnCompositorThread",
               this,
               &RemoteContentController::NotifyPinchGestureOnCompositorThread,
-              aType, aGuid, aSpanChange, aModifiers));
+              aType, aGuid, aFocusPoint, aSpanChange, aModifiers));
     }
     return;
   }
@@ -193,7 +196,8 @@ void RemoteContentController::NotifyPinchGesture(
         CompositorBridgeParent::GetGeckoContentControllerForRoot(
             aGuid.mLayersId);
     if (rootController) {
-      rootController->NotifyPinchGesture(aType, aGuid, aSpanChange, aModifiers);
+      rootController->NotifyPinchGesture(aType, aGuid, aFocusPoint, aSpanChange,
+                                         aModifiers);
     }
   }
 }

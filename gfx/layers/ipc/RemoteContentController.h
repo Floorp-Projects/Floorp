@@ -49,6 +49,7 @@ class RemoteContentController : public GeckoContentController,
 
   void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                           const ScrollableLayerGuid& aGuid,
+                          const LayoutDevicePoint& aFocusPoint,
                           LayoutDeviceCoord aSpanChange,
                           Modifiers aModifiers) override;
 
@@ -101,8 +102,8 @@ class RemoteContentController : public GeckoContentController,
                                    uint64_t aInputBlockId);
   void NotifyPinchGestureOnCompositorThread(
       PinchGestureInput::PinchGestureType aType,
-      const ScrollableLayerGuid& aGuid, LayoutDeviceCoord aSpanChange,
-      Modifiers aModifiers);
+      const ScrollableLayerGuid& aGuid, const LayoutDevicePoint& aFocusPoint,
+      LayoutDeviceCoord aSpanChange, Modifiers aModifiers);
 
   void CancelAutoscrollInProcess(const ScrollableLayerGuid& aScrollId);
   void CancelAutoscrollCrossProcess(const ScrollableLayerGuid& aScrollId);

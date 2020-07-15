@@ -257,7 +257,7 @@ TEST_F(APZCPinchGestureDetectorTester,
   // Since we are preventing the pinch action via touch-action we should not be
   // sending the pinch gesture notifications that would normally be sent when
   // apz_allow_zooming is false.
-  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _)).Times(0);
+  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _, _)).Times(0);
   nsTArray<uint32_t> behaviors = {mozilla::layers::AllowedTouchBehavior::NONE,
                                   mozilla::layers::AllowedTouchBehavior::NONE};
   DoPinchTest(false, &behaviors);
@@ -273,7 +273,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault_NoAPZZoom) {
   // Since we are preventing the pinch action we should not be sending the pinch
   // gesture notifications that would normally be sent when apz_allow_zooming is
   // false.
-  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _)).Times(0);
+  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _, _)).Times(0);
 
   DoPinchWithPreventDefaultTest();
 }
@@ -449,14 +449,14 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
   // get called as the pinch progresses, but the metrics shouldn't change.
   EXPECT_CALL(*mcc,
               NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_START,
-                                 apzc->GetGuid(), LayoutDeviceCoord(0), _))
+                                 apzc->GetGuid(), _, LayoutDeviceCoord(0), _))
       .Times(1);
   EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_SCALE,
-                                       apzc->GetGuid(), _, _))
+                                       apzc->GetGuid(), _, _, _))
       .Times(AtLeast(1));
   EXPECT_CALL(*mcc,
               NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_END,
-                                 apzc->GetGuid(), LayoutDeviceCoord(0), _))
+                                 apzc->GetGuid(), _, LayoutDeviceCoord(0), _))
       .Times(1);
 
   int touchInputId = 0;
@@ -488,14 +488,14 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_NoSpan) {
   // get called as the pinch progresses, but the metrics shouldn't change.
   EXPECT_CALL(*mcc,
               NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_START,
-                                 apzc->GetGuid(), LayoutDeviceCoord(0), _))
+                                 apzc->GetGuid(), _, LayoutDeviceCoord(0), _))
       .Times(1);
   EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_SCALE,
-                                       apzc->GetGuid(), _, _))
+                                       apzc->GetGuid(), _, _, _))
       .Times(AtLeast(1));
   EXPECT_CALL(*mcc,
               NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_END,
-                                 apzc->GetGuid(), LayoutDeviceCoord(0), _))
+                                 apzc->GetGuid(), _, LayoutDeviceCoord(0), _))
       .Times(1);
 
   int inputId = 0;

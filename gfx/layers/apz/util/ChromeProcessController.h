@@ -60,6 +60,7 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
                  uint64_t aInputBlockId) override;
   void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                           const ScrollableLayerGuid& aGuid,
+                          const LayoutDevicePoint& aFocusPoint,
                           LayoutDeviceCoord aSpanChange,
                           Modifiers aModifiers) override;
   void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
