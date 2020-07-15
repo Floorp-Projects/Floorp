@@ -9,6 +9,7 @@ DevToolsModules(
     'history.js',
     'ignore.js',
     'log.js',
+    'performance-marker.js',
     'promise.js',
     'task.js',
     'thunk-with-options.js',
