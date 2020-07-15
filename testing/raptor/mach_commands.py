@@ -234,8 +234,13 @@ class MachRaptor(MachCommandBase):
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
             from mozdevice import ADBAndroid
             install = InstallIntent.NO if kwargs.pop('noinstall', False) else InstallIntent.YES
+            verbose = False
+            if kwargs.get('log_mach_verbose') or kwargs.get('log_tbpl_level') == 'debug' or \
+               kwargs.get('log_mach_level') == 'debug' or kwargs.get('log_raw_level') == 'debug':
+                verbose = True
             if not verify_android_device(build_obj, install=install,
                                          app=kwargs['binary'],
+                                         verbose=verbose,
                                          xre=True):  # Equivalent to 'run_local' = True.
                 return 1
 
