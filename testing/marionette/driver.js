@@ -1574,35 +1574,27 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
  * ID.  Searches for windows by name, then ID.  Content windows take
  * precedence.
  *
- * @param {string} name
- *     Target name or ID of the window to switch to.
+ * @param {string} handle
+ *     Handle of the window to switch to.
  * @param {boolean=} focus
- *      A boolean value which determines whether to focus
- *      the window. Defaults to true.
+ *     A boolean value which determines whether to focus
+ *     the window. Defaults to true.
  */
 GeckoDriver.prototype.switchToWindow = async function(cmd) {
-  let focus = true;
-  if (typeof cmd.parameters.focus != "undefined") {
-    focus = cmd.parameters.focus;
-  }
+  const { focus = true, handle } = cmd.parameters;
 
-  // Window IDs are internally handled as numbers, but here it could
-  // also be the name of the window.
-  let switchTo = parseInt(cmd.parameters.name);
-  if (isNaN(switchTo)) {
-    switchTo = cmd.parameters.name;
-  }
+  assert.string(
+    handle,
+    pprint`Expected "handle" to be a string, got ${handle}`
+  );
+  assert.boolean(focus, pprint`Expected "focus" to be a boolean, got ${focus}`);
 
-  let byNameOrId = function(win, windowId) {
-    return switchTo === win.name || switchTo === windowId;
-  };
-
-  let found = this.findWindow(this.windows, byNameOrId);
-
+  const id = parseInt(handle);
+  const found = this.findWindow(this.windows, (win, winId) => id == winId);
   if (found) {
     await this.setWindowHandle(found, focus);
   } else {
-    throw new NoSuchWindowError(`Unable to locate window: ${switchTo}`);
+    throw new NoSuchWindowError(`Unable to locate window: ${handle}`);
   }
 };
 
