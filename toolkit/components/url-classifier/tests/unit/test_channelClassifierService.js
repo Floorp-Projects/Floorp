@@ -31,7 +31,7 @@ function setupChannel(uri, topUri = TOP_LEVEL_DOMAIN) {
       NetUtil.newURI(topUri),
       {}
     ),
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   });
 

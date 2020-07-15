@@ -334,7 +334,7 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
   }
 
   nsSecurityFlags securityFlags =
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
   uint32_t sandboxFlags = aBrowsingContext->GetSandboxFlags();
 
   if (aLoadState->LoadType() == LOAD_ERROR_PAGE) {

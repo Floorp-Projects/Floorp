@@ -497,7 +497,7 @@ var PushServiceWebSocket = {
       null, // aLoadingNode
       Services.scriptSecurityManager.getSystemPrincipal(),
       null, // aTriggeringPrincipal
-      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       Ci.nsIContentPolicy.TYPE_WEBSOCKET
     );
     // Allow deprecated HTTP request from SystemPrincipal

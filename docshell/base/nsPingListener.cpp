@@ -97,7 +97,7 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   NS_NewChannel(getter_AddRefs(chan), aURI, doc,
                 info->requireSameHost
                     ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
-                    : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                    : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                 nsIContentPolicy::TYPE_PING,
                 nullptr,                  // PerformanceStorage
                 nullptr,                  // aLoadGroup

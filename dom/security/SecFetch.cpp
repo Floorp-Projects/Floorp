@@ -236,17 +236,21 @@ void SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
   uint32_t securityMode = loadInfo->GetSecurityMode();
   nsContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
 
-  if (securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS ||
+  if (securityMode ==
+          nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT ||
       securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED) {
     mode = "same-origin"_ns;
-  } else if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
+  } else if (securityMode ==
+             nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT) {
     mode = "cors"_ns;
   } else {
     // If it's not one of the security modes above, then we ensure it's
     // at least one of the others defined in nsILoadInfo
     MOZ_ASSERT(
-        securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS ||
-            securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+        securityMode ==
+                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT ||
+            securityMode ==
+                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
         "unhandled security mode");
   }
 

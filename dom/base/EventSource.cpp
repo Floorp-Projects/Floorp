@@ -1029,7 +1029,8 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
 
   nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
 
-  nsSecurityFlags securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+  nsSecurityFlags securityFlags =
+      nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
 
   if (mEventSource->mWithCredentials) {
     securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;

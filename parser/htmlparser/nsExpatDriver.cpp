@@ -655,7 +655,7 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
     localURI.swap(uri);
     rv = NS_NewChannel(getter_AddRefs(channel), uri,
                        nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                        nsIContentPolicy::TYPE_DTD);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
@@ -671,20 +671,22 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
         if (doc->SkipDTDSecurityChecks()) {
           policyType = nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD;
         }
-        rv = NS_NewChannel(getter_AddRefs(channel), uri, doc,
-                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                               nsILoadInfo::SEC_ALLOW_CHROME,
-                           policyType);
+        rv = NS_NewChannel(
+            getter_AddRefs(channel), uri, doc,
+            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
+                nsILoadInfo::SEC_ALLOW_CHROME,
+            policyType);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
     if (!channel) {
       nsCOMPtr<nsIPrincipal> nullPrincipal =
           mozilla::NullPrincipal::CreateWithoutOriginAttributes();
-      rv = NS_NewChannel(getter_AddRefs(channel), uri, nullPrincipal,
-                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                             nsILoadInfo::SEC_ALLOW_CHROME,
-                         policyType);
+      rv = NS_NewChannel(
+          getter_AddRefs(channel), uri, nullPrincipal,
+          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
+              nsILoadInfo::SEC_ALLOW_CHROME,
+          policyType);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

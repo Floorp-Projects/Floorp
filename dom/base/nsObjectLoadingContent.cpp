@@ -2272,7 +2272,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
       true,    // aInheritForAboutBlank
       false);  // aForceInherit
   nsSecurityFlags securityFlags =
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
 
   bool isURIUniqueOrigin =
       StaticPrefs::security_data_uri_unique_opaque_origin() &&

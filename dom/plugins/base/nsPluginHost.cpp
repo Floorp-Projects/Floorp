@@ -2263,7 +2263,7 @@ nsresult nsPluginHost::NewPluginURLStream(
   // form |nsDocShell::OnLinkClickSync| bug 166613
   rv = NS_NewChannel(
       getter_AddRefs(channel), url, element,
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
           nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
       nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
       nullptr,  // aPerformanceStorage

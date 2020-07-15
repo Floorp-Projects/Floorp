@@ -118,7 +118,7 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
     nsresult rv;
 
     nsSecurityFlags secFlags;
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
     uint32_t sandboxFlags = SANDBOXED_ORIGIN;
 
     nsCOMPtr<nsIURI> url;

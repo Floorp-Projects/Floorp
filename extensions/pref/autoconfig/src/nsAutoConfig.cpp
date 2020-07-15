@@ -243,7 +243,7 @@ nsresult nsAutoConfig::downloadAutoConfig() {
   // open a channel for the url
   rv = NS_NewChannel(
       getter_AddRefs(channel), url, nsContentUtils::GetSystemPrincipal(),
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       nsIContentPolicy::TYPE_OTHER,
       nullptr,  // nsICookieJarSettings
       nullptr,  // PerformanceStorage

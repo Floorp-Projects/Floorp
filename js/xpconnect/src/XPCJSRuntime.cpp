@@ -2722,7 +2722,7 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
   nsCOMPtr<nsIChannel> scriptChannel;
   rv = NS_NewChannel(getter_AddRefs(scriptChannel), uri,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
 

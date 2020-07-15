@@ -35,7 +35,7 @@ function loadFileContent(aFile, aCharset) {
                                null,      // aLoadingNode
                                SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
                                null,      // aTriggeringPrincipal
-                               SpecialPowers.Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                               SpecialPowers.Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                                SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
 
     var cis = SpecialPowers.Ci.nsIConverterInputStream;

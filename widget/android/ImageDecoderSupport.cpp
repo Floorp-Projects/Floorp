@@ -163,7 +163,7 @@ NS_IMPL_ISUPPORTS(ImageCallbackHelper, imgIContainerCallback,
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), uri,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsIContentPolicy::TYPE_IMAGE);
   NS_ENSURE_SUCCESS(rv, rv);
 

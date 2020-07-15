@@ -82,10 +82,10 @@ static already_AddRefed<ipc::SharedMemoryBasic> LoadInShmemFromURI(
     nsIURI* aURI, uint32_t* aLength) {
   MOZ_ASSERT(XRE_IsParentProcess());
   nsCOMPtr<nsIChannel> channel;
-  if (NS_FAILED(NS_NewChannel(getter_AddRefs(channel), aURI,
-                              nsContentUtils::GetSystemPrincipal(),
-                              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                              nsIContentPolicy::TYPE_OTHER))) {
+  if (NS_FAILED(NS_NewChannel(
+          getter_AddRefs(channel), aURI, nsContentUtils::GetSystemPrincipal(),
+          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+          nsIContentPolicy::TYPE_OTHER))) {
     return nullptr;
   }
   nsCOMPtr<nsIInputStream> instream;

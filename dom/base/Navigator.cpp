@@ -1187,9 +1187,9 @@ bool Navigator::SendBeaconInternal(const nsAString& aUrl,
   if (aBody && !contentTypeWithCharset.IsVoid() &&
       !nsContentUtils::IsCORSSafelistedRequestHeader("content-type"_ns,
                                                      contentTypeWithCharset)) {
-    securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
   } else {
-    securityFlags |= nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+    securityFlags |= nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
   }
 
   nsCOMPtr<nsIChannel> channel;

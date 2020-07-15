@@ -97,8 +97,9 @@ nsresult ViaductRequest::LaunchRequest(
   nsresult rv = NS_NewURI(getter_AddRefs(uri), request.url().c_str());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsSecurityFlags secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
-                             nsILoadInfo::SEC_COOKIES_OMIT;
+  nsSecurityFlags secFlags =
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL |
+      nsILoadInfo::SEC_COOKIES_OMIT;
   uint32_t loadFlags = 0;
 
   if (!request.use_caches()) {

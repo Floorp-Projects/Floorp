@@ -1710,8 +1710,8 @@ class HTMLMediaElement::ChannelLoader final {
     // determine what security checks need to be performed in AsyncOpen().
     nsSecurityFlags securityFlags =
         aElement->ShouldCheckAllowOrigin()
-            ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
-            : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+            ? nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT
+            : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
 
     if (aElement->GetCORSMode() == CORS_USE_CREDENTIALS) {
       securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;

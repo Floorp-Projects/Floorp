@@ -313,7 +313,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
     return;
   }
 
-  nsSecurityFlags secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+  nsSecurityFlags secFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
   nsLoadFlags loadFlags =
       nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
   nsContentPolicyType contentPolicy =

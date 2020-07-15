@@ -23,10 +23,10 @@ Result<Ok, nsresult> FileMgr::Open(const nsACString& aPath) {
   MOZ_TRY(NS_NewURI(getter_AddRefs(uri), aPath));
 
   nsCOMPtr<nsIChannel> channel;
-  MOZ_TRY(NS_NewChannel(getter_AddRefs(channel), uri,
-                        nsContentUtils::GetSystemPrincipal(),
-                        nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
-                        nsIContentPolicy::TYPE_OTHER));
+  MOZ_TRY(NS_NewChannel(
+      getter_AddRefs(channel), uri, nsContentUtils::GetSystemPrincipal(),
+      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT,
+      nsIContentPolicy::TYPE_OTHER));
 
   MOZ_TRY(channel->Open(getter_AddRefs(mStream)));
   return Ok();

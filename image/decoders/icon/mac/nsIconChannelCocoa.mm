@@ -190,12 +190,12 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
     return rv;
   }
 
-  MOZ_ASSERT(
-      mLoadInfo->GetSecurityMode() == 0 || mLoadInfo->GetInitialSecurityCheckDone() ||
-          (mLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
-           mLoadInfo->GetLoadingPrincipal() &&
-           mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()),
-      "security flags in loadInfo but doContentSecurityCheck() not called");
+  MOZ_ASSERT(mLoadInfo->GetSecurityMode() == 0 || mLoadInfo->GetInitialSecurityCheckDone() ||
+                 (mLoadInfo->GetSecurityMode() ==
+                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL &&
+                  mLoadInfo->GetLoadingPrincipal() &&
+                  mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()),
+             "security flags in loadInfo but doContentSecurityCheck() not called");
 
   nsCOMPtr<nsIInputStream> inStream;
   rv = MakeInputStream(getter_AddRefs(inStream), true);

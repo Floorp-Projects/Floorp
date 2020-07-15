@@ -100,9 +100,10 @@ nsresult FetchImageHelper::ImageFetchListener::FetchDecodedImageFromURI(
   RefPtr<nsIPrincipal> nullPrincipal =
       NullPrincipal::CreateWithoutOriginAttributes();
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel), aURI, nullPrincipal,
-                              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                              nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+  nsresult rv =
+      NS_NewChannel(getter_AddRefs(channel), aURI, nullPrincipal,
+                    nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+                    nsIContentPolicy::TYPE_INTERNAL_IMAGE);
   if (NS_FAILED(rv)) {
     return rv;
   }

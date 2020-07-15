@@ -1212,7 +1212,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     nsCOMPtr<nsIChannel> channel;
     NS_NewChannel(getter_AddRefs(channel), uri,
                   nsContentUtils::GetSystemPrincipal(),
-                  nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                  nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                   nsIContentPolicy::TYPE_OTHER);
 
     if (!channel) {

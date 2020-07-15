@@ -382,13 +382,13 @@ RequestMode InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel) {
   uint32_t securityMode = loadInfo->GetSecurityMode();
 
   switch (securityMode) {
-    case nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS:
+    case nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT:
     case nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED:
       return RequestMode::Same_origin;
-    case nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS:
-    case nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL:
+    case nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT:
+    case nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL:
       return RequestMode::No_cors;
-    case nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS:
+    case nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT:
       // TODO: Check additional flag force-preflight after bug 1199693 (bug
       // 1189945)
       return RequestMode::Cors;

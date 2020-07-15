@@ -197,7 +197,7 @@ add_task(async function test_set_responseHeaders() {
         "http://example.com"
       ),
       contentPolicyType: Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     });
 
     channel.asyncOpen({
