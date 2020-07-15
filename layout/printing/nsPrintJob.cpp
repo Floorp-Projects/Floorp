@@ -290,10 +290,11 @@ static nsPrintObject* FindPrintObjectByDOMWin(nsPrintObject* aPO,
   return nullptr;
 }
 
-static nsresult GetSeqFrameAndCountPagesInternal(
-    const UniquePtr<nsPrintObject>& aPO, nsIFrame*& aSeqFrame,
-    int32_t& aCount) {
-  NS_ENSURE_ARG_POINTER(aPO);
+static std::tuple<nsPageSequenceFrame*, int32_t>
+GetSeqFrameAndCountPagesInternal(const UniquePtr<nsPrintObject>& aPO) {
+  if (!aPO) {
+    return {nullptr, 0};
+  }
 
   // This is sometimes incorrectly called before the pres shell has been created
   // (bug 1141756). MOZ_DIAGNOSTIC_ASSERT so we'll still see the crash in
@@ -301,18 +302,16 @@ static nsresult GetSeqFrameAndCountPagesInternal(
   if (!aPO->mPresShell) {
     MOZ_DIAGNOSTIC_ASSERT(
         false, "GetSeqFrameAndCountPages needs a non-null pres shell");
-    return NS_ERROR_FAILURE;
+    return {nullptr, 0};
   }
 
-  aSeqFrame = aPO->mPresShell->GetPageSequenceFrame();
-  if (!aSeqFrame) {
-    return NS_ERROR_FAILURE;
+  nsPageSequenceFrame* seqFrame = aPO->mPresShell->GetPageSequenceFrame();
+  if (!seqFrame) {
+    return {nullptr, 0};
   }
 
   // count the total number of pages
-  aCount = aSeqFrame->PrincipalChildList().GetLength();
-
-  return NS_OK;
+  return {seqFrame, seqFrame->PrincipalChildList().GetLength()};
 }
 
 /**
@@ -546,14 +545,14 @@ void nsPrintJob::SuppressPrintPreviewUserEvents() {
 }
 
 //-----------------------------------------------------------------
-nsresult nsPrintJob::GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame,
-                                              int32_t& aCount) {
+std::tuple<nsPageSequenceFrame*, int32_t>
+nsPrintJob::GetSeqFrameAndCountPages() {
   MOZ_ASSERT(mPrtPreview);
   // Guarantee that mPrintPreview->mPrintObject won't be deleted during a call
   // of GetSeqFrameAndCountPagesInternal().
   RefPtr<nsPrintData> printDataForPrintPreview = mPrtPreview;
   return GetSeqFrameAndCountPagesInternal(
-      printDataForPrintPreview->mPrintObject, aSeqFrame, aCount);
+      printDataForPrintPreview->mPrintObject);
 }
 //---------------------------------------------------------------------------------
 //-- Done: Methods needed by the DocViewer
@@ -1030,13 +1029,9 @@ int32_t nsPrintJob::GetPrintPreviewNumPages() {
   if (NS_WARN_IF(!printData)) {
     return 0;
   }
-  nsIFrame* seqFrame = nullptr;
-  int32_t numPages = 0;
-  nsresult rv = GetSeqFrameAndCountPagesInternal(printData->mPrintObject,
-                                                 seqFrame, numPages);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return 0;
-  }
+  auto [seqFrame, numPages] =
+      GetSeqFrameAndCountPagesInternal(printData->mPrintObject);
+  Unused << seqFrame;
   return numPages;
 }
 

@@ -303,6 +303,7 @@
   background: white;
   box-shadow: 5px 5px 8px #202020;
   box-decoration-break: clone;
+  /* TODO: Remove margin if viewport is small or something? */
   margin: 0.125in 0.25in;
 }
 

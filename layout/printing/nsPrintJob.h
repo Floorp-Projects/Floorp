@@ -126,7 +126,7 @@ class nsPrintJob final : public nsIObserver,
   bool GetIsPrintPreview() { return mIsDoingPrintPreview; }
   bool GetIsCreatingPrintPreview() { return mIsCreatingPrintPreview; }
 
-  nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount);
+  std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountPages();
 
   void TurnScriptingOn(bool aDoTurnOn);
 
@@ -143,10 +143,6 @@ class nsPrintJob final : public nsIObserver,
 
   mozilla::PresShell* GetPrintPreviewPresShell() {
     return mPrtPreview->mPrintObject->mPresShell;
-  }
-
-  float GetPrintPreviewScale() {
-    return mPrtPreview->mPrintObject->mPresContext->GetPrintPreviewScale();
   }
 
   nsresult Cancel();

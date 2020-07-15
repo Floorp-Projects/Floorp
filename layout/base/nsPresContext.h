@@ -453,14 +453,19 @@ class nsPresContext : public nsISupports,
   void SetPageScale(float aScale) { mPageScale = aScale; }
 
   /**
-   * Get/set the scaling facor to use when rendering the pages for print
+   * Get/set the scaling factor to use when rendering the pages for print
    * preview. Only safe to get after print preview set up; safe to set anytime.
    * This is a scaling factor for the display of the print preview.  It
    * does not affect layout.  It only affects the size of the onscreen pages
    * in print preview.
+   *
+   * The getter should only be used by the page sequence frame, which is the
+   * frame responsible for applying the scaling. Other callers should use
+   * nsPageSequenceFrame::GetPrintPreviewScale() if needed, instead of this API.
+   *
    * XXX Temporary: see http://wiki.mozilla.org/Gecko:PrintPreview
    */
-  float GetPrintPreviewScale() { return mPPScale; }
+  float GetPrintPreviewScaleForSequenceFrame() { return mPPScale; }
   void SetPrintPreviewScale(float aScale) { mPPScale = aScale; }
 
   nsDeviceContext* DeviceContext() const { return mDeviceContext; }
