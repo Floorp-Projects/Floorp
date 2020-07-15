@@ -2275,6 +2275,12 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   // called at some random time after that.  If multiple calls of this can ever
   // occur, that function may require changes.
 
+  // The SourceCompressionTask needs to record the major GC number for
+  // scheduling. This cannot be accessed off-thread and must be handle in
+  // ParseTask::finish instead.
+  MOZ_ASSERT(!cx->isHelperThreadContext());
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+
   if (!hasUncompressedSource()) {
     // This excludes compressed, missing, and retrievable source.
     return true;
@@ -2293,19 +2299,6 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
                               CanUseExtraThreads();
   if (length() < ScriptSource::MinimumCompressibleLength ||
       !canCompressOffThread) {
-    return true;
-  }
-
-  // The SourceCompressionTask needs to record the major GC number for
-  // scheduling. If we're parsing off thread, this number is not safe to
-  // access.
-  //
-  // When parsing on the main thread, the attempts made to compress off
-  // thread in BytecodeCompiler will succeed.
-  //
-  // When parsing off-thread, the above attempts will fail and the attempt
-  // made in ParseTask::finish will succeed.
-  if (!CurrentThreadCanAccessRuntime(cx->runtime())) {
     return true;
   }
 
