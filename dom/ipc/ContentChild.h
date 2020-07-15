@@ -129,9 +129,7 @@ class ContentChild final : public PContentChild,
 
   const AppInfo& GetAppInfo() { return mAppInfo; }
 
-  void SetProcessName(const nsAString& aName);
-
-  void GetProcessName(nsAString& aName) const;
+  void SetProcessName(const nsACString& aName);
 
   void GetProcessName(nsACString& aName) const;
 
@@ -865,7 +863,7 @@ class ContentChild final : public PContentChild,
   bool mIsForBrowser;
   nsCString mRemoteType = NOT_REMOTE_TYPE;
   bool mIsAlive;
-  nsString mProcessName;
+  nsCString mProcessName;
 
   static ContentChild* sSingleton;
 
