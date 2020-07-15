@@ -1663,64 +1663,53 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   }
 }
 
-bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
-                                      nsPIDOMWindowOuter* aWindow) {
-  if (!aWindow || !aPossibleAncestor) {
+static already_AddRefed<BrowsingContext> GetParentIgnoreChromeBoundary(
+    BrowsingContext* aBC) {
+  // Chrome BrowsingContexts are only available in the parent process, so if
+  // we're in a content process, we only worry about the context tree.
+  if (XRE_IsParentProcess()) {
+    return aBC->Canonical()->GetParentCrossChromeBoundary();
+  }
+  return do_AddRef(aBC->GetParent());
+}
+
+bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
+                                      BrowsingContext* aContext) {
+  if (!aPossibleAncestor) {
     return false;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> ancestordsti = aPossibleAncestor->GetDocShell();
-  nsCOMPtr<nsIDocShellTreeItem> dsti = aWindow->GetDocShell();
-  while (dsti) {
-    if (dsti == ancestordsti) return true;
-    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
-    dsti->GetInProcessParent(getter_AddRefs(parentDsti));
-    dsti.swap(parentDsti);
+  for (RefPtr<BrowsingContext> bc = aContext; bc;
+       bc = GetParentIgnoreChromeBoundary(bc)) {
+    if (bc == aPossibleAncestor) {
+      return true;
+    }
   }
 
   return false;
 }
 
 bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
+                                      nsPIDOMWindowOuter* aWindow) {
+  if (aWindow && aPossibleAncestor) {
+    return IsSameOrAncestor(aPossibleAncestor->GetBrowsingContext(),
+                            aWindow->GetBrowsingContext());
+  }
+  return false;
+}
+
+bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
                                       BrowsingContext* aContext) {
-  if (!aContext || !aPossibleAncestor) {
-    return false;
+  if (aPossibleAncestor) {
+    return IsSameOrAncestor(aPossibleAncestor->GetBrowsingContext(), aContext);
   }
-
-  if (XRE_IsParentProcess()) {
-    return IsSameOrAncestor(aPossibleAncestor, aContext->GetDOMWindow());
-  }
-
-  return IsSameOrAncestor(aPossibleAncestor->GetBrowsingContext(), aContext);
+  return false;
 }
 
 bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
                                       nsPIDOMWindowOuter* aWindow) {
-  if (!aWindow || !aPossibleAncestor) {
-    return false;
-  }
-
-  if (XRE_IsParentProcess()) {
-    return IsSameOrAncestor(aPossibleAncestor->GetDOMWindow(), aWindow);
-  }
-
-  return IsSameOrAncestor(aPossibleAncestor, aWindow->GetBrowsingContext());
-}
-
-bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
-                                      BrowsingContext* aContext) {
-  if (!aContext || !aPossibleAncestor) {
-    return false;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(!XRE_IsParentProcess());
-
-  while (aContext) {
-    if (aPossibleAncestor == aContext) {
-      return true;
-    }
-    // XXX this is wrong for `mozbrowser` and XUL `browser remote=true`.
-    aContext = aContext->GetParent();
+  if (aWindow) {
+    return IsSameOrAncestor(aPossibleAncestor, aWindow->GetBrowsingContext());
   }
   return false;
 }
