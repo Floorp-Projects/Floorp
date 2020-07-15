@@ -18,111 +18,42 @@ const kStrictKeyPressEvents = SpecialPowers.getBoolPref(
   "dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content"
 );
 
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
-function frameScript() {
-  let doc = content.document;
-  addMessageListener("Test:RequestFullscreen", () => {
-    doc.body.requestFullscreen();
-  });
-  addMessageListener("Test:DispatchUntrustedKeyEvents", msg => {
-    var evt = new content.CustomEvent("Test:DispatchKeyEvents", {
-      detail: Cu.cloneInto({ code: msg.data }, content),
-    });
-    content.dispatchEvent(evt);
-  });
+function receiveExpectedKeyEvents(aBrowser, aKeyCode, aTrusted) {
+  return SpecialPowers.spawn(
+    aBrowser,
+    [aKeyCode, aTrusted, kStrictKeyPressEvents],
+    (keyCode, trusted, strictKeyPressEvents) => {
+      return new Promise(resolve => {
+        let events =
+          strictKeyPressEvents && trusted
+            ? ["keydown", "keyup"]
+            : ["keydown", "keypress", "keyup"];
+        function listener(event) {
+          let expected = events.shift();
+          Assert.equal(
+            event.type,
+            expected,
+            `Should receive a ${expected} event`
+          );
+          Assert.equal(
+            event.keyCode,
+            keyCode,
+            `Should receive the event with key code ${keyCode}`
+          );
+          if (!events.length) {
+            content.document.removeEventListener("keydown", listener, true);
+            content.document.removeEventListener("keyup", listener, true);
+            content.document.removeEventListener("keypress", listener, true);
+            resolve();
+          }
+        }
 
-  doc.addEventListener("fullscreenchange", () => {
-    sendAsyncMessage("Test:FullscreenChanged", !!doc.fullscreenElement);
-  });
-
-  function keyHandler(evt) {
-    sendAsyncMessage("Test:KeyReceived", {
-      type: evt.type,
-      keyCode: evt.keyCode,
-    });
-  }
-  doc.addEventListener("keydown", keyHandler, true);
-  doc.addEventListener("keyup", keyHandler, true);
-  doc.addEventListener("keypress", keyHandler, true);
-
-  function waitUntilActive() {
-    if (docShell.isActive && doc.hasFocus()) {
-      sendAsyncMessage("Test:Activated");
-    } else {
-      setTimeout(waitUntilActive, 10);
+        content.document.addEventListener("keydown", listener, true);
+        content.document.addEventListener("keyup", listener, true);
+        content.document.addEventListener("keypress", listener, true);
+      });
     }
-  }
-  waitUntilActive();
-}
-/* eslint-enable mozilla/no-arbitrary-setTimeout */
-
-var gMessageManager;
-
-function listenOneMessage(aMsg, aListener) {
-  function listener({ data }) {
-    gMessageManager.removeMessageListener(aMsg, listener);
-    aListener(data);
-  }
-  gMessageManager.addMessageListener(aMsg, listener);
-}
-
-function promiseOneMessage(aMsg) {
-  return new Promise(resolve => listenOneMessage(aMsg, resolve));
-}
-
-function captureUnexpectedFullscreenChange() {
-  ok(false, "Caught an unexpected fullscreen change");
-}
-
-async function temporaryRemoveUnexpectedFullscreenChangeCapture(callback) {
-  gMessageManager.removeMessageListener(
-    "Test:FullscreenChanged",
-    captureUnexpectedFullscreenChange
   );
-  await callback();
-  gMessageManager.addMessageListener(
-    "Test:FullscreenChanged",
-    captureUnexpectedFullscreenChange
-  );
-}
-
-function captureUnexpectedKeyEvent(type) {
-  ok(false, `Caught an unexpected ${type} event`);
-}
-
-async function temporaryRemoveUnexpectedKeyEventCapture(callback) {
-  gMessageManager.removeMessageListener(
-    "Test:KeyReceived",
-    captureUnexpectedKeyEvent
-  );
-  await callback();
-  gMessageManager.addMessageListener(
-    "Test:KeyReceived",
-    captureUnexpectedKeyEvent
-  );
-}
-
-function receiveExpectedKeyEvents(aKeyCode, aTrusted) {
-  return new Promise(resolve => {
-    let events =
-      kStrictKeyPressEvents && aTrusted
-        ? ["keydown", "keyup"]
-        : ["keydown", "keypress", "keyup"];
-    function listener({ data }) {
-      let expected = events.shift();
-      is(data.type, expected, `Should receive a ${expected} event`);
-      is(
-        data.keyCode,
-        aKeyCode,
-        `Should receive the event with key code ${aKeyCode}`
-      );
-      if (!events.length) {
-        gMessageManager.removeMessageListener("Test:KeyReceived", listener);
-        resolve();
-      }
-    }
-    gMessageManager.addMessageListener("Test:KeyReceived", listener);
-  });
 }
 
 const kPage =
@@ -140,76 +71,140 @@ add_task(async function() {
   registerCleanupFunction(() => gBrowser.removeTab(tab));
   await waitForDocLoadComplete();
 
-  gMessageManager = browser.messageManager;
-  gMessageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();",
-    false
-  );
-
   // Wait for the document being actived, so that
   // fullscreen request won't be denied.
-  await promiseOneMessage("Test:Activated");
-
-  // Register listener to capture unexpected events
-  gMessageManager.addMessageListener(
-    "Test:FullscreenChanged",
-    captureUnexpectedFullscreenChange
-  );
-  gMessageManager.addMessageListener(
-    "Test:KeyReceived",
-    captureUnexpectedKeyEvent
-  );
-  registerCleanupFunction(() => {
-    gMessageManager.removeMessageListener(
-      "Test:FullscreenChanged",
-      captureUnexpectedFullscreenChange
-    );
-    gMessageManager.removeMessageListener(
-      "Test:KeyReceived",
-      captureUnexpectedKeyEvent
+  await SpecialPowers.spawn(browser, [], () => {
+    return ContentTaskUtils.waitForCondition(
+      () => docShell.isActive && content.document.hasFocus(),
+      "document is active"
     );
   });
+
+  // Register listener to capture unexpected events
+  let keyEventsCount = 0;
+  let fullScreenEventsCount = 0;
+  let removeFullScreenListener = BrowserTestUtils.addContentEventListener(
+    browser,
+    "fullscreenchange",
+    () => fullScreenEventsCount++
+  );
+  let removeKeyDownListener = BrowserTestUtils.addContentEventListener(
+    browser,
+    "keydown",
+    () => keyEventsCount++,
+    { wantUntrusted: true }
+  );
+  let removeKeyPressListener = BrowserTestUtils.addContentEventListener(
+    browser,
+    "keypress",
+    () => keyEventsCount++,
+    { wantUntrusted: true }
+  );
+  let removeKeyUpListener = BrowserTestUtils.addContentEventListener(
+    browser,
+    "keyup",
+    () => keyEventsCount++,
+    { wantUntrusted: true }
+  );
+
+  let expectedFullScreenEventsCount = 0;
+  let expectedKeyEventsCount = 0;
 
   for (let { key, keyCode, suppressed } of kKeyList) {
     let keyCodeValue = KeyEvent["DOM_" + keyCode];
     info(`Test keycode ${key} (${keyCodeValue})`);
 
     info("Enter fullscreen");
-    await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
-      gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
-      let state = await promiseOneMessage("Test:FullscreenChanged");
-      ok(state, "The content should have entered fullscreen");
-      ok(document.fullscreenElement, "The chrome should also be in fullscreen");
+    let state = await SpecialPowers.spawn(browser, [], () => {
+      return new Promise(resolve => {
+        content.document.addEventListener(
+          "fullscreenchange",
+          () => {
+            resolve(!!content.document.fullscreenElement);
+          },
+          { once: true }
+        );
+        content.document.body.requestFullscreen();
+      });
     });
+    ok(state, "The content should have entered fullscreen");
+    ok(document.fullscreenElement, "The chrome should also be in fullscreen");
+
+    is(
+      fullScreenEventsCount,
+      ++expectedFullScreenEventsCount,
+      "correct number of fullscreen events occurred"
+    );
 
     info("Dispatch untrusted key events from content");
-    await temporaryRemoveUnexpectedKeyEventCapture(async function() {
-      let promiseExpectedKeyEvents = receiveExpectedKeyEvents(
-        keyCodeValue,
-        false
-      );
-      gMessageManager.sendAsyncMessage(
-        "Test:DispatchUntrustedKeyEvents",
-        keyCode
-      );
-      await promiseExpectedKeyEvents;
+    let promiseExpectedKeyEvents = receiveExpectedKeyEvents(
+      browser,
+      keyCodeValue,
+      false
+    );
+
+    SpecialPowers.spawn(browser, [keyCode], keyCodeChild => {
+      var evt = new content.CustomEvent("Test:DispatchKeyEvents", {
+        detail: Cu.cloneInto({ code: keyCodeChild }, content),
+      });
+      content.dispatchEvent(evt);
     });
+    await promiseExpectedKeyEvents;
+
+    expectedKeyEventsCount += 3;
+    is(
+      keyEventsCount,
+      expectedKeyEventsCount,
+      "correct number of key events occurred"
+    );
 
     info("Send trusted key events");
-    await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
-      await temporaryRemoveUnexpectedKeyEventCapture(async function() {
-        let promiseExpectedKeyEvents = suppressed
-          ? Promise.resolve()
-          : receiveExpectedKeyEvents(keyCodeValue, true);
-        EventUtils.synthesizeKey("KEY_" + key);
-        await promiseExpectedKeyEvents;
-        let state = await promiseOneMessage("Test:FullscreenChanged");
-        ok(!state, "The content should have exited fullscreen");
-        ok(
-          !document.fullscreenElement,
-          "The chrome should also have exited fullscreen"
+
+    let fullScreenPromise = SpecialPowers.spawn(browser, [], () => {
+      return new Promise(resolve => {
+        content.document.addEventListener(
+          "fullscreenchange",
+          () => {
+            resolve(!!content.document.fullscreenElement);
+          },
+          { once: true }
         );
       });
     });
+
+    promiseExpectedKeyEvents = suppressed
+      ? Promise.resolve()
+      : receiveExpectedKeyEvents(browser, keyCodeValue, true);
+    await SpecialPowers.spawn(browser, [], () => {});
+
+    EventUtils.synthesizeKey("KEY_" + key);
+    await promiseExpectedKeyEvents;
+
+    state = await fullScreenPromise;
+    ok(!state, "The content should have exited fullscreen");
+    ok(
+      !document.fullscreenElement,
+      "The chrome should also have exited fullscreen"
+    );
+
+    is(
+      fullScreenEventsCount,
+      ++expectedFullScreenEventsCount,
+      "correct number of fullscreen events occurred"
+    );
+    if (!suppressed) {
+      expectedKeyEventsCount +=
+        kStrictKeyPressEvents && keyCode == "VK_F11" ? 2 : 3;
+    }
+    is(
+      keyEventsCount,
+      expectedKeyEventsCount,
+      "correct number of key events occurred"
+    );
   }
+
+  removeFullScreenListener();
+  removeKeyDownListener();
+  removeKeyPressListener();
+  removeKeyUpListener();
 });
