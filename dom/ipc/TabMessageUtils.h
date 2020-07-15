@@ -10,38 +10,21 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Event.h"
-#include "nsExceptionHandler.h"
 #include "nsIRemoteTab.h"
 #include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
 #include "mozilla/dom/EffectsInfo.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "ipc/IPCMessageUtils.h"
+#include "TabMessageTypes.h"
 #include "X11UndefineNone.h"
 
-namespace mozilla {
-namespace dom {
-class Event;
-
-struct RemoteDOMEvent {
-  // Make sure to set the owner after deserializing.
-  RefPtr<Event> mEvent;
-};
+namespace mozilla::dom {
 
 bool ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
                      mozilla::dom::RemoteDOMEvent* aResult);
 
-typedef CrashReporter::ThreadId NativeThreadId;
-
-enum class EmbedderElementEventType {
-  NoEvent,
-  LoadEvent,
-  ErrorEvent,
-  EndGuard_,
-};
-
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 namespace IPC {
 

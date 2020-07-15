@@ -11,16 +11,18 @@ include protocol PDocAccessible;
 
 include DOMTypes;
 
+include "mozilla/dom/TabMessageUtils.h";
+
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
-using mozilla::dom::EffectsInfo from "mozilla/dom/TabMessageUtils.h";
+using mozilla::dom::EffectsInfo from "mozilla/dom/EffectsInfo.h";
 using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
 using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct nsRect from "nsRect.h";
 using CallerType from "mozilla/dom/BindingDeclarations.h";
 using nsIntRect from "nsRect.h";
-using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageUtils.h";
+using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
 
 namespace mozilla {
 namespace dom {
