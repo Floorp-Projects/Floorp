@@ -9,25 +9,23 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitAll
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.CancellableOperation
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.webextensions.WebExtensionSupport
 import mozilla.components.support.webextensions.WebExtensionSupport.installedExtensions
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
+import java.util.Locale
 import java.util.Collections.newSetFromMap
 import java.util.concurrent.ConcurrentHashMap
-import java.util.Locale
 
 /**
  * Provides access to installed and recommended [Addon]s and manages their states.
  *
  * @property store The application's [BrowserStore].
- * @property engine The application's browser [Engine].
+ * @property runtime The application's [WebExtensionRuntime] to install and configure extensions.
  * @property addonsProvider The [AddonsProvider] to query available [Addon]s.
  * @property addonUpdater The [AddonUpdater] instance to use when checking / triggering
  * updates.
@@ -35,7 +33,7 @@ import java.util.Locale
 @Suppress("LargeClass")
 class AddonManager(
     private val store: BrowserStore,
-    private val engine: Engine,
+    private val runtime: WebExtensionRuntime,
     private val addonsProvider: AddonsProvider,
     private val addonUpdater: AddonUpdater
 ) {
@@ -125,7 +123,7 @@ class AddonManager(
         }
 
         val pendingAction = addPendingAddonAction()
-        return engine.installWebExtension(
+        return runtime.installWebExtension(
             id = addon.id,
             url = addon.downloadUrl,
             onSuccess = { ext ->
@@ -160,7 +158,7 @@ class AddonManager(
         }
 
         val pendingAction = addPendingAddonAction()
-        engine.uninstallWebExtension(
+        runtime.uninstallWebExtension(
             extension,
             onSuccess = {
                 addonUpdater.unregisterForFutureUpdates(addon.id)
@@ -195,7 +193,7 @@ class AddonManager(
         }
 
         val pendingAction = addPendingAddonAction()
-        engine.enableWebExtension(
+        runtime.enableWebExtension(
             extension,
             source = source,
             onSuccess = { ext ->
@@ -231,7 +229,7 @@ class AddonManager(
         }
 
         val pendingAction = addPendingAddonAction()
-        engine.disableWebExtension(
+        runtime.disableWebExtension(
             extension,
             source,
             onSuccess = { ext ->
@@ -267,7 +265,7 @@ class AddonManager(
         }
 
         val pendingAction = addPendingAddonAction()
-        engine.setAllowedInPrivateBrowsing(
+        runtime.setAllowedInPrivateBrowsing(
             extension,
             allowed,
             onSuccess = { ext ->
@@ -310,7 +308,7 @@ class AddonManager(
             onFinish(Status.Error(message, exception))
         }
 
-        engine.updateWebExtension(extension, onSuccess, onError)
+        runtime.updateWebExtension(extension, onSuccess, onError)
     }
 
     private fun addPendingAddonAction() = CompletableDeferred<Unit>().also {
