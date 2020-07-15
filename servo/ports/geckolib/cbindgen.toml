@@ -30,7 +30,7 @@ line_length = 80
 tab_width = 2
 language = "C++"
 namespaces = ["mozilla"]
-includes = ["mozilla/ServoStyleConstsForwards.h"]
+includes = ["mozilla/ServoStyleConstsForwards.h", "mozilla/ServoStyleSet.h"]
 
 [parse]
 parse_deps = true
