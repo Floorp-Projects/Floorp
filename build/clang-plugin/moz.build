@@ -29,6 +29,7 @@ HOST_SOURCES += [
     'NoAutoTypeChecker.cpp',
     'NoDuplicateRefCntMemberChecker.cpp',
     'NoExplicitMoveConstructorChecker.cpp',
+    'NoLocaleSpecificChecker.cpp',
     'NoNewThreadsChecker.cpp',
     'NonMemMovableMemberChecker.cpp',
     'NonMemMovableTemplateArgChecker.cpp',

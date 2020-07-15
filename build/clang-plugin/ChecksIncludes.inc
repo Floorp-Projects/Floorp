@@ -26,6 +26,7 @@
 #include "NoAutoTypeChecker.h"
 #include "NoDuplicateRefCntMemberChecker.h"
 #include "NoExplicitMoveConstructorChecker.h"
+#include "NoLocaleSpecificChecker.h"
 #include "NoNewThreadsChecker.h"
 #include "NonMemMovableMemberChecker.h"
 #include "NonMemMovableTemplateArgChecker.h"
