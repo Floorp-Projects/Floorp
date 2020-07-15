@@ -12,6 +12,7 @@
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsICookieJarSettings.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsContentUtils.h"
