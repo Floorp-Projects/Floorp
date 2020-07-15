@@ -145,6 +145,7 @@
 #include "InProcessWinCompositorWidget.h"
 #include "InputDeviceUtils.h"
 #include "ScreenHelperWin.h"
+#include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 #include "nsIGfxInfo.h"
@@ -207,6 +208,7 @@
 #endif
 
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "InputData.h"
