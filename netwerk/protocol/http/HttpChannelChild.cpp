@@ -214,8 +214,7 @@ HttpChannelChild::HttpChannelChild()
 HttpChannelChild::~HttpChannelChild() {
   LOG(("Destroying HttpChannelChild @%p\n", this));
 
-#if 0
-#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy && mAsyncOpenSucceeded &&
       !mSuccesfullyRedirected && !mOnStopRequestCalled) {
     bool emptyBgChildQueue, nullBgChild;
@@ -239,15 +238,20 @@ HttpChannelChild::~HttpChannelChild() {
         (emptyBgChildQueue ? 1 << 12 : 0) |
         (mOnStartRequestCalled ? 1 << 13 : 0) |
         (mBackgroundChildQueueFinalState == BCKCHILD_EMPTY ? 1 << 14 : 0) |
-        (mBackgroundChildQueueFinalState == BCKCHILD_NON_EMPTY ? 1 << 15 : 0);
+        (mBackgroundChildQueueFinalState == BCKCHILD_NON_EMPTY ? 1 << 15 : 0) |
+        (mRemoteChannelExistedAtCancel ? 1 << 16 : 0) |
+        (mEverHadBgChildAtAsyncOpen ? 1 << 17 : 0) |
+        (mEverHadBgChildAtConnectParent ? 1 << 18 : 0) |
+        (mCreateBackgroundChannelFailed ? 1 << 19 : 0) |
+        (mBgInitFailCallbackTriggered ? 1 << 20 : 0) |
+        (mCanSendAtCancel ? 1 << 21 : 0);
     MOZ_CRASH_UNSAFE_PRINTF(
         "~HttpChannelChild, mOnStopRequestCalled=false, mStatus=0x%08x, "
-        "mActorDestroyReason=%d, 20200618 flags=%u",
+        "mActorDestroyReason=%d, 20200709 flags=%u",
         static_cast<uint32_t>(nsresult(mStatus)),
         static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1),
         flags);
   }
-#  endif
 #endif
 
   ReleaseMainThreadOnlyReferences();
@@ -387,6 +391,9 @@ void HttpChannelChild::OnBackgroundChildDestroyed(
   }
 
   if (callback) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mBgInitFailCallbackTriggered = true;
+#endif
     nsCOMPtr<nsISerialEventTarget> neckoTarget = GetNeckoTarget();
     neckoTarget->Dispatch(callback, NS_DISPATCH_NORMAL);
   }
@@ -2056,6 +2063,9 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
     }
 
     mBgChild = std::move(bgChild);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mEverHadBgChildAtConnectParent = true;
+#endif
   }
 
   MaybeConnectToSocketProcess();
@@ -2281,7 +2291,14 @@ HttpChannelChild::Cancel(nsresult aStatus) {
     // is responsible for cleaning up.
     mCanceled = true;
     mStatus = aStatus;
-    if (RemoteChannelExists()) {
+
+    bool remoteChannelExists = RemoteChannelExists();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mCanSendAtCancel = CanSend();
+    mRemoteChannelExistedAtCancel = remoteChannelExists;
+#endif
+
+    if (remoteChannelExists) {
       SendCancel(aStatus, mLoadInfo->GetRequestBlockingReason());
     }
 
@@ -2830,6 +2847,9 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
     }
 
     mBgChild = std::move(bgChild);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mEverHadBgChildAtAsyncOpen = true;
+#endif
   }
 
   MaybeConnectToSocketProcess();
