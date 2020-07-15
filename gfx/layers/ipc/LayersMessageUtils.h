@@ -13,15 +13,11 @@
 
 #include "FrameMetrics.h"
 #include "VsyncSource.h"
-#include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
-#include "gfxTelemetry.h"
 #include "ipc/IPCMessageUtils.h"
-#include "ipc/nsGUIEventIPC.h"
-#include "mozilla/GfxMessageUtils.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ipc/ByteBufUtils.h"
+#include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/CompositorOptions.h"
@@ -32,10 +28,13 @@
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/MatrixMessage.h"
-#include "mozilla/layers/RefCountedShmem.h"
 #include "mozilla/layers/RepaintRequest.h"
-#include "mozilla/layers/WebRenderMessageUtils.h"
 #include "nsSize.h"
+
+// For ParamTraits, could be moved to cpp file
+#include "ipc/nsGUIEventIPC.h"
+#include "mozilla/GfxMessageUtils.h"
+#include "mozilla/ipc/ByteBufUtils.h"
 
 #ifdef _MSC_VER
 #  pragma warning(disable : 4800)
