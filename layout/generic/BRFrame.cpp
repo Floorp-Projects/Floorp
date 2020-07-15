@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsFontMetrics.h"
+#include "nsHTMLParts.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsLineLayout.h"

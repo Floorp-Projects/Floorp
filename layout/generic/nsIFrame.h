@@ -63,11 +63,9 @@
 #include "nsFrameList.h"
 #include "nsFrameState.h"
 #include "mozilla/ReflowInput.h"
-#include "nsHTMLParts.h"
 #include "nsITheme.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
-#include "nsString.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsStyleStruct.h"
 #include "Visibility.h"
@@ -101,7 +99,6 @@
  */
 
 class nsAtom;
-class nsPresContext;
 class nsView;
 class nsFrameSelection;
 class nsIWidget;
@@ -118,7 +115,6 @@ class gfxSkipCharsIterator;
 class gfxContext;
 class nsLineList_iterator;
 class nsAbsoluteContainingBlock;
-class nsIContent;
 class nsContainerFrame;
 class nsPlaceholderFrame;
 class nsStyleChangeList;
@@ -126,10 +122,6 @@ class nsWindowSizes;
 
 struct nsBoxLayoutMetrics;
 struct nsPeekOffsetStruct;
-struct nsPoint;
-struct nsRect;
-struct nsSize;
-struct nsMargin;
 struct CharacterDataChangeInfo;
 
 namespace mozilla {
@@ -137,9 +129,6 @@ namespace mozilla {
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
 class EventStates;
-class PresShell;
-struct ReflowInput;
-class ReflowOutput;
 class ServoRestyleState;
 class DisplayItemData;
 class EffectSet;
@@ -152,10 +141,6 @@ class LayerManager;
 namespace layout {
 class ScrollAnchorContainer;
 }  // namespace layout
-
-namespace dom {
-class Selection;
-}  // namespace dom
 
 }  // namespace mozilla
 
