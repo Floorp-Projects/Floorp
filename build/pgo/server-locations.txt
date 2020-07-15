@@ -117,7 +117,6 @@ https://untrusted.example.com:443      privileged,cert=untrusted
 https://expired.example.com:443        privileged,cert=expired
 https://requestclientcert.example.com:443         privileged,clientauth=request
 https://requireclientcert.example.com:443         privileged,clientauth=require
-https://requireclientcert-2.example.com:443         privileged,clientauth=require
 https://mismatch.expired.example.com:443	privileged,cert=expired
 https://mismatch.untrusted.example.com:443	privileged,cert=untrusted
 https://untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
