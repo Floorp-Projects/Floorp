@@ -343,7 +343,7 @@ function runTests()
 
     reset()
     synthesizeKey("KEY_Escape");
-    check(true, false, "'Escape' key on combobox");
+    check(false, false, "'Escape' key on combobox");
 
     if (!kIsWin) {
       reset()
