@@ -150,6 +150,12 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   virtual void traceMappings(WeakMapTracer* tracer) = 0;
   virtual void clearAndCompact() = 0;
 
+  // We have a key that, if it or its delegate is marked, may lead to a WeakMap
+  // value getting marked. Insert it or its delegate (if any) into the
+  // appropriate zone's gcWeakKeys or gcNurseryWeakKeys.
+  static inline void addWeakEntry(GCMarker* marker, gc::Cell* key,
+                                  const gc::WeakMarkable& markable);
+
   // Any weakmap key types that want to participate in the non-iterative
   // ephemeron marking must override this method.
   virtual void markKey(GCMarker* marker, gc::Cell* markedCell, gc::Cell* l) = 0;
@@ -342,13 +348,12 @@ class WeakMap
     MOZ_ASSERT(tmp == v);
   }
 
-  // We have a key that, if it or its delegate is marked, may lead to a WeakMap
-  // value getting marked. Insert it or its delegate (if any) into the
-  // appropriate zone's gcWeakKeys or gcNurseryWeakKeys.
-  static void addWeakEntry(GCMarker* marker, gc::Cell* key,
-                           const gc::WeakMarkable& markable);
-
   bool markEntries(GCMarker* marker) override;
+
+ protected:
+  // Find sweep group edges for delegates, if the key type has delegates. (If
+  // not, the optimizer should make this a nop.)
+  bool findSweepGroupEdges() override;
 
   /**
    * If a wrapper is used as a key in a weakmap, the garbage collector should
@@ -365,11 +370,6 @@ class WeakMap
   }
   void exposeGCThingToActiveJS(JSObject* obj) const {
     JS::ExposeObjectToActiveJS(obj);
-  }
-
-  bool findSweepGroupEdges() override {
-    // This is overridden by ObjectValueWeakMap and DebuggerWeakMap.
-    return true;
   }
 
   void sweep() override;
@@ -396,8 +396,6 @@ class WeakMap
 class ObjectValueWeakMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
  public:
   ObjectValueWeakMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
-
-  bool findSweepGroupEdges() override;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
