@@ -104,8 +104,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                           CompilationInfo& compilationInfo);
 
   void assertSourceAndParserCreated(CompilationInfo& compilationInfo) const {
-    MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
-    MOZ_ASSERT(compilationInfo.sourceObject->source() != nullptr);
+    MOZ_ASSERT(compilationInfo.source() != nullptr);
     MOZ_ASSERT(parser.isSome());
   }
 
@@ -399,7 +398,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
                  sourceBuffer_.units(), sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationInfo,
                  syntaxParser.ptrOr(nullptr), nullptr);
-  parser->ss = compilationInfo.sourceObject->source();
+  parser->ss = compilationInfo.source();
   return parser->checkOptions();
 }
 
@@ -499,10 +498,10 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   // We have just finished parsing the source. Inform the source so that we
   // can compute statistics (e.g. how much time our functions remain lazy).
-  compilationInfo.sourceObject->source()->recordParseEnded();
+  compilationInfo.source()->recordParseEnded();
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
+  if (!compilationInfo.source()->tryCompressOffThread(cx)) {
     return nullptr;
   }
 
@@ -551,7 +550,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   MOZ_ASSERT(compilationInfo.module);
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
+  if (!compilationInfo.source()->tryCompressOffThread(cx)) {
     return nullptr;
   }
 
@@ -643,8 +642,7 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
   MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.sourceObject->source()->tryCompressOffThread(
-          compilationInfo.cx)) {
+  if (!compilationInfo.source()->tryCompressOffThread(compilationInfo.cx)) {
     return nullptr;
   }
 
@@ -914,8 +912,7 @@ static JSFunction* CompileStandaloneFunction(
   // interpreted script.
   if (compilationInfo.script) {
     if (parameterListEnd) {
-      compilationInfo.sourceObject->source()->setParameterListEnd(
-          *parameterListEnd);
+      compilationInfo.source()->setParameterListEnd(*parameterListEnd);
     }
     tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
                                     compilationInfo.script);

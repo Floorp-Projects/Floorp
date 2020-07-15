@@ -268,9 +268,11 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   void setEnclosingScope(Scope* scope) { enclosingScope = scope; }
 
+  ScriptSource* source() { return sourceObject->source(); }
+
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
-    return sourceObject->source()->assignSource(cx, options, sourceBuffer);
+    return source()->assignSource(cx, options, sourceBuffer);
   }
 
   MOZ_MUST_USE bool instantiateStencils();
