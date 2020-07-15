@@ -17,6 +17,10 @@ constexpr static bool kCancelAndRemovePreloadOnZeroReferences = false;
 
 namespace mozilla {
 
+PreloaderBase::UsageTimer::UsageTimer(PreloaderBase* aPreload,
+                                      dom::Document* aDocument)
+    : mDocument(aDocument), mPreload(aPreload) {}
+
 PreloaderBase::RedirectSink::RedirectSink(PreloaderBase* aPreloader,
                                           nsIInterfaceRequestor* aCallbacks)
     : mPreloader(new nsMainThreadPtrHolder<PreloaderBase>(
