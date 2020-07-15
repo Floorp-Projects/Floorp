@@ -38,7 +38,6 @@ categories:
         - tools/fuzzing
         - tools/sanitizer
         - testing/perfdocs
-        - testing/perftest
         - tools/code-coverage
         - testing-rust-code
     l10n_doc:
