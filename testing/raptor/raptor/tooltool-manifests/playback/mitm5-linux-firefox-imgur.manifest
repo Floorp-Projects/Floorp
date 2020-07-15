@@ -1,0 +1,10 @@
+[
+  {
+    "size": 10280492,
+    "visibility": "public",
+    "digest": "7042a13b62e5136d36b9da25aeaa3e7f9c4af2eacbe652eced9a1b80bede9d45f1d49b69c99846a551849c8026cf72996d0eb98c331e4e417043f7298321c637",
+    "algorithm": "sha512",
+    "filename": "mitm5-linux-firefox-imgur.zip",
+    "unpack": true
+  }
+]
