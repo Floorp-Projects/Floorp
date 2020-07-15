@@ -81,6 +81,13 @@ const WebRTCIndicator = {
     if (AppConstants.platform == "macosx") {
       this.macOSIndicator = new MacOSWebRTCStatusbarIndicator();
     }
+
+    if (
+      Services.prefs.getBoolPref("privacy.webrtc.hideGlobalIndicator", false)
+    ) {
+      let baseWin = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+      baseWin.visibility = false;
+    }
   },
 
   /**
