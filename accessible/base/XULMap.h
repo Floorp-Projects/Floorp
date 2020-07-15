@@ -5,6 +5,7 @@
 XULMAP_TYPE(browser, OuterDocAccessible)
 XULMAP_TYPE(button, XULButtonAccessible)
 XULMAP_TYPE(checkbox, CheckboxAccessible)
+XULMAP_TYPE(description, XULLabelAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
 XULMAP_TYPE(editor, OuterDocAccessible)
 XULMAP_TYPE(findbar, XULToolbarAccessible)
@@ -34,34 +35,7 @@ XULMAP_TYPE(treecolpicker, XULButtonAccessible)
 XULMAP_TYPE(treecols, XULTreeColumAccessible)
 XULMAP_TYPE(toolbar, XULToolbarAccessible)
 XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
-
-XULMAP(description, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  if (aElement->ClassList()->Contains(u"tooltip-label"_ns)) {
-    return nullptr;
-  }
-
-  return new XULLabelAccessible(aElement, aContext->Document());
-})
-
-XULMAP(tooltip, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (!frame) {
-    return nullptr;
-  }
-
-  nsMenuPopupFrame* popupFrame = do_QueryFrame(frame);
-  if (!popupFrame) {
-    return nullptr;
-  }
-
-  nsPopupState popupState = popupFrame->PopupState();
-  if (popupState == ePopupHiding || popupState == ePopupInvisible ||
-      popupState == ePopupClosed) {
-    return nullptr;
-  }
-
-  return new XULTooltipAccessible(aElement, aContext->Document());
-})
+XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(label, [](Element* aElement, Accessible* aContext) -> Accessible* {
   if (aElement->ClassList()->Contains(u"text-link"_ns)) {
