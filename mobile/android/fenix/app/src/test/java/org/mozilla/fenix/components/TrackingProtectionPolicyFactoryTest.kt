@@ -345,8 +345,7 @@ private fun EngineSession.TrackingProtectionPolicy.assertPolicyEquals(
     checkPrivacy: Boolean
 ) {
     assertEquals(this.cookiePolicy, actual.cookiePolicy)
-    // TODO Uncomment this assertion after the fix in AC#6079 lands
-//    assertEquals(this.strictSocialTrackingProtection, actual.strictSocialTrackingProtection)
+    assertEquals(this.strictSocialTrackingProtection, actual.strictSocialTrackingProtection)
     // E.g., atm, RECOMMENDED == AD + ANALYTICS + SOCIAL + TEST + MOZILLA_SOCIAL + CRYPTOMINING.
     // If all of these are set manually, the equality check should not fail
     if (this.trackingCategories.toInt() != actual.trackingCategories.toInt()) {
