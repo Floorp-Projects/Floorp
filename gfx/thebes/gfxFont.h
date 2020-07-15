@@ -9,10 +9,7 @@
 
 #include "gfxTypes.h"
 #include "gfxFontEntry.h"
-#include "gfxFontVariations.h"
 #include "nsString.h"
-#include "gfxPoint.h"
-#include "gfxPattern.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -27,16 +24,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/TypedEnumBits.h"
-#include "MainThreadUtils.h"
 #include <algorithm>
 #include "DrawMode.h"
 #include "nsDataHashtable.h"
-#include "harfbuzz/hb.h"
 #include "mozilla/gfx/2D.h"
 #include "nsColor.h"
 #include "nsFontMetrics.h"
 #include "mozilla/ServoUtils.h"
-#include "TextDrawTarget.h"
 #include "ThebesRLBoxTypes.h"
 
 typedef struct _cairo cairo_t;
@@ -46,10 +40,9 @@ typedef struct _cairo_scaled_font cairo_scaled_font_t;
 #  include <stdio.h>
 #endif
 
-class gfxContext;
 class gfxTextRun;
-class gfxFont;
 class gfxGlyphExtents;
+class gfxPattern;
 class gfxShapedText;
 class gfxShapedWord;
 class gfxSkipChars;
@@ -73,6 +66,10 @@ struct gfxTextRunDrawCallbacks;
 
 namespace mozilla {
 class SVGContextPaint;
+
+namespace layout {
+class TextDrawTarget;
+}
 }  // namespace mozilla
 
 struct gfxFontStyle {
