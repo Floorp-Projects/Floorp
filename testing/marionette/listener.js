@@ -1507,8 +1507,15 @@ function switchToParentFrame(msg) {
 }
 
 /**
- * Switch to frame given either the server-assigned element id,
- * its index in window.frames, or the iframe's name or id.
+ * Switch to the specified frame.
+ *
+ * @param {boolean=} focus
+ *     Focus the frame if set to true. Defaults to false.
+ * @param {(string|Object)=} element
+ *     A web element reference of the frame or its element id.
+ * @param {number=} id
+ *     The index of the frame to switch to.
+ *     If both element and id are not defined, switch to top-level frame.
  */
 function switchToFrame(msg) {
   let commandID = msg.json.commandID;

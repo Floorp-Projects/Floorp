@@ -43,7 +43,7 @@ class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(new_window)
 
         with self.marionette.using_context("chrome"):
-            self.marionette.switch_to_frame("iframe")
+            self.marionette.switch_to_frame(0)
         self.marionette.close_chrome_window()
 
         with self.assertRaises(NoSuchWindowException):
