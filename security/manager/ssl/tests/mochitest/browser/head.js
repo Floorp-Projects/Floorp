@@ -63,3 +63,21 @@ function readCertificate(filename, trustString) {
     }
   );
 }
+
+/**
+ * Asynchronously opens the certificate manager.
+ *
+ * @return {Window} a handle on the opened certificate manager window
+ */
+async function openCertManager() {
+  let win = window.openDialog("chrome://pippki/content/certManager.xhtml");
+  return new Promise((resolve, reject) => {
+    win.addEventListener(
+      "load",
+      function() {
+        executeSoon(() => resolve(win));
+      },
+      { once: true }
+    );
+  });
+}
