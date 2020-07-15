@@ -199,7 +199,6 @@ add_task(async function() {
   });
 
   info("string with known host");
-  Services.prefs.setBoolPref("browser.fixup.defaultToSearch", true);
   query = "firefox/get";
   context = createContext(query, { isPrivate: false });
   await check_results({
@@ -211,22 +210,6 @@ add_task(async function() {
       }),
     ],
   });
-
-  Services.prefs.setBoolPref("browser.fixup.defaultToSearch", false);
-  query = "firefox/get";
-  context = createContext(query, { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeVisitResult(context, {
-        uri: `http://${query}`,
-        title: `http://${query}`,
-        iconUri: "page-icon:http://firefox/",
-        heuristic: true,
-      }),
-    ],
-  });
-  Services.prefs.clearUserPref("browser.fixup.defaultToSearch");
 
   Services.prefs.setBoolPref("browser.fixup.domainwhitelist.firefox", true);
   registerCleanupFunction(() => {
