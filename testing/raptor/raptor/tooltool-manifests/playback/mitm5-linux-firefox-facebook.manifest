@@ -1,0 +1,10 @@
+[
+  {
+    "size": 15328202,
+    "visibility": "public",
+    "digest": "bd64f7015e3b1bd4f13677201be06629e2f7ec8c38508ca4a751ffbbae6600b5a1e1f9ce0bd099cb2c01fde8e8bd6f92476dbe524e89d3db1bcb65fd505f4611",
+    "algorithm": "sha512",
+    "filename": "mitm5-linux-firefox-facebook.zip",
+    "unpack": true
+  }
+]
