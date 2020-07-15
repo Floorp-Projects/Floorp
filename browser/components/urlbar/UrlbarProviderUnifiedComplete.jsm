@@ -36,8 +36,6 @@ XPCOMUtils.defineLazyServiceGetter(
 class ProviderUnifiedComplete extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -75,10 +73,12 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
     let urls = new Set();
     await unifiedComplete.wrappedJSObject.startQuery(queryContext, acResult => {
+      if (instance != this.queryInstance) {
+        return;
+      }
       let results = convertLegacyAutocompleteResult(
         queryContext,
         acResult,
@@ -88,7 +88,6 @@ class ProviderUnifiedComplete extends UrlbarProvider {
         addCallback(this, result);
       }
     });
-    this.queries.delete(queryContext);
   }
 
   /**
@@ -96,8 +95,6 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
-    // This doesn't properly support being used concurrently by multiple fields.
-    this.queries.delete(queryContext);
     unifiedComplete.stopSearch();
   }
 }

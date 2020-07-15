@@ -42,5 +42,4 @@ add_task(async function test_openTabs() {
   Assert.equal(matchCount, 1, "Found the expected number of matches");
   // Sanity check that this doesn't throw.
   provider.cancelQuery(context);
-  Assert.equal(provider.queries.size, 0, "All the queries have been removed");
 });

@@ -50,8 +50,6 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
 class ProviderSearchSuggestions extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -210,8 +208,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     let trimmedOriginalSearchString = queryContext.searchString.trim();
 
@@ -296,15 +293,13 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       alias
     );
 
-    if (!results || !this.queries.has(queryContext)) {
+    if (!results || instance != this.queryInstance) {
       return;
     }
 
     for (let result of results) {
       addCallback(this, result);
     }
-
-    this.queries.delete(queryContext);
   }
 
   /**
@@ -325,8 +320,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       this._suggestionsController.stop();
       this._suggestionsController = null;
     }
-
-    this.queries.delete(queryContext);
   }
 
   /**

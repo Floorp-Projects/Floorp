@@ -44,8 +44,6 @@ class ProviderPrivateSearch extends UrlbarProvider {
     super();
     // Maps the open tabs by userContextId.
     this.openTabs = new Map();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -104,8 +102,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
         .join(" ");
     }
 
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     let engine = queryContext.engineName
       ? Services.search.getEngineByName(queryContext.engineName)
@@ -124,6 +121,10 @@ class ProviderPrivateSearch extends UrlbarProvider {
       logger: this.logger,
     }).promise;
 
+    if (instance != this.queryInstance) {
+      return;
+    }
+
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -137,16 +138,13 @@ class ProviderPrivateSearch extends UrlbarProvider {
     );
     result.suggestedIndex = 1;
     addCallback(this, result);
-    this.queries.delete(queryContext);
   }
 
   /**
    * Cancels a running query.
    * @param {object} queryContext The query context object
    */
-  cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-  }
+  cancelQuery(queryContext) {}
 }
 
 var UrlbarProviderPrivateSearch = new ProviderPrivateSearch();

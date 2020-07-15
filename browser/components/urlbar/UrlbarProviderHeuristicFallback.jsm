@@ -30,8 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class ProviderHeuristicFallback extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -78,8 +76,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     let result = this._matchUnknownUrl(queryContext);
     if (result) {
@@ -102,7 +99,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
           let searchResult = await this._defaultEngineSearchResult(
             queryContext
           );
-          if (!this.queries.has(queryContext)) {
+          if (instance != this.queryInstance) {
             return;
           }
           addCallback(this, searchResult);
@@ -110,23 +107,19 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       }
     } else {
       result = await this._defaultEngineSearchResult(queryContext);
-      if (!result || !this.queries.has(queryContext)) {
+      if (!result || instance != this.queryInstance) {
         return;
       }
       result.heuristic = true;
       addCallback(this, result);
     }
-
-    this.queries.delete(queryContext);
   }
 
   /**
    * Cancels a running query.
    * @param {object} queryContext The query context object
    */
-  cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-  }
+  cancelQuery(queryContext) {}
 
   // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
   // scheme isn't specificed.
