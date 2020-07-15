@@ -8,10 +8,8 @@
 #define mozilla_dom_MathMLElement_h_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Element.h"
 #include "nsMappedAttributeElement.h"
 #include "Link.h"
-#include "mozilla/dom/DOMRect.h"
 
 class nsCSSValue;
 
