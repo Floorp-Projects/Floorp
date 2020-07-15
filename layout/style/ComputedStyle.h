@@ -9,7 +9,6 @@
 #ifndef _ComputedStyle_h_
 #define _ComputedStyle_h_
 
-#include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/CachedInheritingStyles.h"
 #include "mozilla/Maybe.h"
@@ -17,16 +16,12 @@
 #include "mozilla/ServoComputedData.h"
 #include "mozilla/ServoComputedDataInlines.h"
 #include "mozilla/ServoStyleConsts.h"
-#include "mozilla/ServoTypes.h"
-#include "mozilla/ServoUtils.h"
-#include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsColor.h"
 
 #include "nsStyleStructFwd.h"
 
 enum nsChangeHint : uint32_t;
-class nsPresContext;
 class nsWindowSizes;
 
 #define STYLE_STRUCT(name_) struct nsStyle##name_;
@@ -42,8 +37,6 @@ namespace mozilla {
 namespace dom {
 class Document;
 }
-
-class ComputedStyle;
 
 /**
  * A ComputedStyle represents the computed style data for an element.
