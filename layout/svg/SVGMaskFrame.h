@@ -29,9 +29,9 @@ class SVGMaskFrame final : public SVGContainerFrame {
   friend nsIFrame* ::NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
-  typedef gfx::Matrix Matrix;
-  typedef gfx::SourceSurface SourceSurface;
-  typedef image::imgDrawingParams imgDrawingParams;
+  using Matrix = gfx::Matrix;
+  using SourceSurface = gfx::SourceSurface;
+  using imgDrawingParams = image::imgDrawingParams;
 
  protected:
   explicit SVGMaskFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)

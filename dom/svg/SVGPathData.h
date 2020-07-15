@@ -87,15 +87,15 @@ class SVGPathData {
   // SVGPathDataParser will not keep wrappers in sync, so consumers
   // are responsible for that!
 
-  typedef gfx::DrawTarget DrawTarget;
-  typedef gfx::Path Path;
-  typedef gfx::PathBuilder PathBuilder;
-  typedef gfx::FillRule FillRule;
-  typedef gfx::Float Float;
-  typedef gfx::CapStyle CapStyle;
+  using DrawTarget = gfx::DrawTarget;
+  using Path = gfx::Path;
+  using PathBuilder = gfx::PathBuilder;
+  using FillRule = gfx::FillRule;
+  using Float = gfx::Float;
+  using CapStyle = gfx::CapStyle;
 
  public:
-  typedef const float* const_iterator;
+  using const_iterator = const float*;
 
   SVGPathData() = default;
   ~SVGPathData() = default;

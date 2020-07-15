@@ -19,7 +19,7 @@ nsresult NS_NewSVGScriptElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGScriptElementBase;
+using SVGScriptElementBase = SVGElement;
 
 class SVGScriptElement final : public SVGScriptElementBase,
                                public ScriptElement {

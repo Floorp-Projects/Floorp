@@ -47,7 +47,7 @@ class MOZ_RAII AutoSetRestorePaintServerState {
 
 class SVGPaintServerFrame : public SVGContainerFrame {
  protected:
-  typedef gfx::DrawTarget DrawTarget;
+  using DrawTarget = gfx::DrawTarget;
 
   SVGPaintServerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                       ClassID aID)
@@ -56,7 +56,7 @@ class SVGPaintServerFrame : public SVGContainerFrame {
   }
 
  public:
-  typedef image::imgDrawingParams imgDrawingParams;
+  using imgDrawingParams = image::imgDrawingParams;
 
   NS_DECL_ABSTRACT_FRAME(SVGPaintServerFrame)
 

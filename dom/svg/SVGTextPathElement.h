@@ -26,7 +26,7 @@ namespace dom {
 static const uint16_t TEXTPATH_SIDETYPE_LEFT = 1;
 static const uint16_t TEXTPATH_SIDETYPE_RIGHT = 2;
 
-typedef SVGTextContentElement SVGTextPathElementBase;
+using SVGTextPathElementBase = SVGTextContentElement;
 
 class SVGTextPathElement final : public SVGTextPathElementBase {
   friend class mozilla::SVGTextFrame;

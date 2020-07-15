@@ -50,9 +50,6 @@ class UserSpaceMetricsWithSize : public UserSpaceMetrics {
 
 class SVGElementMetrics : public UserSpaceMetrics {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
-  typedef mozilla::dom::SVGViewportElement SVGViewportElement;
-
   explicit SVGElementMetrics(SVGElement* aSVGElement,
                              SVGViewportElement* aCtx = nullptr);
 
@@ -82,18 +79,17 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 }  // namespace dom
 
 class SVGAnimatedLength {
-  friend class mozilla::dom::DOMSVGAnimatedLength;
-  friend class mozilla::dom::DOMSVGLength;
-  typedef mozilla::dom::DOMSVGLength DOMSVGLength;
-  typedef mozilla::dom::SVGElement SVGElement;
-  typedef mozilla::dom::SVGViewportElement SVGViewportElement;
-  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
+  friend class dom::DOMSVGAnimatedLength;
+  friend class dom::DOMSVGLength;
+  using DOMSVGLength = dom::DOMSVGLength;
+  using SVGElement = dom::SVGElement;
+  using SVGViewportElement = dom::SVGViewportElement;
+  using UserSpaceMetrics = dom::UserSpaceMetrics;
 
  public:
-  void Init(uint8_t aCtxType = mozilla::SVGContentUtils::XY,
-            uint8_t aAttrEnum = 0xff, float aValue = 0,
-            uint8_t aUnitType =
-                mozilla::dom::SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
+  void Init(uint8_t aCtxType = SVGContentUtils::XY, uint8_t aAttrEnum = 0xff,
+            float aValue = 0,
+            uint8_t aUnitType = dom::SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
     mAnimVal = mBaseVal = aValue;
     mSpecifiedUnitType = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -137,7 +133,7 @@ class SVGAnimatedLength {
   uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
   bool IsPercentage() const {
     return mSpecifiedUnitType ==
-           mozilla::dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
+           dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
   }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
@@ -154,10 +150,10 @@ class SVGAnimatedLength {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedLength> ToDOMAnimatedLength(
+  already_AddRefed<dom::DOMSVGAnimatedLength> ToDOMAnimatedLength(
       SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   float mAnimVal;
@@ -208,9 +204,8 @@ class SVGAnimatedLength {
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;

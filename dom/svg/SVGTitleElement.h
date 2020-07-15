@@ -16,7 +16,7 @@ nsresult NS_NewSVGTitleElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGTitleElementBase;
+using SVGTitleElementBase = SVGElement;
 
 class SVGTitleElement final : public SVGTitleElementBase,
                               public nsStubMutationObserver {

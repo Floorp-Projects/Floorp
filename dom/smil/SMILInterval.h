@@ -52,7 +52,7 @@ class SMILInterval {
   void FixBegin();
   void FixEnd();
 
-  typedef nsTArray<RefPtr<SMILInstanceTime> > InstanceTimeList;
+  using InstanceTimeList = nsTArray<RefPtr<SMILInstanceTime>>;
 
   void AddDependentTime(SMILInstanceTime& aTime);
   void RemoveDependentTime(const SMILInstanceTime& aTime);

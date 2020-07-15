@@ -15,7 +15,7 @@ nsresult NS_NewSVGFEComponentTransferElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGFE SVGFEComponentTransferElementBase;
+using SVGFEComponentTransferElementBase = SVGFE;
 
 class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase {
   friend nsresult(::NS_NewSVGFEComponentTransferElement(

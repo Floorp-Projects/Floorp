@@ -16,7 +16,7 @@ nsresult NS_NewSVGLineElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGGeometryElement SVGLineElementBase;
+using SVGLineElementBase = SVGGeometryElement;
 
 class SVGLineElement final : public SVGLineElementBase {
  protected:

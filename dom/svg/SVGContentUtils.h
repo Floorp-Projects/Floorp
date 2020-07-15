@@ -75,10 +75,10 @@ enum SVGTransformTypes {
  */
 class SVGContentUtils {
  public:
-  typedef mozilla::gfx::Float Float;
-  typedef mozilla::gfx::Matrix Matrix;
-  typedef mozilla::gfx::Rect Rect;
-  typedef mozilla::gfx::StrokeOptions StrokeOptions;
+  using Float = gfx::Float;
+  using Matrix = gfx::Matrix;
+  using Rect = gfx::Rect;
+  using StrokeOptions = gfx::StrokeOptions;
 
   /*
    * Get the outer SVG element of an nsIContent

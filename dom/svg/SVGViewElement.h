@@ -23,7 +23,7 @@ class SVGOuterSVGFrame;
 namespace dom {
 class SVGViewportElement;
 
-typedef SVGElement SVGViewElementBase;
+using SVGViewElementBase = SVGElement;
 
 class SVGViewElement : public SVGViewElementBase {
  protected:

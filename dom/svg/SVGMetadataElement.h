@@ -16,7 +16,7 @@ nsresult NS_NewSVGMetadataElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGMetadataElementBase;
+using SVGMetadataElementBase = SVGElement;
 
 class SVGMetadataElement final : public SVGMetadataElementBase {
  protected:

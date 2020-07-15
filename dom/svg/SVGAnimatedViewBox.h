@@ -40,7 +40,7 @@ struct SVGViewBox {
 
 class SVGAnimatedViewBox {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
+  using SVGElement = dom::SVGElement;
 
   void Init();
 
@@ -76,14 +76,14 @@ class SVGAnimatedViewBox {
                               bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
 
-  already_AddRefed<mozilla::dom::SVGAnimatedRect> ToSVGAnimatedRect(
+  already_AddRefed<dom::SVGAnimatedRect> ToSVGAnimatedRect(
       SVGElement* aSVGElement);
 
   already_AddRefed<dom::SVGRect> ToDOMBaseVal(SVGElement* aSVGElement);
 
   already_AddRefed<dom::SVGRect> ToDOMAnimVal(SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   SVGViewBox mBaseVal;
@@ -104,15 +104,14 @@ class SVGAnimatedViewBox {
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 
-  static SVGAttrTearoffTable<SVGAnimatedViewBox, mozilla::dom::SVGAnimatedRect>
+  static SVGAttrTearoffTable<SVGAnimatedViewBox, dom::SVGAnimatedRect>
       sSVGAnimatedRectTearoffTable;
 };
 

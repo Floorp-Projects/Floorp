@@ -63,12 +63,12 @@ class SVGFilterElement;
  *   "filter space point" = (20, 20)
  */
 class SVGFilterInstance {
-  typedef gfx::Point3D Point3D;
-  typedef gfx::IntRect IntRect;
-  typedef gfx::SourceSurface SourceSurface;
-  typedef gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
-  typedef dom::SVGFE SVGFE;
-  typedef dom::UserSpaceMetrics UserSpaceMetrics;
+  using Point3D = gfx::Point3D;
+  using IntRect = gfx::IntRect;
+  using SourceSurface = gfx::SourceSurface;
+  using FilterPrimitiveDescription = gfx::FilterPrimitiveDescription;
+  using SVGFE = dom::SVGFE;
+  using UserSpaceMetrics = dom::UserSpaceMetrics;
 
  public:
   /**

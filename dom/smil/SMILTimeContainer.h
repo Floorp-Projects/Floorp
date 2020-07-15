@@ -188,7 +188,7 @@ class SMILTimeContainer {
    */
   bool GetNextMilestoneInParentTime(SMILMilestone& aNextMilestone) const;
 
-  typedef nsTArray<RefPtr<mozilla::dom::SVGAnimationElement> > AnimElemArray;
+  using AnimElemArray = nsTArray<RefPtr<dom::SVGAnimationElement>>;
 
   /*
    * Removes and returns the timebase elements from the start of the list of

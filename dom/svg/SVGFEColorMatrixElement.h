@@ -19,7 +19,7 @@ namespace dom {
 
 class DOMSVGAnimatedNumberList;
 
-typedef SVGFE SVGFEColorMatrixElementBase;
+using SVGFEColorMatrixElementBase = SVGFE;
 
 class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase {
   friend nsresult(::NS_NewSVGFEColorMatrixElement(

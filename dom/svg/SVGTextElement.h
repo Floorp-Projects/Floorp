@@ -15,7 +15,7 @@ nsresult NS_NewSVGTextElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGTextPositioningElement SVGTextElementBase;
+using SVGTextElementBase = SVGTextPositioningElement;
 
 class SVGTextElement final : public SVGTextElementBase {
  protected:

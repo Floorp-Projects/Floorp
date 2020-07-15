@@ -16,7 +16,7 @@ nsresult NS_NewSVGFEDistantLightElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGFELightElement SVGFEDistantLightElementBase;
+using SVGFEDistantLightElementBase = SVGFELightElement;
 
 class SVGFEDistantLightElement : public SVGFEDistantLightElementBase {
   friend nsresult(::NS_NewSVGFEDistantLightElement(

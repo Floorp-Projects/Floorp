@@ -25,7 +25,7 @@ class SVGElement;
 
 class SVGAnimatedIntegerPair {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
+  using SVGElement = dom::SVGElement;
 
   enum PairIndex { eFirst, eSecond };
 
@@ -59,9 +59,9 @@ class SVGAnimatedIntegerPair {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedInteger> ToDOMAnimatedInteger(
+  already_AddRefed<dom::DOMSVGAnimatedInteger> ToDOMAnimatedInteger(
       PairIndex aIndex, SVGElement* aSVGElement);
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   int32_t mAnimVal[2];
@@ -71,12 +71,10 @@ class SVGAnimatedIntegerPair {
   bool mIsBaseSet;
 
  public:
-  struct DOMAnimatedInteger final : public mozilla::dom::DOMSVGAnimatedInteger {
+  struct DOMAnimatedInteger final : public dom::DOMSVGAnimatedInteger {
     DOMAnimatedInteger(SVGAnimatedIntegerPair* aVal, PairIndex aIndex,
                        SVGElement* aSVGElement)
-        : mozilla::dom::DOMSVGAnimatedInteger(aSVGElement),
-          mVal(aVal),
-          mIndex(aIndex) {}
+        : dom::DOMSVGAnimatedInteger(aSVGElement), mVal(aVal), mIndex(aIndex) {}
     virtual ~DOMAnimatedInteger();
 
     SVGAnimatedIntegerPair* mVal;  // kept alive because it belongs to content
@@ -108,9 +106,8 @@ class SVGAnimatedIntegerPair {
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;

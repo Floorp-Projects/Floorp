@@ -69,7 +69,7 @@ class DOMSVGTranslatePoint final : public nsISVGPoint {
   ~DOMSVGTranslatePoint() = default;
 };
 
-typedef SVGViewportElement SVGSVGElementBase;
+using SVGSVGElementBase = SVGViewportElement;
 
 class SVGSVGElement final : public SVGSVGElementBase {
   friend class mozilla::SVGFragmentIdentifier;

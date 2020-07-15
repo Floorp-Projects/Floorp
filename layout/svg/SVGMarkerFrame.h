@@ -37,7 +37,7 @@ nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(mozilla::PresShell* aPresShell,
 namespace mozilla {
 
 class SVGMarkerFrame final : public SVGContainerFrame {
-  typedef image::imgDrawingParams imgDrawingParams;
+  using imgDrawingParams = image::imgDrawingParams;
 
   friend class SVGMarkerAnonChildFrame;
   friend nsContainerFrame* ::NS_NewSVGMarkerFrame(

@@ -34,7 +34,7 @@ enum RotateType {
  * many ways as if there were, for simplicity.
  */
 class SVGMotionSMILType : public SMILType {
-  typedef mozilla::gfx::Path Path;
+  using Path = mozilla::gfx::Path;
 
  public:
   // Singleton for SMILValue objects to hold onto.

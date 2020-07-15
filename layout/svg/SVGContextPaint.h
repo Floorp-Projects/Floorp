@@ -53,9 +53,9 @@ class SVGDocument;
  */
 class SVGContextPaint : public RefCounted<SVGContextPaint> {
  protected:
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::Float Float;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+  using DrawTarget = mozilla::gfx::DrawTarget;
+  using Float = mozilla::gfx::Float;
+  using imgDrawingParams = mozilla::image::imgDrawingParams;
 
   SVGContextPaint() : mDashOffset(0.0f), mStrokeWidth(0.0f) {}
 
@@ -144,7 +144,7 @@ class MOZ_RAII AutoSetRestoreSVGContextPaint {
  */
 struct SVGContextPaintImpl : public SVGContextPaint {
  protected:
-  typedef mozilla::gfx::DrawTarget DrawTarget;
+  using DrawTarget = mozilla::gfx::DrawTarget;
 
  public:
   DrawMode Init(const DrawTarget* aDrawTarget, const gfxMatrix& aContextMatrix,
@@ -230,7 +230,7 @@ struct SVGContextPaintImpl : public SVGContextPaint {
  * support context colors and not paint servers.
  */
 class SVGEmbeddingContextPaint : public SVGContextPaint {
-  typedef gfx::DeviceColor DeviceColor;
+  using DeviceColor = gfx::DeviceColor;
 
  public:
   SVGEmbeddingContextPaint() : mFillOpacity(1.0f), mStrokeOpacity(1.0f) {}

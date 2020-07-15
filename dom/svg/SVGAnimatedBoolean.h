@@ -27,7 +27,7 @@ class SVGElement;
 
 class SVGAnimatedBoolean {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
+  using SVGElement = dom::SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, bool aValue = false) {
     mAnimVal = mBaseVal = aValue;
@@ -44,7 +44,7 @@ class SVGAnimatedBoolean {
   void SetAnimValue(bool aValue, SVGElement* aSVGElement);
   bool GetAnimValue() const { return mAnimVal; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedBoolean> ToDOMAnimatedBoolean(
+  already_AddRefed<dom::DOMSVGAnimatedBoolean> ToDOMAnimatedBoolean(
       SVGElement* aSVGElement);
   UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 

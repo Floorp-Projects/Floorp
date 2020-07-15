@@ -16,7 +16,7 @@ nsresult NS_NewSVGStopElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGStopElementBase;
+using SVGStopElementBase = SVGElement;
 
 class SVGStopElement final : public SVGStopElementBase {
  protected:

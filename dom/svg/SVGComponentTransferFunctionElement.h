@@ -25,7 +25,7 @@ namespace dom {
 
 class DOMSVGAnimatedNumberList;
 
-typedef SVGFEUnstyledElement SVGComponentTransferFunctionElementBase;
+using SVGComponentTransferFunctionElementBase = SVGFEUnstyledElement;
 
 class SVGComponentTransferFunctionElement
     : public SVGComponentTransferFunctionElementBase {
@@ -37,7 +37,7 @@ class SVGComponentTransferFunctionElement
   virtual ~SVGComponentTransferFunctionElement() = default;
 
  public:
-  typedef gfx::ComponentTransferAttributes ComponentTransferAttributes;
+  using ComponentTransferAttributes = gfx::ComponentTransferAttributes;
 
   // interfaces:
   NS_DECLARE_STATIC_IID_ACCESSOR(

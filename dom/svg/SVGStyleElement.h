@@ -18,7 +18,7 @@ nsresult NS_NewSVGStyleElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGStyleElementBase;
+using SVGStyleElementBase = SVGElement;
 
 class SVGStyleElement final : public SVGStyleElementBase,
                               public nsStubMutationObserver,

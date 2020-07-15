@@ -22,7 +22,7 @@ class EventChainPreVisitor;
 
 namespace dom {
 
-typedef SVGGraphicsElement SVGAElementBase;
+using SVGAElementBase = SVGGraphicsElement;
 
 class SVGAElement final : public SVGAElementBase, public Link {
  protected:

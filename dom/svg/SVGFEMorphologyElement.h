@@ -18,7 +18,7 @@ nsresult NS_NewSVGFEMorphologyElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGFE SVGFEMorphologyElementBase;
+using SVGFEMorphologyElementBase = SVGFE;
 
 class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
   friend nsresult(::NS_NewSVGFEMorphologyElement(

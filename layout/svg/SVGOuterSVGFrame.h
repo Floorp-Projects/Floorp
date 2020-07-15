@@ -32,7 +32,7 @@ namespace mozilla {
 
 class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
                                public ISVGSVGFrame {
-  typedef image::imgDrawingParams imgDrawingParams;
+  using imgDrawingParams = image::imgDrawingParams;
 
   friend nsContainerFrame* ::NS_NewSVGOuterSVGFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);

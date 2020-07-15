@@ -54,7 +54,7 @@ class SVGPathDataParser : public SVGDataParser {
 };
 
 class SVGArcConverter {
-  typedef mozilla::gfx::Point Point;
+  using Point = mozilla::gfx::Point;
 
  public:
   SVGArcConverter(const Point& from, const Point& to, const Point& radii,

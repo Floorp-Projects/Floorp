@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGAnimationElementBase;
+using SVGAnimationElementBase = SVGElement;
 
 class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
  protected:

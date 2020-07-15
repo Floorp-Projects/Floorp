@@ -111,12 +111,11 @@ class SMILAnimationController final : public SMILTimeContainer,
  protected:
   ~SMILAnimationController();
 
-  // Typedefs
-  typedef nsPtrHashKey<SMILTimeContainer> TimeContainerPtrKey;
-  typedef nsTHashtable<TimeContainerPtrKey> TimeContainerHashtable;
-  typedef nsPtrHashKey<mozilla::dom::SVGAnimationElement>
-      AnimationElementPtrKey;
-  typedef nsTHashtable<AnimationElementPtrKey> AnimationElementHashtable;
+  // alias declarations
+  using TimeContainerPtrKey = nsPtrHashKey<SMILTimeContainer>;
+  using TimeContainerHashtable = nsTHashtable<TimeContainerPtrKey>;
+  using AnimationElementPtrKey = nsPtrHashKey<dom::SVGAnimationElement>;
+  using AnimationElementHashtable = nsTHashtable<AnimationElementPtrKey>;
 
   // Returns mDocument's refresh driver, if it's got one.
   nsRefreshDriver* GetRefreshDriver();

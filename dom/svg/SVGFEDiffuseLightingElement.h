@@ -15,7 +15,7 @@ nsresult NS_NewSVGFEDiffuseLightingElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGFELightingElement SVGFEDiffuseLightingElementBase;
+using SVGFEDiffuseLightingElementBase = SVGFELightingElement;
 
 class SVGFEDiffuseLightingElement : public SVGFEDiffuseLightingElementBase {
   friend nsresult(::NS_NewSVGFEDiffuseLightingElement(

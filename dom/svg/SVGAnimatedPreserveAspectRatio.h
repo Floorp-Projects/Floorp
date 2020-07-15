@@ -69,7 +69,7 @@ class SVGAnimatedPreserveAspectRatio final {
   bool IsAnimated() const { return mIsAnimated; }
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedPreserveAspectRatio>
+  already_AddRefed<dom::DOMSVGAnimatedPreserveAspectRatio>
   ToDOMAnimatedPreserveAspectRatio(dom::SVGElement* aSVGElement);
   UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 

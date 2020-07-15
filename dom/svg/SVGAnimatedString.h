@@ -22,7 +22,7 @@ class SVGElement;
 
 class SVGAnimatedString {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
+  using SVGElement = dom::SVGElement;
 
   void Init(uint8_t aAttrEnum) {
     mAnimVal = nullptr;
@@ -46,10 +46,10 @@ class SVGAnimatedString {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return !!mAnimVal || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ToDOMAnimatedString(
+  already_AddRefed<dom::DOMSVGAnimatedString> ToDOMAnimatedString(
       SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   UniquePtr<nsString> mAnimVal;
@@ -59,12 +59,12 @@ class SVGAnimatedString {
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedString interface where the
   // wrapped class is SVGAnimatedString.
-  struct DOMAnimatedString final : public mozilla::dom::DOMSVGAnimatedString {
+  struct DOMAnimatedString final : public dom::DOMSVGAnimatedString {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
     DOMAnimatedString(SVGAnimatedString* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
+        : dom::DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
 
     SVGAnimatedString* mVal;  // kept alive because it belongs to content
 
@@ -97,9 +97,8 @@ class SVGAnimatedString {
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;

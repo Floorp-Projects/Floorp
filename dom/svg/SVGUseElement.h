@@ -31,7 +31,7 @@ struct URLExtraData;
 
 namespace dom {
 
-typedef SVGGraphicsElement SVGUseElementBase;
+using SVGUseElementBase = SVGGraphicsElement;
 
 class SVGUseElement final : public SVGUseElementBase,
                             public nsStubMutationObserver {

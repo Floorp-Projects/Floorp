@@ -23,7 +23,7 @@ namespace mozilla {
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in SMILTimeValue.h
 //
-typedef int64_t SMILTime;
+using SMILTime = int64_t;
 
 }  // namespace mozilla
 

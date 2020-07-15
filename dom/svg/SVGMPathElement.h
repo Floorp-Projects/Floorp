@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 class SVGPathElement;
 
-typedef SVGElement SVGMPathElementBase;
+using SVGMPathElementBase = SVGElement;
 
 class SVGMPathElement final : public SVGMPathElementBase,
                               public nsStubMutationObserver {

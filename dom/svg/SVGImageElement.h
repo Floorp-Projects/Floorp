@@ -22,7 +22,7 @@ class SVGImageFrame;
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
 
-typedef SVGGeometryElement SVGImageElementBase;
+using SVGImageElementBase = SVGGeometryElement;
 
 class SVGImageElement : public SVGImageElementBase,
                         public nsImageLoadingContent {

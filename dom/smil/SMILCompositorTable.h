@@ -21,7 +21,7 @@ namespace mozilla {
 
 class SMILCompositor;
 
-typedef nsTHashtable<SMILCompositor> SMILCompositorTable;
+using SMILCompositorTable = nsTHashtable<SMILCompositor>;
 
 }  // namespace mozilla
 
