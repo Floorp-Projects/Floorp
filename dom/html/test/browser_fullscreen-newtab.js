@@ -20,38 +20,33 @@ async function runTest() {
       url: kPage,
     },
     async function(browser) {
-      await ContentTask.spawn(browser, null, function() {
-        content.document.addEventListener("fullscreenchange", () => {
-          sendAsyncMessage("Test:FullscreenChange");
-        });
-        content.document.addEventListener("fullscreenerror", () => {
-          sendAsyncMessage("Test:FullscreenError");
-        });
-      });
-      let promiseFsEvents = new Promise(resolve => {
-        let countFsChange = 0;
-        let countFsError = 0;
-        function checkAndResolve() {
-          if (countFsChange > 0 && countFsError > 0) {
-            ok(false, "Got both fullscreenchange and fullscreenerror events");
-          } else if (countFsChange > 2) {
-            ok(false, "Got too many fullscreenchange events");
-          } else if (countFsError > 1) {
-            ok(false, "Got too many fullscreenerror events");
-          } else if (countFsChange == 2 || countFsError == 1) {
-            resolve();
+      let promiseFsEvents = SpecialPowers.spawn(browser, [], function() {
+        return new Promise(resolve => {
+          let countFsChange = 0;
+          let countFsError = 0;
+          function checkAndResolve() {
+            if (countFsChange > 0 && countFsError > 0) {
+              Assert.ok(
+                false,
+                "Got both fullscreenchange and fullscreenerror events"
+              );
+            } else if (countFsChange > 2) {
+              Assert.ok(false, "Got too many fullscreenchange events");
+            } else if (countFsError > 1) {
+              Assert.ok(false, "Got too many fullscreenerror events");
+            } else if (countFsChange == 2 || countFsError == 1) {
+              resolve();
+            }
           }
-        }
-        let mm = browser.messageManager;
-        mm.addMessageListener("Test:FullscreenChange", () => {
-          info("Got fullscreenchange event");
-          ++countFsChange;
-          checkAndResolve();
-        });
-        mm.addMessageListener("Test:FullscreenError", () => {
-          info("Got fullscreenerror event");
-          ++countFsError;
-          checkAndResolve();
+
+          content.document.addEventListener("fullscreenchange", () => {
+            ++countFsChange;
+            checkAndResolve();
+          });
+          content.document.addEventListener("fullscreenerror", () => {
+            ++countFsError;
+            checkAndResolve();
+          });
         });
       });
       let promiseNewTab = BrowserTestUtils.waitForNewTab(
