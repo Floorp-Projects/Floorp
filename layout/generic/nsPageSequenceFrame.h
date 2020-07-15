@@ -73,6 +73,10 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   // For Shrink To Fit
   float GetSTFPercent() const { return mPageData->mShrinkToFitRatio; }
 
+  // Gets the final print preview scale that we're applying to the previewed
+  // sheets of paper.
+  float GetPrintPreviewScale() const;
+
   // Async Printing
   nsresult StartPrint(nsPresContext* aPresContext,
                       nsIPrintSettings* aPrintSettings,
@@ -112,11 +116,8 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   void SetDateTimeStr(const nsAString& aDateTimeStr);
   void SetPageNumberFormat(const nsAString& aFormatStr, bool aForPageNumOnly);
 
-  // Sets the frame desired size to the size of the viewport, or the given
-  // nscoords, whichever is larger. Print scaling is applied in this function.
-  void SetDesiredSize(ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput, nscoord aWidth,
-                      nscoord aHeight);
+  // Print scaling is applied in this function.
+  void PopulateReflowOutput(ReflowOutput&, const ReflowInput&);
 
   // Helper function to compute the offset needed to center a child
   // page-frame's margin-box inside our content-box.
@@ -130,14 +131,17 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   nsMargin mMargin;
 
   nsSize mSize;
+
   nsSharedPageData* mPageData;  // data shared by all the nsPageFrames
 
-  // Asynch Printing
+  // Async Printing
   int32_t mPageNum;
   int32_t mTotalPages;
   int32_t mPrintRangeType;
   int32_t mFromPageNum;
   int32_t mToPageNum;
+  // The size we need to shrink-to-fit our previewed sheets of paper against.
+  nscoord mAvailableISize = -1;
   nsTArray<int32_t> mPageRanges;
   nsTArray<RefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
 

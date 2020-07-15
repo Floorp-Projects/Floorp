@@ -82,22 +82,39 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------------------------------------------------------------------
 
-void nsPageSequenceFrame::SetDesiredSize(ReflowOutput& aDesiredSize,
-                                         const ReflowInput& aReflowInput,
-                                         nscoord aWidth, nscoord aHeight) {
-  // Aim to fill the whole size of the document, not only so we
-  // can act as a background in print preview but also handle overflow
-  // in child page frames correctly.
+float nsPageSequenceFrame::GetPrintPreviewScale() const {
+  MOZ_DIAGNOSTIC_ASSERT(mAvailableISize >= 0, "Unset available width?");
+
+  nsPresContext* pc = PresContext();
+  float scale = pc->GetPrintPreviewScaleForSequenceFrame();
+  if (pc->IsScreen()) {
+    // For print preview, scale to the available size if needed.
+    nscoord iSize = GetWritingMode().IsVertical() ? mSize.height : mSize.width;
+    nscoord scaledISize = NSToCoordCeil(iSize * scale);
+    if (scaledISize > mAvailableISize) {
+      scale *= float(mAvailableISize) / float(scaledISize);
+    }
+  }
+  return scale;
+}
+
+void nsPageSequenceFrame::PopulateReflowOutput(
+    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput) {
+  // Aim to fill the whole available space, not only so we can act as a
+  // background in print preview but also handle overflow in child page frames
+  // correctly.
   // Use availableISize so we don't cause a needless horizontal scrollbar.
+  float scale = GetPrintPreviewScale();
+
   WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord scaledWidth = aWidth * PresContext()->GetPrintPreviewScale();
-  nscoord scaledHeight = aHeight * PresContext()->GetPrintPreviewScale();
+  nscoord iSize = wm.IsVertical() ? mSize.Height() : mSize.Width();
+  nscoord bSize = wm.IsVertical() ? mSize.Width() : mSize.Height();
 
-  nscoord scaledISize = (wm.IsVertical() ? scaledHeight : scaledWidth);
-  nscoord scaledBSize = (wm.IsVertical() ? scaledWidth : scaledHeight);
-
-  aDesiredSize.ISize(wm) = std::max(scaledISize, aReflowInput.AvailableISize());
-  aDesiredSize.BSize(wm) = std::max(scaledBSize, aReflowInput.ComputedBSize());
+  aDesiredSize.ISize(wm) =
+      std::max(NSToCoordFloor(iSize * scale), aReflowInput.AvailableISize());
+  aDesiredSize.BSize(wm) =
+      std::max(NSToCoordFloor(bSize * scale), aReflowInput.ComputedBSize());
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
 }
 
 // Helper function to compute the offset needed to center a child
@@ -113,9 +130,9 @@ nscoord nsPageSequenceFrame::ComputeCenteringMargin(
   // print-preview scale factor, via ComputePageSequenceTransform().
   // We really want to center *that scaled-up rendering* inside of
   // aContainerContentBoxWidth.  So, we scale up its margin-box here...
-  auto ppScale = PresContext()->GetPrintPreviewScale();
+  float scale = GetPrintPreviewScale();
   nscoord scaledChildMarginBoxWidth =
-      NSToCoordRound(childMarginBoxWidth * ppScale);
+      NSToCoordRound(childMarginBoxWidth * scale);
 
   // ...and see we how much space is left over, when we subtract that scaled-up
   // size from the container width:
@@ -131,7 +148,7 @@ nscoord nsPageSequenceFrame::ComputeCenteringMargin(
   // of the extra space.  And then, we have to scale that space back down, so
   // that it'll produce the correct scaled-up amount when we render (because
   // rendering will scale it back up):
-  return NSToCoordRound(scaledExtraSpace * 0.5 / ppScale);
+  return NSToCoordRound(scaledExtraSpace * 0.5 / scale);
 }
 
 /*
@@ -151,27 +168,30 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE_REFLOW_IN("nsPageSequenceFrame::Reflow");
 
+  auto CenterPages = [&] {
+    for (nsIFrame* child : mFrames) {
+      nsMargin pageCSSMargin = child->GetUsedMargin();
+      nscoord centeringMargin =
+          ComputeCenteringMargin(aReflowInput.ComputedWidth(),
+                                 child->GetRect().Width(), pageCSSMargin);
+      nscoord newX = pageCSSMargin.left + centeringMargin;
+
+      // Adjust the child's x-position:
+      child->MovePositionBy(nsPoint(newX - child->GetNormalPosition().x, 0));
+    }
+  };
+
+  mAvailableISize = aReflowInput.AvailableISize();
+
   // Don't do incremental reflow until we've taught tables how to do
   // it right in paginated mode.
   if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Return our desired size
-    SetDesiredSize(aDesiredSize, aReflowInput, mSize.width, mSize.height);
-    aDesiredSize.SetOverflowAreasToDesiredBounds();
+    PopulateReflowOutput(aDesiredSize, aReflowInput);
     FinishAndStoreOverflow(&aDesiredSize);
 
-    if (GetRect().Width() != aDesiredSize.Width()) {
-      // Our width is changing; we need to re-center our children (our pages).
-      for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-        nsIFrame* child = e.get();
-        nsMargin pageCSSMargin = child->GetUsedMargin();
-        nscoord centeringMargin =
-            ComputeCenteringMargin(aReflowInput.ComputedWidth(),
-                                   child->GetRect().Width(), pageCSSMargin);
-        nscoord newX = pageCSSMargin.left + centeringMargin;
-
-        // Adjust the child's x-position:
-        child->MovePositionBy(nsPoint(newX - child->GetNormalPosition().x, 0));
-      }
+    if (GetSize().Width() != aDesiredSize.Width()) {
+      CenterPages();
     }
     return;
   }
@@ -257,10 +277,6 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowInput, x, y,
                 ReflowChildFlags::Default, status);
 
-    // If the page is narrower than our width, then center it horizontally:
-    x += ComputeCenteringMargin(aReflowInput.ComputedWidth(), kidSize.Width(),
-                                pageCSSMargin);
-
     FinishReflowChild(kidFrame, aPresContext, kidSize, &kidReflowInput, x, y,
                       ReflowChildFlags::Default);
     y += kidSize.Height();
@@ -308,18 +324,19 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     SetDateTimeStr(formattedDateString);
   }
 
+  // cache the size so we can set the desired size
+  // for the other reflows that happen
+  mSize = nsSize(maxXMost, y);
+
   // Return our desired size
   // Adjust the reflow size by PrintPreviewScale so the scrollbars end up the
   // correct size
-  SetDesiredSize(aDesiredSize, aReflowInput, maxXMost, y);
+  PopulateReflowOutput(aDesiredSize, aReflowInput);
 
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
 
-  // cache the size so we can set the desired size
-  // for the other reflows that happen
-  mSize.width = maxXMost;
-  mSize.height = y;
+  // Now center our pages.
+  CenterPages();
 
   NS_FRAME_TRACE_REFLOW_OUT("nsPageSequenceFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
@@ -662,9 +679,11 @@ nsresult nsPageSequenceFrame::DoPageEnd() {
   return rv;
 }
 
-inline gfx::Matrix4x4 ComputePageSequenceTransform(nsIFrame* aFrame,
-                                                   float aAppUnitsPerPixel) {
-  float scale = aFrame->PresContext()->GetPrintPreviewScale();
+gfx::Matrix4x4 ComputePageSequenceTransform(nsIFrame* aFrame,
+                                            float aAppUnitsPerPixel) {
+  MOZ_ASSERT(aFrame->IsPageSequenceFrame());
+  float scale =
+      static_cast<nsPageSequenceFrame*>(aFrame)->GetPrintPreviewScale();
   return gfx::Matrix4x4::Scaling(scale, scale, 1);
 }
 
@@ -684,7 +703,7 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     nsIFrame* child = PrincipalChildList().FirstChild();
     nsRect visible = aBuilder->GetVisibleRect();
-    visible.ScaleInverseRoundOut(PresContext()->GetPrintPreviewScale());
+    visible.ScaleInverseRoundOut(GetPrintPreviewScale());
 
     while (child) {
       if (child->GetVisualOverflowRectRelativeToParent().Intersects(visible)) {

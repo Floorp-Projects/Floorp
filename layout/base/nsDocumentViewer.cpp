@@ -3259,9 +3259,8 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   }
 
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
-  nsIFrame* seqFrame = nullptr;
-  int32_t pageCount = 0;
-  if (NS_FAILED(mPrintJob->GetSeqFrameAndCountPages(seqFrame, pageCount))) {
+  auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
+  if (!seqFrame) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3317,7 +3316,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   }
 
   if (fndPageFrame) {
-    nscoord newYPosn = nscoord(mPrintJob->GetPrintPreviewScale() *
+    nscoord newYPosn = nscoord(seqFrame->GetPrintPreviewScale() *
                                fndPageFrame->GetPosition().y);
     sf->ScrollTo(nsPoint(pt.x, newYPosn), ScrollMode::Instant);
   }
