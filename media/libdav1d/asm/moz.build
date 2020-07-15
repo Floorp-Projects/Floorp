@@ -50,11 +50,9 @@ elif CONFIG['CPU_ARCH'] == 'x86_64':
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
     elif CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/win/' % TOPSRCDIR]
-    elif CONFIG['OS_TARGET'] == 'Android':
-        error('Platform %s is not expected' % CONFIG['OS_TARGET'])
     else:
-        # The rest of the platforms are all Linux flavors
-        # Linux,OpenBSD,NetBSD,FreeBSD,DragonFly,SunOS
+        # The rest of the platforms are all Linux-like: plain Linux
+        # Android, OpenBSD, NetBSD, FreeBSD, DragonFly, SunOS
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/linux/' % TOPSRCDIR]
 elif CONFIG['CPU_ARCH'] == 'aarch64':
     stack_alignment = 16
