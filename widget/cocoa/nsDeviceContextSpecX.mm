@@ -75,7 +75,18 @@ static nsresult FillPaperListForPrinter(PMPrinter aPrinter,
     nsAutoString name;
     nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(pmPaperName), name);
 
-    aPaperList.AppendElement(new nsPaper(name, width, height, 0.0, 0.0, 0.0, 0.0));
+    PMPaperMargins unwriteableMargins;
+    if (PMPaperGetMargins(pmPaper, &unwriteableMargins) != noErr) {
+      // If we can't get unwriteable margins, just default to none.
+      unwriteableMargins.top = 0.0;
+      unwriteableMargins.bottom = 0.0;
+      unwriteableMargins.left = 0.0;
+      unwriteableMargins.right = 0.0;
+    }
+
+    aPaperList.AppendElement(new nsPaper(name, width, height, unwriteableMargins.top,
+                                         unwriteableMargins.bottom, unwriteableMargins.left,
+                                         unwriteableMargins.right));
   }
 
   return NS_OK;
