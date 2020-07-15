@@ -57,6 +57,8 @@ class IOUtils final {
                                         const nsAString& aDestPath,
                                         const MoveOptions& aOptions);
 
+  static bool IsAbsolutePath(const nsAString& aPath);
+
  private:
   ~IOUtils() = default;
 
