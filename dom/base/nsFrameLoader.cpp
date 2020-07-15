@@ -2223,11 +2223,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
 
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(ToSupports(this), "inprocess-browser-shown", nullptr);
-  }
-
   return NS_OK;
 }
 
