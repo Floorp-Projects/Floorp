@@ -27,6 +27,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/GeckoBindings.h"
 #include "PreferenceSheet.h"
+#include "nsGlobalWindowOuter.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;
