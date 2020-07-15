@@ -1279,26 +1279,6 @@ nsresult WhiteSpaceVisibilityKeeper::
     return NS_OK;
   }
 
-  const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
-      !deleteStartEqualsOrIsBeforeTextStart
-          ? textFragmentDataAtStart
-                .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
-                    aRangeToDelete.StartRef())
-          : EditorDOMRange();
-  const Maybe<const VisibleWhiteSpacesData>
-      nonPreformattedVisibleWhiteSpacesAtStart =
-          !deleteStartEqualsOrIsBeforeTextStart &&
-                  !textFragmentDataAtStart.IsPreformatted() &&
-                  !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
-              ? Some(textFragmentDataAtStart.VisibleWhiteSpacesDataRef())
-              : Nothing();
-  const PointPosition
-      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
-          nonPreformattedVisibleWhiteSpacesAtStart.isSome() &&
-                  nonPreformattedVisibleWhiteSpacesAtStart.ref().IsInitialized()
-              ? nonPreformattedVisibleWhiteSpacesAtStart.ref().ComparePoint(
-                    aRangeToDelete.StartRef())
-              : PointPosition::NotInSameDOMTree;
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
       !deleteEndIsAfterTextEnd
           ? textFragmentDataAtEnd
@@ -1320,9 +1300,6 @@ nsresult WhiteSpaceVisibilityKeeper::
   const bool followingContentMayBecomeFirstVisibleContent =
       textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
           aRangeToDelete.StartRef());
-  const bool precedingContentMayBecomeInvisible =
-      textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
-          aRangeToDelete.EndRef());
 
   EditorDOMPoint startToDelete(aRangeToDelete.StartRef());
   if (!deleteEndIsAfterTextEnd) {
@@ -1440,27 +1417,6 @@ nsresult WhiteSpaceVisibilityKeeper::
               ? nonPreformattedVisibleWhiteSpacesAtStart.ref().ComparePoint(
                     aRangeToDelete.StartRef())
               : PointPosition::NotInSameDOMTree;
-  const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
-      !deleteEndIsAfterTextEnd
-          ? textFragmentDataAtEnd
-                .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
-                    aRangeToDelete.EndRef())
-          : EditorDOMRange();
-  const Maybe<const VisibleWhiteSpacesData>
-      nonPreformattedVisibleWhiteSpacesAtEnd =
-          !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
-                  !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
-              ? Some(textFragmentDataAtEnd.VisibleWhiteSpacesDataRef())
-              : Nothing();
-  const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
-      nonPreformattedVisibleWhiteSpacesAtEnd.isSome() &&
-              nonPreformattedVisibleWhiteSpacesAtEnd.ref().IsInitialized()
-          ? nonPreformattedVisibleWhiteSpacesAtEnd.ref().ComparePoint(
-                aRangeToDelete.EndRef())
-          : PointPosition::NotInSameDOMTree;
-  const bool followingContentMayBecomeFirstVisibleContent =
-      textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
-          aRangeToDelete.StartRef());
   const bool precedingContentMayBecomeInvisible =
       textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
           aRangeToDelete.EndRef());
