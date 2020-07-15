@@ -76,7 +76,8 @@ child:
                   ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
 
   async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
-                           LayoutDeviceCoord aSpanChange, Modifiers aModifiers);
+                           LayoutDevicePoint aFocusPoint, LayoutDeviceCoord aSpanChange,
+                           Modifiers aModifiers);
 
   async CancelAutoscroll(ViewID aScrollId);
 };

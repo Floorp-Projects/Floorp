@@ -890,8 +890,10 @@ void APZCCallbackHelper::CancelAutoscroll(
 
 /* static */
 void APZCCallbackHelper::NotifyPinchGesture(
-    PinchGestureInput::PinchGestureType aType, LayoutDeviceCoord aSpanChange,
+    PinchGestureInput::PinchGestureType aType,
+    const LayoutDevicePoint& aFocusPoint, LayoutDeviceCoord aSpanChange,
     Modifiers aModifiers, const nsCOMPtr<nsIWidget>& aWidget) {
+  APZCCH_LOG("APZCCallbackHelper dispatching pinch gesture\n");
   EventMessage msg;
   switch (aType) {
     case PinchGestureInput::PINCHGESTURE_START:
@@ -914,6 +916,8 @@ void APZCCallbackHelper::NotifyPinchGesture(
   // on that currently, but we might want to fix it at some point.
   event.mDelta = aSpanChange;
   event.mModifiers = aModifiers;
+  event.mRefPoint = RoundedToInt(aFocusPoint);
+
   DispatchWidgetEvent(event);
 }
 

@@ -214,14 +214,16 @@ void ChromeProcessController::HandleTap(
 
 void ChromeProcessController::NotifyPinchGesture(
     PinchGestureInput::PinchGestureType aType, const ScrollableLayerGuid& aGuid,
-    LayoutDeviceCoord aSpanChange, Modifiers aModifiers) {
+    const LayoutDevicePoint& aFocusPoint, LayoutDeviceCoord aSpanChange,
+    Modifiers aModifiers) {
   if (!mUIThread->IsOnCurrentThread()) {
     mUIThread->Dispatch(
         NewRunnableMethod<PinchGestureInput::PinchGestureType,
-                          ScrollableLayerGuid, LayoutDeviceCoord, Modifiers>(
+                          ScrollableLayerGuid, LayoutDevicePoint,
+                          LayoutDeviceCoord, Modifiers>(
             "layers::ChromeProcessController::NotifyPinchGesture", this,
             &ChromeProcessController::NotifyPinchGesture, aType, aGuid,
-            aSpanChange, aModifiers));
+            aFocusPoint, aSpanChange, aModifiers));
     return;
   }
 
@@ -232,8 +234,8 @@ void ChromeProcessController::NotifyPinchGesture(
     // loop and cause undesirable re-entrancy in APZ.
     mUIThread->Dispatch(NewRunnableFunction(
         "layers::ChromeProcessController::NotifyPinchGestureAsync",
-        &APZCCallbackHelper::NotifyPinchGesture, aType, aSpanChange, aModifiers,
-        mWidget));
+        &APZCCallbackHelper::NotifyPinchGesture, aType, aFocusPoint,
+        aSpanChange, aModifiers, mWidget));
   }
 }
 

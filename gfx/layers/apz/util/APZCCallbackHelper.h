@@ -190,6 +190,7 @@ class APZCCallbackHelper {
    * will dispatch appropriate WidgetSimpleGestureEvent events to gecko.
    */
   static void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                                 const LayoutDevicePoint& aFocusPoint,
                                  LayoutDeviceCoord aSpanChange,
                                  Modifiers aModifiers,
                                  const nsCOMPtr<nsIWidget>& aWidget);

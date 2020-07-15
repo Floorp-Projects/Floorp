@@ -74,6 +74,7 @@ class GeckoContentController {
    *        of the pinch.
    * @param aGuid The guid of the APZ that is detecting the pinch. This is
    *        generally the root APZC for the layers id.
+   * @param aFocusPoint The focus point of the pinch event.
    * @param aSpanChange For the START or END event, this is always 0.
    *        For a SCALE event, this is the difference in span between the
    *        previous state and the new state.
@@ -81,6 +82,7 @@ class GeckoContentController {
    */
   virtual void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                                   const ScrollableLayerGuid& aGuid,
+                                  const LayoutDevicePoint& aFocusPoint,
                                   LayoutDeviceCoord aSpanChange,
                                   Modifiers aModifiers) = 0;
 
