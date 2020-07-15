@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.syncedtabs.presenter
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.concept.sync.AccountObserver
@@ -37,7 +38,7 @@ internal class DefaultPresenter(
 ) : SyncedTabsPresenter {
 
     @VisibleForTesting
-    internal val eventObserver = SyncedTabsSyncObserver(view, controller)
+    internal val eventObserver = SyncedTabsSyncObserver(view.asView().context, view, controller)
     @VisibleForTesting
     internal val accountObserver = SyncedTabsAccountObserver(view, controller)
 
@@ -55,19 +56,20 @@ internal class DefaultPresenter(
             autoPause = true
         )
 
-        // No account setup
-        if (accountManager.accountProfile() == null) {
+        // No authenticated account present at all.
+        if (accountManager.authenticatedAccount() == null) {
             view.onError(ErrorType.SYNC_UNAVAILABLE)
             return
         }
 
+        // Have an account, but it ran into auth issues.
         if (accountManager.accountNeedsReauth()) {
             view.onError(ErrorType.SYNC_NEEDS_REAUTHENTICATION)
             return
         }
 
-        // Synced tabs not enabled
-        if (SyncEnginesStorage(view.asView().context).getStatus()[SyncEngine.Tabs] != true) {
+        // Synced tabs not enabled.
+        if (!isSyncedTabsEngineEnabled(view.asView().context)) {
             view.onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
             return
         }
@@ -77,6 +79,12 @@ internal class DefaultPresenter(
 
     override fun stop() {
         // no-op
+    }
+
+    companion object {
+        private fun isSyncedTabsEngineEnabled(context: Context): Boolean {
+            return SyncEnginesStorage(context).getStatus()[SyncEngine.Tabs] ?: false
+        }
     }
 
     internal class SyncedTabsAccountObserver(
@@ -98,12 +106,17 @@ internal class DefaultPresenter(
     }
 
     internal class SyncedTabsSyncObserver(
+        private val context: Context,
         private val view: SyncedTabsView,
         private val controller: SyncedTabsController
     ) : SyncStatusObserver {
 
         override fun onIdle() {
-            controller.refreshSyncedTabs()
+            if (isSyncedTabsEngineEnabled(context)) {
+                controller.refreshSyncedTabs()
+            } else {
+                view.onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
+            }
         }
 
         override fun onError(error: Exception?) {

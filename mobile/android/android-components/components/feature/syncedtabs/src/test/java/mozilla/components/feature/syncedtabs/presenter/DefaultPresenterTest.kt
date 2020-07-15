@@ -21,6 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 
 @RunWith(AndroidJUnit4::class)
 class DefaultPresenterTest {
@@ -63,7 +64,7 @@ class DefaultPresenterTest {
 
         // disable sync storage
         prefs.edit().putBoolean("tabs", false).apply()
-        `when`(accountManager.accountProfile()).thenReturn(mock())
+        `when`(accountManager.authenticatedAccount()).thenReturn(mock())
 
         presenter.start()
 
@@ -79,7 +80,7 @@ class DefaultPresenterTest {
             lifecycleOwner
         )
 
-        `when`(accountManager.accountProfile()).thenReturn(mock())
+        `when`(accountManager.authenticatedAccount()).thenReturn(mock())
         `when`(accountManager.accountNeedsReauth()).thenReturn(true)
 
         presenter.start()
@@ -88,7 +89,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `start invokes syncTabs`() = runBlockingTest {
+    fun `start invokes syncTabs - account profile is absent`() = runBlockingTest {
         val presenter = DefaultPresenter(
             controller,
             accountManager,
@@ -97,6 +98,26 @@ class DefaultPresenterTest {
         )
 
         prefs.edit().putBoolean("tabs", true).apply()
+        `when`(accountManager.authenticatedAccount()).thenReturn(mock())
+        `when`(accountManager.accountProfile()).thenReturn(null)
+        `when`(accountManager.accountNeedsReauth()).thenReturn(false)
+
+        presenter.start()
+
+        verify(controller).syncAccount()
+    }
+
+    @Test
+    fun `start invokes syncTabs - account profile is present`() = runBlockingTest {
+        val presenter = DefaultPresenter(
+            controller,
+            accountManager,
+            view,
+            lifecycleOwner
+        )
+
+        prefs.edit().putBoolean("tabs", true).apply()
+        `when`(accountManager.authenticatedAccount()).thenReturn(mock())
         `when`(accountManager.accountProfile()).thenReturn(mock())
         `when`(accountManager.accountNeedsReauth()).thenReturn(false)
 
@@ -148,7 +169,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `sync tabs on idle status`() = runBlockingTest {
+    fun `sync tabs on idle status - tabs sync enabled`() = runBlockingTest {
         val presenter = DefaultPresenter(
             controller,
             accountManager,
@@ -156,9 +177,26 @@ class DefaultPresenterTest {
             lifecycleOwner
         )
 
+        prefs.edit().putBoolean("tabs", true).apply()
         presenter.eventObserver.onIdle()
 
         verify(controller).refreshSyncedTabs()
+    }
+
+    @Test
+    fun `sync tabs on idle status - tabs sync disabled`() = runBlockingTest {
+        val presenter = DefaultPresenter(
+            controller,
+            accountManager,
+            view,
+            lifecycleOwner
+        )
+
+        prefs.edit().putBoolean("tabs", false).apply()
+        presenter.eventObserver.onIdle()
+
+        verifyZeroInteractions(controller)
+        verify(view).onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
     }
 
     @Test
