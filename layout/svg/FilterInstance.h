@@ -17,7 +17,6 @@
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTArray.h"
-#include "nsIFrame.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 

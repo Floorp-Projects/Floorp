@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SVGContainerFrame.h"
-#include "nsIFrame.h"
 #include "nsQueryFrame.h"
 
 class nsAtom;

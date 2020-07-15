@@ -25,7 +25,6 @@
 #include "nsIDragService.h"
 #include "nsGkAtoms.h"
 #include "nsRefPtrHashtable.h"
-#include "nsIFrame.h"
 #include "nsBaseWidget.h"
 #include "CompositorWidget.h"
 #include "mozilla/widget/WindowSurface.h"
@@ -81,6 +80,7 @@ void WindowDragLeaveHandler(GtkWidget* aWidget);
 #endif
 
 class gfxPattern;
+class nsIFrame;
 
 namespace mozilla {
 class TimeStamp;
