@@ -57,7 +57,7 @@ self.onmessage = async function(msg) {
       "IOUtils::read can read entire file when requested maxBytes is too large"
     );
 
-    await cleanup(tmpFileName);
+    cleanup(tmpFileName);
   }
 
   async function test_move_file() {
@@ -72,14 +72,13 @@ self.onmessage = async function(msg) {
       "IOUtils::move can move files from a worker"
     );
 
-    await cleanup(dest);
-  }
-
-  async function cleanup(...files) {
-    for (const file of files) {
-      await self.IOUtils.remove(file, { ignoreAbsent: true, recursive: true });
-      const exists = OS.File.exists(file);
-      ok(!exists, `Removed temporary file: ${file}`);
-    }
+    cleanup(dest);
   }
 };
+
+function cleanup(...files) {
+  files.forEach(file => {
+    OS.File.remove(file);
+    ok(!OS.File.exists(file), `Removed temporary file: ${file}`);
+  });
+}

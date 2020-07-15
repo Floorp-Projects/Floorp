@@ -459,64 +459,6 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
-                                          const nsAString& aPath,
-                                          const RemoveOptions& aOptions) {
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  REJECT_IF_SHUTTING_DOWN(promise);
-
-  // Do the IO on a background thread and return the result to this thread.
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  // Process arguments.
-  if (!IsAbsolutePath(aPath)) {
-    promise->MaybeRejectWithOperationError(
-        "Only absolute file paths are permitted");
-    return promise.forget();
-  }
-
-  InvokeAsync(bg, __func__,
-              [path = nsAutoString(aPath), aOptions]() {
-                nsresult rv = RemoveSync(path, aOptions.mIgnoreAbsent,
-                                         aOptions.mRecursive);
-                if (NS_FAILED(rv)) {
-                  return IORemoveMozPromise::CreateAndReject(rv, __func__);
-                }
-                return IORemoveMozPromise::CreateAndResolve(true, __func__);
-              })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const bool&) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
-            promise->MaybeResolveWithUndefined();
-          },
-          [promise = RefPtr(promise)](const nsresult& aError) {
-            switch (aError) {
-              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
-              case NS_ERROR_FILE_NOT_FOUND:
-                promise->MaybeRejectWithNotFoundError(
-                    "Target file does not exist");
-                break;
-              case NS_ERROR_FILE_DIR_NOT_EMPTY:
-                promise->MaybeRejectWithOperationError(
-                    "Could not remove non-empty directory, specify the "
-                    "`recursive: true` option to mitigate this error");
-                break;
-              default:
-                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
-                    aError, "Unexpected error removing file"));
-            }
-          });
-
-  return promise.forget();
-}
-
-/* static */
 already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
   if (sShutdownStarted) {
     return nullptr;
@@ -754,19 +696,6 @@ nsresult IOUtils::MoveSync(const nsAString& aSourcePath,
 
   // NB: if destDir doesn't exist, then MoveTo will create it.
   return srcFile->MoveTo(destDir, destName);
-}
-
-/* static */
-nsresult IOUtils::RemoveSync(const nsAString& aPath, bool aIgnoreAbsent,
-                             bool aRecursive) {
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
-
-  nsresult rv = file->Remove(aRecursive);
-  if (aIgnoreAbsent && IsFileNotFound(rv)) {
-    return NS_OK;
-  }
-  return rv;
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
