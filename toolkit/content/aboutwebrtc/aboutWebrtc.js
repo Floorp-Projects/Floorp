@@ -262,10 +262,15 @@ class AecLogging extends Control {
   window.setInterval(async () => {
     const reports = await getStats();
     reports.forEach(report => {
-      const statsDiv = document.getElementById("frame-stats: " + report.pcid);
-      if (statsDiv) {
-        statsDiv.replaceWith(renderFrameRateStats(report));
-      }
+      const replace = (id, renderFunc) => {
+        const elem = document.getElementById(`${id}: ${report.pcid}`);
+        if (elem) {
+          elem.replaceWith(renderFunc(report));
+        }
+      };
+      replace("ice-stats", renderICEStats);
+      replace("rtp-stats", renderRTPStats);
+      replace("frame-stats", renderFrameRateStats);
     });
   }, 500);
 })();
@@ -466,7 +471,7 @@ function renderRTPStats(report) {
   const stats = [...rtpStats, ...remoteRtpStats];
 
   // Render stats set
-  return renderElements("div", {}, [
+  return renderElements("div", { id: "rtp-stats: " + report.pcid }, [
     renderText("h4", string("rtp_stats_heading")),
     ...stats.map(stat => {
       const { id, remoteId, remoteRtpStats } = stat;
@@ -614,7 +619,7 @@ function renderConfiguration(c) {
 }
 
 function renderICEStats(report) {
-  const iceDiv = renderElements("div", {}, [
+  const iceDiv = renderElements("div", { id: "ice-stats: " + report.pcid }, [
     renderText("h4", string("ice_stats_heading")),
   ]);
 
