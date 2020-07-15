@@ -76,6 +76,10 @@ pub enum Error {
     TransportError(TransportError),
     Unavailable,
     Unexpected,
+    StreamLimitError,
+    TransportStreamDoesNotExist,
+    InvalidInput,
+    FatalError,
 }
 
 impl Error {
@@ -104,7 +108,6 @@ impl Error {
         }
     }
 
-    // TODO: dragana look into http3 errors
     #[must_use]
     pub fn connection_error(&self) -> bool {
         match self {
@@ -117,9 +120,68 @@ impl Error {
             | Self::HttpExcessiveLoad
             | Self::HttpId
             | Self::HttpSettings
-            | Self::HttpMissingSettings => true,
+            | Self::HttpMissingSettings
+            | Self::QpackError(QpackError::EncoderStream)
+            | Self::QpackError(QpackError::DecoderStream) => true,
             _ => false,
         }
+    }
+
+    #[must_use]
+    pub fn map_stream_send_errors(err: &TransportError) -> Self {
+        match err {
+            TransportError::InvalidStreamId | TransportError::FinalSizeError => {
+                Error::TransportStreamDoesNotExist
+            }
+            TransportError::InvalidInput => Error::InvalidInput,
+            _ => {
+                debug_assert!(false, "Unexpected error");
+                Error::TransportStreamDoesNotExist
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn map_stream_create_errors(err: &TransportError) -> Self {
+        match err {
+            TransportError::ConnectionState => Error::Unavailable,
+            TransportError::StreamLimitError => Error::StreamLimitError,
+            _ => {
+                debug_assert!(false, "Unexpected error");
+                Error::TransportStreamDoesNotExist
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn map_stream_recv_errors(err: &TransportError) -> Self {
+        match err {
+            TransportError::NoMoreData => {
+                debug_assert!(
+                    false,
+                    "Do not call stream_recv if FIN has been previously read"
+                );
+            }
+            TransportError::InvalidStreamId => {}
+            _ => {
+                debug_assert!(false, "Unexpected error");
+            }
+        };
+        Error::TransportStreamDoesNotExist
+    }
+
+    #[must_use]
+    pub fn map_set_resumption_errors(err: &TransportError) -> Self {
+        match err {
+            TransportError::ConnectionState => Error::InvalidState,
+            _ => Error::InvalidResumptionToken,
+        }
+    }
+
+    #[must_use]
+    pub fn map_send_errors() -> Self {
+        debug_assert!(false, "Unexpected error");
+        Error::HttpInternal
     }
 }
 
@@ -131,7 +193,11 @@ impl From<TransportError> for Error {
 
 impl From<QpackError> for Error {
     fn from(err: QpackError) -> Self {
-        Self::QpackError(err)
+        match err {
+            QpackError::ClosedCriticalStream => Error::HttpClosedCriticalStream,
+            QpackError::InternalError => Error::HttpInternal,
+            e => Self::QpackError(e),
+        }
     }
 }
 

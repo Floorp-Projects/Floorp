@@ -15,7 +15,7 @@ use crate::table::{HeaderTable, LookupResult, ADDITIONAL_TABLE_ENTRY_SIZE};
 use crate::Header;
 use crate::{Error, QpackSettings, Res};
 use neqo_common::{qdebug, qerror, qlog::NeqoQlog, qtrace};
-use neqo_transport::{Connection, StreamId};
+use neqo_transport::{Connection, Error as TransportError, StreamId};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::TryFrom;
 
@@ -260,7 +260,9 @@ impl QPackEncoder {
 
         let stream_id = self.local_stream.stream_id().ok_or(Error::Internal)?;
 
-        let sent = conn.stream_send_atomic(stream_id.as_u64(), &buf)?;
+        let sent = conn
+            .stream_send_atomic(stream_id.as_u64(), &buf)
+            .map_err(|e| map_stream_send_atomic_error(&e))?;
         if !sent {
             return Err(Error::EncoderStreamBlocked);
         }
@@ -346,9 +348,9 @@ impl QPackEncoder {
     }
 
     /// Encodes headers
-    /// ### Errors
-    /// This function may return a transport error when a new entry is added to the table and while sending its
-    /// instruction an error occurs.
+    /// # Errors
+    /// `ClosedCriticalStream` if the encoder stream is closed.
+    /// `InternalError` if an unexpected error occurred.
     pub fn encode_header_block(
         &mut self,
         conn: &mut Connection,
@@ -410,9 +412,7 @@ impl QPackEncoder {
                         encoded_h.encode_literal_with_name_literal(&name, &value)
                     }
                     Err(e) => {
-                        // These errors should never happen:
-                        // `Internal`, `InvalidStreamId`, `InvalidInput`, `FinalSizeError`
-                        debug_assert!(false, "Unexpected error: {:?}", e);
+                        // `InternalError`, `ClosedCriticalStream`
                         return Err(e);
                     }
                 }
@@ -496,6 +496,18 @@ fn map_error(err: &Error) -> Error {
         Error::ClosedCriticalStream
     } else {
         Error::DecoderStream
+    }
+}
+
+fn map_stream_send_atomic_error(err: &TransportError) -> Error {
+    match err {
+        TransportError::InvalidStreamId | TransportError::FinalSizeError => {
+            Error::ClosedCriticalStream
+        }
+        _ => {
+            debug_assert!(false, "Unexpected error");
+            Error::InternalError
+        }
     }
 }
 

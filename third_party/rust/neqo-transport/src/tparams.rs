@@ -8,7 +8,7 @@
 
 #![allow(dead_code)]
 use crate::{Error, Res};
-use neqo_common::{hex, matches, qdebug, qinfo, qtrace, Decoder, Encoder};
+use neqo_common::{hex, qdebug, qinfo, qtrace, Decoder, Encoder};
 use neqo_crypto::constants::{TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS};
 use neqo_crypto::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
 use neqo_crypto::{HandshakeMessage, ZeroRttCheckResult, ZeroRttChecker};

@@ -6,7 +6,7 @@
 
 #![allow(unused_assignments)]
 
-use neqo_common::{matches, Datagram};
+use neqo_common::Datagram;
 use neqo_crypto::AuthenticationStatus;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Server, Http3ServerEvent, Http3State};
 use test_fixture::*;
@@ -113,7 +113,7 @@ fn test_fetch() {
 
     eprintln!("-----client");
     let req = hconn_c
-        .fetch("GET", "https", "something.com", "/", &[])
+        .fetch(now(), "GET", "https", "something.com", "/", &[])
         .unwrap();
     assert_eq!(req, 0);
     hconn_c.stream_close_send(req).unwrap();

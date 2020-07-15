@@ -169,7 +169,8 @@ impl HFrameReader {
     #[allow(clippy::too_many_lines)]
     /// returns true if quic stream was closed.
     /// # Errors
-    /// returns an error if frame is not complete.
+    /// May return `HttpFrame` if a frame cannot be decoded.
+    /// and `TransportStreamDoesNotExist` if `stream_recv` fails.
     pub fn receive(
         &mut self,
         conn: &mut Connection,
@@ -178,7 +179,10 @@ impl HFrameReader {
         loop {
             let to_read = std::cmp::min(self.min_remaining(), MAX_READ_SIZE);
             let mut buf = vec![0; to_read];
-            let (output, read, fin) = match conn.stream_recv(stream_id, &mut buf)? {
+            let (output, read, fin) = match conn
+                .stream_recv(stream_id, &mut buf)
+                .map_err(|e| Error::map_stream_recv_errors(&e))?
+            {
                 (0, f) => (None, false, f),
                 (amount, f) => {
                     qtrace!(
@@ -210,6 +214,8 @@ impl HFrameReader {
         }
     }
 
+    /// # Errors
+    /// May return `HttpFrame` if a frame cannot be decoded.
     fn consume(&mut self, mut input: Decoder) -> Res<Option<HFrame>> {
         match &mut self.state {
             HFrameReaderState::GetType { decoder } => {
@@ -290,7 +296,7 @@ impl HFrameReader {
     }
 
     /// # Errors
-    /// May return `NotEnoughData` if frame is not completely read.
+    /// May return `HttpFrame` if a frame cannot be decoded.
     fn get_frame(&mut self) -> Res<HFrame> {
         let payload = mem::replace(&mut self.payload, Vec::new());
         let mut dec = Decoder::from(&payload[..]);
@@ -332,7 +338,6 @@ impl HFrameReader {
 mod tests {
     use super::{Encoder, Error, HFrame, HFrameReader, HSettings};
     use crate::settings::{HSetting, HSettingType};
-    use neqo_common::matches;
     use neqo_crypto::AuthenticationStatus;
     use neqo_transport::{Connection, StreamType};
     use num_traits::Num;

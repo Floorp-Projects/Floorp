@@ -8,8 +8,9 @@ use crate::connection::Http3State;
 use crate::send_message::SendMessageEvents;
 use crate::Header;
 use crate::RecvMessageEvents;
-use neqo_common::matches;
+
 use neqo_transport::AppError;
+
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;

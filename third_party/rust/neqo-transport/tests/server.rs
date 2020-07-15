@@ -7,7 +7,7 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-use neqo_common::{hex_with_len, matches, qdebug, qtrace, Datagram, Decoder, Encoder};
+use neqo_common::{hex_with_len, qdebug, qtrace, Datagram, Decoder, Encoder};
 use neqo_crypto::{
     aead::Aead,
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
