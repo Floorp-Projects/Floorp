@@ -174,6 +174,10 @@ class RenderCompositorNativeSWGL : public RenderCompositorNative {
 
   void CancelFrame() override;
 
+  // Maps an underlying layer and sets aData to the top left pixel of
+  // aValidRect.  The row stride is set to aStride, note this doesn't
+  // mean there are always aStride bytes available per row (the
+  // last row will fall short if aValidRect is not at X==0).
   bool MapTile(wr::NativeTileId aId, wr::DeviceIntRect aDirtyRect,
                wr::DeviceIntRect aValidRect, void** aData,
                int32_t* aStride) override;
@@ -191,6 +195,7 @@ class RenderCompositorNativeSWGL : public RenderCompositorNative {
   void* mContext = nullptr;
   RefPtr<gfx::DrawTarget> mLayerTarget;
   uint8_t* mLayerData = nullptr;
+  uint8_t* mLayerValidRectData = nullptr;
   int32_t mLayerStride = 0;
 };
 

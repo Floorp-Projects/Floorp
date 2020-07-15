@@ -433,7 +433,7 @@ bool RenderCompositorNativeSWGL::InitDefaultFramebuffer(
       return false;
     }
     wr_swgl_init_default_framebuffer(mContext, aBounds.width, aBounds.height,
-                                     mLayerStride, mLayerData);
+                                     mLayerStride, mLayerValidRectData);
   }
   return true;
 }
@@ -466,6 +466,7 @@ bool RenderCompositorNativeSWGL::MapNativeLayer(
              format == gfx::SurfaceFormat::B8G8R8X8);
   mLayerTarget = std::move(dt);
   mLayerData = data;
+  mLayerValidRectData = data + aValidRect.y * stride + aValidRect.x * 4;
   mLayerStride = stride;
   return true;
 }
@@ -475,6 +476,7 @@ void RenderCompositorNativeSWGL::UnmapNativeLayer() {
   mLayerTarget->ReleaseBits(mLayerData);
   mLayerTarget = nullptr;
   mLayerData = nullptr;
+  mLayerValidRectData = nullptr;
   mLayerStride = 0;
 }
 
@@ -494,7 +496,7 @@ bool RenderCompositorNativeSWGL::MapTile(wr::NativeTileId aId,
     UnbindNativeLayer();
     return false;
   }
-  *aData = mLayerData;
+  *aData = mLayerValidRectData;
   *aStride = mLayerStride;
   return true;
 }
