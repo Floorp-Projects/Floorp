@@ -51,8 +51,7 @@ class AppLinksInterceptor(
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp,
         alwaysDeniedSchemes = alwaysDeniedSchemes),
-    private val launchFromInterceptor: Boolean = false,
-    private val allowRedirectUrls: Set<String> = ALLOW_REDIRECT_HOSTS
+    private val launchFromInterceptor: Boolean = false
 ) : RequestInterceptor {
 
     override fun onLoadRequest(
@@ -61,12 +60,13 @@ class AppLinksInterceptor(
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
-        isDirectNavigation: Boolean
+        isDirectNavigation: Boolean,
+        isSubframeRequest: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         val encodedUri = Uri.parse(uri)
         val uriScheme = encodedUri.scheme
         val engineSupportsScheme = engineSupportedSchemes.contains(uriScheme)
-        val isAllowedRedirect = (isRedirect && encodedUri.host in allowRedirectUrls)
+        val isAllowedRedirect = (isRedirect && !isSubframeRequest)
 
         val doNotIntercept = when {
             uriScheme == null -> true
@@ -130,11 +130,5 @@ class AppLinksInterceptor(
         }
 
         return null
-    }
-
-    companion object {
-        internal val ALLOW_REDIRECT_HOSTS: Set<String> = setOf(
-            "www.ubereats.com"
-        )
     }
 }

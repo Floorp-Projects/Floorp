@@ -639,7 +639,7 @@ class GeckoEngineSessionTest {
     fun `keeps track of current url via onLocationChange events`() {
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
-        var geckoResult = GeckoResult<Boolean?>()
+        val geckoResult = GeckoResult<Boolean?>()
         whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
@@ -660,7 +660,7 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
             context = coroutineContext)
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
-        var geckoResult = GeckoResult<Boolean?>()
+        val geckoResult = GeckoResult<Boolean?>()
         whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
@@ -1270,7 +1270,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
@@ -1300,7 +1301,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
@@ -1335,7 +1337,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalled = true
                 return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
@@ -1380,7 +1383,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return null
@@ -2047,7 +2051,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return when (uri) {
                     "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
@@ -2088,6 +2093,7 @@ class GeckoEngineSessionTest {
 
         var observedUrl: String? = null
         var observedIntent: Intent? = null
+        var observedIsSubframe = false
 
         engineSession.settings.requestInterceptor = object : RequestInterceptor {
             override fun interceptsAppInitiatedRequests() = true
@@ -2098,8 +2104,10 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
+                observedIsSubframe = isSubframeRequest
                 return when (uri) {
                     "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
                     else -> null
@@ -2122,12 +2130,14 @@ class GeckoEngineSessionTest {
 
         assertNotNull(observedIntent)
         assertEquals("result", observedUrl)
+        assertEquals(true, observedIsSubframe)
 
         navigationDelegate.value.onSubframeLoadRequest(
             mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
 
         assertNotNull(observedIntent)
         assertEquals("result", observedUrl)
+        assertEquals(true, observedIsSubframe)
     }
 
     @Test
@@ -2152,7 +2162,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return when (uri) {
                     "sample:about" -> RequestInterceptor.InterceptionResponse.Url("result")
@@ -2275,7 +2286,8 @@ class GeckoEngineSessionTest {
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
-                isDirectNavigation: Boolean
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return when (uri) {
                     fakeUrl -> null

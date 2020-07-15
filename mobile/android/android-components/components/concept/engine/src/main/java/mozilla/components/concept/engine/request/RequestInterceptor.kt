@@ -63,6 +63,7 @@ interface RequestInterceptor {
      * @param isSameDomain If the request is the same domain as the current URL then true, else false.
      * @param isRedirect If the request is due to redirect then true, else false.
      * @param isDirectNavigation If the request is due to a direct navigation then true, else false.
+     * @param isSubframeRequest If the request is coming from a subframe then true, else false.
      * @return An [InterceptionResponse] object containing alternative content
      * or an alternative URL. Null if the original request should continue to
      * be loaded.
@@ -74,7 +75,8 @@ interface RequestInterceptor {
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
-        isDirectNavigation: Boolean
+        isDirectNavigation: Boolean,
+        isSubframeRequest: Boolean
     ): InterceptionResponse? = null
 
     /**

@@ -68,7 +68,8 @@ class FirefoxAccountsAuthFeature(
             hasUserGesture: Boolean,
             isSameDomain: Boolean,
             isRedirect: Boolean,
-            isDirectNavigation: Boolean
+            isDirectNavigation: Boolean,
+            isSubframeRequest: Boolean
         ): RequestInterceptor.InterceptionResponse? {
             if (uri.startsWith(redirectUrl)) {
                 val parsedUri = Uri.parse(uri)
