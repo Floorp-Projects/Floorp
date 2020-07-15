@@ -21,6 +21,10 @@ android {
 }
 
 dependencies {
+    implementation project(':ui-colors')
+    implementation project(':ui-icons')
+
+    implementation Dependencies.androidx_constraintlayout
     implementation Dependencies.google_material
 }
 
