@@ -10,6 +10,7 @@
 #include "mozilla/dom/StyledRange.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/PresShellForwards.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/SelectionChangeEventDispatcher.h"
 #include "mozilla/UniquePtr.h"

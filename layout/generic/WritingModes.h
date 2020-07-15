@@ -10,7 +10,6 @@
 #include <ostream>
 
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EnumeratedRange.h"
 
 #include "nsRect.h"

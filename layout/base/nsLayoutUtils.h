@@ -55,6 +55,7 @@ class nsDisplayListBuilder;
 enum class nsDisplayListBuilderMode : uint8_t;
 enum nsChangeHint : uint32_t;
 class nsDisplayItem;
+class nsDisplayList;
 class nsFontMetrics;
 class nsFontFaceList;
 class nsIImageLoadingContent;
