@@ -69,23 +69,23 @@ class RemoteGTests(object):
            Return False if a crash or other failure is detected, else True.
         """
         update_mozinfo()
-        self.device = mozdevice.ADBDevice(adb=adb_path,
-                                          device=device_serial,
-                                          test_root=remote_test_root,
-                                          logger_name=LOGGER_NAME,
-                                          verbose=True)
+        self.device = mozdevice.ADBDeviceFactory(adb=adb_path,
+                                                 device=device_serial,
+                                                 test_root=remote_test_root,
+                                                 logger_name=LOGGER_NAME,
+                                                 verbose=True,
+                                                 run_as_package=package)
         root = self.device.test_root
         self.remote_profile = posixpath.join(root, 'gtest-profile')
         self.remote_minidumps = posixpath.join(root, 'gtest-minidumps')
         self.remote_log = posixpath.join(root, 'gtest.log')
-        self.remote_libdir = posixpath.join('/data', 'local', 'gtest')
+        self.remote_libdir = posixpath.join(root, 'gtest')
 
         self.package = package
         self.cleanup()
-        self.device.mkdir(self.remote_profile, parents=True)
-        self.device.mkdir(self.remote_minidumps, parents=True)
-        self.device.mkdir(self.remote_libdir, parents=True, root=True)
-        self.device.chmod(self.remote_libdir, recursive=True, root=True)
+        self.device.mkdir(self.remote_profile)
+        self.device.mkdir(self.remote_minidumps)
+        self.device.mkdir(self.remote_libdir)
 
         log.info("Running Android gtest")
         if not self.device.is_app_installed(self.package):
@@ -134,7 +134,7 @@ class RemoteGTests(object):
         else:
             # Trigger an ANR report with "kill -3" (SIGQUIT)
             try:
-                self.device.pkill(self.package, sig=3, attempts=1, root=True)
+                self.device.pkill(self.package, sig=3, attempts=1)
             except mozdevice.ADBTimeoutError:
                 raise
             except:  # NOQA: E722
@@ -142,7 +142,7 @@ class RemoteGTests(object):
             time.sleep(3)
             # Trigger a breakpad dump with "kill -6" (SIGABRT)
             try:
-                self.device.pkill(self.package, sig=6, attempts=1, root=True)
+                self.device.pkill(self.package, sig=6, attempts=1)
             except mozdevice.ADBTimeoutError:
                 raise
             except:  # NOQA: E722
@@ -158,7 +158,7 @@ class RemoteGTests(object):
                 retries += 1
             if self.device.process_exist(self.package):
                 try:
-                    self.device.pkill(self.package, sig=9, attempts=1, root=True)
+                    self.device.pkill(self.package, sig=9, attempts=1)
                 except mozdevice.ADBTimeoutError:
                     raise
                 except:  # NOQA: E722
@@ -172,7 +172,7 @@ class RemoteGTests(object):
         if self.device.process_exist(crashreporter):
             log.warning("%s unexpectedly found running. Killing..." % crashreporter)
             try:
-                self.device.pkill(crashreporter, root=True)
+                self.device.pkill(crashreporter)
             except mozdevice.ADBTimeoutError:
                 raise
             except:  # NOQA: E722
@@ -205,10 +205,10 @@ class RemoteGTests(object):
     def cleanup(self):
         if self.device:
             self.device.stop_application(self.package)
-            self.device.rm(self.remote_log, force=True, root=True)
-            self.device.rm(self.remote_profile, recursive=True, force=True, root=True)
-            self.device.rm(self.remote_minidumps, recursive=True, force=True, root=True)
-            self.device.rm(self.remote_libdir, recursive=True, force=True, root=True)
+            self.device.rm(self.remote_log, force=True)
+            self.device.rm(self.remote_profile, recursive=True, force=True)
+            self.device.rm(self.remote_minidumps, recursive=True, force=True)
+            self.device.rm(self.remote_libdir, recursive=True, force=True)
 
 
 class AppWaiter(object):
@@ -343,7 +343,7 @@ class remoteGtestOptions(argparse.ArgumentParser):
                           type=str,
                           dest="remote_test_root",
                           help="Remote directory to use as test root "
-                               "(eg. /mnt/sdcard/tests or /data/local/tests).")
+                               "(eg. /data/local/tmp/test_root).")
         self.add_argument("--libxul",
                           action="store",
                           type=str,
