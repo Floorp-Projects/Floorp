@@ -848,6 +848,9 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvDecodeFailed(const uint32_t& aStatus) {
+  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecodeFailed(this=%p status=%" PRIu32
+                ")",
+                this, aStatus);
   if (mIsShutdown) {
     MOZ_ASSERT(mDecodePromise.IsEmpty());
     return IPC_OK();
@@ -859,8 +862,11 @@ ipc::IPCResult ChromiumCDMParent::RecvDecodeFailed(const uint32_t& aStatus) {
   }
 
   mDecodePromise.RejectIfExists(
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("ChromiumCDMParent::RecvDecodeFailed")),
+      MediaResult(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR,
+          RESULT_DETAIL(
+              "ChromiumCDMParent::RecvDecodeFailed with status=%" PRIu32,
+              aStatus)),
       __func__);
   return IPC_OK();
 }
