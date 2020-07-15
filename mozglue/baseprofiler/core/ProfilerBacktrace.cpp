@@ -44,7 +44,7 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // any JitReturnAddr entries. For synchronous samples, JIT frames get expanded
   // at sample time.
   StreamSamplesAndMarkers(mName.get(), mThreadId, *mProfileBuffer, aWriter, "",
-                          aProcessStartTime,
+                          "", aProcessStartTime,
                           /* aRegisterTime */ TimeStamp(),
                           /* aUnregisterTime */ TimeStamp(),
                           /* aSinceTime */ 0, aUniqueStacks);

@@ -129,7 +129,8 @@ class ContentChild final : public PContentChild,
 
   const AppInfo& GetAppInfo() { return mAppInfo; }
 
-  void SetProcessName(const nsACString& aName);
+  void SetProcessName(const nsACString& aName,
+                      const nsACString* aETLDplus1 = nullptr);
 
   void GetProcessName(nsACString& aName) const;
 

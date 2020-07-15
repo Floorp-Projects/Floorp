@@ -638,6 +638,7 @@ class CorePS {
 #endif
 
   PS_GET_AND_SET(const nsACString&, ProcessName)
+  PS_GET_AND_SET(const nsACString&, ETLDplus1)
 
  private:
   // The singleton instance
@@ -678,6 +679,9 @@ class CorePS {
 
   // Process name, provided by child process initialization code.
   nsAutoCString mProcessName;
+  // Private name, provided by child process initialization code (eTLD+1 in
+  // fission)
+  nsAutoCString mETLDplus1;
 
   // This memory buffer is used by the MergeStacks mechanism. Previously it was
   // stack allocated, but this led to a stack overflow, as it was too much
@@ -2750,7 +2754,7 @@ static void locked_profiler_stream_json_for_this_process(
       ProfiledThreadData* profiledThreadData = thread.second;
       profiledThreadData->StreamJSON(
           buffer, cx, aWriter, CorePS::ProcessName(aLock),
-          CorePS::ProcessStartTime(), aSinceTime,
+          CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
           ActivePS::FeatureJSTracer(aLock), aService);
     }
 
@@ -2772,10 +2776,10 @@ static void locked_profiler_stream_json_for_this_process(
       RefPtr<ThreadInfo> threadInfo = new ThreadInfo(
           "Java Main Thread", 0, false, CorePS::ProcessStartTime());
       ProfiledThreadData profiledThreadData(threadInfo, nullptr);
-      profiledThreadData.StreamJSON(javaBuffer, nullptr, aWriter,
-                                    CorePS::ProcessName(aLock),
-                                    CorePS::ProcessStartTime(), aSinceTime,
-                                    ActivePS::FeatureJSTracer(aLock), nullptr);
+      profiledThreadData.StreamJSON(
+          javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
+          CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
+          ActivePS::FeatureJSTracer(aLock), nullptr);
     }
 #endif
 
@@ -4104,10 +4108,15 @@ static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
   return true;
 }
 
-void profiler_set_process_name(const nsACString& aProcessName) {
-  LOG("profiler_set_process_name(\"%s\")", aProcessName.Data());
+void profiler_set_process_name(const nsACString& aProcessName,
+                               const nsACString* aETLDplus1) {
+  LOG("profiler_set_process_name(\"%s\", \"%s\")", aProcessName.Data(),
+      aETLDplus1 ? aETLDplus1->Data() : "<none>");
   PSAutoLock lock(gPSMutex);
   CorePS::SetProcessName(lock, aProcessName);
+  if (aETLDplus1) {
+    CorePS::SetETLDplus1(lock, *aETLDplus1);
+  }
 }
 
 UniquePtr<char[]> profiler_get_profile(double aSinceTime,

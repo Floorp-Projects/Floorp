@@ -26,13 +26,11 @@ ProfiledThreadData::~ProfiledThreadData() {
   MOZ_COUNT_DTOR(ProfiledThreadData);
 }
 
-void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
-                                    JSContext* aCx,
-                                    SpliceableJSONWriter& aWriter,
-                                    const nsACString& aProcessName,
-                                    const mozilla::TimeStamp& aProcessStartTime,
-                                    double aSinceTime, bool JSTracerEnabled,
-                                    ProfilerCodeAddressService* aService) {
+void ProfiledThreadData::StreamJSON(
+    const ProfileBuffer& aBuffer, JSContext* aCx, SpliceableJSONWriter& aWriter,
+    const nsACString& aProcessName, const nsACString& aETLDplus1,
+    const mozilla::TimeStamp& aProcessStartTime, double aSinceTime,
+    bool JSTracerEnabled, ProfilerCodeAddressService* aService) {
   if (mJITFrameInfoForPreviousJSContexts &&
       mJITFrameInfoForPreviousJSContexts->HasExpired(
           aBuffer.BufferRangeStart())) {
@@ -57,9 +55,9 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
   aWriter.Start();
   {
     StreamSamplesAndMarkers(mThreadInfo->Name(), mThreadInfo->ThreadId(),
-                            aBuffer, aWriter, aProcessName, aProcessStartTime,
-                            mThreadInfo->RegisterTime(), mUnregisterTime,
-                            aSinceTime, uniqueStacks);
+                            aBuffer, aWriter, aProcessName, aETLDplus1,
+                            aProcessStartTime, mThreadInfo->RegisterTime(),
+                            mUnregisterTime, aSinceTime, uniqueStacks);
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -202,6 +200,7 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              const ProfileBuffer& aBuffer,
                              SpliceableJSONWriter& aWriter,
                              const nsACString& aProcessName,
+                             const nsACString& aETLDplus1,
                              const mozilla::TimeStamp& aProcessStartTime,
                              const mozilla::TimeStamp& aRegisterTime,
                              const mozilla::TimeStamp& aUnregisterTime,
@@ -215,6 +214,9 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
     aWriter.StringProperty("processName", "Parent Process");
   } else if (!aProcessName.IsEmpty()) {
     aWriter.StringProperty("processName", aProcessName.Data());
+  }
+  if (!aETLDplus1.IsEmpty()) {
+    aWriter.StringProperty("eTLD+1", aETLDplus1.Data());
   }
 
   aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));

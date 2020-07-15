@@ -513,6 +513,7 @@ class CorePS {
 #endif
 
   PS_GET_AND_SET(const std::string&, ProcessName)
+  PS_GET_AND_SET(const std::string&, ETLDplus1)
 
  private:
   // The singleton instance
@@ -553,6 +554,9 @@ class CorePS {
 
   // Process name, provided by child process initialization code.
   std::string mProcessName;
+  // Private name, provided by child process initialization code (eTLD+1 in
+  // fission)
+  std::string mETLDplus1;
 };
 
 CorePS* CorePS::sInstance = nullptr;
@@ -1913,9 +1917,9 @@ static void locked_profiler_stream_json_for_this_process(
         ActivePS::ProfiledThreads(aLock);
     for (auto& thread : threads) {
       ProfiledThreadData* profiledThreadData = thread.second;
-      profiledThreadData->StreamJSON(buffer, aWriter,
-                                     CorePS::ProcessName(aLock),
-                                     CorePS::ProcessStartTime(), aSinceTime);
+      profiledThreadData->StreamJSON(
+          buffer, aWriter, CorePS::ProcessName(aLock), CorePS::ETLDplus1(aLock),
+          CorePS::ProcessStartTime(), aSinceTime);
     }
   }
 
@@ -2773,10 +2777,15 @@ static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
   return true;
 }
 
-void profiler_set_process_name(const std::string& aProcessName) {
-  LOG("profiler_set_process_name(\"%s\")", aProcessName.c_str());
+void profiler_set_process_name(const std::string& aProcessName,
+                               const std::string* aETLDplus1) {
+  LOG("profiler_set_process_name(\"%s\", \"%s\")", aProcessName.c_str(),
+      aETLDplus1 ? aETLDplus1->c_str() : "<none>");
   PSAutoLock lock;
   CorePS::SetProcessName(lock, aProcessName);
+  if (aETLDplus1) {
+    CorePS::SetETLDplus1(lock, *aETLDplus1);
+  }
 }
 
 UniquePtr<char[]> profiler_get_profile(double aSinceTime, bool aIsShuttingDown,

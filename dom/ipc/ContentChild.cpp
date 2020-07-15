@@ -753,7 +753,8 @@ bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
   return true;
 }
 
-void ContentChild::SetProcessName(const nsACString& aName) {
+void ContentChild::SetProcessName(const nsACString& aName,
+                                  const nsACString* aETLDplus1) {
   char* name;
   if ((name = PR_GetEnv("MOZ_DEBUG_APP_PROCESS")) && aName.EqualsASCII(name)) {
 #ifdef OS_POSIX
@@ -771,7 +772,15 @@ void ContentChild::SetProcessName(const nsACString& aName) {
 
   mProcessName = aName;
 #ifdef MOZ_GECKO_PROFILER
-  profiler_set_process_name(mProcessName);
+  if (aETLDplus1) {
+    mozilla::ipc::SetThisProcessName(PromiseFlatCString(*aETLDplus1).get());
+    profiler_set_process_name(mProcessName, aETLDplus1);
+  } else {
+    mozilla::ipc::SetThisProcessName(PromiseFlatCString(mProcessName).get());
+    profiler_set_process_name(mProcessName);
+  }
+#else
+  mozilla::ipc::SetThisProcessName(PromiseFlatCString(mProcessName).get());
 #endif
 }
 
@@ -2607,7 +2616,10 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     } else
 #endif
     {
-      SetProcessName("Isolated Web Content"_ns);
+      // The profiler can sanitize out the eTLD+1
+      nsCString etld(
+          Substring(aRemoteType, FISSION_WEB_REMOTE_TYPE.Length() + 1));
+      SetProcessName("Isolated Web Content"_ns, &etld);
     }
   }
   // else "prealloc", "web" or "webCOOP+COEP" type -> "Web Content" already set

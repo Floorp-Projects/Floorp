@@ -25,6 +25,7 @@ ProfiledThreadData::~ProfiledThreadData() {}
 void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
                                     SpliceableJSONWriter& aWriter,
                                     const std::string& aProcessName,
+                                    const std::string& aETLDplus1,
                                     const TimeStamp& aProcessStartTime,
                                     double aSinceTime) {
   UniqueStacks uniqueStacks;
@@ -32,9 +33,9 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
   aWriter.Start();
   {
     StreamSamplesAndMarkers(mThreadInfo->Name(), mThreadInfo->ThreadId(),
-                            aBuffer, aWriter, aProcessName, aProcessStartTime,
-                            mThreadInfo->RegisterTime(), mUnregisterTime,
-                            aSinceTime, uniqueStacks);
+                            aBuffer, aWriter, aProcessName, aETLDplus1,
+                            aProcessStartTime, mThreadInfo->RegisterTime(),
+                            mUnregisterTime, aSinceTime, uniqueStacks);
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -79,14 +80,12 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
   aWriter.End();
 }
 
-void StreamSamplesAndMarkers(const char* aName, int aThreadId,
-                             const ProfileBuffer& aBuffer,
-                             SpliceableJSONWriter& aWriter,
-                             const std::string& aProcessName,
-                             const TimeStamp& aProcessStartTime,
-                             const TimeStamp& aRegisterTime,
-                             const TimeStamp& aUnregisterTime,
-                             double aSinceTime, UniqueStacks& aUniqueStacks) {
+void StreamSamplesAndMarkers(
+    const char* aName, int aThreadId, const ProfileBuffer& aBuffer,
+    SpliceableJSONWriter& aWriter, const std::string& aProcessName,
+    const std::string& aETLDplus1, const TimeStamp& aProcessStartTime,
+    const TimeStamp& aRegisterTime, const TimeStamp& aUnregisterTime,
+    double aSinceTime, UniqueStacks& aUniqueStacks) {
   aWriter.StringProperty(
       "processType",
       "(unknown)" /* XRE_GeckoProcessTypeToString(XRE_GetProcessType()) */);
@@ -106,6 +105,9 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
   // Use given process name (if any).
   if (!aProcessName.empty()) {
     aWriter.StringProperty("processName", aProcessName.c_str());
+  }
+  if (!aETLDplus1.empty()) {
+    aWriter.StringProperty("eTLD+1", aETLDplus1.c_str());
   }
 
   aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));
