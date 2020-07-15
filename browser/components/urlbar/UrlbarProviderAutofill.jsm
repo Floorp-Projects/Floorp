@@ -273,8 +273,6 @@ function iconHelper(url) {
 class ProviderAutofill extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -301,6 +299,8 @@ class ProviderAutofill extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   async isActive(queryContext) {
+    let instance = this.queryInstance;
+
     // First of all, check for the autoFill pref.
     if (!UrlbarPrefs.get("autoFill")) {
       return false;
@@ -359,6 +359,11 @@ class ProviderAutofill extends UrlbarProvider {
       return false;
     }
 
+    // Check the query was not canceled while this executed.
+    if (instance != this.queryInstance) {
+      return false;
+    }
+
     return true;
   }
 
@@ -387,10 +392,9 @@ class ProviderAutofill extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    // This serves as the equivalent of checking this.queries.has to see if the
-    // query has been cancelled, since this._autofillResult is deleted in
-    // cancelQuery.
+    // Sanity check since this._autofillResult is deleted in cancelQuery.
     if (!this._autofillResult) {
+      this.logger.error("startQuery invoked without an _autofillResult");
       return;
     }
 

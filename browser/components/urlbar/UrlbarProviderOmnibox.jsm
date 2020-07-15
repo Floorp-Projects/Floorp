@@ -33,8 +33,6 @@ const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
 class ProviderOmnibox extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -111,8 +109,7 @@ class ProviderOmnibox extends UrlbarProvider {
    *   The callback invoked by this method to add each result.
    */
   async startQuery(queryContext, addCallback) {
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     // Fetch heuristic result.
     let keyword = queryContext.tokens[0].value;
@@ -139,6 +136,9 @@ class ProviderOmnibox extends UrlbarProvider {
     this._resultsPromise = ExtensionSearchHandler.handleSearch(
       data,
       suggestions => {
+        if (instance != this.queryInstance) {
+          return;
+        }
         for (let suggestion of suggestions) {
           let content = `${queryContext.tokens[0].value} ${suggestion.content}`;
           if (content == heuristicResult.payload.content) {
@@ -172,8 +172,6 @@ class ProviderOmnibox extends UrlbarProvider {
     await Promise.race([timeoutPromise, this._resultsPromise]).catch(
       Cu.reportError
     );
-
-    this.queries.delete(queryContext);
   }
 
   /**
@@ -183,9 +181,7 @@ class ProviderOmnibox extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext
    *   The query context object.
    */
-  cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-  }
+  cancelQuery(queryContext) {}
 }
 
 var UrlbarProviderOmnibox = new ProviderOmnibox();

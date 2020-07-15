@@ -92,8 +92,6 @@ const LAST_UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 class ProviderSearchTips extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
 
     // Whether we should disable tips for the current browser session, for
     // example because a tip was already shown.
@@ -169,8 +167,7 @@ class ProviderSearchTips extends UrlbarProvider {
    *       is done searching AND returning results.
    */
   async startQuery(queryContext, addCallback) {
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     let tip = this.currentTip;
     this.showedTipTypeInCurrentEngagement = this.currentTip;
@@ -209,14 +206,13 @@ class ProviderSearchTips extends UrlbarProvider {
         break;
     }
 
-    if (!this.queries.has(queryContext)) {
+    if (instance != this.queryInstance) {
       return;
     }
 
     Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
 
     addCallback(this, result);
-    this.queries.delete(queryContext);
   }
 
   /**
@@ -224,9 +220,7 @@ class ProviderSearchTips extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext the query context object to cancel
    *        query for.
    */
-  cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-  }
+  cancelQuery(queryContext) {}
 
   /**
    * Called when the tip is selected.

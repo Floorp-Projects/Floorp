@@ -34,8 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class ProviderTopSites extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   get PRIORITY() {
@@ -107,8 +105,7 @@ class ProviderTopSites extends UrlbarProvider {
 
     let sites = AboutNewTab.getTopSites();
 
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     // Filter out empty values. Site is empty when there's a gap between tiles
     // on about:newtab.
@@ -182,7 +179,7 @@ class ProviderTopSites extends UrlbarProvider {
           }
 
           // Our query has been cancelled.
-          if (!this.queries.get(queryContext)) {
+          if (instance != this.queryInstance) {
             break;
           }
 
@@ -208,7 +205,7 @@ class ProviderTopSites extends UrlbarProvider {
             break;
           }
 
-          if (!this.queries.get(queryContext)) {
+          if (instance != this.queryInstance) {
             break;
           }
 
@@ -233,7 +230,6 @@ class ProviderTopSites extends UrlbarProvider {
           break;
       }
     }
-    this.queries.delete(queryContext);
   }
 
   /**
@@ -241,9 +237,7 @@ class ProviderTopSites extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext the query context object to cancel
    *        query for.
    */
-  cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-  }
+  cancelQuery(queryContext) {}
 }
 
 var UrlbarProviderTopSites = new ProviderTopSites();

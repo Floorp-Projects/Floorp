@@ -433,8 +433,6 @@ function getL10nPropertiesForTip(tip) {
 class ProviderInterventions extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
     // The tip we should currently show.
     this.currentTip = TIPS.NONE;
 
@@ -586,8 +584,7 @@ class ProviderInterventions extends UrlbarProvider {
    *        result. A UrlbarResult should be passed to it.
    */
   async startQuery(queryContext, addCallback) {
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
 
     // TIPS.UPDATE_CHECKING is special, and we never actually show a tip that
     // reflects a "checking" status.  Instead it's handled like this.  We call
@@ -616,7 +613,7 @@ class ProviderInterventions extends UrlbarProvider {
           };
           appUpdater.addListener(this._appUpdaterListener);
         });
-        if (!this.queries.has(queryContext)) {
+        if (instance != this.queryInstance) {
           // The query was canceled before the check finished.
           return;
         }
@@ -625,7 +622,6 @@ class ProviderInterventions extends UrlbarProvider {
         // early.
         this._setCurrentTipFromAppUpdaterStatus();
         if (this.currentTip == TIPS.UPDATE_CHECKING) {
-          this.queries.delete(queryContext);
           return;
         }
       }
@@ -645,14 +641,13 @@ class ProviderInterventions extends UrlbarProvider {
 
     Object.assign(result.payload, getL10nPropertiesForTip(this.currentTip));
 
-    if (!this.queries.has(queryContext)) {
+    if (instance != this.queryInstance) {
       return;
     }
 
     this.tipsShownInCurrentEngagement.add(this.currentTip);
 
     addCallback(this, result);
-    this.queries.delete(queryContext);
   }
 
   /**
@@ -661,8 +656,6 @@ class ProviderInterventions extends UrlbarProvider {
    *        query for.
    */
   cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-
     // If we're waiting for appUpdater to finish its update check,
     // this._appUpdaterListener will be defined.  We can stop listening now.
     if (this._appUpdaterListener) {

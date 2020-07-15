@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class UrlbarProviderOpenTabs extends UrlbarProvider {
   constructor() {
     super();
-    // Maps the running queries by queryContext.
-    this.queries = new Map();
   }
 
   /**
@@ -132,8 +130,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
     // temp table to return proper frecency.
     // TODO:
     //  * properly search and handle tokens, this is just a mock for now.
-    let instance = {};
-    this.queries.set(queryContext, instance);
+    let instance = this.queryInstance;
     let conn = await PlacesUtils.promiseLargeCacheDBConnection();
     await UrlbarProviderOpenTabs.promiseDBPopulated;
     await conn.executeCached(
@@ -143,7 +140,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
     `,
       {},
       (row, cancel) => {
-        if (!this.queries.has(queryContext)) {
+        if (instance != this.queryInstance) {
           cancel();
           return;
         }
@@ -160,17 +157,13 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
         );
       }
     );
-    // We are done.
-    this.queries.delete(queryContext);
   }
 
   /**
    * Cancels a running query.
    * @param {object} queryContext The query context object
    */
-  cancelQuery(queryContext) {
-    this.queries.delete(queryContext);
-  }
+  cancelQuery(queryContext) {}
 }
 
 /**

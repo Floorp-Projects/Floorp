@@ -327,6 +327,15 @@ class Query {
     let activePromises = [];
     let maxPriority = -1;
     for (let provider of this.providers) {
+      // This can be used by the provider to check the query is still running
+      // after executing async tasks:
+      //   let instance = this.queryInstance;
+      //   await ...
+      //   if (instance != this.queryInstance) {
+      //     // Query was canceled or a new one started.
+      //     return;
+      //   }
+      provider.queryInstance = this;
       activePromises.push(
         // Not all isActive implementations are async, so wrap the call in a
         // promise so we can be sure we can call `then` on it.  Note that
@@ -422,6 +431,8 @@ class Query {
       provider.logger.info(
         `Canceling query for "${this.context.searchString}"`
       );
+      // Mark the instance as no more valid, see start() for details.
+      provider.queryInstance = null;
       provider.tryMethod("cancelQuery", this.context);
     }
     if (this._chunkTimer) {
