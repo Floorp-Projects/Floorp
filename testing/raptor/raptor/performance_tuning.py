@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import
 
+from mozdevice import ADBError
+
 
 def tune_performance(device, log=None, timeout=None):
     """Set various performance-oriented parameters, to reduce jitter.
@@ -24,7 +26,7 @@ class PerformanceTuner(object):
     def tune_performance(self):
         self.log.info("tuning android device performance")
         self.set_svc_power_stayon()
-        if self.device._have_su or self.device._have_android_su:
+        if self.device.is_rooted:
             device_name = self.device.shell_output('getprop ro.product.model',
                                                    timeout=self.timeout)
             # all commands require root shell from here on
@@ -37,13 +39,15 @@ class PerformanceTuner(object):
         self.device.clear_logcat(timeout=self.timeout)
         self.log.info("android device performance tuning complete")
 
-    def _set_value_and_check_exitcode(self, file_name, value, root=False):
+    def _set_value_and_check_exitcode(self, file_name, value):
         self.log.info('setting {} to {}'.format(file_name, value))
-        if self.device.shell_bool(' '.join(['echo', str(value), '>', str(file_name)]),
-                                  root=root, timeout=self.timeout):
+        try:
+            self.device.shell_output(' '.join(['echo', str(value), '>', str(file_name)]),
+                                     timeout=self.timeout)
             self.log.info('successfully set {} to {}'.format(file_name, value))
-        else:
-            self.log.warning('command failed')
+        except ADBError as e:
+            self.log.info("Ignoring failure to set value {} to {}. {}".format(
+                file_name, value, e))
 
     def set_svc_power_stayon(self):
         self.log.info('set device to stay awake on usb')
@@ -62,8 +66,13 @@ class PerformanceTuner(object):
             'thermald',
         ]
         for service in services:
-            self.log.info(' '.join(['turning off service:', service]))
-            self.device.shell_bool(' '.join(['stop', service]), root=True, timeout=self.timeout)
+            try:
+                self.log.info(' '.join(['turning off service:', service]))
+                self.device.shell_bool(' '.join(['stop', service]),
+                                       timeout=self.timeout)
+            except ADBError as e:
+                self.log.info("Ignoring failure to stop service {}. Error: {}: {}".format(
+                    service, e.__class__.__name__, e))
 
         services_list_output = self.device.shell_output('service list', timeout=self.timeout)
         for service in services:
@@ -107,7 +116,7 @@ class PerformanceTuner(object):
         }
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
 
     def set_cpu_performance_parameters(self, device_name=None):
         self.log.info('setting cpu performance parameters')
@@ -144,7 +153,7 @@ class PerformanceTuner(object):
                           .format(device_name))
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
 
     def set_gpu_performance_parameters(self, device_name=None):
         self.log.info('setting gpu performance parameters')
@@ -186,7 +195,7 @@ class PerformanceTuner(object):
                           .format(device_name))
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
 
     def set_kernel_performance_parameters(self):
         self.log.info('setting kernel performance parameters')
@@ -197,4 +206,4 @@ class PerformanceTuner(object):
             '/sys/kernel/debug/msm-bus-dbg/shell-client/slv': '512',
         }
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
