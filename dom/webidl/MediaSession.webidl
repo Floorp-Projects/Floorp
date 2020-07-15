@@ -70,11 +70,12 @@ dictionary MediaImage {
   DOMString type = "";
 };
 
+// Spec issue https://github.com/w3c/mediasession/issues/254
 dictionary MediaSessionActionDetails {
   required MediaSessionAction action;
-  // Merge MediaSessionSeekActionDetails here:
-  // https://github.com/w3c/mediasession/issues/234
   double seekOffset;
+  double seekTime;
+  boolean fastSeek;
 };
 
 dictionary MediaPositionState {
