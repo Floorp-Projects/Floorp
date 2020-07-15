@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -25,6 +26,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
@@ -37,6 +39,7 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -48,7 +51,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
     private val snackbarAnchor: View?
         get() = if (tabTrayView.fabView.new_tab_button.isVisible) tabTrayView.fabView.new_tab_button
-                else null
+        else null
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
@@ -131,7 +134,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
             startingInLandscape = requireContext().resources.configuration.orientation ==
                     Configuration.ORIENTATION_LANDSCAPE,
             lifecycleScope = viewLifecycleOwner.lifecycleScope
-        ) { tabsFeature.get()?.filterTabs(it) }
+        ) { private ->
+            val filter: (TabSessionState) -> Boolean = { state -> private == state.content.private }
+
+            tabsFeature.get()?.filterTabs(filter)
+
+            setSecureFlagsIfNeeded(private)
+        }
 
         tabsFeature.set(
             TabsFeature(
@@ -168,6 +177,14 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         consumeFrom(requireComponents.core.store) {
             tabTrayView.updateState(it)
             navigateHomeIfNeeded(it)
+        }
+    }
+
+    private fun setSecureFlagsIfNeeded(private: Boolean) {
+        if (private && context?.settings()?.allowScreenshotsInPrivateMode == false) {
+            dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else if (!(activity as HomeActivity).browsingModeManager.mode.isPrivate) {
+            dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 

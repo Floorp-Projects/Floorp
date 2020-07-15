@@ -27,7 +27,6 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -44,7 +43,7 @@ class TabTrayView(
     isPrivate: Boolean,
     startingInLandscape: Boolean,
     lifecycleScope: LifecycleCoroutineScope,
-    private val filterTabs: ((TabSessionState) -> Boolean) -> Unit
+    private val filterTabs: (Boolean) -> Unit
 ) : LayoutContainer, TabLayout.OnTabSelectedListener {
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
@@ -204,14 +203,8 @@ class TabTrayView(
     }
 
     override fun onTabSelected(tab: TabLayout.Tab?) {
-        // We need a better way to determine which tab was selected.
-        val filter: (TabSessionState) -> Boolean = when (tab?.position) {
-            1 -> { state -> state.content.private }
-            else -> { state -> !state.content.private }
-        }
-
         toggleFabText(isPrivateModeSelected)
-        filterTabs.invoke(filter)
+        filterTabs.invoke(isPrivateModeSelected)
 
         updateState(view.context.components.core.store.state)
         scrollToTab(view.context.components.core.store.state.selectedTabId)
