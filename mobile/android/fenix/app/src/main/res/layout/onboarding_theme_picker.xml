@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/onboarding_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -140,34 +141,18 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
+        android:background="@android:color/transparent"
         android:contentDescription="@string/onboarding_theme_automatic_title"
+        android:foreground="@drawable/rounded_ripple"
         android:paddingStart="0dp"
         android:paddingEnd="8dp"
         android:theme="@style/Checkable.Colored"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:onboardingKey="@string/pref_key_follow_device_theme" />
+        app:onboardingKey="@string/pref_key_follow_device_theme"
+        app:onboardingKeyDescription="@string/onboarding_theme_automatic_summary"
+        app:onboardingKeyTitle="@string/onboarding_theme_automatic_title"
+        tools:text="Automatic" />
 
-    <TextView
-        android:id="@+id/automatic_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="9dp"
-        android:text="@string/onboarding_theme_automatic_title"
-        android:textColor="?primaryText"
-        android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@+id/theme_automatic_radio_button"
-        app:layout_constraintTop_toBottomOf="@+id/divider" />
-
-    <TextView
-        android:id="@+id/automatic_theme_summary"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/onboarding_theme_automatic_summary"
-        android:textColor="?secondaryText"
-        android:textSize="14sp"
-        app:layout_constraintStart_toEndOf="@+id/theme_automatic_radio_button"
-        app:layout_constraintEnd_toEndOf="@id/clickable_region_automatic"
-        app:layout_constraintTop_toBottomOf="@id/automatic_title" />
 </androidx.constraintlayout.widget.ConstraintLayout>

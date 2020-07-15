@@ -84,6 +84,8 @@
 
     <declare-styleable name="OnboardingRadioButton">
         <attr name="onboardingKey" format="reference" />
+        <attr name="onboardingKeyTitle" format="reference" />
+        <attr name="onboardingKeyDescription" format="reference" />
     </declare-styleable>
 
 </resources>

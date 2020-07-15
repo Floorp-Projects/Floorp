@@ -37,17 +37,17 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
             isChecked = view.context.settings().shouldUseTrackingProtection
             setOnCheckedChangeListener { _, isChecked ->
                 updateTrackingProtectionSetting(isChecked)
-                updateRadioGroupState(view, isChecked)
+                updateRadioGroupState(isChecked)
             }
         }
 
-        setupRadioGroup(view, trackingProtectionToggle.isChecked)
-        updateRadioGroupState(view, trackingProtectionToggle.isChecked)
+        setupRadioGroup(trackingProtectionToggle.isChecked)
+        updateRadioGroupState(trackingProtectionToggle.isChecked)
     }
 
-    private fun setupRadioGroup(view: View, isChecked: Boolean) {
+    private fun setupRadioGroup(isChecked: Boolean) {
 
-        updateRadioGroupState(view, isChecked)
+        updateRadioGroupState(isChecked)
 
         addToRadioGroup(standardTrackingProtection, strictTrackingProtection)
 
@@ -58,56 +58,20 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         standardTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
-            view.context.components.analytics.metrics
+            itemView.context.components.analytics.metrics
                 .track(Event.OnboardingTrackingProtection(Setting.STANDARD))
-        }
-
-        view.clickable_region_standard.apply {
-            setOnClickListener {
-                standardTrackingProtection.performClick()
-                view.context.components.analytics.metrics
-                    .track(Event.OnboardingTrackingProtection(Setting.STANDARD))
-            }
-            val standardTitle = view.context.getString(
-                R.string.onboarding_tracking_protection_standard_button_2
-            )
-            val standardSummary = view.context.getString(
-                R.string.onboarding_tracking_protection_standard_button_description_2
-            )
-            contentDescription = "$standardTitle. $standardSummary"
         }
 
         strictTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
-            view.context.components.analytics.metrics
+            itemView.context.components.analytics.metrics
                 .track(Event.OnboardingTrackingProtection(Setting.STRICT))
-        }
-
-        view.clickable_region_strict.apply {
-            setOnClickListener {
-                strictTrackingProtection.performClick()
-                view.context.components.analytics.metrics
-                    .track(Event.OnboardingTrackingProtection(Setting.STRICT))
-            }
-            val strictTitle =
-                view.context.getString(R.string.onboarding_tracking_protection_strict_option)
-            val strictSummary =
-                view.context.getString(R.string.onboarding_tracking_protection_strict_button_description_2)
-            contentDescription = "$strictTitle. $strictSummary"
         }
     }
 
-    private fun updateRadioGroupState(view: View, isChecked: Boolean) {
+    private fun updateRadioGroupState(isChecked: Boolean) {
         standardTrackingProtection.isEnabled = isChecked
         strictTrackingProtection.isEnabled = isChecked
-
-        view.protection_standard_description.isEnabled = isChecked
-        view.protection_strict_description.isEnabled = isChecked
-        view.clickable_region_standard.isClickable = isChecked
-
-        view.protection_standard_title.isEnabled = isChecked
-        view.protection_strict_title.isEnabled = isChecked
-        view.clickable_region_strict.isClickable = isChecked
     }
 
     private fun updateTrackingProtectionSetting(enabled: Boolean) {

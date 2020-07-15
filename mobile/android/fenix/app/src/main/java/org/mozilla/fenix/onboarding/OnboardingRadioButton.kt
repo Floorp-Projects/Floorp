@@ -5,12 +5,16 @@
 package org.mozilla.fenix.onboarding
 
 import android.content.Context
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.util.AttributeSet
 import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.core.content.edit
 import androidx.core.content.withStyledAttributes
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.setTextColor
+import org.mozilla.fenix.ext.setTextSize
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.view.GroupableRadioButton
 import org.mozilla.fenix.utils.view.uncheckAll
@@ -23,6 +27,8 @@ class OnboardingRadioButton(
     private var illustration: ImageView? = null
     private var clickListener: (() -> Unit)? = null
     var key: Int = 0
+    var title: Int = 0
+    var description: Int = 0
 
     init {
         context.withStyledAttributes(
@@ -31,6 +37,9 @@ class OnboardingRadioButton(
             0, 0
         ) {
             key = getResourceId(R.styleable.OnboardingRadioButton_onboardingKey, 0)
+            title = getResourceId(R.styleable.OnboardingRadioButton_onboardingKeyTitle, 0)
+            description =
+                getResourceId(R.styleable.OnboardingRadioButton_onboardingKeyDescription, 0)
         }
     }
 
@@ -52,6 +61,28 @@ class OnboardingRadioButton(
             toggleRadioGroups()
             clickListener?.invoke()
         }
+        if (title != 0) {
+            setRadioButtonText(context)
+        }
+    }
+
+    private fun setRadioButtonText(context: Context) {
+        val builder = SpannableStringBuilder()
+
+        val spannableTitle = SpannableString(resources.getString(title))
+        spannableTitle.setTextSize(context, TITLE_TEXT_SIZE)
+        spannableTitle.setTextColor(context, R.color.primary_state_list_text_color)
+
+        builder.append(spannableTitle)
+
+        if (description != 0) {
+            val spannableDescription = SpannableString(resources.getString(description))
+            spannableDescription.setTextSize(context, DESCRIPTION_TEXT_SIZE)
+            spannableDescription.setTextColor(context, R.color.secondary_state_list_text_color)
+            builder.append("\n")
+            builder.append(spannableDescription)
+        }
+        this.text = builder
     }
 
     override fun updateRadioValue(isChecked: Boolean) {
@@ -68,5 +99,10 @@ class OnboardingRadioButton(
         if (isChecked) {
             radioGroups.uncheckAll()
         }
+    }
+
+    companion object {
+        private const val TITLE_TEXT_SIZE = 16
+        private const val DESCRIPTION_TEXT_SIZE = 14
     }
 }
