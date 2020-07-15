@@ -164,7 +164,7 @@ def parse_args():
                             type=str, dest='device_serial', default=None,
                             help='ADB device serial number of remote device to test')
     harness_og.add_argument('--remoteTestRoot', dest='remote_test_root', action='store',
-                            type=str, default='/data/local/tests',
+                            type=str, default='/data/local/tmp/test_root',
                             help='The remote directory to use as test root'
                             ' (e.g. %(default)s)')
     harness_og.add_argument('--localLib', dest='local_lib', action='store',
@@ -608,7 +608,7 @@ def main():
             jtd_tests = posixpath.join(options.remote_test_root, 'tests', 'tests')
             init_remote_dir(device, jtd_tests)
             device.push(test_dir, jtd_tests, timeout=600)
-            device.chmod(jtd_tests, recursive=True, root=True)
+            device.chmod(jtd_tests, recursive=True)
             prefix[0] = options.js_shell
             for test in test_gen:
                 out = run_test_remote(test, device, prefix, options)
