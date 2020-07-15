@@ -5499,6 +5499,7 @@ dependencies = [
  "svg_fmt",
  "time",
  "tracy-rs",
+ "uuid",
  "webrender_api",
  "webrender_build",
  "wr_malloc_size_of",
