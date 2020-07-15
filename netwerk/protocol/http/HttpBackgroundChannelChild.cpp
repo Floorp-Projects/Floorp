@@ -40,6 +40,9 @@ nsresult HttpBackgroundChannelChild::Init(HttpChannelChild* aChannelChild) {
   mChannelChild = aChannelChild;
 
   if (NS_WARN_IF(!CreateBackgroundChannel())) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mChannelChild->mCreateBackgroundChannelFailed = true;
+#endif
     mChannelChild = nullptr;
     return NS_ERROR_FAILURE;
   }
