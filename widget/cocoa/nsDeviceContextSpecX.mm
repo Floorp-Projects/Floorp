@@ -75,7 +75,7 @@ static nsresult FillPaperListForPrinter(PMPrinter aPrinter,
     nsAutoString name;
     nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(pmPaperName), name);
 
-    aPaperList.AppendElement(new nsPaper(name, width, height));
+    aPaperList.AppendElement(new nsPaper(name, width, height, 0.0, 0.0, 0.0, 0.0));
   }
 
   return NS_OK;
