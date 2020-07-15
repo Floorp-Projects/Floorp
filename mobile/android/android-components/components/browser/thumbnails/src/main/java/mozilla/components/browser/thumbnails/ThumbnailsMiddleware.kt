@@ -11,7 +11,6 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareStore
-import mozilla.components.support.images.ImageRequest
 
 /**
  * [Middleware] implementation for handling [ContentAction.UpdateThumbnailAction] and storing
@@ -29,7 +28,7 @@ class ThumbnailsMiddleware(
             is ContentAction.UpdateThumbnailAction -> {
                 // Store the captured tab screenshot from the EngineView when the session's
                 // thumbnail is updated.
-                thumbnailStorage.saveThumbnail(ImageRequest(action.sessionId), action.thumbnail)
+                thumbnailStorage.saveThumbnail(action.sessionId, action.thumbnail)
             }
             is TabListAction.RemoveAllNormalTabsAction -> {
                 store.state.tabs.filterNot { it.content.private }.forEach { tab ->

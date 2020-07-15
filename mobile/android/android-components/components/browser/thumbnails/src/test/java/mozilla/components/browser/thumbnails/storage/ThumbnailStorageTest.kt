@@ -8,7 +8,7 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -39,57 +39,56 @@ class ThumbnailStorageTest {
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail(ImageRequest("test-tab1"), bitmap).joinBlocking()
-        thumbnailStorage.saveThumbnail(ImageRequest("test-tab2"), bitmap).joinBlocking()
-        var thumbnail1 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab1")).await()
-        var thumbnail2 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab2")).await()
+        thumbnailStorage.saveThumbnail("test-tab1", bitmap).joinBlocking()
+        thumbnailStorage.saveThumbnail("test-tab2", bitmap).joinBlocking()
+        var thumbnail1 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab1", 100)).await()
+        var thumbnail2 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab2", 100)).await()
         assertNotNull(thumbnail1)
         assertNotNull(thumbnail2)
 
         thumbnailStorage.clearThumbnails()
-        thumbnail1 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab1")).await()
-        thumbnail2 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab2")).await()
+        thumbnail1 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab1", 100)).await()
+        thumbnail2 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab2", 100)).await()
         assertNull(thumbnail1)
         assertNull(thumbnail2)
     }
 
     @Test
     fun `deleteThumbnail`() = runBlocking {
-        val id = "test-tab1"
-        val request = ImageRequest(id)
+        val request = "test-tab1"
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
         thumbnailStorage.saveThumbnail(request, bitmap).joinBlocking()
-        var thumbnail = thumbnailStorage.loadThumbnail(request).await()
+        var thumbnail = thumbnailStorage.loadThumbnail(ImageLoadRequest(request, 100)).await()
         assertNotNull(thumbnail)
 
-        thumbnailStorage.deleteThumbnail(id).joinBlocking()
-        thumbnail = thumbnailStorage.loadThumbnail(request).await()
+        thumbnailStorage.deleteThumbnail(request).joinBlocking()
+        thumbnail = thumbnailStorage.loadThumbnail(ImageLoadRequest(request, 100)).await()
         assertNull(thumbnail)
     }
 
     @Test
     fun `saveThumbnail`() = runBlocking {
-        val request = ImageRequest("test-tab1")
+        val request = ImageLoadRequest("test-tab1", 100)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext))
         var thumbnail = thumbnailStorage.loadThumbnail(request).await()
 
         assertNull(thumbnail)
 
-        thumbnailStorage.saveThumbnail(request, bitmap).joinBlocking()
+        thumbnailStorage.saveThumbnail(request.id, bitmap).joinBlocking()
         thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertNotNull(thumbnail)
     }
 
     @Test
     fun `loadThumbnail`() = runBlocking {
-        val request = ImageRequest("test-tab1")
+        val request = ImageLoadRequest("test-tab1", 100)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail(request, bitmap)
+        thumbnailStorage.saveThumbnail(request.id, bitmap)
         `when`(thumbnailStorage.loadThumbnail(request)).thenReturn(CompletableDeferred(bitmap))
 
         val thumbnail = thumbnailStorage.loadThumbnail(request).await()

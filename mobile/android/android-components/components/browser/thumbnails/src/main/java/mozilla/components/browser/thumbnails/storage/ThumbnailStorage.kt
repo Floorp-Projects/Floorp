@@ -18,7 +18,8 @@ import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.utils.ThumbnailDiskCache
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.images.DesiredSize
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
+import mozilla.components.support.images.ImageSaveRequest
 import mozilla.components.support.images.decoder.AndroidImageDecoder
 import java.util.concurrent.Executors
 
@@ -63,9 +64,9 @@ class ThumbnailStorage(
         }
 
     /**
-     * Asynchronously loads a thumbnail [Bitmap] for the given [ImageRequest].
+     * Asynchronously loads a thumbnail [Bitmap] for the given [ImageLoadRequest].
      */
-    fun loadThumbnail(request: ImageRequest): Deferred<Bitmap?> = scope.async {
+    fun loadThumbnail(request: ImageLoadRequest): Deferred<Bitmap?> = scope.async {
         loadThumbnailInternal(request).also { loadedThumbnail ->
             if (loadedThumbnail != null) {
                 logger.debug(
@@ -79,9 +80,9 @@ class ThumbnailStorage(
     }
 
     @WorkerThread
-    private fun loadThumbnailInternal(request: ImageRequest): Bitmap? {
+    private fun loadThumbnailInternal(request: ImageLoadRequest): Bitmap? {
         val desiredSize = DesiredSize(
-            targetSize = context.resources.getDimensionPixelSize(request.size.dimen),
+            targetSize = request.size,
             maxSize = maximumSize,
             maxScaleFactor = MAXIMUM_SCALE_FACTOR
         )
@@ -96,13 +97,13 @@ class ThumbnailStorage(
     }
 
     /**
-     * Stores the given thumbnail [Bitmap] into the disk cache with the provided [ImageRequest]
+     * Stores the given thumbnail [Bitmap] into the disk cache with the provided [ImageLoadRequest]
      * as its key.
      */
-    fun saveThumbnail(request: ImageRequest, bitmap: Bitmap): Job =
+    fun saveThumbnail(request: ImageSaveRequest, bitmap: Bitmap): Job =
         scope.launch {
             logger.debug(
-                "Saved thumbnail to disk (id = ${request.id}, " +
+                "Saved thumbnail to disk (id = $request, " +
                     "generationId = ${bitmap.generationId})"
             )
             sharedDiskCache.putThumbnailBitmap(context, request, bitmap)

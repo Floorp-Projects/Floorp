@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.support.images.CancelOnDetach
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.images.loader.ImageLoader
 import java.lang.ref.WeakReference
 
@@ -26,7 +26,7 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
 
     override fun loadIntoView(
         view: ImageView,
-        request: ImageRequest,
+        request: ImageLoadRequest,
         placeholder: Drawable?,
         error: Drawable?
     ) {
@@ -38,7 +38,7 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
     @MainThread
     private suspend fun loadIntoViewInternal(
         view: WeakReference<ImageView>,
-        request: ImageRequest,
+        request: ImageLoadRequest,
         placeholder: Drawable?,
         error: Drawable?
     ) {
