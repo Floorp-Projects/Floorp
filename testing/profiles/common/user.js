@@ -12,7 +12,7 @@ user_pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "[]"
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.message-groups", "[]");
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel", "[]");
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments", "[]");
-user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.system.topstories", false);
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
 user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
 user_pref("browser.newtabpage.activity-stream.discoverystream.config", "[]");

@@ -513,7 +513,7 @@ class FirefoxLauncher implements ProductLauncher {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1543115
       'browser.dom.window.dump.enabled': true,
       // Disable topstories
-      'browser.newtabpage.activity-stream.feeds.section.topstories': false,
+      'browser.newtabpage.activity-stream.feeds.system.topstories': false,
       // Always display a blank page
       'browser.newtabpage.enabled': false,
       // Background thumbnails in particular cause grief: and disabling
