@@ -62,7 +62,7 @@ class DOMSVGStringList;
 class SVGSVGElement;
 class SVGViewportElement;
 
-typedef nsStyledElement SVGElementBase;
+using SVGElementBase = nsStyledElement;
 
 class SVGElement : public SVGElementBase  // nsIContent
 {

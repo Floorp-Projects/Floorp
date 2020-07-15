@@ -22,7 +22,7 @@ class SVGFilterInstance;
 namespace dom {
 class DOMSVGAnimatedLength;
 
-typedef SVGElement SVGFilterElementBase;
+using SVGFilterElementBase = SVGElement;
 
 class SVGFilterElement : public SVGFilterElementBase {
   friend class mozilla::SVGFilterFrame;

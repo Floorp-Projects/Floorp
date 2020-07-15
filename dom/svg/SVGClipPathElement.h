@@ -18,7 +18,7 @@ class SVGClipPathFrame;
 
 namespace dom {
 
-typedef SVGTransformableElement SVGClipPathElementBase;
+using SVGClipPathElementBase = SVGTransformableElement;
 
 class SVGClipPathElement final : public SVGClipPathElementBase {
   friend class mozilla::SVGClipPathFrame;

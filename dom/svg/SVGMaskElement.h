@@ -21,7 +21,7 @@ namespace dom {
 
 //--------------------- Masks ------------------------
 
-typedef SVGElement SVGMaskElementBase;
+using SVGMaskElementBase = SVGElement;
 
 class SVGMaskElement final : public SVGMaskElementBase {
   friend class mozilla::SVGMaskFrame;

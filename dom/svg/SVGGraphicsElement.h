@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-typedef SVGTransformableElement SVGGraphicsElementBase;
+using SVGGraphicsElementBase = SVGTransformableElement;
 
 class SVGGraphicsElement : public SVGGraphicsElementBase, public SVGTests {
  protected:

@@ -24,7 +24,7 @@ class SVGElement;
 
 class SVGAnimatedClass {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
+  using SVGElement = dom::SVGElement;
 
   void Init() { mAnimVal = nullptr; }
 
@@ -36,10 +36,10 @@ class SVGAnimatedClass {
   void GetAnimValue(nsAString& aResult, const SVGElement* aSVGElement) const;
   bool IsAnimated() const { return !!mAnimVal; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ToDOMAnimatedString(
+  already_AddRefed<dom::DOMSVGAnimatedString> ToDOMAnimatedString(
       SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   UniquePtr<nsString> mAnimVal;
@@ -58,9 +58,8 @@ class SVGAnimatedClass {
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;

@@ -15,7 +15,7 @@ nsresult NS_NewSVGPolylineElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGPolyElement SVGPolylineElementBase;
+using SVGPolylineElementBase = SVGPolyElement;
 
 class SVGPolylineElement final : public SVGPolylineElementBase {
  protected:

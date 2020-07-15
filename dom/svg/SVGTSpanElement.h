@@ -15,7 +15,7 @@ nsresult NS_NewSVGTSpanElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGTextPositioningElement SVGTSpanElementBase;
+using SVGTSpanElementBase = SVGTextPositioningElement;
 
 class SVGTSpanElement final : public SVGTSpanElementBase {
  protected:

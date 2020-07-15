@@ -22,7 +22,7 @@ struct DOMPointInit;
 class nsISVGPoint;
 class SVGRect;
 
-typedef SVGGraphicsElement SVGTextContentElementBase;
+using SVGTextContentElementBase = SVGGraphicsElement;
 
 class SVGTextContentElement : public SVGTextContentElementBase {
   friend class mozilla::SVGTextFrame;

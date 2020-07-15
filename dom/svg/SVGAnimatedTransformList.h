@@ -107,7 +107,7 @@ class SVGAnimatedTransformList {
     return mCreatedOrRemovedOnLastChange;
   }
 
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or

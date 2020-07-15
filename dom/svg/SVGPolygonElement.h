@@ -16,7 +16,7 @@ nsresult NS_NewSVGPolygonElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGPolyElement SVGPolygonElementBase;
+using SVGPolygonElementBase = SVGPolyElement;
 
 class SVGPolygonElement final : public SVGPolygonElementBase {
  protected:

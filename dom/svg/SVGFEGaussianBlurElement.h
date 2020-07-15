@@ -17,7 +17,7 @@ nsresult NS_NewSVGFEGaussianBlurElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGFE SVGFEGaussianBlurElementBase;
+using SVGFEGaussianBlurElementBase = SVGFE;
 
 class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
   friend nsresult(::NS_NewSVGFEGaussianBlurElement(

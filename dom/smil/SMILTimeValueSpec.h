@@ -39,9 +39,9 @@ class Event;
 
 class SMILTimeValueSpec {
  public:
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::Event Event;
-  typedef mozilla::dom::IDTracker IDTracker;
+  using Element = dom::Element;
+  using Event = dom::Event;
+  using IDTracker = dom::IDTracker;
 
   SMILTimeValueSpec(SMILTimedElement& aOwner, bool aIsBegin);
   ~SMILTimeValueSpec();
