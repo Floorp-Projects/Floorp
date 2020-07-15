@@ -32,12 +32,15 @@ NS_IMPL_ADDREF(IPCBlobInputStreamStorage)
 NS_IMPL_RELEASE(IPCBlobInputStreamStorage)
 
 /* static */
-IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() { return gStorage; }
+IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() {
+  mozilla::StaticMutexAutoLock lock(gMutex);
+  return gStorage;
+}
 
 /* static */
 void IPCBlobInputStreamStorage::Initialize() {
+  mozilla::StaticMutexAutoLock lock(gMutex);
   MOZ_ASSERT(!gStorage);
-
   gStorage = new IPCBlobInputStreamStorage();
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -57,6 +60,7 @@ IPCBlobInputStreamStorage::Observe(nsISupports* aSubject, const char* aTopic,
       obs->RemoveObserver(this, "ipc:content-shutdown");
     }
 
+    mozilla::StaticMutexAutoLock lock(gMutex);
     gStorage = nullptr;
     return NS_OK;
   }
