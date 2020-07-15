@@ -5,15 +5,14 @@
 from __future__ import absolute_import
 
 import abc
-import os
 import re
 from os.path import expanduser
 
 import sentry_sdk
 from mozboot.util import get_state_dir
+from mozbuild.telemetry import is_telemetry_enabled
 from mozversioncontrol import get_repository_object, InvalidRepoPath
 from six import string_types
-from six.moves.configparser import SafeConfigParser, NoOptionError
 
 # The following developers frequently modify mach code, and testing will commonly cause
 # exceptions to be thrown. We don't want these exceptions reported to Sentry.
@@ -49,26 +48,8 @@ class NoopErrorReporter(ErrorReporter):
         pass
 
 
-def _is_telemetry_enabled(cfg_file):
-    config = SafeConfigParser()
-
-    if not config.read(cfg_file):
-        return False
-
-    try:
-        telemetry_enabled = config.getboolean("build", "telemetry")
-    except NoOptionError:
-        return False
-
-    if not telemetry_enabled:
-        return False
-
-    return True
-
-
-def register_sentry(argv, topsrcdir=None):
-    cfg_file = os.path.join(get_state_dir(), 'machrc')
-    if not _is_telemetry_enabled(cfg_file):
+def register_sentry(argv, settings, topsrcdir=None):
+    if not is_telemetry_enabled(settings):
         return NoopErrorReporter()
 
     if topsrcdir:

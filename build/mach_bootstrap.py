@@ -308,12 +308,8 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if depth != 1 or os.environ.get('MACH_MAIN_PID') != str(os.getpid()):
             return
 
-        # Don't write telemetry data for 'mach' when 'DISABLE_TELEMETRY' is set.
-        if os.environ.get('DISABLE_TELEMETRY') == '1':
-            return
-
-        # We have not opted-in to telemetry
-        if not context.settings.build.telemetry:
+        from mozbuild.telemetry import is_telemetry_enabled
+        if not is_telemetry_enabled(context.settings):
             return
 
         from mozbuild.telemetry import gather_telemetry
