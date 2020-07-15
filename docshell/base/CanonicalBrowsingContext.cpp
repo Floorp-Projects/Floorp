@@ -85,6 +85,12 @@ const CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
   return static_cast<const CanonicalBrowsingContext*>(aContext);
 }
 
+already_AddRefed<CanonicalBrowsingContext> CanonicalBrowsingContext::Cast(
+    already_AddRefed<BrowsingContext>&& aContext) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  return aContext.downcast<CanonicalBrowsingContext>();
+}
+
 ContentParent* CanonicalBrowsingContext::GetContentParent() const {
   if (mProcessId == 0) {
     return nullptr;
