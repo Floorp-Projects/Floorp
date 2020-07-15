@@ -298,14 +298,19 @@ impl VertexDescriptor {
         }
     }
 
-    fn bind(&self, gl: &dyn gl::Gl, main: VBOId, instance: VBOId) {
-        Self::bind_attributes(self.vertex_attributes, 0, 0, gl, main);
+    fn bind(&self, gl: &dyn gl::Gl, vertex_buf: VBOId, instance_buf: VBOId) {
+        if !self.vertex_attributes.is_empty() {
+            Self::bind_attributes(
+                self.vertex_attributes,
+                0,
+                0, gl, vertex_buf);
+        }
 
         if !self.instance_attributes.is_empty() {
             Self::bind_attributes(
                 self.instance_attributes,
                 self.vertex_attributes.len(),
-                1, gl, instance,
+                1, gl, instance_buf,
             );
         }
     }
@@ -3305,7 +3310,7 @@ impl Device {
         );
     }
 
-    pub fn draw_triangles_u16(&mut self, first_vertex: i32, index_count: i32) {
+    pub fn draw_triangles_u16(&mut self, first_index: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
@@ -3314,11 +3319,11 @@ impl Device {
             gl::TRIANGLES,
             index_count,
             gl::UNSIGNED_SHORT,
-            first_vertex as u32 * 2,
+            first_index as u32 * 2,
         );
     }
 
-    pub fn draw_triangles_u32(&mut self, first_vertex: i32, index_count: i32) {
+    pub fn draw_triangles_u32(&mut self, first_index: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
@@ -3327,7 +3332,7 @@ impl Device {
             gl::TRIANGLES,
             index_count,
             gl::UNSIGNED_INT,
-            first_vertex as u32 * 4,
+            first_index as u32 * 4,
         );
     }
 

@@ -408,13 +408,7 @@ pub(crate) mod desc {
     use crate::device::{VertexAttribute, VertexAttributeKind, VertexDescriptor};
 
     pub const PRIM_INSTANCES: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aData",
@@ -425,13 +419,7 @@ pub(crate) mod desc {
     };
 
     pub const BLUR: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aBlurRenderTaskAddress",
@@ -452,13 +440,7 @@ pub(crate) mod desc {
     };
 
     pub const LINE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskRect",
@@ -489,13 +471,7 @@ pub(crate) mod desc {
     };
 
     pub const GRADIENT: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskRect",
@@ -545,13 +521,7 @@ pub(crate) mod desc {
     };
 
     pub const BORDER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskOrigin",
@@ -602,13 +572,7 @@ pub(crate) mod desc {
     };
 
     pub const SCALE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aScaleTargetRect",
@@ -629,13 +593,7 @@ pub(crate) mod desc {
     };
 
     pub const CLIP: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTransformIds",
@@ -692,13 +650,7 @@ pub(crate) mod desc {
     };
 
     pub const RESOLVE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aRect",
@@ -709,13 +661,7 @@ pub(crate) mod desc {
     };
 
     pub const SVG_FILTER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aFilterRenderTaskAddress",
@@ -840,13 +786,7 @@ pub(crate) mod desc {
     };
 
     pub const COMPOSITE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aDeviceRect",
@@ -892,13 +832,7 @@ pub(crate) mod desc {
     };
 
     pub const CLEAR: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aRect",
@@ -2380,14 +2314,13 @@ impl Renderer {
         let x1 = 1.0;
         let y1 = 1.0;
 
-        let quad_indices: [u16; 6] = [0, 1, 2, 2, 1, 3];
         let quad_vertices = [
             PackedVertex { pos: [x0, y0] },
             PackedVertex { pos: [x1, y0] },
             PackedVertex { pos: [x0, y1] },
             PackedVertex { pos: [x1, y1] },
         ];
-
+        let quad_indices: [u16; 6] = [0, 1, 2, 2, 1, 3];
         let prim_vao = device.create_vao(&desc::PRIM_INSTANCES);
         device.bind_vao(&prim_vao);
         device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
