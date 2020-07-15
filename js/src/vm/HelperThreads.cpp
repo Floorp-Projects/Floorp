@@ -1046,45 +1046,28 @@ bool js::StartOffThreadDecodeMultiScripts(JSContext* cx,
 void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
   MOZ_ASSERT(!OffThreadParsingMustWaitForGC(rt));
 
-  GlobalHelperThreadState::ParseTaskVector newTasks;
-  {
-    AutoLockHelperThreadState lock;
-    GlobalHelperThreadState::ParseTaskVector& waiting =
-        HelperThreadState().parseWaitingOnGC(lock);
-
-    for (size_t i = 0; i < waiting.length(); i++) {
-      if (waiting[i]->runtimeMatches(rt)) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!newTasks.append(std::move(waiting[i]))) {
-          oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
-        }
-        HelperThreadState().remove(waiting, &i);
-      }
-    }
-  }
-
-  if (newTasks.empty()) {
-    return;
-  }
-
-  // This logic should mirror the contents of the
-  // !OffThreadParsingMustWaitForGC() branch in QueueOffThreadParseTask:
-
-  for (size_t i = 0; i < newTasks.length(); i++) {
-    newTasks[i]->activate(rt);
-  }
-
   AutoLockHelperThreadState lock;
 
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    GlobalHelperThreadState::ParseTaskVector& worklist =
-        HelperThreadState().parseWorklist(lock);
-    for (size_t i = 0; i < newTasks.length(); i++) {
-      if (!worklist.append(std::move(newTasks[i]))) {
+  GlobalHelperThreadState::ParseTaskVector& waiting =
+      HelperThreadState().parseWaitingOnGC(lock);
+  GlobalHelperThreadState::ParseTaskVector& worklist =
+      HelperThreadState().parseWorklist(lock);
+  for (size_t i = 0; i < waiting.length(); i++) {
+    if (!waiting[i]->runtimeMatches(rt)) {
+      continue;
+    }
+
+    // This logic should mirror the contents of the
+    // !OffThreadParsingMustWaitForGC() branch in QueueOffThreadParseTask:
+    waiting[i]->activate(rt);
+
+    {
+      AutoEnterOOMUnsafeRegion oomUnsafe;
+      if (!worklist.append(std::move(waiting[i]))) {
         oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
       }
     }
+    HelperThreadState().remove(waiting, &i);
   }
 
   HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
