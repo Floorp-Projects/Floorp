@@ -16,7 +16,7 @@ import mozcrash
 import mozfile
 import mozinfo
 import mozlog
-from mozdevice import ADBDevice, ADBProcessError, ADBTimeoutError
+from mozdevice import ADBDeviceFactory, ADBProcessError, ADBTimeoutError
 
 try:
     from mozbuild.base import MozbuildObject
@@ -30,9 +30,9 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
     def __init__(self, options, progs):
         cppunittests.CPPUnitTests.__init__(self)
         self.options = options
-        self.device = ADBDevice(adb=options.adb_path or 'adb',
-                                device=options.device_serial,
-                                test_root=options.remote_test_root)
+        self.device = ADBDeviceFactory(adb=options.adb_path or 'adb',
+                                       device=options.device_serial,
+                                       test_root=options.remote_test_root)
         self.remote_test_root = posixpath.join(self.device.test_root, "cppunittests")
         self.remote_bin_dir = posixpath.join(self.remote_test_root, "b")
         self.remote_tmp_dir = posixpath.join(self.remote_test_root, "tmp")
@@ -41,13 +41,13 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
             self.setup_bin(progs)
 
     def setup_bin(self, progs):
-        self.device.rm(self.remote_test_root, force=True, recursive=True, root=True)
+        self.device.rm(self.remote_test_root, force=True, recursive=True)
         self.device.mkdir(self.remote_home_dir, parents=True)
         self.device.mkdir(self.remote_tmp_dir)
         self.device.mkdir(self.remote_bin_dir)
         self.push_libs()
         self.push_progs(progs)
-        self.device.chmod(self.remote_bin_dir, recursive=True, root=True)
+        self.device.chmod(self.remote_bin_dir, recursive=True)
 
     def push_libs(self):
         if self.options.local_apk:
@@ -209,11 +209,13 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         self.add_option("--remoteTestRoot", action="store",
                         type="string", dest="remote_test_root",
                         help="Remote directory to use as test root "
-                             "(eg. /mnt/sdcard/tests or /data/local/tests).")
+                             "(eg. /data/local/tmp/test_root).")
 
-        # /data/local/tests is used because it is usually not possible to set +x permissions
-        # on binaries on /mnt/sdcard
-        defaults["remote_test_root"] = "/data/local/tests"
+        # /data/local/tmp/test_root is used because it is usually not
+        # possible to set +x permissions on binaries on /mnt/sdcard
+        # and since scope storage on Android 10 causes permission
+        # errors on the sdcard.
+        defaults["remote_test_root"] = "/data/local/tmp/test_root"
 
         self.add_option("--addEnv", action="append",
                         type="string", dest="add_env",
