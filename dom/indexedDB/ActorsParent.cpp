@@ -2090,8 +2090,9 @@ class EncodeKeysFunction final : public mozIStorageFunction {
       aArguments->GetString(0, stringKey);
       auto result = key.SetFromString(stringKey);
       if (!result.Is(Ok)) {
-        return result.Is(Invalid) ? NS_ERROR_DOM_INDEXEDDB_DATA_ERR
-                                  : result.AsException().StealNSResult();
+        return result.Is(SpecialValues::Invalid)
+                   ? NS_ERROR_DOM_INDEXEDDB_DATA_ERR
+                   : result.AsException().StealNSResult();
       }
     } else {
       NS_WARNING("Don't call me with the wrong type of arguments!");
@@ -9864,7 +9865,7 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
 
   auto result = aBaseKey.ToLocaleAwareKey(aLocale);
   if (!result.Is(Ok)) {
-    return NS_WARN_IF(result.Is(Exception))
+    return NS_WARN_IF(result.Is(SpecialValues::Exception))
                ? result.AsException().StealNSResult()
                : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
@@ -21601,7 +21602,7 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
 
     auto result = oldKey.ToLocaleAwareKey(aLocale);
     if (!result.Is(Ok)) {
-      return NS_WARN_IF(result.Is(Exception))
+      return NS_WARN_IF(result.Is(SpecialValues::Exception))
                  ? result.AsException().StealNSResult()
                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
@@ -26532,7 +26533,7 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         // XXX Explain why an error or Invalid result is ignored here (If it's
         // impossible, then
         //     we should change this to an assertion.)
-        if (res.Is(Exception)) {
+        if (res.Is(SpecialValues::Exception)) {
           res.AsException().SuppressException();
         }
 
