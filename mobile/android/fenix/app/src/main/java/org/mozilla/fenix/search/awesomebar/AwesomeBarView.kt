@@ -20,6 +20,7 @@ import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
@@ -32,6 +33,7 @@ import org.mozilla.fenix.search.SearchFragmentState
 /**
  * View that contains and configures the BrowserAwesomeBar
  */
+@Suppress("LargeClass")
 class AwesomeBarView(
     private val activity: HomeActivity,
     val interactor: AwesomeBarInteractor,
@@ -41,6 +43,7 @@ class AwesomeBarView(
     private val historyStorageProvider: HistoryStorageSuggestionProvider
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
+    private val syncedTabsStorageSuggestionProvider: SyncedTabsStorageSuggestionProvider
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
     private val defaultSearchActionProvider: SearchActionProvider
     private val searchSuggestionProviderMap: MutableMap<SearchEngine, List<AwesomeBar.SuggestionProvider>>
@@ -121,6 +124,13 @@ class AwesomeBarView(
                 icons = components.core.icons,
                 indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
                 engine = engineForSpeculativeConnects
+            )
+
+        syncedTabsStorageSuggestionProvider =
+            SyncedTabsStorageSuggestionProvider(
+                components.backgroundServices.syncedTabsStorage,
+                components.useCases.tabsUseCases.addTab,
+                components.core.icons
             )
 
         val searchBitmap = getDrawable(activity, R.drawable.ic_search)!!.apply {
@@ -204,6 +214,7 @@ class AwesomeBarView(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun getProvidersToAdd(state: SearchFragmentState): MutableSet<AwesomeBar.SuggestionProvider> {
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
@@ -217,6 +228,10 @@ class AwesomeBarView(
 
         if (state.showSearchSuggestions) {
             providersToAdd.addAll(getSelectedSearchSuggestionProvider(state))
+        }
+
+        if (state.showSyncedTabsSuggestions) {
+            providersToAdd.add(syncedTabsStorageSuggestionProvider)
         }
 
         if (activity.browsingModeManager.mode == BrowsingMode.Normal) {
@@ -241,6 +256,10 @@ class AwesomeBarView(
 
         if (!state.showSearchSuggestions) {
             providersToRemove.addAll(getSelectedSearchSuggestionProvider(state))
+        }
+
+        if (!state.showSyncedTabsSuggestions) {
+            providersToRemove.add(syncedTabsStorageSuggestionProvider)
         }
 
         if (activity.browsingModeManager.mode == BrowsingMode.Private) {

@@ -56,6 +56,7 @@ class ToolbarViewTest {
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
+        showSyncedTabsSuggestions = false,
         searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE
     )
 

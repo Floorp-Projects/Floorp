@@ -66,6 +66,7 @@ data class SearchFragmentState(
     val showClipboardSuggestions: Boolean,
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
+    val showSyncedTabsSuggestions: Boolean,
     val tabId: String?,
     val pastedText: String? = null,
     val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?
@@ -110,6 +111,7 @@ fun createInitialSearchFragmentState(
         showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
         showHistorySuggestions = settings.shouldShowHistorySuggestions,
         showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
+        showSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
         tabId = tabId,
         pastedText = pastedText,
         searchAccessPoint = searchAccessPoint

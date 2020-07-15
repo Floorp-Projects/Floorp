@@ -72,6 +72,7 @@ class SearchFragmentStoreTest {
             showClipboardSuggestions = false,
             showHistorySuggestions = false,
             showBookmarkSuggestions = false,
+            showSyncedTabsSuggestions = false,
             tabId = null,
             pastedText = "pastedText",
             searchAccessPoint = SearchAccessPoint.ACTION
@@ -128,6 +129,7 @@ class SearchFragmentStoreTest {
                 showClipboardSuggestions = false,
                 showHistorySuggestions = false,
                 showBookmarkSuggestions = false,
+                showSyncedTabsSuggestions = false,
                 tabId = "tabId",
                 pastedText = "",
                 searchAccessPoint = SearchAccessPoint.SHORTCUT
@@ -234,6 +236,7 @@ class SearchFragmentStoreTest {
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
+        showSyncedTabsSuggestions = false,
         searchAccessPoint = SearchAccessPoint.NONE
     )
 }

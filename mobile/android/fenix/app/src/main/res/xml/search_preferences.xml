@@ -46,6 +46,10 @@
             android:title='@string/preferences_search_bookmarks' />
         <SwitchPreference
             android:defaultValue="true"
+            android:key="@string/pref_key_search_synced_tabs"
+            android:title='@string/preferences_search_synced_tabs' />
+        <SwitchPreference
+            android:defaultValue="true"
             android:key="@string/pref_key_show_voice_search"
             android:title="@string/preferences_show_voice_search" />
         <SwitchPreference
