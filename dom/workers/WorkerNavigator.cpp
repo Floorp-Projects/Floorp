@@ -4,29 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/MediaCapabilities.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseWorkerProxy.h"
-#include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/WorkerNavigator.h"
-#include "mozilla/dom/WorkerNavigatorBinding.h"
-#include "mozilla/dom/network/Connection.h"
-#include "mozilla/StaticPrefs_privacy.h"
 
-#include "nsProxyRelease.h"
-#include "nsRFPService.h"
+#include <utility>
+
+#include "ErrorList.h"
+#include "MainThreadUtils.h"
 #include "RuntimeService.h"
-
-#include "mozilla/dom/Document.h"
-
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-
+#include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/Navigator.h"
-
+#include "mozilla/dom/StorageManager.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
+#include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/dom/network/Connection.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/webgpu/Instance.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsIGlobalObject.h"
+#include "nsLiteralString.h"
+#include "nsPIDOMWindow.h"
+#include "nsRFPService.h"
+#include "nsString.h"
+
+class JSObject;
+struct JSContext;
 
 namespace mozilla {
 namespace dom {

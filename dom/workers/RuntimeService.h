@@ -12,6 +12,7 @@
 #include "nsIObserver.h"
 
 #include "js/ContextOptions.h"
+#include "MainThreadUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
