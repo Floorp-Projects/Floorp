@@ -61,6 +61,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
     private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
     private var _tabTrayView: TabTrayView? = null
+    private var currentOrientation: Int? = null
     private val tabTrayView: TabTrayView
         get() = _tabTrayView!!
     private lateinit var tabTrayDialogStore: TabTrayDialogFragmentStore
@@ -154,9 +155,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
         tabTrayView.setTopOffset(isLandscape)
 
-        if (isLandscape) {
+        if (newConfig.orientation != currentOrientation) {
             tabTrayView.dismissMenu()
             tabTrayView.expand()
+            currentOrientation = newConfig.orientation
         }
     }
 
@@ -168,6 +170,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
         val thumbnailLoader = ThumbnailLoader(requireContext().components.core.thumbnailStorage)
         val adapter = FenixTabsAdapter(requireContext(), thumbnailLoader)
+        currentOrientation = resources.configuration.orientation
 
         _tabTrayView = TabTrayView(
             view.tabLayout,
