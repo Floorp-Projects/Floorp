@@ -9,10 +9,10 @@ module.exports = {
   extends: "../../../.eslintrc.js",
 
   rules: {
-    // The inspector is being migrated to HTML and cleaned of
-    // chrome-privileged code, so this rule disallows requiring chrome
-    // code. Some files here disable this rule still. The
-    // goal is to enable the rule globally on all files.
+    // This rule was introduced for the DevTools HTML initiative, the goal was
+    // to avoid requiring helpers unavailable in a regular content page, to
+    // use DevTools as a regular webapplication. Should be reviewed in
+    // Bug 1591091.
     "mozilla/reject-some-requires": [
       "error",
       "^(chrome|chrome:.*|resource:.*|devtools/server/.*|.*\\.jsm)$",
