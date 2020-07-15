@@ -4986,6 +4986,10 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
       UpdateAutoplayPermission();
     }
 
+    if (!mDoc) {
+      return NS_OK;
+    }
+
     RefPtr<PermissionDelegateHandler> permDelegateHandler =
         mDoc->GetPermissionDelegateHandler();
 
