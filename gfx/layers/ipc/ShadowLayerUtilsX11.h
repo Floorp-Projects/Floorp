@@ -8,8 +8,7 @@
 #define mozilla_layers_ShadowLayerUtilsX11_h
 
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/layers/LayersMessageUtils.h"
-#include "nsCOMPtr.h"  // for already_AddRefed
+#include "mozilla/AlreadyAddRefed.h"
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
@@ -65,20 +64,10 @@ template <>
 struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
   typedef mozilla::layers::SurfaceDescriptorX11 paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mId);
-    WriteParam(aMsg, aParam.mSize);
-    WriteParam(aMsg, aParam.mFormat);
-    WriteParam(aMsg, aParam.mGLXPixmap);
-  }
+  static void Write(Message* aMsg, const paramType& aParam);
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mId) &&
-            ReadParam(aMsg, aIter, &aResult->mSize) &&
-            ReadParam(aMsg, aIter, &aResult->mFormat) &&
-            ReadParam(aMsg, aIter, &aResult->mGLXPixmap));
-  }
+                   paramType* aResult);
 };
 
 }  // namespace IPC
