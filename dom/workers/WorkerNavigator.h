@@ -7,19 +7,25 @@
 #ifndef mozilla_dom_workernavigator_h__
 #define mozilla_dom_workernavigator_h__
 
-#include "WorkerCommon.h"
-#include "nsString.h"
-#include "nsWrapperCache.h"
+#include <stdint.h>
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/workerinternals/RuntimeService.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace webgpu {
 class Instance;
 }  // namespace webgpu
 namespace dom {
-class Promise;
 class StorageManager;
 class MediaCapabilities;
 
