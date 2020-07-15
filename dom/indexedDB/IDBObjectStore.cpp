@@ -574,7 +574,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
       auto result = value.SetFromJSVal(aCx, arrayItem);
       if (!result.Is(Ok) || value.IsUnset()) {
         // Not a value we can do anything with, ignore it.
-        if (result.Is(indexedDB::Exception)) {
+        if (result.Is(SpecialValues::Exception)) {
           result.AsException().SuppressException();
         }
         continue;
@@ -591,7 +591,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
     auto result = value.SetFromJSVal(aCx, val);
     if (!result.Is(Ok) || value.IsUnset()) {
       // Not a value we can do anything with, ignore it.
-      if (result.Is(indexedDB::Exception)) {
+      if (result.Is(SpecialValues::Exception)) {
         result.AsException().SuppressException();
       }
       return;

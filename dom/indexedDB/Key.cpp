@@ -42,7 +42,8 @@ IDBResult<void, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
   // 1. Let `len` be ? ToLength( ? Get(`input`, "length")).
   uint32_t len;
   if (!JS::GetArrayLength(aCx, aObject, &len)) {
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    return {SpecialValues::Exception,
+            ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
   }
 
   // 2. Add `input` to `seen`.
@@ -58,24 +59,27 @@ IDBResult<void, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
   while (index < len) {
     JS::RootedId indexId(aCx);
     if (!JS_IndexToId(aCx, index, &indexId)) {
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      return {SpecialValues::Exception,
+              ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
     }
 
     // 1. Let `hop` be ? HasOwnProperty(`input`, `index`).
     bool hop;
     if (!JS_HasOwnPropertyById(aCx, aObject, indexId, &hop)) {
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      return {SpecialValues::Exception,
+              ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
     }
 
     // 2. If `hop` is false, return invalid.
     if (!hop) {
-      return Invalid;
+      return SpecialValues::Invalid;
     }
 
     // 3. Let `entry` be ? Get(`input`, `index`).
     JS::RootedValue entry(aCx);
     if (!JS_GetPropertyById(aCx, aObject, indexId, &entry)) {
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      return {SpecialValues::Exception,
+              ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
     }
 
     // 4. Let `key` be the result of running the steps to convert a value to a
@@ -254,7 +258,7 @@ IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
   }
 
   if (!res.mBuffer.SetCapacity(mBuffer.Length(), fallible)) {
-    return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+    return {SpecialValues::Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
   }
 
   // A string was found, so we need to copy the data we've read so far
@@ -288,21 +292,21 @@ IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
     if (type == eTerminator) {
       // Copy array TypeID and terminator from raw key
       if (!updateBufferAndIter(0)) {
-        return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+        return {SpecialValues::Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
       }
     } else if (type == eFloat || type == eDate) {
       // Copy number from raw key
       const size_t byteCount = std::min(sizeof(uint64_t), size_t(end - it - 1));
 
       if (!updateBufferAndIter(byteCount)) {
-        return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+        return {SpecialValues::Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
       }
     } else if (type == eBinary) {
       // skip all binary data
       const auto binaryLength = LengthOfEncodedBinary(it, end);
 
       if (!updateBufferAndIter(binaryLength)) {
-        return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+        return {SpecialValues::Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
       }
     } else {
       // Decode string and reencode
@@ -370,7 +374,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
   // 2. If `input` is in `seen` return invalid.
   // Note: we replace this check with a simple recursion depth check.
   if (NS_WARN_IF(aRecursionDepth == kMaxRecursionDepth)) {
-    return Invalid;
+    return SpecialValues::Invalid;
   }
 
   // 3. Jump to the appropriate step below:
@@ -383,7 +387,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
 
     // 1. If `input` is NaN then return invalid.
     if (mozilla::IsNaN(number)) {
-      return Invalid;
+      return SpecialValues::Invalid;
     }
 
     // 2. Otherwise, return a new key with type `number` and value `input`.
@@ -397,7 +401,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     nsAutoJSString string;
     if (!string.init(aCx, aVal)) {
       IDB_REPORT_INTERNAL_ERR();
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      return {SpecialValues::Exception,
+              ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
     }
     return EncodeString(string, aTypeOffset);
   }
@@ -408,7 +413,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     js::ESClass builtinClass;
     if (!js::GetBuiltinClass(aCx, object, &builtinClass)) {
       IDB_REPORT_INTERNAL_ERR();
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      return {SpecialValues::Exception,
+              ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
     }
 
     // If `input` is a Date (has a [[DateValue]] internal slot)
@@ -417,12 +423,13 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
       double ms;
       if (!js::DateGetMsecSinceEpoch(aCx, object, &ms)) {
         IDB_REPORT_INTERNAL_ERR();
-        return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+        return {SpecialValues::Exception,
+                ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
       }
 
       // 2. If `ms` is NaN then return invalid.
       if (mozilla::IsNaN(ms)) {
-        return Invalid;
+        return SpecialValues::Invalid;
       }
 
       // 3. Otherwise, return a new key with type `date` and value `ms`.
@@ -445,7 +452,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
 
   // Otherwise
   // Return invalid.
-  return Invalid;
+  return SpecialValues::Invalid;
 }
 
 // static
@@ -559,7 +566,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
   // First measure how long the encoded string will be.
   if (NS_WARN_IF(UINT32_MAX - 2 < uintptr_t(aInput.Length()))) {
     IDB_REPORT_INTERNAL_ERR();
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    return {SpecialValues::Exception,
+            ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
   }
 
   // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
@@ -583,7 +591,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
       payloadSize += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
       if (!payloadSize.isValid()) {
         IDB_REPORT_INTERNAL_ERR();
-        return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+        return {SpecialValues::Exception,
+                ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
       }
     }
   }
@@ -596,13 +605,15 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
   if (!size.isValid()) {
     IDB_REPORT_INTERNAL_ERR();
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    return {SpecialValues::Exception,
+            ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
   }
 
   char* buffer;
   if (!mBuffer.GetMutableData(&buffer, size.value())) {
     IDB_REPORT_INTERNAL_ERR();
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    return {SpecialValues::Exception,
+            ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
   }
   buffer += oldLen;
 
@@ -658,7 +669,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
   UErrorCode uerror = U_ZERO_ERROR;
   UCollator* collator = ucol_open(aLocale.get(), &uerror);
   if (NS_WARN_IF(U_FAILURE(uerror))) {
-    return {Exception, ErrorResult{NS_ERROR_FAILURE}};
+    return {SpecialValues::Exception, ErrorResult{NS_ERROR_FAILURE}};
   }
   MOZ_ASSERT(collator);
 
@@ -667,7 +678,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
       collator, ustr, length, keyBuffer.Elements(), keyBuffer.Length());
   if (sortKeyLength > (int32_t)keyBuffer.Length()) {
     if (!keyBuffer.SetLength(sortKeyLength, fallible)) {
-      return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+      return {SpecialValues::Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
     }
     sortKeyLength = ucol_getSortKey(collator, ustr, length,
                                     keyBuffer.Elements(), sortKeyLength);
@@ -675,7 +686,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
 
   ucol_close(collator);
   if (NS_WARN_IF(sortKeyLength == 0)) {
-    return {Exception, ErrorResult{NS_ERROR_FAILURE}};
+    return {SpecialValues::Exception, ErrorResult{NS_ERROR_FAILURE}};
   }
 
   return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),

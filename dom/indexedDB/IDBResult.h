@@ -46,9 +46,14 @@ constexpr inline detail::OkType<std::remove_reference_t<T>> Ok(T&& aValue) {
 
 constexpr inline detail::OkType<void> Ok() { return {}; }
 
+// Put these in a subnamespace to avoid conflicts from the combination of 1.
+// using namespace mozilla::dom::indexedDB; in cpp files, 2. the unified build
+// and 3. mozilla::dom::Exception
+namespace SpecialValues {
 constexpr const detail::FailureType Failure;
 constexpr const detail::InvalidType Invalid;
 constexpr const detail::ExceptionType Exception;
+}  // namespace SpecialValues
 
 template <typename T, IDBSpecialValue... S>
 class MOZ_MUST_USE_TYPE IDBResult;
@@ -193,7 +198,7 @@ auto IDBResultBase<T, S...>::PropagateNotOk() {
 #if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)
       [](const ValueType&) -> ResultType { MOZ_CRASH("non-value expected"); },
       [](ErrorResult& aException) -> ResultType {
-        return {Exception, std::move(aException)};
+        return {SpecialValues::Exception, std::move(aException)};
       },
       [](SpecialConstant<S> aSpecialValue) -> ResultType {
         return aSpecialValue;
@@ -205,7 +210,7 @@ auto IDBResultBase<T, S...>::PropagateNotOk() {
         if constexpr (std::is_same_v<ValueType&, decltype(aParam)>) {
           MOZ_CRASH("non-value expected");
         } else if constexpr (std::is_same_v<ErrorResult&, decltype(aParam)>) {
-          return {Exception, std::move(aParam)};
+          return {SpecialValues::Exception, std::move(aParam)};
         } else {
           return aParam;
         }
