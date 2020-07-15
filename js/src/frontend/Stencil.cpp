@@ -340,6 +340,35 @@ static JSFunction* CreateFunction(JSContext* cx,
   return fun;
 }
 
+static bool InstantiateScriptSourceObject(JSContext* cx,
+                                          CompilationInfo& compilationInfo) {
+  MOZ_ASSERT(compilationInfo.source());
+
+  compilationInfo.sourceObject =
+      ScriptSourceObject::create(cx, compilationInfo.source());
+  if (!compilationInfo.sourceObject) {
+    return false;
+  }
+
+  // Off-thread compilations do all their GC heap allocation, including the
+  // SSO, in a temporary compartment. Hence, for the SSO to refer to the
+  // gc-heap-allocated values in |options|, it would need cross-compartment
+  // wrappers from the temporary compartment to the real compartment --- which
+  // would then be inappropriate once we merged the temporary and real
+  // compartments.
+  //
+  // Instead, we put off populating those SSO slots in off-thread compilations
+  // until after we've merged compartments.
+  if (!cx->isHelperThreadContext()) {
+    if (!ScriptSourceObject::initFromOptions(cx, compilationInfo.sourceObject,
+                                             compilationInfo.options)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Instantiate ModuleObject if this is a module compile.
 static bool MaybeInstantiateModule(JSContext* cx,
                                    CompilationInfo& compilationInfo) {
@@ -606,6 +635,10 @@ bool CompilationInfo::instantiateStencils() {
   if (lazy) {
     FunctionsFromExistingLazy(*this);
   } else {
+    if (!InstantiateScriptSourceObject(cx, *this)) {
+      return false;
+    }
+
     if (!MaybeInstantiateModule(cx, *this)) {
       return false;
     }
