@@ -607,13 +607,6 @@ const FEEDS_DATA = [
       "System pref that fetches content recommendations from a configurable content provider",
     // Dynamically determine if Pocket should be shown for a geo / locale
     getValue: ({ geo, locale }) => {
-      const userPreffedStoriesBool = Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.feeds.section.topstories",
-        false
-      );
-      if (!userPreffedStoriesBool) {
-        return false;
-      }
       const preffedRegionsString =
         Services.prefs.getStringPref(REGION_STORIES_CONFIG) || "";
       const preffedRegions = preffedRegionsString.split(",").map(s => s.trim());

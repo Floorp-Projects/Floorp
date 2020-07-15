@@ -556,7 +556,7 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "browser.newtabpage.activity-stream.feeds.snippets": false,
-      "browser.newtabpage.activity-stream.feeds.section.topstories": false,
+      "browser.newtabpage.activity-stream.feeds.system.topstories": false,
     },
   },
 

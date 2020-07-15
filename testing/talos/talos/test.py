@@ -1078,6 +1078,7 @@ class about_newtab_with_snippets(PageloaderTest):
             "http://fakedomain/tests/about-newtab/snippets.json",\
             "updateCycleInMs":14400000}',
             'browser.newtabpage.activity-stream.feeds.snippets': True,
+            'browser.newtabpage.activity-stream.feeds.system.topstories': True,
             'browser.newtabpage.activity-stream.feeds.section.topstories': True,
             'browser.newtabpage.activity-stream.feeds.section.topstories.options':\
             '{"provider_name":""}',
