@@ -1243,6 +1243,9 @@
         "UrlbarInterventions": {
           "type": "boolean"
         },
+        "SkipOnboarding": {
+          "type": "boolean"
+        },
         "Locked": {
           "type": "boolean"
         }
