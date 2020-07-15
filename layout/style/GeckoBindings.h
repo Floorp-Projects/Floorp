@@ -610,6 +610,8 @@ mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(
     const mozilla::dom::Document*);
 
 uint32_t Gecko_MediaFeatures_GetColorDepth(const mozilla::dom::Document*);
+uint32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
+    const mozilla::dom::Document*);
 
 void Gecko_MediaFeatures_GetDeviceSize(const mozilla::dom::Document*,
                                        nscoord* width, nscoord* height);
