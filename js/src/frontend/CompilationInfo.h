@@ -262,7 +262,6 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   void initFromLazy(BaseScript* lazy) {
     this->lazy = lazy;
-    this->sourceObject = lazy->sourceObject();
     this->enclosingScope = lazy->function()->enclosingScope();
   }
 
