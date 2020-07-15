@@ -120,23 +120,10 @@ class AlternateServerPlayback:
                     "Recorded response is a WebSocketFlow. Removing from recording list as"
                     "  WebSockets are disabled"
                 )
-            elif i.response:
-                # check if recorded request has a response associated
-                if self.mitm_version == "5.0.1":
-                    if i.response.content:
-                        # Mitmproxy 5.0.1 Cannot assemble flow with missing content
-
-                        l = self.flowmap.setdefault(self._hash(i), [])
-                        l.append(i)
-                    else:
-                        ctx.log.info(
-                             "Recorded response %s has no content. Removing from recording list"
-                             % i.request.url
-                        )
-                if self.mitm_version in ("4.0.2", "4.0.4"):
-                    # see: https://github.com/mitmproxy/mitmproxy/issues/3856
-                    l = self.flowmap.setdefault(self._hash(i), [])
-                    l.append(i)
+            elif i.response and self.mitm_version in ("4.0.2", "4.0.4", "5.1.1"):
+                # see: https://github.com/mitmproxy/mitmproxy/issues/3856
+                l = self.flowmap.setdefault(self._hash(i), [])
+                l.append(i)
             else:
                 ctx.log.info(
                     "Recorded request %s has no response. Removing from recording list"
@@ -150,6 +137,8 @@ class AlternateServerPlayback:
                 paths = paths[0].split(",")
             for path in paths:
                 ctx.log.info("Loading flows from %s" % path)
+                if not os.path.exists(path):
+                    raise Exception("File does not exist!")
                 try:
                     flows = io.read_flows_from_paths([path])
                 except exceptions.FlowReadException as e:

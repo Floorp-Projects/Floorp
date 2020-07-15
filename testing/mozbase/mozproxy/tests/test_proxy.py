@@ -64,7 +64,7 @@ def get_status_code(url, playback):
 
 def test_mitm_check_proxy(*args):
     # test setup
-    bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
+    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
     playback_recordings = "amazon.mp"
 
@@ -72,7 +72,7 @@ def test_mitm_check_proxy(*args):
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": os.path.join(here, "files", pageset_name),
-        "playback_version": '4.0.4',
+        "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "run_local": "MOZ_AUTOMATION" not in os.environ,
         "binary": "firefox",
@@ -104,14 +104,14 @@ def test_mitm_check_proxy(*args):
 @mock.patch("mozproxy.utils.ProcessHandler", new=Process)
 @mock.patch("os.kill", new=kill)
 def test_mitm(*args):
-    bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
+    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
 
     config = {
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
-        "playback_version": '4.0.4',
+        "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
@@ -145,14 +145,14 @@ def test_playback_setup_failed(*args):
 
         return _s
 
-    bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
+    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
 
     config = {
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
-        "playback_version": '4.0.4',
+        "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
@@ -182,14 +182,14 @@ def test_playback_setup_failed(*args):
 @mock.patch("mozproxy.utils.ProcessHandler", new=ProcessWithRetry)
 @mock.patch("os.kill", new=kill)
 def test_mitm_with_retry(*args):
-    bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
+    bin_name = "mitmproxy-rel-bin-5.1.1-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
 
     config = {
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
-        "playback_version": '4.0.4',
+        "playback_version": '5.1.1',
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
