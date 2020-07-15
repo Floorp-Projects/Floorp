@@ -266,7 +266,8 @@ static uint32_t FallbackOnZero(uint32_t val, uint32_t fallback) {
 TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
                              uint32_t rowLength, uint32_t width,
                              uint32_t height, uint32_t depth,
-                             gfxAlphaType srcAlphaType)
+                             gfxAlphaType srcAlphaType,
+                             const bool applyUnpackTransforms)
     : mAlignment(webgl->mPixelStore.mUnpackAlignment),
       mRowLength(rowLength),
       mImageHeight(FallbackOnZero(
@@ -286,6 +287,7 @@ TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
       mSrcAlphaType(srcAlphaType)
 
       ,
+      mApplyUnpackTransforms(applyUnpackTransforms),
       mNeedsExactUpload(false) {
   MOZ_ASSERT_IF(!IsTarget3D(target), mDepth == 1);
 }
@@ -321,7 +323,7 @@ bool TexUnpackBlob::ConvertIfNeeded(
   if (!rowLength || !rowCount) return true;
 
   const auto srcIsPremult = (mSrcAlphaType == gfxAlphaType::Premult);
-  const auto& dstIsPremult = webgl->mPixelStore.mPremultiplyAlpha;
+  auto dstIsPremult = webgl->mPixelStore.mPremultiplyAlpha;
   const auto fnHasPremultMismatch = [&]() {
     if (mSrcAlphaType == gfxAlphaType::Opaque) return false;
 
@@ -333,7 +335,12 @@ bool TexUnpackBlob::ConvertIfNeeded(
   const auto srcOrigin =
       (webgl->mPixelStore.mFlipY ? gl::OriginPos::TopLeft
                                  : gl::OriginPos::BottomLeft);
-  const auto dstOrigin = gl::OriginPos::BottomLeft;
+  auto dstOrigin = gl::OriginPos::BottomLeft;
+
+  if (!mApplyUnpackTransforms) {
+    dstIsPremult = srcIsPremult;
+    dstOrigin = srcOrigin;
+  }
 
   if (srcFormat != dstFormat) {
     webgl->GeneratePerfWarning(
@@ -405,7 +412,7 @@ TexUnpackBytes::TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target,
                                size_t availBytes)
     : TexUnpackBlob(webgl, target,
                     FallbackOnZero(webgl->mPixelStore.mUnpackRowLength, width),
-                    width, height, depth, gfxAlphaType::NonPremult),
+                    width, height, depth, gfxAlphaType::NonPremult, true),
       mIsClientData(isClientData),
       mPtr(ptr),
       mAvailBytes(availBytes) {}
@@ -585,7 +592,7 @@ TexUnpackImage::TexUnpackImage(const WebGLContext* webgl, TexImageTarget target,
                                uint32_t width, uint32_t height, uint32_t depth,
                                layers::Image* image, gfxAlphaType srcAlphaType)
     : TexUnpackBlob(webgl, target, image->GetSize().width, width, height, depth,
-                    srcAlphaType),
+                    srcAlphaType, true),
       mImage(image) {}
 
 TexUnpackImage::~TexUnpackImage() = default;
@@ -726,7 +733,7 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
   }
 
   const TexUnpackSurface surfBlob(webgl, target, mWidth, mHeight, mDepth,
-                                  dataSurf, mSrcAlphaType);
+                                  dataSurf, mSrcAlphaType, true);
 
   return surfBlob.TexOrSubImage(isSubImage, needsRespec, tex, target, level,
                                 dui, xOffset, yOffset, zOffset, pi, out_error);
@@ -740,9 +747,10 @@ TexUnpackSurface::TexUnpackSurface(const WebGLContext* webgl,
                                    TexImageTarget target, uint32_t width,
                                    uint32_t height, uint32_t depth,
                                    gfx::DataSourceSurface* surf,
-                                   gfxAlphaType srcAlphaType)
+                                   gfxAlphaType srcAlphaType,
+                                   const bool applyUnpackTransforms)
     : TexUnpackBlob(webgl, target, surf->GetSize().width, width, height, depth,
-                    srcAlphaType),
+                    srcAlphaType, applyUnpackTransforms),
       mSurf(surf) {}
 
 //////////
