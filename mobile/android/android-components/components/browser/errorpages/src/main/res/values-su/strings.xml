@@ -192,8 +192,20 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protokol Teu Dipikawanoh</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Alamatna méré protocol (e.g., <q>wxyz://</q>) anu teu dipikawanoh ku pamaluruh, ku kituna pamaluruhna teu bisa nyambung kalawan bener ka lokana.</p>
+      <ul>
+        <li>Badé muka multimédia atawa layanan non-téks lianna? Pariksa lokana pikeun kalengkepanana.</li>
+        <li>Sababaraha protokol butuh sopwér atawa plugin pihak katilu sangkan bisa dipikawanoh ku pamaluruhna.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Berkas Teu Kapanggih</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Boa itemna geus ganti ngaran, dipiceun, atawa dipindahkeun?</li>
+        <li>Aya salah ketik, kapitalisasi, atawa galat tipograpik dina alamatna?</li>
+        <li>Naha anjeun boga idin aksés nu cukup kana item anu dipundut?</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Aksés ka berkas ditolak</string>
@@ -205,8 +217,22 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Server proxy Nolak Sambungan</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Pamaluruhna disetél maké serper proksi, tapi proksina nolak sambungan.</p>
+      <ul>
+        <li>Konfigurasi proksi pamaluruhna geus bener? Pariksa setélanana sarta cobaan deui.</li>
+        <li>Layanan proksina ngidinan sambungan ti ieu jaringan?</li>
+        <li>Can bener kénéh? Cobi pundut bantuan ka administrator jaringan atawa panyadia internétna.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Server Proksi Teu Kapanggih</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Pamaluruhna disetél maké serper proksi, tapi proksina teu kapanggih.</p>
+      <ul>
+        <li>Konpigurasi proksi pamaluruhna geus bener? Pariksa setélanana sarta cobaan deui.</li>
+        <li>Perangkatna nyambung ka jaringan aktip?</li>
+        <li>Can bener kénéh? Cobi pundut bantuan ka administrator jaringan atawa panyadia internétna.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Isu loka malwér</string>
