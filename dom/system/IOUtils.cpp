@@ -13,6 +13,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Span.h"
+#include "mozilla/TextUtils.h"
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
 #include "nspr/prtypes.h"
@@ -106,6 +107,37 @@ static nsCString FormatErrorMessage(nsresult aError,
                          static_cast<uint32_t>(aError));
 }
 
+#ifdef XP_WIN
+constexpr char PathSeparator = u'\\';
+#else
+constexpr char PathSeparator = u'/';
+#endif
+
+/* static */
+bool IOUtils::IsAbsolutePath(const nsAString& aPath) {
+  // NB: This impl is adapted from js::shell::IsAbsolutePath(JSLinearString*).
+  const size_t length = aPath.Length();
+
+#ifdef XP_WIN
+  // On Windows there are various forms of absolute paths (see
+  // http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
+  // for details):
+  //
+  //   "\..."
+  //   "\\..."
+  //   "C:\..."
+  //
+  // The first two cases are handled by the common test below so we only need a
+  // specific test for the last one here.
+
+  if (length > 3 && mozilla::IsAsciiAlpha(aPath.CharAt(0)) &&
+      aPath.CharAt(1) == u':' && aPath.CharAt(2) == u'\\') {
+    return true;
+  }
+#endif
+  return length > 0 && aPath.CharAt(0) == PathSeparator;
+}
+
 // IOUtils implementation
 
 /* static */
@@ -128,6 +160,12 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
+
   uint32_t toRead = 0;
   if (aMaxBytes.WasPassed()) {
     toRead = aMaxBytes.Value();
@@ -223,6 +261,11 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
   aData.ComputeState();
   FallibleTArray<uint8_t> toWrite;
   if (!toWrite.InsertElementsAt(0, aData.Data(), aData.Length(), fallible)) {
