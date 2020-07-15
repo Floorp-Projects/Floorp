@@ -537,7 +537,8 @@ var Policies = {
     onBeforeAddons(manager, param) {
       if (param) {
         setAndLockPref("identity.fxaccounts.enabled", false);
-        setAndLockPref("trailhead.firstrun.branches", "nofirstrun");
+        setAndLockPref("trailhead.firstrun.branches", "nofirstrun-empty");
+        setAndLockPref("browser.aboutwelcome.enabled", false);
       }
     },
   },
@@ -1294,7 +1295,8 @@ var Policies = {
     onProfileAfterChange(manager, param) {
       let url = param ? param.href : "";
       setAndLockPref("startup.homepage_welcome_url", url);
-      setAndLockPref("trailhead.firstrun.branches", "nofirstrun");
+      setAndLockPref("trailhead.firstrun.branches", "nofirstrun-empty");
+      setAndLockPref("browser.aboutwelcome.enabled", false);
     },
   },
 
@@ -1845,6 +1847,10 @@ var Policies = {
       }
       if ("UrlbarInterventions" in param && !param.UrlbarInterventions) {
         manager.disallowFeature("urlbarinterventions");
+      }
+      if ("SkipOnboarding") {
+        setAndLockPref("trailhead.firstrun.branches", "nofirstrun-empty");
+        setAndLockPref("browser.aboutwelcome.enabled", false);
       }
     },
   },
