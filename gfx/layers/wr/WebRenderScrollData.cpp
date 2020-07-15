@@ -8,6 +8,7 @@
 
 #include "Layers.h"
 #include "LayersLogging.h"
+#include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/Unused.h"
 #include "nsDisplayList.h"
@@ -241,3 +242,72 @@ bool WebRenderScrollData::RepopulateMap() {
 
 }  // namespace layers
 }  // namespace mozilla
+
+namespace IPC {
+
+void ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Write(
+    Message* aMsg, const paramType& aParam) {
+  WriteParam(aMsg, aParam.mDescendantCount);
+  WriteParam(aMsg, aParam.mScrollIds);
+  WriteParam(aMsg, aParam.mAncestorTransform);
+  WriteParam(aMsg, aParam.mTransform);
+  WriteParam(aMsg, aParam.mTransformIsPerspective);
+  WriteParam(aMsg, aParam.mVisibleRegion);
+  WriteParam(aMsg, aParam.mRemoteDocumentSize);
+  WriteParam(aMsg, aParam.mReferentId);
+  WriteParam(aMsg, aParam.mEventRegionsOverride);
+  WriteParam(aMsg, aParam.mScrollbarData);
+  WriteParam(aMsg, aParam.mScrollbarAnimationId);
+  WriteParam(aMsg, aParam.mFixedPositionAnimationId);
+  WriteParam(aMsg, aParam.mFixedPositionSides);
+  WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
+  WriteParam(aMsg, aParam.mStickyPosScrollContainerId);
+  WriteParam(aMsg, aParam.mStickyScrollRangeOuter);
+  WriteParam(aMsg, aParam.mStickyScrollRangeInner);
+  WriteParam(aMsg, aParam.mStickyPositionAnimationId);
+  WriteParam(aMsg, aParam.mZoomAnimationId);
+  WriteParam(aMsg, aParam.mAsyncZoomContainerId);
+}
+
+bool ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Read(
+    const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+  return ReadParam(aMsg, aIter, &aResult->mDescendantCount) &&
+         ReadParam(aMsg, aIter, &aResult->mScrollIds) &&
+         ReadParam(aMsg, aIter, &aResult->mAncestorTransform) &&
+         ReadParam(aMsg, aIter, &aResult->mTransform) &&
+         ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective) &&
+         ReadParam(aMsg, aIter, &aResult->mVisibleRegion) &&
+         ReadParam(aMsg, aIter, &aResult->mRemoteDocumentSize) &&
+         ReadParam(aMsg, aIter, &aResult->mReferentId) &&
+         ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride) &&
+         ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
+         ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId) &&
+         ReadParam(aMsg, aIter, &aResult->mFixedPositionAnimationId) &&
+         ReadParam(aMsg, aIter, &aResult->mFixedPositionSides) &&
+         ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId) &&
+         ReadParam(aMsg, aIter, &aResult->mStickyPosScrollContainerId) &&
+         ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeOuter) &&
+         ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeInner) &&
+         ReadParam(aMsg, aIter, &aResult->mStickyPositionAnimationId) &&
+         ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
+         ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId);
+}
+
+void ParamTraits<mozilla::layers::WebRenderScrollData>::Write(
+    Message* aMsg, const paramType& aParam) {
+  WriteParam(aMsg, aParam.mScrollMetadatas);
+  WriteParam(aMsg, aParam.mLayerScrollData);
+  WriteParam(aMsg, aParam.mIsFirstPaint);
+  WriteParam(aMsg, aParam.mPaintSequenceNumber);
+}
+
+bool ParamTraits<mozilla::layers::WebRenderScrollData>::Read(
+    const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+  return ReadParam(aMsg, aIter, &aResult->mScrollMetadatas) &&
+         ReadParam(aMsg, aIter, &aResult->mLayerScrollData) &&
+         ReadParam(aMsg, aIter, &aResult->mIsFirstPaint) &&
+         ReadParam(aMsg, aIter, &aResult->mPaintSequenceNumber) &&
+         aResult->RepopulateMap();
+}
+
+}  // namespace IPC

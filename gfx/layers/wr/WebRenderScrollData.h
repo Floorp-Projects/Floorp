@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/layers/LayerAttributes.h"
-#include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/WebRenderMessageUtils.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -287,73 +286,20 @@ template <>
 struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
   typedef mozilla::layers::WebRenderLayerScrollData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mDescendantCount);
-    WriteParam(aMsg, aParam.mScrollIds);
-    WriteParam(aMsg, aParam.mAncestorTransform);
-    WriteParam(aMsg, aParam.mTransform);
-    WriteParam(aMsg, aParam.mTransformIsPerspective);
-    WriteParam(aMsg, aParam.mVisibleRegion);
-    WriteParam(aMsg, aParam.mRemoteDocumentSize);
-    WriteParam(aMsg, aParam.mReferentId);
-    WriteParam(aMsg, aParam.mEventRegionsOverride);
-    WriteParam(aMsg, aParam.mScrollbarData);
-    WriteParam(aMsg, aParam.mScrollbarAnimationId);
-    WriteParam(aMsg, aParam.mFixedPositionAnimationId);
-    WriteParam(aMsg, aParam.mFixedPositionSides);
-    WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
-    WriteParam(aMsg, aParam.mStickyPosScrollContainerId);
-    WriteParam(aMsg, aParam.mStickyScrollRangeOuter);
-    WriteParam(aMsg, aParam.mStickyScrollRangeInner);
-    WriteParam(aMsg, aParam.mStickyPositionAnimationId);
-    WriteParam(aMsg, aParam.mZoomAnimationId);
-    WriteParam(aMsg, aParam.mAsyncZoomContainerId);
-  }
+  static void Write(Message* aMsg, const paramType& aParam);
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mDescendantCount) &&
-           ReadParam(aMsg, aIter, &aResult->mScrollIds) &&
-           ReadParam(aMsg, aIter, &aResult->mAncestorTransform) &&
-           ReadParam(aMsg, aIter, &aResult->mTransform) &&
-           ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective) &&
-           ReadParam(aMsg, aIter, &aResult->mVisibleRegion) &&
-           ReadParam(aMsg, aIter, &aResult->mRemoteDocumentSize) &&
-           ReadParam(aMsg, aIter, &aResult->mReferentId) &&
-           ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride) &&
-           ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
-           ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId) &&
-           ReadParam(aMsg, aIter, &aResult->mFixedPositionAnimationId) &&
-           ReadParam(aMsg, aIter, &aResult->mFixedPositionSides) &&
-           ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyPosScrollContainerId) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeOuter) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeInner) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyPositionAnimationId) &&
-           ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
-           ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId);
-  }
+                   paramType* aResult);
 };
 
 template <>
 struct ParamTraits<mozilla::layers::WebRenderScrollData> {
   typedef mozilla::layers::WebRenderScrollData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mScrollMetadatas);
-    WriteParam(aMsg, aParam.mLayerScrollData);
-    WriteParam(aMsg, aParam.mIsFirstPaint);
-    WriteParam(aMsg, aParam.mPaintSequenceNumber);
-  }
+  static void Write(Message* aMsg, const paramType& aParam);
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mScrollMetadatas) &&
-           ReadParam(aMsg, aIter, &aResult->mLayerScrollData) &&
-           ReadParam(aMsg, aIter, &aResult->mIsFirstPaint) &&
-           ReadParam(aMsg, aIter, &aResult->mPaintSequenceNumber) &&
-           aResult->RepopulateMap();
-  }
+                   paramType* aResult);
 };
 
 }  // namespace IPC
