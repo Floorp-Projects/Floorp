@@ -12,6 +12,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsIClassifiedChannel.h"
+#include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
