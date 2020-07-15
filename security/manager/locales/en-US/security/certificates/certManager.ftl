@@ -184,6 +184,9 @@ delete-email-cert-impact = If you delete a person’s e-mail certificate, you wi
 cert-with-serial =
     .value = Certificate with serial number: { $serialNumber }
 
+# Used to indicate that the user chose not to send a client authentication certificate to a server that requested one in a TLS handshake.
+send-no-client-certificate = Send no client certificate
+
 ## Add Security Exception dialog
 add-exception-branded-warning = You are about to override how { -brand-short-name } identifies this site.
 add-exception-invalid-header = This site attempts to identify itself with invalid information.
