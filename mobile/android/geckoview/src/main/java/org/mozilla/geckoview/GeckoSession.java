@@ -3152,6 +3152,9 @@ public class GeckoSession implements Parcelable {
              */
             public final @Nullable String srcUri;
 
+            // TODO: Bug 1595822 make public
+            final List<WebExtension.Menu> extensionMenus;
+
             protected ContextElement(
                     final @Nullable String baseUri,
                     final @Nullable String linkUri,
@@ -3165,6 +3168,7 @@ public class GeckoSession implements Parcelable {
                 this.altText = altText;
                 this.type = getType(typeStr);
                 this.srcUri = srcUri;
+                this.extensionMenus = null;
             }
 
             private static int getType(final String name) {

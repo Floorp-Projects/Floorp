@@ -1864,4 +1864,259 @@ public class WebExtension {
             }
         }
     }
+
+    // TODO: make public bug 1595822
+
+    @IntDef(flag = true,
+            value = {Context.NONE, Context.BOOKMARK, Context.BROWSER_ACTION,
+                    Context.PAGE_ACTION, Context.TAB, Context.TOOLS_MENU})
+
+    /* package */ @interface ContextFlags {}
+
+    /**
+     * Flags to determine which contexts a menu item should be shown in.
+     * See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType>
+     *     menus.ContextType</a>.
+     **/
+    static class Context {
+        /**
+         * Shows the menu item in no contexts.
+         */
+        static final int NONE = 0;
+
+        /**
+         * Shows the menu item when the user context-clicks an item on the bookmarks toolbar, bookmarks menu,
+         * bookmarks sidebar, or Library window.
+         */
+        static final int BOOKMARK = 1 << 1;
+
+        /**
+         * Shows the menu item when the user context-clicks the extension's browser action.
+         */
+        static final int BROWSER_ACTION = 1 << 2;
+
+        /**
+         * Shows the menu item when the user context-clicks on the extension's page action.
+         */
+        static final int PAGE_ACTION = 1 << 3;
+
+        /**
+         * Shows when the user context-clicks on a tab (such as the element on the tab bar.)
+         */
+        static final int TAB = 1 << 4;
+
+        /**
+         * Adds the item to the browser's tools menu.
+         */
+        static final int TOOLS_MENU = 1 << 5;
+
+    }
+
+    // TODO: make public bug 1595822
+
+    /**
+     * Represents an addition to the context menu by an extension.
+     *
+     * In the <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus>menus</a>
+     * API, all elements added by one extension should be collapsed under one header. This class represents
+     * all of one extension's menu items, as well as the icon that should be used with that header.
+     *
+     */
+    static class Menu {
+        /**
+        * List of menu items that belong to this extension.
+        */
+        final @NonNull List<MenuItem> items;
+
+        /**
+         * Icon for this extension.
+         */
+        final @Nullable Icon icon;
+
+        /**
+         * Title for the menu header.
+         */
+        final @Nullable String title;
+
+        /**
+         * The extension adding this Menu to the context menu.
+         */
+        final @NonNull WebExtension extension;
+
+        /* package */ Menu(final @NonNull WebExtension extension, final GeckoBundle bundle) {
+            this.extension = extension;
+            title = bundle.getString("title", "");
+            GeckoBundle[] items = bundle.getBundleArray("items");
+            this.items = new ArrayList<>();
+            if (items != null) {
+                for (GeckoBundle item : items) {
+                    this.items.add(new MenuItem(this.extension, item));
+                }
+            }
+
+            if (bundle.containsKey("icon")) {
+                icon = new Icon(bundle.getBundle("icon"));
+            } else {
+                icon = null;
+            }
+        }
+
+        /**
+         * Notifies the extension that a user has opened the context menu.
+         */
+        void show() {
+            final GeckoBundle bundle = new GeckoBundle(1);
+            bundle.putString("extensionId", extension.id);
+
+            EventDispatcher.getInstance().dispatch(
+                    "GeckoView:WebExtension:MenuShow", bundle);
+        }
+
+        /**
+         * Notifies the extension that a user has hidden the context menu.
+         */
+        void hide() {
+            final GeckoBundle bundle = new GeckoBundle(1);
+            bundle.putString("extensionId", extension.id);
+
+            EventDispatcher.getInstance().dispatch(
+                     "GeckoView:WebExtension:MenuHide", bundle);
+        }
+    }
+
+    // TODO: make public bug 1595822
+    /**
+     * Represents an item in the menu.
+     *
+     *  If there is only one menu item in the list, the embedder should display that item as itself,
+     *  not under a header.
+     */
+    static class MenuItem {
+
+        @IntDef(flag = false,
+                value = {MenuType.NORMAL, MenuType.CHECKBOX, MenuType.RADIO, MenuType.SEPARATOR})
+
+        /* package */ @interface Type {}
+
+        /**
+         * A set of constants that represents the display type of this menu item.
+         */
+        static class MenuType {
+            /**
+             * This represents a menu item that just displays a label.
+             * <p>
+             * See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ItemType>
+             * menus.ItemType.normal</a>
+             */
+            static final int NORMAL = 0;
+
+            /**
+             * This represents a menu item that can be selected and deselected.
+             * <p>
+             * See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ItemType>
+             * menus.ItemType.checkbox</a>
+             */
+            static final int CHECKBOX = 1;
+
+            /**
+             * This represents a menu item that is one of a group of choices. All menu items for an
+             * extension that are of type radio are part of one radio group.
+             * <p>
+             * See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ItemType>
+             * menus.ItemType.radio</a>
+             */
+            static final int RADIO = 2;
+
+            /**
+             * This represents a line separating elements.
+             * <p>
+             * See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ItemType>
+             * menus.ItemType.separator</a>
+             */
+            static final int SEPARATOR = 3;
+        }
+
+
+
+        /**
+         * Direct children for this menu item. These should be displayed as a sub-menu.
+         *
+         * See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/create>
+         *     createProperties.parentId</a>
+         */
+        final @Nullable  List<MenuItem> children;
+
+        /**
+         * One of the {@link Type} constants. Determines the type of the action.
+         */
+        final @Type int type;
+
+        /** The id of this menu item. See <a href=https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/create>
+         * createProperties.id</a>
+         */
+        final @Nullable String id;
+
+        /**
+         * Determines if the menu item should be currently displayed.
+         */
+        final boolean visible;
+
+        /**
+         * The title to be displayed for this menu item.
+         */
+        final @Nullable String title;
+
+        /**
+         * Whether or not the menu item is initially checked. Defaults to false.
+         */
+        final boolean checked;
+
+        /**
+         * Contexts that this menu item should be shown in.
+         */
+        final @ContextFlags int contexts;
+
+        /**
+         * Icon for this menu item.
+         */
+        final @Nullable Icon icon;
+
+        final WebExtension mExtension;
+
+        /**
+         * Creates a new menu item using a bundle and a reference to the extension that
+         * this item belongs to.
+         *
+         * @param extension WebExtension object.
+         * @param bundle GeckoBundle containing the item information.
+         */
+        /* package */ MenuItem(final WebExtension extension, final GeckoBundle bundle) {
+            title = bundle.getString("title");
+            mExtension = extension;
+            checked = bundle.getBoolean("checked", false);
+            visible = bundle.getBoolean("visible", true);
+            id = bundle.getString("id");
+            contexts  = bundle.getInt("contexts");
+            type = bundle.getInt("type");
+            children = new ArrayList<>();
+
+            if (bundle.containsKey("icon")) {
+                icon = new Icon(bundle.getBundle("icon"));
+            } else {
+                icon = null;
+            }
+        }
+
+        /**
+         * Notifies the extension that the user has clicked on this menu item.
+         */
+        void click() {
+            final GeckoBundle bundle = new GeckoBundle(2);
+            bundle.putString("menuId", this.id);
+            bundle.putString("extensionId", mExtension.id);
+
+            EventDispatcher.getInstance().dispatch(
+                    "GeckoView:WebExtension:MenuClick", bundle);
+        }
+    }
 }

@@ -901,7 +901,6 @@ public class WebExtensionController {
                 openOptionsPage(message, extension);
                 return;
             }
-
             final String nativeApp = bundle.getString("nativeApp");
             if (nativeApp == null) {
                 if (BuildConfig.DEBUG) {
@@ -1365,5 +1364,10 @@ public class WebExtensionController {
         } else if (actionType == WebExtension.Action.TYPE_PAGE_ACTION) {
             delegate.onPageAction(extension, message.session, action);
         }
+    }
+
+    // TODO: implement bug 1595822
+    /* package */ static GeckoResult<List<WebExtension.Menu>> getMenu(final GeckoBundle menuArrayBundle) {
+        return null;
     }
 }
