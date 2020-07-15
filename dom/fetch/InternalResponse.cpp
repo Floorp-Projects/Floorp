@@ -32,9 +32,11 @@ nsCOMPtr<nsIInputStream> TakeStreamFromStorage(
   MOZ_ASSERT(aVariant.type() == BodyStreamVariant::TParentToParentStream);
   const auto& uuid = aVariant.get_ParentToParentStream().uuid();
 
-  auto stream = IPCBlobInputStreamStorage::Get()->ForgetStream(uuid);
+  auto storageOrErr = IPCBlobInputStreamStorage::Get();
+  MOZ_ASSERT(storageOrErr.isOk());
+  auto storage = storageOrErr.unwrap();
+  auto stream = storage->ForgetStream(uuid);
   MOZ_ASSERT(stream);
-
   return stream;
 }
 
