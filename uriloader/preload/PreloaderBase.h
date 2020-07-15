@@ -175,8 +175,7 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
     NS_DECL_ISUPPORTS
     NS_DECL_NSITIMERCALLBACK
 
-    UsageTimer(PreloaderBase* aPreload, dom::Document* aDocument)
-        : mDocument(aDocument), mPreload(aPreload) {}
+    UsageTimer(PreloaderBase* aPreload, dom::Document* aDocument);
 
    private:
     ~UsageTimer() = default;
