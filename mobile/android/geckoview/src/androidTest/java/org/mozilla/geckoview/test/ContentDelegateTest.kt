@@ -164,13 +164,14 @@ class ContentDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("full-screen-api.allow-trusted-requests-only" to false))
         mainSession.loadTestPath(FULLSCREEN_PATH)
         mainSession.waitForPageStop()
-        mainSession.evaluateJS("document.querySelector('#fullscreen').requestFullscreen(); true")
+        val promise = mainSession.evaluatePromiseJS("document.querySelector('#fullscreen').requestFullscreen()")
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
                 assertThat("Div went fullscreen", fullScreen, equalTo(true))
             }
         })
+        promise.value
     }
 
     private fun waitForFullscreenExit() {
@@ -184,8 +185,9 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @Test fun fullscreen() {
         goFullscreen()
-        mainSession.evaluateJS("document.exitFullscreen(); true")
+        val promise = mainSession.evaluatePromiseJS("document.exitFullscreen()")
         waitForFullscreenExit()
+        promise.value
     }
 
     @Test fun sessionExitFullscreen() {
