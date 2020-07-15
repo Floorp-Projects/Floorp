@@ -25,6 +25,7 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/PendingAnimationTracker.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIFrame.h"
