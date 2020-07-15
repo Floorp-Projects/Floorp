@@ -34,7 +34,8 @@ ChromiumCDMParent::ChromiumCDMParent(GMPContentParent* aContentParent,
       mContentParent(aContentParent),
       mVideoShmemLimit(StaticPrefs::media_eme_chromium_api_video_shmems()) {
   GMP_LOG_DEBUG(
-      "ChromiumCDMParent::ChromiumCDMParent(this=%p, contentParent=%p, id=%u)",
+      "ChromiumCDMParent::ChromiumCDMParent(this=%p, contentParent=%p, "
+      "id=%" PRIu32 ")",
       this, aContentParent, aPluginId);
 }
 
@@ -136,9 +137,10 @@ void ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
 
 void ChromiumCDMParent::LoadSession(uint32_t aPromiseId, uint32_t aSessionType,
                                     nsString aSessionId) {
-  GMP_LOG_DEBUG(
-      "ChromiumCDMParent::LoadSession(this=%p, pid=%u, type=%u, sid=%s)", this,
-      aPromiseId, aSessionType, NS_ConvertUTF16toUTF8(aSessionId).get());
+  GMP_LOG_DEBUG("ChromiumCDMParent::LoadSession(this=%p, pid=%" PRIu32
+                ", type=%" PRIu32 ", sid=%s)",
+                this, aPromiseId, aSessionType,
+                NS_ConvertUTF16toUTF8(aSessionId).get());
   if (mIsShutdown) {
     RejectPromiseShutdown(aPromiseId);
     return;
@@ -381,8 +383,8 @@ ipc::IPCResult ChromiumCDMParent::Recv__delete__() {
 ipc::IPCResult ChromiumCDMParent::RecvOnResolvePromiseWithKeyStatus(
     const uint32_t& aPromiseId, const uint32_t& aKeyStatus) {
   GMP_LOG_DEBUG(
-      "ChromiumCDMParent::RecvOnResolvePromiseWithKeyStatus(this=%p, pid=%u, "
-      "keystatus=%u)",
+      "ChromiumCDMParent::RecvOnResolvePromiseWithKeyStatus(this=%p, "
+      "pid=%" PRIu32 ", keystatus=%" PRIu32 ")",
       this, aPromiseId, aKeyStatus);
   if (!mCDMCallback || mIsShutdown) {
     return IPC_OK();
@@ -396,8 +398,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolvePromiseWithKeyStatus(
 ipc::IPCResult ChromiumCDMParent::RecvOnResolveNewSessionPromise(
     const uint32_t& aPromiseId, const nsCString& aSessionId) {
   GMP_LOG_DEBUG(
-      "ChromiumCDMParent::RecvOnResolveNewSessionPromise(this=%p, pid=%u, "
-      "sid=%s)",
+      "ChromiumCDMParent::RecvOnResolveNewSessionPromise(this=%p, pid=%" PRIu32
+      ", sid=%s)",
       this, aPromiseId, aSessionId.get());
   if (!mCDMCallback || mIsShutdown) {
     return IPC_OK();
@@ -420,8 +422,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolveNewSessionPromise(
 ipc::IPCResult ChromiumCDMParent::RecvResolveLoadSessionPromise(
     const uint32_t& aPromiseId, const bool& aSuccessful) {
   GMP_LOG_DEBUG(
-      "ChromiumCDMParent::RecvResolveLoadSessionPromise(this=%p, pid=%u, "
-      "successful=%d)",
+      "ChromiumCDMParent::RecvResolveLoadSessionPromise(this=%p, pid=%" PRIu32
+      ", successful=%d)",
       this, aPromiseId, aSuccessful);
   if (!mCDMCallback || mIsShutdown) {
     return IPC_OK();
@@ -433,8 +435,8 @@ ipc::IPCResult ChromiumCDMParent::RecvResolveLoadSessionPromise(
 }
 
 void ChromiumCDMParent::ResolvePromise(uint32_t aPromiseId) {
-  GMP_LOG_DEBUG("ChromiumCDMParent::ResolvePromise(this=%p, pid=%u)", this,
-                aPromiseId);
+  GMP_LOG_DEBUG("ChromiumCDMParent::ResolvePromise(this=%p, pid=%" PRIu32 ")",
+                this, aPromiseId);
 
   // Note: The MediaKeys rejects all pending DOM promises when it
   // initiates shutdown.
@@ -454,8 +456,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolvePromise(
 void ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
                                       ErrorResult&& aException,
                                       const nsCString& aErrorMessage) {
-  GMP_LOG_DEBUG("ChromiumCDMParent::RejectPromise(this=%p, pid=%u)", this,
-                aPromiseId);
+  GMP_LOG_DEBUG("ChromiumCDMParent::RejectPromise(this=%p, pid=%" PRIu32 ")",
+                this, aPromiseId);
   // Note: The MediaKeys rejects all pending DOM promises when it
   // initiates shutdown.
   if (!mCDMCallback || mIsShutdown) {
@@ -570,9 +572,9 @@ DecryptStatus ToDecryptStatus(uint32_t aStatus) {
 
 ipc::IPCResult ChromiumCDMParent::RecvDecryptFailed(const uint32_t& aId,
                                                     const uint32_t& aStatus) {
-  GMP_LOG_DEBUG(
-      "ChromiumCDMParent::RecvDecryptFailed(this=%p, id=%u, status=%u)", this,
-      aId, aStatus);
+  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecryptFailed(this=%p, id=%" PRIu32
+                ", status=%" PRIu32 ")",
+                this, aId, aStatus);
 
   if (mIsShutdown) {
     MOZ_ASSERT(mDecrypts.IsEmpty());
@@ -592,7 +594,8 @@ ipc::IPCResult ChromiumCDMParent::RecvDecryptFailed(const uint32_t& aId,
 ipc::IPCResult ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
                                                 const uint32_t& aStatus,
                                                 ipc::Shmem&& aShmem) {
-  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecrypted(this=%p, id=%u, status=%u)",
+  GMP_LOG_DEBUG("ChromiumCDMParent::RecvDecrypted(this=%p, id=%" PRIu32
+                ", status=%" PRIu32 ")",
                 this, aId, aStatus);
 
   // We must deallocate the shmem once we've copied the result out of it
@@ -865,8 +868,9 @@ ipc::IPCResult ChromiumCDMParent::RecvDecodeFailed(const uint32_t& aStatus) {
       MediaResult(
           NS_ERROR_DOM_MEDIA_FATAL_ERR,
           RESULT_DETAIL(
-              "ChromiumCDMParent::RecvDecodeFailed with status=%" PRIu32,
-              aStatus)),
+              "ChromiumCDMParent::RecvDecodeFailed with status %s (%" PRIu32
+              ")",
+              CdmStatusToString(aStatus), aStatus)),
       __func__);
   return IPC_OK();
 }
@@ -959,8 +963,9 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMParent::InitializeVideoDecoder(
 
 ipc::IPCResult ChromiumCDMParent::RecvOnDecoderInitDone(
     const uint32_t& aStatus) {
-  GMP_LOG_DEBUG("ChromiumCDMParent::RecvOnDecoderInitDone(this=%p, status=%u)",
-                this, aStatus);
+  GMP_LOG_DEBUG(
+      "ChromiumCDMParent::RecvOnDecoderInitDone(this=%p, status=%" PRIu32 ")",
+      this, aStatus);
   if (mIsShutdown) {
     MOZ_ASSERT(mInitVideoDecoderPromise.IsEmpty());
     return IPC_OK();
@@ -972,7 +977,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnDecoderInitDone(
     mInitVideoDecoderPromise.RejectIfExists(
         MediaResult(
             NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL("CDM init decode failed with %" PRIu32, aStatus)),
+            RESULT_DETAIL("CDM init decode failed with status %s (%" PRIu32 ")",
+                          CdmStatusToString(aStatus), aStatus)),
         __func__);
   }
   return IPC_OK();
