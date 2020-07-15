@@ -1223,6 +1223,39 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 nsresult WhiteSpaceVisibilityKeeper::
     MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
         HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete) {
+  if (NS_WARN_IF(!aRangeToDelete.IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange(
+          aHTMLEditor, aRangeToDelete, editingHost);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::"
+        "MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange() failed");
+    return rv;
+  }
+  if (editingHost != aHTMLEditor.GetActiveEditingHost()) {
+    NS_WARNING("Active editing host was changed");
+    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
+  rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAtStartOfDeletingRange(
+          aHTMLEditor, aRangeToDelete, editingHost);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "WhiteSpaceVisibilityKeeper::"
+      "MakeSureToKeepVisibleStateOfWhiteSpacesAtStartOfDeletingRange() failed");
+  return rv;
+}
+
+// static
+nsresult WhiteSpaceVisibilityKeeper::
+    MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange(
+        HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
+        Element* aEditingHost) {
   // this routine adjust white-space before *this* and after aEndObject
   // in preperation for the two areas to become adjacent after the
   // intervening content is deleted.  It's overly agressive right
@@ -1234,13 +1267,215 @@ nsresult WhiteSpaceVisibilityKeeper::
     return NS_ERROR_INVALID_ARG;
   }
 
-  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentDataAtStart(aRangeToDelete.StartRef(),
-                                           editingHost);
+                                           aEditingHost);
   const bool deleteStartEqualsOrIsBeforeTextStart =
       aRangeToDelete.StartRef().EqualsOrIsBefore(
           textFragmentDataAtStart.StartRef());
-  TextFragmentData textFragmentDataAtEnd(aRangeToDelete.EndRef(), editingHost);
+  TextFragmentData textFragmentDataAtEnd(aRangeToDelete.EndRef(), aEditingHost);
+  const bool deleteEndIsAfterTextEnd =
+      textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(aRangeToDelete.EndRef());
+  if (deleteStartEqualsOrIsBeforeTextStart && deleteEndIsAfterTextEnd) {
+    return NS_OK;
+  }
+
+  const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
+      !deleteStartEqualsOrIsBeforeTextStart
+          ? textFragmentDataAtStart
+                .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
+                    aRangeToDelete.StartRef())
+          : EditorDOMRange();
+  const Maybe<const VisibleWhiteSpacesData>
+      nonPreformattedVisibleWhiteSpacesAtStart =
+          !deleteStartEqualsOrIsBeforeTextStart &&
+                  !textFragmentDataAtStart.IsPreformatted() &&
+                  !invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()
+              ? Some(textFragmentDataAtStart.VisibleWhiteSpacesDataRef())
+              : Nothing();
+  const PointPosition
+      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
+          nonPreformattedVisibleWhiteSpacesAtStart.isSome() &&
+                  nonPreformattedVisibleWhiteSpacesAtStart.ref().IsInitialized()
+              ? nonPreformattedVisibleWhiteSpacesAtStart.ref().ComparePoint(
+                    aRangeToDelete.StartRef())
+              : PointPosition::NotInSameDOMTree;
+  const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
+      !deleteEndIsAfterTextEnd
+          ? textFragmentDataAtEnd
+                .GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
+                    aRangeToDelete.EndRef())
+          : EditorDOMRange();
+  const Maybe<const VisibleWhiteSpacesData>
+      nonPreformattedVisibleWhiteSpacesAtEnd =
+          !deleteEndIsAfterTextEnd && !textFragmentDataAtEnd.IsPreformatted() &&
+                  !invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()
+              ? Some(textFragmentDataAtEnd.VisibleWhiteSpacesDataRef())
+              : Nothing();
+  const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
+      nonPreformattedVisibleWhiteSpacesAtEnd.isSome() &&
+              nonPreformattedVisibleWhiteSpacesAtEnd.ref().IsInitialized()
+          ? nonPreformattedVisibleWhiteSpacesAtEnd.ref().ComparePoint(
+                aRangeToDelete.EndRef())
+          : PointPosition::NotInSameDOMTree;
+  const bool followingContentMayBecomeFirstVisibleContent =
+      textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
+          aRangeToDelete.StartRef());
+  const bool precedingContentMayBecomeInvisible =
+      textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
+          aRangeToDelete.EndRef());
+
+  EditorDOMPoint startToDelete(aRangeToDelete.StartRef());
+  if (!deleteEndIsAfterTextEnd) {
+    // If deleting range is followed by invisible trailing white-spaces, we need
+    // to remove it for making them not visible.
+    if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
+      if (!invisibleTrailingWhiteSpaceRangeAtEnd.Collapsed()) {
+        // XXX Why don't we remove all invisible white-spaces?
+        MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeAtEnd.StartRef() ==
+                   aRangeToDelete.EndRef());
+        // startToDelete will be referred bellow so that we need to keep
+        // it a valid point.
+        AutoEditorDOMPointChildInvalidator forgetChild(startToDelete);
+        nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+            invisibleTrailingWhiteSpaceRangeAtEnd.StartRef(),
+            invisibleTrailingWhiteSpaceRangeAtEnd.EndRef());
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+          return rv;
+        }
+      }
+    }
+    // If end of the deleting range is followed by visible white-spaces which
+    // is not preformatted, we might need to replace the following ASCII
+    // white-spaces with an NBSP.
+    else if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
+                 PointPosition::StartOfFragment ||
+             pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
+                 PointPosition::MiddleOfFragment) {
+      // If start of deleting range follows white-spaces or end of delete
+      // will be start of a line, the following text cannot start with an
+      // ASCII white-space for keeping it visible.
+      if (followingContentMayBecomeFirstVisibleContent) {
+        EditorDOMPointInText nextCharOfStartOfEnd =
+            textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
+                aRangeToDelete.EndRef());
+        if (nextCharOfStartOfEnd.IsSet() &&
+            !nextCharOfStartOfEnd.IsEndOfContainer() &&
+            nextCharOfStartOfEnd.IsCharASCIISpace()) {
+          // startToDelete will be referred bellow so that we need to keep
+          // it a valid point.
+          AutoEditorDOMPointChildInvalidator forgetChild(startToDelete);
+          if (nextCharOfStartOfEnd.IsStartOfContainer() ||
+              nextCharOfStartOfEnd.IsPreviousCharASCIISpace()) {
+            nextCharOfStartOfEnd =
+                textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
+                    nextCharOfStartOfEnd);
+          }
+          EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+              textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
+                  nextCharOfStartOfEnd);
+          nsresult rv =
+              WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+                  aHTMLEditor, nextCharOfStartOfEnd,
+                  endOfCollapsibleASCIIWhiteSpaces);
+          if (NS_FAILED(rv)) {
+            NS_WARNING(
+                "WhiteSpaceVisibilityKeeper::"
+                "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+            return rv;
+          }
+        }
+      }
+    }
+  }
+
+  if (deleteStartEqualsOrIsBeforeTextStart) {
+    return NS_OK;
+  }
+
+  // If deleting range follows invisible leading white-spaces, we need to
+  // remove them for making them not visible.
+  if (invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()) {
+    if (invisibleLeadingWhiteSpaceRangeAtStart.Collapsed()) {
+      return NS_OK;
+    }
+
+    // XXX Why don't we remove all leading white-spaces?
+    // XXX Different from the other similar methods, startToDelete may be
+    //     different from end of invisibleLeadingWhiteSpaceRangeAtStart.
+    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        invisibleLeadingWhiteSpaceRangeAtStart.StartRef(), startToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+    return rv;
+  }
+
+  // If start of the deleting range follows visible white-spaces which is not
+  // preformatted, we might need to replace previous ASCII white-spaces with
+  // an NBSP.
+  if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
+          PointPosition::MiddleOfFragment ||
+      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
+          PointPosition::EndOfFragment) {
+    // If end of the deleting range is (was) followed by white-spaces or
+    // previous character of start of deleting range will be immediately
+    // before a block boundary, the text cannot ends with an ASCII white-space
+    // for keeping it visible.
+    if (precedingContentMayBecomeInvisible) {
+      EditorDOMPointInText atPreviousCharOfStart =
+          textFragmentDataAtStart.GetPreviousEditableCharPoint(startToDelete);
+      if (atPreviousCharOfStart.IsSet() &&
+          !atPreviousCharOfStart.IsEndOfContainer() &&
+          atPreviousCharOfStart.IsCharASCIISpace()) {
+        if (atPreviousCharOfStart.IsStartOfContainer() ||
+            atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
+          atPreviousCharOfStart =
+              textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
+                  atPreviousCharOfStart);
+        }
+        EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+            textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
+                atPreviousCharOfStart);
+        nsresult rv =
+            WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+                aHTMLEditor, atPreviousCharOfStart,
+                endOfCollapsibleASCIIWhiteSpaces);
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP()"
+              " failed");
+          return rv;
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// static
+nsresult WhiteSpaceVisibilityKeeper::
+    MakeSureToKeepVisibleStateOfWhiteSpacesAtStartOfDeletingRange(
+        HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
+        Element* aEditingHost) {
+  // this routine adjust white-space before *this* and after aEndObject
+  // in preperation for the two areas to become adjacent after the
+  // intervening content is deleted.  It's overly agressive right
+  // now.  There might be a block boundary remaining between them after
+  // the deletion, in which case these adjstments are unneeded (though
+  // I don't think they can ever be harmful?)
+
+  if (NS_WARN_IF(!aRangeToDelete.IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  TextFragmentData textFragmentDataAtStart(aRangeToDelete.StartRef(),
+                                           aEditingHost);
+  const bool deleteStartEqualsOrIsBeforeTextStart =
+      aRangeToDelete.StartRef().EqualsOrIsBefore(
+          textFragmentDataAtStart.StartRef());
+  TextFragmentData textFragmentDataAtEnd(aRangeToDelete.EndRef(), aEditingHost);
   const bool deleteEndIsAfterTextEnd =
       textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(aRangeToDelete.EndRef());
   if (deleteStartEqualsOrIsBeforeTextStart && deleteEndIsAfterTextEnd) {

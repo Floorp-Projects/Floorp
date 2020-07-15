@@ -1221,6 +1221,21 @@ class WhiteSpaceVisibilityKeeper final {
 
  private:
   /**
+   * MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange() and
+   * MakeSureToKeepVisibleStateOfWhiteSpacesAtStartOfDeletingRange() are
+   * helper methods of
+   * MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange().
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange(
+      HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
+      Element* aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  MakeSureToKeepVisibleStateOfWhiteSpacesAtStartOfDeletingRange(
+      HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
+      Element* aEditingHost);
+
+  /**
    * MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() may delete
    * invisible white-spaces for keeping make them invisible and/or may replace
    * ASCII white-spaces with NBSPs for making visible white-spaces to keep
