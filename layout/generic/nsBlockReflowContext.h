@@ -9,9 +9,9 @@
 #ifndef nsBlockReflowContext_h___
 #define nsBlockReflowContext_h___
 
-#include "nsIFrame.h"
 #include "mozilla/ReflowOutput.h"
 
+class nsIFrame;
 class nsLineBox;
 class nsPresContext;
 namespace mozilla {

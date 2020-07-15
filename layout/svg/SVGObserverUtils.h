@@ -12,16 +12,18 @@
 #include "FrameProperties.h"
 #include "mozilla/dom/Element.h"
 #include "nsID.h"
-#include "nsIFrame.h"
+#include "nsIFrame.h"  // only for LayoutFrameType
 #include "nsIMutationObserver.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
 #include "nsIReferrerInfo.h"
 #include "nsStringFwd.h"
 #include "nsStubMutationObserver.h"
+#include "nsStyleStruct.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsAtom;
+class nsIFrame;
 class nsIURI;
 
 namespace mozilla {

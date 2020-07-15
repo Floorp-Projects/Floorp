@@ -21,7 +21,6 @@
 #include "mozilla/Attributes.h"
 
 class imgIContainer;
-class nsIFrame;
 class nsPresContext;
 class nsIURI;
 class nsIPrincipal;

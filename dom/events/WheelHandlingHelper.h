@@ -10,9 +10,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsCoord.h"
-#include "nsIFrame.h"
+#include "nsIFrame.h"  // for AutoWeakFrame only
 #include "nsPoint.h"
 
+class nsIFrame;
 class nsIScrollableFrame;
 class nsITimer;
 

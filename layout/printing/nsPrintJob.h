@@ -14,9 +14,9 @@
 #include "nsPrintObject.h"
 #include "nsPrintData.h"
 #include "nsFrameList.h"
-#include "nsIFrame.h"
 #include "nsIWebProgress.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "nsIFrame.h"  // for WeakFrame only
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
@@ -27,6 +27,7 @@
 class nsPagePrintTimer;
 class nsIDocShell;
 class nsIDocumentViewerPrint;
+class nsIFrame;
 class nsPrintObject;
 class nsIDocShell;
 class nsPageSequenceFrame;

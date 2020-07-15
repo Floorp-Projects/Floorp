@@ -11,9 +11,9 @@
 #include "nsIAccessibleTypes.h"
 #include "nsDirection.h"
 #include "WordMovementType.h"
-#include "nsIFrame.h"
 
 class nsFrameSelection;
+class nsIFrame;
 class nsRange;
 class nsIWidget;
 
