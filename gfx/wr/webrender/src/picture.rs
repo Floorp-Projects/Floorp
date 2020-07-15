@@ -4576,6 +4576,11 @@ pub struct PicturePrimitive {
     /// different depending on how much was culled.
     pub precise_local_rect: LayoutRect,
 
+    /// Store the state of the previous precise local rect
+    /// for this picture. We need this in order to know when
+    /// to invalidate segments / drop-shadow gpu cache handles.
+    pub prev_precise_local_rect: LayoutRect,
+
     /// If false, this picture needs to (re)build segments
     /// if it supports segment rendering. This can occur
     /// if the local rect of the picture changes due to
@@ -4733,6 +4738,7 @@ impl PicturePrimitive {
             spatial_node_index,
             estimated_local_rect: LayoutRect::zero(),
             precise_local_rect: LayoutRect::zero(),
+            prev_precise_local_rect: LayoutRect::zero(),
             options,
             segments_are_valid: false,
             num_render_tasks: 0,
