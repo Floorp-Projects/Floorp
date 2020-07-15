@@ -53,9 +53,9 @@ nsresult FontPreloader::BuildChannel(
 
   uint32_t securityFlags = 0;
   if (aURI->SchemeIs("file")) {
-    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
   } else {
-    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
   }
 
   nsContentPolicyType contentPolicyType =

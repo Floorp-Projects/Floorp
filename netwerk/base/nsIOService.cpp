@@ -1974,13 +1974,13 @@ nsresult nsIOService::SpeculativeConnectInternal(
   // channel we create underneath - hence it's safe to use
   // the systemPrincipal as the loadingPrincipal for this channel.
   nsCOMPtr<nsIChannel> channel;
-  rv = NewChannelFromURI(aURI,
-                         nullptr,  // aLoadingNode,
-                         loadingPrincipal,
-                         nullptr,  // aTriggeringPrincipal,
-                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                         nsIContentPolicy::TYPE_SPECULATIVE,
-                         getter_AddRefs(channel));
+  rv = NewChannelFromURI(
+      aURI,
+      nullptr,  // aLoadingNode,
+      loadingPrincipal,
+      nullptr,  // aTriggeringPrincipal,
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      nsIContentPolicy::TYPE_SPECULATIVE, getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aAnonymous) {

@@ -314,16 +314,16 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   nsSecurityFlags secFlags;
   if (CORS_NONE == corsMode) {
     // Same-origin is required for track element.
-    secFlags = nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
+    secFlags = nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT;
   } else {
-    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
     if (CORS_ANONYMOUS == corsMode) {
       secFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
     } else if (CORS_USE_CREDENTIALS == corsMode) {
       secFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
     } else {
       NS_WARNING("Unknown CORS mode.");
-      secFlags = nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
+      secFlags = nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT;
     }
   }
 

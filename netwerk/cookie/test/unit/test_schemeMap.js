@@ -57,7 +57,7 @@ add_task(async _ => {
   let channel = NetUtil.newChannel({
     uri,
     loadingPrincipal: principal,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   });
 
@@ -75,7 +75,7 @@ add_task(async _ => {
   channel = NetUtil.newChannel({
     uri,
     loadingPrincipal: principal,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   });
 
@@ -124,7 +124,7 @@ add_task(async _ => {
     let channel = NetUtil.newChannel({
       uri,
       loadingPrincipal: principal,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 
@@ -138,7 +138,7 @@ add_task(async _ => {
     channel = NetUtil.newChannel({
       uri,
       loadingPrincipal: principal,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 
@@ -200,7 +200,7 @@ add_task(async _ => {
     let channel = NetUtil.newChannel({
       uri,
       loadingPrincipal: principal,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 
@@ -251,7 +251,7 @@ add_task(async _ => {
     let channel = NetUtil.newChannel({
       uri,
       loadingPrincipal: principal,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 

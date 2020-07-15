@@ -28,7 +28,7 @@ add_task(async () => {
       loadingPrincipal:
         principal ||
         Services.scriptSecurityManager.createContentPrincipal(uri, {}),
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 

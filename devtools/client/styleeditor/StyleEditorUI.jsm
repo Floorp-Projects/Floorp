@@ -460,7 +460,8 @@ StyleEditorUI.prototype = {
         {
           uri: NetUtil.newURI(selectedFile),
           loadingNode: this._window.document,
-          securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+          securityFlags:
+            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
           contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
         },
         async (stream, status) => {

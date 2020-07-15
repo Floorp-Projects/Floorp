@@ -9495,7 +9495,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   uint32_t sandboxFlags = mBrowsingContext->GetSandboxFlags();
   nsSecurityFlags securityFlags =
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
 
   if (mLoadType == LOAD_ERROR_PAGE) {
     securityFlags |= nsILoadInfo::SEC_LOAD_ERROR_PAGE;

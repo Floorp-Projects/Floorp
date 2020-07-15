@@ -213,15 +213,15 @@ nsresult nsIncrementalDownload::ProcessTimeout() {
   // Fetch next chunk
 
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI,
-                              nsContentUtils::GetSystemPrincipal(),
-                              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                              nsIContentPolicy::TYPE_OTHER,
-                              nullptr,  // nsICookieJarSettings
-                              nullptr,  // PerformanceStorage
-                              nullptr,  // loadGroup
-                              this,     // aCallbacks
-                              mLoadFlags);
+  nsresult rv = NS_NewChannel(
+      getter_AddRefs(channel), mFinalURI, nsContentUtils::GetSystemPrincipal(),
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      nsIContentPolicy::TYPE_OTHER,
+      nullptr,  // nsICookieJarSettings
+      nullptr,  // PerformanceStorage
+      nullptr,  // loadGroup
+      this,     // aCallbacks
+      mLoadFlags);
 
   if (NS_FAILED(rv)) return rv;
 

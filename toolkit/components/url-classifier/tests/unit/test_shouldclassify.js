@@ -106,7 +106,7 @@ function setupChannel(params) {
     channel = NetUtil.newChannel({
       uri: trackingOrigin + "/evil.js",
       loadingPrincipal: principal,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType: params.contentType,
     });
   }

@@ -49,7 +49,7 @@ let prompterParent = runInParent(() => {
                                              Services.
                                              scriptSecurityManager.getSystemPrincipal(),
                                              null, // aTriggeringPrincipal
-                                             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                                              Ci.nsIContentPolicy.TYPE_OTHER);
 
   channels.channel2 = Services.io.newChannel("http://example2.com",
@@ -59,7 +59,7 @@ let prompterParent = runInParent(() => {
                                              Services.
                                              scriptSecurityManager.getSystemPrincipal(),
                                              null, // aTriggeringPrincipal
-                                             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                                              Ci.nsIContentPolicy.TYPE_OTHER);
 
   addMessageListener("proxyPrompter", function onMessage(msg) {

@@ -116,7 +116,7 @@ function makeChan(loadingUrl, url, contentPolicy) {
   return NetUtil.newChannel({
     uri: url,
     loadingPrincipal: principal,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
     contentPolicyType: contentPolicy,
   }).QueryInterface(Ci.nsIHttpChannel);
 }

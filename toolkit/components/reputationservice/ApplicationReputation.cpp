@@ -1677,7 +1677,7 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
                        nullptr,  // aLoadingNode
                        nsContentUtils::GetSystemPrincipal(),
                        nullptr,  // aTriggeringPrincipal
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER, getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 

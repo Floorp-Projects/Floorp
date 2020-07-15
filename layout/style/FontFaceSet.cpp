@@ -1352,12 +1352,12 @@ nsresult FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
   // being loaded might have a different origin from the principal of the
   // stylesheet that initiated the font load.
   // Further, we only get here for data: loads, so it doesn't really matter
-  // whether we use SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS or not, to be more
-  // restrictive we use SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS.
+  // whether we use SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT or not, to be
+  // more restrictive we use SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT.
   rv = NS_NewChannelWithTriggeringPrincipal(
       getter_AddRefs(channel), aFontFaceSrc->mURI->get(), mDocument,
       principal ? principal->NodePrincipal() : nullptr,
-      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
+      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT,
       nsIContentPolicy::TYPE_FONT);
 
   NS_ENSURE_SUCCESS(rv, rv);

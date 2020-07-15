@@ -1253,7 +1253,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
   // Open a channel to the URI
   nsCOMPtr<nsIChannel> inputChannel;
   rv = NS_NewChannel(getter_AddRefs(inputChannel), aURI, aTriggeringPrincipal,
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      aContentPolicyType, cookieJarSettings,
                      nullptr,  // aPerformanceStorage
                      nullptr,  // aLoadGroup
@@ -2513,7 +2513,7 @@ nsresult nsWebBrowserPersist::CreateChannelFromURI(nsIURI* aURI,
   *aChannel = nullptr;
 
   rv = NS_NewChannel(aChannel, aURI, nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_ARG_POINTER(*aChannel);

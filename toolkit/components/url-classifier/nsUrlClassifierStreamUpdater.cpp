@@ -129,7 +129,7 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
                        nsIChannel::LOAD_BYPASS_URL_CLASSIFIER;
   rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER,
                      nullptr,  // nsICookieJarSettings
                      nullptr,  // aPerformanceStorage

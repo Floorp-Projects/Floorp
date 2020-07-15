@@ -112,7 +112,7 @@ class FaviconLoad {
       iconInfo.node,
       iconInfo.node.nodePrincipal,
       iconInfo.node.nodePrincipal,
-      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
         Ci.nsILoadInfo.SEC_ALLOW_CHROME |
         Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT,
       Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON

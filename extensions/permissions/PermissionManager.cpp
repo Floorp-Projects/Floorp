@@ -3272,7 +3272,7 @@ already_AddRefed<nsIInputStream> PermissionManager::GetDefaultsInputStream() {
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), defaultsURI,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, nullptr);
 

@@ -66,7 +66,7 @@ add_task(async function test_converter_abort_should_stop_data_sending() {
   const loadInfo = NetUtil.newChannel({
     uri: Services.io.newURI("data:text/plain,"),
     loadingPrincipal: nullP,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   }).loadInfo;
   // Stub all the things.
@@ -124,7 +124,7 @@ add_task(async function test_converter_principal_needs_matching() {
   const loadInfo = NetUtil.newChannel({
     uri: Services.io.newURI("data:text/plain,"),
     loadingPrincipal: nullP,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   }).loadInfo;
   // Stub all the things.
