@@ -537,11 +537,11 @@ renaming_overrides_prefixing = true
   inline ~StyleOwnedSlice();
 
   Span<const T> AsSpan() const {
-    return MakeSpan(ptr, len);
+    return {ptr, len};
   }
 
   size_t Length() const {
-    return AsSpan().Length();
+    return len;
   }
 
   bool IsEmpty() const { return Length() == 0; }
