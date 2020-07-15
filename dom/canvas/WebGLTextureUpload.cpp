@@ -102,8 +102,9 @@ static UniquePtr<webgl::TexUnpackBlob> FromImageBitmap(
   // WhatWG "HTML Living Standard" (30 October 2015):
   // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
   // non-premultiplied alpha values."
-  return MakeUnique<webgl::TexUnpackSurface>(
-      webgl, target, size.x, size.y, size.z, surf, cloneData->mAlphaType);
+  return MakeUnique<webgl::TexUnpackSurface>(webgl, target, size.x, size.y,
+                                             size.z, surf,
+                                             cloneData->mAlphaType, false);
 }
 
 static UniquePtr<webgl::TexUnpackBlob> FromImageData(
@@ -150,7 +151,7 @@ static UniquePtr<webgl::TexUnpackBlob> FromImageData(
   ////
 
   return MakeUnique<webgl::TexUnpackSurface>(webgl, target, size.x, size.y,
-                                             size.z, surf, alphaType);
+                                             size.z, surf, alphaType, true);
 }
 
 UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
@@ -254,8 +255,8 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
   }
 
   MOZ_ASSERT(dataSurf);
-  return MakeUnique<webgl::TexUnpackSurface>(this, target, size.x, size.y,
-                                             size.z, dataSurf, sfer.mAlphaType);
+  return MakeUnique<webgl::TexUnpackSurface>(
+      this, target, size.x, size.y, size.z, dataSurf, sfer.mAlphaType, true);
 }
 
 ////////////////////////////////////////

@@ -50,13 +50,15 @@ class TexUnpackBlob {
   const uint32_t mDepth;
 
   const gfxAlphaType mSrcAlphaType;
+  const bool mApplyUnpackTransforms;
 
   bool mNeedsExactUpload;
 
  protected:
   TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
                 uint32_t rowLength, uint32_t width, uint32_t height,
-                uint32_t depth, gfxAlphaType srcAlphaType);
+                uint32_t depth, gfxAlphaType srcAlphaType,
+                bool applyUnpackTransforms);
 
  public:
   virtual ~TexUnpackBlob() = default;
@@ -134,7 +136,8 @@ class TexUnpackSurface final : public TexUnpackBlob {
 
   TexUnpackSurface(const WebGLContext* webgl, TexImageTarget target,
                    uint32_t width, uint32_t height, uint32_t depth,
-                   gfx::DataSourceSurface* surf, gfxAlphaType srcAlphaType);
+                   gfx::DataSourceSurface* surf, gfxAlphaType srcAlphaType,
+                   bool applyUnpackTransforms);
 
   virtual bool Validate(WebGLContext* webgl,
                         const webgl::PackingInfo& pi) override;
