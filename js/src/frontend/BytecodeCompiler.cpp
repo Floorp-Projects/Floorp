@@ -655,41 +655,6 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
   return fun;
 }
 
-ScriptSourceObject* frontend::CreateScriptSourceObject(
-    JSContext* cx, const ReadOnlyCompileOptions& options) {
-  ScriptSource* ss = cx->new_<ScriptSource>();
-  if (!ss) {
-    return nullptr;
-  }
-  ScriptSourceHolder ssHolder(ss);
-
-  if (!ss->initFromOptions(cx, options)) {
-    return nullptr;
-  }
-
-  RootedScriptSourceObject sso(cx, ScriptSourceObject::create(cx, ss));
-  if (!sso) {
-    return nullptr;
-  }
-
-  // Off-thread compilations do all their GC heap allocation, including the
-  // SSO, in a temporary compartment. Hence, for the SSO to refer to the
-  // gc-heap-allocated values in |options|, it would need cross-compartment
-  // wrappers from the temporary compartment to the real compartment --- which
-  // would then be inappropriate once we merged the temporary and real
-  // compartments.
-  //
-  // Instead, we put off populating those SSO slots in off-thread compilations
-  // until after we've merged compartments.
-  if (!cx->isHelperThreadContext()) {
-    if (!ScriptSourceObject::initFromOptions(cx, sso, options)) {
-      return nullptr;
-    }
-  }
-
-  return sso;
-}
-
 template <typename Unit>
 static ModuleObject* InternalParseModule(
     JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
