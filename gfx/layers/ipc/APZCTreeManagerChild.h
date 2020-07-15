@@ -76,6 +76,7 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
 
   mozilla::ipc::IPCResult RecvNotifyPinchGesture(
       const PinchGestureType& aType, const ScrollableLayerGuid& aGuid,
+      const LayoutDevicePoint& aFocusPoint,
       const LayoutDeviceCoord& aSpanChange, const Modifiers& aModifiers);
 
   mozilla::ipc::IPCResult RecvCancelAutoscroll(
