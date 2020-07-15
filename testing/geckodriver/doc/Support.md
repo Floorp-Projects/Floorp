@@ -37,22 +37,22 @@ and required versions of Selenium and Firefox:
   <td>0.24.0
   <td>≥ 3.11 (3.14 Python)
   <td>57
-  <td>n/a
+  <td>79
  <tr>
   <td>0.23.0
   <td>≥ 3.11 (3.14 Python)
   <td>57
-  <td>n/a
+  <td>79
  <tr>
   <td>0.22.0
   <td>≥ 3.11 (3.14 Python)
   <td>57
-  <td>n/a
+  <td>79
  <tr>
   <td>0.21.0
   <td>≥ 3.11 (3.14 Python)
   <td>57
-  <td>n/a
+  <td>79
  <tr>
   <td>0.20.1
   <td>≥ 3.5
