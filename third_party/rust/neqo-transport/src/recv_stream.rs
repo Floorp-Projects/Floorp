@@ -21,9 +21,12 @@ use crate::events::ConnectionEvents;
 use crate::flow_mgr::FlowMgr;
 use crate::stream_id::StreamId;
 use crate::{AppError, Error, Res};
-use neqo_common::{matches, qtrace};
+use neqo_common::qtrace;
 
-pub const RX_STREAM_DATA_WINDOW: u64 = 0xFFFF; // 64 KiB
+const RX_STREAM_DATA_WINDOW: u64 = 0x10_0000; // 1MiB
+
+// Export as usize for consistency with SEND_BUFFER_SIZE
+pub const RECV_BUFFER_SIZE: usize = RX_STREAM_DATA_WINDOW as usize;
 
 pub(crate) type RecvStreams = BTreeMap<StreamId, RecvStream>;
 
@@ -514,6 +517,8 @@ impl RecvStream {
             .map_or(false, RxStreamOrderer::data_ready)
     }
 
+    /// # Errors
+    /// `NoMoreData` if data and fin bit were previously read by the application.
     pub fn read(&mut self, buf: &mut [u8]) -> Res<(usize, bool)> {
         let res = match &mut self.state {
             RecvStreamState::Recv { recv_buf, .. }
@@ -522,7 +527,7 @@ impl RecvStream {
                 let bytes_read = recv_buf.read(buf);
                 let fin_read = recv_buf.buffered() == 0;
                 if fin_read {
-                    self.set_state(RecvStreamState::DataRead)
+                    self.set_state(RecvStreamState::DataRead);
                 }
                 Ok((bytes_read, fin_read))
             }
@@ -551,7 +556,6 @@ impl RecvStream {
 mod tests {
     use super::*;
     use crate::frame::Frame;
-    use neqo_common::matches;
 
     #[test]
     fn test_stream_rx() {

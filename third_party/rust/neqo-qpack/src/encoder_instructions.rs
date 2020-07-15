@@ -11,7 +11,7 @@ use crate::prefix::{
 use crate::qpack_send_buf::QPData;
 use crate::reader::{IntReader, LiteralReader, ReadByte, Reader};
 use crate::Res;
-use neqo_common::{matches, qdebug, qtrace};
+use neqo_common::{qdebug, qtrace};
 use std::mem;
 
 // The encoder only uses InsertWithNameLiteral, therefore clippy is complaining about dead_code.
