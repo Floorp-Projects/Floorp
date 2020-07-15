@@ -16,6 +16,11 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
     private ImageDecoder() {}
 
+    /**
+     * Gets the singleton instance of this class.
+     *
+     * @return the singleton {@link ImageDecoder} instance
+     */
     public static ImageDecoder instance() {
         if (instance == null) {
             instance = new ImageDecoder();
@@ -25,7 +30,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     }
 
     @WrapForJNI(dispatchTo = "gecko", stubName = "Decode")
-    private static native void nativeDecode(final String uri, final int desiredLength,
+    private static native void nativeDecode(final String uri, final int maxSize,
                                             GeckoResult<Bitmap> result);
 
     /**
@@ -55,14 +60,13 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      *
      *            e.g. if the image file is locate at /assets/test.png inside the apk, set the uri
      *            to resource://android/assets/test.png.
-     * @param desiredLength Longest size for the image in device pixel units. The resulting image
-     *                      might be slightly different if the image cannot be resized efficiently.
-     *                      If desiredLength is 0 then the image will be decoded to its natural
-     *                      size.
+     * @param maxSize Longest size for the image in device pixel units. The resulting image
+     *                might be slightly different if the image cannot be resized efficiently.
+     *                If maxSize is 0 then the image will be decoded to its natural size.
      * @return A {@link GeckoResult} to the decoded image.
      */
     @NonNull
-    public GeckoResult<Bitmap> decode(final @NonNull String uri, final int desiredLength) {
+    public GeckoResult<Bitmap> decode(final @NonNull String uri, final int maxSize) {
         if (uri == null) {
             throw new IllegalArgumentException("Uri cannot be null");
         }
@@ -70,10 +74,10 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         final GeckoResult<Bitmap> result = new GeckoResult<>();
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            nativeDecode(uri, desiredLength, result);
+            nativeDecode(uri, maxSize, result);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, this,
-                    "nativeDecode", String.class, uri, int.class, desiredLength,
+                    "nativeDecode", String.class, uri, int.class, maxSize,
                     GeckoResult.class, result);
         }
 

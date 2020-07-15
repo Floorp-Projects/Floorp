@@ -15,7 +15,7 @@ namespace widget {
 class ImageDecoderSupport final
     : public java::ImageDecoder::Natives<ImageDecoderSupport> {
  public:
-  static void Decode(jni::String::Param aUri, int32_t aDesiredLength,
+  static void Decode(jni::String::Param aUri, int32_t aMaxSize,
                      jni::Object::Param aResult);
 
  private:
