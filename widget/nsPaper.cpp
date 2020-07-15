@@ -26,3 +26,31 @@ nsPaper::GetHeight(double* aHeight) {
   *aHeight = mHeight;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPaper::GetUnwriteableMarginTop(double* aUnwriteableMarginTop) {
+  NS_ENSURE_ARG_POINTER(aUnwriteableMarginTop);
+  *aUnwriteableMarginTop = mUnwriteableMarginTop;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPaper::GetUnwriteableMarginBottom(double* aUnwriteableMarginBottom) {
+  NS_ENSURE_ARG_POINTER(aUnwriteableMarginBottom);
+  *aUnwriteableMarginBottom = mUnwriteableMarginBottom;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPaper::GetUnwriteableMarginLeft(double* aUnwriteableMarginLeft) {
+  NS_ENSURE_ARG_POINTER(aUnwriteableMarginLeft);
+  *aUnwriteableMarginLeft = mUnwriteableMarginLeft;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPaper::GetUnwriteableMarginRight(double* aUnwriteableMarginRight) {
+  NS_ENSURE_ARG_POINTER(aUnwriteableMarginRight);
+  *aUnwriteableMarginRight = mUnwriteableMarginRight;
+  return NS_OK;
+}
