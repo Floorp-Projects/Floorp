@@ -3543,6 +3543,14 @@
   value: false
   mirror: always
 
+# Allow renaming of process names to the origin on nightly
+# Setting this pref creates a privacy leak, but helps greatly with
+# debugging
+- name: fission.processOriginNames
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
