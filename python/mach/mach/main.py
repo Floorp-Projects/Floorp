@@ -36,7 +36,7 @@ from .decorators import (
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
-from .sentry import register_sentry
+from .sentry import register_sentry, NoopErrorReporter
 from .util import setenv
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r'''
@@ -317,11 +317,7 @@ To see more help for a specific command, run:
         Returns the integer exit code that should be used. 0 means success. All
         other values indicate failure.
         """
-        if self.populate_context_handler:
-            topsrcdir = self.populate_context_handler('topdir')
-            sentry = register_sentry(argv, topsrcdir)
-        else:
-            sentry = register_sentry(argv)
+        sentry = NoopErrorReporter()
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
@@ -343,6 +339,18 @@ To see more help for a specific command, run:
         orig_env = dict(os.environ)
 
         try:
+            # Load settings as early as possible so things in dispatcher.py
+            # can use them.
+            for provider in Registrar.settings_providers:
+                self.settings.register_provider(provider)
+            self.load_settings(self.settings_paths)
+
+            if self.populate_context_handler:
+                topsrcdir = self.populate_context_handler('topdir')
+                sentry = register_sentry(argv, self.settings, topsrcdir)
+            else:
+                sentry = register_sentry(argv, self.settings)
+
             if sys.version_info < (3, 0):
                 if stdin.encoding is None:
                     sys.stdin = codecs.getreader('utf-8')(stdin)
@@ -391,12 +399,6 @@ To see more help for a specific command, run:
             sys.stderr = orig_stderr
 
     def _run(self, argv, sentry):
-        # Load settings as early as possible so things in dispatcher.py
-        # can use them.
-        for provider in Registrar.settings_providers:
-            self.settings.register_provider(provider)
-        self.load_settings(self.settings_paths)
-
         context = CommandContext(cwd=self.cwd,
                                  settings=self.settings, log_manager=self.log_manager,
                                  commands=Registrar)
