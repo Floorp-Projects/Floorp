@@ -14,12 +14,15 @@ namespace IOUtils {
    */
   Promise<Uint8Array> read(DOMString path, optional unsigned long maxBytes);
   /**
-   * Atomically write |data| to a file at |path|. This operation attempts to
-   * ensure that until the data is entirely written to disk, the destination
-   * file is not modified.
+   * Attempts to safely write |data| to a file at |path|.
    *
-   * This is generally accomplished by writing to a temporary file, then
-   * performing an overwriting move.
+   * This operation can be made atomic by specifying the |tmpFile| option. If
+   * specified, then this method ensures that the destination file is not
+   * modified until the data is entirely written to the temporary file, after
+   * which point the |tmpFile| is moved to the specified |path|.
+   *
+   * The target file can also be backed up to a |backupFile| before any writes
+   * are performed to prevent data loss in case of corruption.
    *
    * @param path    A forward-slash separated path.
    * @param data    Data to write to the file at path.
@@ -47,8 +50,10 @@ dictionary WriteAtomicOptions {
    */
   DOMString backupFile;
   /**
-   * If specified, write the data to a file at |tmpPath|. Once the write is
-   * complete, the destination will be overwritten by a move.
+   * If specified, write the data to a file at |tmpPath| instead of directly to
+   * the destination. Once the write is complete, the destination will be
+   * overwritten by a move. Specifying this option will make the write a little
+   * slower, but also safer.
    */
   DOMString tmpPath;
   /**
