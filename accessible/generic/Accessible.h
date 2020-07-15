@@ -11,20 +11,18 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
 
+#include "mozilla/dom/Element.h"
+
 #include "mozilla/UniquePtr.h"
 
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
 #include "nsRect.h"
 
 struct nsRoleMapEntry;
 
-struct nsRect;
 class nsIFrame;
-class nsAtom;
 class nsIPersistentProperties;
 
 namespace mozilla {
