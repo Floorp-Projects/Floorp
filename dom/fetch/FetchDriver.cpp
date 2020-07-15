@@ -574,12 +574,12 @@ nsresult FetchDriver::HttpFetch(
 
   nsSecurityFlags secFlags = 0;
   if (mRequest->Mode() == RequestMode::Cors) {
-    secFlags |= nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    secFlags |= nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
   } else if (mRequest->Mode() == RequestMode::Same_origin ||
              mRequest->Mode() == RequestMode::Navigate) {
-    secFlags |= nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
+    secFlags |= nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT;
   } else if (mRequest->Mode() == RequestMode::No_cors) {
-    secFlags |= nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+    secFlags |= nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected request mode!");
     return NS_ERROR_UNEXPECTED;

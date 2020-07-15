@@ -108,7 +108,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
                                                         null, // aLoadingNode
                                                         systemPrincipal,
                                                         null, // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                                                         Ci.nsIContentPolicy.TYPE_OTHER);
     proxyChannel.asyncOpen(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
   },
@@ -124,7 +124,7 @@ function startup() {
                                                      null, // aLoadingNode
                                                      systemPrincipal,
                                                      null, // aTriggeringPrincipal
-                                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                                                      Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);
 }

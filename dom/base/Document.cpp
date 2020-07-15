@@ -1044,7 +1044,7 @@ nsresult ExternalResourceMap::PendingLoad::StartLoad(
   nsresult rv = NS_OK;
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), aURI, aRequestingNode,
-                     nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
+                     nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT,
                      nsIContentPolicy::TYPE_OTHER,
                      nullptr,  // aPerformanceStorage
                      loadGroup);

@@ -1535,7 +1535,7 @@ class nsContextMenu {
       uri: makeURI(linkURL),
       loadingPrincipal: this.principal,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
     });
 
     if (linkDownload) {

@@ -53,7 +53,7 @@ function sendRequest(notification) {
 
   var uri = NetUtil.newURI(path);
   var securityFlags =
-    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL |
     Ci.nsILoadInfo.SEC_COOKIES_INCLUDE;
   var principal = Services.scriptSecurityManager.createContentPrincipal(uri, {
     privateBrowsingId: 1,

@@ -1184,7 +1184,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     }
 
     nsSecurityFlags securityFlags =
-        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
         nsILoadInfo::SEC_ALLOW_CHROME;
 
     nsContentPolicyType contentPolicyType =
@@ -1318,8 +1318,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   CORSMode ourCORSMode = aLoadData.mSheet->GetCORSMode();
   nsSecurityFlags securityFlags =
       ourCORSMode == CORS_NONE
-          ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS
-          : nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+          ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT
+          : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
   if (ourCORSMode == CORS_ANONYMOUS) {
     securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
   } else if (ourCORSMode == CORS_USE_CREDENTIALS) {

@@ -47,7 +47,7 @@ var gImgPath = "http://localhost:" + server.identity.primaryPort + "/image.png";
 
 function setup_chan(path, isPrivate, callback) {
   var uri = NetUtil.newURI(gImgPath);
-  var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+  var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
   var principal = Services.scriptSecurityManager.createContentPrincipal(uri, {
     privateBrowsingId: isPrivate ? 1 : 0,
   });

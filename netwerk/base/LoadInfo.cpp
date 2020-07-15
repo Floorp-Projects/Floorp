@@ -1118,12 +1118,12 @@ LoadInfo::GetSandboxFlags(uint32_t* aResult) {
 
 NS_IMETHODIMP
 LoadInfo::GetSecurityMode(uint32_t* aFlags) {
-  *aFlags =
-      (mSecurityFlags & (nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS |
-                         nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED |
-                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
-                         nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS));
+  *aFlags = (mSecurityFlags &
+             (nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT |
+              nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED |
+              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
+              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL |
+              nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT));
   return NS_OK;
 }
 
@@ -1161,7 +1161,7 @@ NS_IMETHODIMP
 LoadInfo::GetCookiePolicy(uint32_t* aResult) {
   uint32_t policy = mSecurityFlags & sCookiePolicyMask;
   if (policy == nsILoadInfo::SEC_COOKIES_DEFAULT) {
-    policy = (mSecurityFlags & SEC_REQUIRE_CORS_DATA_INHERITS)
+    policy = (mSecurityFlags & SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT)
                  ? nsILoadInfo::SEC_COOKIES_SAME_ORIGIN
                  : nsILoadInfo::SEC_COOKIES_INCLUDE;
   }
@@ -1620,7 +1620,8 @@ const nsTArray<uint64_t>& LoadInfo::AncestorBrowsingContextIDs() {
 
 void LoadInfo::SetCorsPreflightInfo(const nsTArray<nsCString>& aHeaders,
                                     bool aForcePreflight) {
-  MOZ_ASSERT(GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS);
+  MOZ_ASSERT(GetSecurityMode() ==
+             nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT);
   MOZ_ASSERT(!mInitialSecurityCheckDone);
   mCorsUnsafeHeaders = aHeaders.Clone();
   mForcePreflight = aForcePreflight;
@@ -1637,7 +1638,8 @@ LoadInfo::GetForcePreflight(bool* aForcePreflight) {
 }
 
 void LoadInfo::SetIsPreflight() {
-  MOZ_ASSERT(GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS);
+  MOZ_ASSERT(GetSecurityMode() ==
+             nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT);
   MOZ_ASSERT(!mInitialSecurityCheckDone);
   mIsPreflight = true;
 }

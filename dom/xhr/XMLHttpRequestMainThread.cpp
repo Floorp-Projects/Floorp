@@ -2377,19 +2377,19 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
   if (mPrincipal->IsSystemPrincipal()) {
     // When chrome is loading we want to make sure to sandbox any potential
     // result document. We also want to allow cross-origin loads.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
     sandboxFlags = SANDBOXED_ORIGIN;
   } else if (IsSystemXHR()) {
     // For pages that have appropriate permissions, we want to still allow
     // cross-origin loads, but make sure that the any potential result
     // documents get the same principal as the loader.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
                nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
     loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
   } else {
     // Otherwise use CORS. Again, make sure that potential result documents
     // use the same principal as the loader.
-    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
+    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT |
                nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
