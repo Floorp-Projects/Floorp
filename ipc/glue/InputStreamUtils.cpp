@@ -283,10 +283,11 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
     if (params.type() == IPCBlobInputStreamParams::TIPCBlobInputStreamRef) {
       MOZ_ASSERT(XRE_IsParentProcess());
       const IPCBlobInputStreamRef& ref = params.get_IPCBlobInputStreamRef();
-
+      auto storage = IPCBlobInputStreamStorage::Get().unwrapOr(nullptr);
+      MOZ_ASSERT(storage);
       nsCOMPtr<nsIInputStream> stream;
-      IPCBlobInputStreamStorage::Get()->GetStream(
-          ref.id(), ref.start(), ref.length(), getter_AddRefs(stream));
+      storage->GetStream(ref.id(), ref.start(), ref.length(),
+                         getter_AddRefs(stream));
       return stream.forget();
     }
 

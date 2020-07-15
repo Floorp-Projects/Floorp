@@ -142,11 +142,13 @@ IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIInputStream> stream;
-    IPCBlobInputStreamStorage::Get()->GetStream(mActor->ID(), 0, mLength,
-                                                getter_AddRefs(stream));
-    if (stream) {
-      mState = eRunning;
-      mRemoteStream = stream;
+    auto storage = IPCBlobInputStreamStorage::Get().unwrapOr(nullptr);
+    if (storage) {
+      storage->GetStream(mActor->ID(), 0, mLength, getter_AddRefs(stream));
+      if (stream) {
+        mState = eRunning;
+        mRemoteStream = stream;
+      }
     }
   }
 }

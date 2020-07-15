@@ -27,7 +27,7 @@ class IPCBlobInputStreamStorage final : public nsIObserver {
   // This initializes the singleton and it must be called on the main-thread.
   static void Initialize();
 
-  static IPCBlobInputStreamStorage* Get();
+  static Result<RefPtr<IPCBlobInputStreamStorage>, nsresult> Get();
 
   void AddStream(nsIInputStream* aInputStream, const nsID& aID, uint64_t aSize,
                  uint64_t aChildID);
