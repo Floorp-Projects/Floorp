@@ -40,9 +40,9 @@ config = {
     "default_actions": [
         'clobber',
         'setup-avds',
-        'start-emulator',
         'download-and-extract',
         'create-virtualenv',
+        'start-emulator',
         'verify-device',
         'install',
         'run-tests',

@@ -6,9 +6,9 @@
 config = {
     "default_actions": [
         'setup-avds',
-        'start-emulator',
         'download',
         'create-virtualenv',
+        'start-emulator',
         'verify-device',
         'install',
         'run-tests',
