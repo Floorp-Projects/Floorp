@@ -17,7 +17,3 @@ CompiledModules(
     'source-search.js',
     'token-events.js',
 )
-
-DevToolsModules(
-    'source-editor.css',
-)

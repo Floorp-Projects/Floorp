@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import "resource://devtools/client/themes/variables.css";
-@import "resource://devtools/client/themes/common.css";
-@import "resource://devtools/client/themes/toolbars.css";
+@import "chrome://devtools/skin/variables.css";
+@import "chrome://devtools/skin/common.css";
+@import "chrome://devtools/skin/toolbars.css";
 
-@import "resource://devtools/client/shared/components/tree/TreeView.css";
-@import "resource://devtools/client/shared/components/tabs/Tabs.css";
+@import "chrome://devtools/content/shared/components/tree/TreeView.css";
+@import "chrome://devtools/content/shared/components/tabs/Tabs.css";
 
 @import "general.css";
 @import "search-box.css";

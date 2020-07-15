@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import "chrome://devtools/skin/widgets.css";
-@import "resource://devtools/client/shared/components/splitter/SplitBox.css";
-@import "resource://devtools/client/shared/components/tree/TreeView.css";
-@import "resource://devtools/client/shared/components/tabs/Tabs.css";
+@import "chrome://devtools/content/shared/components/splitter/SplitBox.css";
+@import "chrome://devtools/content/shared/components/tree/TreeView.css";
+@import "chrome://devtools/content/shared/components/tabs/Tabs.css";
 @import "chrome://devtools/skin/components-frame.css";
 @import "chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css";
 @import "chrome://devtools/content/shared/sourceeditor/codemirror/addon/dialog/dialog.css";
 @import "chrome://devtools/content/shared/sourceeditor/codemirror/mozilla.css";
-@import "resource://devtools/client/shared/components/MdnLink.css";
+@import "chrome://devtools/content/shared/components/MdnLink.css";
 
 /* Network panel components & styles */
 @import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
