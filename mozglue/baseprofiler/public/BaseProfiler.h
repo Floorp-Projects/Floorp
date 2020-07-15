@@ -894,7 +894,8 @@ class MOZ_RAII AutoProfilerTextMarker {
 //---------------------------------------------------------------------------
 
 // Set a user-friendly process name, used in JSON stream.
-MFBT_API void profiler_set_process_name(const std::string& aProcessName);
+MFBT_API void profiler_set_process_name(const std::string& aProcessName,
+                                        const std::string* aETLDplus1);
 
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
 // profiler is inactive.
