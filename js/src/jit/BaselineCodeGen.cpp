@@ -3356,32 +3356,12 @@ bool BaselineCompilerCodeGen::tryOptimizeBindGlobalName() {
     return false;
   }
 
-  // We can bind name to the global lexical scope if the binding already
-  // exists, is initialized, and is writable (i.e., an initialized
-  // 'let') at compile time.
+  RootedGlobalObject global(cx, &script->global());
   RootedPropertyName name(cx, script->getName(handler.pc()));
-  Rooted<LexicalEnvironmentObject*> env(cx,
-                                        &script->global().lexicalEnvironment());
-  if (Shape* shape = env->lookup(cx, name)) {
-    if (shape->writable() &&
-        !env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
-      frame.push(ObjectValue(*env));
-      return true;
-    }
-    return false;
+  if (JSObject* binding = MaybeOptimizeBindGlobalName(cx, global, name)) {
+    frame.push(ObjectValue(*binding));
+    return true;
   }
-
-  if (Shape* shape = script->global().lookup(cx, name)) {
-    // If the property does not currently exist on the global lexical
-    // scope, we can bind name to the global object if the property
-    // exists on the global and is non-configurable, as then it cannot
-    // be shadowed.
-    if (!shape->configurable()) {
-      frame.push(ObjectValue(script->global()));
-      return true;
-    }
-  }
-
   return false;
 }
 

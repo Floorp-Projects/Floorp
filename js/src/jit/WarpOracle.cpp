@@ -22,6 +22,7 @@
 #include "jit/WarpCacheIRTranspiler.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
 
@@ -508,6 +509,20 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
+      case JSOp::BindGName: {
+        RootedGlobalObject global(cx_, &script_->global());
+        RootedPropertyName name(cx_, loc.getPropertyName(script_));
+        if (JSObject* env = MaybeOptimizeBindGlobalName(cx_, global, name)) {
+          MOZ_ASSERT(env->isTenured());
+          if (!AddOpSnapshot<WarpBindGName>(alloc_, opSnapshots, offset, env)) {
+            return abort(AbortReason::Alloc);
+          }
+        } else {
+          MOZ_TRY(maybeInlineIC(opSnapshots, loc));
+        }
+        break;
+      }
+
       case JSOp::GetName:
       case JSOp::GetGName:
       case JSOp::GetProp:
@@ -538,7 +553,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::StrictEq:
       case JSOp::StrictNe:
       case JSOp::BindName:
-      case JSOp::BindGName:
       case JSOp::Add:
       case JSOp::Sub:
       case JSOp::Mul:

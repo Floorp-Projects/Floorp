@@ -36,6 +36,7 @@ class WarpScriptSnapshot;
   _(WarpRest)                    \
   _(WarpNewArray)                \
   _(WarpNewObject)               \
+  _(WarpBindGName)               \
   _(WarpBailout)                 \
   _(WarpCacheIR)                 \
   _(WarpInlinedCall)
@@ -423,6 +424,25 @@ class WarpNewObject : public WarpOpSnapshot {
       : WarpOpSnapshot(ThisKind, offset), templateObject_(templateObject) {}
 
   JSObject* templateObject() const { return templateObject_; }
+
+  void traceData(JSTracer* trc);
+
+#ifdef JS_JITSPEW
+  void dumpData(GenericPrinter& out) const;
+#endif
+};
+
+// Global environment for BindGName
+class WarpBindGName : public WarpOpSnapshot {
+  WarpGCPtr<JSObject*> globalEnv_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpBindGName;
+
+  WarpBindGName(uint32_t offset, JSObject* globalEnv)
+      : WarpOpSnapshot(ThisKind, offset), globalEnv_(globalEnv) {}
+
+  JSObject* globalEnv() const { return globalEnv_; }
 
   void traceData(JSTracer* trc);
 
