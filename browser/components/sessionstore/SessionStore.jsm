@@ -4943,8 +4943,13 @@ var SessionStoreInternal = {
         aOptions.restoreContentReason || RESTORE_TAB_CONTENT_REASON.SET_STATE,
     });
 
-    // Focus the tab's content area.
-    if (aTab.selected && !window.isBlankPageURL(uri)) {
+    // Focus the tab's content area, unless the restore is for a new tab URL or
+    // was triggered by a DocumentChannel process switch.
+    if (
+      aTab.selected &&
+      !window.isBlankPageURL(uri) &&
+      !aOptions.isRemotenessUpdate
+    ) {
       browser.focus();
     }
   },
