@@ -2864,7 +2864,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
   narr->setLength(cx, count);
 
   if (newlength > 0) {
-    narr->initDenseElements(obj, begin, newlength);
+    narr->initDenseElements(cx, obj, begin, newlength);
   }
 
   return narr;
@@ -3635,7 +3635,7 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
       if (!result->ensureElements(cx, newlength)) {
         return false;
       }
-      result->initDenseElements(arr, begin, newlength);
+      result->initDenseElements(cx, arr, begin, newlength);
     }
   }
 
