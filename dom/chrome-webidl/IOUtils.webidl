@@ -9,7 +9,7 @@ namespace IOUtils {
    * Reads up to |maxBytes| of the file at |path|. If |maxBytes| is unspecified,
    * the entire file is read.
    *
-   * @param path      A forward-slash separated path.
+   * @param path      An absolute file path.
    * @param maxBytes  The max bytes to read from the file at path.
    */
   Promise<Uint8Array> read(DOMString path, optional unsigned long maxBytes);
@@ -24,7 +24,7 @@ namespace IOUtils {
    * The target file can also be backed up to a |backupFile| before any writes
    * are performed to prevent data loss in case of corruption.
    *
-   * @param path    A forward-slash separated path.
+   * @param path    An absolute file path.
    * @param data    Data to write to the file at path.
    */
   Promise<unsigned long long> writeAtomic(DOMString path, Uint8Array data, optional WriteAtomicOptions options = {});
