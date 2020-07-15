@@ -260,7 +260,7 @@ bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
 }
 
 bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op, Imm32 imm) {
-  return op == wasm::SimdOp::I64x2ShrS && imm.value > 31;
+  return op == wasm::SimdOp::I64x2ShrS && (imm.value & 63) > 31;
 }
 #endif
 
