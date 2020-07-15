@@ -62,6 +62,7 @@
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/AbstractRange.h"  // for AbstractRange
+#include "mozilla/dom/Attr.h"           // for Attr
 #include "mozilla/dom/CharacterData.h"  // for CharacterData
 #include "mozilla/dom/DataTransfer.h"   // for DataTransfer
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement

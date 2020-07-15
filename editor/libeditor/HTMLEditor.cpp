@@ -30,6 +30,7 @@
 #include "mozilla/TextServicesDocument.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/AncestorIterator.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
