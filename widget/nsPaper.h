@@ -15,8 +15,16 @@ class nsPaper final : public nsIPaper {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAPER
   nsPaper() = delete;
-  nsPaper(const nsAString& aName, double aWidth, double aHeight)
-      : mName(aName), mWidth(aWidth), mHeight(aHeight) {}
+  nsPaper(nsAString& aName, double aWidth, double aHeight,
+          double aUnwriteableMarginTop, double aUnwriteableMarginBottom,
+          double aUnwriteableMarginLeft, double aUnwriteableMarginRight)
+      : mName(aName),
+        mWidth(aWidth),
+        mHeight(aHeight),
+        mUnwriteableMarginTop(aUnwriteableMarginTop),
+        mUnwriteableMarginBottom(aUnwriteableMarginBottom),
+        mUnwriteableMarginLeft(aUnwriteableMarginLeft),
+        mUnwriteableMarginRight(aUnwriteableMarginRight) {}
 
  private:
   ~nsPaper() = default;
@@ -24,6 +32,10 @@ class nsPaper final : public nsIPaper {
   nsString mName;
   double mWidth;
   double mHeight;
+  double mUnwriteableMarginTop;
+  double mUnwriteableMarginBottom;
+  double mUnwriteableMarginLeft;
+  double mUnwriteableMarginRight;
 };
 
 #endif /* nsPaper_h__ */

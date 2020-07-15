@@ -662,7 +662,8 @@ static nsTArray<RefPtr<nsIPaper>> GetPaperListForPrinter(LPWSTR aPrinterName) {
 
     nsAutoString paperName;
     paperName.Assign(paperNames[i].cbegin(), nameLength);
-    paperList.AppendElement(new nsPaper(paperName, width, height));
+    paperList.AppendElement(
+        new nsPaper(paperName, width, height, 0.0, 0.0, 0.0, 0.0));
   }
 
   return paperList;
