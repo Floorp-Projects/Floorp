@@ -19,13 +19,6 @@ module.exports = {
     "mozilla/no-aArgs": "error",
     // See bug 1224289.
     "mozilla/reject-importGlobalProperties": ["error", "everything"],
-    // devtools/shared/platform is special; see the README.md in that
-    // directory for details.  We reject requires using explicit
-    // subdirectories of this directory.
-    "mozilla/reject-some-requires": [
-      "error",
-      "^devtools/shared/platform/(chome|content)/",
-    ],
     "mozilla/var-only-at-top-level": "error",
     "mozilla/use-chromeutils-import": ["error", { allowCu: true }],
   },
