@@ -25,6 +25,7 @@
 #include "nsIScriptError.h"
 #include "nsIURL.h"
 #include "nsIURI.h"
+#include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 

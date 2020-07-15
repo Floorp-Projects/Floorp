@@ -217,16 +217,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                  nsICookieJarSettings* aCookieJarSettings, bool aForWorker,
                  nsIURI* aBaseURI = nullptr, nsILoadGroup* aLoadGroup = nullptr,
                  PerformanceStorage* aPerformanceStorage = nullptr,
-                 nsICSPEventListener* aCSPEventListener = nullptr) {
-    MOZ_ASSERT(aPrincipal);
-    mPrincipal = aPrincipal;
-    mBaseURI = aBaseURI;
-    mLoadGroup = aLoadGroup;
-    mCookieJarSettings = aCookieJarSettings;
-    mForWorker = aForWorker;
-    mPerformanceStorage = aPerformanceStorage;
-    mCSPEventListener = aCSPEventListener;
-  }
+                 nsICSPEventListener* aCSPEventListener = nullptr);
 
   void InitParameters(bool aAnon, bool aSystem);
 

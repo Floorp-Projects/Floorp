@@ -42,6 +42,7 @@ class nsIURI;
 class nsILoadContext;
 class nsIDocShell;
 class nsIWebBrowserPersistDocumentReceiver;
+class nsIWebProgress;
 
 namespace mozilla {
 

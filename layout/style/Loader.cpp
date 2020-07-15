@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
+#include "nsICookieJarSettings.h"
 #include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"

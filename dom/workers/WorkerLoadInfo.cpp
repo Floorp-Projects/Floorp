@@ -17,6 +17,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsICookieJarSettings.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIProtocolHandler.h"
 #include "nsIBrowserChild.h"

@@ -75,6 +75,10 @@
 #include "WorkerThread.h"
 #include "prsystem.h"
 
+#ifdef DEBUG
+#  include "nsICookieJarSettings.h"
+#endif
+
 #define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
 namespace mozilla {
