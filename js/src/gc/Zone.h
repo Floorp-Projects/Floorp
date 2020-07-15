@@ -125,7 +125,7 @@ class WeakRefMap
   using GCHashMap::GCHashMap;
   using Base = GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
                          MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
-  void sweep();
+  void sweep(gc::StoreBuffer* sbToLock);
 };
 
 }  // namespace js
