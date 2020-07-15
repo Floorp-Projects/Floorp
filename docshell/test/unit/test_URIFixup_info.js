@@ -33,10 +33,6 @@ var flagInputs = [
     Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
 ];
 
-const kDefaultToSearch = Services.prefs.getBoolPref(
-  "browser.fixup.defaultToSearch",
-  true
-);
 /*
   The following properties are supported for these test cases:
   {
@@ -516,7 +512,7 @@ var testcases = [
     alternateURI: "http://www.'.com/?",
     keywordLookup: true,
     protocolChange: true,
-    affectedByDNSForSingleWordHosts: kDefaultToSearch,
+    affectedByDNSForSingleWordHosts: true,
   },
   {
     input: "whitelisted?.com",
@@ -559,16 +555,16 @@ var testcases = [
     fixedURI: "http://mozilla5/2",
     alternateURI: "http://www.mozilla5.com/2",
     protocolChange: true,
-    keywordLookup: kDefaultToSearch,
-    affectedByDNSForSingleWordHosts: kDefaultToSearch,
+    keywordLookup: true,
+    affectedByDNSForSingleWordHosts: true,
   },
   {
     input: "mozilla/foo",
     fixedURI: "http://mozilla/foo",
     alternateURI: "http://www.mozilla.com/foo",
     protocolChange: true,
-    keywordLookup: kDefaultToSearch,
-    affectedByDNSForSingleWordHosts: kDefaultToSearch,
+    keywordLookup: true,
+    affectedByDNSForSingleWordHosts: true,
   },
   {
     input: "mozilla\\",
@@ -610,7 +606,7 @@ var testcases = [
     fixedURI: "http://plonk/%20#",
     alternateURI: "http://www.plonk.com/%20#",
     protocolChange: true,
-    keywordLookup: !kDefaultToSearch,
+    keywordLookup: false,
   },
   {
     input: "blah.com.",
@@ -669,16 +665,14 @@ if (AppConstants.platform == "win") {
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
   });
-  if (kDefaultToSearch) {
-    testcases.push({
-      input: "/a",
-      fixedURI: "http://a/",
-      alternateURI: "http://www.a.com/",
-      keywordLookup: true,
-      protocolChange: true,
-      affectedByDNSForSingleWordHosts: true,
-    });
-  }
+  testcases.push({
+    input: "/a",
+    fixedURI: "http://a/",
+    alternateURI: "http://www.a.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByDNSForSingleWordHosts: true,
+  });
 } else {
   testcases.push({
     input: "/some/file.txt",
