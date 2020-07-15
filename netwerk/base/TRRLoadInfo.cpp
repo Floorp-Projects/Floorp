@@ -6,6 +6,7 @@
 
 #include "TRRLoadInfo.h"
 #include "mozilla/dom/ClientSource.h"
+#include "nsContentUtils.h"
 #include "nsIRedirectHistoryEntry.h"
 
 using namespace mozilla::dom;

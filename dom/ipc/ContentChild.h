@@ -7,27 +7,22 @@
 #ifndef mozilla_dom_ContentChild_h
 #define mozilla_dom_ContentChild_h
 
-#include "base/shared_memory.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/dom/BrowserBridgeChild.h"
-#include "mozilla/dom/ProcessActor.h"
-#include "mozilla/dom/JSProcessActorChild.h"
-#include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/RemoteBrowser.h"
+#include "mozilla/dom/ProcessActor.h"
 #include "mozilla/dom/RemoteType.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/Shmem.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "nsClassHashtable.h"
+#include "nscore.h"
 #include "nsHashKeys.h"
 #include "nsIDOMProcessChild.h"
-#include "nsIObserver.h"
-#include "nsTHashtable.h"
-#include "nsStringFwd.h"
-#include "nsTArrayForwardDeclare.h"
 #include "nsRefPtrHashtable.h"
+#include "nsString.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsTHashtable.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "nsIFile.h"
@@ -48,6 +43,10 @@ namespace mozilla {
 class RemoteSpellcheckEngineChild;
 class ChildProfilerController;
 class BenchmarkStorageChild;
+
+namespace loader {
+class PScriptCacheChild;
+}
 
 using mozilla::loader::PScriptCacheChild;
 
