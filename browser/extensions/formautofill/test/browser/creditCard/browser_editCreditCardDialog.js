@@ -401,3 +401,50 @@ add_task(async function test_editInvalidCreditCardNumber() {
   addresses = await getAddresses();
   is(addresses.length, 0, "Address storage is empty");
 });
+
+add_task(async function test_editCreditCardWithInvalidNumber() {
+  const TEST_CREDIT_CARD = Object.assign({}, TEST_CREDIT_CARD_1);
+  await saveCreditCard(TEST_CREDIT_CARD);
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "only one credit card is in storage");
+  await testDialog(
+    EDIT_CREDIT_CARD_DIALOG_URL,
+    win => {
+      ok(
+        win.document.documentElement
+          .querySelector("title")
+          .textContent.includes("Edit"),
+        "Edit card dialog title is correct"
+      );
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      is(
+        win.document.querySelector("#cc-number").validity.customError,
+        false,
+        "cc-number field should not have a custom error"
+      );
+      EventUtils.synthesizeKey("4111111111111112", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      is(
+        win.document.querySelector("#cc-number").validity.customError,
+        true,
+        "cc-number field should have a custom error"
+      );
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      win.document.querySelector("#cancel").click();
+    },
+    {
+      record: creditCards[0],
+    }
+  );
+  ok(true, "Edit credit card dialog is closed");
+  creditCards = await getCreditCards();
+
+  is(creditCards.length, 1, "only one credit card is in storage");
+  await removeCreditCards([creditCards[0].guid]);
+
+  creditCards = await getCreditCards();
+  is(creditCards.length, 0, "Credit card storage is empty");
+});
