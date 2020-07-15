@@ -4,22 +4,14 @@
 
 DevToolsModules(
     'Manifest.js',
-	'ManifestColorItem.css',
     'ManifestColorItem.js',
     'ManifestEmpty.js',
-    'ManifestIconItem.css',
     'ManifestIconItem.js',
-	'ManifestIssue.css',
 	'ManifestIssue.js',
-	'ManifestIssueList.css',
 	'ManifestIssueList.js',
-    'ManifestItem.css',
     'ManifestItem.js',
-    'ManifestJsonLink.css',
     'ManifestJsonLink.js',
-    'ManifestLoader.css',
     'ManifestLoader.js',
     'ManifestPage.js',
-    'ManifestSection.css',
     'ManifestSection.js',
 )

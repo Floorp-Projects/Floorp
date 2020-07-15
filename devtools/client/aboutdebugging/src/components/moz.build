@@ -10,15 +10,11 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'App.css',
     'App.js',
     'CompatibilityWarning.js',
     'ConnectionPromptSetting.js',
-    'ProfilerDialog.css',
     'ProfilerDialog.js',
-    'RuntimeActions.css',
     'RuntimeActions.js',
-    'RuntimeInfo.css',
     'RuntimeInfo.js',
     'RuntimePage.js',
     'ServiceWorkersWarning.js',

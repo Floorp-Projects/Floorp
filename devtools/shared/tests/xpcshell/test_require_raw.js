@@ -9,7 +9,7 @@ function run_test() {
   const loader = new DevToolsLoader();
   const require = loader.require;
 
-  const variableFileContents = require("raw!devtools/client/themes/variables.css");
+  const variableFileContents = require("raw!chrome://devtools/skin/variables.css");
   ok(variableFileContents.length > 0, "raw browserRequire worked");
 
   const propertiesFileContents = require("raw!devtools/client/locales/shared.properties");

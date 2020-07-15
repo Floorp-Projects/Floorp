@@ -6,7 +6,6 @@
 
 
 DevToolsModules(
-  'DebugTargetErrorPage.css',
   'DebugTargetErrorPage.js',
   'DebugTargetInfo.js',
   'MeatballMenu.js',
