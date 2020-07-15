@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use neqo_common::{matches, Datagram};
+use neqo_common::Datagram;
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
@@ -303,7 +303,7 @@ pub extern "C" fn neqo_http3conn_fetch(
     };
     match conn
         .conn
-        .fetch(method_tmp, scheme_tmp, host_tmp, path_tmp, &hdrs)
+        .fetch(Instant::now(), method_tmp, scheme_tmp, host_tmp, path_tmp, &hdrs)
     {
         Ok(id) => {
             *stream_id = id;
