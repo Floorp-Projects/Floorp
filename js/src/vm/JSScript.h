@@ -1105,7 +1105,11 @@ class ScriptSourceHolder {
   }
   ScriptSource* get() const { return ss; }
 
-  void trace(JSTracer* trc) { ss->trace(trc); }
+  void trace(JSTracer* trc) {
+    if (ss) {
+      ss->trace(trc);
+    }
+  }
 };
 
 // [SMDOC] ScriptSourceObject
