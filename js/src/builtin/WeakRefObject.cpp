@@ -6,6 +6,8 @@
 
 #include "builtin/WeakRefObject.h"
 
+#include "mozilla/Maybe.h"
+
 #include "jsapi.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -276,24 +278,30 @@ void GCRuntime::traceKeptObjects(JSTracer* trc) {
 
 }  // namespace gc
 
-void WeakRefMap::sweep() {
-  for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
+void WeakRefMap::sweep(gc::StoreBuffer* sbToLock) {
+  mozilla::Maybe<typename Base::Enum> e;
+  for (e.emplace(*this); !e->empty(); e->popFront()) {
     // If target is dying, clear the target field of all weakRefs, and remove
     // the entry from the map.
-    if (JS::GCPolicy<HeapPtrObject>::needsSweep(&e.front().mutableKey())) {
-      for (JSObject* obj : e.front().value()) {
+    if (JS::GCPolicy<HeapPtrObject>::needsSweep(&e->front().mutableKey())) {
+      for (JSObject* obj : e->front().value()) {
         MOZ_ASSERT(!JS_IsDeadWrapper(obj));
         obj = UncheckedUnwrapWithoutExpose(obj);
 
         WeakRefObject* weakRef = &obj->as<WeakRefObject>();
         weakRef->setTarget(nullptr);
       }
-      e.removeFront();
+      e->removeFront();
     } else {
       // Update the target field after compacting.
-      e.front().value().sweep(e.front().mutableKey());
+      e->front().value().sweep(e->front().mutableKey());
     }
   }
+
+  // Take store buffer lock while the Enum's destructor is called as this can
+  // rehash/resize the table and access the store buffer.
+  gc::AutoLockStoreBuffer lock(sbToLock);
+  e.reset();
 }
 
 // Like GCVector::sweep, but this method will also update the target in every
