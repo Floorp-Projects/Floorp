@@ -25,6 +25,7 @@
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/MessageEvent.h"

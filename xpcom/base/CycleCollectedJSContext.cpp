@@ -31,6 +31,7 @@
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/PromiseRejectionEvent.h"
 #include "mozilla/dom/PromiseRejectionEventBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/UserActivation.h"
 #include "nsContentUtils.h"
