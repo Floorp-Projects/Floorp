@@ -56,9 +56,9 @@ class AndroidMixin(object):
             # not any system-wide installation of mozdevice.
             adb = self.adb_path
             import mozdevice
-            self._device = mozdevice.ADBDevice(adb=adb,
-                                               device=self.device_serial,
-                                               verbose=True)
+            self._device = mozdevice.ADBDeviceFactory(adb=adb,
+                                                      device=self.device_serial,
+                                                      verbose=True)
         return self._device
 
     @property
@@ -324,7 +324,7 @@ class AndroidMixin(object):
         """
         import mozdevice
         try:
-            self.device.install_app(apk, replace=replace)
+            self.device.run_as_package = self.device.install_app(apk, replace=replace)
         except (mozdevice.ADBError, mozdevice.ADBProcessError, mozdevice.ADBTimeoutError) as e:
             self.info('Failed to install %s on %s: %s %s' %
                       (apk, self.device_name,
@@ -360,10 +360,10 @@ class AndroidMixin(object):
             pass
         return False
 
-    def shell_output(self, cmd):
+    def shell_output(self, cmd, enable_run_as=False):
         import mozdevice
         try:
-            return self.device.shell_output(cmd, timeout=30)
+            return self.device.shell_output(cmd, timeout=30, enable_run_as=enable_run_as)
         except (mozdevice.ADBTimeoutError) as e:
             self.info('Failed to run shell command %s from %s: %s %s' %
                       (cmd, self.device_name,
@@ -452,16 +452,16 @@ class AndroidMixin(object):
     def delete_ANRs(self):
         remote_dir = self.device.stack_trace_dir
         try:
-            if not self.device.is_dir(remote_dir, root=True):
-                self.mkdir(remote_dir, root=True)
-                self.chmod(remote_dir, root=True)
+            if not self.device.is_dir(remote_dir):
+                self.device.mkdir(remote_dir)
                 self.info("%s created" % remote_dir)
                 return
-            for trace_file in self.device.ls(remote_dir, root=True):
+            self.device.chmod(remote_dir, recursive=True)
+            for trace_file in self.device.ls(remote_dir, recursive=True):
                 trace_path = posixpath.join(remote_dir, trace_file)
-                self.device.chmod(trace_path, root=True)
-                self.device.rm(trace_path, root=True)
-                self.info("%s deleted" % trace_path)
+                if self.device.is_file(trace_path):
+                    self.device.rm(trace_path)
+                    self.info("%s deleted" % trace_path)
         except Exception as e:
             self.info("failed to delete %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
 
@@ -475,7 +475,7 @@ class AndroidMixin(object):
             if not self.device.is_dir(remote_dir):
                 self.info("%s not found; ANR check skipped" % remote_dir)
                 return
-            self.device.chmod(remote_dir, recursive=True, root=True)
+            self.device.chmod(remote_dir, recursive=True)
             self.device.pull(remote_dir, dirs['abs_blob_upload_dir'])
             self.delete_ANRs()
         except Exception as e:
@@ -484,16 +484,16 @@ class AndroidMixin(object):
     def delete_tombstones(self):
         remote_dir = "/data/tombstones"
         try:
-            if not self.device.is_dir(remote_dir, root=True):
-                self.mkdir(remote_dir, root=True)
-                self.chmod(remote_dir, root=True)
+            if not self.device.is_dir(remote_dir):
+                self.device.mkdir(remote_dir)
                 self.info("%s created" % remote_dir)
                 return
-            for trace_file in self.device.ls(remote_dir, root=True):
+            self.device.chmod(remote_dir, recursive=True)
+            for trace_file in self.device.ls(remote_dir, recursive=True):
                 trace_path = posixpath.join(remote_dir, trace_file)
-                self.device.chmod(trace_path, root=True)
-                self.device.rm(trace_path, root=True)
-                self.info("%s deleted" % trace_path)
+                if self.device.is_file(trace_path):
+                    self.device.rm(trace_path)
+                    self.info("%s deleted" % trace_path)
         except Exception as e:
             self.info("failed to delete %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
 
@@ -507,7 +507,7 @@ class AndroidMixin(object):
             if not self.device.is_dir(remote_dir):
                 self.info("%s not found; tombstone check skipped" % remote_dir)
                 return
-            self.device.chmod(remote_dir, recursive=True, root=True)
+            self.device.chmod(remote_dir, recursive=True)
             self.device.pull(remote_dir, dirs['abs_blob_upload_dir'])
             self.delete_tombstones()
         except Exception as e:
