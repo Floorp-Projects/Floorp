@@ -315,11 +315,20 @@ async function openPopupAndGetEngineButton(
     undefined,
     "One-off for test engine should exist"
   );
-  Assert.equal(
-    oneOffButton.getAttribute("tooltiptext"),
-    engineName,
-    "One-off should have the tooltip set to the engine name"
-  );
+  if (isSearch) {
+    Assert.equal(
+      oneOffButton.getAttribute("tooltiptext"),
+      engineName,
+      "One-off should have the tooltip set to the engine name"
+    );
+  } else {
+    let aliases = UrlbarSearchUtils.aliasesForEngine(oneOffButton.engine);
+    Assert.equal(
+      oneOffButton.getAttribute("tooltiptext"),
+      engineName + (aliases.length ? ` (${aliases[0]})` : ""),
+      "One-off should have the tooltip set to the engine name"
+    );
+  }
   Assert.equal(
     oneOffButton.id,
     baseId + engineName,

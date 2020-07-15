@@ -6,6 +6,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://testing-common/CustomizableUITestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);

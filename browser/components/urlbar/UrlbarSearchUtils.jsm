@@ -72,6 +72,22 @@ class SearchUtils {
   }
 
   /**
+   * Gets the aliases given search engine.
+   *
+   * @param {nsISearchEngine} engine
+   * @returns {array}
+   *   An array of strings of the engine's aliases.
+   */
+  aliasesForEngine(engine) {
+    let aliases = [];
+    if (engine.alias) {
+      aliases.push(engine.alias);
+    }
+    aliases.push(...engine.wrappedJSObject._internalAliases);
+    return aliases;
+  }
+
+  /**
    * The list of engines with token ("@") aliases.
    *
    * @returns {array}
@@ -81,7 +97,7 @@ class SearchUtils {
     await this.init();
     let tokenAliasEngines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
-      let tokenAliases = this._engineAliases(engine).filter(a =>
+      let tokenAliases = this.aliasesForEngine(engine).filter(a =>
         a.startsWith("@")
       );
       if (tokenAliases.length) {
@@ -104,21 +120,12 @@ class SearchUtils {
     this._enginesByAlias = new Map();
     for (let engine of await Services.search.getVisibleEngines()) {
       if (!engine.hidden) {
-        let aliases = this._engineAliases(engine);
+        let aliases = this.aliasesForEngine(engine);
         for (let alias of aliases) {
           this._enginesByAlias.set(alias.toLocaleLowerCase(), engine);
         }
       }
     }
-  }
-
-  _engineAliases(engine) {
-    let aliases = [];
-    if (engine.alias) {
-      aliases.push(engine.alias);
-    }
-    aliases.push(...engine.wrappedJSObject._internalAliases);
-    return aliases;
   }
 
   observe(subject, topic, data) {
