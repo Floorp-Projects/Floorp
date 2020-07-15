@@ -67,16 +67,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.fixup.alternate.enabled",
   true
 );
-// This is a feature preference that inverts the keyword fixup behavior to
-// search by default, unless the string has URI characteristics.
-// When set to false, we'll consider most strings URIs, unless they have search
-// characteristics.
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "defaultToSearch",
-  "browser.fixup.defaultToSearch",
-  true
-);
 
 const {
   FIXUP_FLAG_NONE,
@@ -96,9 +86,6 @@ XPCOMUtils.defineLazyGetter(
   "userPasswordRegex",
   () => /^([a-z+.-]+:\/{0,3})*[^\/@]+@.+/i
 );
-
-// Regex used to look for ascii alphabetical characters.
-XPCOMUtils.defineLazyGetter(this, "asciiAlphaRegex", () => /[a-z]/i);
 
 // Regex used to identify specific URI characteristics to disallow searching.
 XPCOMUtils.defineLazyGetter(
@@ -431,9 +418,7 @@ URIFixup.prototype = {
       keywordEnabled &&
       fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP &&
       !inputHadDuffProtocol &&
-      // When defaultToSearch is false, we are conservative about always going
-      // through keywordURIFixup.
-      (!defaultToSearch || !checkSuffix(info).suffix) &&
+      !checkSuffix(info).suffix &&
       keywordURIFixup(uriString, info, isPrivateContext, postData)
     ) {
       return info;
@@ -907,14 +892,6 @@ function fixupURIProtocol(uriString) {
  * @returns {boolean} Whether the keyword fixup was succesful.
  */
 function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
-  if (!defaultToSearch) {
-    return keywordURIFixupLegacy(
-      uriString,
-      fixupInfo,
-      isPrivateContext,
-      postData
-    );
-  }
   // Here is a few examples of strings that should be searched:
   // "what is mozilla"
   // "what is mozilla?"
@@ -970,117 +947,6 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
   if (
     !uriLikeRegex.test(uriString) &&
     !(userPass && /^[^\s@]+@/.test(uriString))
-  ) {
-    return tryKeywordFixupForURIInfo(
-      fixupInfo.originalInput,
-      fixupInfo,
-      isPrivateContext,
-      postData
-    );
-  }
-
-  return false;
-}
-
-/**
- * This is the old version of keywordURIFixup, used when
- * browser.fixup.defaultToSearch is false
- */
-function keywordURIFixupLegacy(
-  uriString,
-  fixupInfo,
-  isPrivateContext,
-  postData
-) {
-  // These are keyword formatted strings
-  // "what is mozilla"
-  // "what is mozilla?"
-  // "docshell site:mozilla.org" - has no dot/colon in the first space-separated
-  // substring
-  // "?mozilla" - anything that begins with a question mark
-  // "?site:mozilla.org docshell"
-  // Things that have a quote before the first dot/colon
-  // "mozilla" - checked against the knownDomains to see if it's a host or not
-  // ".mozilla", "mozilla." - ditto
-
-  // These are not keyword formatted strings
-  // "www.blah.com" - first space-separated substring contains a dot, doesn't
-  // start with "?" "www.blah.com stuff" "nonQualifiedHost:80" - first
-  // space-separated substring contains a colon, doesn't start with "?"
-  // "nonQualifiedHost:80 args"
-  // "nonQualifiedHost?"
-  // "nonQualifiedHost?args"
-  // "nonQualifiedHost?some args"
-  // "blah.com."
-
-  // Check for IPs.
-  if (IPv4LikeRegex.test(uriString) || IPv6LikeRegex.test(uriString)) {
-    return false;
-  }
-
-  // We do keyword lookups if the input starts with a question mark, or if it
-  // contains a space or quote, provided they don't come after a dot, colon or
-  // question mark.
-  if (uriString.startsWith("?") || /^[^.:?]*[\s"']/.test(uriString)) {
-    return tryKeywordFixupForURIInfo(
-      fixupInfo.originalInput,
-      fixupInfo,
-      isPrivateContext,
-      postData
-    );
-  }
-
-  // Avoid lookup if we can identify a host and it's known.
-  // Note that if dnsFirstForSingleWords is true isDomainKnown will always
-  // return true, so we can avoid checking dnsFirstForSingleWords after this.
-  let asciiHost = fixupInfo.fixedURI?.asciiHost;
-  if (asciiHost && isDomainKnown(asciiHost)) {
-    return false;
-  }
-
-  // Or when the asciiHost is the same as displayHost and there are no
-  // alphabetical characters
-  let displayHost = fixupInfo.fixedURI && fixupInfo.fixedURI.displayHost;
-  let hasAsciiAlpha = asciiAlphaRegex.test(uriString);
-  if (
-    asciiHost &&
-    displayHost &&
-    !hasAsciiAlpha &&
-    asciiHost.toLowerCase() == displayHost.toLowerCase()
-  ) {
-    return tryKeywordFixupForURIInfo(
-      fixupInfo.originalInput,
-      fixupInfo,
-      isPrivateContext,
-      postData
-    );
-  }
-
-  // Avoid lookup if we reached this point and there is a question mark or colon.
-  if (uriString.includes(":") || uriString.includes("?")) {
-    return false;
-  }
-
-  // Keyword lookup if there is exactly one dot and it is the first or last
-  // character of the input.
-  let firstDotIndex = uriString.indexOf(".");
-  if (
-    firstDotIndex == uriString.length - 1 ||
-    (firstDotIndex == 0 && firstDotIndex == uriString.lastIndexOf("."))
-  ) {
-    return tryKeywordFixupForURIInfo(
-      fixupInfo.originalInput,
-      fixupInfo,
-      isPrivateContext,
-      postData
-    );
-  }
-
-  // Keyword lookup if there is no dot and the string doesn't include a slash,
-  // or any alphabetical character or a host.
-  if (
-    firstDotIndex == -1 &&
-    (!uriString.includes("/") || !hasAsciiAlpha || !asciiHost)
   ) {
     return tryKeywordFixupForURIInfo(
       fixupInfo.originalInput,
