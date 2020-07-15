@@ -631,8 +631,17 @@ pub fn update_primitive_visibility(
 
         // Layout space for the picture is picture space from the
         // perspective of its child primitives.
-        let pic_local_rect = surface_rect * Scale::new(1.0);
-        if pic.precise_local_rect != pic_local_rect {
+        pic.precise_local_rect = surface_rect * Scale::new(1.0);
+
+        // If the precise rect changed since last frame, we need to invalidate
+        // any segments and gpu cache handles for drop-shadows.
+        // TODO(gw): Requiring storage of the `prev_precise_local_rect` here
+        //           is a total hack. It's required because `prev_precise_local_rect`
+        //           gets written to twice (during initial vis pass and also during
+        //           prepare pass). The proper longer term fix for this is to make
+        //           use of the conservative picture rect for segmenting (which should
+        //           be done during scene building).
+        if pic.precise_local_rect != pic.prev_precise_local_rect {
             match rc.composite_mode {
                 PictureCompositeMode::Filter(Filter::DropShadows(..)) => {
                     for handle in &pic.extra_gpu_data_handles {
@@ -644,7 +653,7 @@ pub fn update_primitive_visibility(
             // Invalidate any segments built for this picture, since the local
             // rect has changed.
             pic.segments_are_valid = false;
-            pic.precise_local_rect = pic_local_rect;
+            pic.prev_precise_local_rect = pic.precise_local_rect;
         }
 
         if let PictureCompositeMode::TileCache { .. } = rc.composite_mode {
