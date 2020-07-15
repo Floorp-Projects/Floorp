@@ -204,6 +204,12 @@ class LoginManagerPrompter {
     let chromeDoc = browser.ownerDocument;
     let currentNotification;
 
+    let wasModifiedEvent = {
+      // Values are mutated
+      did_edit_un: "false",
+      did_edit_pw: "false",
+    };
+
     let updateButtonStatus = element => {
       let mainActionButton = element.button;
       // Disable the main button inside the menu-button if the password field is empty.
@@ -289,6 +295,16 @@ class LoginManagerPrompter {
     let onInput = () => {
       readDataFromUI();
       updateButtonLabel();
+    };
+
+    let onUsernameInput = () => {
+      wasModifiedEvent.did_edit_un = "true";
+      onInput();
+    };
+
+    let onPasswordInput = () => {
+      wasModifiedEvent.did_edit_pw = "true";
+      onInput();
     };
 
     let onKeyUp = e => {
@@ -434,6 +450,26 @@ class LoginManagerPrompter {
         } else {
           throw new Error("Unknown histogram");
         }
+
+        let eventObject;
+        if (type == "password-change") {
+          eventObject = "update";
+        } else if (type == "password-save") {
+          eventObject = "save";
+        } else {
+          throw new Error(
+            `Unexpected doorhanger type. Expected either 'password-save' or 'password-change', got ${type}`
+          );
+        }
+
+        Services.telemetry.recordEvent(
+          "pwmgr",
+          "doorhanger_submitted",
+          eventObject,
+          null,
+          wasModifiedEvent
+        );
+
         persistData();
         Services.obs.notifyObservers(
           null,
@@ -557,7 +593,7 @@ class LoginManagerPrompter {
                 .removeAttribute("focused");
               chromeDoc
                 .getElementById("password-notification-username")
-                .addEventListener("input", onInput);
+                .addEventListener("input", onUsernameInput);
               chromeDoc
                 .getElementById("password-notification-username")
                 .addEventListener("keyup", onKeyUp);
@@ -566,7 +602,7 @@ class LoginManagerPrompter {
                 .addEventListener("keyup", onKeyUp);
               chromeDoc
                 .getElementById("password-notification-password")
-                .addEventListener("input", onInput);
+                .addEventListener("input", onPasswordInput);
               let toggleBtn = chromeDoc.getElementById(
                 "password-notification-visibilityToggle"
               );
@@ -619,12 +655,12 @@ class LoginManagerPrompter {
               let usernameField = chromeDoc.getElementById(
                 "password-notification-username"
               );
-              usernameField.removeEventListener("input", onInput);
+              usernameField.removeEventListener("input", onUsernameInput);
               usernameField.removeEventListener("keyup", onKeyUp);
               let passwordField = chromeDoc.getElementById(
                 "password-notification-password"
               );
-              passwordField.removeEventListener("input", onInput);
+              passwordField.removeEventListener("input", onPasswordInput);
               passwordField.removeEventListener("keyup", onKeyUp);
               passwordField.removeEventListener("command", onVisibilityToggle);
               break;
