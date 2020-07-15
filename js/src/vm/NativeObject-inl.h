@@ -175,11 +175,28 @@ inline void NativeObject::copyDenseElements(uint32_t dstStart, const Value* src,
   }
 }
 
-inline void NativeObject::initDenseElements(NativeObject* src,
+inline void NativeObject::initDenseElements(JSContext* cx, NativeObject* src,
                                             uint32_t srcStart, uint32_t count) {
   MOZ_ASSERT(src->getDenseInitializedLength() >= srcStart + count);
 
   const Value* vp = src->getDenseElements() + srcStart;
+
+  if (!src->denseElementsArePacked()) {
+    // Mark non-packed if we're copying holes or if there are too many elements
+    // to check this efficiently.
+    static constexpr uint32_t MaxCountForPackedCheck = 30;
+    if (count > MaxCountForPackedCheck) {
+      markDenseElementsNotPacked(cx);
+    } else {
+      for (uint32_t i = 0; i < count; i++) {
+        if (vp[i].isMagic(JS_ELEMENTS_HOLE)) {
+          markDenseElementsNotPacked(cx);
+          break;
+        }
+      }
+    }
+  }
+
   initDenseElements(vp, count);
 }
 

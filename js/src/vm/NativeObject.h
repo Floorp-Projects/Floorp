@@ -1014,6 +1014,8 @@ class NativeObject : public JSObject {
   MOZ_ALWAYS_INLINE void checkStoredValue(const Value& v) {
     MOZ_ASSERT(IsObjectValueInCompartment(v, compartment()));
     MOZ_ASSERT(AtomIsMarked(zoneFromAnyThread(), v));
+    MOZ_ASSERT_IF(v.isMagic() && v.whyMagic() == JS_ELEMENTS_HOLE,
+                  !denseElementsArePacked());
   }
 
   MOZ_ALWAYS_INLINE void setSlot(uint32_t slot, const Value& value) {
@@ -1299,8 +1301,8 @@ class NativeObject : public JSObject {
   inline void copyDenseElements(uint32_t dstStart, const Value* src,
                                 uint32_t count);
   inline void initDenseElements(const Value* src, uint32_t count);
-  inline void initDenseElements(NativeObject* src, uint32_t srcStart,
-                                uint32_t count);
+  inline void initDenseElements(JSContext* cx, NativeObject* src,
+                                uint32_t srcStart, uint32_t count);
   inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart,
                                 uint32_t count);
   inline void moveDenseElementsNoPreBarrier(uint32_t dstStart,
