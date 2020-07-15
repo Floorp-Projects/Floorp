@@ -1052,7 +1052,7 @@ var Policies = {
       }
       if ("Pocket" in param) {
         setDefaultPref(
-          "browser.newtabpage.activity-stream.feeds.section.topstories",
+          "browser.newtabpage.activity-stream.feeds.system.topstories",
           param.Pocket,
           locked
         );
