@@ -78,23 +78,23 @@ class IOUtils final {
   /**
    * Opens an existing file at |path|.
    *
-   * @param path  The location of the file as a unix-style UTF-8 path string.
+   * @param path  The location of the file as an absolute path string.
    * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
    */
   static UniquePtr<PRFileDesc, PR_CloseDelete> OpenExistingSync(
-      const char* aPath, int32_t aFlags);
+      const nsAString& aPath, int32_t aFlags);
 
   /**
    * Creates a new file at |path|.
    *
-   * @param aPath  The location of the file as a unix-style UTF-8 path string.
+   * @param aPath  The location of the file as an absolute path string.
    * @param aFlags PRIO flags to be used in addition to |PR_CREATE| and
    *               |PR_EXCL|.
    * @param aMode  Optional file mode. Defaults to 0666 to allow the system
    *               umask to compute the best mode for the new file.
    */
   static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
-      const char* aPath, int32_t aFlags, int32_t aMode = 0666);
+      const nsAString& aPath, int32_t aFlags, int32_t aMode = 0666);
 
   static nsresult ReadSync(PRFileDesc* aFd, const uint32_t aBufSize,
                            nsTArray<uint8_t>& aResult);
