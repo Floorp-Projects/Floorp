@@ -39,7 +39,7 @@ class SVGTests : public nsISupports {
   SVGTests();
 
   friend class dom::DOMSVGStringList;
-  typedef mozilla::SVGStringList SVGStringList;
+  using SVGStringList = mozilla::SVGStringList;
 
   /**
    * Compare the language name(s) in a systemLanguage attribute to the

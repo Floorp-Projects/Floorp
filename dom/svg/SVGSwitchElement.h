@@ -16,7 +16,7 @@ nsresult NS_NewSVGSwitchElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGGraphicsElement SVGSwitchElementBase;
+using SVGSwitchElementBase = SVGGraphicsElement;
 
 class SVGSwitchElement final : public SVGSwitchElementBase {
  protected:

@@ -257,8 +257,8 @@ class SMILAnimationFunction {
   };
 
  protected:
-  // Typedefs
-  typedef FallibleTArray<SMILValue> SMILValueArray;
+  // alias declarations
+  using SMILValueArray = FallibleTArray<SMILValue>;
 
   // Types
   enum SMILCalcMode : uint8_t {

@@ -22,10 +22,10 @@ namespace dom {
 
 class nsISVGPoint;
 
-typedef SVGGeometryElement SVGPathElementBase;
+using SVGPathElementBase = SVGGeometryElement;
 
 class SVGPathElement final : public SVGPathElementBase {
-  typedef mozilla::gfx::Path Path;
+  using Path = mozilla::gfx::Path;
 
  protected:
   friend nsresult(::NS_NewSVGPathElement(

@@ -26,9 +26,9 @@ class SVGElement;
 }
 
 class SVGMotionSMILPathUtils {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::Path Path;
-  typedef mozilla::gfx::PathBuilder PathBuilder;
+  using DrawTarget = mozilla::gfx::DrawTarget;
+  using Path = mozilla::gfx::Path;
+  using PathBuilder = mozilla::gfx::PathBuilder;
 
  public:
   // Class to assist in generating a Path, based on

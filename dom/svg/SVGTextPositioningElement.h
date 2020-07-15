@@ -17,7 +17,7 @@ class SVGAnimatedLengthList;
 namespace dom {
 class DOMSVGAnimatedLengthList;
 class DOMSVGAnimatedNumberList;
-typedef SVGTextContentElement SVGTextPositioningElementBase;
+using SVGTextPositioningElementBase = SVGTextContentElement;
 
 class SVGTextPositioningElement : public SVGTextPositioningElementBase {
  public:

@@ -37,7 +37,7 @@ nsIFrame* NS_NewSVGRadialGradientFrame(mozilla::PresShell* aPresShell,
 namespace mozilla {
 
 class SVGGradientFrame : public SVGPaintServerFrame {
-  typedef gfx::ExtendMode ExtendMode;
+  using ExtendMode = gfx::ExtendMode;
 
  protected:
   SVGGradientFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,

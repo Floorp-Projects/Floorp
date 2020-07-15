@@ -33,20 +33,20 @@ namespace dom {
 
 class DOMSVGAnimatedNumber;
 
-typedef mozilla::dom::SVGGraphicsElement SVGGeometryElementBase;
+using SVGGeometryElementBase = mozilla::dom::SVGGraphicsElement;
 
 class SVGGeometryElement : public SVGGeometryElementBase {
  protected:
-  typedef mozilla::gfx::CapStyle CapStyle;
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::FillRule FillRule;
-  typedef mozilla::gfx::Float Float;
-  typedef mozilla::gfx::Matrix Matrix;
-  typedef mozilla::gfx::Path Path;
-  typedef mozilla::gfx::Point Point;
-  typedef mozilla::gfx::PathBuilder PathBuilder;
-  typedef mozilla::gfx::Rect Rect;
-  typedef mozilla::gfx::StrokeOptions StrokeOptions;
+  using CapStyle = mozilla::gfx::CapStyle;
+  using DrawTarget = mozilla::gfx::DrawTarget;
+  using FillRule = mozilla::gfx::FillRule;
+  using Float = mozilla::gfx::Float;
+  using Matrix = mozilla::gfx::Matrix;
+  using Path = mozilla::gfx::Path;
+  using Point = mozilla::gfx::Point;
+  using PathBuilder = mozilla::gfx::PathBuilder;
+  using Rect = mozilla::gfx::Rect;
+  using StrokeOptions = mozilla::gfx::StrokeOptions;
 
  public:
   explicit SVGGeometryElement(

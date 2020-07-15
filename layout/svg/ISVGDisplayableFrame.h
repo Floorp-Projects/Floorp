@@ -46,7 +46,7 @@ struct imgDrawingParams;
  */
 class ISVGDisplayableFrame : public nsQueryFrame {
  public:
-  typedef image::imgDrawingParams imgDrawingParams;
+  using imgDrawingParams = image::imgDrawingParams;
 
   NS_DECL_QUERYFRAME_TARGET(ISVGDisplayableFrame)
 

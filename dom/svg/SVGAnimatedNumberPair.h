@@ -27,7 +27,7 @@ class SVGElement;
 
 class SVGAnimatedNumberPair {
  public:
-  typedef mozilla::dom::SVGElement SVGElement;
+  using SVGElement = dom::SVGElement;
 
   enum PairIndex { eFirst, eSecond };
 
@@ -60,9 +60,9 @@ class SVGAnimatedNumberPair {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedNumber> ToDOMAnimatedNumber(
+  already_AddRefed<dom::DOMSVGAnimatedNumber> ToDOMAnimatedNumber(
       PairIndex aIndex, SVGElement* aSVGElement);
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   float mAnimVal[2];
@@ -74,12 +74,10 @@ class SVGAnimatedNumberPair {
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedNumber interface where the
   // wrapped class is SVGAnimatedNumberPair.
-  struct DOMAnimatedNumber final : public mozilla::dom::DOMSVGAnimatedNumber {
+  struct DOMAnimatedNumber final : public dom::DOMSVGAnimatedNumber {
     DOMAnimatedNumber(SVGAnimatedNumberPair* aVal, PairIndex aIndex,
                       SVGElement* aSVGElement)
-        : mozilla::dom::DOMSVGAnimatedNumber(aSVGElement),
-          mVal(aVal),
-          mIndex(aIndex) {}
+        : dom::DOMSVGAnimatedNumber(aSVGElement), mVal(aVal), mIndex(aIndex) {}
     virtual ~DOMAnimatedNumber();
 
     SVGAnimatedNumberPair* mVal;  // kept alive because it belongs to content
@@ -87,7 +85,7 @@ class SVGAnimatedNumberPair {
 
     virtual float BaseVal() override { return mVal->GetBaseValue(mIndex); }
     virtual void SetBaseVal(float aValue) override {
-      MOZ_ASSERT(mozilla::IsFinite(aValue));
+      MOZ_ASSERT(IsFinite(aValue));
       mVal->SetBaseValue(aValue, mIndex, mSVGElement);
     }
 
@@ -112,9 +110,8 @@ class SVGAnimatedNumberPair {
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;

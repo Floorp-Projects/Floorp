@@ -18,7 +18,7 @@ class SVGFEImageFrame;
 
 namespace dom {
 
-typedef SVGFE SVGFEImageElementBase;
+using SVGFEImageElementBase = SVGFE;
 
 class SVGFEImageElement final : public SVGFEImageElementBase,
                                 public nsImageLoadingContent {

@@ -32,9 +32,9 @@ class SVGElement;
 
 class SVGAnimatedOrient {
   friend class AutoChangeOrientNotifier;
-  friend class mozilla::dom::DOMSVGAngle;
-  friend class mozilla::dom::DOMSVGAnimatedAngle;
-  typedef mozilla::dom::SVGElement SVGElement;
+  friend class dom::DOMSVGAngle;
+  friend class dom::DOMSVGAnimatedAngle;
+  using SVGElement = dom::SVGElement;
 
  public:
   void Init() {
@@ -110,7 +110,7 @@ class SVGAnimatedOrient {
 
     SVGAnimatedOrient* mVal;  // kept alive because it belongs to content
 
-    using mozilla::dom::DOMSVGAnimatedEnumeration::SetBaseVal;
+    using dom::DOMSVGAnimatedEnumeration::SetBaseVal;
     uint16_t BaseVal() override { return Sanitize(mVal->mBaseType); }
     void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) override {
       mVal->SetBaseType(aBaseVal, mSVGElement, aRv);

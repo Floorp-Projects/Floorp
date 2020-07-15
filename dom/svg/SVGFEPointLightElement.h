@@ -16,7 +16,7 @@ nsresult NS_NewSVGFEPointLightElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGFELightElement SVGFEPointLightElementBase;
+using SVGFEPointLightElementBase = SVGFELightElement;
 
 class SVGFEPointLightElement : public SVGFEPointLightElementBase {
   friend nsresult(::NS_NewSVGFEPointLightElement(

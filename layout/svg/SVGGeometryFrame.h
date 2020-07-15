@@ -45,7 +45,7 @@ nsIFrame* NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
 namespace mozilla {
 
 class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
-  typedef gfx::DrawTarget DrawTarget;
+  using DrawTarget = gfx::DrawTarget;
 
   friend nsIFrame* ::NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
@@ -143,7 +143,7 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
 // Display list item:
 
 class DisplaySVGGeometry final : public nsPaintedDisplayItem {
-  typedef image::imgDrawingParams imgDrawingParams;
+  using imgDrawingParams = image::imgDrawingParams;
 
  public:
   DisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)

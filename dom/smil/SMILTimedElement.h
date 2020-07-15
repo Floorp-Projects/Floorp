@@ -42,7 +42,7 @@ class SMILTimedElement {
   SMILTimedElement();
   ~SMILTimedElement();
 
-  typedef mozilla::dom::Element Element;
+  using Element = dom::Element;
 
   /*
    * Sets the owning animation element which this class uses to convert between
@@ -344,15 +344,15 @@ class SMILTimedElement {
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
   void Unlink();
 
-  typedef bool (*RemovalTestFunction)(SMILInstanceTime* aInstance);
+  using RemovalTestFunction = bool (*)(SMILInstanceTime* aInstance);
 
  protected:
   // Typedefs
-  typedef nsTArray<UniquePtr<SMILTimeValueSpec>> TimeValueSpecList;
-  typedef nsTArray<RefPtr<SMILInstanceTime>> InstanceTimeList;
-  typedef nsTArray<UniquePtr<SMILInterval>> IntervalList;
-  typedef nsPtrHashKey<SMILTimeValueSpec> TimeValueSpecPtrKey;
-  typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
+  using TimeValueSpecList = nsTArray<UniquePtr<SMILTimeValueSpec>>;
+  using InstanceTimeList = nsTArray<RefPtr<SMILInstanceTime>>;
+  using IntervalList = nsTArray<UniquePtr<SMILInterval>>;
+  using TimeValueSpecPtrKey = nsPtrHashKey<SMILTimeValueSpec>;
+  using TimeValueSpecHashSet = nsTHashtable<TimeValueSpecPtrKey>;
 
   // Helper classes
   class InstanceTimeComparator {

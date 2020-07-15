@@ -28,9 +28,9 @@ namespace mozilla {
 
 class SMILCompositor : public PLDHashEntryHdr {
  public:
-  typedef SMILTargetIdentifier KeyType;
-  typedef const KeyType& KeyTypeRef;
-  typedef const KeyType* KeyTypePointer;
+  using KeyType = SMILTargetIdentifier;
+  using KeyTypeRef = const KeyType&;
+  using KeyTypePointer = const KeyType*;
 
   explicit SMILCompositor(KeyTypePointer aKey)
       : mKey(*aKey), mForceCompositing(false) {}

@@ -23,10 +23,10 @@ namespace mozilla {
  * FilterPrimitiveDescription connected to the filter graph.
  */
 class CSSFilterInstance {
-  typedef gfx::sRGBColor sRGBColor;
-  typedef gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
-  typedef gfx::IntPoint IntPoint;
-  typedef gfx::Size Size;
+  using sRGBColor = gfx::sRGBColor;
+  using FilterPrimitiveDescription = gfx::FilterPrimitiveDescription;
+  using IntPoint = gfx::IntPoint;
+  using Size = gfx::Size;
 
  public:
   /**

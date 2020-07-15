@@ -175,10 +175,10 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   friend struct TextRenderedRun;
   friend class TextRenderedRunIterator;
 
-  typedef gfxTextRun::Range Range;
-  typedef gfx::DrawTarget DrawTarget;
-  typedef gfx::Path Path;
-  typedef gfx::Point Point;
+  using Range = gfxTextRun::Range;
+  using DrawTarget = gfx::DrawTarget;
+  using Path = gfx::Path;
+  using Point = gfx::Point;
 
  protected:
   explicit SVGTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)

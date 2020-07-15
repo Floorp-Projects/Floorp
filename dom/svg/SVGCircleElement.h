@@ -19,7 +19,7 @@ class ComputedStyle;
 
 namespace dom {
 
-typedef SVGGeometryElement SVGCircleElementBase;
+using SVGCircleElementBase = SVGGeometryElement;
 
 class SVGCircleElement final : public SVGCircleElementBase {
  protected:

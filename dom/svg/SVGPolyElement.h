@@ -16,7 +16,7 @@ namespace dom {
 
 class DOMSVGPointList;
 
-typedef SVGGeometryElement SVGPolyElementBase;
+using SVGPolyElementBase = SVGGeometryElement;
 
 class SVGPolyElement : public SVGPolyElementBase {
  protected:

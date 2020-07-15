@@ -31,7 +31,7 @@ nsIFrame* NS_NewSVGPatternFrame(mozilla::PresShell* aPresShell,
 namespace mozilla {
 
 class SVGPatternFrame final : public SVGPaintServerFrame {
-  typedef gfx::SourceSurface SourceSurface;
+  using SourceSurface = gfx::SourceSurface;
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGPatternFrame)

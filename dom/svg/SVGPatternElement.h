@@ -25,7 +25,7 @@ class SVGPatternFrame;
 namespace dom {
 class DOMSVGAnimatedTransformList;
 
-typedef SVGElement SVGPatternElementBase;
+using SVGPatternElementBase = SVGElement;
 
 class SVGPatternElement final : public SVGPatternElementBase {
   friend class mozilla::SVGPatternFrame;

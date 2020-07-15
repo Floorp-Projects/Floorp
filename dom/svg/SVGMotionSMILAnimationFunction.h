@@ -33,7 +33,7 @@ class SVGMPathElement;
 // by the <animateMotion> element.
 //
 class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
-  typedef mozilla::gfx::Path Path;
+  using Path = mozilla::gfx::Path;
 
  public:
   SVGMotionSMILAnimationFunction();

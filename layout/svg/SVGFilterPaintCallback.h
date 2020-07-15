@@ -16,7 +16,7 @@ namespace mozilla {
 
 class SVGFilterPaintCallback {
  public:
-  typedef image::imgDrawingParams imgDrawingParams;
+  using imgDrawingParams = image::imgDrawingParams;
 
   /**
    * Paint the frame contents.

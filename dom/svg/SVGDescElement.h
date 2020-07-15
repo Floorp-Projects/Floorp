@@ -16,7 +16,7 @@ nsresult NS_NewSVGDescElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGElement SVGDescElementBase;
+using SVGDescElementBase = SVGElement;
 
 class SVGDescElement final : public SVGDescElementBase {
  protected:

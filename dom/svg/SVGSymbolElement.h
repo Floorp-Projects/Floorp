@@ -15,7 +15,7 @@ nsresult NS_NewSVGSymbolElement(
 namespace mozilla {
 namespace dom {
 
-typedef SVGViewportElement SVGSymbolElementBase;
+using SVGSymbolElementBase = SVGViewportElement;
 
 class SVGSymbolElement final : public SVGSymbolElementBase {
  protected:

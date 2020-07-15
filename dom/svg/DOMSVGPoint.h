@@ -38,7 +38,7 @@ class SVGElement;
 class DOMSVGPoint final : public nsISVGPoint {
   friend class AutoChangePointNotifier;
 
-  typedef mozilla::gfx::Point Point;
+  using Point = gfx::Point;
 
  public:
   /**
