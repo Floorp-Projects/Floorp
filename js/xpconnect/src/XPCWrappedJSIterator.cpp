@@ -8,6 +8,7 @@
 
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/IteratorResultBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
