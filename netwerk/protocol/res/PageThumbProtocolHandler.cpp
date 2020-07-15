@@ -7,6 +7,7 @@
 #include "PageThumbProtocolHandler.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/ipc/URIParams.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
