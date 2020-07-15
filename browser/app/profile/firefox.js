@@ -1709,6 +1709,7 @@ pref("privacy.userContext.newTabContainerOnLeftClick.enabled", false);
 pref("privacy.webrtc.allowSilencingNotifications", true);
 // Set to true to use the legacy WebRTC global indicator
 pref("privacy.webrtc.legacyGlobalIndicator", false);
+pref("privacy.webrtc.hideGlobalIndicator", false);
 #else
 pref("privacy.webrtc.allowSilencingNotifications", false);
 pref("privacy.webrtc.legacyGlobalIndicator", true);
