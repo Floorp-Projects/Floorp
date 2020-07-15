@@ -3357,6 +3357,25 @@ class GLContext : public GenericAtomicRefCounted,
   virtual bool SwapBuffers() { return false; }
 
   /**
+   * If this context supports it, submit a subset of its content instead of
+   * using SwapBuffer.
+   *
+   * Check the result of HasCopySubBuffer Before calling this.
+   *
+   * Only supported by GLX contexts on MESA.
+   */
+  virtual void CopySubBuffer(int x, int y, int w, int h) {
+    MOZ_CRASH("Unsupported CopySubBuffer");
+  }
+
+  /**
+   * Returns true if this context supports CopySubBuffer.
+   *
+   * Only supported by GLX contexts on MESA.
+   */
+  virtual bool HasCopySubBuffer() const { return false; }
+
+  /**
    * Stores a damage region (in origin bottom left coordinates), which
    * makes the next SwapBuffers call do eglSwapBuffersWithDamage if supported.
    *
