@@ -177,6 +177,15 @@ class EditCreditCardDialog extends AutofillEditDialog {
   constructor(elements, record) {
     elements.fieldContainer._elements.billingAddress.disabled = true;
     super("creditCards", elements, record);
+    elements.fieldContainer._elements.ccNumber.addEventListener(
+      "blur",
+      this._onCCNumberFieldBlur.bind(this)
+    );
+  }
+
+  _onCCNumberFieldBlur() {
+    let elem = this._elements.fieldContainer._elements.ccNumber;
+    this._elements.fieldContainer.updateCustomValidity(elem);
   }
 
   localizeDocument() {
