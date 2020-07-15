@@ -1,0 +1,10 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "d801dc23873ef5fac668aa58fa948f5de0d9f3ccc53d6773fb5a137515bd04e72cc8c0c7975c6e1fc19c72b3d721effb5432fce78b0ca6f3a90f2d6467ee5b68",
+    "filename": "mitm5-linux-firefox-amazon.zip",
+    "size": 6588776,
+    "unpack": true,
+    "visibility": "public"
+  }
+]

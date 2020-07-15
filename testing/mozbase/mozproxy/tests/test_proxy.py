@@ -152,7 +152,7 @@ def test_playback_setup_failed(*args):
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
-        "playback_version": '5.1.1',
+        "playback_version": '4.0.4',
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
