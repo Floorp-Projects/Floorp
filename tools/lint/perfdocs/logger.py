@@ -12,6 +12,7 @@ class PerfDocLogger(object):
     them into through the StructuredLogger provided by lint.
     """
 
+    TOP_DIR = ""
     PATHS = []
     LOGGER = None
     FAILED = False
@@ -51,8 +52,7 @@ class PerfDocLogger(object):
         # Add a reviewbot error for each file that is given
         for file in files:
             # Get a relative path (reviewbot can't handle absolute paths)
-            # TODO: Expand to outside of the testing directory
-            fpath = re.sub(".*testing", "testing", file)
+            fpath = re.sub(PerfDocLogger.TOP_DIR, "", file)
 
             # Filter out any issues that do not relate to the paths
             # that are being linted
