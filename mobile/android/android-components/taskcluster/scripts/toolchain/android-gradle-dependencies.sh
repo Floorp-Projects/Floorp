@@ -19,8 +19,8 @@ pushd $PROJECT_DIR
 . taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh
 
 COMPONENT_REGEX='^  ([-a-z]+):$'
-# XXX We don't build samples-browsers at all. They don't have any extra dependencies so we can
-# filter them out. Other components are built in second pass
+# Components to ignore on first pass. They don't have any extra dependencies so we can
+# filter them out. Other components are built in second pass.
 COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS='(samples-browser|tooling-detekt|tooling-lint)'
 FIRST_PASS_COMPONENTS=$(grep -E "$COMPONENT_REGEX" "$PROJECT_DIR/.buildconfig.yml" | sed -E "s/$COMPONENT_REGEX/:\1/g" | grep -E -v "$COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS")
 
@@ -42,8 +42,9 @@ set +e; ./gradlew $GRADLE_ARGS -Pcoverage $TEST_COMMANDS; set -e
 # part of the first pass. That's why the second pass is introduced.
 ./gradlew $GRADLE_ARGS -Pcoverage \
   :tooling-detekt:assemble :tooling-detekt:assembleAndroidTest :tooling-detekt:test :tooling-detekt:lintRelease \
-  :tooling-lint:assemble :tooling-lint:assembleAndroidTest :tooling-lint:test :tooling-lint:lint
-  # :tooling-lint:lintRelease doesn't exist
+  :tooling-lint:assemble :tooling-lint:assembleAndroidTest :tooling-lint:test :tooling-lint:lint \
+  :samples-browser:assemble :samples-browser:assembleAndroidTest :samples-browser:test :samples-browser:lint
+  # :tooling-lint:lintRelease and :samples-browser:lintRelease do not exist
 
 . taskcluster/scripts/toolchain/android-gradle-dependencies/after.sh
 

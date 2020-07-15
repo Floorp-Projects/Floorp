@@ -41,7 +41,7 @@ class SwipeRefreshFeature(
      * Start feature: Starts adding pull to refresh behavior for the active session.
      */
     override fun start() {
-        store.flowScoped { flow ->
+        scope = store.flowScoped { flow ->
             flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .map { tab -> tab?.content?.loading ?: false }
                 .ifChanged()
