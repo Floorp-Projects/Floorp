@@ -8,6 +8,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/AnonymousContentBinding.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCycleCollectionParticipant.h"

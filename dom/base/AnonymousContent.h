@@ -7,17 +7,24 @@
 #ifndef mozilla_dom_AnonymousContent_h
 #define mozilla_dom_AnonymousContent_h
 
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsICSSDeclaration.h"
-#include "mozilla/dom/Document.h"
+
+class nsIPrincipal;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
+class Animation;
+class DOMRect;
+class DOMString;
 class Element;
+class Event;
+template <typename T>
+class Sequence;
 class UnrestrictedDoubleOrAnonymousKeyframeAnimationOptions;
+class UnrestrictedDoubleOrKeyframeAnimationOptions;
 
 class AnonymousContent final {
  public:
