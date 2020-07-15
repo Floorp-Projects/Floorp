@@ -1568,7 +1568,8 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
 
   nsTArray<fontlist::Family::InitData> families;
 
-  nsClassHashtable<nsCStringHashKey, nsTArray<fontlist::Face::InitData>> faces;
+  using FaceInitArray = nsTArray<fontlist::Face::InitData>;
+  nsClassHashtable<nsCStringHashKey, FaceInitArray> faces;
 
   auto addPattern = [this, &families, &faces](
                         FcPattern* aPattern, FcChar8*& aLastFamilyName,
@@ -1581,43 +1582,31 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
       return;
     }
 
-    // same as the last one? definitely no need to add a new family
-    if (FcStrCmp(canonical, aLastFamilyName) != 0) {
+    nsAutoCString keyName;
+    keyName = ToCharPtr(canonical);
+    ToLowerCase(keyName);
+    FaceInitArray* faceListPtr = nullptr;
+
+    // Same canonical family name as the last one? Definitely no need to add a
+    // new family record.
+    if (FcStrCmp(canonical, aLastFamilyName) == 0) {
+      faceListPtr = faces.Get(keyName);
+      MOZ_ASSERT(faceListPtr);
+    } else {
       aLastFamilyName = canonical;
-
-      // add new family if one doesn't already exist
       aFamilyName = ToCharPtr(canonical);
-      nsAutoCString keyName(aFamilyName);
-      ToLowerCase(keyName);
 
-      auto faceList = faces.Get(keyName);
+      // Add new family record if one doesn't already exist.
+      auto faceList = faces.LookupForAdd(keyName);
       if (!faceList) {
-        faceList = new nsTArray<fontlist::Face::InitData>;
-        faces.Put(keyName, faceList);
-
-        /* TODO:
-        // Add pointers to other localized family names. Most fonts
-        // only have a single name, so the first call to GetString
-        // will usually not match
-        FcChar8* otherName;
-        int n = (cIndex == 0 ? 1 : 0);
-        while (FcPatternGetString(aFont, FC_FAMILY, n, &otherName) ==
-               FcResultMatch) {
-          nsAutoCString otherFamilyName(ToCharPtr(otherName));
-          AddOtherFamilyName(aFontFamily, otherFamilyName);
-          n++;
-          if (n == int(cIndex)) {
-            n++;  // skip over canonical name
-          }
-        }
-        */
-
+        faceList.OrInsert([]() { return new FaceInitArray; });
         FontVisibility visibility =
             aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
         families.AppendElement(fontlist::Family::InitData(
             keyName, aFamilyName, /*index*/ 0, visibility,
             /*bundled*/ aAppFont, /*badUnderline*/ false));
       }
+      faceListPtr = faceList.Data().get();
     }
 
     char* s = (char*)FcNameUnparse(aPattern);
@@ -1629,10 +1618,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     SlantStyleRange style(FontSlantStyle::Normal());
     GetFontProperties(aPattern, &weight, &stretch, &style);
 
-    nsAutoCString keyName(aFamilyName);
-    ToLowerCase(keyName);
-    auto faceList = faces.Get(keyName);
-    faceList->AppendElement(
+    faceListPtr->AppendElement(
         fontlist::Face::InitData{descriptor, 0, false, weight, stretch, style});
     // map the psname, fullname ==> font family for local font lookups
     nsAutoCString psname, fullname;
@@ -1647,6 +1633,34 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
       if (fullname != psname) {
         mLocalNameTable.Put(
             fullname, fontlist::LocalFaceRec::InitData(keyName, descriptor));
+      }
+    }
+
+    // Add entries for any other localized family names. (Most fonts only have
+    // a single family name, so the first call to GetString will usually fail).
+    FcChar8* otherName;
+    int n = (cIndex == 0 ? 1 : 0);
+    while (FcPatternGetString(aPattern, FC_FAMILY, n, &otherName) ==
+           FcResultMatch) {
+      nsAutoCString otherFamilyName(ToCharPtr(otherName));
+      keyName = otherFamilyName;
+      ToLowerCase(keyName);
+
+      auto faceList = faces.LookupForAdd(keyName);
+      if (!faceList) {
+        faceList.OrInsert([]() { return new FaceInitArray; });
+        FontVisibility visibility =
+            aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
+        families.AppendElement(fontlist::Family::InitData(
+            keyName, otherFamilyName, /*index*/ 0, visibility,
+            /*bundled*/ aAppFont, /*badUnderline*/ false));
+      }
+      faceList.Data()->AppendElement(fontlist::Face::InitData{
+          descriptor, 0, false, weight, stretch, style});
+
+      n++;
+      if (n == int(cIndex)) {
+        n++;  // skip over canonical name
       }
     }
   };
