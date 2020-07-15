@@ -2160,7 +2160,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
   sweepTypesAfterCompacting(zone);
   sweepFinalizationRegistries(zone);
-  zone->weakRefMap().sweep();
+  zone->weakRefMap().sweep(&storeBuffer());
 
   {
     zone->sweepWeakMaps();
@@ -5055,7 +5055,7 @@ void GCRuntime::sweepUniqueIds() {
 void GCRuntime::sweepWeakRefs() {
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
-    zone->weakRefMap().sweep();
+    zone->weakRefMap().sweep(&storeBuffer());
   }
 }
 
