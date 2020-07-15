@@ -6,7 +6,7 @@
 
 // Directly relating to QUIC frames.
 
-use neqo_common::{matches, qdebug, qtrace, Decoder, Encoder};
+use neqo_common::{qdebug, qtrace, Decoder, Encoder};
 
 use crate::cid::MAX_CONNECTION_ID_LEN;
 use crate::packet::PacketType;

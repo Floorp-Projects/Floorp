@@ -8,7 +8,7 @@ use crate::connection::Http3Connection;
 use crate::hframe::HFrame;
 use crate::RecvMessageEvents;
 use crate::{Error, Header, Res};
-use neqo_common::{matches, qerror, qinfo, qtrace};
+use neqo_common::{qerror, qinfo, qtrace};
 use neqo_transport::{AppError, Connection};
 use std::cell::RefCell;
 use std::collections::VecDeque;

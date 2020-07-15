@@ -11,7 +11,7 @@ use std::ops::{Index, IndexMut, Range};
 use std::rc::Rc;
 use std::time::Instant;
 
-use neqo_common::{hex, matches, qdebug, qerror, qinfo, qtrace, Role};
+use neqo_common::{hex, qdebug, qerror, qinfo, qtrace, Role};
 use neqo_crypto::{
     aead::Aead, hkdf, hp::HpKey, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record,
     RecordList, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,

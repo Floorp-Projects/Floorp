@@ -15,8 +15,7 @@ use crate::settings::HSettings;
 use crate::Header;
 use crate::RecvMessageEvents;
 use neqo_common::{
-    hex, hex_with_len, matches, qdebug, qinfo, qlog::NeqoQlog, qtrace, Datagram, Decoder, Encoder,
-    Role,
+    hex, hex_with_len, qdebug, qinfo, qlog::NeqoQlog, qtrace, Datagram, Decoder, Encoder, Role,
 };
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, SecretAgentInfo};
 use neqo_qpack::{stats::Stats, QpackSettings};
@@ -183,7 +182,19 @@ impl Http3Client {
             .map_err(|_| Error::InvalidResumptionToken)?;
         let tok = dec.decode_remainder();
         qtrace!([self], "  Transport token {}", hex(&tok));
-        self.conn.set_resumption_token(now, tok)?;
+        self.conn
+            .set_resumption_token(now, tok)
+            .map_err(|e| Error::map_set_resumption_errors(&e))?;
+        if self.conn.state().closed() {
+            let state = self.conn.state().clone();
+            debug_assert!(
+                Ok(true)
+                    == self
+                        .base_handler
+                        .handle_state_change(&mut self.conn, &state)
+            );
+            return Err(Error::FatalError);
+        }
         if *self.conn.zero_rtt_state() == ZeroRttState::Sending {
             self.base_handler
                 .set_0rtt_settings(&mut self.conn, settings)?;
@@ -217,6 +228,7 @@ impl Http3Client {
     /// If a new stream cannot be created an error will be return.
     pub fn fetch(
         &mut self,
+        now: Instant,
         method: &str,
         scheme: &str,
         host: &str,
@@ -240,7 +252,10 @@ impl Http3Client {
             _ => {}
         }
 
-        let id = self.conn.stream_create(StreamType::BiDi)?;
+        let id = self
+            .conn
+            .stream_create(StreamType::BiDi)
+            .map_err(|e| Error::map_stream_create_errors(&e))?;
 
         // Transform pseudo-header fields
         let mut final_headers = Vec::new();
@@ -259,6 +274,22 @@ impl Http3Client {
                 Some(self.push_handler.clone()),
             )),
         );
+
+        // Call immediately send so that at least headers get sent. This will make Firefox faster, since
+        // it can send request body immediatly in most cases and does not need to do a complete process loop.
+        if let Err(e) = self
+            .base_handler
+            .send_streams
+            .get_mut(&id)
+            .ok_or(Error::InvalidStreamId)?
+            .send(&mut self.conn, &mut self.base_handler.qpack_encoder)
+        {
+            if e.connection_error() {
+                self.close(now, e.code(), "");
+            }
+            return Err(e);
+        }
+
         Ok(id)
     }
 
@@ -285,8 +316,11 @@ impl Http3Client {
 
     /// To supply a request body this function is called (headers are supplied through the `fetch` function.)
     /// # Errors
-    /// It will be return an error if a stream does not exist or new data cannot be sent because stream
-    /// is already closed.
+    /// `InvalidStreamId` if thee stream does not exist,
+    /// `AlreadyClosed` if the stream has already been closed.
+    /// `TransportStreamDoesNotExist` if the transport stream does not exist (this may happen if `process_output`
+    /// has not been called when needed, and HTTP3 layer has not picked up the info that the stream has been closed.)
+    /// `InvalidInput` if an empty buffer has been supplied.
     pub fn send_request_body(&mut self, stream_id: u64, buf: &[u8]) -> Res<usize> {
         qinfo!(
             [self],
@@ -656,11 +690,12 @@ mod tests {
     };
     use crate::hframe::HFrame;
     use crate::settings::{HSetting, HSettingType};
-    use neqo_common::{matches, Datagram, Encoder};
+    use neqo_common::{Datagram, Encoder};
     use neqo_crypto::{AllowZeroRtt, AntiReplay};
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_transport::{
         CloseError, ConnectionEvent, FixedConnectionIdManager, QuicVersion, State,
+        RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
     };
     use test_fixture::{
         default_server, fixture_init, loopback, now, DEFAULT_ALPN, DEFAULT_SERVER_NAME,
@@ -988,7 +1023,7 @@ mod tests {
     // Fetch request fetch("GET", "https", "something.com", "/", &[]).
     fn make_request(client: &mut Http3Client, close_sending_side: bool) -> u64 {
         let request_stream_id = client
-            .fetch("GET", "https", "something.com", "/", &[])
+            .fetch(now(), "GET", "https", "something.com", "/", &[])
             .unwrap();
         if close_sending_side {
             let _ = client.stream_close_send(request_stream_id);
@@ -1852,7 +1887,7 @@ mod tests {
             if let ConnectionEvent::RecvStreamReadable { stream_id } = e {
                 if stream_id == request_stream_id {
                     // Read the DATA frame.
-                    let mut buf = [1_u8; 0xffff];
+                    let mut buf = vec![1_u8; RECV_BUFFER_SIZE];
                     let (amount, fin) = server.conn.stream_recv(stream_id, &mut buf).unwrap();
                     assert_eq!(fin, true);
                     assert_eq!(
@@ -1906,6 +1941,7 @@ mod tests {
 
     // Send 2 data frames so that the second one cannot fit into the send_buf and it is only
     // partialy sent. We check that the sent data is correct.
+    #[allow(clippy::useless_vec)]
     fn fetch_with_two_data_frames(
         first_frame: &[u8],
         expected_first_data_frame_header: &[u8],
@@ -1924,15 +1960,16 @@ mod tests {
         assert_eq!(sent, Ok(first_frame.len()));
 
         // The second frame cannot fit.
-        let sent = client.send_request_body(request_stream_id, &[0_u8; 0xffff]);
+        let sent = client.send_request_body(request_stream_id, &vec![0_u8; SEND_BUFFER_SIZE]);
         assert_eq!(sent, Ok(expected_second_data_frame.len()));
 
         // Close stream.
         let _ = client.stream_close_send(request_stream_id);
 
         let mut out = client.process(None, now());
-        // We need to loop a bit until all data has been sent.
-        for _i in 0..55 {
+        // We need to loop a bit until all data has been sent. Once for every 1K
+        // of data.
+        for _i in 0..SEND_BUFFER_SIZE / 1000 {
             out = server.conn.process(out.dgram(), now());
             out = client.process(out.dgram(), now());
         }
@@ -1942,7 +1979,7 @@ mod tests {
             if let ConnectionEvent::RecvStreamReadable { stream_id } = e {
                 if stream_id == request_stream_id {
                     // Read DATA frames.
-                    let mut buf = [1_u8; 0xffff];
+                    let mut buf = vec![1_u8; RECV_BUFFER_SIZE];
                     let (amount, fin) = server.conn.stream_recv(stream_id, &mut buf).unwrap();
                     assert_eq!(fin, true);
                     assert_eq!(
@@ -1983,16 +2020,20 @@ mod tests {
         read_response(&mut client, &mut server.conn, request_stream_id);
     }
 
+    fn alloc_buffer(size: usize) -> (Vec<u8>, Vec<u8>) {
+        let data_frame = HFrame::Data { len: size as u64 };
+        let mut enc = Encoder::default();
+        data_frame.encode(&mut enc);
+
+        (vec![0_u8; size], enc.to_vec())
+    }
+
     // Send 2 frames. For the second one we can only send 63 bytes.
     // After the first frame there is exactly 63+2 bytes left in the send buffer.
     #[test]
     fn fetch_two_data_frame_second_63bytes() {
-        fetch_with_two_data_frames(
-            &[0_u8; 65447],
-            &[0x0, 0x80, 0x0, 0xff, 0x0a7],
-            &[0x0, 0x3f],
-            &[0_u8; 63],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 88);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x3f], &[0_u8; 63]);
     }
 
     // Send 2 frames. For the second one we can only send 63 bytes.
@@ -2000,12 +2041,8 @@ mod tests {
     // but we can only send 63 bytes.
     #[test]
     fn fetch_two_data_frame_second_63bytes_place_for_66() {
-        fetch_with_two_data_frames(
-            &[0_u8; 65446],
-            &[0x0, 0x80, 0x0, 0xff, 0x0a6],
-            &[0x0, 0x3f],
-            &[0_u8; 63],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 89);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x3f], &[0_u8; 63]);
     }
 
     // Send 2 frames. For the second one we can only send 64 bytes.
@@ -2013,60 +2050,40 @@ mod tests {
     // but we can only send 64 bytes.
     #[test]
     fn fetch_two_data_frame_second_64bytes_place_for_67() {
-        fetch_with_two_data_frames(
-            &[0_u8; 65445],
-            &[0x0, 0x80, 0x0, 0xff, 0x0a5],
-            &[0x0, 0x40, 0x40],
-            &[0_u8; 64],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 90);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x40, 0x40], &[0_u8; 64]);
     }
 
     // Send 2 frames. For the second one we can only send 16383 bytes.
     // After the first frame there is exactly 16383+3 bytes left in the send buffer.
     #[test]
     fn fetch_two_data_frame_second_16383bytes() {
-        fetch_with_two_data_frames(
-            &[0_u8; 49126],
-            &[0x0, 0x80, 0x0, 0xbf, 0x0e6],
-            &[0x0, 0x7f, 0xff],
-            &[0_u8; 16383],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 16409);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x7f, 0xff], &[0_u8; 16383]);
     }
 
     // Send 2 frames. For the second one we can only send 16383 bytes.
     // After the first frame there is exactly 16383+4 bytes left in the send buffer, but we can only send 16383 bytes.
     #[test]
     fn fetch_two_data_frame_second_16383bytes_place_for_16387() {
-        fetch_with_two_data_frames(
-            &[0_u8; 49125],
-            &[0x0, 0x80, 0x0, 0xbf, 0x0e5],
-            &[0x0, 0x7f, 0xff],
-            &[0_u8; 16383],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 16410);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x7f, 0xff], &[0_u8; 16383]);
     }
 
     // Send 2 frames. For the second one we can only send 16383 bytes.
     // After the first frame there is exactly 16383+5 bytes left in the send buffer, but we can only send 16383 bytes.
     #[test]
     fn fetch_two_data_frame_second_16383bytes_place_for_16388() {
-        fetch_with_two_data_frames(
-            &[0_u8; 49124],
-            &[0x0, 0x80, 0x0, 0xbf, 0x0e4],
-            &[0x0, 0x7f, 0xff],
-            &[0_u8; 16383],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 16411);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x7f, 0xff], &[0_u8; 16383]);
     }
 
     // Send 2 frames. For the second one we can send 16384 bytes.
     // After the first frame there is exactly 16384+5 bytes left in the send buffer, but we can send 16384 bytes.
     #[test]
     fn fetch_two_data_frame_second_16384bytes_place_for_16389() {
-        fetch_with_two_data_frames(
-            &[0_u8; 49123],
-            &[0x0, 0x80, 0x0, 0xbf, 0x0e3],
-            &[0x0, 0x80, 0x0, 0x40, 0x0],
-            &[0_u8; 16384],
-        );
+        let (buf, hdr) = alloc_buffer(SEND_BUFFER_SIZE - 16412);
+        fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x80, 0x0, 0x40, 0x0], &[0_u8; 16384]);
     }
 
     // Test receiving STOP_SENDING with the HttpNoError error code.
@@ -2538,7 +2555,7 @@ mod tests {
 
         // Check that a new request cannot be made.
         assert_eq!(
-            client.fetch("GET", "https", "something.com", "/", &[]),
+            client.fetch(now(), "GET", "https", "something.com", "/", &[]),
             Err(Error::AlreadyClosed)
         );
 
@@ -3301,7 +3318,7 @@ mod tests {
     fn zero_rtt_before_resumption_token() {
         let mut client = default_http3_client();
         assert!(client
-            .fetch("GET", "https", "something.com", "/", &[])
+            .fetch(now(), "GET", "https", "something.com", "/", &[])
             .is_err());
     }
 

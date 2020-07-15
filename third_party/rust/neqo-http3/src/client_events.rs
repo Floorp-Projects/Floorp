@@ -10,7 +10,7 @@ use crate::connection::Http3State;
 use crate::send_message::SendMessageEvents;
 use crate::Header;
 use crate::RecvMessageEvents;
-use neqo_common::matches;
+
 use neqo_transport::{AppError, StreamType};
 
 use std::cell::RefCell;

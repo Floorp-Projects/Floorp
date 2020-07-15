@@ -23,17 +23,6 @@ pub use self::incrdecoder::{
 #[macro_use]
 extern crate lazy_static;
 
-// Cribbed from the |matches| crate, for simplicity.
-#[macro_export]
-macro_rules! matches {
-    ($expression:expr, $($pattern:tt)+) => {
-        match $expression {
-            $($pattern)+ => true,
-            _ => false
-        }
-    }
-}
-
 #[must_use]
 pub fn hex(buf: &[u8]) -> String {
     let mut ret = String::with_capacity(buf.len() * 2);

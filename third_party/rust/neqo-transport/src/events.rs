@@ -10,8 +10,6 @@ use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
 
-use neqo_common::matches;
-
 use crate::connection::State;
 use crate::frame::StreamType;
 use crate::stream_id::StreamId;

@@ -26,8 +26,7 @@ use crate::LOCAL_IDLE_TIMEOUT;
 
 pub const GRANULARITY: Duration = Duration::from_millis(20);
 pub const MAX_ACK_DELAY: Duration = Duration::from_millis(25);
-// Defined in -recovery 6.2 as 500ms but using lower value until we have RTT
-// caching. See https://github.com/mozilla/neqo/issues/79
+// Defined in -recovery 6.2 as 333ms but using lower value.
 const INITIAL_RTT: Duration = Duration::from_millis(100);
 const PACKET_THRESHOLD: u64 = 3;
 /// `ACK_ONLY_SIZE_LIMIT` is the minimum size of the congestion window.
@@ -47,55 +46,68 @@ pub enum RecoveryToken {
     HandshakeDone,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct RttVals {
+    samples: u64,
     latest_rtt: Duration,
-    smoothed_rtt: Option<Duration>,
+    smoothed_rtt: Duration,
     rttvar: Duration,
     min_rtt: Duration,
     max_ack_delay: Duration,
 }
 
 impl RttVals {
-    fn update_rtt(&mut self, mut qlog: &mut NeqoQlog, latest_rtt: Duration, ack_delay: Duration) {
-        self.latest_rtt = latest_rtt;
+    pub fn set_initial_rtt(&mut self, rtt: Duration) {
+        // Only allow this when there are no samples.
+        debug_assert!(self.samples == 0);
+        self.latest_rtt = rtt;
+        self.min_rtt = rtt;
+        self.smoothed_rtt = rtt;
+        self.rttvar = rtt / 2;
+    }
+
+    fn update_rtt(
+        &mut self,
+        mut qlog: &mut NeqoQlog,
+        mut rtt_sample: Duration,
+        ack_delay: Duration,
+    ) {
         // min_rtt ignores ack delay.
-        self.min_rtt = min(self.min_rtt, self.latest_rtt);
+        self.min_rtt = min(self.min_rtt, rtt_sample);
         // Limit ack_delay by max_ack_delay
         let ack_delay = min(ack_delay, self.max_ack_delay);
         // Adjust for ack delay if it's plausible.
-        if self.latest_rtt - self.min_rtt >= ack_delay {
-            self.latest_rtt -= ack_delay;
+        if rtt_sample - self.min_rtt >= ack_delay {
+            rtt_sample -= ack_delay;
         }
-        // Based on {{?RFC6298}}.
-        match self.smoothed_rtt {
-            None => {
-                self.smoothed_rtt = Some(self.latest_rtt);
-                self.rttvar = self.latest_rtt / 2;
-            }
-            Some(smoothed_rtt) => {
-                let rttvar_sample = if smoothed_rtt > self.latest_rtt {
-                    smoothed_rtt - self.latest_rtt
-                } else {
-                    self.latest_rtt - smoothed_rtt
-                };
 
-                self.rttvar = (self.rttvar * 3 + rttvar_sample) / 4;
-                self.smoothed_rtt = Some((smoothed_rtt * 7 + self.latest_rtt) / 8);
-            }
+        if self.samples == 0 {
+            self.set_initial_rtt(rtt_sample);
+        } else {
+            // Calculate EWMA RTT (based on {{?RFC6298}}).
+            let rttvar_sample = if self.smoothed_rtt > rtt_sample {
+                self.smoothed_rtt - rtt_sample
+            } else {
+                rtt_sample - self.smoothed_rtt
+            };
+
+            self.latest_rtt = rtt_sample;
+            self.rttvar = (self.rttvar * 3 + rttvar_sample) / 4;
+            self.smoothed_rtt = (self.smoothed_rtt * 7 + rtt_sample) / 8;
         }
+        self.samples += 1;
         qlog::metrics_updated(
             &mut qlog,
             &[
                 QlogMetric::LatestRtt(self.latest_rtt),
                 QlogMetric::MinRtt(self.min_rtt),
-                QlogMetric::SmoothedRtt(self.smoothed_rtt.unwrap()),
+                QlogMetric::SmoothedRtt(self.smoothed_rtt),
             ],
         );
     }
 
     pub fn rtt(&self) -> Duration {
-        self.smoothed_rtt.unwrap_or(self.latest_rtt)
+        self.smoothed_rtt
     }
 
     fn pto(&self, pn_space: PNSpace) -> Duration {
@@ -106,6 +118,19 @@ impl RttVals {
             } else {
                 Duration::from_millis(0)
             }
+    }
+}
+
+impl Default for RttVals {
+    fn default() -> Self {
+        Self {
+            samples: 0,
+            latest_rtt: INITIAL_RTT,
+            smoothed_rtt: INITIAL_RTT,
+            rttvar: INITIAL_RTT / 2,
+            min_rtt: INITIAL_RTT,
+            max_ack_delay: MAX_ACK_DELAY,
+        }
     }
 }
 
@@ -475,12 +500,7 @@ pub(crate) struct LossRecovery {
 impl LossRecovery {
     pub fn new() -> Self {
         Self {
-            rtt_vals: RttVals {
-                min_rtt: Duration::from_secs(u64::max_value()),
-                max_ack_delay: MAX_ACK_DELAY,
-                latest_rtt: INITIAL_RTT,
-                ..RttVals::default()
-            },
+            rtt_vals: RttVals::default(),
             pto_state: None,
             cc: CongestionControl::default(),
             spaces: LossRecoverySpaces::new(),
@@ -502,9 +522,8 @@ impl LossRecovery {
         self.rtt_vals.rtt()
     }
 
-    pub fn set_initial_rtt(&mut self, value: Duration) {
-        debug_assert!(self.rtt_vals.smoothed_rtt.is_none());
-        self.rtt_vals.latest_rtt = value
+    pub fn set_initial_rtt(&mut self, rtt: Duration) {
+        self.rtt_vals.set_initial_rtt(rtt)
     }
 
     pub fn cwnd_avail(&self) -> usize {
@@ -625,10 +644,7 @@ impl LossRecovery {
         // kTimeThreshold = 9/8
         // loss_delay = kTimeThreshold * max(latest_rtt, smoothed_rtt)
         // loss_delay = max(loss_delay, kGranularity)
-        let rtt = match self.rtt_vals.smoothed_rtt {
-            None => self.rtt_vals.latest_rtt,
-            Some(smoothed_rtt) => max(self.rtt_vals.latest_rtt, smoothed_rtt),
-        };
+        let rtt = max(self.rtt_vals.latest_rtt, self.rtt_vals.smoothed_rtt);
         max(rtt * 9 / 8, GRANULARITY)
     }
 
@@ -838,7 +854,7 @@ mod tests {
             lr.rtt_vals.min_rtt,
         );
         assert_eq!(lr.rtt_vals.latest_rtt, latest_rtt, "latest RTT");
-        assert_eq!(lr.rtt_vals.smoothed_rtt, Some(smoothed_rtt), "smoothed RTT");
+        assert_eq!(lr.rtt_vals.smoothed_rtt, smoothed_rtt, "smoothed RTT");
         assert_eq!(lr.rtt_vals.rttvar, rttvar, "RTT variance");
         assert_eq!(lr.rtt_vals.min_rtt, min_rtt, "min RTT");
     }

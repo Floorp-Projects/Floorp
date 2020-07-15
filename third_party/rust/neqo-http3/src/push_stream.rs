@@ -9,7 +9,6 @@ use crate::push_controller::{PushController, RecvPushEvents};
 use crate::recv_message::RecvMessage;
 use crate::stream_type_reader::NewStreamTypeReader;
 use crate::{Error, RecvStream, Res};
-use neqo_common::matches;
 use neqo_qpack::decoder::QPackDecoder;
 use neqo_transport::{AppError, Connection};
 use std::cell::RefCell;

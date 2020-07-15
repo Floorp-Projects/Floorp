@@ -218,7 +218,6 @@ fn prepare_data(
 mod tests {
     use super::{Http3Server, Http3ServerEvent, Http3State, Rc, RefCell};
     use crate::{Error, Header};
-    use neqo_common::matches;
     use neqo_crypto::AuthenticationStatus;
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_qpack::QpackSettings;

@@ -7,8 +7,8 @@
 // This file implements a server that can handle multiple connections.
 
 use neqo_common::{
-    self as common, hex, matches, qdebug, qerror, qinfo, qlog::NeqoQlog, qtrace, qwarn,
-    timer::Timer, Datagram, Decoder, Encoder, Role,
+    self as common, hex, qdebug, qerror, qinfo, qlog::NeqoQlog, qtrace, qwarn, timer::Timer,
+    Datagram, Decoder, Encoder, Role,
 };
 use neqo_crypto::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
