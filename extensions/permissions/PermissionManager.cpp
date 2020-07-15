@@ -25,6 +25,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
+#include "nsCRT.h"
 #include "nsEffectiveTLDService.h"
 #include "nsIConsoleService.h"
 #include "nsIIdleService.h"

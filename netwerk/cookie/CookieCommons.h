@@ -13,6 +13,7 @@
 #include "nsICookie.h"
 
 class nsIChannel;
+class nsIConsoleReportCollector;
 class nsICookieJarSettings;
 class nsIEffectiveTLDService;
 class nsIPrincipal;
