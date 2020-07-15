@@ -42,7 +42,6 @@
 #include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
-#include "frontend/BytecodeCompiler.h"  // js::frontend::CreateScriptSourceObject
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
@@ -2963,9 +2962,22 @@ static ScriptSourceObject* SelfHostingScriptSourceObject(JSContext* cx) {
   CompileOptions options(cx);
   FillSelfHostingCompileOptions(options);
 
-  ScriptSourceObject* sourceObject =
-      frontend::CreateScriptSourceObject(cx, options);
+  ScriptSource* ss = cx->new_<ScriptSource>();
+  if (!ss) {
+    return nullptr;
+  }
+  Rooted<ScriptSourceHolder> ssHolder(cx, ss);
+
+  if (!ss->initFromOptions(cx, options)) {
+    return nullptr;
+  }
+
+  RootedScriptSourceObject sourceObject(cx, ScriptSourceObject::create(cx, ss));
   if (!sourceObject) {
+    return nullptr;
+  }
+
+  if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
     return nullptr;
   }
 

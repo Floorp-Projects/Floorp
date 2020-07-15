@@ -164,9 +164,6 @@ MOZ_MUST_USE JSFunction* CompileStandaloneAsyncGenerator(
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind);
 
-ScriptSourceObject* CreateScriptSourceObject(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options);
-
 /*
  * True if str consists of an IdentifierStart character, followed by one or
  * more IdentifierPart characters, i.e. it matches the IdentifierName production
