@@ -1044,6 +1044,8 @@ var ins = wasmEvalText(`
       (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const 63))))
     (func (export "shr_i64x2_64")
       (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const 64))))
+    (func (export "shr_i64x2_-1")
+      (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const -1))))
     (func (export "shr_u64x2") (param $count i32)
       (v128.store (i32.const 0) (i64x2.shr_u (v128.load (i32.const 16)) (local.get $count))))
     (func (export "shr_u64x2_27")
