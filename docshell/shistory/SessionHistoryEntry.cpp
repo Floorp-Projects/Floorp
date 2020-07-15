@@ -9,6 +9,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsSHEntryShared.h"
 #include "nsStructuredCloneContainer.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -41,6 +42,17 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
 }
 
 static uint32_t gEntryID;
+nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>*
+    SessionHistoryEntry::sInfoIdToEntry = nullptr;
+
+SessionHistoryEntry* SessionHistoryEntry::GetByInfoId(uint64_t aId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!sInfoIdToEntry) {
+    return nullptr;
+  }
+
+  return sInfoIdToEntry->Get(aId);
+}
 
 SessionHistoryEntry::SessionHistoryEntry(nsISHistory* aSessionHistory,
                                          nsDocShellLoadState* aLoadState,
@@ -54,6 +66,20 @@ SessionHistoryEntry::SessionHistoryEntry(nsISHistory* aSessionHistory,
       aLoadState->PartitionedPrincipalToInherit();
   mSharedInfo->mCsp = aLoadState->Csp();
   // FIXME Set remaining shared fields!
+
+  if (!sInfoIdToEntry) {
+    sInfoIdToEntry =
+        new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
+  }
+  sInfoIdToEntry->Put(Info().Id(), this);
+}
+
+SessionHistoryEntry::~SessionHistoryEntry() {
+  sInfoIdToEntry->Remove(Info().Id());
+  if (sInfoIdToEntry->IsEmpty()) {
+    delete sInfoIdToEntry;
+    sInfoIdToEntry = nullptr;
+  }
 }
 
 NS_IMPL_ISUPPORTS(SessionHistoryEntry, nsISHEntry)
