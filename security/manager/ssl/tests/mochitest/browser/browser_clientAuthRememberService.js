@@ -21,19 +21,6 @@ const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
 
-async function openCertmanager() {
-  let win = window.openDialog("chrome://pippki/content/certManager.xhtml");
-  return new Promise((resolve, reject) => {
-    win.addEventListener(
-      "load",
-      function() {
-        executeSoon(() => resolve(win));
-      },
-      { once: true }
-    );
-  });
-}
-
 function findCertByCommonName(commonName) {
   for (let cert of certDB.getCerts()) {
     if (cert.commonName == commonName) {
@@ -94,7 +81,7 @@ add_task(async function testRememberedDecisionsUI() {
     MockRegistrar.unregister(clientAuthRememberServiceCID);
   });
 
-  let win = await openCertmanager();
+  let win = await openCertManager();
 
   let listItems = win.document
     .getElementById("rememberedList")

@@ -403,34 +403,9 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(
       // overrides, we are storing certs without any trust flags associated.
       // So we must check whether the cert really belongs to the
       // server, email or unknown tab. We will lookup the cert in the override
-      // list to come to the decision. Unfortunately, the lookup in the
-      // override list is quite expensive. Therefore we are using this
-      // lengthy if/else statement to minimize
-      // the number of override-list-lookups.
-
-      if (aWantedType == nsIX509Cert::SERVER_CERT &&
-          thisCertType == nsIX509Cert::UNKNOWN_CERT) {
-        // This unknown cert was stored without trust
-        // Are there host:port based overrides stored?
-        // If yes, display them.
-        addOverrides = true;
-      } else if (aWantedType == nsIX509Cert::SERVER_CERT &&
-                 thisCertType == nsIX509Cert::SERVER_CERT) {
-        // This server cert is explicitly marked as a web site peer,
-        // with or without trust, but editable, so show it
-        wantThisCert = true;
-        // Are there host:port based overrides stored?
-        // If yes, display them.
-        addOverrides = true;
-      } else if (aWantedType == nsIX509Cert::SERVER_CERT &&
-                 thisCertType == nsIX509Cert::EMAIL_CERT) {
-        // This cert might have been categorized as an email cert
-        // because it carries an email address. But is it really one?
-        // Our cert categorization is uncertain when it comes to
-        // distinguish between email certs and web site certs.
-        // So, let's see if we have an override for that cert
-        // and if there is, conclude it's really a web site cert.
-        addOverrides = true;
+      // list to come to the decision.
+      if (aWantedType == nsIX509Cert::SERVER_CERT) {
+        wantThisCertIfHaveOverrides = true;
       } else if (aWantedType == nsIX509Cert::EMAIL_CERT &&
                  thisCertType == nsIX509Cert::EMAIL_CERT) {
         // This cert might have been categorized as an email cert
@@ -462,7 +437,7 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(
       if (wantThisCertIfHaveOverrides) {
         if (NS_SUCCEEDED(rv) && ocount > 0) {
           // there are overrides for this cert
-          wantThisCert = true;
+          addOverrides = true;
         }
       }
     }
