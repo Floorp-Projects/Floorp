@@ -169,7 +169,10 @@ class PromptParent extends JSWindowActorParent {
 
       this.unregisterPrompt(id);
 
-      PromptUtils.fireDialogEvent(window, "DOMModalDialogClosed", browser);
+      PromptUtils.fireDialogEvent(window, "DOMModalDialogClosed", browser, {
+        wasPermitUnload: args.inPermitUnload,
+        areLeaving: args.ok,
+      });
       resolver(args);
       browser.maybeLeaveModalState();
     };

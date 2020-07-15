@@ -5418,6 +5418,26 @@
         true
       );
 
+      // When cancelling beforeunload tabmodal dialogs, reset the URL bar to
+      // avoid spoofing risks.
+      this.addEventListener(
+        "DOMModalDialogClosed",
+        event => {
+          if (
+            !event.detail?.wasPermitUnload ||
+            event.detail.areLeaving ||
+            event.target.nodeName != "browser"
+          ) {
+            return;
+          }
+          event.target.userTypedValue = null;
+          if (event.target == this.selectedBrowser) {
+            gURLBar.setURI();
+          }
+        },
+        true
+      );
+
       let onTabCrashed = event => {
         if (!event.isTrusted || !event.isTopFrame) {
           return;
