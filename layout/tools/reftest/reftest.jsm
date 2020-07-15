@@ -1687,6 +1687,10 @@ function RecvStartPrint(isPrintSelection, printRange)
         ps.endPageRange = +range[1] || 1;
     }
 
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
+    ps.printInColor = prefs.getBoolPref("print.print_in_color", true);
+
     g.browser.frameLoader.print(g.browser.outerWindowID, ps, {
         onStateChange: function(webProgress, request, stateFlags, status) {
             if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
