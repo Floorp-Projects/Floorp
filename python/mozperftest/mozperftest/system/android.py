@@ -46,7 +46,7 @@ class ADBLoggedDevice(ADBDevice):
         self._provided_logger = kw.pop("logger")
         super(ADBLoggedDevice, self).__init__(*args, **kw)
 
-    def _get_logger(self, logger_name):
+    def _get_logger(self, logger_name, verbose):
         return self._provided_logger
 
 
