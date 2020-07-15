@@ -1807,6 +1807,13 @@ bool WarpBuilder::build_BindName(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_BindGName(BytecodeLocation loc) {
+  if (const auto* snapshot = getOpSnapshot<WarpBindGName>(loc)) {
+    MOZ_ASSERT(!script_->hasNonSyntacticScope());
+    JSObject* globalEnv = snapshot->globalEnv();
+    pushConstant(ObjectValue(*globalEnv));
+    return true;
+  }
+
   if (script_->hasNonSyntacticScope()) {
     return build_BindName(loc);
   }

@@ -4062,5 +4062,32 @@ bool js::AnalyzeEntrainedVariables(JSContext* cx, HandleScript script) {
 
   return true;
 }
-
 #endif
+
+JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
+                                          Handle<GlobalObject*> global,
+                                          HandlePropertyName name) {
+  // We can bind name to the global lexical scope if the binding already
+  // exists, is initialized, and is writable (i.e., an initialized
+  // 'let') at compile time.
+  Rooted<LexicalEnvironmentObject*> env(cx, &global->lexicalEnvironment());
+  if (Shape* shape = env->lookup(cx, name)) {
+    if (shape->writable() &&
+        !env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+      return env;
+    }
+    return nullptr;
+  }
+
+  if (Shape* shape = global->lookup(cx, name)) {
+    // If the property does not currently exist on the global lexical
+    // scope, we can bind name to the global object if the property
+    // exists on the global and is non-configurable, as then it cannot
+    // be shadowed.
+    if (!shape->configurable()) {
+      return global;
+    }
+  }
+
+  return nullptr;
+}

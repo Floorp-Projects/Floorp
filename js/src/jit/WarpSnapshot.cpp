@@ -167,6 +167,10 @@ void WarpNewObject::dumpData(GenericPrinter& out) const {
   out.printf("    template: 0x%p\n", templateObject());
 }
 
+void WarpBindGName::dumpData(GenericPrinter& out) const {
+  out.printf("    globalEnv: 0x%p\n", globalEnv());
+}
+
 void WarpBailout::dumpData(GenericPrinter& out) const {
   // No fields.
 }
@@ -289,6 +293,10 @@ void WarpNewArray::traceData(JSTracer* trc) {
 
 void WarpNewObject::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, templateObject_, "warp-newobject-template");
+}
+
+void WarpBindGName::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, globalEnv_, "warp-bindgname-globalenv");
 }
 
 void WarpBailout::traceData(JSTracer* trc) {
