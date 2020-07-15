@@ -1396,15 +1396,6 @@ JS_PUBLIC_API void JS::SetHostCleanupFinalizationRegistryCallback(
   cx->runtime()->gc.setHostCleanupFinalizationRegistryCallback(cb, data);
 }
 
-JS_PUBLIC_API bool JS::CleanupQueuedFinalizationRegistry(
-    JSContext* cx, HandleObject registry) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(registry);
-  return cx->runtime()->gc.cleanupQueuedFinalizationRegistry(
-      cx, registry.as<FinalizationRegistryObject>());
-}
-
 JS_PUBLIC_API void JS::ClearKeptObjects(JSContext* cx) {
   gc::GCRuntime* gc = &cx->runtime()->gc;
 

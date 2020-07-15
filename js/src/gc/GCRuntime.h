@@ -421,7 +421,7 @@ class GCRuntime {
   void setHostCleanupFinalizationRegistryCallback(
       JSHostCleanupFinalizationRegistryCallback callback, void* data);
   void callHostCleanupFinalizationRegistryCallback(
-      FinalizationRegistryObject* registry);
+      JSFunction* doCleanup, GlobalObject* incumbentGlobal);
   MOZ_MUST_USE bool addWeakPointerZonesCallback(
       JSWeakPointerZonesCallback callback, void* data);
   void removeWeakPointerZonesCallback(JSWeakPointerZonesCallback callback);
@@ -439,8 +439,6 @@ class GCRuntime {
                                FinalizationRegistryObject* registry);
   bool registerWithFinalizationRegistry(JSContext* cx, HandleObject target,
                                         HandleObject record);
-  bool cleanupQueuedFinalizationRegistry(
-      JSContext* cx, Handle<FinalizationRegistryObject*> registry);
 
   void setFullCompartmentChecks(bool enable);
 
