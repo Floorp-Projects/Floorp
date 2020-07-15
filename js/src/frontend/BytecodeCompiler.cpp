@@ -501,8 +501,10 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
   compilationInfo.source()->recordParseEnded();
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.source()->tryCompressOffThread(cx)) {
-    return nullptr;
+  if (!compilationInfo.cx->isHelperThreadContext()) {
+    if (!compilationInfo.source()->tryCompressOffThread(cx)) {
+      return nullptr;
+    }
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
@@ -550,8 +552,10 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   MOZ_ASSERT(compilationInfo.module);
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.source()->tryCompressOffThread(cx)) {
-    return nullptr;
+  if (!cx->isHelperThreadContext()) {
+    if (!compilationInfo.source()->tryCompressOffThread(cx)) {
+      return nullptr;
+    }
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
@@ -642,8 +646,10 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
   MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.source()->tryCompressOffThread(compilationInfo.cx)) {
-    return nullptr;
+  if (!compilationInfo.cx->isHelperThreadContext()) {
+    if (!compilationInfo.source()->tryCompressOffThread(compilationInfo.cx)) {
+      return nullptr;
+    }
   }
 
   return fun;
