@@ -176,7 +176,7 @@ def add_remote_arguments(parser):
 
     parser.add_argument("--remoteTestRoot", action="store", type=str, dest="remoteTestRoot",
                         help="Remote directory to use as test root "
-                             "(eg. /mnt/sdcard/tests or /data/local/tests).")
+                             "(eg. /data/local/tmp/test_root).")
 
 
 def parser_desktop():
