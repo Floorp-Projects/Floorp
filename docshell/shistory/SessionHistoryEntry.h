@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsISHEntry.h"
 #include "nsStructuredCloneContainer.h"
+#include "nsDataHashtable.h"
 
 class nsDocShellLoadState;
 class nsIChannel;
@@ -75,14 +76,19 @@ class SessionHistoryEntry : public nsISHEntry {
 
   const SessionHistoryInfo& Info() const { return *mInfo; }
 
+  // Get an entry based on SessionHistoryInfo's Id. Parent process only.
+  static SessionHistoryEntry* GetByInfoId(uint64_t aId);
+
  private:
-  virtual ~SessionHistoryEntry() = default;
+  virtual ~SessionHistoryEntry();
 
   UniquePtr<SessionHistoryInfo> mInfo;
   RefPtr<SHEntrySharedParentState> mSharedInfo;
   nsISHEntry* mParent = nullptr;
   uint32_t mID;
   nsTArray<RefPtr<SessionHistoryEntry>> mChildren;
+
+  static nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>* sInfoIdToEntry;
 };
 
 }  // namespace dom

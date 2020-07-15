@@ -274,6 +274,7 @@ CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
   RefPtr<SessionHistoryEntry> entry =
       new SessionHistoryEntry(GetSessionHistory(), aLoadState, aChannel);
   mLoadingEntries.AppendElement(entry);
+  MOZ_ASSERT(SessionHistoryEntry::GetByInfoId(entry->Info().Id()) == entry);
   return MakeUnique<SessionHistoryInfo>(entry->Info());
 }
 
