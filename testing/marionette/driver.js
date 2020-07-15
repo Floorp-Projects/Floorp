@@ -1758,7 +1758,7 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.switchToFrame = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  let curWindow = assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
   let { focus = false, id } = cmd.parameters;
@@ -1776,29 +1776,21 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     byFrame = WebElement.fromJSON(cmd.parameters.element);
   }
 
-  const otherErrorsExpr = /about:.+(error)|(blocked)\?/;
-  const checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  const checkLoad = function(win) {
+    const otherErrorsExpr = /about:.+(error)|(blocked)\?/;
 
-  let curWindow = this.getCurrentWindow();
-
-  let checkLoad = function() {
-    let win = this.getCurrentWindow();
-    if (win.document.readyState == "complete") {
-      return;
-    } else if (win.document.readyState == "interactive") {
-      let documentURI = win.document.documentURI;
-      if (documentURI.startsWith("about:certerror")) {
-        throw new InsecureCertificateError();
-      } else if (otherErrorsExpr.exec(documentURI)) {
-        throw new UnknownError("Reached error page: " + documentURI);
+    return new PollPromise(resolve => {
+      if (win.document.readyState == "complete") {
+        resolve();
+      } else if (win.document.readyState == "interactive") {
+        let documentURI = win.document.documentURI;
+        if (documentURI.startsWith("about:certerror")) {
+          throw new InsecureCertificateError();
+        } else if (otherErrorsExpr.exec(documentURI)) {
+          throw new UnknownError("Reached error page: " + documentURI);
+        }
       }
-    }
-
-    checkTimer.initWithCallback(
-      checkLoad.bind(this),
-      100,
-      Ci.nsITimer.TYPE_ONE_SHOT
-    );
+    });
   };
 
   if (this.context == Context.Chrome) {
@@ -1810,11 +1802,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
       if (focus) {
         this.mainFrame.focus();
       }
-      checkTimer.initWithCallback(
-        checkLoad.bind(this),
-        100,
-        Ci.nsITimer.TYPE_ONE_SHOT
-      );
+      await checkLoad(curWindow);
       return;
     }
 
@@ -1832,11 +1820,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
         if (focus) {
           this.curFrame.focus();
         }
-        checkTimer.initWithCallback(
-          checkLoad.bind(this),
-          100,
-          Ci.nsITimer.TYPE_ONE_SHOT
-        );
+        await checkLoad(curWindow);
         return;
       }
 
@@ -1852,11 +1836,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
           if (focus) {
             this.curFrame.focus();
           }
-          checkTimer.initWithCallback(
-            checkLoad.bind(this),
-            100,
-            Ci.nsITimer.TYPE_ONE_SHOT
-          );
+          await checkLoad(curWindow);
           return;
         }
       }
@@ -1871,11 +1851,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
         if (focus) {
           this.curFrame.focus();
         }
-        checkTimer.initWithCallback(
-          checkLoad.bind(this),
-          100,
-          Ci.nsITimer.TYPE_ONE_SHOT
-        );
+        await checkLoad(curWindow);
       } else {
         throw new NoSuchFrameError(`Unable to locate frame: ${id}`);
       }
