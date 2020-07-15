@@ -1670,6 +1670,17 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         decl.isNameValid = CSS.supports(decl.name, "initial");
         return decl;
       });
+
+      // Associate all the compatibility issues for the declarations with the
+      // form. Once Bug 1648339
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1648339
+      // is solved we can directly associate compatibility issue with the
+      // declaration themselves.
+      const compatibility = this.pageStyle.inspector.getCompatibility();
+      form.compatibilityIssues = compatibility.getCSSDeclarationBlockIssues(
+        declarations
+      );
+
       // Cache parsed declarations so we don't needlessly re-parse authoredText every time
       // we need to check previous property names and values when tracking changes.
       this._declarations = declarations;
