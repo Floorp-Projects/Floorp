@@ -247,7 +247,7 @@ class Mitmproxy(Playback):
             self.recording_paths = [normalize_path(recording_path)
                                     for recording_path in self.config["playback_files"]]
 
-            if self.config["playback_version"] in ["4.0.4", "5.0.1"]:
+            if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
                 args = [
                     "-v",
                     "--set",
