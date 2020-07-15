@@ -50,11 +50,14 @@
 
     <!--Preferences-->
     <dimen name="checkbox_preference_padding_vertical">12dp</dimen>
+    <dimen name="radiobutton_preference_margin_start">8dp</dimen>
     <dimen name="top_bar_alignment_margin_start">72dp</dimen>
 
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">28dp</dimen>
     <dimen name="tracking_protection_item_height">48dp</dimen>
+    <dimen name="tracking_protection_item_margin_end">16dp</dimen>
+    <dimen name="tracking_protection_item_margin_bottom">18dp</dimen>
 
     <dimen name="design_quick_action_sheet_peek_height_min">64dp</dimen>
 
@@ -116,6 +119,7 @@
     <dimen name="locale_item_text_margin_gone_start">72dp</dimen>
     <dimen name="locale_item_title_size">16sp</dimen>
     <dimen name="locale_item_subtitle_size">12sp</dimen>
+    <dimen name="locale_item_height">48dp</dimen>
 
     <!--Migration Activity-->
     <dimen name="migration_margin_horizontal_large">20dp</dimen>
@@ -157,6 +161,9 @@
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_size">12dp</dimen>
     <dimen name="saved_logins_detail_menu_vertical_padding">5dp</dimen>
     <dimen name="saved_logins_end_icon_drawable_padding">16dp</dimen>
+    <dimen name="saved_logins_item_padding">4dp</dimen>
+    <dimen name="saved_logins_item_margin_start">16dp</dimen>
+    <dimen name="saved_logins_item_margin_end">48dp</dimen>
 
     <!-- a11y -->
     <dimen name="accessibility_min_height">48dp</dimen>

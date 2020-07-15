@@ -29,7 +29,7 @@
     <TextView
         android:id="@+id/title"
         android:layout_width="0dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="@dimen/radiobutton_preference_margin_start"
         android:layout_height="wrap_content"
         android:gravity="center|start"
         android:layout_marginEnd="@dimen/radio_button_preference_horizontal"

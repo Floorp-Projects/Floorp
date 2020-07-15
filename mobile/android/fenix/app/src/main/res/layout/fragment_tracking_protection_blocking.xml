@@ -17,8 +17,8 @@
             android:fontFamily="@font/metropolis_bold"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/tracking_protection_item_height"
-            android:layout_marginStart="72dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+            android:layout_marginEnd="@dimen/tracking_protection_item_margin_end"
             android:paddingStart="0dp"
             android:paddingEnd="0dp"
             android:text="@string/enhanced_tracking_protection_blocked" />
