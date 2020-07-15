@@ -47,8 +47,8 @@ class ImageCallbackHelper : public imgIContainerCallback,
     gDecodeRequests.remove(this);
   }
 
-  ImageCallbackHelper(java::GeckoResult::Param aResult, int32_t aMaxSize)
-      : mResult(aResult), mMaxSize(aMaxSize), mImage(nullptr) {
+  ImageCallbackHelper(java::GeckoResult::Param aResult, int32_t aDesiredLength)
+      : mResult(aResult), mDesiredLength(aDesiredLength), mImage(nullptr) {
     MOZ_ASSERT(mResult);
   }
 
@@ -63,21 +63,20 @@ class ImageCallbackHelper : public imgIContainerCallback,
     }
 
     mImage = aImage;
-    return mImage->StartDecoding(imgIContainer::FLAG_SYNC_DECODE |
-                                     imgIContainer::FLAG_ASYNC_NOTIFY |
-                                     imgIContainer::FLAG_HIGH_QUALITY_SCALING,
-                                 imgIContainer::FRAME_FIRST);
+    return mImage->StartDecoding(
+        imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY,
+        imgIContainer::FRAME_FIRST);
   }
 
   // This method assumes that the image is ready to be processed
   nsresult SendBitmap() {
     RefPtr<gfx::SourceSurface> surface;
 
-    if (mMaxSize > 0) {
+    if (mDesiredLength > 0) {
       surface = mImage->GetFrameAtSize(
-          gfx::IntSize(mMaxSize, mMaxSize), imgIContainer::FRAME_FIRST,
-          imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY |
-              imgIContainer::FLAG_HIGH_QUALITY_SCALING);
+          gfx::IntSize(mDesiredLength, mDesiredLength),
+          imgIContainer::FRAME_FIRST,
+          imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
     } else {
       surface = mImage->GetFrame(
           imgIContainer::FRAME_FIRST,
@@ -126,7 +125,7 @@ class ImageCallbackHelper : public imgIContainerCallback,
 
  private:
   const java::GeckoResult::GlobalRef mResult;
-  int32_t mMaxSize;
+  int32_t mDesiredLength;
   nsCOMPtr<imgIContainer> mImage;
   virtual ~ImageCallbackHelper() {}
 };
@@ -137,11 +136,11 @@ NS_IMPL_ISUPPORTS(ImageCallbackHelper, imgIContainerCallback,
 }  // namespace
 
 /* static */ void ImageDecoderSupport::Decode(jni::String::Param aUri,
-                                              int32_t aMaxSize,
+                                              int32_t aDesiredLength,
                                               jni::Object::Param aResult) {
   auto result = java::GeckoResult::LocalRef(aResult);
   RefPtr<ImageCallbackHelper> helper =
-      new ImageCallbackHelper(result, aMaxSize);
+      new ImageCallbackHelper(result, aDesiredLength);
 
   nsresult rv = DecodeInternal(aUri->ToString(), helper, helper);
   if (NS_FAILED(rv)) {
