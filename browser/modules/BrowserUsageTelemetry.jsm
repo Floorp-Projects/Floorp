@@ -892,6 +892,8 @@ let BrowserUsageTelemetry = {
               widget == "tabbrowser-tabs" ||
               // We care about the page action and other buttons in here.
               widget == "urlbar-container" ||
+              // We care about the actual menu items.
+              widget == "menubar-items" ||
               // We care about individual bookmarks here.
               widget == "personal-bookmarks"
             ) {
