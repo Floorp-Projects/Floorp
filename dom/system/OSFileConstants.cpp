@@ -476,7 +476,7 @@ static const dom::ConstantSpec gLibcProperties[] = {
     INT_CONSTANT(DT_SOCK),
 #endif  // defined(DT_UNKNOWN)
 
-#if defined(S_IFIFO)
+#if defined(XP_UNIX)
     // Constants for |stat|
     INT_CONSTANT(S_IFMT),
     INT_CONSTANT(S_IFIFO),
@@ -484,9 +484,9 @@ static const dom::ConstantSpec gLibcProperties[] = {
     INT_CONSTANT(S_IFDIR),
     INT_CONSTANT(S_IFBLK),
     INT_CONSTANT(S_IFREG),
-    INT_CONSTANT(S_IFLNK),
-    INT_CONSTANT(S_IFSOCK),
-#endif  // defined(S_IFIFO)
+    INT_CONSTANT(S_IFLNK),   // not defined on minGW
+    INT_CONSTANT(S_IFSOCK),  // not defined on minGW
+#endif                       // defined(XP_UNIX)
 
     INT_CONSTANT(PATH_MAX),
 
