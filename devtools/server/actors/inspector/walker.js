@@ -446,8 +446,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       traits: {
         // Walker implements node picker starting with Firefox 80
         supportsNodePicker: true,
-        // watch/unwatchRootNode are available starting with Fx77
-        watchRootNode: true,
       },
     };
   },
