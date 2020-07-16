@@ -221,6 +221,8 @@ class ChannelWrapper final : public DOMEventTargetHelper,
 
   void GetRequestHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal,
                          ErrorResult& aRv) const;
+  void GetRequestHeader(const nsCString& aHeader, nsCString& aResult,
+                        ErrorResult& aRv) const;
 
   void GetResponseHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal,
                           ErrorResult& aRv) const;
