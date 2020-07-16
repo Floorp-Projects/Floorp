@@ -318,11 +318,7 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 pref("browser.urlbar.openintab", false);
 
 // If true, we show tail suggestions when available.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.urlbar.richSuggestions.tail", true);
-#else
-pref("browser.urlbar.richSuggestions.tail", false);
-#endif
 
 // Whether we expand the font size when when the urlbar is
 // focused in design update 2.
