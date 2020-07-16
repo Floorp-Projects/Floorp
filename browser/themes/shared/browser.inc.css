@@ -643,12 +643,12 @@ menupopup::part(drop-indicator) {
 }
 
 .ac-dropmarker::part(icon) {
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
 }
 
 .ac-has-end-icon {
   /* icon width + icon end margin */
-  padding-inline-end: calc(16px + 8px);
+  padding-inline-end: calc(12px + 8px);
   text-overflow: ellipsis;
   overflow: hidden;
 }
