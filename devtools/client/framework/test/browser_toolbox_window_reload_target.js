@@ -110,12 +110,8 @@ async function testReload(shortcut, toolbox) {
   const observer = {
     _isDocumentUnloaded: false,
     _isNewRooted: false,
-    onMutation(mutations) {
-      for (const { type } of mutations) {
-        if (type === "documentUnload") {
-          this._isDocumentUnloaded = true;
-        }
-      }
+    onRootDestroyed(mutations) {
+      this._isDocumentUnloaded = true;
     },
     onNewRootNode() {
       this._isNewRooted = true;
@@ -125,9 +121,9 @@ async function testReload(shortcut, toolbox) {
     },
   };
 
-  observer.onMutation = observer.onMutation.bind(observer);
+  observer.onRootDestroyed = observer.onRootDestroyed.bind(observer);
   observer.onNewRootNode = observer.onNewRootNode.bind(observer);
-  walker.on("mutations", observer.onMutation);
+  walker.on("root-destroyed", observer.onRootDestroyed);
   walker.watchRootNode(observer.onNewRootNode);
 
   // If we have a jsdebugger panel, wait for it to complete its reload
@@ -145,9 +141,9 @@ async function testReload(shortcut, toolbox) {
 
   await loadPromise;
 
-  // Wait for the documentUnload and newRoot were fired.
+  // Wait for root-destroyed and root-available to be fired.
   await waitUntil(() => observer.isReady());
-  walker.off("mutations", observer.onMutation);
+  walker.off("root-destroyed", observer.onRootDestroyed);
   walker.unwatchRootNode(observer.onNewRootNode);
   await onReloaded;
 }
