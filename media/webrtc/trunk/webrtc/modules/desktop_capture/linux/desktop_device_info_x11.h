@@ -21,7 +21,6 @@ public:
 
 protected:
   //DesktopDeviceInfo Interfaces
-  virtual void InitializeApplicationList() override;
   virtual void InitializeScreenList() override;
 
 private:

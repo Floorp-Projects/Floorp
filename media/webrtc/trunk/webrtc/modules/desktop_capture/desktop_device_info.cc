@@ -94,82 +94,6 @@ DesktopDisplayDevice& DesktopDisplayDevice::operator= (DesktopDisplayDevice& oth
   return *this;
 }
 
-
-DesktopApplication::DesktopApplication() {
-  processId_ = 0;
-  processPathNameUTF8_= NULL;
-  applicationNameUTF8_= NULL;
-  processUniqueIdUTF8_= NULL;
-  windowCount_ = 0;
-}
-
-DesktopApplication::~DesktopApplication() {
-  if (processPathNameUTF8_) {
-    delete [] processPathNameUTF8_;
-  }
-
-  if (applicationNameUTF8_) {
-    delete [] applicationNameUTF8_;
-  }
-
-  if (processUniqueIdUTF8_) {
-    delete [] processUniqueIdUTF8_;
-  }
-
-  processPathNameUTF8_= NULL;
-  applicationNameUTF8_= NULL;
-  processUniqueIdUTF8_= NULL;
-}
-
-void DesktopApplication::setProcessId(const ProcessId processId) {
-  processId_ = processId;
-}
-
-void DesktopApplication::setProcessPathName(const char *appPathNameUTF8) {
-  SetStringMember(&processPathNameUTF8_, appPathNameUTF8);
-}
-
-void DesktopApplication::setUniqueIdName(const char *appUniqueIdUTF8) {
-  SetStringMember(&processUniqueIdUTF8_, appUniqueIdUTF8);
-}
-
-void DesktopApplication::setProcessAppName(const char *appNameUTF8) {
-  SetStringMember(&applicationNameUTF8_, appNameUTF8);
-}
-
-void DesktopApplication::setWindowCount(const uint32_t count) {
-  windowCount_ = count;
-}
-
-ProcessId DesktopApplication::getProcessId() {
-  return processId_;
-}
-
-const char *DesktopApplication::getProcessPathName() {
-  return processPathNameUTF8_;
-}
-
-const char *DesktopApplication::getUniqueIdName() {
-  return processUniqueIdUTF8_;
-}
-
-const char *DesktopApplication::getProcessAppName() {
-  return applicationNameUTF8_;
-}
-
-uint32_t DesktopApplication::getWindowCount() {
-  return windowCount_;
-}
-
-DesktopApplication& DesktopApplication::operator= (DesktopApplication& other) {
-  processId_ = other.getProcessId();
-  setProcessPathName(other.getProcessPathName());
-  setUniqueIdName(other.getUniqueIdName());
-  setProcessAppName(other.getProcessAppName());
-
-  return *this;
-}
-
 DesktopTab::DesktopTab() {
   tabBrowserId_ = 0;
   tabNameUTF8_= NULL;
@@ -277,26 +201,6 @@ int32_t DesktopDeviceInfoImpl::getWindowInfo(int32_t nIndex,
   return 0;
 }
 
-int32_t DesktopDeviceInfoImpl::getApplicationCount() {
-  return desktop_application_list_.size();
-}
-
-int32_t DesktopDeviceInfoImpl::getApplicationInfo(int32_t nIndex,
-                                                  DesktopApplication & desktopApplication) {
-  if(nIndex < 0 || (size_t) nIndex >= desktop_application_list_.size()) {
-    return -1;
-  }
-
-  std::map<intptr_t,DesktopApplication*>::iterator iter = desktop_application_list_.begin();
-  std::advance (iter, nIndex);
-  DesktopApplication * pDesktopApplication = iter->second;
-  if (pDesktopApplication) {
-    desktopApplication = (*pDesktopApplication);
-  }
-
-  return 0;
-}
-
 int32_t DesktopDeviceInfoImpl::getTabCount() {
   return desktop_tab_list_.size();
 }
@@ -320,13 +224,11 @@ int32_t DesktopDeviceInfoImpl::getTabInfo(int32_t nIndex,
 void DesktopDeviceInfoImpl::CleanUp() {
   CleanUpScreenList();
   CleanUpWindowList();
-  CleanUpApplicationList();
   CleanUpTabList();
 }
 int32_t DesktopDeviceInfoImpl::Init() {
   InitializeScreenList();
   InitializeWindowList();
-  InitializeApplicationList();
   InitializeTabList();
 
   return 0;
@@ -334,7 +236,6 @@ int32_t DesktopDeviceInfoImpl::Init() {
 int32_t DesktopDeviceInfoImpl::Refresh() {
   RefreshScreenList();
   RefreshWindowList();
-  RefreshApplicationList();
   RefreshTabList();
 
   return 0;
@@ -378,20 +279,6 @@ void DesktopDeviceInfoImpl::InitializeWindowList() {
 void DesktopDeviceInfoImpl::RefreshWindowList() {
   CleanUpWindowList();
   InitializeWindowList();
-}
-
-void DesktopDeviceInfoImpl::CleanUpApplicationList() {
-  std::map<intptr_t,DesktopApplication*>::iterator iterApp;
-  for (iterApp = desktop_application_list_.begin(); iterApp != desktop_application_list_.end(); iterApp++){
-    DesktopApplication *pDesktopApplication = iterApp->second;
-    delete pDesktopApplication;
-    iterApp->second = NULL;
-  }
-  desktop_application_list_.clear();
-}
-void DesktopDeviceInfoImpl::RefreshApplicationList() {
-  CleanUpApplicationList();
-  InitializeApplicationList();
 }
 
 void DesktopDeviceInfoImpl::CleanUpTabList() {
