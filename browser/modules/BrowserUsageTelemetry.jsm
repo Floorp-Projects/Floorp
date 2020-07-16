@@ -885,7 +885,7 @@ let BrowserUsageTelemetry = {
     if (node.ownerDocument.URL == AppConstants.BROWSER_CHROME_URL) {
       // First find if it is inside one of the customizable areas.
       for (let area of CustomizableUI.areas) {
-        if (node.closest(`#${area}`)) {
+        if (node.closest(`#${CSS.escape(area)}`)) {
           for (let widget of CustomizableUI.getWidgetIdsInArea(area)) {
             if (
               // We care about the buttons on the tabs themselves.
@@ -898,7 +898,7 @@ let BrowserUsageTelemetry = {
               continue;
             }
 
-            if (node.closest(`#${widget}`)) {
+            if (node.closest(`#${CSS.escape(widget)}`)) {
               return widget;
             }
           }
