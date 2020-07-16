@@ -347,4 +347,7 @@ def is_telemetry_enabled(settings):
     if os.environ.get('DISABLE_TELEMETRY') == '1':
         return False
 
-    return settings.build.telemetry
+    try:
+        return settings.build.telemetry
+    except (AttributeError, KeyError):
+        return False
