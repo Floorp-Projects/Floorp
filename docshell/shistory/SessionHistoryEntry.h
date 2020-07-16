@@ -35,7 +35,18 @@ class SessionHistoryInfo {
     return false;  // FIXME
   }
 
+  nsIInputStream* GetPostData() const { return mPostData; }
+  void GetScrollPosition(int32_t* aScrollPositionX, int32_t* aScrollPositionY) {
+    *aScrollPositionX = mScrollPositionX;
+    *aScrollPositionY = mScrollPositionY;
+  }
+  bool GetScrollRestorationIsManual() const {
+    return mScrollRestorationIsManual;
+  }
+  const nsAString& GetTitle() { return mTitle; }
   nsIURI* GetURI() const { return mURI; }
+
+  bool GetURIWasModified() const { return mURIWasModified; }
 
   uint64_t Id() const { return mId; }
 

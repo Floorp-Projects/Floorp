@@ -216,7 +216,7 @@ interface nsISHEntry : nsISupports
      * Sets/gets the current scroll restoration state,
      * if true == "manual", false == "auto".
      */
-    attribute boolean scrollRestorationIsManual;
+    [infallible] attribute boolean scrollRestorationIsManual;
 
     /**
      * Flag to indicate that the history entry was originally loaded in the
