@@ -295,6 +295,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:Loggable\n"
          "race:UpdateMinLogSeverity\n"
 
+         // See bug 1652174
+         "race:event_debug_mode_too_late\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
