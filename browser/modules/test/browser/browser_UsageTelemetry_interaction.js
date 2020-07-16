@@ -476,6 +476,44 @@ add_task(async function webextension() {
   });
 });
 
+add_task(async function mainMenu() {
+  // macOS does not use the menu bar.
+  if (AppConstants.platform == "macosx") {
+    return;
+  }
+
+  BrowserUsageTelemetry._resetAddonIds();
+
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    CustomizableUI.setToolbarVisibility("toolbar-menubar", true);
+
+    let shown = BrowserTestUtils.waitForEvent(
+      elem("menu_EditPopup"),
+      "popupshown"
+    );
+    click("edit-menu");
+    await shown;
+
+    let hidden = BrowserTestUtils.waitForEvent(
+      elem("menu_EditPopup"),
+      "popuphidden"
+    );
+    click("menu_selectAll");
+    await hidden;
+
+    assertInteractionScalars({
+      menu_bar: {
+        // Note that the _ is replaced with - for telemetry identifiers.
+        "menu-selectAll": 1,
+      },
+    });
+
+    CustomizableUI.setToolbarVisibility("toolbar-menubar", false);
+  });
+});
+
 add_task(async function preferences() {
   let initialized = BrowserTestUtils.waitForEvent(gBrowser, "Initialized");
   await BrowserTestUtils.withNewTab("about:preferences", async browser => {
