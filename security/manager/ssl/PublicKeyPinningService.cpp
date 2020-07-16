@@ -277,8 +277,9 @@ static nsresult CheckPinsForHostname(
           if (!rootCertObj) {
             return NS_ERROR_FAILURE;
           }
-          int32_t binNumber =
-              RootCABinNumber(&rootCertObj->derCert, rootCertObj->slot);
+          Span<uint8_t> certSpan =
+              MakeSpan(rootCertObj->derCert.data, rootCertObj->derCert.len);
+          int32_t binNumber = RootCABinNumber(certSpan);
           if (binNumber != ROOT_CERTIFICATE_UNKNOWN) {
             pinningTelemetryInfo->accumulateForRoot = true;
             pinningTelemetryInfo->rootBucket = binNumber;
