@@ -1021,8 +1021,8 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         aState += TS_DISABLED;
       else {
         nsIFrame* parent = aFrame->GetParent();
-        EventStates parentState =
-            GetContentState(parent, parent->StyleDisplay()->mAppearance);
+        EventStates parentState = GetContentState(
+            parent, parent->StyleDisplay()->EffectiveAppearance());
         if (eventState.HasAllStates(NS_EVENT_STATE_HOVER |
                                     NS_EVENT_STATE_ACTIVE))
           aState += TS_ACTIVE;

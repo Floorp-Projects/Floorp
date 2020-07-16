@@ -231,11 +231,12 @@ bool nsMeterFrame::ShouldUseNativeStyle() const {
   // - both frames use the native appearance;
   // - neither frame has author specified rules setting the border or the
   //   background.
-  return StyleDisplay()->mAppearance == StyleAppearance::Meter &&
+  return StyleDisplay()->EffectiveAppearance() == StyleAppearance::Meter &&
          !PresContext()->HasAuthorSpecifiedRules(
              this, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND) &&
          barFrame &&
-         barFrame->StyleDisplay()->mAppearance == StyleAppearance::Meterchunk &&
+         barFrame->StyleDisplay()->EffectiveAppearance() ==
+             StyleAppearance::Meterchunk &&
          !PresContext()->HasAuthorSpecifiedRules(
              barFrame, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND);
 }

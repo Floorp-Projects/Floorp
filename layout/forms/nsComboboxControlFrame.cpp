@@ -703,7 +703,7 @@ bool nsComboboxControlFrame::HasDropDownButton() const {
   const nsStyleDisplay* disp = StyleDisplay();
   // FIXME(emilio): Blink also shows this for menulist-button and such... Seems
   // more similar to our mac / linux implementation.
-  return disp->mAppearance == StyleAppearance::Menulist &&
+  return disp->EffectiveAppearance() == StyleAppearance::Menulist &&
          (!IsThemed(disp) ||
           PresContext()->Theme()->ThemeNeedsComboboxDropmarker());
 }
@@ -1282,7 +1282,8 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
   // clipping the display text, by enforcing the display text minimum size in
   // that situation.
   const bool shouldHonorMinISize =
-      mComboBox->StyleDisplay()->mAppearance == StyleAppearance::Menulist;
+      mComboBox->StyleDisplay()->EffectiveAppearance() ==
+      StyleAppearance::Menulist;
   if (shouldHonorMinISize) {
     computedISize = std::max(state.ComputedMinISize(), computedISize);
     // Don't let this size go over mMaxDisplayISize, since that'd be
@@ -1502,7 +1503,8 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsPresContext* pc = PresContext();
     const nsStyleDisplay* disp = StyleDisplay();
     if (IsThemed(disp) &&
-        pc->Theme()->ThemeWantsButtonInnerFocusRing(disp->mAppearance) &&
+        pc->Theme()->ThemeWantsButtonInnerFocusRing(
+            disp->EffectiveAppearance()) &&
         mDisplayFrame && IsVisibleForPainting()) {
       aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder, this);
     }

@@ -426,7 +426,7 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl) {
 static bool IsInSourceList(nsIFrame* aFrame) {
   for (nsIFrame* frame = aFrame->GetParent(); frame;
        frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
-    if (frame->StyleDisplay()->mAppearance == StyleAppearance::MozMacSourceList) {
+    if (frame->StyleDisplay()->EffectiveAppearance() == StyleAppearance::MozMacSourceList) {
       return true;
     }
   }
@@ -989,7 +989,7 @@ static bool IsToolbarStyleContainer(nsIFrame* aFrame) {
     return true;
   }
 
-  switch (aFrame->StyleDisplay()->mAppearance) {
+  switch (aFrame->StyleDisplay()->EffectiveAppearance()) {
     case StyleAppearance::Toolbar:
     case StyleAppearance::Statusbar:
       return true;
@@ -1223,7 +1223,7 @@ void nsNativeThemeCocoa::DrawMenuSeparator(CGContextRef cgContext, const CGRect&
 
 static bool ShouldUnconditionallyDrawFocusRingIfFocused(nsIFrame* aFrame) {
   // Mac always draws focus rings for textboxes and lists.
-  switch (aFrame->StyleDisplay()->mAppearance) {
+  switch (aFrame->StyleDisplay()->EffectiveAppearance()) {
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -2374,7 +2374,7 @@ static bool IsSmallScrollbar(nsIFrame* aFrame) {
   }
   nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
   if (scrollbarFrame &&
-      scrollbarFrame->StyleDisplay()->mAppearance == StyleAppearance::ScrollbarSmall) {
+      scrollbarFrame->StyleDisplay()->EffectiveAppearance() == StyleAppearance::ScrollbarSmall) {
     return true;
   }
   return false;

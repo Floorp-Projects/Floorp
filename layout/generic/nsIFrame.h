@@ -1848,12 +1848,13 @@ class nsIFrame : public nsQueryFrame {
     nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
     nsPresContext* pc = PresContext();
     nsITheme* theme = pc->Theme();
-    if (!theme->ThemeSupportsWidget(pc, mutable_this, aDisp->mAppearance)) {
+    if (!theme->ThemeSupportsWidget(pc, mutable_this,
+                                    aDisp->EffectiveAppearance())) {
       return false;
     }
     if (aTransparencyState) {
-      *aTransparencyState =
-          theme->GetWidgetTransparency(mutable_this, aDisp->mAppearance);
+      *aTransparencyState = theme->GetWidgetTransparency(
+          mutable_this, aDisp->EffectiveAppearance());
     }
     return true;
   }

@@ -1218,7 +1218,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                                            //         otherwise equal to
                                            //         mDisplay
   mozilla::StyleContain mContain;
+
+ private:
   mozilla::StyleAppearance mAppearance;
+
+ public:
   mozilla::StyleAppearance mDefaultAppearance;
   mozilla::StylePositionProperty mPosition;
 
@@ -1323,7 +1327,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleShapeOutside mShapeOutside;
 
   bool HasAppearance() const {
-    return mAppearance != mozilla::StyleAppearance::None;
+    return EffectiveAppearance() != mozilla::StyleAppearance::None;
+  }
+
+  mozilla::StyleAppearance EffectiveAppearance() const {
+    return mAppearance == mozilla::StyleAppearance::Auto ? mDefaultAppearance
+                                                         : mAppearance;
   }
 
   static mozilla::StyleDisplayOutside DisplayOutside(

@@ -4181,19 +4181,19 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(
 
 void nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder) {
   const nsStyleDisplay* disp = StyleFrame()->StyleDisplay();
-  mAppearance = disp->mAppearance;
+  mAppearance = disp->EffectiveAppearance();
   StyleFrame()->IsThemed(disp, &mThemeTransparency);
 
   // Perform necessary RegisterThemeGeometry
   nsITheme* theme = StyleFrame()->PresContext()->Theme();
   nsITheme::ThemeGeometryType type =
-      theme->ThemeGeometryTypeForWidget(StyleFrame(), disp->mAppearance);
+      theme->ThemeGeometryTypeForWidget(StyleFrame(), mAppearance);
   if (type != nsITheme::eThemeGeometryTypeUnknown) {
     RegisterThemeGeometry(aBuilder, this, StyleFrame(), type);
   }
 
-  if (disp->mAppearance == StyleAppearance::MozWinBorderlessGlass ||
-      disp->mAppearance == StyleAppearance::MozWinGlass) {
+  if (mAppearance == StyleAppearance::MozWinBorderlessGlass ||
+      mAppearance == StyleAppearance::MozWinGlass) {
     aBuilder->SetGlassDisplayItem(this);
   }
 
@@ -4312,9 +4312,9 @@ nsRect nsDisplayThemedBackground::GetBoundsInternal() {
   nsPresContext* presContext = mFrame->PresContext();
 
   nsRect r = mBackgroundRect - ToReferenceFrame();
-  presContext->Theme()->GetWidgetOverflow(presContext->DeviceContext(), mFrame,
-                                          mFrame->StyleDisplay()->mAppearance,
-                                          &r);
+  presContext->Theme()->GetWidgetOverflow(
+      presContext->DeviceContext(), mFrame,
+      mFrame->StyleDisplay()->EffectiveAppearance(), &r);
   return r + ToReferenceFrame();
 }
 

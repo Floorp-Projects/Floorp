@@ -358,7 +358,7 @@ StyleWindowShadow nsMenuPopupFrame::GetShadowStyle() {
   StyleWindowShadow shadow = StyleUIReset()->mWindowShadow;
   if (shadow != StyleWindowShadow::Default) return shadow;
 
-  switch (StyleDisplay()->mAppearance) {
+  switch (StyleDisplay()->EffectiveAppearance()) {
     case StyleAppearance::Tooltip:
       return StyleWindowShadow::Tooltip;
     case StyleAppearance::Menupopup:
