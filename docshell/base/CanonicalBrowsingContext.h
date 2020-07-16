@@ -94,7 +94,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   nsISHistory* GetSessionHistory();
   UniquePtr<SessionHistoryInfo> CreateSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
-  void SessionHistoryCommit(uint64_t aSessionHistoryEntryId);
+  void SessionHistoryCommit(uint64_t aSessionHistoryEntryId,
+                            const nsID& aChangeID);
 
   // Calls the session history listeners' OnHistoryReload, storing the result in
   // aCanReload. If aCanReload is set to true and we have an active or a loading

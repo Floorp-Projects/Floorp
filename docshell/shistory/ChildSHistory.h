@@ -24,6 +24,7 @@
 #include "nsWrapperCache.h"
 #include "nsThreadUtils.h"
 #include "mozilla/LinkedList.h"
+#include "nsID.h"
 
 class nsISHEntry;
 class nsISHistory;
@@ -75,7 +76,9 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
 
   nsISHistory* LegacySHistory();
 
-  void SetLength(uint32_t aLength) { mLength = aLength; }
+  void SetIndexAndLength(uint32_t aIndex, uint32_t aLength,
+                         const nsID& aChangeId);
+  nsID AddPendingHistoryChange();
 
  private:
   virtual ~ChildSHistory() = default;
@@ -108,7 +111,15 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   RefPtr<BrowsingContext> mBrowsingContext;
   nsCOMPtr<nsISHistory> mHistory;
   mozilla::LinkedList<PendingAsyncHistoryNavigation> mPendingNavigations;
-  uint32_t mLength = 0;
+  int32_t mIndex = -1;
+  int32_t mLength = 0;
+
+  struct PendingSHistoryChange {
+    nsID mChangeID;
+    int32_t mIndexDelta;
+    int32_t mLengthDelta;
+  };
+  AutoTArray<PendingSHistoryChange, 2> mPendingSHistoryChanges;
 };
 
 }  // namespace dom

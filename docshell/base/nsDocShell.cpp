@@ -5367,17 +5367,22 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     SetDocCurrentStateObj(mLSHE);
 
     SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
+    nsID changeID = {};
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       mActiveEntry = nullptr;
       mLoadingEntry.swap(mActiveEntry);
       if (mActiveEntry) {
         if (XRE_IsParentProcess()) {
           mBrowsingContext->Canonical()->SessionHistoryCommit(
-              mActiveEntry->Id());
+              mActiveEntry->Id(), changeID);
         } else {
+          RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
+          if (rootSH) {
+            changeID = rootSH->AddPendingHistoryChange();
+          }
           ContentChild* cc = ContentChild::GetSingleton();
-          mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                                   mActiveEntry->Id());
+          mozilla::Unused << cc->SendHistoryCommit(
+              mBrowsingContext, mActiveEntry->Id(), changeID);
         }
       }
     }
