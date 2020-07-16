@@ -6,6 +6,9 @@
 
 #include "ImageComposite.h"
 
+#include <inttypes.h>
+
+#include "GeckoProfiler.h"
 #include "gfxPlatform.h"
 
 namespace mozilla {
@@ -205,9 +208,54 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
   mImages = std::move(aNewImages);
 }
 
-void ImageComposite::UpdateCompositedFrame(const TimedImage* aImage) {
+void ImageComposite::UpdateCompositedFrame(int aImageIndex,
+                                           const TimedImage* aImage,
+                                           base::ProcessId aProcessId,
+                                           const CompositableHandle& aHandle) {
+#if MOZ_GECKO_PROFILER
+  nsCString descr;
+  if (profiler_can_accept_markers()) {
+    TimeStamp compositionTime = GetCompositionTime();
+    static const char* kBiasStrings[] = {"NONE", "NEGATIVE", "POSITIVE"};
+    descr.AppendPrintf("frameID %" PRId32 " (producerID %" PRId32
+                       ") [bias %s] [relative timestamp %.1lfms]",
+                       aImage->mFrameID, aImage->mProducerID,
+                       kBiasStrings[mBias],
+                       (aImage->mTimeStamp - compositionTime).ToMilliseconds());
+    if (mLastProducerID != aImage->mProducerID) {
+      descr.AppendPrintf(", previous producerID: %" PRId32, mLastProducerID);
+    } else if (mLastFrameID != aImage->mFrameID) {
+      descr.AppendPrintf(", previous frameID: %" PRId32, mLastFrameID);
+    } else {
+      descr.AppendLiteral(", no change");
+    }
+  }
+  AUTO_PROFILER_TEXT_MARKER_CAUSE("UpdateCompositedFrame", descr, GRAPHICS,
+                                  Nothing(), nullptr);
+#endif
+
+  if (mLastFrameID == aImage->mFrameID &&
+      mLastProducerID == aImage->mProducerID) {
+    return;
+  }
+
   mLastFrameID = aImage->mFrameID;
   mLastProducerID = aImage->mProducerID;
+
+  if (aHandle) {
+    ImageCompositeNotificationInfo info;
+    info.mImageBridgeProcessId = aProcessId;
+    info.mNotification = ImageCompositeNotification(
+        aHandle, aImage->mTimeStamp, GetCompositionTime(), mLastFrameID,
+        mLastProducerID);
+    AppendImageCompositeNotification(info);
+  }
+
+  // Update mBias. This can change which frame ChooseImage(Index) would
+  // return, and we don't want to do that until we've finished compositing
+  // since callers of ChooseImage(Index) assume the same image will be chosen
+  // during a given composition.
+  UpdateBias(aImageIndex);
 }
 
 const ImageComposite::TimedImage* ImageComposite::GetImage(

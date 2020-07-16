@@ -143,6 +143,13 @@ TimeStamp ImageHost::GetCompositionTime() const {
   return time;
 }
 
+void ImageHost::AppendImageCompositeNotification(
+    const ImageCompositeNotificationInfo& aInfo) const {
+  if (HostLayerManager* lm = GetLayerManager()) {
+    lm->AppendImageCompositeNotification(aInfo);
+  }
+}
+
 TextureHost* ImageHost::GetAsTextureHost(IntRect* aPictureRect) {
   const TimedImage* img = ChooseImage();
   if (!img) {
@@ -321,28 +328,8 @@ RefPtr<TextureSource> ImageHost::AcquireTextureSource(const RenderInfo& aInfo) {
 }
 
 void ImageHost::FinishRendering(const RenderInfo& aInfo) {
-  HostLayerManager* lm = GetLayerManager();
-  const TimedImage* img = aInfo.img;
-  int imageIndex = aInfo.imageIndex;
-
-  if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
-    if (mAsyncRef) {
-      ImageCompositeNotificationInfo info;
-      info.mImageBridgeProcessId = mAsyncRef.mProcessId;
-      info.mNotification = ImageCompositeNotification(
-          mAsyncRef.mHandle, img->mTimeStamp, lm->GetCompositionTime(),
-          img->mFrameID, img->mProducerID);
-      lm->AppendImageCompositeNotification(info);
-    }
-    UpdateCompositedFrame(img);
-  }
-
-  // Update mBias last. This can change which frame ChooseImage(Index) would
-  // return, and we don't want to do that until we've finished compositing
-  // since callers of ChooseImage(Index) assume the same image will be chosen
-  // during a given composition. This must happen after autoLock's
-  // destructor!
-  UpdateBias(imageIndex);
+  UpdateCompositedFrame(aInfo.imageIndex, aInfo.img, mAsyncRef.mProcessId,
+                        mAsyncRef.mHandle);
 }
 
 void ImageHost::SetTextureSourceProvider(TextureSourceProvider* aProvider) {
