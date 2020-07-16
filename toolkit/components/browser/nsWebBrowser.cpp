@@ -851,14 +851,6 @@ nsWebBrowser::InitWindow(nativeWindow aParentNativeWindow,
 }
 
 NS_IMETHODIMP
-nsWebBrowser::Create() {
-  // nsIBaseWindow::InitWindow and nsIBaseWindow::Create
-  // implementations have been merged into nsWebBrowser::Create
-  MOZ_DIAGNOSTIC_ASSERT(false);
-  return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP
 nsWebBrowser::Destroy() {
   InternalDestroy();
 

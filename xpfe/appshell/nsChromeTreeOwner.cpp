@@ -250,11 +250,6 @@ NS_IMETHODIMP nsChromeTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::Create() {
-  NS_ASSERTION(false, "You can't call this");
-  return NS_ERROR_UNEXPECTED;
-}
-
 NS_IMETHODIMP nsChromeTreeOwner::Destroy() {
   NS_ENSURE_STATE(mAppWindow);
   return mAppWindow->Destroy();
