@@ -44,6 +44,14 @@ var onetouchpinch_prefs = [
   ["apz.max_tap_time", 10000],
 ];
 
+// For helper_fixed_pos_displayport the mechanism we use to record the
+// fixed-pos displayport only takes effect when not in a partial display list
+// update. So for this test we just disable retained display lists entirely.
+var no_rdl_prefs = [
+  ...prefs,
+  ["layout.display-list.retain", false],
+];
+
 var subtests = [
   {"file": "helper_basic_zoom.html", "prefs": prefs},
   {"file": "helper_basic_onetouchpinch.html", "prefs": onetouchpinch_prefs},
@@ -54,7 +62,7 @@ var subtests = [
   {"file": "helper_visual_smooth_scroll.html", "prefs": prefs},
   {"file": "helper_scroll_into_view_bug1516056.html", "prefs": prefs},
   {"file": "helper_scroll_into_view_bug1562757.html", "prefs": prefs},
-  {"file": "helper_fixed_pos_displayport.html", "prefs": prefs},
+  {"file": "helper_fixed_pos_displayport.html", "prefs": no_rdl_prefs},
   // If you're adding more tests, add them to test_group_zoom-2.html
 ];
 
