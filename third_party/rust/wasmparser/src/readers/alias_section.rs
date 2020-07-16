@@ -1,8 +1,9 @@
 use crate::{
-    BinaryReader, BinaryReaderError, ExternalKind, Result, SectionIteratorLimited, SectionReader,
-    SectionWithLimitedItems,
+    BinaryReader, BinaryReaderError, ExternalKind, Range, Result, SectionIteratorLimited,
+    SectionReader, SectionWithLimitedItems,
 };
 
+#[derive(Clone)]
 pub struct AliasSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -65,6 +66,9 @@ impl<'a> SectionReader for AliasSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         AliasSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

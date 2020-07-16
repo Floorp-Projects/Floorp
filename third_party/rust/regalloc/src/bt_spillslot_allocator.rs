@@ -5,7 +5,7 @@
 
 use crate::avl_tree::{AVLTree, AVL_NULL};
 use crate::data_structures::{
-    cmp_range_frags, RangeFrag, SortedRangeFrags, SpillSlot, TypedIxVec, VirtualRange,
+    cmp_range_frags, InstPoint, RangeFrag, SortedRangeFrags, SpillSlot, TypedIxVec, VirtualRange,
     VirtualRangeIx,
 };
 use crate::union_find::UnionFindEquivClasses;
@@ -28,6 +28,22 @@ use crate::Function;
 //=============================================================================
 // Logical spill slots
 
+// In the trees, we keep track of which frags are reftyped, so we can later create stackmaps by
+// slicing all of the trees at some `InstPoint`.  Unfortunately this requires storing 65 bits of
+// data in each node -- 64 bits for the RangeFrag and 1 bit for the reftype.  A TODO would be to
+// steal one bit from the RangeFrag.  For now though, we do the simple thing.
+
+#[derive(Clone, PartialEq, PartialOrd)]
+struct RangeFragAndRefness {
+    frag: RangeFrag,
+    is_ref: bool,
+}
+impl RangeFragAndRefness {
+    fn new(frag: RangeFrag, is_ref: bool) -> Self {
+        Self { frag, is_ref }
+    }
+}
+
 // We keep one of these for every "logical spill slot" in use.
 enum LogicalSpillSlot {
     // This slot is in use and can hold values of size `size` (only).  Note that
@@ -36,7 +52,10 @@ enum LogicalSpillSlot {
     // `SpillSlotAllocator::slots`, the next `size` - 1 entries must be
     // `Unavail`.  This is a hard invariant, violation of which will cause
     // overlapping spill slots and potential chaos.
-    InUse { size: u32, tree: AVLTree<RangeFrag> },
+    InUse {
+        size: u32,
+        tree: AVLTree<RangeFragAndRefness>,
+    },
     // This slot is unavailable, as described above.  It's unavailable because
     // it holds some part of the values associated with the nearest lower
     // numbered entry which isn't `Unavail`, and that entry must be an `InUse`
@@ -53,13 +72,13 @@ impl LogicalSpillSlot {
     fn is_InUse(&self) -> bool {
         !self.is_Unavail()
     }
-    fn get_tree(&self) -> &AVLTree<RangeFrag> {
+    fn get_tree(&self) -> &AVLTree<RangeFragAndRefness> {
         match self {
             LogicalSpillSlot::InUse { ref tree, .. } => tree,
             LogicalSpillSlot::Unavail => panic!("LogicalSpillSlot::get_tree"),
         }
     }
-    fn get_mut_tree(&mut self) -> &mut AVLTree<RangeFrag> {
+    fn get_mut_tree(&mut self) -> &mut AVLTree<RangeFragAndRefness> {
         match self {
             LogicalSpillSlot::InUse { ref mut tree, .. } => tree,
             LogicalSpillSlot::Unavail => panic!("LogicalSpillSlot::get_mut_tree"),
@@ -71,6 +90,62 @@ impl LogicalSpillSlot {
             LogicalSpillSlot::Unavail => panic!("LogicalSpillSlot::get_size"),
         }
     }
+    // If this spill slot is occupied at `pt`, return the refness of the value (VirtualRange)
+    // stored in it.  This is conceptually equivalent to CommitmentMap::lookup_inst_point.
+    fn get_refness_at_inst_point(&self, pt: InstPoint) -> Option<bool> {
+        match self {
+            LogicalSpillSlot::InUse { size: 1, tree } => {
+                // Search the tree to see if a reffy commitment intersects `pt`.
+                let mut root = tree.root;
+                while root != AVL_NULL {
+                    let root_node = &tree.pool[root as usize];
+                    let root_item = &root_node.item;
+                    if pt < root_item.frag.first {
+                        // `pt` is to the left of the `root`.  So there's no
+                        // overlap with `root`.  Continue by inspecting the left subtree.
+                        root = root_node.left;
+                    } else if root_item.frag.last < pt {
+                        // Ditto for the right subtree.
+                        root = root_node.right;
+                    } else {
+                        // `pt` overlaps the `root`, so we have what we want.
+                        return Some(root_item.is_ref);
+                    }
+                }
+                None
+            }
+            LogicalSpillSlot::InUse { .. } | LogicalSpillSlot::Unavail => {
+                // Slot isn't is use, or is in use but for values of some non-ref size
+                None
+            }
+        }
+    }
+}
+
+// HELPER FUNCTION
+// Find out whether it is possible to add `frag` to `tree`.
+#[inline(always)]
+fn ssal_is_add_frag_possible(tree: &AVLTree<RangeFragAndRefness>, frag: &RangeFrag) -> bool {
+    // BEGIN check `frag` for any overlap against `tree`.
+    let mut root = tree.root;
+    while root != AVL_NULL {
+        let root_node = &tree.pool[root as usize];
+        let root_item = &root_node.item;
+        if frag.last < root_item.frag.first {
+            // `frag` is entirely to the left of the `root`.  So there's no
+            // overlap with root.  Continue by inspecting the left subtree.
+            root = root_node.left;
+        } else if root_item.frag.last < frag.first {
+            // Ditto for the right subtree.
+            root = root_node.right;
+        } else {
+            // `frag` overlaps the `root`.  Give up.
+            return false;
+        }
+    }
+    // END check `frag` for any overlap against `tree`.
+    // `frag` doesn't overlap.
+    true
 }
 
 // HELPER FUNCTION
@@ -81,38 +156,23 @@ impl LogicalSpillSlot {
 // no guarantee that elements of `frags` don't overlap `tree`.  Hence we have
 // to do a custom walk of `tree` to check for overlap; we can't just use
 // `AVLTree::contains`.
-fn ssal_is_add_possible(tree: &AVLTree<RangeFrag>, frags: &SortedRangeFrags) -> bool {
+fn ssal_is_add_possible(tree: &AVLTree<RangeFragAndRefness>, frags: &SortedRangeFrags) -> bool {
     // Figure out whether all the frags will go in.
     for frag in &frags.frags {
-        // BEGIN check `frag` for any overlap against `tree`.
-        let mut root = tree.root;
-        while root != AVL_NULL {
-            let root_node = &tree.pool[root as usize];
-            let root_frag = root_node.item.clone();
-            if frag.last < root_frag.first {
-                // `frag` is entirely to the left of the `root`.  So there's no
-                // overlap with root.  Continue by inspecting the left subtree.
-                root = root_node.left;
-            } else if root_frag.last < frag.first {
-                // Ditto for the right subtree.
-                root = root_node.right;
-            } else {
-                // `frag` overlaps the `root`.  Give up.
-                return false;
-            }
+        if !ssal_is_add_frag_possible(&tree, frag) {
+            return false;
         }
-        // END check `frag` for any overlap against `tree`.
         // `frag` doesn't overlap.  Move on to the next one.
     }
     true
 }
 
 // HELPER FUNCTION
-// Try to add all of `frags` to `tree`.  Return `true` if possible, `false` if
-// not possible.  If `false` is returned, `tree` is unchanged (this is
-// important).  This routine relies on the fact that SortedFrags is
-// non-overlapping.
-fn ssal_add_if_possible(tree: &mut AVLTree<RangeFrag>, frags: &SortedRangeFrags) -> bool {
+// Try to add all of `frags` to `tree`.  Return `true` if possible, `false` if not possible.  If
+// `false` is returned, `tree` is unchanged (this is important).  This routine relies on the
+// fact that SortedFrags is non-overlapping.  They are initially all marked as non-reffy.  That
+// may later be changed by calls to `SpillSlotAllocator::notify_spillage_of_reftyped_vlr`.
+fn ssal_add_if_possible(tree: &mut AVLTree<RangeFragAndRefness>, frags: &SortedRangeFrags) -> bool {
     // Check if all the frags will go in.
     if !ssal_is_add_possible(tree, frags) {
         return false;
@@ -120,13 +180,36 @@ fn ssal_add_if_possible(tree: &mut AVLTree<RangeFrag>, frags: &SortedRangeFrags)
     // They will.  So now insert them.
     for frag in &frags.frags {
         let inserted = tree.insert(
-            frag.clone(),
-            Some(&|frag1, frag2| cmp_range_frags(&frag1, &frag2)),
+            RangeFragAndRefness::new(frag.clone(), /*is_ref=*/ false),
+            Some(&|item1: RangeFragAndRefness, item2: RangeFragAndRefness| {
+                cmp_range_frags(&item1.frag, &item2.frag)
+            }),
         );
         // This can't fail
         assert!(inserted);
     }
     true
+}
+
+// HELPER FUNCTION
+// Let `frags` be the RangeFrags for some VirtualRange, that have already been allocated in
+// `tree`.  Mark each such RangeFrag as reffy.
+fn ssal_mark_frags_as_reftyped(tree: &mut AVLTree<RangeFragAndRefness>, frags: &SortedRangeFrags) {
+    for frag in &frags.frags {
+        // Be paranoid.  (1) `frag` must already exist in `tree`.  (2) it must not be marked as
+        // reffy.
+        let del_this = RangeFragAndRefness::new(frag.clone(), /*is_ref=*/ false);
+        let add_this = RangeFragAndRefness::new(frag.clone(), /*is_ref=*/ true);
+        let replaced_ok = tree.find_and_replace(
+            del_this,
+            add_this,
+            &|item1: RangeFragAndRefness, item2: RangeFragAndRefness| {
+                cmp_range_frags(&item1.frag, &item2.frag)
+            },
+        );
+        // This assertion effectively encompasses both (1) and (2) above.
+        assert!(replaced_ok);
+    }
 }
 
 //=============================================================================
@@ -155,9 +238,11 @@ impl SpillSlotAllocator {
         while self.slots.len() % (req_size as usize) != 0 {
             self.slots.push(LogicalSpillSlot::Unavail);
         }
-        // And now the new slot.
-        let dflt = RangeFrag::invalid_value();
-        let tree = AVLTree::<RangeFrag>::new(dflt);
+        // And now the new slot.  The `dflt` value is needed by `AVLTree` to initialise storage
+        // slots for tree nodes, but we will never actually see those values.  So it doesn't
+        // matter what they are.
+        let dflt = RangeFragAndRefness::new(RangeFrag::invalid_value(), false);
+        let tree = AVLTree::<RangeFragAndRefness>::new(dflt);
         let res = self.slots.len() as u32;
         self.slots.push(LogicalSpillSlot::InUse {
             size: req_size,
@@ -176,6 +261,7 @@ impl SpillSlotAllocator {
         res
     }
 
+    // THE MAIN FUNCTION
     // Allocate spill slots for all the VirtualRanges in `vlrix`s eclass,
     // including `vlrix` itself.  Since we are allocating spill slots for
     // complete eclasses at once, none of the members of the class should
@@ -191,8 +277,25 @@ impl SpillSlotAllocator {
         vlrEquivClasses: &UnionFindEquivClasses<VirtualRangeIx>,
         vlrix: VirtualRangeIx,
     ) {
+        let is_ref = vlr_env[vlrix].is_ref;
         for cand_vlrix in vlrEquivClasses.equiv_class_elems_iter(vlrix) {
+            // "None of the VLRs in this equivalence class have an allocated spill slot."
+            // This should be true because we allocate spill slots for all of the members of an
+            // eclass at once.
             assert!(vlr_slot_env[cand_vlrix].is_none());
+
+            // "All of the VLRs in this eclass have the same ref-ness as this VLR."
+            // Why this is true is a bit subtle.  The equivalence classes are computed by
+            // `do_coalescing_analysis`, fundamentally by looking at all the move instructions
+            // and computing the transitive closure induced by them.  The ref-ness annotations
+            // on each VLR are computed in `do_reftypes_analysis`, and they are also computed
+            // as a transitive closure on the same move instructions.  Hence the results should
+            // be identical.
+            //
+            // With all that said, note that these equivalence classes are *not* guaranteed to
+            // be internally non-overlapping.  This is explained in the big block comment at the
+            // top of bt_coalescing_analysis.rs.
+            assert!(vlr_env[cand_vlrix].is_ref == is_ref);
         }
 
         // Do this in two passes.  It's a bit cumbersome.
@@ -242,6 +345,12 @@ impl SpillSlotAllocator {
         let vlrix_vreg = vlr_env[vlrix].vreg;
         let req_size = func.get_spillslot_size(vlrix_vreg.get_class(), vlrix_vreg);
         assert!(req_size == 1 || req_size == 2 || req_size == 4 || req_size == 8);
+
+        // Sanity check: if the VLR is reftyped, then it must need a 1-word slot
+        // (anything else is nonsensical.)
+        if is_ref {
+            assert!(req_size == 1);
+        }
 
         // Pass 1: find a slot which can take all VirtualRanges in `vlrix`s
         // eclass when tested individually.
@@ -343,5 +452,71 @@ impl SpillSlotAllocator {
             panic!("SpillSlotAllocator: alloc_spill_slots: failed?!?!");
             /*NOTREACHED*/
         } /* 'pass2_per_equiv_class */
+    }
+
+    // STACKMAP SUPPORT
+    // Mark the `frags` for `slot_no` as being reftyped.  They are expected to already exist in
+    // the relevant tree, and not currently be marked as reftyped.
+    pub fn notify_spillage_of_reftyped_vlr(
+        &mut self,
+        slot_no: SpillSlot,
+        frags: &SortedRangeFrags,
+    ) {
+        let slot_ix = slot_no.get_usize();
+        assert!(slot_ix < self.slots.len());
+        let slot = &mut self.slots[slot_ix];
+        match slot {
+            LogicalSpillSlot::InUse { size, tree } if *size == 1 => {
+                ssal_mark_frags_as_reftyped(tree, frags)
+            }
+            _ => panic!("SpillSlotAllocator::notify_spillage_of_reftyped_vlr: invalid slot"),
+        }
+    }
+
+    // STACKMAP SUPPORT
+    // Allocate a size-1 (word!) spill slot for `frag` and return it.  The slot is marked
+    // reftyped so that a later call to `get_reftyped_spillslots_at_inst_point` will return it.
+    pub fn alloc_reftyped_spillslot_for_frag(&mut self, frag: RangeFrag) -> SpillSlot {
+        for i in 0..self.slots.len() {
+            match &mut self.slots[i] {
+                LogicalSpillSlot::InUse { size: 1, tree } => {
+                    if ssal_is_add_frag_possible(&tree, &frag) {
+                        // We're in luck.
+                        let inserted = tree.insert(
+                            RangeFragAndRefness::new(frag, /*is_ref=*/ true),
+                            Some(&|item1: RangeFragAndRefness, item2: RangeFragAndRefness| {
+                                cmp_range_frags(&item1.frag, &item2.frag)
+                            }),
+                        );
+                        // This can't fail -- we just checked for it!
+                        assert!(inserted);
+                        return SpillSlot::new(i as u32);
+                    }
+                    // Otherwise move on.
+                }
+                LogicalSpillSlot::InUse { .. } | LogicalSpillSlot::Unavail => {
+                    // Slot isn't is use, or is in use but for values of some non-ref size.
+                    // Move on.
+                }
+            }
+        }
+        // We tried all slots, but without success.  Add a new one and try again.  This time we
+        // must succeed.  Calling recursively is a bit stupid in the sense that we then search
+        // again to find the slot we just allocated, but hey.
+        self.add_new_slot(1 /*word*/);
+        self.alloc_reftyped_spillslot_for_frag(frag) // \o/ tailcall \o/
+    }
+
+    // STACKMAP SUPPORT
+    // Examine all the spill slots at `pt` and return those that are reftyped.  This is
+    // fundamentally what creates a stack map.
+    pub fn get_reftyped_spillslots_at_inst_point(&self, pt: InstPoint) -> Vec<SpillSlot> {
+        let mut res = Vec::<SpillSlot>::new();
+        for (i, slot) in self.slots.iter().enumerate() {
+            if slot.get_refness_at_inst_point(pt) == Some(true) {
+                res.push(SpillSlot::new(i as u32));
+            }
+        }
+        res
     }
 }

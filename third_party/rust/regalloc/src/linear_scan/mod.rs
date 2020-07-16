@@ -11,7 +11,7 @@ use std::env;
 use std::fmt;
 
 use crate::data_structures::{BlockIx, InstIx, InstPoint, Point, RealReg, RegVecsAndBounds};
-use crate::inst_stream::{add_spills_reloads_and_moves, InstToInsertAndPoint};
+use crate::inst_stream::{add_spills_reloads_and_moves, InstToInsertAndExtPoint};
 use crate::{
     checker::CheckerContext, reg_maps::MentionRegUsageMapper, Function, RealRegUniverse,
     RegAllocError, RegAllocResult, RegClass, Set, SpillSlot, VirtualReg, NUM_REG_CLASSES,
@@ -625,7 +625,7 @@ fn set_registers<F: Function>(
     virtual_intervals: &Vec<VirtualInterval>,
     reg_universe: &RealRegUniverse,
     use_checker: bool,
-    memory_moves: &Vec<InstToInsertAndPoint>,
+    memory_moves: &Vec<InstToInsertAndExtPoint>,
 ) -> Set<RealReg> {
     info!("set_registers");
 
@@ -751,7 +751,7 @@ fn set_registers<F: Function>(
 fn apply_registers<F: Function>(
     func: &mut F,
     virtual_intervals: &Vec<VirtualInterval>,
-    memory_moves: Vec<InstToInsertAndPoint>,
+    memory_moves: Vec<InstToInsertAndExtPoint>,
     reg_universe: &RealRegUniverse,
     num_spill_slots: u32,
     use_checker: bool,
@@ -766,8 +766,11 @@ fn apply_registers<F: Function>(
         &memory_moves,
     );
 
-    let (final_insns, target_map, orig_insn_map) =
-        add_spills_reloads_and_moves(func, memory_moves).map_err(|e| RegAllocError::Other(e))?;
+    let safepoint_insns = vec![];
+    let (final_insns, target_map, new_to_old_insn_map, new_safepoint_insns) =
+        add_spills_reloads_and_moves(func, &safepoint_insns, memory_moves)
+            .map_err(|e| RegAllocError::Other(e))?;
+    assert!(new_safepoint_insns.is_empty()); // because `safepoint_insns` is also empty.
 
     // And now remove from the clobbered registers set, all those not available to the allocator.
     // But not removing the reserved regs, since we might have modified those.
@@ -782,9 +785,11 @@ fn apply_registers<F: Function>(
     Ok(RegAllocResult {
         insns: final_insns,
         target_map,
-        orig_insn_map,
+        orig_insn_map: new_to_old_insn_map,
         clobbered_registers,
         num_spill_slots,
         block_annotations: None,
+        stackmaps: vec![],
+        new_safepoint_insns,
     })
 }

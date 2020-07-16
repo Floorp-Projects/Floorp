@@ -122,25 +122,24 @@ impl<'a> BinaryReader<'a> {
         }
     }
 
+    pub(crate) fn remaining_buffer(&self) -> &'a [u8] {
+        &self.buffer[self.position..]
+    }
+
     fn ensure_has_byte(&self) -> Result<()> {
         if self.position < self.buffer.len() {
             Ok(())
         } else {
-            Err(BinaryReaderError::new(
-                "Unexpected EOF",
-                self.original_position(),
-            ))
+            Err(BinaryReaderError::eof(self.original_position(), 1))
         }
     }
 
-    fn ensure_has_bytes(&self, len: usize) -> Result<()> {
+    pub(crate) fn ensure_has_bytes(&self, len: usize) -> Result<()> {
         if self.position + len <= self.buffer.len() {
             Ok(())
         } else {
-            Err(BinaryReaderError::new(
-                "Unexpected EOF",
-                self.original_position(),
-            ))
+            let hint = self.position + len - self.buffer.len();
+            Err(BinaryReaderError::eof(self.original_position(), hint))
         }
     }
 
@@ -1314,9 +1313,7 @@ impl<'a> BinaryReader<'a> {
             0xd0 => Operator::RefNull {
                 ty: self.read_type()?,
             },
-            0xd1 => Operator::RefIsNull {
-                ty: self.read_type()?,
-            },
+            0xd1 => Operator::RefIsNull,
             0xd2 => Operator::RefFunc {
                 function_index: self.read_var_u32()?,
             },
@@ -1712,19 +1709,6 @@ impl<'a> BinaryReader<'a> {
             ));
         }
         Ok(version)
-    }
-
-    pub(crate) fn read_section_header(&mut self) -> Result<SectionHeader<'a>> {
-        let id_position = self.position;
-        let id = self.read_var_u7()?;
-        let payload_len = self.read_var_u32()? as usize;
-        let payload_start = self.position;
-        let code = self.read_section_code(id, id_position)?;
-        Ok(SectionHeader {
-            code,
-            payload_start,
-            payload_len,
-        })
     }
 
     pub(crate) fn read_name_type(&mut self) -> Result<NameType> {

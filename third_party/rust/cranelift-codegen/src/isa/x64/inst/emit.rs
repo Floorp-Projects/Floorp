@@ -1,6 +1,8 @@
 use log::debug;
 use regalloc::Reg;
 
+use std::convert::TryFrom;
+
 use crate::binemit::Reloc;
 use crate::isa::x64::inst::*;
 
@@ -262,6 +264,34 @@ fn emit_std_enc_mem(
                 panic!("ImmRegRegShift");
             }
         }
+
+        Amode::RipRelative { ref target } => {
+            // First, the REX byte, with REX.B = 0.
+            rex.emit_two_op(sink, enc_g, 0);
+
+            // Now the opcode(s).  These include any other prefixes the caller
+            // hands to us.
+            while num_opcodes > 0 {
+                num_opcodes -= 1;
+                sink.put1(((opcodes >> (num_opcodes << 3)) & 0xFF) as u8);
+            }
+
+            // RIP-relative is mod=00, rm=101.
+            sink.put1(encode_modrm(0, enc_g & 7, 0b101));
+
+            match *target {
+                BranchTarget::Label(label) => {
+                    let offset = sink.cur_offset();
+                    sink.use_label_at_offset(offset, label, LabelUse::JmpRel32);
+                    sink.put4(0);
+                }
+                BranchTarget::ResolvedOffset(offset) => {
+                    let offset =
+                        u32::try_from(offset).expect("rip-relative can't hold >= U32_MAX values");
+                    sink.put4(offset);
+                }
+            }
+        }
     }
 }
 
@@ -340,6 +370,16 @@ fn emit_simm(sink: &mut MachBuffer<Inst>, size: u8, simm32: u32) {
     }
 }
 
+/// Emits a one way conditional jump if CC is set (true).
+fn one_way_jmp(sink: &mut MachBuffer<Inst>, cc: CC, label: MachLabel) {
+    let cond_start = sink.cur_offset();
+    let cond_disp_off = cond_start + 2;
+    sink.use_label_at_offset(cond_disp_off, label, LabelUse::JmpRel32);
+    sink.put1(0x0F);
+    sink.put1(0x80 + cc.get_enc());
+    sink.put4(0x0);
+}
+
 /// The top-level emit function.
 ///
 /// Important!  Do not add improved (shortened) encoding cases to existing
@@ -395,7 +435,7 @@ fn emit_simm(sink: &mut MachBuffer<Inst>, size: u8, simm32: u32) {
 pub(crate) fn emit(
     inst: &Inst,
     sink: &mut MachBuffer<Inst>,
-    _flags: &settings::Flags,
+    flags: &settings::Flags,
     state: &mut EmitState,
 ) {
     match inst {
@@ -516,6 +556,226 @@ pub(crate) fn emit(
             }
         }
 
+        Inst::UnaryRmR { size, op, src, dst } => {
+            let (prefix, rex_flags) = match size {
+                2 => (LegacyPrefix::_66, RexFlags::clear_w()),
+                4 => (LegacyPrefix::None, RexFlags::clear_w()),
+                8 => (LegacyPrefix::None, RexFlags::set_w()),
+                _ => unreachable!(),
+            };
+
+            let (opcode, num_opcodes) = match op {
+                UnaryRmROpcode::Bsr => (0x0fbd, 2),
+                UnaryRmROpcode::Bsf => (0x0fbc, 2),
+            };
+
+            match src {
+                RegMem::Reg { reg: src } => emit_std_reg_reg(
+                    sink,
+                    prefix,
+                    opcode,
+                    num_opcodes,
+                    dst.to_reg(),
+                    *src,
+                    rex_flags,
+                ),
+                RegMem::Mem { addr: src } => emit_std_reg_mem(
+                    sink,
+                    prefix,
+                    opcode,
+                    num_opcodes,
+                    dst.to_reg(),
+                    &src.finalize(state),
+                    rex_flags,
+                ),
+            }
+        }
+
+        Inst::Div {
+            size,
+            signed,
+            divisor,
+            loc,
+        } => {
+            let (prefix, rex_flags) = match size {
+                2 => (LegacyPrefix::_66, RexFlags::clear_w()),
+                4 => (LegacyPrefix::None, RexFlags::clear_w()),
+                8 => (LegacyPrefix::None, RexFlags::set_w()),
+                _ => unreachable!(),
+            };
+
+            sink.add_trap(*loc, TrapCode::IntegerDivisionByZero);
+
+            let subopcode = if *signed { 7 } else { 6 };
+            match divisor {
+                RegMem::Reg { reg } => {
+                    let src = int_reg_enc(*reg);
+                    emit_std_enc_enc(sink, prefix, 0xF7, 1, subopcode, src, rex_flags)
+                }
+                RegMem::Mem { addr: src } => emit_std_enc_mem(
+                    sink,
+                    prefix,
+                    0xF7,
+                    1,
+                    subopcode,
+                    &src.finalize(state),
+                    rex_flags,
+                ),
+            }
+        }
+
+        Inst::MulHi { size, signed, rhs } => {
+            let (prefix, rex_flags) = match size {
+                2 => (LegacyPrefix::_66, RexFlags::clear_w()),
+                4 => (LegacyPrefix::None, RexFlags::clear_w()),
+                8 => (LegacyPrefix::None, RexFlags::set_w()),
+                _ => unreachable!(),
+            };
+
+            let subopcode = if *signed { 5 } else { 4 };
+            match rhs {
+                RegMem::Reg { reg } => {
+                    let src = int_reg_enc(*reg);
+                    emit_std_enc_enc(sink, prefix, 0xF7, 1, subopcode, src, rex_flags)
+                }
+                RegMem::Mem { addr: src } => emit_std_enc_mem(
+                    sink,
+                    prefix,
+                    0xF7,
+                    1,
+                    subopcode,
+                    &src.finalize(state),
+                    rex_flags,
+                ),
+            }
+        }
+
+        Inst::SignExtendRaxRdx { size } => {
+            match size {
+                2 => sink.put1(0x66),
+                4 => {}
+                8 => sink.put1(0x48),
+                _ => unreachable!(),
+            }
+            sink.put1(0x99);
+        }
+
+        Inst::CheckedDivOrRemSeq {
+            kind,
+            size,
+            divisor,
+            loc,
+            tmp,
+        } => {
+            // Generates the following code sequence:
+            //
+            // ;; check divide by zero:
+            // cmp 0 %divisor
+            // jnz $after_trap
+            // ud2
+            // $after_trap:
+            //
+            // ;; for signed modulo/div:
+            // cmp -1 %divisor
+            // jnz $do_op
+            // ;;   for signed modulo, result is 0
+            //    mov #0, %rdx
+            //    j $done
+            // ;;   for signed div, check for integer overflow against INT_MIN of the right size
+            // cmp INT_MIN, %rax
+            // jnz $do_op
+            // ud2
+            //
+            // $do_op:
+            // ;; if signed
+            //     cdq ;; sign-extend from rax into rdx
+            // ;; else
+            //     mov #0, %rdx
+            // idiv %divisor
+            //
+            // $done:
+            debug_assert!(flags.avoid_div_traps());
+
+            // Check if the divisor is zero, first.
+            let inst = Inst::cmp_rmi_r(*size, RegMemImm::imm(0), *divisor);
+            inst.emit(sink, flags, state);
+
+            let inst = Inst::trap_if(CC::Z, TrapCode::IntegerDivisionByZero, *loc);
+            inst.emit(sink, flags, state);
+
+            let (do_op, done_label) = if kind.is_signed() {
+                // Now check if the divisor is -1.
+                let inst = Inst::cmp_rmi_r(*size, RegMemImm::imm(0xffffffff), *divisor);
+                inst.emit(sink, flags, state);
+
+                let do_op = sink.get_label();
+
+                // If not equal, jump to do-op.
+                one_way_jmp(sink, CC::NZ, do_op);
+
+                // Here, divisor == -1.
+                if !kind.is_div() {
+                    // x % -1 = 0; put the result into the destination, $rdx.
+                    let done_label = sink.get_label();
+
+                    let inst = Inst::imm_r(*size == 8, 0, Writable::from_reg(regs::rdx()));
+                    inst.emit(sink, flags, state);
+
+                    let inst = Inst::jmp_known(BranchTarget::Label(done_label));
+                    inst.emit(sink, flags, state);
+
+                    (Some(do_op), Some(done_label))
+                } else {
+                    // Check for integer overflow.
+                    if *size == 8 {
+                        let tmp = tmp.expect("temporary for i64 sdiv");
+
+                        let inst = Inst::imm_r(true, 0x8000000000000000, tmp);
+                        inst.emit(sink, flags, state);
+
+                        let inst = Inst::cmp_rmi_r(8, RegMemImm::reg(tmp.to_reg()), regs::rax());
+                        inst.emit(sink, flags, state);
+                    } else {
+                        let inst = Inst::cmp_rmi_r(*size, RegMemImm::imm(0x80000000), regs::rax());
+                        inst.emit(sink, flags, state);
+                    }
+
+                    // If not equal, jump over the trap.
+                    let inst = Inst::trap_if(CC::Z, TrapCode::IntegerOverflow, *loc);
+                    inst.emit(sink, flags, state);
+
+                    (Some(do_op), None)
+                }
+            } else {
+                (None, None)
+            };
+
+            if let Some(do_op) = do_op {
+                sink.bind_label(do_op);
+            }
+
+            // Fill in the high parts:
+            if kind.is_signed() {
+                // sign-extend the sign-bit of rax into rdx, for signed opcodes.
+                let inst = Inst::sign_extend_rax_to_rdx(*size);
+                inst.emit(sink, flags, state);
+            } else {
+                // zero for unsigned opcodes.
+                let inst = Inst::imm_r(true /* is_64 */, 0, Writable::from_reg(regs::rdx()));
+                inst.emit(sink, flags, state);
+            }
+
+            let inst = Inst::div(*size, kind.is_signed(), RegMem::reg(*divisor), *loc);
+            inst.emit(sink, flags, state);
+
+            // Lowering takes care of moving the result back into the right register, see comment
+            // there.
+
+            if let Some(done) = done_label {
+                sink.bind_label(done);
+            }
+        }
+
         Inst::Imm_R {
             dst_is_64,
             simm64,
@@ -546,7 +806,12 @@ pub(crate) fn emit(
             emit_std_reg_reg(sink, LegacyPrefix::None, 0x89, 1, *src, dst.to_reg(), rex);
         }
 
-        Inst::MovZX_RM_R { ext_mode, src, dst } => {
+        Inst::MovZX_RM_R {
+            ext_mode,
+            src,
+            dst,
+            srcloc,
+        } => {
             let (opcodes, num_opcodes, rex_flags) = match ext_mode {
                 ExtMode::BL => {
                     // MOVZBL is (REX.W==0) 0F B6 /r
@@ -588,27 +853,45 @@ pub(crate) fn emit(
                     *src,
                     rex_flags,
                 ),
-                RegMem::Mem { addr: src } => emit_std_reg_mem(
-                    sink,
-                    LegacyPrefix::None,
-                    opcodes,
-                    num_opcodes,
-                    dst.to_reg(),
-                    &src.finalize(state),
-                    rex_flags,
-                ),
+                RegMem::Mem { addr: src } => {
+                    let src = &src.finalize(state);
+
+                    if let Some(srcloc) = *srcloc {
+                        // Register the offset at which the actual load instruction starts.
+                        sink.add_trap(srcloc, TrapCode::HeapOutOfBounds);
+                    }
+
+                    emit_std_reg_mem(
+                        sink,
+                        LegacyPrefix::None,
+                        opcodes,
+                        num_opcodes,
+                        dst.to_reg(),
+                        src,
+                        rex_flags,
+                    )
+                }
             }
         }
 
-        Inst::Mov64_M_R { src, dst } => emit_std_reg_mem(
-            sink,
-            LegacyPrefix::None,
-            0x8B,
-            1,
-            dst.to_reg(),
-            &src.finalize(state),
-            RexFlags::set_w(),
-        ),
+        Inst::Mov64_M_R { src, dst, srcloc } => {
+            let src = &src.finalize(state);
+
+            if let Some(srcloc) = *srcloc {
+                // Register the offset at which the actual load instruction starts.
+                sink.add_trap(srcloc, TrapCode::HeapOutOfBounds);
+            }
+
+            emit_std_reg_mem(
+                sink,
+                LegacyPrefix::None,
+                0x8B,
+                1,
+                dst.to_reg(),
+                src,
+                RexFlags::set_w(),
+            )
+        }
 
         Inst::LoadEffectiveAddress { addr, dst } => emit_std_reg_mem(
             sink,
@@ -620,7 +903,12 @@ pub(crate) fn emit(
             RexFlags::set_w(),
         ),
 
-        Inst::MovSX_RM_R { ext_mode, src, dst } => {
+        Inst::MovSX_RM_R {
+            ext_mode,
+            src,
+            dst,
+            srcloc,
+        } => {
             let (opcodes, num_opcodes, rex_flags) = match ext_mode {
                 ExtMode::BL => {
                     // MOVSBL is (REX.W==0) 0F BE /r
@@ -654,20 +942,40 @@ pub(crate) fn emit(
                     *src,
                     rex_flags,
                 ),
-                RegMem::Mem { addr: src } => emit_std_reg_mem(
-                    sink,
-                    LegacyPrefix::None,
-                    opcodes,
-                    num_opcodes,
-                    dst.to_reg(),
-                    &src.finalize(state),
-                    rex_flags,
-                ),
+
+                RegMem::Mem { addr: src } => {
+                    let src = &src.finalize(state);
+
+                    if let Some(srcloc) = *srcloc {
+                        // Register the offset at which the actual load instruction starts.
+                        sink.add_trap(srcloc, TrapCode::HeapOutOfBounds);
+                    }
+
+                    emit_std_reg_mem(
+                        sink,
+                        LegacyPrefix::None,
+                        opcodes,
+                        num_opcodes,
+                        dst.to_reg(),
+                        src,
+                        rex_flags,
+                    )
+                }
             }
         }
 
-        Inst::Mov_R_M { size, src, dst } => {
+        Inst::Mov_R_M {
+            size,
+            src,
+            dst,
+            srcloc,
+        } => {
             let dst = &dst.finalize(state);
+
+            if let Some(srcloc) = *srcloc {
+                // Register the offset at which the actual load instruction starts.
+                sink.add_trap(srcloc, TrapCode::HeapOutOfBounds);
+            }
 
             match size {
                 1 => {
@@ -736,9 +1044,11 @@ pub(crate) fn emit(
         } => {
             let enc_dst = int_reg_enc(dst.to_reg());
             let subopcode = match kind {
-                ShiftKind::Left => 4,
-                ShiftKind::RightZ => 5,
-                ShiftKind::RightS => 7,
+                ShiftKind::RotateLeft => 0,
+                ShiftKind::RotateRight => 1,
+                ShiftKind::ShiftLeft => 4,
+                ShiftKind::ShiftRightLogical => 5,
+                ShiftKind::ShiftRightArithmetic => 7,
             };
 
             let rex = if *is_64 {
@@ -847,6 +1157,30 @@ pub(crate) fn emit(
                 reg_enc(dst.to_reg()),
                 rex_flags,
             );
+        }
+
+        Inst::Cmove {
+            size,
+            cc,
+            src,
+            dst: reg_g,
+        } => {
+            let (prefix, rex_flags) = match size {
+                2 => (LegacyPrefix::_66, RexFlags::clear_w()),
+                4 => (LegacyPrefix::None, RexFlags::clear_w()),
+                8 => (LegacyPrefix::None, RexFlags::set_w()),
+                _ => unreachable!("invalid size spec for cmove"),
+            };
+            let opcode = 0x0F40 + cc.get_enc() as u32;
+            match src {
+                RegMem::Reg { reg: reg_e } => {
+                    emit_std_reg_reg(sink, prefix, opcode, 2, reg_g.to_reg(), *reg_e, rex_flags);
+                }
+                RegMem::Mem { addr } => {
+                    let addr = &addr.finalize(state);
+                    emit_std_reg_mem(sink, prefix, opcode, 2, reg_g.to_reg(), addr, rex_flags);
+                }
+            }
         }
 
         Inst::Push64 { src } => {
@@ -1027,10 +1361,112 @@ pub(crate) fn emit(
             }
         }
 
+        Inst::JmpTableSeq {
+            idx,
+            tmp1,
+            tmp2,
+            ref targets,
+            default_target,
+            ..
+        } => {
+            // This sequence is *one* instruction in the vcode, and is expanded only here at
+            // emission time, because we cannot allow the regalloc to insert spills/reloads in
+            // the middle; we depend on hardcoded PC-rel addressing below.
+            //
+            // We don't have to worry about emitting islands, because the only label-use type has a
+            // maximum range of 2 GB. If we later consider using shorter-range label references,
+            // this will need to be revisited.
+
+            // Save index in a tmp (the live range of ridx only goes to start of this
+            // sequence; rtmp1 or rtmp2 may overwrite it).
+
+            // We generate the following sequence:
+            // ;; generated by lowering: cmp #jmp_table_size, %idx
+            // jnb $default_target
+            // movl %idx, %tmp2
+            // lea start_of_jump_table_offset(%rip), %tmp1
+            // movzlq [%tmp1, %tmp2], %tmp2
+            // addq %tmp2, %tmp1
+            // j *%tmp1
+            // $start_of_jump_table:
+            // -- jump table entries
+            let default_label = match default_target {
+                BranchTarget::Label(label) => label,
+                _ => unreachable!(),
+            };
+            one_way_jmp(sink, CC::NB, *default_label); // idx unsigned >= jmp table size
+
+            // Copy the index (and make sure to clear the high 32-bits lane of tmp2).
+            let inst = Inst::movzx_rm_r(ExtMode::LQ, RegMem::reg(*idx), *tmp2, None);
+            inst.emit(sink, flags, state);
+
+            // Load base address of jump table.
+            let start_of_jumptable = sink.get_label();
+            let inst = Inst::lea(
+                Amode::rip_relative(BranchTarget::Label(start_of_jumptable)),
+                *tmp1,
+            );
+            inst.emit(sink, flags, state);
+
+            // Load value out of jump table.
+            let inst = Inst::movzx_rm_r(
+                ExtMode::LQ,
+                RegMem::mem(Amode::imm_reg_reg_shift(0, tmp1.to_reg(), tmp2.to_reg(), 2)),
+                *tmp2,
+                None,
+            );
+            inst.emit(sink, flags, state);
+
+            // Add base of jump table to jump-table-sourced block offset.
+            let inst = Inst::alu_rmi_r(
+                true, /* is_64 */
+                AluRmiROpcode::Add,
+                RegMemImm::reg(tmp2.to_reg()),
+                *tmp1,
+            );
+            inst.emit(sink, flags, state);
+
+            // Branch to computed address.
+            let inst = Inst::jmp_unknown(RegMem::reg(tmp1.to_reg()));
+            inst.emit(sink, flags, state);
+
+            // Emit jump table (table of 32-bit offsets).
+            sink.bind_label(start_of_jumptable);
+            let jt_off = sink.cur_offset();
+            for &target in targets.iter() {
+                let word_off = sink.cur_offset();
+                // off_into_table is an addend here embedded in the label to be later patched at
+                // the end of codegen. The offset is initially relative to this jump table entry;
+                // with the extra addend, it'll be relative to the jump table's start, after
+                // patching.
+                let off_into_table = word_off - jt_off;
+                sink.use_label_at_offset(word_off, target.as_label().unwrap(), LabelUse::PCRel32);
+                sink.put4(off_into_table);
+            }
+        }
+
+        Inst::TrapIf {
+            cc,
+            trap_code,
+            srcloc,
+        } => {
+            let else_label = sink.get_label();
+
+            // Jump over if the invert of CC is set (i.e. CC is not set).
+            one_way_jmp(sink, cc.invert(), else_label);
+
+            // Trap!
+            let inst = Inst::trap(*srcloc, *trap_code);
+            inst.emit(sink, flags, state);
+
+            sink.bind_label(else_label);
+        }
+
         Inst::XMM_Mov_RM_R {
             op,
             src: src_e,
             dst: reg_g,
+            srcloc,
         } => {
             let rex = RexFlags::clear_w();
             let (prefix, opcode) = match op {
@@ -1045,9 +1481,12 @@ pub(crate) fn emit(
                 RegMem::Reg { reg: reg_e } => {
                     emit_std_reg_reg(sink, prefix, opcode, 2, reg_g.to_reg(), *reg_e, rex);
                 }
-
                 RegMem::Mem { addr } => {
                     let addr = &addr.finalize(state);
+                    if let Some(srcloc) = *srcloc {
+                        // Register the offset at which the actual load instruction starts.
+                        sink.add_trap(srcloc, TrapCode::HeapOutOfBounds);
+                    }
                     emit_std_reg_mem(sink, prefix, opcode, 2, reg_g.to_reg(), addr, rex);
                 }
             }
@@ -1075,14 +1514,19 @@ pub(crate) fn emit(
                 RegMem::Reg { reg: reg_e } => {
                     emit_std_reg_reg(sink, prefix, opcode, 2, reg_g.to_reg(), *reg_e, rex);
                 }
-
                 RegMem::Mem { addr } => {
                     let addr = &addr.finalize(state);
                     emit_std_reg_mem(sink, prefix, opcode, 2, reg_g.to_reg(), addr, rex);
                 }
             }
         }
-        Inst::XMM_Mov_R_M { op, src, dst } => {
+
+        Inst::XMM_Mov_R_M {
+            op,
+            src,
+            dst,
+            srcloc,
+        } => {
             let rex = RexFlags::clear_w();
             let (prefix, opcode) = match op {
                 SseOpcode::Movd => (LegacyPrefix::_66, 0x0F7E),
@@ -1091,8 +1535,32 @@ pub(crate) fn emit(
             };
 
             let dst = &dst.finalize(state);
+            if let Some(srcloc) = *srcloc {
+                // Register the offset at which the actual load instruction starts.
+                sink.add_trap(srcloc, TrapCode::HeapOutOfBounds);
+            }
             emit_std_reg_mem(sink, prefix, opcode, 2, *src, dst, rex);
         }
+
+        Inst::LoadExtName {
+            dst,
+            name,
+            offset,
+            srcloc,
+        } => {
+            // The full address can be encoded in the register, with a relocation.
+            // Generates: movabsq $name, %dst
+            let enc_dst = int_reg_enc(dst.to_reg());
+            sink.put1(0x48 | ((enc_dst >> 3) & 1));
+            sink.put1(0xB8 | (enc_dst & 7));
+            sink.add_reloc(*srcloc, Reloc::Abs8, name, *offset);
+            if flags.emit_all_ones_funcaddrs() {
+                sink.put8(u64::max_value());
+            } else {
+                sink.put8(0);
+            }
+        }
+
         Inst::Hlt => {
             sink.put1(0xcc);
         }

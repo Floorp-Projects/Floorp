@@ -383,6 +383,7 @@ fn define_simd(
     let fcmp = insts.by_name("fcmp");
     let fcvt_from_uint = insts.by_name("fcvt_from_uint");
     let fcvt_to_sint_sat = insts.by_name("fcvt_to_sint_sat");
+    let fcvt_to_uint_sat = insts.by_name("fcvt_to_uint_sat");
     let fmax = insts.by_name("fmax");
     let fmin = insts.by_name("fmin");
     let fneg = insts.by_name("fneg");
@@ -405,14 +406,19 @@ fn define_simd(
     let uadd_sat = insts.by_name("uadd_sat");
     let umax = insts.by_name("umax");
     let umin = insts.by_name("umin");
+    let snarrow = insts.by_name("snarrow");
+    let swiden_high = insts.by_name("swiden_high");
+    let swiden_low = insts.by_name("swiden_low");
     let ushr_imm = insts.by_name("ushr_imm");
     let ushr = insts.by_name("ushr");
+    let uwiden_high = insts.by_name("uwiden_high");
+    let uwiden_low = insts.by_name("uwiden_low");
     let vconst = insts.by_name("vconst");
     let vall_true = insts.by_name("vall_true");
     let vany_true = insts.by_name("vany_true");
     let vselect = insts.by_name("vselect");
 
-    let x86_packss = x86_instructions.by_name("x86_packss");
+    let x86_palignr = x86_instructions.by_name("x86_palignr");
     let x86_pmaxs = x86_instructions.by_name("x86_pmaxs");
     let x86_pmaxu = x86_instructions.by_name("x86_pmaxu");
     let x86_pmins = x86_instructions.by_name("x86_pmins");
@@ -575,7 +581,7 @@ fn define_simd(
                 def!(g = raw_bitcast_i16x8_again(f)),
                 def!(h = x86_psra(g, b)),
                 // Re-pack the vector.
-                def!(z = x86_packss(e, h)),
+                def!(z = snarrow(e, h)),
             ],
         );
     }
@@ -785,6 +791,26 @@ fn define_simd(
         );
     }
 
+    // SIMD widen
+    for ty in &[I8, I16] {
+        let swiden_high = swiden_high.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(b = swiden_high(a)),
+            vec![
+                def!(c = x86_palignr(a, a, uimm8_eight)),
+                def!(b = swiden_low(c)),
+            ],
+        );
+        let uwiden_high = uwiden_high.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(b = uwiden_high(a)),
+            vec![
+                def!(c = x86_palignr(a, a, uimm8_eight)),
+                def!(b = uwiden_low(c)),
+            ],
+        );
+    }
+
     narrow.custom_legalize(shuffle, "convert_shuffle");
     narrow.custom_legalize(extractlane, "convert_extractlane");
     narrow.custom_legalize(insertlane, "convert_insertlane");
@@ -797,4 +823,5 @@ fn define_simd(
 
     narrow_avx.custom_legalize(imul, "convert_i64x2_imul");
     narrow_avx.custom_legalize(fcvt_from_uint, "expand_fcvt_from_uint_vector");
+    narrow_avx.custom_legalize(fcvt_to_uint_sat, "expand_fcvt_to_uint_sat_vector");
 }

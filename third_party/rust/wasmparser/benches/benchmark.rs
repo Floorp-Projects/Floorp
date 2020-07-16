@@ -2,26 +2,11 @@
 extern crate criterion;
 
 use anyhow::Result;
-use criterion::{black_box, Criterion};
+use criterion::Criterion;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
-use wasmparser::{
-    validate, OperatorValidatorConfig, Parser, ParserState, ValidatingParser,
-    ValidatingParserConfig, WasmDecoder,
-};
-
-const VALIDATOR_CONFIG: Option<ValidatingParserConfig> = Some(ValidatingParserConfig {
-    operator_config: OperatorValidatorConfig {
-        enable_threads: true,
-        enable_reference_types: true,
-        enable_simd: true,
-        enable_bulk_memory: true,
-        enable_multi_value: true,
-        enable_tail_call: true,
-        enable_module_linking: true,
-    },
-});
+use wasmparser::{DataKind, ElementKind, Parser, Payload, Validator};
 
 /// A benchmark input.
 pub struct BenchmarkInput {
@@ -93,19 +78,108 @@ fn collect_test_files(path: &Path, list: &mut Vec<BenchmarkInput>) -> Result<()>
 ///
 /// The `path` specifies which benchmark input file we are currently operating on
 /// so that we can report better errors in case of failures.
-fn read_all_wasm<'a, T>(path: &PathBuf, mut d: T)
-where
-    T: WasmDecoder<'a>,
-{
-    loop {
-        match *d.read() {
-            ParserState::Error(ref e) => {
-                panic!("unexpected error while reading Wasm from {:?}: {}", path, e)
+fn read_all_wasm(wasm: &[u8]) -> Result<()> {
+    use Payload::*;
+    for item in Parser::new(0).parse_all(wasm) {
+        match item? {
+            TypeSection(s) => {
+                for item in s {
+                    item?;
+                }
             }
-            ParserState::EndWasm => return,
-            _ => (),
+            ImportSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            AliasSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            InstanceSection(s) => {
+                for item in s {
+                    for arg in item?.args()? {
+                        arg?;
+                    }
+                }
+            }
+            ModuleSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            FunctionSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            TableSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            MemorySection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            GlobalSection(s) => {
+                for item in s {
+                    for op in item?.init_expr.get_operators_reader() {
+                        op?;
+                    }
+                }
+            }
+            ExportSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ElementSection(s) => {
+                for item in s {
+                    let item = item?;
+                    if let ElementKind::Active { init_expr, .. } = item.kind {
+                        for op in init_expr.get_operators_reader() {
+                            op?;
+                        }
+                    }
+                    for op in item.items.get_items_reader()? {
+                        op?;
+                    }
+                }
+            }
+            DataSection(s) => {
+                for item in s {
+                    let item = item?;
+                    if let DataKind::Active { init_expr, .. } = item.kind {
+                        for op in init_expr.get_operators_reader() {
+                            op?;
+                        }
+                    }
+                }
+            }
+            CodeSectionEntry(body) => {
+                for local in body.get_locals_reader()? {
+                    local?;
+                }
+                for op in body.get_operators_reader()? {
+                    op?;
+                }
+            }
+
+            Version { .. }
+            | StartSection { .. }
+            | DataCountSection { .. }
+            | UnknownSection { .. }
+            | CustomSection { .. }
+            | CodeSectionStart { .. }
+            | ModuleCodeSectionStart { .. }
+            | ModuleCodeSectionEntry { .. }
+            | End => {}
         }
     }
+    Ok(())
 }
 
 /// Returns the default benchmark inputs that are proper `wasmparser` benchmark
@@ -119,70 +193,39 @@ fn collect_benchmark_inputs() -> Vec<BenchmarkInput> {
 fn it_works_benchmark(c: &mut Criterion) {
     let mut inputs = collect_benchmark_inputs();
     // Filter out all benchmark inputs that fail to parse via `wasmparser`.
-    inputs.retain(|input| {
-        let mut parser = Parser::new(input.wasm.as_slice());
-        'outer: loop {
-            match parser.read() {
-                ParserState::Error(_) => break 'outer false,
-                ParserState::EndWasm => break 'outer true,
-                _ => continue,
-            }
-        }
-    });
+    inputs.retain(|input| read_all_wasm(input.wasm.as_slice()).is_ok());
     c.bench_function("it works benchmark", move |b| {
         b.iter(|| {
             for input in &mut inputs {
-                let _ = black_box(read_all_wasm(
-                    &input.path,
-                    Parser::new(input.wasm.as_slice()),
-                ));
+                read_all_wasm(input.wasm.as_slice()).unwrap();
             }
         })
-    });
-}
-
-fn validator_not_fails_benchmark(c: &mut Criterion) {
-    let mut inputs = collect_benchmark_inputs();
-    // Filter out all benchmark inputs that fail to validate via `wasmparser`.
-    inputs.retain(|input| {
-        let mut parser = ValidatingParser::new(input.wasm.as_slice(), VALIDATOR_CONFIG);
-        'outer: loop {
-            match parser.read() {
-                ParserState::Error(_) => break 'outer false,
-                ParserState::EndWasm => break 'outer true,
-                _ => continue,
-            }
-        }
-    });
-    c.bench_function("validator no fails benchmark", move |b| {
-        b.iter(|| {
-            for input in &mut inputs {
-                let _ = black_box(read_all_wasm(
-                    &input.path,
-                    ValidatingParser::new(input.wasm.as_slice(), VALIDATOR_CONFIG),
-                ));
-            }
-        });
     });
 }
 
 fn validate_benchmark(c: &mut Criterion) {
+    fn validator() -> Validator {
+        let mut ret = Validator::new();
+        ret.wasm_reference_types(true)
+            .wasm_multi_value(true)
+            .wasm_simd(true)
+            .wasm_module_linking(true)
+            .wasm_bulk_memory(true)
+            .wasm_threads(true)
+            .wasm_tail_call(true);
+        return ret;
+    }
     let mut inputs = collect_benchmark_inputs();
     // Filter out all benchmark inputs that fail to validate via `wasmparser`.
-    inputs.retain(|input| validate(input.wasm.as_slice(), VALIDATOR_CONFIG).is_ok());
+    inputs.retain(|input| validator().validate_all(&input.wasm).is_ok());
     c.bench_function("validate benchmark", move |b| {
         b.iter(|| {
             for input in &mut inputs {
-                let _ = black_box(validate(input.wasm.as_slice(), VALIDATOR_CONFIG));
+                validator().validate_all(&input.wasm).unwrap();
             }
         })
     });
 }
 
-criterion_group!(
-    benchmark,
-    it_works_benchmark,
-    validator_not_fails_benchmark,
-    validate_benchmark
-);
+criterion_group!(benchmark, it_works_benchmark, validate_benchmark);
 criterion_main!(benchmark);
