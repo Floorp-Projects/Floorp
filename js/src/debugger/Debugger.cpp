@@ -1479,7 +1479,7 @@ bool Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj) {
     return false;
   }
 
-  obj.set(static_cast<JSObject*>(ndobj->getPrivate()));
+  obj.set(ndobj->referent());
   return true;
 }
 
@@ -6009,12 +6009,12 @@ bool Debugger::CallData::adoptDebuggeeValue() {
   RootedValue v(cx, args[0]);
   if (v.isObject()) {
     RootedObject obj(cx, &v.toObject());
-    NativeObject* ndobj = ToNativeDebuggerObject(cx, &obj);
+    DebuggerObject* ndobj = ToNativeDebuggerObject(cx, &obj);
     if (!ndobj) {
       return false;
     }
 
-    obj.set(static_cast<JSObject*>(ndobj->getPrivate()));
+    obj.set(ndobj->referent());
     v = ObjectValue(*obj);
 
     if (!dbg->wrapDebuggeeValue(cx, &v)) {
@@ -6712,10 +6712,9 @@ bool Debugger::isDebuggerCrossCompartmentEdge(JSObject* obj,
   } else if (obj->is<DebuggerSource>()) {
     referent = obj->as<DebuggerSource>().getReferentRawObject();
   } else if (obj->is<DebuggerObject>()) {
-    referent = static_cast<gc::Cell*>(obj->as<DebuggerObject>().getPrivate());
+    referent = obj->as<DebuggerObject>().referent();
   } else if (obj->is<DebuggerEnvironment>()) {
-    referent =
-        static_cast<gc::Cell*>(obj->as<DebuggerEnvironment>().getPrivate());
+    referent = obj->as<DebuggerEnvironment>().referent();
   }
 
   return referent == target;
