@@ -1,4 +1,4 @@
-// |reftest| skip-if(release_or_beta) async -- AggregateError is not released yet
+// |reftest| async
 // Copyright (C) 2019 Sergey Rubanov. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
