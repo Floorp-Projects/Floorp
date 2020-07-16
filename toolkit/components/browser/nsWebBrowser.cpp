@@ -259,7 +259,7 @@ nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow) {
 
 NS_IMETHODIMP
 nsWebBrowser::SetContainerWindow(nsIWebBrowserChrome* aTopWindow) {
-  NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
+  EnsureDocShellTreeOwner();
   return mDocShellTreeOwner->SetWebBrowserChrome(aTopWindow);
 }
 
@@ -412,7 +412,7 @@ nsWebBrowser::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner) {
 
 NS_IMETHODIMP
 nsWebBrowser::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
-  NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
+  EnsureDocShellTreeOwner();
   return mDocShellTreeOwner->SetTreeOwner(aTreeOwner);
 }
 
@@ -1172,16 +1172,13 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebBrowser::EnsureDocShellTreeOwner() {
+void nsWebBrowser::EnsureDocShellTreeOwner() {
   if (mDocShellTreeOwner) {
-    return NS_OK;
+    return;
   }
 
   mDocShellTreeOwner = new nsDocShellTreeOwner();
   mDocShellTreeOwner->WebBrowser(this);
-
-  return NS_OK;
 }
 
 static void DrawPaintedLayer(PaintedLayer* aLayer, gfxContext* aContext,

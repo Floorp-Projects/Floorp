@@ -117,7 +117,7 @@ class nsWebBrowser final : public nsIWebBrowser,
 
   // XXXbz why are these NS_IMETHOD?  They're not interface methods!
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
-  NS_IMETHOD EnsureDocShellTreeOwner();
+  void EnsureDocShellTreeOwner();
 
   nsIWidget* EnsureWidget();
 
