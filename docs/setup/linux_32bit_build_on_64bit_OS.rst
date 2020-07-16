@@ -67,7 +67,7 @@ These steps were verified to work as of June 2020
 
      sudo apt install gcc-multilib g++-multilib libdbus-glib-1-dev:i386 \
        libgtk2.0-dev:i386 libgtk-3-dev:i386 libpango1.0-dev:i386 libxt-dev:i386 \
-       libx11-xcb-dev:i386 libpulse-dev:i386
+       libx11-xcb-dev:i386 libpulse-dev:i386 libdrm-dev:i386
 
 5. Create a file called ``mozconfig`` in the top-level directory of you
    ``mozilla-central`` checkout, containing at least the following:
