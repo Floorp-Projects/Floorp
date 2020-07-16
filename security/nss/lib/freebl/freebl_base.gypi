@@ -35,6 +35,8 @@
     'ecl/ecp_jac.c',
     'ecl/ecp_jm.c',
     'ecl/ecp_mont.c',
+    'ecl/ecp_secp384r1.c',
+    'ecl/ecp_secp521r1.c',
     'fipsfreebl.c',
     'blinit.c',
     'freeblver.c',
