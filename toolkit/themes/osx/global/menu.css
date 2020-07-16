@@ -7,7 +7,8 @@
 menu,
 menuitem,
 menucaption {
-  -moz-appearance: menuitem;
+  appearance: auto;
+  -moz-default-appearance: menuitem;
   -moz-font-smoothing-background-color: -moz-mac-menuitem;
   -moz-box-align: center;
   list-style-image: none;
@@ -72,13 +73,14 @@ menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
 
 .menu-right {
   list-style-image: none;
-  -moz-appearance: menuarrow;
+  appearance: auto;
+  -moz-default-appearance: menuarrow;
 }
 
 /* menu/menuitems in menubar */
 
 menubar > menu {
-  -moz-appearance: none;
+  appearance: none;
   padding-block: 2px;
   padding-inline: 7px 5px;
   margin: 1px 0;
@@ -90,7 +92,8 @@ menubar > menu[_moz-menuactive="true"] {
 }
 
 menubar > menu[_moz-menuactive="true"][open="true"] {
-  -moz-appearance: menuitem;
+  appearance: auto;
+  -moz-default-appearance: menuitem;
   -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
   color: -moz-mac-menutextselect;
 }
@@ -125,7 +128,7 @@ menuitem[_moz-menuactive="true"] {
 }
 
 menuitem[customoptionstyling="true"] {
-  -moz-appearance: none;
+  appearance: none;
   padding-block: 0;
 }
 
@@ -146,7 +149,8 @@ menulist > menupopup > menu {
 
 :not(menulist) > menupopup > menuitem[checked="true"],
 :not(menulist) > menupopup > menuitem[selected="true"] {
-  -moz-appearance: checkmenuitem;
+  appearance: auto;
+  -moz-default-appearance: checkmenuitem;
 }
 
 menulist > menupopup > menuitem[checked="true"]::before,
@@ -160,7 +164,8 @@ menulist > menupopup > menuitem[selected="true"]::before {
 /* menuseparator */
 
 menuseparator {
-  -moz-appearance: menuseparator;
+  appearance: auto;
+  -moz-default-appearance: menuseparator;
   margin: 5px 0;
   padding: 1px 0;
 }
@@ -179,7 +184,8 @@ menuseparator {
    * clears everything under it.
    * Without help from native theming this effect wouldn't be achievable.
    */
-  -moz-appearance: menuitem;
+  appearance: auto;
+  -moz-default-appearance: menuitem;
 }
 
 .menupopup-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-up) {

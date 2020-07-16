@@ -6,7 +6,8 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 #topBar {
-  -moz-appearance: toolbar;
+  appearance: auto;
+  -moz-default-appearance: toolbar;
   -moz-window-dragging: drag;
   -moz-box-align: center;
   -moz-box-pack: center;
@@ -20,7 +21,8 @@
 #viewGroup > toolbarbutton {
   -moz-box-orient: vertical;
   -moz-box-align: center;
-  -moz-appearance: toolbarbutton;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
   font: menu;
   margin: 0;
   padding: 0 6px;
@@ -105,7 +107,8 @@ treechildren::-moz-tree-cell-text(broken) {
 #permList {
   margin: .5em;
   overflow: auto;
-  -moz-appearance: listbox;
+  appearance: auto;
+  -moz-default-appearance: listbox;
   color: -moz-fieldtext;
 }
 

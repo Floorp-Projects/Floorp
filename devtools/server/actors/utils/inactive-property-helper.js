@@ -717,7 +717,7 @@ class InactivePropertyHelper {
         "hr",
         "iframe",
         // Inputs are generally replaced elements. E.g. checkboxes and radios are replaced
-        // unless they have `-moz-appearance: none`. However unconditionally treating them
+        // unless they have `appearance: none`. However unconditionally treating them
         // as replaced is enough for our purpose here, and avoids extra complexity that
         // will likely not be necessary in most cases.
         "input",

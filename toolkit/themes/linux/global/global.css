@@ -25,7 +25,8 @@
   --arrowpanel-padding: 10px;
   --panel-disabled-color: GrayText;
   /* ::::: Styles ::::: */
-  -moz-appearance: dialog;
+  appearance: auto;
+  -moz-default-appearance: dialog;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
@@ -109,7 +110,7 @@ html|*#print-preview-pageNumber {
 /* ::::: Miscellaneous formatting ::::: */
 
 :root:-moz-lwtheme {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 :root[lwtheme-image]:-moz-lwtheme-darktext {

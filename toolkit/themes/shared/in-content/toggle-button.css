@@ -16,7 +16,7 @@ input[type="checkbox"].toggle-button {
 }
 
 input[type="checkbox"].toggle-button {
-  -moz-appearance: none;
+  appearance: none;
   padding: 0;
   margin: 0;
   outline: 0;

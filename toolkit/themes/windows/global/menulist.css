@@ -5,7 +5,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 :host {
-  -moz-appearance: menulist;
+  appearance: auto;
+  -moz-default-appearance: menulist;
   margin: 2px 4px;
   color: -moz-FieldText;
   text-shadow: none;

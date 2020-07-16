@@ -228,7 +228,7 @@ body {
 }
 
 .tooltip-container .menuitem > .command[role="link"] {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   color: var(--theme-arrowpanel-color);
   background-color: transparent;

@@ -700,7 +700,7 @@
   background-color: var(--text-color);
 
   border: 0px;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 :-moz-native-anonymous .paused-dbg-divider {

@@ -5,7 +5,7 @@
 %include ../../../shared/alert.inc.css
 
 #alertNotification {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   padding: 10px;
 }

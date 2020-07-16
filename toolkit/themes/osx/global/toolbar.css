@@ -5,23 +5,26 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 toolbox {
-  /* Setting -moz-appearance:toolbox causes sheets to attach under the
+  /* Setting -moz-default-appearance:toolbox causes sheets to attach under the
    * toolbox and has no other effects. It doesn't render anything. */
-  -moz-appearance: toolbox;
+  appearance: auto;
+  -moz-default-appearance: toolbox;
 }
 
 toolbar {
   min-width: 1px;
   min-height: 20px;
-  -moz-appearance: toolbar;
+  appearance: auto;
+  -moz-default-appearance: toolbar;
 }
 
 toolbar:-moz-lwtheme {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 toolbarseparator {
-  -moz-appearance: separator;
+  appearance: auto;
+  -moz-default-appearance: separator;
   margin: 3px 4px;
 }
 

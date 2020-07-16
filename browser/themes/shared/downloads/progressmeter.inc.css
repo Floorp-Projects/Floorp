@@ -14,7 +14,7 @@
  */
 
 .downloadProgress {
-  -moz-appearance: none;
+  appearance: none;
   display: -moz-box;
   margin: 4px 0 0;
   margin-inline-end: 12px;
@@ -24,7 +24,7 @@
 }
 
 .downloadProgress::-moz-progress-bar {
-  -moz-appearance: none;
+  appearance: none;
   background-color: Highlight;
 }
 

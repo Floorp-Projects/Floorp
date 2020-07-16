@@ -124,7 +124,8 @@ resizer {
   z-index: 2147483647;
   /* Widget gets decide on its own whether or not the native theme should apply,
      based on the context/OS theme. If it does not, SVG background will kick in. */
-  -moz-appearance: resizer;
+  appearance: auto;
+  -moz-default-appearance: resizer;
 
   /* native resizer should never flip on its own;
      we will flip it (or the SVG background) with CSS transform below. */

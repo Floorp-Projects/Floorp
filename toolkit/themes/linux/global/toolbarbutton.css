@@ -9,7 +9,8 @@
 /* ::::: toolbarbutton ::::: */
 
 toolbarbutton {
-  -moz-appearance: toolbarbutton;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 0;
@@ -53,7 +54,8 @@ toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  -moz-appearance: toolbarbutton-dropdown;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton-dropdown;
 }
 
 /* ::::: toolbarbutton badged ::::: */

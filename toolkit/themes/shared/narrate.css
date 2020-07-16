@@ -197,7 +197,7 @@ body.dark .narrate-word-highlight {
 
 .voiceselect > button.select-toggle,
 .voiceselect > .options > button.option {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   width: 100%;
   min-height: 40px;

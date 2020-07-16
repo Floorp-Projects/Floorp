@@ -11,7 +11,7 @@
 
 #downloadsRichListBox {
   /** The default listbox appearance comes with an unwanted margin. **/
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .downloadButton {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-align: center;
   background: transparent;
   min-width: 0;
@@ -78,7 +78,7 @@
 }
 
 .downloadButton > .button-box {
-  -moz-appearance: none;
+  appearance: none;
   padding: 2px !important;
 }
 

@@ -42,7 +42,7 @@ label.findbar-find-fast:-moz-lwtheme {
 }
 
 .findbar-button {
-  -moz-appearance: none;
+  appearance: none;
   border-width: @roundButtonBorderWidth@;
   margin-inline-end: 5px;
   padding: 2px 9px;

@@ -15,7 +15,8 @@ tabbox {
 }
 
 tabpanels {
-  -moz-appearance: tabpanels;
+  appearance: auto;
+  -moz-default-appearance: tabpanels;
   padding: 33px 15px 15px;
 }
 
@@ -28,7 +29,8 @@ tabs {
 }
 
 tab {
-  -moz-appearance: tab;
+  appearance: auto;
+  -moz-default-appearance: tab;
   padding-top: 1px;
 }
 

@@ -260,7 +260,8 @@
 
 /* Override the background-color: white applied to filler elements in codemirror.css */
 .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
-  -moz-appearance: scrollcorner;
+  appearance: auto;
+  -moz-default-appearance: scrollcorner;
 }
 
 /* Markup view and Event tooltip styles */

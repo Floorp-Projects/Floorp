@@ -7,7 +7,8 @@
 
 menupopup,
 panel {
-  -moz-appearance: menupopup;
+  appearance: auto;
+  -moz-default-appearance: menupopup;
   -moz-font-smoothing-background-color: -moz-mac-menupopup;
   background-color: Menu;
   color: MenuText;
@@ -22,11 +23,11 @@ menupopup > menu > menupopup {
 }
 
 panel[titlebar] {
-  -moz-appearance: none; /* to disable rounded corners */
+  appearance: none; /* to disable rounded corners */
 }
 
 panel[type="arrow"] {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
 }
 
@@ -41,7 +42,7 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrowcontent {
-  -moz-appearance: none;
+  appearance: none;
   -moz-font-smoothing-background-color: var(--arrowpanel-background);
   background: var(--arrowpanel-background);
   border-radius: var(--arrowpanel-border-radius);
@@ -111,6 +112,6 @@ menulist > menupopup:not([position]) {
 }
 
 menupopup[customoptionstyling="true"] {
-  -moz-appearance: none;
+  appearance: none;
   padding-block: 0;
 }

@@ -446,7 +446,7 @@
 
 .pictureInPictureToggleButton {
   display: flex;
-  -moz-appearance: none;
+  appearance: none;
   position: absolute;
   background-color: #0060df;
   color: #fff;

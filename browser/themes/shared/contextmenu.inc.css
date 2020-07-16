@@ -9,7 +9,7 @@
 }
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {

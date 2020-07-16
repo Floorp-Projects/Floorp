@@ -19,7 +19,8 @@ tabs {
 /* ::::: tabpanels ::::: */
 
 tabpanels {
-  -moz-appearance: tabpanels;
+  appearance: auto;
+  -moz-default-appearance: tabpanels;
   padding: 8px;
   color: -moz-DialogText;
 }
@@ -28,7 +29,8 @@ tabpanels {
 
 tab {
   position: relative;
-  -moz-appearance: tab;
+  appearance: auto;
+  -moz-default-appearance: tab;
   margin-top: 2px;
   padding: 3px 4px;
   color: -moz-DialogText;

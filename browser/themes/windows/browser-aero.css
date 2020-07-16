@@ -27,12 +27,14 @@
      *   it in the restored window case.
      */
     :root[sizemode="normal"] .titlebar-buttonbox {
-      -moz-appearance: -moz-window-button-box;
+      appearance: auto;
+      -moz-default-appearance: -moz-window-button-box;
     }
 
     @media (-moz-windows-compositor) {
       :root[sizemode="maximized"] .titlebar-buttonbox {
-        -moz-appearance: -moz-window-button-box-maximized;
+        appearance: auto;
+        -moz-default-appearance: -moz-window-button-box-maximized;
       }
     }
   }
@@ -87,7 +89,8 @@
 
       @media (-moz-windows-default-theme: 0) {
         :root[tabsintitlebar] {
-          -moz-appearance: -moz-win-glass;
+          appearance: auto;
+          -moz-default-appearance: -moz-win-glass;
         }
 
         :root[tabsintitlebar]:not(:-moz-lwtheme) {
@@ -98,13 +101,14 @@
          * the sidebar, if the sidebar is open the accent color bleeds through in
          * the titlebar */
         :root[tabsintitlebar] #browser {
-          -moz-appearance: -moz-win-exclude-glass;
+          appearance: auto;
+          -moz-default-appearance: -moz-win-exclude-glass;
         }
       }
 
       .titlebar-buttonbox,
       .titlebar-button {
-        -moz-appearance: none !important;
+        appearance: none !important;
       }
 
       .titlebar-button {
@@ -267,7 +271,8 @@
          (-moz-os-version: windows-win8) {
     :root {
       background-color: transparent;
-      -moz-appearance: -moz-win-borderless-glass;
+      appearance: auto;
+      -moz-default-appearance: -moz-win-borderless-glass;
     }
 
     :root[sizemode="maximized"] .titlebar-buttonbox {
@@ -283,7 +288,8 @@
      * win7 we want to make sure they are "glassy", so we can't use #browser
      * as the exclude-glass container. We use #appcontent instead. */
     #appcontent {
-      -moz-appearance: -moz-win-exclude-glass;
+      appearance: auto;
+      -moz-default-appearance: -moz-win-exclude-glass;
     }
   }
 
@@ -398,6 +404,7 @@
   }
 
   #print-preview-toolbar:not(:-moz-lwtheme) {
-    -moz-appearance: -moz-win-browsertabbar-toolbox;
+    appearance: auto;
+    -moz-default-appearance: -moz-win-browsertabbar-toolbox;
   }
 }

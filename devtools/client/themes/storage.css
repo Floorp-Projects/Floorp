@@ -91,7 +91,7 @@ a {
 
 /* Text input in storage table */
 #storage-table input {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-flex: 1;
   /* make sure the outline is not cut off */
   position: relative;

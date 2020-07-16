@@ -5,7 +5,7 @@
 %include ../../shared/customizableui/panelUI.inc.css
 
 #BMB_bookmarksPopup menupopup {
-  -moz-appearance: none;
+  appearance: none;
   background: var(--arrowpanel-background);
   color: var(--arrowpanel-color);
   border: 1px solid var(--arrowpanel-border-color);
@@ -14,11 +14,11 @@
 }
 
 menuitem.subviewbutton {
-  -moz-appearance: none !important;
+  appearance: none !important;
 }
 
 .subviewradio > .radio-label-box {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 /*

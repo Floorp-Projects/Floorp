@@ -54,7 +54,7 @@
 }
 
 #navigator-toolbox {
-  -moz-appearance: none;
+  appearance: none;
   background-color: transparent;
   border-top: none;
 }
@@ -67,7 +67,7 @@
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   color: var(--toolbar-color);
-  -moz-appearance: none;
+  appearance: none;
   border-style: none;
 }
 
@@ -122,7 +122,7 @@ menuitem.bookmark-item {
 #minimize-button,
 #restore-button,
 #close-button {
-  -moz-appearance: none;
+  appearance: none;
   padding: 6px 12px;
   -moz-context-properties: stroke;
   stroke: currentColor;
@@ -297,7 +297,7 @@ notification[value="translation"] menulist::part(dropmarker) {
 }
 
 .sidebar-splitter {
-  -moz-appearance: none;
+  appearance: none;
   width: 6px;
   background-color: -moz-dialog;
   border: 1px ThreeDShadow;
@@ -318,7 +318,8 @@ notification[value="translation"] menulist::part(dropmarker) {
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
-  -moz-appearance: menubar;
+  appearance: auto;
+  -moz-default-appearance: menubar;
   color: -moz-menubartext;
 }
 
@@ -461,15 +462,17 @@ notification[value="translation"] menulist::part(dropmarker) {
   @media (-moz-gtk-csd-transparent-background) {
     :root[tabsintitlebar][sizemode="normal"]:not(:-moz-lwtheme) {
       background-color: transparent;
-      -moz-appearance: none;
+      appearance: none;
     }
   }
 
   :root[tabsintitlebar] #titlebar {
-    -moz-appearance: -moz-window-titlebar-maximized;
+    appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar-maximized;
   }
   :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #titlebar {
-    -moz-appearance: -moz-window-titlebar;
+    appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar;
   }
   :root[tabsintitlebar]:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
     visibility: hidden;
@@ -499,7 +502,7 @@ notification[value="translation"] menulist::part(dropmarker) {
   :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #TabsToolbar,
   :root[tabsintitlebar][sizemode="maximized"] #TabsToolbar,
   :root[tabsintitlebar] #toolbar-menubar {
-    -moz-appearance: none;
+    appearance: none;
   }
 
   /* The button box must appear on top of the navigator-toolbox in order for
@@ -515,7 +518,8 @@ notification[value="translation"] menulist::part(dropmarker) {
    * Use full scale icons here as the Gtk+ does. */
   @media (-moz-gtk-csd-minimize-button) {
     .titlebar-min {
-      -moz-appearance: -moz-window-button-minimize;
+      appearance: auto;
+      -moz-default-appearance: -moz-window-button-minimize;
     }
   }
   @media (-moz-gtk-csd-minimize-button: 0) {
@@ -526,10 +530,12 @@ notification[value="translation"] menulist::part(dropmarker) {
 
   @media (-moz-gtk-csd-maximize-button) {
     .titlebar-max {
-      -moz-appearance: -moz-window-button-maximize;
+      appearance: auto;
+      -moz-default-appearance: -moz-window-button-maximize;
     }
     .titlebar-restore {
-      -moz-appearance: -moz-window-button-restore;
+      appearance: auto;
+      -moz-default-appearance: -moz-window-button-restore;
     }
   }
   @media (-moz-gtk-csd-maximize-button: 0) {
@@ -541,7 +547,8 @@ notification[value="translation"] menulist::part(dropmarker) {
 
   @media (-moz-gtk-csd-close-button) {
     .titlebar-close {
-      -moz-appearance: -moz-window-button-close;
+      appearance: auto;
+      -moz-default-appearance: -moz-window-button-close;
     }
   }
   @media (-moz-gtk-csd-close-button: 0) {

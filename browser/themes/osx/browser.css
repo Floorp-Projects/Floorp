@@ -42,21 +42,22 @@
 }
 
 #navigator-toolbox {
-  -moz-appearance: none;
+  appearance: none;
   --tabs-border-color: rgba(0,0,0,.3);
 }
 
 /*
   This is a workaround for Bug 1482157
-  -moz-appearance: toolbox; makes the macOS sheets attached to the element's
-  bottom border. We cannot put this property on the toolbox itself as it
-  cancels all backgrounds that are there, so we set it on the toolbox bottom
+  -moz-default-appearance: toolbox; makes the macOS sheets attached to the
+  element's bottom border. We cannot put this property on the toolbox itself as
+  it cancels all backgrounds that are there, so we set it on the toolbox bottom
   border.
 */
 #navigator-toolbox::after {
   content: "";
   display: -moz-box;
-  -moz-appearance: toolbox;
+  appearance: auto;
+  -moz-default-appearance: toolbox;
   height: 1px;
   margin-top: -1px;
   opacity: 0.001;
@@ -116,13 +117,13 @@
 }
 
 .browser-toolbar:not(.titlebar-color) {
-  -moz-appearance: none;
+  appearance: none;
   background: var(--toolbar-bgcolor);
   color: var(--toolbar-color);
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using
-   -moz-appearance: toolbar. */
+   -moz-default-appearance: toolbar. */
 :root:-moz-any([sizemode="fullscreen"],[customizing]) #nav-bar:not([tabs-hidden="true"]),
 :root:not([tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
 #nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
@@ -301,7 +302,7 @@
 
 #editBookmarkPanelRows > vbox > html|input,
 #editBookmarkPanelRows > vbox > hbox > html|input {
-  -moz-appearance: none;
+  appearance: none;
   background-color: var(--arrowpanel-field-background);
   color: inherit;
   border-radius: 2px;
@@ -332,7 +333,7 @@
 }
 
 #editBMPanel_newFolderButton {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-flex: 1;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
@@ -375,7 +376,7 @@
 }
 
 #editBMPanel_folderMenuList::part(dropmarker) {
-  -moz-appearance: none;
+  appearance: none;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;
@@ -390,7 +391,7 @@
 
 #editBMPanel_folderTree,
 #editBMPanel_tagsSelector {
-  -moz-appearance: none;
+  appearance: none;
   background-color: var(--arrowpanel-field-background);
   color: inherit;
   border-radius: 2px;
@@ -430,7 +431,7 @@
 
 #editBookmarkPanel .expander-up,
 #editBookmarkPanel .expander-down {
-  -moz-appearance: none; /* override button.css */
+  appearance: none; /* override button.css */
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;
@@ -472,14 +473,15 @@
   --sidebar-background-color: -moz-mac-source-list;
 }
 
-/* Give the sidebar a vibrant -moz-appearance. Only do this when no lwtheme is
- * in use, because vibrant -moz-appearance values only work if there is no
+/* Give the sidebar a vibrant appearance. Only do this when no lwtheme is
+ * in use, because vibrant appearance values only work if there is no
  * background-color rendered behind the element, and we have :root:-moz-lwtheme
- * rules which set -moz-appearance: none and an opaque background color on the
+ * rules which set appearance: none and an opaque background color on the
  * root element. That background color would interfere with the vibrancy.
  * See bug 1594132 for fixing this. */
 #sidebar-box:not(:-moz-lwtheme) {
-  -moz-appearance: -moz-mac-source-list;
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-source-list;
   -moz-font-smoothing-background-color: -moz-mac-source-list;
 }
 
@@ -554,7 +556,8 @@
 }
 
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
-  -moz-appearance: -moz-mac-vibrant-titlebar-dark;
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-vibrant-titlebar-dark;
   -moz-font-smoothing-background-color: -moz-mac-vibrant-titlebar-dark;
   background-color: #232323;
   color: hsl(240, 9%, 98%);

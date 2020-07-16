@@ -9,11 +9,13 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 toolbox {
-  -moz-appearance: toolbox;
+  appearance: auto;
+  -moz-default-appearance: toolbox;
 }
 
 toolbar {
-  -moz-appearance: toolbar;
+  appearance: auto;
+  -moz-default-appearance: toolbar;
   min-width: 1px;
   min-height: 19px;
 }
@@ -24,11 +26,12 @@ toolbar:first-child {
 
 toolbox:-moz-lwtheme,
 toolbar:-moz-lwtheme {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 toolbarseparator {
-  -moz-appearance: separator;
+  appearance: auto;
+  -moz-default-appearance: separator;
 }
 
 toolbarspacer {

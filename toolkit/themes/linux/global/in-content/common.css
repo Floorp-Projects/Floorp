@@ -23,11 +23,11 @@ xul|button > xul|*.button-box,
 xul|menulist::part(label-box),
 xul|*.radio-label-box,
 xul|*.checkbox-label-box {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
-  -moz-appearance: none !important;
+  appearance: none !important;
 }
 
 xul|*.help-button > xul|*.button-box > xul|*.button-icon {
