@@ -25,7 +25,7 @@ log = logging.getLogger('upload-symbols')
 log.setLevel(logging.INFO)
 
 DEFAULT_URL = 'https://symbols.mozilla.org/upload/'
-MAX_RETRIES = 5
+MAX_RETRIES = 7
 
 
 def print_error(r):
