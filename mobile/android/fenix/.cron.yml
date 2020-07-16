@@ -32,3 +32,9 @@ jobs:
           treeherder-symbol: bump-ac
           target-tasks-method: bump_android_components
       when: [{hour: 14, minute: 0}]
+    - name: screenshots
+      job:
+          type: decision-task
+          treeherder-symbol: screenshots-D
+          target-tasks-method: screenshots
+      when: [{weekday: 'Monday', hour: 10, minute: 0}]

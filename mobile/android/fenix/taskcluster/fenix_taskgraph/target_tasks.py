@@ -73,3 +73,13 @@ def target_tasks_bump_android_components(full_task_graph, parameters, graph_conf
         return task.attributes.get("bump-type", "") == "android-components"
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+
+@_target_task("screenshots")
+def target_tasks_screnshots(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to generate screenshots on a real device."""
+
+    def filter(task, parameters):
+        return task.attributes.get("screenshots", False)
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]

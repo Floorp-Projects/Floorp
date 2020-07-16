@@ -11,44 +11,56 @@ transforms:
 
 job-defaults:
     attributes:
+        build-type: debug
         code-review: true
         retrigger: true
+    dependencies:
+            signing: signing-debug
+            signing-android-test: signing-android-test-debug
+    include-pull-request-number: true
+    run:
+        commands:
+            - [wget, {artifact-reference: '<signing/public/build/x86/geckoNightly/target.apk>'}, '-O', app.apk]
+            - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/geckoNightly/target.apk>'}, '-O', android-test.apk]
+        secrets:
+            - name: project/mobile/fenix/firebase
+              key: firebaseToken
+              path: .firebase_token.json
+              json: true
+        using: run-commands
+        use-caches: false
+    treeherder:
+        kind: test
+        platform: 'ui-test/opt'
+        tier: 2
+    worker:
+        docker-image: {in-tree: ui-tests}
+        max-run-time: 7200
+        env:
+            GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
+            GOOGLE_PROJECT: moz-fenix
+        artifacts:
+            - name: public
+              path: /builds/worker/artifacts
+              type: directory
+    worker-type: b-android
 
 jobs:
     x86-debug:
-        attributes:
-            build-type: debug
-        dependencies:
-            signing: signing-debug
-            signing-android-test: signing-android-test-debug
         description: Test Fenix
-        include-pull-request-number: true
         run-on-tasks-for: [github-pull-request, github-push]
         run:
             commands:
-                - [wget, {artifact-reference: '<signing/public/build/x86/geckoNightly/target.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/geckoNightly/target.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '50']
-            secrets:
-                - name: project/mobile/fenix/firebase
-                  key: firebaseToken
-                  path: .firebase_token.json
-                  json: true
-            using: run-commands
-            use-caches: false
         treeherder:
-            kind: test
-            platform: 'ui-test/opt'
             symbol: debug(ui-test-x86)
-            tier: 2
-        worker:
-            docker-image: {in-tree: ui-tests}
-            max-run-time: 7200
-            env:
-                GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
-                GOOGLE_PROJECT: moz-fenix
-            artifacts:
-                - name: public
-                  path: /builds/worker/artifacts
-                  type: directory
-        worker-type: b-android
+    screenshots-x86:
+        attributes:
+            screenshots: true
+        description: Run UI screenshots tests to keep them up to date
+        run-on-tasks-for: []
+        run:
+            commands:
+                - [automation/taskcluster/androidTest/ui-test.sh, x86-screenshots-tests, app.apk, android-test.apk, '-1']
+        treeherder:
+            symbol: debug(screenshots-x86)

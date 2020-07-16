@@ -92,9 +92,10 @@ class MenuScreenShotTest : ScreenshotTest() {
             Screengrab.screenshot("SettingsSubMenuDefaultBrowserRobot_settings-default-browser")
             mDevice.pressBack()
 
-            settingsTP()
-            Screengrab.screenshot("settings-enhanced-tp")
-            mDevice.pressBack()
+            // Disabled for Pixel 2
+            // settingsTP()
+            // Screengrab.screenshot("settings-enhanced-tp")
+            // mDevice.pressBack()
 
             loginsAndPassword()
             Screengrab.screenshot("SettingsSubMenuLoginsAndPasswords-settings-logins-passwords")
