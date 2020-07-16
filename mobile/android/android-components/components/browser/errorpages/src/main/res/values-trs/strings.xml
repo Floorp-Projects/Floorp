@@ -151,4 +151,68 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Nu nārì\'ìj dīreksiûn</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Nu ga\'ue narì\' riña sā nana\'uî\'t \'ngō servidor guendâ direksiûn gachrûnt.</p>
+      <ul>
+        <li>Gīni\'iāj si nu gāchrūn hue\'êt, dàj rû\':
+          <strong>ww</strong>.example.com luguâ gāchrūnt
+          <strong>www</strong>.example.com.</li>
+        <li>Sisī na\'ue nāyi\'nïn riña gà\' si \'ngō pâjina, ni\'iāj si huā internet riña si āgà\'t li.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nitāj internet hua</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Nātsij ni\'iājt sisī huā internet asi ginù huin ñû nā\'nïnt riña nanâ doj sínj.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Nā\'nïn ñû</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Nitāj si huā hue\'ê direksiûn gachrûnt</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Nu nārì\'t dà gāchrūnt direksiûn. Ni\'iāj dānè gachrûn a\'nâ\'t nī nāchrūn hue\'ê man.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Nitāj si huā hue\'ê direksiûn gachrûnt</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Huā da\'āj nī achrûn\' \'ngō dīreksiûn dànanj <strong>http://www.example.com/</strong></li>
+        <li>Ni\'iāj hue\'ê sisī arâj sunt huìj chrun li nīkïn\' nītïn dan ân (dàj rû\' <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Sê dànanj gāchrūn\'</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Dàj gāchrūn\' \'ngō dīreksiûn (dàj rû\', <q>wxyz://</q>) da\' nāni\'in riña sā nana\'uî\'t, si nitāj nī si na\'nïn riña sitiô ruhuât gātūt.</p>
+      <ul>
+        <li>Sī gātūt riña \'ngō hiūj sê sa achrû\' huin anj. Gīni\'iāj nùj huin doj sa achín sitiô dan ân.</li>
+        <li>Huā da\'āj nej man nī ni\'ña \'ngō software asi plūyîn da\' ga\'ue nāni\'in sa riñā nana\'uî\'t man.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Nu nārì\'ij archîbo</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Nadunâ si yūgui man, nare\' man asi nadunâ man riña hūa aj.</li>
+        <li>Nu gāchrūn hue\'êt, asi garâj sunt mayûskula asi a\'ngô sa huā a\'nan\' gachrûnt riña dīreksiûn anj.</li>
+        <li>Giri\' nì\'iát da\' gātūt hiūj nan bè\'ej.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Nu ga\'ue gā\'nïn gātūt riña archîbo</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Ga\'ue si nare\'ej asi ganatu a\'ngô hiūj u, asi nu gīrì\' nì\'iát riña archîbo da\' gātūt riñaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Nu gā\'nïn servidor proxy gātūt</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Huā nî\'nïn riña sā nana\'uî\'t dan da\' gārāsunj \'ngō servidor proxy, sanī proxy nu gā\'nïn gātūt.</p>
+      <ul>
+        <li>Huā hue\'ê proxy riña sa riñā nana\'uî\'t bè\'ej. Nātsij ni\'iājt nī ginù huin ñû gātūt.</li>
+        <li>Ga\'ue gātūt hiūj nan tāj proxy bè\'ej.</li>
+        <li>Huā nï\' iaj chij aj. Gīni\'iāj gā\'mīnt ngà duguî\' dû\'uèj internet asi sû\' nīkāj ñu\'ūnj man da\' rūgûñu\'ūnj si sò\'.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nu nārì\'ij servidor proxy</string>
+
     </resources>
