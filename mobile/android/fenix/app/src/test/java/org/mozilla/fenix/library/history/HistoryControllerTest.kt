@@ -25,6 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 // Robolectric needed for `onShareItem()`
@@ -189,15 +190,12 @@ class HistoryControllerTest {
     fun onShareItem() {
         controller.handleShare(historyItem)
 
-        // `verify` checks for referential equality.
-        // This would fail as the NavDirections are created and used in place in the tested method.
-        // Capture the NavDirections and `assert` for structural equality after.
         verify {
-            navController.navigate(
+            navController.navigate(directionsEq(
                 HistoryFragmentDirections.actionGlobalShareFragment(
                     data = arrayOf(ShareData(url = historyItem.url, title = historyItem.title))
                 )
-            )
+            ))
         }
     }
 

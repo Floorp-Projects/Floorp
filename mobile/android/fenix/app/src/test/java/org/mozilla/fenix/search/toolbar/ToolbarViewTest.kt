@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.search.toolbar
 
+import android.content.Context
+import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.every
@@ -21,6 +23,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -28,12 +31,14 @@ class ToolbarViewTest {
 
     @MockK(relaxed = true) private lateinit var interactor: ToolbarInteractor
     @MockK private lateinit var engine: Engine
+    private lateinit var context: Context
     private lateinit var toolbar: BrowserToolbar
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        toolbar = spyk(BrowserToolbar(testContext))
+        context = ContextThemeWrapper(testContext, R.style.NormalTheme)
+        toolbar = spyk(BrowserToolbar(context))
     }
 
     @Test
@@ -68,7 +73,7 @@ class ToolbarViewTest {
     }
 
     private fun buildToolbarView(isPrivate: Boolean) = ToolbarView(
-        testContext,
+        context,
         interactor,
         historyStorage = null,
         isPrivate = isPrivate,

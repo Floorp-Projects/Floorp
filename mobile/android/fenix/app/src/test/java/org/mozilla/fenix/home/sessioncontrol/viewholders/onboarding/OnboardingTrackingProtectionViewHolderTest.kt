@@ -4,16 +4,11 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
-import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.View
-import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
+import androidx.appcompat.view.ContextThemeWrapper
 import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
-import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -28,18 +23,9 @@ class OnboardingTrackingProtectionViewHolderTest {
 
     @Before
     fun setup() {
-        mockkStatic("mozilla.components.support.ktx.android.content.res.ThemeKt")
-        view = LayoutInflater.from(testContext)
+        val context = ContextThemeWrapper(testContext, R.style.NormalTheme)
+        view = LayoutInflater.from(context)
             .inflate(OnboardingTrackingProtectionViewHolder.LAYOUT_ID, null)
-
-        every {
-            any<Resources.Theme>().resolveAttribute(R.attr.onboardingSelected)
-        } returns R.color.onboarding_illustration_selected_normal_theme
-    }
-
-    @After
-    fun teardown() {
-        unmockkStatic("mozilla.components.support.ktx.android.content.res.ThemeKt")
     }
 
     @Test

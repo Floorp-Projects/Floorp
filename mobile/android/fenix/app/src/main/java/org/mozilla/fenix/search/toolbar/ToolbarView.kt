@@ -15,10 +15,10 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.search.SearchFragmentState
-import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
@@ -71,10 +71,9 @@ class ToolbarView(
                 false
             }
 
-            background =
-                AppCompatResources.getDrawable(
-                    context, ThemeManager.resolveAttribute(R.attr.foundation, context)
-                )
+            background = AppCompatResources.getDrawable(
+                context, context.theme.resolveAttribute(R.attr.foundation)
+            )
 
             edit.hint = context.getString(R.string.search_hint)
 

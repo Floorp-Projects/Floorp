@@ -4,18 +4,13 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
-import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.View
-import io.mockk.every
+import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
-import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,19 +26,10 @@ class OnboardingPrivacyNoticeViewHolderTest {
 
     @Before
     fun setup() {
-        mockkStatic("mozilla.components.support.ktx.android.content.res.ThemeKt")
-        view = LayoutInflater.from(testContext)
+        val context = ContextThemeWrapper(testContext, R.style.NormalTheme)
+        view = LayoutInflater.from(context)
             .inflate(OnboardingPrivacyNoticeViewHolder.LAYOUT_ID, null)
         interactor = mockk(relaxed = true)
-
-        every {
-            any<Resources.Theme>().resolveAttribute(R.attr.onboardingSelected)
-        } returns R.color.onboarding_illustration_selected_normal_theme
-    }
-
-    @After
-    fun teardown() {
-        unmockkStatic("mozilla.components.support.ktx.android.content.res.ThemeKt")
     }
 
     @Test
