@@ -4112,13 +4112,6 @@ nsDocShell::InitWindow(nativeWindow aParentNativeWindow,
 }
 
 NS_IMETHODIMP
-nsDocShell::Create() {
-  // Implementations have been moved to nsDocShell::Initialize
-  MOZ_DIAGNOSTIC_ASSERT(false);
-  return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP
 nsDocShell::Destroy() {
   // XXX: We allow this function to be called just once.  If you are going to
   // reset new variables in this function, please make sure the variables will

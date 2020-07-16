@@ -441,9 +441,6 @@ nsDocShellTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::Create() { return NS_ERROR_NULL_POINTER; }
-
-NS_IMETHODIMP
 nsDocShellTreeOwner::Destroy() {
   nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
   if (webBrowserChrome) {

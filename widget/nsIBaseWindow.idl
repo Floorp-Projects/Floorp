@@ -52,26 +52,14 @@ interface nsIBaseWindow : nsISupports
 	@param cy - This is the height for the window to be.
 
 	@return	NS_OK - Window Init succeeded without a problem.
-				NS_ERROR_UNEXPECTED - Call was unexpected at this time.  Most likely
-					due to you calling it after create() has been called.
+				NS_ERROR_UNEXPECTED - Call was unexpected at this time. Perhaps
+				  initWindow() had already been called.
 				NS_ERROR_INVALID_ARG - controls that require either a parentNativeWindow
 					or a parentWidget may return invalid arg when they do not
 					receive what they are needing.
 	*/
 	[noscript]void initWindow(in nativeWindow parentNativeWindow,
 		in nsIWidget parentWidget,	in long x, in long y, in long cx, in long cy);
-
-	/*
-	Tells the window that intialization and setup is complete.  When this is
-	called the window can actually create itself based on the setup
-	information handed to it.
-
-	@return	NS_OK - Creation was successfull.
-				NS_ERROR_UNEXPECTED - This call was unexpected at this time.
-					Perhaps create() had already been called or not all
-					required initialization had been done.
-	*/
-	void create();
 
 	/*
 	Tell the window that it should destroy itself.  This call should not be
