@@ -127,7 +127,8 @@ static nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel) {
   return global;
 }
 
-static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP) {
+static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP,
+                         const nsAString& aContentOfPseudoScript) {
   if (!aCSP) {
     return true;
   }
@@ -138,9 +139,9 @@ static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP) {
                                       true,           // aParserCreated
                                       nullptr,        // aElement,
                                       nullptr,        // nsICSPEventListener
-                                      EmptyString(),  // aContent
-                                      0,              // aLineNumber
-                                      0,              // aColumnNumber
+                                      aContentOfPseudoScript,  // aContent
+                                      0,                       // aLineNumber
+                                      0,                       // aColumnNumber
                                       &allowsInlineScript);
 
   return (NS_SUCCEEDED(rv) && allowsInlineScript);
@@ -201,7 +202,12 @@ nsresult nsJSThunk::EvaluateScript(
   // target document.  The target document check is performed below,
   // once we have determined the target document.
   nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCspToInherit();
-  if (!AllowedByCSP(csp)) {
+
+  nsAutoCString script(mScript);
+  // Unescape the script
+  NS_UnescapeURL(script);
+
+  if (!AllowedByCSP(csp, NS_ConvertASCIItoUTF16(script))) {
     return NS_ERROR_DOM_RETVAL_UNDEFINED;
   }
 
@@ -245,7 +251,7 @@ nsresult nsJSThunk::EvaluateScript(
     // against if the triggering principal is system.
     if (targetDoc->NodePrincipal()->Subsumes(loadInfo->TriggeringPrincipal())) {
       nsCOMPtr<nsIContentSecurityPolicy> targetCSP = targetDoc->GetCsp();
-      if (!AllowedByCSP(targetCSP)) {
+      if (!AllowedByCSP(targetCSP, NS_ConvertASCIItoUTF16(script))) {
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
       }
     }
@@ -259,10 +265,6 @@ nsresult nsJSThunk::EvaluateScript(
   // So far so good: get the script context from its owner.
   nsCOMPtr<nsIScriptContext> scriptContext = global->GetContext();
   if (!scriptContext) return NS_ERROR_FAILURE;
-
-  nsAutoCString script(mScript);
-  // Unescape the script
-  NS_UnescapeURL(script);
 
   // New script entry point required, due to the "Create a script" step of
   // http://www.whatwg.org/specs/web-apps/current-work/#javascript-protocol
