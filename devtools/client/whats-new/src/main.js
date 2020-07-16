@@ -22,41 +22,51 @@ const utmParams = new URLSearchParams({
 });
 
 const aside = {
-  header: "Instantly Send Tabs to Mobile",
-  content: `Test your site on mobile and other devices without having to copy, paste, or leave the browser.`,
-  cta: "Learn More About Send Tabs",
-  href: `https://play.google.com/store/apps/details?id=org.mozilla.fennec_aurora&referrer=utm_source%3Dmozilla%26utm_medium%3DReferral%26utm_campaign%3Dmozilla-org${utmParams}`,
+  header: "A Fast and Secure VPN",
+  content: `A VPN from the trusted pioneer in internet privacy. Available for users in the US, Canada, UK, Singapore, Malaysia, and New Zealand.`,
+  cta: "Try Mozilla VPN",
+  href: `https://vpn.mozilla.org/?${utmParams}`,
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 78)",
+  title: "What’s New in DevTools (Firefox 79)",
   linkText: "Read more",
-  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/77?${utmParams}`,
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/79?${utmParams}`,
   features: [
     {
-      header: `Better logs for uncaught promise rejections`,
-      description: `Framework and promise errors are now logged with detailed error stacks, names, and properties, especially improving Angular debugging.`,
-      href: `https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises?${utmParams}#Promise_rejection_events`,
+      header: `Async stack visibility in Console & Debugger`,
+      description: `Now you can view async code events, timeouts, and promises in the context of their stacks across panels. Benefit from the additional context in Debugger call stacks, Network initiator stacks, and Console error and log stacks.`,
+      href: `https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Timeouts_and_intervals?${utmParams}`,
     },
     {
-      header: `Faster DOM navigation in Inspector`,
-      description: `Loading and navigating the DOM on sites with many CSS variables is much snappier.`,
+      header: `Even better source map references for JS and CSS`,
+      description: `Links to Style Editor and Debugger reliably jump to the right file and location. This results in a smoother SCSS inspection experience.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map?${utmParams}`,
+    },
+    {
+      header: `Console displays failed requests`,
+      description: `Network responses with 4xx/5xx status codes are now easier to spot and debug in the Console. In Firefox 79, they display as errors and can be expanded to view detailed request and response information.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/Console_messages?${utmParams}`,
+    },
+    {
+      header: `Debugger highlights errors in code`,
+      description: `When JavaScript code throws an error, the debugger will now highlight the relevant line of code and display error details.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Breaking_on_exceptions?${utmParams}`,
+    },
+    {
+      header: `Faster JavaScript debugging`,
+      description: `Projects with large files and eval-heavy code patterns can now be debugged more quickly.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger?${utmParams}`,
+    },
+    {
+      header: `More accessible Inspector`,
+      description: `Inspector's Changes and Layout tabs can now be read by screen reader users.`,
       href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector?${utmParams}`,
     },
     {
-      header: `Source-mapped variables in Logpoints`,
-      description: `Logpoints can log any variable in original and source-mapped files by automatically finding references to minified names. Make sure to enable the "Map" option in Debugger’s "Scopes" pane.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/Set_a_logpoint?${utmParams}`,
-    },
-    {
-      header: `Better support for blocked network requests`,
-      description: `Network requests blocked by Enhanced Tracking Protection, add-ons, and CORS are now captured in the Network panel and include detailed blocking reasons.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
-    },
-    {
-      header: `URL bar & reload in Remote Debugging`,
-      description: `Navigate your mobile Firefox browser from the remote debugging UI, avoiding fiddling on tiny device screens.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
+      header: `Disabling cache also includes CORS preflight requests`,
+      description: `The "Disable Cache" option in the Network panel now also deactivates CORS preflight request caching, making it easier to iterate on your web security settings.`,
+      href: `https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request?${utmParams}`,
     },
   ],
 };
@@ -67,19 +77,14 @@ const dev = {
   linkText: "Get DevEdition",
   features: [
     {
-      header: `Async stacks in Console & Debugger`,
-      description: `Step through event, timeout, and promise-based function calls over time with the full-featured async stacks in Debugger.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}#Call_stack`,
+      header: `Inspect Server-Sent Events`,
+      description: `Monitor your received event stream data, adding to the existing WebSocket inspection.`,
+      href: `https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events?${utmParams}`,
     },
     {
-      header: `Correct references to source-mapped JS/CSS`,
-      description: `Source-mapped file references in the Inspector and Console now link more reliably to the right file.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map?${utmParams}`,
-    },
-    {
-      header: `Console shows failed requests`,
-      description: `Network requests with 4xx/5xx status codes now log as errors in the Console and can be inspected using the embedded network details.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console?${utmParams}`,
+      header: `Warning for slow server responses`,
+      description: `The Network panel now highlights server performance bottlenecks. Watch out for the friendly turtle icon.`,
+      href: `https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events?${utmParams}`,
     },
   ],
 };
