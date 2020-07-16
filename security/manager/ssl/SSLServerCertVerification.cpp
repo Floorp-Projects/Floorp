@@ -806,8 +806,10 @@ void GatherRootCATelemetry(const UniqueCERTCertList& certList) {
   if (!rootCert) {
     return;
   }
+  Span<uint8_t> certSpan =
+      MakeSpan(rootCert->derCert.data, rootCert->derCert.len);
   AccumulateTelemetryForRootCA(Telemetry::CERT_VALIDATION_SUCCESS_BY_CA,
-                               rootCert);
+                               certSpan);
 }
 
 // There are various things that we want to measure about certificate
@@ -924,15 +926,17 @@ void GatherCertificateTransparencyTelemetry(
   }
 
   // Report CT Policy compliance by CA.
+  Span<uint8_t> certSpan =
+      MakeSpan(rootCert->derCert.data, rootCert->derCert.len);
   switch (info.policyCompliance) {
     case ct::CTPolicyCompliance::Compliant:
       AccumulateTelemetryForRootCA(
-          Telemetry::SSL_CT_POLICY_COMPLIANT_CONNECTIONS_BY_CA, rootCert);
+          Telemetry::SSL_CT_POLICY_COMPLIANT_CONNECTIONS_BY_CA, certSpan);
       break;
     case ct::CTPolicyCompliance::NotEnoughScts:
     case ct::CTPolicyCompliance::NotDiverseScts:
       AccumulateTelemetryForRootCA(
-          Telemetry::SSL_CT_POLICY_NON_COMPLIANT_CONNECTIONS_BY_CA, rootCert);
+          Telemetry::SSL_CT_POLICY_NON_COMPLIANT_CONNECTIONS_BY_CA, certSpan);
       break;
     case ct::CTPolicyCompliance::Unknown:
     default:

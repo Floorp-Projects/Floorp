@@ -317,6 +317,7 @@ PK11_FindCertFromNickname
 PK11_FindCertInSlot
 PK11_FindCertsFromEmailAddress
 PK11_FindCertsFromNickname
+PK11_FindEncodedCertInSlot
 PK11_FindKeyByAnyCert
 PK11_FindKeyByDERCert
 PK11_FindKeyByKeyID

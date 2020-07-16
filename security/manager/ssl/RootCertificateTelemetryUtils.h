@@ -7,8 +7,8 @@
 #ifndef RootCertificateTelemetryUtils_h
 #define RootCertificateTelemetryUtils_h
 
+#include "mozilla/Span.h"
 #include "mozilla/Telemetry.h"
-#include "certt.h"
 
 namespace mozilla {
 namespace psm {
@@ -26,10 +26,10 @@ namespace psm {
 #define ROOT_CERTIFICATE_ENTERPRISE_ROOT 3
 #define ROOT_CERTIFICATE_HASH_FAILURE -1
 
-int32_t RootCABinNumber(const SECItem* cert, PK11SlotInfo* slot);
+int32_t RootCABinNumber(const Span<uint8_t> cert);
 
 void AccumulateTelemetryForRootCA(mozilla::Telemetry::HistogramID probe,
-                                  const CERTCertificate* cert);
+                                  const Span<uint8_t> cert);
 
 }  // namespace psm
 }  // namespace mozilla
