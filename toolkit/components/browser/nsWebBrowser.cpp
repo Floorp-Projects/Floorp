@@ -170,8 +170,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   return browser.forget();
 }
 
-NS_IMETHODIMP
-nsWebBrowser::InternalDestroy() {
+void nsWebBrowser::InternalDestroy() {
   if (mInternalWidget) {
     mInternalWidget->SetWidgetListener(nullptr);
     mInternalWidget->Destroy();
@@ -184,8 +183,6 @@ nsWebBrowser::InternalDestroy() {
     mDocShellTreeOwner->WebBrowser(nullptr);
     mDocShellTreeOwner = nullptr;
   }
-
-  return NS_OK;
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsWebBrowser)

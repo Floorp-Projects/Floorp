@@ -113,7 +113,7 @@ class nsWebBrowser final : public nsIWebBrowser,
 
  protected:
   virtual ~nsWebBrowser();
-  NS_IMETHOD InternalDestroy();
+  void InternalDestroy();
 
   // XXXbz why are these NS_IMETHOD?  They're not interface methods!
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
