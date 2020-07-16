@@ -163,7 +163,10 @@ class SearchCache {
         logConsole.debug("batchTask: Invalidating engine cache");
         await this._write();
       };
-      this._batchTask = new DeferredTask(task, this.CACHE_INVALIDATION_DELAY);
+      this._batchTask = new DeferredTask(
+        task,
+        SearchCache.CACHE_INVALIDATION_DELAY
+      );
     }
     this._batchTask.arm();
   }
