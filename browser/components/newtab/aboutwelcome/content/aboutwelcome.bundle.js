@@ -341,7 +341,7 @@ const MultiStageAboutWelcome = props => {
     })();
   }, [useImportable]);
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    className: `multistageContainer`
+    className: `outer-wrapper multistageContainer`
   }, props.screens.map(screen => {
     return index === screen.order ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
       id: screen.id,

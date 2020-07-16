@@ -66,10 +66,10 @@ add_task(async function test_Separate_About_Welcome_branches() {
     "default",
     // Expected selectors:
     [
-      "h1[data-l10n-id=onboarding-welcome-header]",
-      "button[data-l10n-id=onboarding-data-sync-button2]",
-      "button[data-l10n-id=onboarding-firefox-monitor-button]",
-      "button[data-l10n-id=onboarding-browse-privately-button",
+      "div.multistageContainer",
+      "nav.steps",
+      "button.primary",
+      "button.secondary",
     ],
     // Unexpected selectors:
     [
@@ -79,6 +79,10 @@ add_task(async function test_Separate_About_Welcome_branches() {
       "p[data-l10n-id=onboarding-benefit-sync-text]",
       "p[data-l10n-id=onboarding-benefit-monitor-text]",
       "p[data-l10n-id=onboarding-benefit-lockwise-text]",
+      "h1[data-l10n-id=onboarding-welcome-header]",
+      "button[data-l10n-id=onboarding-data-sync-button2]",
+      "button[data-l10n-id=onboarding-firefox-monitor-button]",
+      "button[data-l10n-id=onboarding-browse-privately-button",
     ]
   );
 });
