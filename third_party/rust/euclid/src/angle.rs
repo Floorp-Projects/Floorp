@@ -7,16 +7,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use num_traits::{Float, FloatConst, Zero};
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
+use crate::approxeq::ApproxEq;
+use crate::trig::Trig;
 use core::cmp::{Eq, PartialEq};
-use core::hash::{Hash};
-use trig::Trig;
+use core::hash::Hash;
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
+use num_traits::{Float, FloatConst, NumCast, One, Zero};
 #[cfg(feature = "serde")]
-use serde;
+use serde::{Deserialize, Serialize};
 
 /// An angle in radians
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Eq, PartialOrd, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Angle<T> {
     pub radians: T,
@@ -73,6 +74,33 @@ where
 
 impl<T> Angle<T>
 where
+    T: Rem<Output = T>
+        + Mul<Output = T>
+        + Sub<Output = T>
+        + Add<Output = T>
+        + One
+        + FloatConst
+        + Copy,
+{
+    /// Returns the shortest signed angle between two angles.
+    ///
+    /// Takes wrapping and signs into account.
+    pub fn angle_to(&self, to: Self) -> Self {
+        let two = T::one() + T::one();
+        let max = T::PI() * two;
+        let d = (to.radians - self.radians) % max;
+
+        Angle::radians(two * d % max - d)
+    }
+
+    /// Linear interpolation between two angles, using the shortest path.
+    pub fn lerp(&self, other: Self, t: T) -> Self {
+        *self + self.angle_to(other) * t
+    }
+}
+
+impl<T> Angle<T>
+where
     T: Float,
 {
     /// Returns (sin(self), cos(self)).
@@ -112,6 +140,36 @@ where
 
     pub fn frac_pi_4() -> Self {
         Angle::radians(T::FRAC_PI_4())
+    }
+}
+
+impl<T> Angle<T>
+where
+    T: NumCast + Copy,
+{
+    /// Cast from one numeric representation to another.
+    #[inline]
+    pub fn cast<NewT: NumCast>(&self) -> Angle<NewT> {
+        self.try_cast().unwrap()
+    }
+
+    /// Fallible cast from one numeric representation to another.
+    pub fn try_cast<NewT: NumCast>(&self) -> Option<Angle<NewT>> {
+        NumCast::from(self.radians).map(|radians| Angle { radians })
+    }
+
+    // Convenience functions for common casts.
+
+    /// Cast angle to `f32`.
+    #[inline]
+    pub fn to_f32(&self) -> Angle<f32> {
+        self.cast()
+    }
+
+    /// Cast angle `f64`.
+    #[inline]
+    pub fn to_f64(&self) -> Angle<f64> {
+        self.cast()
     }
 }
 
@@ -184,61 +242,75 @@ impl<T: Neg<Output = T>> Neg for Angle<T> {
     }
 }
 
+impl<T: ApproxEq<T>> ApproxEq<T> for Angle<T> {
+    #[inline]
+    fn approx_epsilon() -> T {
+        T::approx_epsilon()
+    }
+
+    #[inline]
+    fn approx_eq_eps(&self, other: &Angle<T>, approx_epsilon: &T) -> bool {
+        self.radians.approx_eq_eps(&other.radians, approx_epsilon)
+    }
+}
+
 #[test]
 fn wrap_angles() {
-    use approxeq::ApproxEq;
     use core::f32::consts::{FRAC_PI_2, PI};
 
-    assert!(Angle::radians(0.0).positive().radians.approx_eq(&0.0));
-    assert!(
-        Angle::radians(FRAC_PI_2)
-            .positive()
-            .radians
-            .approx_eq(&FRAC_PI_2)
-    );
-    assert!(
-        Angle::radians(-FRAC_PI_2)
-            .positive()
-            .radians
-            .approx_eq(&(3.0 * FRAC_PI_2))
-    );
-    assert!(
-        Angle::radians(3.0 * FRAC_PI_2)
-            .positive()
-            .radians
-            .approx_eq(&(3.0 * FRAC_PI_2))
-    );
-    assert!(
-        Angle::radians(5.0 * FRAC_PI_2)
-            .positive()
-            .radians
-            .approx_eq(&FRAC_PI_2)
-    );
-    assert!(Angle::radians(2.0 * PI).positive().radians.approx_eq(&0.0));
-    assert!(Angle::radians(-2.0 * PI).positive().radians.approx_eq(&0.0));
-    assert!(Angle::radians(PI).positive().radians.approx_eq(&PI));
-    assert!(Angle::radians(-PI).positive().radians.approx_eq(&PI));
+    assert!(Angle::radians(0.0).positive().approx_eq(&Angle::zero()));
+    assert!(Angle::radians(FRAC_PI_2)
+        .positive()
+        .approx_eq(&Angle::frac_pi_2()));
+    assert!(Angle::radians(-FRAC_PI_2)
+        .positive()
+        .approx_eq(&Angle::radians(3.0 * FRAC_PI_2)));
+    assert!(Angle::radians(3.0 * FRAC_PI_2)
+        .positive()
+        .approx_eq(&Angle::radians(3.0 * FRAC_PI_2)));
+    assert!(Angle::radians(5.0 * FRAC_PI_2)
+        .positive()
+        .approx_eq(&Angle::frac_pi_2()));
+    assert!(Angle::radians(2.0 * PI)
+        .positive()
+        .approx_eq(&Angle::zero()));
+    assert!(Angle::radians(-2.0 * PI)
+        .positive()
+        .approx_eq(&Angle::zero()));
+    assert!(Angle::radians(PI).positive().approx_eq(&Angle::pi()));
+    assert!(Angle::radians(-PI).positive().approx_eq(&Angle::pi()));
 
-    assert!(
-        Angle::radians(FRAC_PI_2)
-            .signed()
-            .radians
-            .approx_eq(&FRAC_PI_2)
-    );
-    assert!(
-        Angle::radians(3.0 * FRAC_PI_2)
-            .signed()
-            .radians
-            .approx_eq(&-FRAC_PI_2)
-    );
-    assert!(
-        Angle::radians(5.0 * FRAC_PI_2)
-            .signed()
-            .radians
-            .approx_eq(&FRAC_PI_2)
-    );
-    assert!(Angle::radians(2.0 * PI).signed().radians.approx_eq(&0.0));
-    assert!(Angle::radians(-2.0 * PI).signed().radians.approx_eq(&0.0));
-    assert!(Angle::radians(-PI).signed().radians.approx_eq(&PI));
-    assert!(Angle::radians(PI).signed().radians.approx_eq(&PI));
+    assert!(Angle::radians(FRAC_PI_2)
+        .signed()
+        .approx_eq(&Angle::frac_pi_2()));
+    assert!(Angle::radians(3.0 * FRAC_PI_2)
+        .signed()
+        .approx_eq(&-Angle::frac_pi_2()));
+    assert!(Angle::radians(5.0 * FRAC_PI_2)
+        .signed()
+        .approx_eq(&Angle::frac_pi_2()));
+    assert!(Angle::radians(2.0 * PI).signed().approx_eq(&Angle::zero()));
+    assert!(Angle::radians(-2.0 * PI).signed().approx_eq(&Angle::zero()));
+    assert!(Angle::radians(-PI).signed().approx_eq(&Angle::pi()));
+    assert!(Angle::radians(PI).signed().approx_eq(&Angle::pi()));
+}
+
+#[test]
+fn lerp() {
+    type A = Angle<f32>;
+
+    let a = A::radians(1.0);
+    let b = A::radians(2.0);
+    assert!(a.lerp(b, 0.25).approx_eq(&Angle::radians(1.25)));
+    assert!(a.lerp(b, 0.5).approx_eq(&Angle::radians(1.5)));
+    assert!(a.lerp(b, 0.75).approx_eq(&Angle::radians(1.75)));
+    assert!(a
+        .lerp(b + A::two_pi(), 0.75)
+        .approx_eq(&Angle::radians(1.75)));
+    assert!(a
+        .lerp(b - A::two_pi(), 0.75)
+        .approx_eq(&Angle::radians(1.75)));
+    assert!(a
+        .lerp(b + A::two_pi() * 5.0, 0.75)
+        .approx_eq(&Angle::radians(1.75)));
 }
