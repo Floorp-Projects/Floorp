@@ -124,23 +124,27 @@ var ctrlTab = {
   },
   get showAllButton() {
     delete this.showAllButton;
-    let button = this.makePreview(true);
-    button.setAttribute("id", "ctrlTab-showAll");
-    document.getElementById("ctrlTab-showAll-container").appendChild(button);
-    return (this.showAllButton = button);
+    this.showAllButton = document.createXULElement("button");
+    this.showAllButton.id = "ctrlTab-showAll";
+    this.showAllButton.addEventListener("mouseover", this);
+    this.showAllButton.addEventListener("command", this);
+    this.showAllButton.addEventListener("click", this);
+    document
+      .getElementById("ctrlTab-showAll-container")
+      .appendChild(this.showAllButton);
+    return this.showAllButton;
   },
   get previews() {
     delete this.previews;
+    this.previews = [];
     let previewsContainer = document.getElementById("ctrlTab-previews");
     for (let i = 0; i < this.maxTabPreviews; i++) {
-      previewsContainer.appendChild(this.makePreview(false));
+      let preview = this._makePreview();
+      previewsContainer.appendChild(preview);
+      this.previews.push(preview);
     }
-    // Ensure that showAllButton is in the document before returning the single
-    // node list that includes both the previews and the button.
-    this.showAllButton;
-    return (this.previews = this.panel.getElementsByClassName(
-      "ctrlTab-preview"
-    ));
+    this.previews.push(this.showAllButton);
+    return this.previews;
   },
   get keys() {
     var keys = {};
@@ -158,7 +162,7 @@ var ctrlTab = {
   get selected() {
     return this._selectedIndex < 0
       ? document.activeElement
-      : this.previews.item(this._selectedIndex);
+      : this.previews[this._selectedIndex];
   },
   get isOpen() {
     return (
@@ -209,44 +213,33 @@ var ctrlTab = {
     this.readPref();
   },
 
-  makePreview: function ctrlTab_makePreview(aIsShowAllButton) {
+  _makePreview() {
     let preview = document.createXULElement("button");
-    preview.setAttribute("class", "ctrlTab-preview");
+    preview.className = "ctrlTab-preview";
     preview.setAttribute("pack", "center");
-    if (!aIsShowAllButton) {
-      preview.setAttribute("flex", "1");
-    }
-    preview.addEventListener("mouseover", () => this._mouseOverFocus(preview));
-    preview.addEventListener("command", () => this.pick(preview));
-    preview.addEventListener("click", event => {
-      if (event.button == 1) {
-        this.remove(preview);
-      } else if (AppConstants.platform == "macosx" && event.button == 2) {
-        // Control+click is a right click on OS X
-        this.pick(preview);
-      }
-    });
+    preview.setAttribute("flex", "1");
+    preview.addEventListener("mouseover", this);
+    preview.addEventListener("command", this);
+    preview.addEventListener("click", this);
 
     let previewInner = document.createXULElement("vbox");
-    previewInner.setAttribute("class", "ctrlTab-preview-inner");
+    previewInner.className = "ctrlTab-preview-inner";
     preview.appendChild(previewInner);
 
-    if (!aIsShowAllButton) {
-      let canvas = (preview._canvas = document.createXULElement("hbox"));
-      canvas.setAttribute("class", "ctrlTab-canvas");
-      previewInner.appendChild(canvas);
+    let canvas = (preview._canvas = document.createXULElement("hbox"));
+    canvas.className = "ctrlTab-canvas";
+    previewInner.appendChild(canvas);
 
-      let faviconContainer = document.createXULElement("hbox");
-      faviconContainer.setAttribute("class", "ctrlTab-favicon-container");
-      previewInner.appendChild(faviconContainer);
+    let faviconContainer = document.createXULElement("hbox");
+    faviconContainer.className = "ctrlTab-favicon-container";
+    previewInner.appendChild(faviconContainer);
 
-      let favicon = (preview._favicon = document.createXULElement("image"));
-      favicon.setAttribute("class", "ctrlTab-favicon");
-      faviconContainer.appendChild(favicon);
-    }
+    let favicon = (preview._favicon = document.createXULElement("image"));
+    favicon.className = "ctrlTab-favicon";
+    faviconContainer.appendChild(favicon);
 
     let label = (preview._label = document.createXULElement("label"));
-    label.setAttribute("class", "ctrlTab-label plain");
+    label.className = "ctrlTab-label plain";
     label.setAttribute("crop", "end");
     previewInner.appendChild(label);
 
@@ -259,10 +252,10 @@ var ctrlTab = {
     }
 
     var showAllLabel = gNavigatorBundle.getString("ctrlTab.listAllTabs.label");
-    this.showAllButton._label.setAttribute(
-      "value",
-      PluralForm.get(this.tabCount, showAllLabel).replace("#1", this.tabCount)
-    );
+    this.showAllButton.label = PluralForm.get(
+      this.tabCount,
+      showAllLabel
+    ).replace("#1", this.tabCount);
     this.showAllButton.hidden = !gTabsPanel.canOpen;
   },
 
@@ -305,10 +298,7 @@ var ctrlTab = {
   },
 
   advanceFocus: function ctrlTab_advanceFocus(aForward) {
-    let selectedIndex = Array.prototype.indexOf.call(
-      this.previews,
-      this.selected
-    );
+    let selectedIndex = this.previews.indexOf(this.selected);
     do {
       selectedIndex += aForward ? 1 : -1;
       if (selectedIndex < 0) {
@@ -603,6 +593,21 @@ var ctrlTab = {
           document.getElementById(
             "menu_showAllTabs"
           ).hidden = !gTabsPanel.canOpen;
+        }
+        break;
+      case "mouseover":
+        this._mouseOverFocus(event.currentTarget);
+        break;
+      case "command":
+        this.pick(event.currentTarget);
+        break;
+      case "click":
+        if (event.button == 1) {
+          this.remove(event.currentTarget);
+        } else if (AppConstants.platform == "macosx" && event.button == 2) {
+          // Control+click is a right click on macOS, but in this case we want
+          // to handle it like a left click.
+          this.pick(event.currentTarget);
         }
         break;
     }

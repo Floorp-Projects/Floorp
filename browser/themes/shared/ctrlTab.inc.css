@@ -20,7 +20,8 @@
 %endif
 }
 
-.ctrlTab-preview {
+.ctrlTab-preview,
+#ctrlTab-showAll {
   -moz-appearance: none;
   /* !important overrides the :hover color from button.css on Linux */
   color: inherit !important;
@@ -64,21 +65,24 @@
   margin-bottom: 8px;
 }
 
-.ctrlTab-preview-inner {
+.ctrlTab-preview-inner,
+#ctrlTab-showAll {
   padding: 8px;
   border: 2px solid transparent;
   border-radius: .5em;
 }
 
-.ctrlTab-preview:not(#ctrlTab-showAll) > .ctrlTab-preview-inner {
+.ctrlTab-preview-inner {
   margin-top: -10px;
 }
 
-#ctrlTab-showAll:not(:focus) > .ctrlTab-preview-inner {
+#ctrlTab-showAll {
   background-color: rgba(255,255,255,.2);
+  margin-top: .5em;
 }
 
-.ctrlTab-preview:focus > .ctrlTab-preview-inner {
+.ctrlTab-preview:focus > .ctrlTab-preview-inner,
+#ctrlTab-showAll:focus {
   background-color: rgba(0,0,0,.75);
   text-shadow: none;
   border-color: #45a1ff;
@@ -86,9 +90,5 @@
 
 .ctrlTab-label {
   text-align: center;
-}
-
-#ctrlTab-showAll {
-  margin-top: .5em;
 }
 
