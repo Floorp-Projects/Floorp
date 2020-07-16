@@ -186,7 +186,16 @@ export class ConditionalPanel extends PureComponent<Props> {
       }
     });
 
-    codeMirror.on("blur", (cm, e) => closeConditionalPanel());
+    codeMirror.on("blur", (cm, e) => {
+      if (
+        e?.relatedTarget &&
+        e.relatedTarget.closest(".conditional-breakpoint-panel")
+      ) {
+        return;
+      }
+
+      closeConditionalPanel();
+    });
 
     const codeMirrorWrapper = codeMirror.getWrapperElement();
 
