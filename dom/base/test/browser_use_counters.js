@@ -74,34 +74,6 @@ add_task(async function() {
       ],
     },
 
-    // Check for -moz-appearance related use counters.
-    {
-      type: "iframe",
-      filename: "file_use_counter_appearance.html",
-      counters: [
-        { name: "APPEARANCE_WIDGET_BUTTON", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_BUTTON", value: 0 },
-        { name: "APPEARANCE_WIDGET_TEXTFIELD", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_TEXTFIELD", value: 0 },
-        { name: "APPEARANCE_WIDGET_RADIO", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_RADIO", value: 0 },
-        { name: "APPEARANCE_WIDGET_CHECKBOX" },
-        { name: "APPEARANCE_NONWIDGET_CHECKBOX", value: 0 },
-        { name: "APPEARANCE_WIDGET_MENULISTBUTTON", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_MENULISTBUTTON" },
-        { name: "APPEARANCE_WIDGET_METER", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_METER", value: 0 },
-        { name: "APPEARANCE_WIDGET_TEXTAREA", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_TEXTAREA", value: 0 },
-        { name: "APPEARANCE_WIDGET_RANGE", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_RANGE", value: 0 },
-        { name: "APPEARANCE_OVERRIDDEN_RANGE" },
-        { name: "APPEARANCE_WIDGET_NUMBERINPUT", value: 0 },
-        { name: "APPEARANCE_NONWIDGET_NUMBERINPUT", value: 0 },
-        { name: "APPEARANCE_OVERRIDDEN_NUMBERINPUT", value: 0 },
-      ],
-    },
-
     // Check that even loads from the imglib cache update use counters.  The
     // images should still be there, because we just loaded them in the last
     // set of tests.  But we won't get updated counts for the document
