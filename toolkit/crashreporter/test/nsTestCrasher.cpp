@@ -84,6 +84,7 @@ const int16_t CRASH_X64CFI_EOF = 20;
 const int16_t CRASH_PHC_USE_AFTER_FREE = 21;
 const int16_t CRASH_PHC_DOUBLE_FREE = 22;
 const int16_t CRASH_PHC_BOUNDS_VIOLATION = 23;
+const int16_t CRASH_HEAP_CORRUPTION = 24;
 
 #if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
 
@@ -214,6 +215,24 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       // not reached
     }
 #endif
+#if XP_WIN
+    case CRASH_HEAP_CORRUPTION: {
+      // We override the HeapFree() function in mozglue so that we can force
+      // the code calling it to use our allocator instead of the Windows one.
+      // Since we need to call the real HeapFree() we get its pointer directly.
+      HMODULE kernel32 = LoadLibraryW(L"Kernel32.dll");
+      if (kernel32) {
+        typedef BOOL(*HeapFreeT)(HANDLE, DWORD, LPVOID);
+        HeapFreeT heapFree = (HeapFreeT)GetProcAddress(kernel32, "HeapFree");
+        if (heapFree) {
+          HANDLE heap = GetProcessHeap();
+          LPVOID badPointer = (LPVOID)3;
+          heapFree(heap, 0, badPointer);
+          break; // This should be unreachable
+        }
+      }
+    }
+#endif  // XP_WIN
     default:
       break;
   }

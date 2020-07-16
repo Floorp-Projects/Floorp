@@ -29,6 +29,10 @@
 
 #include <objbase.h>
 
+#if !defined(STATUS_HEAP_CORRUPTION) // mingw doesn't declare this yet
+#define STATUS_HEAP_CORRUPTION ((DWORD)0xC0000374L)
+#endif // !defined(STATUS_HEAP_CORRUPTION)
+
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
@@ -162,6 +166,7 @@ void ExceptionHandler::Initialize(
   previous_iph_ = NULL;
 #endif  // _MSC_VER >= 1400
   previous_pch_ = NULL;
+  heap_corruption_veh_ = NULL;
   handler_thread_ = NULL;
   is_shutdown_ = false;
   handler_start_semaphore_ = NULL;
@@ -287,6 +292,18 @@ void ExceptionHandler::Initialize(
     if (handler_types & HANDLER_PURECALL)
       previous_pch_ = _set_purecall_handler(HandlePureVirtualCall);
 
+    if (handler_types & HANDLER_HEAP_CORRUPTION) {
+      // Under ASan we need to let the ASan runtime's ShadowExceptionHandler stay
+      // in the first handler position.
+#ifdef MOZ_ASAN
+      const bool first = false;
+#else
+      const bool first = true;
+#endif // MOZ_ASAN
+      heap_corruption_veh_ =
+          AddVectoredExceptionHandler(first, HandleHeapCorruption);
+    }
+
     LeaveCriticalSection(&handler_stack_critical_section_);
   }
 
@@ -315,6 +332,9 @@ ExceptionHandler::~ExceptionHandler() {
 
     if (handler_types_ & HANDLER_PURECALL)
       _set_purecall_handler(previous_pch_);
+
+    if (handler_types_ & HANDLER_HEAP_CORRUPTION)
+      RemoveVectoredExceptionHandler(heap_corruption_veh_);
 
     if (handler_stack_->back() == this) {
       handler_stack_->pop_back();
@@ -699,6 +719,29 @@ void ExceptionHandler::HandlePureVirtualCall() {
   // or passed it on to another handler.  "Swallow" it by exiting, paralleling
   // the behavior of "swallowing" exceptions.
   exit(0);
+}
+
+// static
+LONG ExceptionHandler::HandleHeapCorruption(EXCEPTION_POINTERS* exinfo) {
+  if (exinfo->ExceptionRecord->ExceptionCode != STATUS_HEAP_CORRUPTION) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+
+  AutoExceptionHandler auto_exception_handler;
+  ExceptionHandler* current_handler = auto_exception_handler.get_handler();
+
+  bool result = false;
+
+  // In case of out-of-process dump generation, directly call
+  // WriteMinidumpWithException since there is no separate thread running.
+  if (current_handler->IsOutOfProcess()) {
+    result = current_handler->WriteMinidumpWithException(
+                 GetCurrentThreadId(), exinfo, NULL) == MinidumpResult::Success;
+  } else {
+    result = current_handler->WriteMinidumpOnHandlerThread(exinfo, NULL);
+  }
+
+  return result ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
 }
 
 bool ExceptionHandler::WriteMinidumpOnHandlerThread(
