@@ -1224,6 +1224,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
  public:
   mozilla::StyleAppearance mDefaultAppearance;
+  mozilla::StyleButtonAppearance mButtonAppearance;
   mozilla::StylePositionProperty mPosition;
 
   mozilla::StyleFloat mFloat;
@@ -1331,8 +1332,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   mozilla::StyleAppearance EffectiveAppearance() const {
-    return mAppearance == mozilla::StyleAppearance::Auto ? mDefaultAppearance
-                                                         : mAppearance;
+    if (mAppearance == mozilla::StyleAppearance::Auto ||
+        (mAppearance == mozilla::StyleAppearance::Button &&
+         mButtonAppearance == mozilla::StyleButtonAppearance::Disallow)) {
+      return mDefaultAppearance;
+    }
+    return mAppearance;
   }
 
   static mozilla::StyleDisplayOutside DisplayOutside(

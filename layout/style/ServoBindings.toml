@@ -578,6 +578,7 @@ cbindgen-types = [
     { gecko = "StyleSVGLength", servo = "crate::values::computed::svg::SVGLength" },
     { gecko = "StyleFontSizeKeyword", servo = "crate::values::specified::font::FontSizeKeyword" },
     { gecko = "StyleDefaultFontSizes", servo = "crate::gecko::wrapper::DefaultFontSizes" },
+    { gecko = "StyleButtonAppearance", servo = "crate::values::specified::ButtonAppearance" },
 ]
 
 mapped-generic-types = [
