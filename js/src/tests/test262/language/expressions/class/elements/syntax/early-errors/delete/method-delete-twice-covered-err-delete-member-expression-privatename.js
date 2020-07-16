@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/err-delete-member-expression-privatename.case
 // - src/class-elements/delete-error/cls-expr-method-delete-twice-covered.template
