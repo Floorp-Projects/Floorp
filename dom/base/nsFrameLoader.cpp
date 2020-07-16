@@ -978,10 +978,6 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* frame) {
   RefPtr<nsDocShell> baseWindow = GetDocShell();
   baseWindow->InitWindow(nullptr, view->GetWidget(), 0, 0, size.width,
                          size.height);
-  // This is kinda whacky, this "Create()" call doesn't really
-  // create anything, one starts to wonder why this was named
-  // "Create"...
-  baseWindow->Create();
   baseWindow->SetVisibility(true);
   NS_ENSURE_TRUE(GetDocShell(), false);
 
@@ -2185,10 +2181,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     nsGlobalWindowOuter::Cast(newWindow)->AllowScriptsToClose();
   }
 
-  // This is kinda whacky, this call doesn't really create anything,
-  // but it must be called to make sure things are properly
-  // initialized.
-  if (NS_FAILED(docShell->Create())) {
+  if (!docShell->Initialize()) {
     // Do not call Destroy() here. See bug 472312.
     NS_WARNING("Something wrong when creating the docshell for a frameloader!");
     return NS_ERROR_FAILURE;

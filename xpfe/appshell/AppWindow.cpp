@@ -240,7 +240,7 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   // Make sure to set the item type on the docshell _before_ calling
-  // Create() so it knows what type it is.
+  // InitWindow() so it knows what type it is.
   NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
 
   mDocShell->SetTreeOwner(mChromeTreeOwner);
@@ -249,7 +249,6 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
   NS_ENSURE_SUCCESS(mDocShell->InitWindow(nullptr, mWindow, r.X(), r.Y(),
                                           r.Width(), r.Height()),
                     NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(mDocShell->Create(), NS_ERROR_FAILURE);
 
   // Attach a WebProgress listener.during initialization...
   mDocShell->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_NETWORK);
