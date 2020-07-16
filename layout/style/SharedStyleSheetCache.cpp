@@ -498,12 +498,14 @@ void SharedStyleSheetCache::CancelLoadsForLoader(css::Loader& aLoader) {
   // We can't stop in-progress loads because some other loader may care about
   // them.
   for (auto iter = mLoadingDatas.Iter(); !iter.Done(); iter.Next()) {
-    SheetLoadData* data = iter.Data();
-    do {
+    MOZ_DIAGNOSTIC_ASSERT(iter.Data(),
+                          "We weren't properly notified and the load was "
+                          "incorrectly dropped on the floor");
+    for (SheetLoadData* data = iter.Data(); data; data = data->mNext) {
       if (data->mLoader == &aLoader) {
         data->mIsCancelled = true;
       }
-    } while ((data = data->mNext));
+    }
   }
 }
 
