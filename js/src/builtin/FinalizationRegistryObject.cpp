@@ -295,20 +295,17 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(
-          cx, args, JSProto_FinalizationRegistry, &proto)) {
-    return false;
-  }
-
   RootedObject cleanupCallback(
       cx, ValueToCallable(cx, args.get(0), 1, NO_CONSTRUCT));
   if (!cleanupCallback) {
     return false;
   }
 
-  Rooted<GlobalObject*> incumbentGlobal(cx,
-                                        cx->runtime()->getIncumbentGlobal(cx));
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(
+          cx, args, JSProto_FinalizationRegistry, &proto)) {
+    return false;
+  }
 
   Rooted<UniquePtr<ObjectWeakMap>> registrations(
       cx, cx->make_unique<ObjectWeakMap>(cx));
@@ -328,14 +325,6 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  HandlePropertyName funName = cx->names().empty;
-  RootedFunction doCleanupFunction(
-      cx, NewNativeFunction(cx, doCleanup, 0, funName,
-                            gc::AllocKind::FUNCTION_EXTENDED));
-  if (!doCleanupFunction) {
-    return false;
-  }
-
   FinalizationRegistryObject* registry =
       NewObjectWithClassProto<FinalizationRegistryObject>(cx, proto);
   if (!registry) {
@@ -344,8 +333,6 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
 
   registry->initReservedSlot(CleanupCallbackSlot,
                              ObjectValue(*cleanupCallback));
-  registry->initReservedSlot(IncumbentGlobalSlot,
-                             ObjectValue(*incumbentGlobal));
   InitReservedSlot(registry, RegistrationsSlot, registrations.release(),
                    MemoryUse::FinalizationRegistryRegistrations);
   InitReservedSlot(registry, ActiveRecords, activeRecords.release(),
@@ -354,11 +341,6 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
                    recordsToBeCleanedUp.release(),
                    MemoryUse::FinalizationRegistryRecordVector);
   registry->initReservedSlot(IsQueuedForCleanupSlot, BooleanValue(false));
-  registry->initReservedSlot(DoCleanupFunctionSlot,
-                             ObjectValue(*doCleanupFunction));
-
-  doCleanupFunction->setExtendedSlot(DoCleanupFunction_RegistrySlot,
-                                     ObjectValue(*registry));
 
   if (!cx->runtime()->gc.addFinalizationRegistry(cx, registry)) {
     return false;
@@ -436,20 +418,12 @@ void FinalizationRegistryObject::finalize(JSFreeOp* fop, JSObject* obj) {
                MemoryUse::FinalizationRegistryRecordVector);
 }
 
-JSObject* FinalizationRegistryObject::cleanupCallback() const {
+inline JSObject* FinalizationRegistryObject::cleanupCallback() const {
   Value value = getReservedSlot(CleanupCallbackSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
   return &value.toObject();
-}
-
-GlobalObject* FinalizationRegistryObject::incumbentGlobal() const {
-  Value value = getReservedSlot(IncumbentGlobalSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-  return &value.toObject().as<GlobalObject>();
 }
 
 ObjectWeakMap* FinalizationRegistryObject::registrations() const {
@@ -479,14 +453,6 @@ FinalizationRecordVector* FinalizationRegistryObject::recordsToBeCleanedUp()
 
 bool FinalizationRegistryObject::isQueuedForCleanup() const {
   return getReservedSlot(IsQueuedForCleanupSlot).toBoolean();
-}
-
-JSFunction* FinalizationRegistryObject::doCleanupFunction() const {
-  Value value = getReservedSlot(DoCleanupFunctionSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-  return &value.toObject().as<JSFunction>();
 }
 
 void FinalizationRegistryObject::queueRecordToBeCleanedUp(
@@ -802,21 +768,6 @@ bool FinalizationRegistryObject::cleanupSome(JSContext* cx, unsigned argc,
 
   args.rval().setUndefined();
   return true;
-}
-
-/* static */
-bool FinalizationRegistryObject::doCleanup(JSContext* cx, unsigned argc,
-                                           Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedFunction callee(cx, &args.callee().as<JSFunction>());
-
-  Value value = callee->getExtendedSlot(DoCleanupFunction_RegistrySlot);
-  RootedFinalizationRegistryObject registry(
-      cx, &value.toObject().as<FinalizationRegistryObject>());
-
-  registry->setQueuedForCleanup(false);
-  return cleanupQueuedRecords(cx, registry);
 }
 
 // CleanupFinalizationRegistry ( finalizationRegistry [ , callback ] )
