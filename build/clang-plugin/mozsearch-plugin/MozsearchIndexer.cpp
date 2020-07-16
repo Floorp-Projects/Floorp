@@ -198,7 +198,7 @@ private:
     if (It == FileMap.end()) {
       // We haven't seen this file before. We need to make the FileInfo
       // structure information ourselves
-      std::string Filename = SM.getFilename(Loc);
+      std::string Filename = std::string(SM.getFilename(Loc));
       std::string Absolute;
       // If Loc is a macro id rather than a file id, it Filename might be
       // empty. Also for some types of file locations that are clang-internal
@@ -399,6 +399,20 @@ private:
           isa<TagDecl>(DC)) {
         llvm::SmallVector<char, 512> Output;
         llvm::raw_svector_ostream Out(Output);
+#if CLANG_VERSION_MAJOR >= 11
+        // This code changed upstream in version 11:
+        // https://github.com/llvm/llvm-project/commit/29e1a16be8216066d1ed733a763a749aed13ff47
+        GlobalDecl GD;
+        if (const CXXConstructorDecl *D = dyn_cast<CXXConstructorDecl>(Decl)) {
+          GD = GlobalDecl(D, Ctor_Complete);
+        } else if (const CXXDestructorDecl *D =
+                       dyn_cast<CXXDestructorDecl>(Decl)) {
+          GD = GlobalDecl(D, Dtor_Complete);
+        } else {
+          GD = GlobalDecl(Decl);
+        }
+        Ctx->mangleName(GD, Out);
+#else
         if (const CXXConstructorDecl *D = dyn_cast<CXXConstructorDecl>(Decl)) {
           Ctx->mangleCXXCtor(D, CXXCtorType::Ctor_Complete, Out);
         } else if (const CXXDestructorDecl *D =
@@ -407,10 +421,11 @@ private:
         } else {
           Ctx->mangleName(Decl, Out);
         }
+#endif
         return Out.str().str();
       } else {
         return std::string("V_") + mangleLocation(Decl->getLocation()) +
-               std::string("_") + hash(Decl->getName());
+               std::string("_") + hash(std::string(Decl->getName()));
       }
     } else if (isa<TagDecl>(Decl) || isa<TypedefNameDecl>(Decl) ||
                isa<ObjCInterfaceDecl>(Decl)) {
@@ -961,7 +976,7 @@ public:
   // This is the only function that emits analysis JSON data. It should be
   // called for each identifier that corresponds to a symbol.
   void visitIdentifier(const char *Kind, const char *SyntaxKind,
-                       std::string QualName, SourceLocation Loc,
+                       llvm::StringRef QualName, SourceLocation Loc,
                        const std::vector<std::string> &Symbols,
                        Context TokenContext = Context(), int Flags = 0,
                        SourceRange PeekRange = SourceRange(),
@@ -1014,7 +1029,7 @@ public:
         Fmt.add("loc", LocStr);
         Fmt.add("target", 1);
         Fmt.add("kind", Kind);
-        Fmt.add("pretty", QualName);
+        Fmt.add("pretty", QualName.data());
         Fmt.add("sym", Symbol);
         if (!TokenContext.Name.empty()) {
           Fmt.add("context", TokenContext.Name);
@@ -1067,7 +1082,7 @@ public:
 
     std::string Pretty(SyntaxKind);
     Pretty.push_back(' ');
-    Pretty.append(QualName);
+    Pretty.append(QualName.data());
     Fmt.add("pretty", Pretty);
 
     Fmt.add("sym", SymbolList);
@@ -1082,7 +1097,7 @@ public:
   }
 
   void visitIdentifier(const char *Kind, const char *SyntaxKind,
-                       std::string QualName, SourceLocation Loc, std::string Symbol,
+                       llvm::StringRef QualName, SourceLocation Loc, std::string Symbol,
                        Context TokenContext = Context(), int Flags = 0,
                        SourceRange PeekRange = SourceRange(),
                        SourceRange NestingRange = SourceRange()) {
@@ -1612,7 +1627,7 @@ public:
     IdentifierInfo *Ident = Tok.getIdentifierInfo();
     if (Ident) {
       std::string Mangled =
-          std::string("M_") + mangleLocation(Loc, Ident->getName());
+          std::string("M_") + mangleLocation(Loc, std::string(Ident->getName()));
       visitIdentifier("def", "macro", Ident->getName(), Loc, Mangled);
     }
   }
@@ -1634,7 +1649,7 @@ public:
     if (Ident) {
       std::string Mangled =
           std::string("M_") +
-          mangleLocation(Macro->getDefinitionLoc(), Ident->getName());
+          mangleLocation(Macro->getDefinitionLoc(), std::string(Ident->getName()));
       visitIdentifier("use", "macro", Ident->getName(), Loc, Mangled);
     }
   }
