@@ -42,6 +42,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/InspectorUtils.h"
 #include "mozilla/dom/InspectorFontFace.h"
+#include "mozilla/gfx/Matrix.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -703,30 +704,88 @@ Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
   return Element::FromNodeOrNull(cb->GetContent());
 }
 
+static bool FrameHasSpecifiedSize(const nsIFrame* aFrame) {
+  auto wm = aFrame->GetWritingMode();
+
+  const nsStylePosition* stylePos = aFrame->StylePosition();
+
+  return stylePos->ISize(wm).IsLengthPercentage() ||
+         stylePos->BSize(wm).IsLengthPercentage();
+}
+
+static bool IsFrameOutsideOfAncestor(const nsIFrame* aFrame,
+                                     const nsIFrame* aAncestorFrame,
+                                     const nsRect& aAncestorRect) {
+  nsRect frameRectInAncestorSpace = nsLayoutUtils::TransformFrameRectToAncestor(
+      aFrame, aFrame->GetScrollableOverflowRect(), RelativeTo{aAncestorFrame},
+      nullptr, nullptr, false, nullptr);
+
+  // We use nsRect::SaturatingUnionEdges because it correctly handles the case
+  // of a zero-width or zero-height frame, which we still want to consider as
+  // contributing to the union.
+  nsRect unionizedRect =
+      frameRectInAncestorSpace.SaturatingUnionEdges(aAncestorRect);
+
+  // If frameRectInAncestorSpace is inside aAncestorRect then union of
+  // frameRectInAncestorSpace and aAncestorRect should be equal to aAncestorRect
+  // hence if it is equal, then false should be returned.
+
+  return !(unionizedRect == aAncestorRect);
+}
+
+static void AddOverflowingChildrenOfElement(const nsIFrame* aFrame,
+                                            const nsIFrame* aAncestorFrame,
+                                            const nsRect& aRect,
+                                            nsSimpleContentList& aList) {
+  MOZ_ASSERT(aFrame, "we assume the passed-in frame is non-null");
+  for (const auto& childList : aFrame->ChildLists()) {
+    for (const nsIFrame* child : childList.mList) {
+      // We want to identify if the child or any of its children have a
+      // frame that is outside of aAncestorFrame. Ideally, child would have
+      // a frame rect that encompasses all of its children, but this is not
+      // guaranteed by the frame tree. So instead we first check other
+      // conditions that indicate child is an interesting frame:
+      //
+      // 1) child has a specified size
+      // 2) none of child's children are implicated
+      //
+      // If either of these conditions are true, we *then* check if child's
+      // frame is outside of aAncestorFrame, and if so, we add child's content
+      // to aList.
+
+      if (FrameHasSpecifiedSize(child) &&
+          IsFrameOutsideOfAncestor(child, aAncestorFrame, aRect)) {
+        aList.AppendElement(child->GetContent());
+        continue;
+      }
+
+      uint32_t currListLength = aList.Length();
+      AddOverflowingChildrenOfElement(child, aAncestorFrame, aRect, aList);
+
+      // If child is a leaf node, length of aList should remain same after
+      // calling AddOverflowingChildrenOfElement on it.
+      if (currListLength == aList.Length() &&
+          IsFrameOutsideOfAncestor(child, aAncestorFrame, aRect)) {
+        aList.AppendElement(child->GetContent());
+      }
+    }
+  }
+}
+
 already_AddRefed<nsINodeList> InspectorUtils::GetOverflowingChildrenOfElement(
     GlobalObject& aGlobal, Element& aElement) {
   RefPtr<nsSimpleContentList> list = new nsSimpleContentList(&aElement);
-  nsIFrame* scrollableFrame = aElement.GetPrimaryFrame();
+  nsIFrame* primaryFrame = aElement.GetPrimaryFrame(FlushType::Frames);
 
-  std::function<void(const nsIFrame*)> GetOverflowingElement =
-      [&](const nsIFrame* aFrame) {
-        MOZ_ASSERT(aFrame, "we assume the passed-in frame is non-null");
-        for (const auto& childList : aFrame->ChildLists()) {
-          for (const nsIFrame* child : childList.mList) {
-            bool isBlameElem = true;  // change this so that it becomes true iff
-                                      // child is causing overflow.
-            if (!isBlameElem) {
-              GetOverflowingElement(child);
-            } else {
-              list->AppendElement(child->GetContent());
-            }
-          }
-        }
-      };
-
-  if (scrollableFrame) {
-    GetOverflowingElement(scrollableFrame);
+  const nsIScrollableFrame* scrollFrame = do_QueryFrame(primaryFrame);
+  // primaryFrame must be nsIScrollableFrame
+  if (!scrollFrame) {
+    return list.forget();
   }
+
+  auto scrollPortRect = scrollFrame->GetScrollPortRect();
+  AddOverflowingChildrenOfElement(scrollFrame->GetScrolledFrame(), primaryFrame,
+                                  scrollPortRect, *list);
   return list.forget();
 }
 
