@@ -289,6 +289,12 @@ extern "C" const char* __tsan_default_suppressions() {
          // See also bug 1615228 for discussion.
          "race:base::Thread::Stop\n"
 
+         // Likely benign race in webrtc.org code
+         // May be fixed upstream at some point
+         // See bug 1652499
+         "race:Loggable\n"
+         "race:UpdateMinLogSeverity\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
