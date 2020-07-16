@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <script>
+      opener.postMessage({ length: history.length}, "*");
+
+      function done() {
+        // Ensure history.length doesn't change after load event has fired.
+        opener.postMessage({ length: history.length}, "*");
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(done);">
+  </body>
+</html>

@@ -282,7 +282,7 @@ CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
 }
 
 void CanonicalBrowsingContext::SessionHistoryCommit(
-    uint64_t aSessionHistoryEntryId) {
+    uint64_t aSessionHistoryEntryId, const nsID& aChangeID) {
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i]->Info().Id() == aSessionHistoryEntryId) {
       nsISHistory* shistory = GetSessionHistory();
@@ -319,9 +319,13 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
         }
       }
       Group()->EachParent([&](ContentParent* aParent) {
-        // FIXME Should we return the length to the one process that committed
-        //       as an async return value? Or should this use synced fields?
-        Unused << aParent->SendHistoryCommitLength(Top(), shistory->GetCount());
+        nsISHistory* shistory = GetSessionHistory();
+        int32_t index = 0;
+        int32_t length = 0;
+        shistory->GetIndex(&index);
+        shistory->GetCount(&length);
+        Unused << aParent->SendHistoryCommitIndexAndLength(Top(), index, length,
+                                                           aChangeID);
       });
       return;
     }
