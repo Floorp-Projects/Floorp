@@ -24,7 +24,6 @@ UNSUPPORTED_FEATURES = set([
     "class-methods-private",
     "class-static-methods-private",
     "regexp-match-indices",
-    "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
     "Intl.Segmenter",
     "top-level-await",
