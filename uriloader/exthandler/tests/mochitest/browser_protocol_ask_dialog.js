@@ -38,10 +38,30 @@ add_task(async function setup() {
 
   let previousHandling = mailHandlerInfo.alwaysAskBeforeHandling;
   mailHandlerInfo.alwaysAskBeforeHandling = true;
+
+  // Create a dummy web mail handler so we always know the mailto: protocol.
+  // Without this, the test fails on VMs without a default mailto: handler,
+  // because no dialog is ever shown, as we ignore subframe navigations to
+  // protocols that cannot be handled.
+  let dummy = Cc["@mozilla.org/uriloader/web-handler-app;1"].createInstance(
+    Ci.nsIWebHandlerApp
+  );
+  dummy.name = "Handler 1";
+  dummy.uriTemplate = "https://example.com/first/%s";
+  mailHandlerInfo.possibleApplicationHandlers.appendElement(dummy);
+
   gHandlerService.store(mailHandlerInfo);
   registerCleanupFunction(() => {
     // Re-add the original protocol handlers:
     let mailHandlers = mailHandlerInfo.possibleApplicationHandlers;
+    for (let i = handlers.Count() - 1; i >= 0; i--) {
+      try {
+        // See if this is a web handler. If it is, it'll throw, otherwise,
+        // we will remove it.
+        mailHandlers.queryElementAt(i, Ci.nsIWebHandlerApp);
+        mailHandlers.removeElementAt(i);
+      } catch (ex) {}
+    }
     for (let h of gOldMailHandlers) {
       mailHandlers.appendElement(h);
     }
@@ -223,4 +243,98 @@ add_task(async function test_multiple_dialogs() {
   gBrowser.removeTab(tab);
   await dialogClosedPromise;
   ok(dialog.closed, "The dialog should have been closed again.");
+});
+
+/**
+ * Check that navigating invisible frames to external-proto URLs
+ * is handled correctly.
+ */
+add_task(async function invisible_iframes() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/"
+  );
+
+  // Ensure we notice the dialog opening:
+  let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    let frame = content.document.createElement("iframe");
+    frame.style.display = "none";
+    frame.src = "mailto:help@example.com";
+    content.document.body.append(frame);
+  });
+  let dialog = await dialogWindowPromise;
+
+  is(
+    dialog.document.location.href,
+    CONTENT_HANDLING_URL,
+    "Dialog opens as expected for invisible iframe"
+  );
+  // Close the dialog:
+  let dialogClosedPromise = BrowserTestUtils.domWindowClosed(dialog);
+  dialog.close();
+  await dialogClosedPromise;
+  gBrowser.removeTab(tab);
+});
+
+/**
+ * Check that nested iframes are handled correctly.
+ */
+add_task(async function nested_iframes() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/"
+  );
+
+  // Ensure we notice the dialog opening:
+  let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+  let innerLoaded = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    true,
+    "https://example.org/"
+  );
+  info("Constructing top frame");
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    let frame = content.document.createElement("iframe");
+    frame.src = "https://example.org/"; // cross-origin frame.
+    content.document.body.prepend(frame);
+
+    content.eval(
+      `window.addEventListener("message", e => e.source.location = "mailto:help@example.com");`
+    );
+  });
+
+  await innerLoaded;
+  let parentBC = tab.linkedBrowser.browsingContext;
+
+  info("Creating innermost frame");
+  await SpecialPowers.spawn(parentBC.children[0], [], async function() {
+    let innerFrame = content.document.createElement("iframe");
+    let frameLoaded = ContentTaskUtils.waitForEvent(innerFrame, "load", true);
+    content.document.body.prepend(innerFrame);
+    await frameLoaded;
+  });
+
+  info("Posting event from innermost frame");
+  await SpecialPowers.spawn(
+    parentBC.children[0].children[0],
+    [],
+    async function() {
+      // Top browsing context needs reference to the innermost, which is cross origin.
+      content.eval("top.postMessage('hello', '*')");
+    }
+  );
+
+  let dialog = await dialogWindowPromise;
+
+  is(
+    dialog.document.location.href,
+    CONTENT_HANDLING_URL,
+    "Dialog opens as expected for deeply nested cross-origin iframe"
+  );
+  // Close the dialog:
+  let dialogClosedPromise = BrowserTestUtils.domWindowClosed(dialog);
+  dialog.close();
+  await dialogClosedPromise;
+  gBrowser.removeTab(tab);
 });

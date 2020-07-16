@@ -984,16 +984,25 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
 
     // Also allow this load if the target is a toplevel BC and contains a
     // non-web-controlled about:blank document
-    if (bc->IsTop() && !bc->HadOriginalOpener()) {
+    if (bc->IsTop() && !bc->HadOriginalOpener() && wgp) {
       RefPtr<nsIURI> uri = wgp->GetDocumentURI();
       foundAccessibleFrame =
           uri && uri->GetSpecOrDefault().EqualsLiteral("about:blank");
     }
 
-    while (wgp && !foundAccessibleFrame) {
-      foundAccessibleFrame =
-          aTriggeringPrincipal->Subsumes(wgp->DocumentPrincipal());
-      wgp = wgp->GetParentWindowContext();
+    while (!foundAccessibleFrame) {
+      if (wgp) {
+        foundAccessibleFrame =
+            aTriggeringPrincipal->Subsumes(wgp->DocumentPrincipal());
+      }
+      // We have to get the parent via the bc, because there may not
+      // be a window global for the innermost bc; see bug 1650162.
+      BrowsingContext* parent = bc->GetParent();
+      if (!parent) {
+        break;
+      }
+      bc = parent;
+      wgp = parent->Canonical()->GetCurrentWindowGlobal();
     }
     if (!foundAccessibleFrame) {
       return NS_OK;  // deny the load.
