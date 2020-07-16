@@ -405,6 +405,7 @@
   MACRO(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor")          \
   MACRO(stack, stack, "stack")                                                 \
   MACRO(star, star, "*")                                                       \
+  MACRO(starNamespaceStar, starNamespaceStar, "*namespace*")                   \
   MACRO(start, start, "start")                                                 \
   MACRO(startRange, startRange, "startRange")                                  \
   MACRO(startTimestamp, startTimestamp, "startTimestamp")                      \

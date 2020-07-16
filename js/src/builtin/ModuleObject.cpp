@@ -1246,7 +1246,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
           }
         }
       }
-    } else if (exp.importName == cx_->names().star) {
+    } else if (exp.importName == cx_->names().star && !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
         return false;
       }

@@ -1954,6 +1954,23 @@ static bool intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_EnsureModuleEnvironmentNamespace(JSContext* cx,
+                                                       unsigned argc,
+                                                       Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  MOZ_ASSERT(args[1].toObject().is<ModuleNamespaceObject>());
+  RootedModuleEnvironmentObject environment(cx, &module->initialEnvironment());
+  // The property already exists in the evironment but is not writable, so set
+  // the slot directly.
+  RootedShape shape(cx, environment->lookup(cx, cx->names().starNamespaceStar));
+  MOZ_ASSERT(shape);
+  environment->setSlot(shape->slot(), args[1]);
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool intrinsic_InstantiateModuleFunctionDeclarations(JSContext* cx,
                                                             unsigned argc,
                                                             Value* vp) {
@@ -2572,6 +2589,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsInstanceOfBuiltin<ModuleEnvironmentObject>, 1, 0),
     JS_FN("CreateImportBinding", intrinsic_CreateImportBinding, 4, 0),
     JS_FN("CreateNamespaceBinding", intrinsic_CreateNamespaceBinding, 3, 0),
+    JS_FN("EnsureModuleEnvironmentNamespace",
+          intrinsic_EnsureModuleEnvironmentNamespace, 1, 0),
     JS_FN("InstantiateModuleFunctionDeclarations",
           intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
     JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
