@@ -63,7 +63,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mozilla/UniquePtr.h"
 #include "nsIEventTarget.h"
 #include "nsTArray.h"
-#include "mozilla/Maybe.h"
 
 #include "m_cpp_utils.h"
 #include "nricestunaddr.h"
@@ -202,39 +201,20 @@ class NrIceCtx {
 
   enum Policy { ICE_POLICY_RELAY, ICE_POLICY_NO_HOST, ICE_POLICY_ALL };
 
-  struct NatSimulatorConfig {
-    bool mBlockTcp = false;
-    bool mBlockUdp = false;
-    nsCString mMappingType = "ENDPOINT_INDEPENDENT"_ns;
-    nsCString mFilteringType = "ENDPOINT_INDEPENDENT"_ns;
-  };
-
-  struct Config {
-    NrIceCtx::Policy mPolicy = NrIceCtx::ICE_POLICY_ALL;
-    Maybe<NatSimulatorConfig> mNatSimulatorConfig;
-  };
-
-  static RefPtr<NrIceCtx> Create(const std::string& aName,
-                                 const Config& aConfig);
+  static RefPtr<NrIceCtx> Create(
+      const std::string& name, bool allow_loopback = false,
+      bool tcp_enabled = true, bool allow_link_local = false,
+      NrIceCtx::Policy policy = NrIceCtx::ICE_POLICY_ALL);
 
   RefPtr<NrIceMediaStream> CreateStream(const std::string& id,
                                         const std::string& name,
                                         int components);
   void DestroyStream(const std::string& id);
 
-  struct GlobalConfig {
-    bool mAllowLinkLocal = false;
-    bool mAllowLoopback = false;
-    bool mTcpEnabled = true;
-    int mStunClientMaxTransmits = 7;
-    int mTrickleIceGracePeriod = 5000;
-    int mIceTcpSoSockCount = 3;
-    int mIceTcpListenBacklog = 10;
-    nsCString mForceNetInterface;
-  };
-
   // initialize ICE globals, crypto, and logging
-  static void InitializeGlobals(const GlobalConfig& aConfig);
+  static void InitializeGlobals(bool allow_loopback = false,
+                                bool tcp_enabled = true,
+                                bool allow_link_local = false);
 
   void SetTargetForDefaultLocalAddressLookup(const std::string& target_ip,
                                              uint16_t target_port);
@@ -298,6 +278,12 @@ class NrIceCtx {
 
   Controlling GetControlling();
 
+  // Set whether we're allowed to produce none, relay or all candidates.
+  // TODO(jib@mozilla.com): Work out what change means mid-connection (1181768)
+  nsresult SetPolicy(Policy policy);
+
+  Policy policy() const { return policy_; }
+
   // Set the STUN servers. Must be called before StartGathering
   // (if at all).
   nsresult SetStunServers(const std::vector<NrIceStunServer>& stun_servers);
@@ -353,7 +339,7 @@ class NrIceCtx {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
  private:
-  NrIceCtx(const std::string& name, const Config& aConfig);
+  NrIceCtx(const std::string& name, Policy policy);
 
   virtual ~NrIceCtx();
 
@@ -402,7 +388,7 @@ class NrIceCtx {
   nr_ice_handler* ice_handler_;            // Must be pointer
   bool trickle_;
   nsCOMPtr<nsIEventTarget> sts_target_;  // The thread to run on
-  Config config_;
+  Policy policy_;
   RefPtr<TestNat> nat_;
   std::shared_ptr<NrSocketProxyConfig> proxy_config_;
   bool obfuscate_host_addresses_;
