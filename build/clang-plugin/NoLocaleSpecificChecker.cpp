@@ -57,11 +57,9 @@ void NoLocaleSpecificChecker::registerMatchers(MatchFinder *AstMatcher) {
                             hasConstCharPtrParam(1),
                             hasIntegerParam(2)),
                       hasNameAndIntegerParam("tolower"),
-                      hasNameAndIntegerParam("toupper")
-                  )
-              )))
-          )
-      ).bind("id"),
+                      hasNameAndIntegerParam("toupper"))))),
+              unless(isAllowedToUseLocaleSpecificFunctions())))
+      .bind("id"),
       this);
 }
 
