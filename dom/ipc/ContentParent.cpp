@@ -6804,10 +6804,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
 
 mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    const uint64_t& aSessionHistoryEntryID, const nsID& aChangeID) {
+    uint64_t aSessionHistoryEntryID) {
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->SessionHistoryCommit(aSessionHistoryEntryID,
-                                                   aChangeID);
+    aContext.get_canonical()->SessionHistoryCommit(aSessionHistoryEntryID);
   }
 
   return IPC_OK();
@@ -6827,24 +6826,6 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
     aResolveRequestedIndex(shistory->GetRequestedIndex());
     shistory->LoadURIs(loadResults);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryUpdate(
-    const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aIndex,
-    const int32_t& aLength, const nsID& aChangeID) {
-  if (aContext.IsNullOrDiscarded()) {
-    MOZ_LOG(
-        BrowsingContext::GetLog(), LogLevel::Debug,
-        ("ParentIPC: Trying to send a message to dead or detached context"));
-    return IPC_OK();
-  }
-
-  CanonicalBrowsingContext* context = aContext.get_canonical();
-  context->Group()->EachParent([&](ContentParent* aParent) {
-    Unused << aParent->SendHistoryCommitIndexAndLength(aContext, aIndex,
-                                                       aLength, aChangeID);
-  });
   return IPC_OK();
 }
 

@@ -135,36 +135,6 @@ extern mozilla::LazyLogModule gPageCacheLog;
   }                                                       \
   PR_END_MACRO
 
-class SHistoryChangeNotifier {
- public:
-  explicit SHistoryChangeNotifier(nsSHistory* aHistory) {
-    // If we're already in an update, the outermost change notifier will
-    // update browsing context in the destructor.
-    if (!aHistory->HasOngoingUpdate()) {
-      aHistory->SetHasOngoingUpdate(true);
-      mSHistory = aHistory;
-      mInitialIndex = aHistory->Index();
-      mInitialLength = aHistory->Length();
-    }
-  }
-
-  ~SHistoryChangeNotifier() {
-    if (mSHistory) {
-      MOZ_ASSERT(mSHistory->HasOngoingUpdate());
-      mSHistory->SetHasOngoingUpdate(false);
-      if (mSHistory->GetBrowsingContext()) {
-        mSHistory->GetBrowsingContext()->SessionHistoryChanged(
-            mSHistory->Index() - mInitialIndex,
-            mSHistory->Length() - mInitialLength);
-      }
-    }
-  }
-
-  RefPtr<nsSHistory> mSHistory;
-  int32_t mInitialIndex;
-  int32_t mInitialLength;
-};
-
 enum HistCmd { HIST_CMD_GOTOINDEX, HIST_CMD_RELOAD };
 
 class nsSHistoryObserver final : public nsIObserver {
@@ -232,7 +202,6 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
 
 nsSHistory::nsSHistory(BrowsingContext* aRootBC)
     : mRootBC(aRootBC),
-      mHasOngoingUpdate(false),
       mIsRemote(false),
       mIndex(-1),
       mRequestedIndex(-1),
@@ -716,8 +685,6 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
     }
   }
 
-  SHistoryChangeNotifier change(this);
-
   nsCOMPtr<nsIURI> uri = aSHEntry->GetURI();
   NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, mIndex));
 
@@ -839,8 +806,6 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
   if (Length() <= 0 || aNumEntries <= 0) {
     return NS_ERROR_FAILURE;
   }
-
-  SHistoryChangeNotifier change(this);
 
   aNumEntries = std::min(aNumEntries, Length());
 
@@ -1407,8 +1372,6 @@ bool nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext) {
     return false;
   }
 
-  SHistoryChangeNotifier change(this);
-
   if (IsSameTree(root1, root2)) {
     mEntries.RemoveElementAt(aIndex);
 
@@ -1454,8 +1417,6 @@ nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex) {
 
 void nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex,
                                bool* aDidRemove) {
-  SHistoryChangeNotifier change(this);
-
   int32_t index = aStartIndex;
   while (index >= 0 && RemoveChildEntries(this, --index, aIDs)) {
   }
@@ -1514,8 +1475,6 @@ void nsSHistory::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aBFEntry) {
 
 NS_IMETHODIMP
 nsSHistory::UpdateIndex() {
-  SHistoryChangeNotifier change(this);
-
   // Update the actual index with the right value.
   if (mIndex != mRequestedIndex && mRequestedIndex != -1) {
     mIndex = mRequestedIndex;
