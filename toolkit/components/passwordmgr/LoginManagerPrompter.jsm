@@ -175,11 +175,6 @@ class LoginManagerPrompter {
       `_showLoginCaptureDoorhanger, got autoFilledLoginGuid: ${autoFilledLoginGuid}`
     );
 
-    LoginManagerPrompter._setUsernameAutocomplete(
-      login,
-      possibleValues?.usernames
-    );
-
     let saveMsgNames = {
       prompt: login.username === "" ? "saveLoginMsgNoUser" : "saveLoginMsg",
       buttonLabel: "saveLoginButtonAllow.label",
@@ -674,6 +669,11 @@ class LoginManagerPrompter {
                       Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
                 toggleBtn.setAttribute("hidden", hideToggle);
               }
+
+              LoginManagerPrompter._setUsernameAutocomplete(
+                login,
+                possibleValues?.usernames
+              );
 
               break;
             case "shown": {
