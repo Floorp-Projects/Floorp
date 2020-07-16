@@ -3069,13 +3069,6 @@ extern JS_PUBLIC_API bool IsMaybeWrappedSavedFrame(JSObject* obj);
  */
 extern JS_PUBLIC_API bool IsUnwrappedSavedFrame(JSObject* obj);
 
-/**
- * Clean up a finalization registry in response to the engine calling the
- * HostCleanupFinalizationRegistry callback.
- */
-extern JS_PUBLIC_API bool CleanupQueuedFinalizationRegistry(
-    JSContext* cx, HandleObject registry);
-
 } /* namespace JS */
 
 namespace js {
