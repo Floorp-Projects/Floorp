@@ -449,8 +449,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   MeterParams ComputeMeterParams(nsIFrame* aFrame);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
-  ScaleParams ComputeXULScaleParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
-                                    bool aIsHorizontal);
   mozilla::Maybe<ScaleParams> ComputeHTMLScaleParams(nsIFrame* aFrame,
                                                      mozilla::EventStates aEventState);
   ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal);
