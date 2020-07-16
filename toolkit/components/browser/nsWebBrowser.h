@@ -115,8 +115,7 @@ class nsWebBrowser final : public nsIWebBrowser,
   virtual ~nsWebBrowser();
   void InternalDestroy();
 
-  // XXXbz why are these NS_IMETHOD?  They're not interface methods!
-  NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
+  void SetDocShell(nsDocShell* aDocShell);
   void EnsureDocShellTreeOwner();
 
   nsIWidget* EnsureWidget();
@@ -131,10 +130,7 @@ class nsWebBrowser final : public nsIWebBrowser,
 
  protected:
   RefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
-  nsCOMPtr<nsIDocShell> mDocShell;
-  nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
-  nsCOMPtr<nsIBaseWindow> mDocShellAsWin;
-  nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
+  RefPtr<nsDocShell> mDocShell;
   mozilla::OriginAttributes mOriginAttributes;
 
   nsCOMPtr<nsIWidget> mInternalWidget;
@@ -144,7 +140,6 @@ class nsWebBrowser final : public nsIWebBrowser,
   bool mWillChangeProcess;
   nativeWindow mParentNativeWindow;
   nsIWebProgressListener* mProgressListener;
-  nsCOMPtr<nsIWebProgress> mWebProgress;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
