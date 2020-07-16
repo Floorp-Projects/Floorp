@@ -36,35 +36,6 @@ protected:
 
 typedef std::map<intptr_t,DesktopDisplayDevice*> DesktopDisplayDeviceList;
 
-class DesktopApplication {
-public:
-  DesktopApplication();
-  ~DesktopApplication();
-
-  void setProcessId(const ProcessId processId);
-  void setProcessPathName(const char *appPathNameUTF8);
-  void setUniqueIdName(const char *appUniqueIdUTF8);
-  void setProcessAppName(const char *appNameUTF8);
-  void setWindowCount(const uint32_t count);
-
-  ProcessId getProcessId();
-  const char *getProcessPathName();
-  const char *getUniqueIdName();
-  const char *getProcessAppName();
-  uint32_t getWindowCount();
-
-  DesktopApplication& operator= (DesktopApplication& other);
-
-protected:
-  ProcessId processId_;
-  char* processPathNameUTF8_;
-  char* applicationNameUTF8_;
-  char* processUniqueIdUTF8_;
-  uint32_t windowCount_;
-};
-
-typedef std::map<intptr_t, DesktopApplication*> DesktopApplicationList;
-
 class DesktopTab {
 public:
   DesktopTab();
@@ -103,9 +74,6 @@ public:
   virtual int32_t getWindowCount() = 0;
   virtual int32_t getWindowInfo(int32_t nindex,
                                 DesktopDisplayDevice &windowDevice) = 0;
-  virtual int32_t getApplicationCount() = 0;
-  virtual int32_t getApplicationInfo(int32_t nIndex,
-                                     DesktopApplication & desktopApplication) = 0;
   virtual int32_t getTabCount() = 0;
   virtual int32_t getTabInfo(int32_t nIndex,
                              DesktopTab & desktopTab) = 0;
@@ -124,9 +92,6 @@ public:
   int32_t getWindowCount() override;
   int32_t getWindowInfo(int32_t nindex,
                                 DesktopDisplayDevice &windowDevice) override;
-  int32_t getApplicationCount() override;
-  int32_t getApplicationInfo(int32_t nIndex,
-                                     DesktopApplication & desktopApplication) override;
   int32_t getTabCount() override;
   int32_t getTabInfo(int32_t nIndex,
                              DesktopTab & desktopTab) override;
@@ -134,22 +99,18 @@ public:
 protected:
   DesktopDisplayDeviceList desktop_display_list_;
   DesktopDisplayDeviceList desktop_window_list_;
-  DesktopApplicationList desktop_application_list_;
   DesktopTabList desktop_tab_list_;
 
   void CleanUp();
   void CleanUpWindowList();
-  void CleanUpApplicationList();
   void CleanUpTabList();
   void CleanUpScreenList();
 
   void InitializeWindowList();
-  virtual void InitializeApplicationList() = 0;
   virtual void InitializeTabList();
   virtual void InitializeScreenList() = 0;
 
   void RefreshWindowList();
-  void RefreshApplicationList();
   void RefreshTabList();
   void RefreshScreenList();
 
