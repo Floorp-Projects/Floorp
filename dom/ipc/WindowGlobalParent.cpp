@@ -724,6 +724,11 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
       mixedContentLevel = MIXED_DISPLAY_CONTENT;
     }
     Accumulate(Telemetry::MIXED_CONTENT_PAGE_LOAD, mixedContentLevel);
+
+    ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_COUNT, 1);
+    if (GetDocTreeHadAudibleMedia()) {
+      ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_MEDIA_COUNT, 1);
+    }
   }
 
   // If there are any non-discarded nested contexts when this WindowContext is
