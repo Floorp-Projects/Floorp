@@ -81,6 +81,12 @@ nsresult nsCacheMetaData::FlattenMetaData(char* buffer, uint32_t bufSize) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  if (!mBuffer) {
+    MOZ_ASSERT(mMetaSize == 0);
+    MOZ_ASSERT(bufSize == 0);
+    return NS_OK;
+  }
+
   memcpy(buffer, mBuffer, mMetaSize);
   return NS_OK;
 }
