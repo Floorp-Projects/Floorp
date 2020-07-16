@@ -562,6 +562,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   }
 
   _onRootNodeDestroyed() {
+    this._releaseFront(this.rootNode, true);
     this.rootNode = null;
   }
 
