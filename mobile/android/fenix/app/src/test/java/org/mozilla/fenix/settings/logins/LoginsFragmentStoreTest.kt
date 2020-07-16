@@ -30,7 +30,8 @@ class LoginsFragmentStoreTest {
         filteredItems = emptyList(),
         searchedForText = null,
         sortingStrategy = SortingStrategy.LastUsed(mockk()),
-        highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort
+        highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
+        duplicateLogins = listOf()
     )
 
     @Test

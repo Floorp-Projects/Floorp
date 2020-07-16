@@ -321,7 +321,7 @@
 
     <fragment
         android:id="@+id/savedLoginsAuthFragment"
-        android:name="org.mozilla.fenix.settings.logins.SavedLoginsAuthFragment"
+        android:name="org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragment"
         android:label="@string/preferences_passwords_logins_and_passwords">
         <action
             android:id="@+id/action_savedLoginsAuthFragment_to_loginsListFragment"
@@ -355,7 +355,7 @@
 
     <fragment
         android:id="@+id/savedLoginsFragment"
-        android:name="org.mozilla.fenix.settings.logins.SavedLoginsFragment"
+        android:name="org.mozilla.fenix.settings.logins.fragment.SavedLoginsFragment"
         tools:layout="@layout/fragment_saved_logins">
         <action
             android:id="@+id/action_savedLoginsFragment_to_loginDetailFragment"
@@ -381,7 +381,7 @@
 
     <fragment
         android:id="@+id/loginDetailFragment"
-        android:name="org.mozilla.fenix.settings.logins.LoginDetailFragment"
+        android:name="org.mozilla.fenix.settings.logins.fragment.LoginDetailFragment"
         tools:layout="@layout/fragment_login_detail">
         <argument
             android:name="savedLoginId"
@@ -396,7 +396,7 @@
 
     <fragment
         android:id="@+id/editLoginFragment"
-        android:name="org.mozilla.fenix.settings.logins.EditLoginFragment"
+        android:name="org.mozilla.fenix.settings.logins.fragment.EditLoginFragment"
         android:label="@string/edit">
         <argument
             android:name="savedLoginItem"
@@ -790,7 +790,7 @@
         android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment" />
     <fragment
         android:id="@+id/saveLoginSettingFragment"
-        android:name="org.mozilla.fenix.settings.logins.SavedLoginsSettingFragment"
+        android:name="org.mozilla.fenix.settings.logins.fragment.SavedLoginsSettingFragment"
         android:label="SaveLoginSettingFragment" />
     <fragment
         android:id="@+id/addonsManagementFragment"

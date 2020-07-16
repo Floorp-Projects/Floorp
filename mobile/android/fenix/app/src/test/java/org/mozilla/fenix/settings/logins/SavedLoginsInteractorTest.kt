@@ -7,15 +7,25 @@ package org.mozilla.fenix.settings.logins
 import io.mockk.mockk
 import io.mockk.verifyAll
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.logins.controller.LoginsListController
+import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
+import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import kotlin.random.Random
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SavedLoginsInteractorTest {
-    private val controller: SavedLoginsController = mockk(relaxed = true)
-    private val interactor = SavedLoginsInteractor(controller)
+    private val listController: LoginsListController = mockk(relaxed = true)
+    private val savedLoginsStorageController: SavedLoginsStorageController = mockk(relaxed = true)
+    private lateinit var interactor: SavedLoginsInteractor
+
+    @Before
+    fun setup() {
+        interactor = SavedLoginsInteractor(listController, savedLoginsStorageController)
+    }
 
     @Test
     fun `GIVEN a SavedLogin being clicked, WHEN the interactor is called for it, THEN it should just delegate the controller`() {
@@ -23,7 +33,7 @@ class SavedLoginsInteractorTest {
         interactor.onItemClicked(item)
 
         verifyAll {
-            controller.handleItemClicked(item)
+            listController.handleItemClicked(item)
         }
     }
 
@@ -34,7 +44,7 @@ class SavedLoginsInteractorTest {
         interactor.onSortingStrategyChanged(sortingStrategy)
 
         verifyAll {
-            controller.handleSort(sortingStrategy)
+            listController.handleSort(sortingStrategy)
         }
     }
 
@@ -43,7 +53,13 @@ class SavedLoginsInteractorTest {
         interactor.onLearnMoreClicked()
 
         verifyAll {
-            controller.handleLearnMoreClicked()
+            listController.handleLearnMoreClicked()
         }
+    }
+
+    @Test
+    fun loadAndMapLoginsTest() {
+        interactor.loadAndMapLogins()
+        verifyAll { savedLoginsStorageController.handleLoadAndMapLogins() }
     }
 }

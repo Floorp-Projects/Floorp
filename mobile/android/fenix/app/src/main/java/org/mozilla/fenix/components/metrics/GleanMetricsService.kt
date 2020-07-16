@@ -466,6 +466,15 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ViewLoginPassword -> EventWrapper<NoExtraKeys>(
             { Logins.viewPasswordLogin.record(it) }
         )
+        is Event.DeleteLogin -> EventWrapper<NoExtraKeys>(
+            { Logins.deleteSavedLogin.record(it) }
+        )
+        is Event.EditLogin -> EventWrapper<NoExtraKeys>(
+            { Logins.openLoginEditor.record(it) }
+        )
+        is Event.EditLoginSave -> EventWrapper<NoExtraKeys>(
+            { Logins.saveEditedLogin.record(it) }
+        )
         is Event.PrivateBrowsingShowSearchSuggestions -> EventWrapper<NoExtraKeys>(
             { SearchSuggestions.enableInPrivate.record(it) }
         )

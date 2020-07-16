@@ -54,18 +54,20 @@ sealed class LoginsAction : Action {
     data class UpdateLoginsList(val list: List<SavedLogin>) : LoginsAction()
     data class UpdateCurrentLogin(val item: SavedLogin) : LoginsAction()
     data class SortLogins(val sortingStrategy: SortingStrategy) : LoginsAction()
+    data class ListOfDupes(val dupeList: List<SavedLogin>) : LoginsAction()
     data class LoginSelected(val item: SavedLogin) : LoginsAction()
 }
 
 /**
  * The state for the Saved Logins Screen
- * @property loginList Source of truth for local list of logins
  * @property loginList Filterable list of logins to display
  * @property currentItem The last item that was opened into the detail view
  * @property searchedForText String used by the user to filter logins
  * @property sortingStrategy sorting strategy selected by the user (Currently we support
  * sorting alphabetically and by last used)
  * @property highlightedItem The current selected sorting strategy from the sort menu
+ * @property duplicateLogins The current list of possible duplicates for a selected login origin,
+ * httpRealm, and formActionOrigin
  */
 data class LoginsListState(
     val isLoading: Boolean = false,
@@ -74,7 +76,8 @@ data class LoginsListState(
     val currentItem: SavedLogin? = null,
     val searchedForText: String?,
     val sortingStrategy: SortingStrategy,
-    val highlightedItem: SavedLoginsSortingStrategyMenu.Item
+    val highlightedItem: SavedLoginsSortingStrategyMenu.Item,
+    val duplicateLogins: List<SavedLogin>
 ) : State
 
 /**
@@ -113,9 +116,14 @@ private fun savedLoginsStateReducer(
         }
         is LoginsAction.LoginSelected -> {
             state.copy(
-                    isLoading = true,
-                    loginList = emptyList(),
-                    filteredItems = emptyList()
+                isLoading = true,
+                loginList = emptyList(),
+                filteredItems = emptyList()
+            )
+        }
+        is LoginsAction.ListOfDupes -> {
+            state.copy(
+                duplicateLogins = action.dupeList
             )
         }
     }

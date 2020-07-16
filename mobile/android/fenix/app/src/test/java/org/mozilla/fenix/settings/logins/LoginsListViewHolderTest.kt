@@ -16,6 +16,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
+import org.mozilla.fenix.settings.logins.view.LoginsListViewHolder
 
 @RunWith(FenixRobolectricTestRunner::class)
 class LoginsListViewHolderTest {
@@ -39,7 +41,10 @@ class LoginsListViewHolderTest {
 
     @Test
     fun `bind url and username`() {
-        val holder = LoginsListViewHolder(view, interactor)
+        val holder = LoginsListViewHolder(
+            view,
+            interactor
+        )
         holder.bind(baseLogin)
 
         assertEquals("mozilla.org", view.webAddressView.text)
@@ -48,7 +53,10 @@ class LoginsListViewHolderTest {
 
     @Test
     fun `call interactor on click`() {
-        val holder = LoginsListViewHolder(view, interactor)
+        val holder = LoginsListViewHolder(
+            view,
+            interactor
+        )
         holder.bind(baseLogin)
 
         view.performClick()

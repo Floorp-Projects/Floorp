@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.logins.view.LoginDetailView
 
 @RunWith(FenixRobolectricTestRunner::class)
 class LoginDetailViewTest {
@@ -31,7 +32,8 @@ class LoginDetailViewTest {
         ),
         searchedForText = null,
         sortingStrategy = SortingStrategy.LastUsed(mockk()),
-        highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort
+        highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
+        duplicateLogins = listOf()
     )
 
     private lateinit var view: ViewGroup

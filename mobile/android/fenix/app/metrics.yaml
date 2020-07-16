@@ -2444,6 +2444,39 @@ logins:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
+  open_login_editor:
+    type: event
+    description: |
+      A user entered the edit screen for an individual saved login
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10173
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/11208
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-10-01"
+  delete_saved_login:
+    type: event
+    description: |
+      A user confirms delete of a saved login
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10173
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/11208
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-10-01"
+  save_edited_login:
+    type: event
+    description: |
+      A user saves changes made to an individual login
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10173
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/11208
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-10-01"
 
 download_notification:
   resume:

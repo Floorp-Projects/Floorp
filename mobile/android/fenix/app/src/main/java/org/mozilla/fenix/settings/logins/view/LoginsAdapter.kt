@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings.logins
+package org.mozilla.fenix.settings.logins.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import org.mozilla.fenix.R
+import org.mozilla.fenix.settings.logins.SavedLogin
+import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 
 class LoginsAdapter(
     private val interactor: SavedLoginsInteractor

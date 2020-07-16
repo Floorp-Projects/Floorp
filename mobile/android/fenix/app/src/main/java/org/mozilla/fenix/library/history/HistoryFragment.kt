@@ -210,9 +210,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
         return if (historyItems.size > 1) {
             getString(R.string.history_delete_multiple_items_snackbar)
         } else {
-            getString(
-                R.string.history_delete_single_item_snackbar,
-                historyItems.first().url.toShortUrl(requireComponents.publicSuffixList)
+            String.format(
+                requireContext().getString(
+                    R.string.history_delete_single_item_snackbar
+                ), historyItems.first().url.toShortUrl(requireComponents.publicSuffixList)
             )
         }
     }

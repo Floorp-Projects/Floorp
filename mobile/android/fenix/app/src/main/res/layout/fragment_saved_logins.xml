@@ -7,4 +7,4 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="org.mozilla.fenix.settings.logins.SavedLoginsFragment" />
+    tools:context="org.mozilla.fenix.settings.logins.fragment.SavedLoginsFragment" />
