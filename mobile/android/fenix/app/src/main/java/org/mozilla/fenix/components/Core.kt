@@ -50,7 +50,6 @@ import org.mozilla.fenix.BuildConfig.DIGITAL_ASSET_LINKS_TOKEN
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -97,11 +96,7 @@ class Core(private val context: Context) {
              * disabled in Fenix Release builds for now.
              * This is consistent with both Fennec and Firefox Desktop.
              */
-            val shouldEnableWebcompatReporter = Config.channel !in setOf(
-                ReleaseChannel.FenixProduction,
-                ReleaseChannel.FennecProduction
-            )
-            if (shouldEnableWebcompatReporter) {
+            if (Config.channel.isNightlyOrDebug || Config.channel.isBeta) {
                 WebCompatReporterFeature.install(it)
             }
         }
