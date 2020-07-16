@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // Copyright (C) 2017 Valerie Young. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
