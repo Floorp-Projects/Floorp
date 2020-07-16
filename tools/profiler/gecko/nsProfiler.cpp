@@ -766,6 +766,35 @@ nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
   return NS_OK;
 }
 
+/* static */ void nsProfiler::GatheringTimerCallback(nsITimer* aTimer,
+                                                     void* aClosure) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIProfiler> profiler(
+      do_GetService("@mozilla.org/tools/profiler;1"));
+  if (!profiler) {
+    // No (more) profiler service.
+    return;
+  }
+  nsProfiler* self = static_cast<nsProfiler*>(profiler.get());
+  if (self != aClosure) {
+    // Different service object!?
+    return;
+  }
+  if (aTimer != self->mGatheringTimer) {
+    // This timer was cancelled after this callback was queued.
+    return;
+  }
+  self->mGatheringTimer = nullptr;
+  if (!profiler_is_active() || !self->mGathering) {
+    // Not gathering anymore.
+    return;
+  }
+  NS_WARNING("Profiler failed to gather profiles from all sub-processes");
+  // We have really reached a timeout while gathering, finish now.
+  // TODO: Add information about missing processes.
+  self->FinishGathering();
+}
+
 void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -794,6 +823,21 @@ void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
     // finish off the profile and resolve the Promise.
     FinishGathering();
   }
+
+  // Not finished yet, restart the timer to let any remaining child enough time
+  // to do their profile-streaming.
+  if (mGatheringTimer) {
+    uint32_t delayMs = 0;
+    const nsresult r = mGatheringTimer->GetDelay(&delayMs);
+    mGatheringTimer->Cancel();
+    mGatheringTimer = nullptr;
+    if (NS_SUCCEEDED(r) && delayMs != 0) {
+      Unused << NS_NewTimerWithFuncCallback(
+          getter_AddRefs(mGatheringTimer), GatheringTimerCallback, this,
+          delayMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "",
+          GetMainThreadSerialEventTarget());
+    }
+  }
 }
 
 void nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile) {
@@ -813,6 +857,11 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
 
   mGathering = true;
 
+  if (mGatheringTimer) {
+    mGatheringTimer->Cancel();
+    mGatheringTimer = nullptr;
+  }
+
   // Request profiles from the other processes. This will trigger asynchronous
   // calls to ProfileGatherer::GatheredOOPProfile as the profiles arrive.
   //
@@ -823,6 +872,8 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
       ProfilerParent::GatherProfiles();
 
   mWriter.emplace();
+
+  TimeStamp streamingStart = TimeStamp::NowUnfuzzed();
 
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
@@ -858,20 +909,37 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   // FinishGathering() will close the array and the root object.
 
   mPendingProfiles = profiles.Length();
-  RefPtr<nsProfiler> self = this;
-  for (auto profile : profiles) {
-    profile->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [self](mozilla::ipc::Shmem&& aResult) {
-          const nsDependentCSubstring profileString(aResult.get<char>(),
-                                                    aResult.Size<char>() - 1);
-          self->GatheredOOPProfile(profileString);
-        },
-        [self](ipc::ResponseRejectReason&& aReason) {
-          self->GatheredOOPProfile(""_ns);
-        });
-  }
-  if (!mPendingProfiles) {
+  if (mPendingProfiles != 0) {
+    // There *are* pending profiles, let's add handlers for their promises.
+
+    // We know how long it took this parent process to stream its profile, give
+    // the slowest child twice as long, plus a bit more. (The timer will be
+    // restarted after each response.)
+    const uint32_t streamingTimeoutMs =
+        static_cast<uint32_t>(
+            (TimeStamp::NowUnfuzzed() - streamingStart).ToMilliseconds()) *
+            2 +
+        1000;
+    Unused << NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mGatheringTimer), GatheringTimerCallback, this,
+        streamingTimeoutMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "",
+        GetMainThreadSerialEventTarget());
+
+    for (auto profile : profiles) {
+      profile->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [self = RefPtr<nsProfiler>(this)](mozilla::ipc::Shmem&& aResult) {
+            const nsDependentCSubstring profileString(aResult.get<char>(),
+                                                      aResult.Size<char>() - 1);
+            self->GatheredOOPProfile(profileString);
+          },
+          [self =
+               RefPtr<nsProfiler>(this)](ipc::ResponseRejectReason&& aReason) {
+            self->GatheredOOPProfile(""_ns);
+          });
+    }
+  } else {
+    // There are no pending profiles, we're already done.
     FinishGathering();
   }
 
@@ -947,5 +1015,9 @@ void nsProfiler::ResetGathering() {
   }
   mPendingProfiles = 0;
   mGathering = false;
+  if (mGatheringTimer) {
+    mGatheringTimer->Cancel();
+    mGatheringTimer = nullptr;
+  }
   mWriter.reset();
 }
