@@ -1,4 +1,4 @@
-// |reftest| async
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) async -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/static-private-fields.case
 // - src/class-elements/productions/cls-decl-after-same-line-async-gen.template

@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-static-field-usage-inside-nested-class.case
 // - src/class-elements/default/cls-decl.template
