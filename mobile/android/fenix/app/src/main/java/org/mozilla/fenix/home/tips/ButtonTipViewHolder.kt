@@ -1,7 +1,5 @@
 package org.mozilla.fenix.home.tips
 
-import android.text.SpannableString
-import android.text.style.UnderlineSpan
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.button_tip_item.view.*
@@ -11,6 +9,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipType
+import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
@@ -36,12 +35,7 @@ class ButtonTipViewHolder(
             if (tip.learnMoreURL == null) {
                 tip_learn_more.visibility = View.GONE
             } else {
-                val learnMoreText = context.getString(R.string.search_suggestions_onboarding_learn_more_link)
-                val textWithLink = SpannableString(learnMoreText).apply {
-                    setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
-                }
-
-                tip_learn_more.text = textWithLink
+                tip_learn_more.addUnderline()
 
                 tip_learn_more.setOnClickListener {
                     (context as HomeActivity).openToBrowserAndLoad(

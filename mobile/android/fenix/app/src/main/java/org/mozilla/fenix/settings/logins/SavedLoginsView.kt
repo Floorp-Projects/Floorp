@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.settings.logins
 
-import android.text.SpannableString
 import android.text.method.LinkMovementMethod
-import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -14,8 +12,8 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_saved_logins.view.*
-import kotlinx.android.synthetic.main.component_saved_logins.view.progress_bar
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -39,13 +37,9 @@ class SavedLoginsView(
             itemAnimator = null
         }
 
-        val learnMoreText = view.saved_passwords_empty_learn_more.text.toString()
-        val textWithLink = SpannableString(learnMoreText).apply {
-            setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
-        }
         with(view.saved_passwords_empty_learn_more) {
             movementMethod = LinkMovementMethod.getInstance()
-            text = textWithLink
+            addUnderline()
             setOnClickListener { interactor.onLearnMore() }
         }
 

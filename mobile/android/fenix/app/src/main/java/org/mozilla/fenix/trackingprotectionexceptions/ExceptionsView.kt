@@ -5,17 +5,16 @@
 package org.mozilla.fenix.trackingprotectionexceptions
 
 import android.text.method.LinkMovementMethod
-import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_exceptions.*
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.addUnderline
 
 /**
  * Interface for the ExceptionsViewInteractor. This interface is implemented by objects that want
@@ -62,10 +61,7 @@ class ExceptionsView(
         }
 
         with(exceptions_learn_more) {
-            val learnMoreText = text
-            text = learnMoreText.toSpannable().apply {
-                setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
-            }
+            addUnderline()
 
             movementMethod = LinkMovementMethod.getInstance()
             setOnClickListener { interactor.onLearnMore() }

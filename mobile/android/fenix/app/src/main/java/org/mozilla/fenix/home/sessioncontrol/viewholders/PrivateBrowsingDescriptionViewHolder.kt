@@ -4,13 +4,12 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
-import android.text.SpannableString
 import android.text.method.LinkMovementMethod
-import android.text.style.UnderlineSpan
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.private_browsing_description.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
 class PrivateBrowsingDescriptionViewHolder(
@@ -24,13 +23,9 @@ class PrivateBrowsingDescriptionViewHolder(
         view.private_session_description.text = resources.getString(
             R.string.private_browsing_placeholder_description_2, appName
         )
-        val commonMythsText = view.private_session_common_myths.text.toString()
-        val textWithLink = SpannableString(commonMythsText).apply {
-            setSpan(UnderlineSpan(), 0, commonMythsText.length, 0)
-        }
         with(view.private_session_common_myths) {
             movementMethod = LinkMovementMethod.getInstance()
-            text = textWithLink
+            addUnderline()
             setOnClickListener {
                 interactor.onPrivateBrowsingLearnMoreClicked()
             }
