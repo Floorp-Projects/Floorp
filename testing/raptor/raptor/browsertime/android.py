@@ -8,7 +8,7 @@ from __future__ import absolute_import
 
 import os
 
-from mozdevice import ADBDeviceFactory
+from mozdevice import ADBDevice
 
 from logger.logger import RaptorLogger
 from performance_tuning import tune_performance
@@ -34,21 +34,16 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     file ourselves. Also note when using playback, the nss certificate db is created as usual when
     mitmproxy is started (and saved in the profile) so it is already included in the profile that
     browsertime/geckodriver copies onto the device.
-    XXX: bc: This doesn't work with scoped storage in Android 10 since the shell owns the profile
-    directory that is pushed to the device and the profile can no longer be on the sdcard. But when
-    geckodriver's android.rs defines the profile to be located on internal storage, it will be
-    owned by shell but if we are attempting to eliminate root, then when we run shell commands
-    as the app, they will fail due to the app being unable to write to the shell owned profile
-    directory.
     """
 
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
         super(BrowsertimeAndroid, self).__init__(
             app, binary, profile_class="firefox", **kwargs
         )
+
         self.config.update({"activity": activity, "intent": intent})
-        self.remote_test_root = None
-        self.remote_profile = None
+        self.remote_test_root = "/data/local/tmp/tests/raptor"
+        self.remote_profile = os.path.join(self.remote_test_root, "profile")
 
     @property
     def browsertime_args(self):
@@ -122,15 +117,12 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
     def setup_adb_device(self):
         if self.device is None:
-            self.device = ADBDeviceFactory(verbose=True)
+            self.device = ADBDevice(verbose=True)
             if not self.config.get("disable_perf_tuning", False):
                 tune_performance(self.device, log=LOG)
 
         self.clear_app_data()
         self.set_debug_app_flag()
-        self.device.run_as_package = self.config['binary']
-        self.remote_test_root = os.path.join(self.device.test_root, "raptor")
-        self.remote_profile = os.path.join(self.remote_test_root, "profile")
 
     def run_test_setup(self, test):
         super(BrowsertimeAndroid, self).run_test_setup(test)
@@ -146,7 +138,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
         if self.config['app'] == "chrome-m":
             # Make sure that chrome is enabled on the device
-            self.device.shell_output("pm enable com.android.chrome")
+            self.device.shell_output("pm enable com.android.chrome", root=True)
 
         return super(BrowsertimeAndroid, self).run_tests(tests, test_names)
 
