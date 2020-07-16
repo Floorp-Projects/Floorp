@@ -128,11 +128,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             all_actions=[
                 'clobber',
                 'setup-avds',
-                'start-emulator',
                 'download-and-extract',
                 'download-and-process-manifest',
                 'create-virtualenv',
                 'pull',
+                'start-emulator',
                 'verify-device',
                 'install',
                 'run-tests',
