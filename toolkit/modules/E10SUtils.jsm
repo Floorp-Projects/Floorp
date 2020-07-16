@@ -134,8 +134,6 @@ const kDocumentChannelDeniedSchemes = ["javascript"];
 const kDocumentChannelDeniedURIs = [
   "about:blank",
   "about:crashcontent",
-  "about:newtab",
-  "about:home",
   "about:printpreview",
 ];
 
