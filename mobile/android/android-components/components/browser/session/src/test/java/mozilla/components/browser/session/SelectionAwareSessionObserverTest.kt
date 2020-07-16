@@ -149,7 +149,6 @@ class SelectionAwareSessionObserverTest {
         observer.onTrackerBlockingEnabledChanged(session, true)
         observer.onTrackerBlocked(session, Tracker(""), emptyList())
         observer.onLongPress(session, Mockito.mock(HitResult::class.java))
-        observer.onFindResult(session, Mockito.mock(Session.FindResult::class.java))
         observer.onDesktopModeChanged(session, true)
         observer.onFullScreenChanged(session, true)
         observer.onThumbnailChanged(session, Mockito.spy(Bitmap::class.java))

@@ -11,11 +11,8 @@ import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
-import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
-import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
-import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.FullScreenChangedAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
@@ -101,7 +98,6 @@ class Session(
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
-        fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
         fun onFullScreenChanged(session: Session, enabled: Boolean) = Unit
         /**
@@ -185,15 +181,6 @@ class Session(
          */
         RESTORED
     }
-
-    /**
-     * A value type representing a result of a "find in page" operation.
-     *
-     * @property activeMatchOrdinal the zero-based ordinal of the currently selected match.
-     * @property numberOfMatches the match count
-     * @property isDoneCounting true if the find operation has completed, otherwise false.
-     */
-    data class FindResult(val activeMatchOrdinal: Int, val numberOfMatches: Int, val isDoneCounting: Boolean)
 
     /**
      * The currently loading or loaded URL.
@@ -373,23 +360,6 @@ class Session(
             // `EngineObserver` always adds new trackers to the end of the list. So we just dispatch
             // an action for the last item in the list.
             store?.syncDispatch(TrackingProtectionAction.TrackerLoadedAction(id, new.last()))
-        }
-    }
-
-    /**
-     * List of results of that latest "find in page" operation.
-     */
-    var findResults: List<FindResult> by Delegates.observable(emptyList()) { _, old, new ->
-        notifyObservers(old, new) {
-            if (new.isNotEmpty()) {
-                onFindResult(this@Session, new.last())
-            }
-        }
-
-        if (new.isNotEmpty()) {
-            store?.syncDispatch(AddFindResultAction(id, new.last().toFindResultState()))
-        } else {
-            store?.syncDispatch(ClearFindResultsAction(id))
         }
     }
 

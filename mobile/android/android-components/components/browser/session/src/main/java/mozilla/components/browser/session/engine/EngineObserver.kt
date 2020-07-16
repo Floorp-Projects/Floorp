@@ -19,6 +19,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
@@ -132,7 +133,8 @@ internal class EngineObserver(
     override fun onLoadingStateChange(loading: Boolean) {
         session.loading = loading
         if (loading) {
-            session.findResults = emptyList()
+            store?.dispatch(ContentAction.ClearFindResultsAction(session.id))
+
             session.trackersBlocked = emptyList()
             session.trackersLoaded = emptyList()
         }
@@ -169,11 +171,18 @@ internal class EngineObserver(
     }
 
     override fun onFind(text: String) {
-        session.findResults = emptyList()
+        store?.dispatch(ContentAction.ClearFindResultsAction(session.id))
     }
 
     override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
-        session.findResults += Session.FindResult(activeMatchOrdinal, numberOfMatches, isDoneCounting)
+        store?.dispatch(ContentAction.AddFindResultAction(
+            session.id,
+            FindResultState(
+                activeMatchOrdinal,
+                numberOfMatches,
+                isDoneCounting
+            )
+        ))
     }
 
     override fun onExternalResource(

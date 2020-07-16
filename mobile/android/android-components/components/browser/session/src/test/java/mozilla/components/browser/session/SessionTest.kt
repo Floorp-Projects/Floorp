@@ -14,7 +14,6 @@ import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
-import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
@@ -35,7 +34,6 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -628,59 +626,6 @@ class SessionTest {
     }
 
     @Test
-    fun `observer is notified on find result`() {
-        val observer = mock(Session.Observer::class.java)
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-
-        val result1 = Session.FindResult(0, 1, false)
-        session.findResults += result1
-        verify(observer).onFindResult(
-                eq(session),
-                eq(result1)
-        )
-        assertEquals(listOf(result1), session.findResults)
-
-        result1.copy()
-        val result2 = result1.copy(1, 2)
-        session.findResults += result2
-        verify(observer).onFindResult(
-                eq(session),
-                eq(result2)
-        )
-        assertEquals(listOf(result1, result2), session.findResults)
-
-        assertEquals(session.findResults[0].activeMatchOrdinal, 0)
-        assertEquals(session.findResults[0].numberOfMatches, 1)
-        assertFalse(session.findResults[0].isDoneCounting)
-        assertEquals(session.findResults[1].activeMatchOrdinal, 1)
-        assertEquals(session.findResults[1].numberOfMatches, 2)
-        assertFalse(session.findResults[1].isDoneCounting)
-        assertNotEquals(result1, result2)
-
-        session.findResults = emptyList()
-        verifyNoMoreInteractions(observer)
-    }
-
-    @Test
-    fun `action is dispatched when find results are updated`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-
-        val result: Session.FindResult = Session.FindResult(0, 1, false)
-        session.findResults += result
-        verify(store).dispatch(ContentAction.AddFindResultAction(session.id, result.toFindResultState()))
-
-        session.findResults = emptyList()
-        verify(store).dispatch(ContentAction.ClearFindResultsAction(session.id))
-
-        verifyNoMoreInteractions(store)
-    }
-
-    @Test
     fun `observer is notified when desktop mode is set`() {
         val observer = mock(Session.Observer::class.java)
         val session = Session("https://www.mozilla.org")
@@ -772,7 +717,6 @@ class SessionTest {
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
         defaultObserver.onTrackerBlocked(session, mock(), emptyList())
         defaultObserver.onLongPress(session, mock(HitResult::class.java))
-        defaultObserver.onFindResult(session, mock(Session.FindResult::class.java))
         defaultObserver.onDesktopModeChanged(session, true)
         defaultObserver.onFullScreenChanged(session, true)
         defaultObserver.onThumbnailChanged(session, spy(Bitmap::class.java))

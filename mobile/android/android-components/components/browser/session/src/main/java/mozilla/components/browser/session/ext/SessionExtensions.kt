@@ -10,7 +10,6 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
-import mozilla.components.browser.state.state.content.FindResultState
 
 /**
  * Create a matching [TabSessionState] from a [Session].
@@ -58,13 +57,6 @@ private fun Session.toContentState(): ContentState {
  */
 fun Session.SecurityInfo.toSecurityInfoState(): SecurityInfoState {
     return SecurityInfoState(secure, host, issuer)
-}
-
-/**
- * Creates a matching [FindResultState] from a [Session.FindResult]
- */
-fun Session.FindResult.toFindResultState(): FindResultState {
-    return FindResultState(activeMatchOrdinal, numberOfMatches, isDoneCounting)
 }
 
 /**

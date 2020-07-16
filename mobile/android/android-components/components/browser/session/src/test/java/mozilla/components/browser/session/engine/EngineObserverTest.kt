@@ -14,6 +14,7 @@ import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -39,6 +40,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -388,32 +390,47 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverClearsFindResults() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
 
-        val result1 = Session.FindResult(0, 1, false)
-        val result2 = Session.FindResult(1, 2, true)
         observer.onFindResult(0, 1, false)
-        observer.onFindResult(1, 2, true)
-        assertEquals(listOf(result1, result2), session.findResults)
+
+        verify(store).dispatch(ContentAction.AddFindResultAction(
+            "test-id", FindResultState(0, 1, false)
+        ))
+        reset(store)
 
         observer.onFind("mozilla")
-        assertEquals(emptyList<Session.FindResult>(), session.findResults)
+
+        verify(store).dispatch(
+            ContentAction.ClearFindResultsAction("test-id")
+        )
     }
 
     @Test
     fun engineObserverClearsFindResultIfNewPageStartsLoading() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
 
-        val result1 = Session.FindResult(0, 1, false)
-        val result2 = Session.FindResult(1, 2, true)
         observer.onFindResult(0, 1, false)
+
+        verify(store).dispatch(ContentAction.AddFindResultAction(
+            "test-id", FindResultState(0, 1, false)
+        ))
+        reset(store)
+
         observer.onFindResult(1, 2, true)
-        assertEquals(listOf(result1, result2), session.findResults)
+
+        verify(store).dispatch(ContentAction.AddFindResultAction(
+            "test-id", FindResultState(1, 2, true)
+        ))
+        reset(store)
 
         observer.onLoadingStateChange(true)
-        assertEquals(emptyList<String>(), session.findResults)
+
+        verify(store).dispatch(ContentAction.ClearFindResultsAction("test-id"))
     }
 
     @Test
