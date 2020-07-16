@@ -270,7 +270,7 @@ bool WindowsSMTCProvider::RegisterEvents() {
 
 void WindowsSMTCProvider::OnButtonPressed(mozilla::dom::MediaControlKey aKey) {
   for (auto& listener : mListeners) {
-    listener->OnKeyPressed(aKey);
+    listener->OnActionPerformed(mozilla::dom::MediaControlAction(aKey));
   }
 }
 

@@ -16,6 +16,7 @@ enum MediaControlKey {
   "seekbackward",
   "seekforward",
   "skipad",
+  "seekto",
   "stop",
 };
 

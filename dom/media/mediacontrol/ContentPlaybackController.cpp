@@ -45,10 +45,17 @@ void ContentPlaybackController::NotifyContentMediaControlKeyReceiver(
 }
 
 void ContentPlaybackController::NotifyMediaSession(MediaSessionAction aAction) {
+  MediaSessionActionDetails details;
+  details.mAction = aAction;
+  NotifyMediaSession(details);
+}
+
+void ContentPlaybackController::NotifyMediaSession(
+    const MediaSessionActionDetails& aDetails) {
   if (RefPtr<MediaSession> session = GetMediaSession()) {
     LOG("Handle '%s' in media session behavior",
-        ToMediaSessionActionStr(aAction));
-    session->NotifyHandler(aAction);
+        ToMediaSessionActionStr(aDetails.mAction));
+    session->NotifyHandler(aDetails);
   }
 }
 
@@ -120,16 +127,22 @@ void ContentPlaybackController::Stop() {
   }
 }
 
-void ContentPlaybackController::SeekTo() {
-  // TODO : use media session's action handler if it exists. MediaSessionAction
-  // doesn't support `seekto` yet.
-  return;
+void ContentPlaybackController::SeekTo(double aSeekTime, bool aFastSeek) {
+  MediaSessionActionDetails details;
+  details.mAction = MediaSessionAction::Seekto;
+  details.mSeekTime.Construct(aSeekTime);
+  if (aFastSeek) {
+    details.mFastSeek.Construct(aFastSeek);
+  }
+  if (IsMediaSessionActionSupported(details.mAction)) {
+    NotifyMediaSession(details);
+  }
 }
 
-void ContentMediaControlKeyHandler::HandleMediaControlKey(
-    BrowsingContext* aContext, MediaControlKey aKey) {
+void ContentMediaControlKeyHandler::HandleMediaControlAction(
+    BrowsingContext* aContext, const MediaControlAction& aAction) {
   ContentPlaybackController controller(aContext);
-  switch (aKey) {
+  switch (aAction.mKey) {
     case MediaControlKey::Focus:
       controller.Focus();
       return;
@@ -157,6 +170,11 @@ void ContentMediaControlKeyHandler::HandleMediaControlKey(
     case MediaControlKey::Skipad:
       controller.SkipAd();
       return;
+    case MediaControlKey::Seekto: {
+      const SeekDetails& details = *aAction.mDetails;
+      controller.SeekTo(details.mSeekTime, details.mFastSeek);
+      return;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid event.");
   };

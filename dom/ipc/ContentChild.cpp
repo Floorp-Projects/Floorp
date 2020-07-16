@@ -3517,13 +3517,15 @@ mozilla::ipc::IPCResult ContentChild::RecvStartDelayedAutoplayMediaComponents(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlKey(
-    const MaybeDiscarded<BrowsingContext>& aContext, MediaControlKey aKey) {
+mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlAction(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const MediaControlAction& aAction) {
   if (NS_WARN_IF(aContext.IsNullOrDiscarded())) {
     return IPC_OK();
   }
 
-  ContentMediaControlKeyHandler::HandleMediaControlKey(aContext.get(), aKey);
+  ContentMediaControlKeyHandler::HandleMediaControlAction(aContext.get(),
+                                                          aAction);
   return IPC_OK();
 }
 

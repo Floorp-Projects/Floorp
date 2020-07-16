@@ -40,6 +40,7 @@ class IMediaController {
   virtual void SeekBackward() = 0;
   virtual void SeekForward() = 0;
   virtual void SkipAd() = 0;
+  virtual void SeekTo(double aSeekTime, bool aFastSeek) = 0;
 
   // Return the ID of the top level browsing context within a tab.
   virtual uint64_t Id() const = 0;
@@ -99,6 +100,7 @@ class MediaController final : public DOMEventTargetHelper,
   void SeekBackward() override;
   void SeekForward() override;
   void SkipAd() override;
+  void SeekTo(double aSeekTime, bool aFastSeek) override;
 
   uint64_t Id() const override;
   bool IsAudible() const override;
@@ -141,7 +143,8 @@ class MediaController final : public DOMEventTargetHelper,
  private:
   ~MediaController();
   void HandleActualPlaybackStateChanged() override;
-  void UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey aKey);
+  void UpdateMediaControlActionToContentMediaIfNeeded(
+      const MediaControlAction& aAction);
   void HandleSupportedMediaSessionActionsChanged(
       const nsTArray<MediaSessionAction>& aSupportedAction);
 

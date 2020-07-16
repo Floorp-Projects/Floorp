@@ -146,7 +146,7 @@ bool MediaHardwareKeysEventSourceMacMediaCenter::IsOpened() const { return mOpen
 
 void MediaHardwareKeysEventSourceMacMediaCenter::HandleEvent(MediaControlKey aEvent) {
   for (auto iter = mListeners.begin(); iter != mListeners.end(); ++iter) {
-    (*iter)->OnKeyPressed(aEvent);
+    (*iter)->OnActionPerformed(MediaControlAction(aEvent));
   }
 }
 

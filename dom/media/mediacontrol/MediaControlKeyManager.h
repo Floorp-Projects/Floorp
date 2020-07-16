@@ -37,7 +37,7 @@ class MediaControlKeyManager final : public MediaControlKeySource,
   MediaSessionPlaybackState GetPlaybackState() const override;
 
   // MediaControlKeyListener methods
-  void OnKeyPressed(MediaControlKey aKey) override;
+  void OnActionPerformed(const MediaControlAction& aAction) override;
 
   // The callback function for monitoring the media controller amount changed
   // event.

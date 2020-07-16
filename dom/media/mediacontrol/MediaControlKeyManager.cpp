@@ -89,9 +89,10 @@ void MediaControlKeyManager::ControllerAmountChanged(
   }
 }
 
-void MediaControlKeyManager::OnKeyPressed(MediaControlKey aKey) {
+void MediaControlKeyManager::OnActionPerformed(
+    const MediaControlAction& aAction) {
   for (auto listener : mListeners) {
-    listener->OnKeyPressed(aKey);
+    listener->OnActionPerformed(aAction);
   }
 }
 

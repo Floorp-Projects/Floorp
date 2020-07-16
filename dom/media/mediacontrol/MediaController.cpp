@@ -8,6 +8,7 @@
 
 #include "MediaControlService.h"
 #include "MediaControlUtils.h"
+#include "MediaControlKeySource.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -83,47 +84,62 @@ MediaController::~MediaController() {
 
 void MediaController::Focus() {
   LOG("Focus");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Focus);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Focus));
 }
 
 void MediaController::Play() {
   LOG("Play");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Play);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Play));
 }
 
 void MediaController::Pause() {
   LOG("Pause");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Pause);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Pause));
 }
 
 void MediaController::PrevTrack() {
   LOG("Prev Track");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Previoustrack);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Previoustrack));
 }
 
 void MediaController::NextTrack() {
   LOG("Next Track");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Nexttrack);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Nexttrack));
 }
 
 void MediaController::SeekBackward() {
   LOG("Seek Backward");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Seekbackward);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Seekbackward));
 }
 
 void MediaController::SeekForward() {
   LOG("Seek Forward");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Seekforward);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Seekforward));
 }
 
 void MediaController::SkipAd() {
   LOG("Skip Ad");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Skipad);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Skipad));
+}
+
+void MediaController::SeekTo(double aSeekTime, bool aFastSeek) {
+  LOG("Seek To");
+  UpdateMediaControlActionToContentMediaIfNeeded(MediaControlAction(
+      MediaControlKey::Seekto, SeekDetails(aSeekTime, aFastSeek)));
 }
 
 void MediaController::Stop() {
   LOG("Stop");
-  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Stop);
+  UpdateMediaControlActionToContentMediaIfNeeded(
+      MediaControlAction(MediaControlKey::Stop));
 }
 
 uint64_t MediaController::Id() const { return mTopLevelBrowsingContextId; }
@@ -132,8 +148,8 @@ bool MediaController::IsAudible() const { return IsMediaAudible(); }
 
 bool MediaController::IsPlaying() const { return IsMediaPlaying(); }
 
-void MediaController::UpdateMediaControlKeyToContentMediaIfNeeded(
-    MediaControlKey aKey) {
+void MediaController::UpdateMediaControlActionToContentMediaIfNeeded(
+    const MediaControlAction& aAction) {
   // If the controller isn't active or it has been shutdown, we don't need to
   // update media action to the content process.
   if (!mIsActive || mShutdown) {
@@ -148,7 +164,7 @@ void MediaController::UpdateMediaControlKeyToContentMediaIfNeeded(
           ? BrowsingContext::Get(*mActiveMediaSessionContextId)
           : BrowsingContext::Get(Id());
   if (context && !context->IsDiscarded()) {
-    context->Canonical()->UpdateMediaControlKey(aKey);
+    context->Canonical()->UpdateMediaControlAction(aAction);
   }
 }
 
