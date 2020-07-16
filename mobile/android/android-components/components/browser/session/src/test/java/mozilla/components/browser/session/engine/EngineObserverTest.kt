@@ -375,17 +375,16 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverPassingHitResult() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
         val hitResult = HitResult.UNKNOWN("data://foobar")
 
         observer.onLongPress(hitResult)
 
-        session.hitResult.consume {
-            assertEquals("data://foobar", it.src)
-            assertTrue(it is HitResult.UNKNOWN)
-            true
-        }
+        verify(store).dispatch(
+            ContentAction.UpdateHitResultAction("test-id", hitResult)
+        )
     }
 
     @Test

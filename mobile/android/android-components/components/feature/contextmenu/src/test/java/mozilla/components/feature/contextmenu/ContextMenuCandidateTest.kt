@@ -396,7 +396,7 @@ class ContextMenuCandidateTest {
 
         val saveImage = ContextMenuCandidate.createSaveImageCandidate(
             testContext,
-            ContextMenuUseCases(sessionManager, store))
+            ContextMenuUseCases(store))
 
         // showFor
 
@@ -448,7 +448,7 @@ class ContextMenuCandidateTest {
 
         val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
             testContext,
-            ContextMenuUseCases(sessionManager, store))
+            ContextMenuUseCases(store))
 
         // showFor
 
@@ -503,7 +503,8 @@ class ContextMenuCandidateTest {
 
         val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
             testContext,
-            ContextMenuUseCases(sessionManager, store))
+            ContextMenuUseCases(store)
+        )
 
         // showFor
 

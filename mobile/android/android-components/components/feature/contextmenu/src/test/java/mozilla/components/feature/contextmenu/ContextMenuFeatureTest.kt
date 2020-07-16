@@ -26,9 +26,9 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -234,7 +234,7 @@ class ContextMenuFeatureTest {
             store,
             listOf(candidate),
             engineView,
-            ContextMenuUseCases(mock(), mock())
+            ContextMenuUseCases(mock())
         )
 
         feature.showContextMenu(
@@ -252,8 +252,12 @@ class ContextMenuFeatureTest {
         val sessionManager = SessionManager(engine = mock(), store = store)
         Session("https://www.mozilla.org", id = "test-tab").also {
             sessionManager.add(it)
-            it.hitResult = Consumable.from(HitResult.UNKNOWN("https://www.mozilla.org"))
         }
+
+        store.dispatch(ContentAction.UpdateHitResultAction(
+            "test-tab",
+            HitResult.UNKNOWN("https://www.mozilla.org")
+        )).joinBlocking()
 
         val (engineView, _) = mockEngineView()
 
@@ -262,13 +266,14 @@ class ContextMenuFeatureTest {
             store,
             ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock()),
             engineView,
-            ContextMenuUseCases(sessionManager, store)
+            ContextMenuUseCases(store)
         )
 
         assertNotNull(store.state.findTab("test-tab")!!.content.hitResult)
 
         feature.onMenuCancelled("test-tab")
 
+        store.waitUntilIdle()
         testDispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab("test-tab")!!.content.hitResult)
@@ -281,8 +286,12 @@ class ContextMenuFeatureTest {
         val sessionManager = SessionManager(engine = mock(), store = store)
         Session("https://www.mozilla.org", id = "test-tab").also {
             sessionManager.add(it)
-            it.hitResult = Consumable.from(HitResult.UNKNOWN("https://www.mozilla.org"))
         }
+
+        store.dispatch(ContentAction.UpdateHitResultAction(
+            "test-tab",
+            HitResult.UNKNOWN("https://www.mozilla.org")
+        )).joinBlocking()
 
         val (engineView, view) = mockEngineView()
         var actionInvoked = false
@@ -298,7 +307,7 @@ class ContextMenuFeatureTest {
             store,
             listOf(candidate),
             engineView,
-            ContextMenuUseCases(sessionManager, store)
+            ContextMenuUseCases(store)
         )
 
         testDispatcher.advanceUntilIdle()
@@ -322,8 +331,12 @@ class ContextMenuFeatureTest {
         val sessionManager = SessionManager(engine = mock(), store = store)
         Session("https://www.mozilla.org", id = "test-tab").also {
             sessionManager.add(it)
-            it.hitResult = Consumable.from(HitResult.UNKNOWN("https://www.mozilla.org"))
         }
+
+        store.dispatch(ContentAction.UpdateHitResultAction(
+            "test-tab",
+            HitResult.UNKNOWN("https://www.mozilla.org")
+        )).joinBlocking()
 
         val (engineView, _) = mockEngineView()
         val candidate = ContextMenuCandidate(
@@ -337,7 +350,7 @@ class ContextMenuFeatureTest {
             store,
             listOf(candidate),
             engineView,
-            ContextMenuUseCases(sessionManager, store)
+            ContextMenuUseCases(store)
         )
 
         CollectionProcessor.withFactCollection { facts ->

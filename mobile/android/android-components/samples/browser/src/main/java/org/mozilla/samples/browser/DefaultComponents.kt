@@ -377,5 +377,5 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
-    val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
+    val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
 }

@@ -13,13 +13,11 @@ import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
-import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.FullScreenChangedAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
-import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
@@ -36,7 +34,6 @@ import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -97,7 +94,6 @@ class Session(
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
-        fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
         fun onFullScreenChanged(session: Session, enabled: Boolean) = Unit
         /**
@@ -361,24 +357,6 @@ class Session(
             // an action for the last item in the list.
             store?.syncDispatch(TrackingProtectionAction.TrackerLoadedAction(id, new.last()))
         }
-    }
-
-    /**
-     * The target of the latest long click operation.
-     */
-    var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
-        store?.let {
-            val hitResult = result.peek()
-            if (hitResult == null) {
-                it.syncDispatch(ConsumeHitResultAction(id))
-            } else {
-                it.syncDispatch(UpdateHitResultAction(id, hitResult))
-                result.onConsume { it.syncDispatch(ConsumeHitResultAction(id)) }
-            }
-        }
-
-        val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
-        !result.consumeBy(consumers)
     }
 
     /**

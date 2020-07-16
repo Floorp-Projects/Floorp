@@ -167,7 +167,9 @@ internal class EngineObserver(
     }
 
     override fun onLongPress(hitResult: HitResult) {
-        session.hitResult = Consumable.from(hitResult)
+        store?.dispatch(
+            ContentAction.UpdateHitResultAction(session.id, hitResult)
+        )
     }
 
     override fun onFind(text: String) {

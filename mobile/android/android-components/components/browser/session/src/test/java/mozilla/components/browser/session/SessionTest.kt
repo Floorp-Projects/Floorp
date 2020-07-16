@@ -21,7 +21,6 @@ import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -450,64 +449,6 @@ class SessionTest {
     }
 
     @Test
-    fun `HitResult will be set on Session`() {
-        val hitResult: HitResult = mock()
-        `when`(hitResult.src).thenReturn("https://mozilla.org")
-
-        val session = Session("http://firefox.com")
-        session.hitResult = Consumable.from(hitResult)
-
-        assertFalse(session.hitResult.isConsumed())
-
-        var hitResultIsSet = false
-        session.hitResult.consume { consumable ->
-            hitResultIsSet = consumable.src == "https://mozilla.org"
-            true
-        }
-
-        assertTrue(hitResultIsSet)
-        assertTrue(session.hitResult.isConsumed())
-    }
-
-    @Test
-    fun `HitResult will not be set on Session if consumed by observer`() {
-        var callbackExecuted = false
-
-        val session = Session("https://www.mozilla.org")
-        session.register(object : Session.Observer {
-            override fun onLongPress(session: Session, hitResult: HitResult): Boolean {
-                callbackExecuted = true
-                return true // Consume HitResult
-            }
-        })
-
-        val hitResult: HitResult = mock()
-        session.hitResult = Consumable.from(hitResult)
-
-        assertTrue(callbackExecuted)
-        assertTrue(session.hitResult.isConsumed())
-    }
-
-    @Test
-    fun `action is dispatched when hit result changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-
-        session.hitResult = Consumable.empty()
-        verify(store).dispatch(ContentAction.ConsumeHitResultAction(session.id))
-
-        val hitResult = HitResult.UNKNOWN("test")
-        session.hitResult = Consumable.from(hitResult)
-        verify(store).dispatch(ContentAction.UpdateHitResultAction(session.id, hitResult))
-
-        session.hitResult.consume { true }
-        verify(store, times(2)).dispatch(ContentAction.ConsumeHitResultAction(session.id))
-    }
-
-    @Test
     fun `observer is notified when title changes`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -716,7 +657,6 @@ class SessionTest {
         defaultObserver.onCustomTabConfigChanged(session, null)
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
         defaultObserver.onTrackerBlocked(session, mock(), emptyList())
-        defaultObserver.onLongPress(session, mock(HitResult::class.java))
         defaultObserver.onDesktopModeChanged(session, true)
         defaultObserver.onFullScreenChanged(session, true)
         defaultObserver.onThumbnailChanged(session, spy(Bitmap::class.java))

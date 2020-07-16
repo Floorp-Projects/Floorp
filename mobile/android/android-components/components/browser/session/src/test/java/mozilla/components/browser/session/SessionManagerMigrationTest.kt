@@ -13,9 +13,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -797,32 +795,6 @@ class SessionManagerMigrationTest {
             assertFalse(tab.trackingProtection.enabled)
             assertEquals(0, tab.trackingProtection.blockedTrackers.size)
             assertEquals(0, tab.trackingProtection.loadedTrackers.size)
-        }
-    }
-
-    @Test
-    fun `Adding a hit result`() {
-        val store = BrowserStore()
-        val manager = SessionManager(engine = mock(), store = store)
-
-        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
-        manager.add(session)
-
-        assertNull(session.hitResult.peek())
-        assertNull(store.state.findTab("session")!!.content.hitResult)
-
-        val hitResult: HitResult = HitResult.UNKNOWN("test")
-        session.hitResult = Consumable.from(hitResult)
-
-        assertEquals(hitResult, session.hitResult.peek())
-        store.state.findTab("session")!!.also { tab ->
-            assertNotNull(tab.content.hitResult)
-            assertSame(hitResult, tab.content.hitResult)
-        }
-
-        session.hitResult.consume { true }
-        store.state.findTab("session")!!.also { tab ->
-            assertNull(tab.content.hitResult)
         }
     }
 
