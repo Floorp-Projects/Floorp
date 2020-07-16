@@ -933,7 +933,7 @@ function PropertyView(tree, name) {
   this.tree = tree;
   this.name = name;
 
-  this.link = "https://developer.mozilla.org/CSS/" + name;
+  this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
 
   this._propertyInfo = new PropertyInfo(tree, name);
 }
