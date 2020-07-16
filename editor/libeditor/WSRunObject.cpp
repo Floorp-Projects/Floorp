@@ -17,6 +17,7 @@
 #include "mozilla/SelectionState.h"
 #include "mozilla/StaticPrefs_dom.h"     // for StaticPrefs::dom_*
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
+#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/dom/AncestorIterator.h"
 
 #include "nsAString.h"
@@ -1229,32 +1230,79 @@ nsresult WhiteSpaceVisibilityKeeper::
     return NS_ERROR_INVALID_ARG;
   }
 
+  EditorDOMRange rangeToDelete(aRangeToDelete);
+  bool mayBecomeUnexpectedDOMTree = aHTMLEditor.MaybeHasMutationEventListeners(
+      NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
+      NS_EVENT_BITS_MUTATION_NODEREMOVED |
+      NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
+      NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+
   RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
   ReplaceRangeData replaceRangeDataAtEnd =
-      GetReplaceRangeDataAtEndOfDeletionRange(aHTMLEditor, aRangeToDelete,
+      GetReplaceRangeDataAtEndOfDeletionRange(aHTMLEditor, rangeToDelete,
                                               editingHost);
   if (replaceRangeDataAtEnd.IsSet() && !replaceRangeDataAtEnd.Collapsed()) {
+    MOZ_ASSERT(rangeToDelete.EndRef().EqualsOrIsBefore(
+        replaceRangeDataAtEnd.EndRef()));
+    MOZ_ASSERT(replaceRangeDataAtEnd.StartRef().EqualsOrIsBefore(
+        rangeToDelete.EndRef()));
+    MOZ_ASSERT(rangeToDelete.StartRef().EqualsOrIsBefore(
+        replaceRangeDataAtEnd.StartRef()));
     if (!replaceRangeDataAtEnd.HasReplaceString()) {
-      nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-          replaceRangeDataAtEnd.StartRef(), replaceRangeDataAtEnd.EndRef());
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return rv;
+      EditorDOMPoint startToDelete(aRangeToDelete.StartRef());
+      EditorDOMPoint endToDelete(replaceRangeDataAtEnd.StartRef());
+      {
+        AutoEditorDOMPointChildInvalidator lockOffsetOfStart(startToDelete);
+        AutoEditorDOMPointChildInvalidator lockOffsetOfEnd(endToDelete);
+        AutoTrackDOMPoint trackStartToDelete(aHTMLEditor.RangeUpdaterRef(),
+                                             &startToDelete);
+        AutoTrackDOMPoint trackEndToDelete(aHTMLEditor.RangeUpdaterRef(),
+                                           &endToDelete);
+        nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+            replaceRangeDataAtEnd.StartRef(), replaceRangeDataAtEnd.EndRef());
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+          return rv;
+        }
       }
+      if (mayBecomeUnexpectedDOMTree &&
+          (NS_WARN_IF(!startToDelete.IsSetAndValid()) ||
+           NS_WARN_IF(!endToDelete.IsSetAndValid()) ||
+           NS_WARN_IF(!startToDelete.EqualsOrIsBefore(endToDelete)))) {
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      MOZ_ASSERT(startToDelete.EqualsOrIsBefore(endToDelete));
+      rangeToDelete.SetStartAndEnd(startToDelete, endToDelete);
     } else {
       MOZ_ASSERT(replaceRangeDataAtEnd.RangeRef().IsInTextNodes());
-      nsresult rv =
-          WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
-              aHTMLEditor, replaceRangeDataAtEnd.RangeRef().AsInTexts(),
-              replaceRangeDataAtEnd.ReplaceStringRef());
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WhiteSpaceVisibilityKeeper::"
-            "MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange() "
-            "failed");
-        return rv;
+      EditorDOMPoint startToDelete(aRangeToDelete.StartRef());
+      EditorDOMPoint endToDelete(replaceRangeDataAtEnd.StartRef());
+      {
+        AutoTrackDOMPoint trackStartToDelete(aHTMLEditor.RangeUpdaterRef(),
+                                             &startToDelete);
+        AutoTrackDOMPoint trackEndToDelete(aHTMLEditor.RangeUpdaterRef(),
+                                           &endToDelete);
+        nsresult rv =
+            WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+                aHTMLEditor, replaceRangeDataAtEnd.RangeRef().AsInTexts(),
+                replaceRangeDataAtEnd.ReplaceStringRef());
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "WhiteSpaceVisibilityKeeper::"
+              "MakeSureToKeepVisibleStateOfWhiteSpacesAtEndOfDeletingRange() "
+              "failed");
+          return rv;
+        }
       }
+      if (mayBecomeUnexpectedDOMTree &&
+          (NS_WARN_IF(!startToDelete.IsSetAndValid()) ||
+           NS_WARN_IF(!endToDelete.IsSetAndValid()) ||
+           NS_WARN_IF(!startToDelete.EqualsOrIsBefore(endToDelete)))) {
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      MOZ_ASSERT(startToDelete.EqualsOrIsBefore(endToDelete));
+      rangeToDelete.SetStartAndEnd(startToDelete, endToDelete);
     }
   }
   if (editingHost != aHTMLEditor.GetActiveEditingHost()) {
@@ -1262,7 +1310,7 @@ nsresult WhiteSpaceVisibilityKeeper::
     return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
   ReplaceRangeData replaceRangeDataAtStart =
-      GetReplaceRangeDataAtStartOfDeletionRange(aHTMLEditor, aRangeToDelete,
+      GetReplaceRangeDataAtStartOfDeletionRange(aHTMLEditor, rangeToDelete,
                                                 editingHost);
   if (!replaceRangeDataAtStart.IsSet() || replaceRangeDataAtStart.Collapsed()) {
     return NS_OK;
@@ -1270,6 +1318,8 @@ nsresult WhiteSpaceVisibilityKeeper::
   if (!replaceRangeDataAtStart.HasReplaceString()) {
     nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         replaceRangeDataAtStart.StartRef(), replaceRangeDataAtStart.EndRef());
+    // XXX Should we validate the range for making this return
+    //     NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE in this case?
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -1279,6 +1329,8 @@ nsresult WhiteSpaceVisibilityKeeper::
   nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
       aHTMLEditor, replaceRangeDataAtStart.RangeRef().AsInTexts(),
       replaceRangeDataAtStart.ReplaceStringRef());
+  // XXX Should we validate the range for making this return
+  //     NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE in this case?
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "WhiteSpaceVisibilityKeeper::"
