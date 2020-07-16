@@ -1,11 +1,10 @@
-from jinja2.visitor import NodeVisitor
-from jinja2._compat import iteritems
+from ._compat import iteritems
+from .visitor import NodeVisitor
 
-
-VAR_LOAD_PARAMETER = 'param'
-VAR_LOAD_RESOLVE = 'resolve'
-VAR_LOAD_ALIAS = 'alias'
-VAR_LOAD_UNDEFINED = 'undefined'
+VAR_LOAD_PARAMETER = "param"
+VAR_LOAD_RESOLVE = "resolve"
+VAR_LOAD_ALIAS = "alias"
+VAR_LOAD_UNDEFINED = "undefined"
 
 
 def find_symbols(nodes, parent_symbols=None):
@@ -23,12 +22,13 @@ def symbols_for_node(node, parent_symbols=None):
 
 
 class Symbols(object):
-
-    def __init__(self, parent=None):
-        if parent is None:
-            self.level = 0
-        else:
-            self.level = parent.level + 1
+    def __init__(self, parent=None, level=None):
+        if level is None:
+            if parent is None:
+                level = 0
+            else:
+                level = parent.level + 1
+        self.level = level
         self.parent = parent
         self.refs = {}
         self.loads = {}
@@ -39,7 +39,7 @@ class Symbols(object):
         visitor.visit(node, **kwargs)
 
     def _define_ref(self, name, load=None):
-        ident = 'l_%d_%s' % (self.level, name)
+        ident = "l_%d_%s" % (self.level, name)
         self.refs[name] = ident
         if load is not None:
             self.loads[ident] = load
@@ -60,8 +60,10 @@ class Symbols(object):
     def ref(self, name):
         rv = self.find_ref(name)
         if rv is None:
-            raise AssertionError('Tried to resolve a name to a reference that '
-                                 'was unknown to the frame (%r)' % name)
+            raise AssertionError(
+                "Tried to resolve a name to a reference that "
+                "was unknown to the frame (%r)" % name
+            )
         return rv
 
     def copy(self):
@@ -116,7 +118,7 @@ class Symbols(object):
             if branch_count == len(branch_symbols):
                 continue
             target = self.find_ref(name)
-            assert target is not None, 'should not happen'
+            assert target is not None, "should not happen"
 
             if self.parent is not None:
                 outer_target = self.parent.find_ref(name)
@@ -147,7 +149,6 @@ class Symbols(object):
 
 
 class RootVisitor(NodeVisitor):
-
     def __init__(self, symbols):
         self.sym_visitor = FrameSymbolVisitor(symbols)
 
@@ -155,31 +156,39 @@ class RootVisitor(NodeVisitor):
         for child in node.iter_child_nodes():
             self.sym_visitor.visit(child)
 
-    visit_Template = visit_Block = visit_Macro = visit_FilterBlock = \
-        visit_Scope = visit_If = visit_ScopedEvalContextModifier = \
-        _simple_visit
+    visit_Template = (
+        visit_Block
+    ) = (
+        visit_Macro
+    ) = (
+        visit_FilterBlock
+    ) = visit_Scope = visit_If = visit_ScopedEvalContextModifier = _simple_visit
 
     def visit_AssignBlock(self, node, **kwargs):
         for child in node.body:
             self.sym_visitor.visit(child)
 
     def visit_CallBlock(self, node, **kwargs):
-        for child in node.iter_child_nodes(exclude=('call',)):
+        for child in node.iter_child_nodes(exclude=("call",)):
             self.sym_visitor.visit(child)
 
-    def visit_For(self, node, for_branch='body', **kwargs):
-        if for_branch == 'body':
+    def visit_OverlayScope(self, node, **kwargs):
+        for child in node.body:
+            self.sym_visitor.visit(child)
+
+    def visit_For(self, node, for_branch="body", **kwargs):
+        if for_branch == "body":
             self.sym_visitor.visit(node.target, store_as_param=True)
             branch = node.body
-        elif for_branch == 'else':
+        elif for_branch == "else":
             branch = node.else_
-        elif for_branch == 'test':
+        elif for_branch == "test":
             self.sym_visitor.visit(node.target, store_as_param=True)
             if node.test is not None:
                 self.sym_visitor.visit(node.test)
             return
         else:
-            raise RuntimeError('Unknown for branch')
+            raise RuntimeError("Unknown for branch")
         for item in branch or ():
             self.sym_visitor.visit(item)
 
@@ -190,8 +199,9 @@ class RootVisitor(NodeVisitor):
             self.sym_visitor.visit(child)
 
     def generic_visit(self, node, *args, **kwargs):
-        raise NotImplementedError('Cannot find symbols for %r' %
-                                  node.__class__.__name__)
+        raise NotImplementedError(
+            "Cannot find symbols for %r" % node.__class__.__name__
+        )
 
 
 class FrameSymbolVisitor(NodeVisitor):
@@ -202,12 +212,15 @@ class FrameSymbolVisitor(NodeVisitor):
 
     def visit_Name(self, node, store_as_param=False, **kwargs):
         """All assignments to names go through this function."""
-        if store_as_param or node.ctx == 'param':
+        if store_as_param or node.ctx == "param":
             self.symbols.declare_parameter(node.name)
-        elif node.ctx == 'store':
+        elif node.ctx == "store":
             self.symbols.store(node.name)
-        elif node.ctx == 'load':
+        elif node.ctx == "load":
             self.symbols.load(node.name)
+
+    def visit_NSRef(self, node, **kwargs):
+        self.symbols.load(node.name)
 
     def visit_If(self, node, **kwargs):
         self.visit(node.test, **kwargs)
@@ -222,9 +235,10 @@ class FrameSymbolVisitor(NodeVisitor):
             return rv
 
         body_symbols = inner_visit(node.body)
+        elif_symbols = inner_visit(node.elif_)
         else_symbols = inner_visit(node.else_ or ())
 
-        self.symbols.branch_update([body_symbols, else_symbols])
+        self.symbols.branch_update([body_symbols, elif_symbols, else_symbols])
 
     def visit_Macro(self, node, **kwargs):
         self.symbols.store(node.name)
@@ -271,3 +285,6 @@ class FrameSymbolVisitor(NodeVisitor):
 
     def visit_Block(self, node, **kwargs):
         """Stop visiting at blocks."""
+
+    def visit_OverlayScope(self, node, **kwargs):
+        """Do not visit into overlay scopes."""

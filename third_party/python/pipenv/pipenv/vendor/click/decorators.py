@@ -1,20 +1,25 @@
-import sys
 import inspect
-
+import sys
 from functools import update_wrapper
 
 from ._compat import iteritems
 from ._unicodefun import _check_for_unicode_literals
-from .utils import echo
+from .core import Argument
+from .core import Command
+from .core import Group
+from .core import Option
 from .globals import get_current_context
+from .utils import echo
 
 
 def pass_context(f):
     """Marks a callback as wanting to receive the current context
     object as first argument.
     """
+
     def new_func(*args, **kwargs):
         return f(get_current_context(), *args, **kwargs)
+
     return update_wrapper(new_func, f)
 
 
@@ -23,8 +28,10 @@ def pass_obj(f):
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
     """
+
     def new_func(*args, **kwargs):
         return f(get_current_context().obj, *args, **kwargs)
+
     return update_wrapper(new_func, f)
 
 
@@ -50,6 +57,7 @@ def make_pass_decorator(object_type, ensure=False):
     :param ensure: if set to `True`, a new object will be created and
                    remembered on the context if it's not there yet.
     """
+
     def decorator(f):
         def new_func(*args, **kwargs):
             ctx = get_current_context()
@@ -58,45 +66,51 @@ def make_pass_decorator(object_type, ensure=False):
             else:
                 obj = ctx.find_object(object_type)
             if obj is None:
-                raise RuntimeError('Managed to invoke callback without a '
-                                   'context object of type %r existing'
-                                   % object_type.__name__)
-            return ctx.invoke(f, obj, *args[1:], **kwargs)
+                raise RuntimeError(
+                    "Managed to invoke callback without a context"
+                    " object of type '{}' existing".format(object_type.__name__)
+                )
+            return ctx.invoke(f, obj, *args, **kwargs)
+
         return update_wrapper(new_func, f)
+
     return decorator
 
 
 def _make_command(f, name, attrs, cls):
     if isinstance(f, Command):
-        raise TypeError('Attempted to convert a callback into a '
-                        'command twice.')
+        raise TypeError("Attempted to convert a callback into a command twice.")
     try:
         params = f.__click_params__
         params.reverse()
         del f.__click_params__
     except AttributeError:
         params = []
-    help = attrs.get('help')
+    help = attrs.get("help")
     if help is None:
         help = inspect.getdoc(f)
         if isinstance(help, bytes):
-            help = help.decode('utf-8')
+            help = help.decode("utf-8")
     else:
         help = inspect.cleandoc(help)
-    attrs['help'] = help
+    attrs["help"] = help
     _check_for_unicode_literals()
-    return cls(name=name or f.__name__.lower(),
-               callback=f, params=params, **attrs)
+    return cls(
+        name=name or f.__name__.lower().replace("_", "-"),
+        callback=f,
+        params=params,
+        **attrs
+    )
 
 
 def command(name=None, cls=None, **attrs):
-    """Creates a new :class:`Command` and uses the decorated function as
+    r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
 
-    The name of the command defaults to the name of the function.  If you
-    want to change that, you can pass the intended name as the first
-    argument.
+    The name of the command defaults to the name of the function with
+    underscores replaced by dashes.  If you want to change that, you can
+    pass the intended name as the first argument.
 
     All keyword arguments are forwarded to the underlying command class.
 
@@ -105,16 +119,18 @@ def command(name=None, cls=None, **attrs):
     command :class:`Group`.
 
     :param name: the name of the command.  This defaults to the function
-                 name.
+                 name with underscores replaced by dashes.
     :param cls: the command class to instantiate.  This defaults to
                 :class:`Command`.
     """
     if cls is None:
         cls = Command
+
     def decorator(f):
         cmd = _make_command(f, name, attrs, cls)
         cmd.__doc__ = f.__doc__
         return cmd
+
     return decorator
 
 
@@ -123,7 +139,7 @@ def group(name=None, **attrs):
     works otherwise the same as :func:`command` just that the `cls`
     parameter is set to :class:`Group`.
     """
-    attrs.setdefault('cls', Group)
+    attrs.setdefault("cls", Group)
     return command(name, **attrs)
 
 
@@ -131,7 +147,7 @@ def _param_memo(f, param):
     if isinstance(f, Command):
         f.params.append(param)
     else:
-        if not hasattr(f, '__click_params__'):
+        if not hasattr(f, "__click_params__"):
             f.__click_params__ = []
         f.__click_params__.append(param)
 
@@ -146,10 +162,12 @@ def argument(*param_decls, **attrs):
     :param cls: the argument class to instantiate.  This defaults to
                 :class:`Argument`.
     """
+
     def decorator(f):
-        ArgumentClass = attrs.pop('cls', Argument)
+        ArgumentClass = attrs.pop("cls", Argument)
         _param_memo(f, ArgumentClass(param_decls, **attrs))
         return f
+
     return decorator
 
 
@@ -163,12 +181,17 @@ def option(*param_decls, **attrs):
     :param cls: the option class to instantiate.  This defaults to
                 :class:`Option`.
     """
+
     def decorator(f):
-        if 'help' in attrs:
-            attrs['help'] = inspect.cleandoc(attrs['help'])
-        OptionClass = attrs.pop('cls', Option)
-        _param_memo(f, OptionClass(param_decls, **attrs))
+        # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
+        option_attrs = attrs.copy()
+
+        if "help" in option_attrs:
+            option_attrs["help"] = inspect.cleandoc(option_attrs["help"])
+        OptionClass = option_attrs.pop("cls", Option)
+        _param_memo(f, OptionClass(param_decls, **option_attrs))
         return f
+
     return decorator
 
 
@@ -189,16 +212,19 @@ def confirmation_option(*param_decls, **attrs):
         def dropdb():
             pass
     """
+
     def decorator(f):
         def callback(ctx, param, value):
             if not value:
                 ctx.abort()
-        attrs.setdefault('is_flag', True)
-        attrs.setdefault('callback', callback)
-        attrs.setdefault('expose_value', False)
-        attrs.setdefault('prompt', 'Do you want to continue?')
-        attrs.setdefault('help', 'Confirm the action without prompting.')
-        return option(*(param_decls or ('--yes',)), **attrs)(f)
+
+        attrs.setdefault("is_flag", True)
+        attrs.setdefault("callback", callback)
+        attrs.setdefault("expose_value", False)
+        attrs.setdefault("prompt", "Do you want to continue?")
+        attrs.setdefault("help", "Confirm the action without prompting.")
+        return option(*(param_decls or ("--yes",)), **attrs)(f)
+
     return decorator
 
 
@@ -214,11 +240,13 @@ def password_option(*param_decls, **attrs):
         def changeadmin(password):
             pass
     """
+
     def decorator(f):
-        attrs.setdefault('prompt', True)
-        attrs.setdefault('confirmation_prompt', True)
-        attrs.setdefault('hide_input', True)
-        return option(*(param_decls or ('--password',)), **attrs)(f)
+        attrs.setdefault("prompt", True)
+        attrs.setdefault("confirmation_prompt", True)
+        attrs.setdefault("hide_input", True)
+        return option(*(param_decls or ("--password",)), **attrs)(f)
+
     return decorator
 
 
@@ -235,10 +263,14 @@ def version_option(version=None, *param_decls, **attrs):
     :param others: everything else is forwarded to :func:`option`.
     """
     if version is None:
-        module = sys._getframe(1).f_globals.get('__name__')
+        if hasattr(sys, "_getframe"):
+            module = sys._getframe(1).f_globals.get("__name__")
+        else:
+            module = ""
+
     def decorator(f):
-        prog_name = attrs.pop('prog_name', None)
-        message = attrs.pop('message', '%(prog)s, version %(version)s')
+        prog_name = attrs.pop("prog_name", None)
+        message = attrs.pop("message", "%(prog)s, version %(version)s")
 
         def callback(ctx, param, value):
             if not value or ctx.resilient_parsing:
@@ -254,25 +286,23 @@ def version_option(version=None, *param_decls, **attrs):
                     pass
                 else:
                     for dist in pkg_resources.working_set:
-                        scripts = dist.get_entry_map().get('console_scripts') or {}
-                        for script_name, entry_point in iteritems(scripts):
+                        scripts = dist.get_entry_map().get("console_scripts") or {}
+                        for _, entry_point in iteritems(scripts):
                             if entry_point.module_name == module:
                                 ver = dist.version
                                 break
                 if ver is None:
-                    raise RuntimeError('Could not determine version')
-            echo(message % {
-                'prog': prog,
-                'version': ver,
-            }, color=ctx.color)
+                    raise RuntimeError("Could not determine version")
+            echo(message % {"prog": prog, "version": ver}, color=ctx.color)
             ctx.exit()
 
-        attrs.setdefault('is_flag', True)
-        attrs.setdefault('expose_value', False)
-        attrs.setdefault('is_eager', True)
-        attrs.setdefault('help', 'Show the version and exit.')
-        attrs['callback'] = callback
-        return option(*(param_decls or ('--version',)), **attrs)(f)
+        attrs.setdefault("is_flag", True)
+        attrs.setdefault("expose_value", False)
+        attrs.setdefault("is_eager", True)
+        attrs.setdefault("help", "Show the version and exit.")
+        attrs["callback"] = callback
+        return option(*(param_decls or ("--version",)), **attrs)(f)
+
     return decorator
 
 
@@ -286,19 +316,18 @@ def help_option(*param_decls, **attrs):
 
     All arguments are forwarded to :func:`option`.
     """
+
     def decorator(f):
         def callback(ctx, param, value):
             if value and not ctx.resilient_parsing:
                 echo(ctx.get_help(), color=ctx.color)
                 ctx.exit()
-        attrs.setdefault('is_flag', True)
-        attrs.setdefault('expose_value', False)
-        attrs.setdefault('help', 'Show this message and exit.')
-        attrs.setdefault('is_eager', True)
-        attrs['callback'] = callback
-        return option(*(param_decls or ('--help',)), **attrs)(f)
+
+        attrs.setdefault("is_flag", True)
+        attrs.setdefault("expose_value", False)
+        attrs.setdefault("help", "Show this message and exit.")
+        attrs.setdefault("is_eager", True)
+        attrs["callback"] = callback
+        return option(*(param_decls or ("--help",)), **attrs)(f)
+
     return decorator
-
-
-# Circular dependencies between core and decorators
-from .core import Command, Group, Argument, Option
