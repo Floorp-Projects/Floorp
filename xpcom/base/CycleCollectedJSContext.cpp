@@ -26,7 +26,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMJSClass.h"
-#include "mozilla/dom/FinalizationRegistryBinding.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -61,8 +60,7 @@ CycleCollectedJSContext::CycleCollectedJSContext()
       mTargetedMicroTaskRecursionDepth(0),
       mMicroTaskLevel(0),
       mDebuggerRecursionDepth(0),
-      mMicroTaskRecursionDepth(0),
-      mFinalizationRegistryCleanup(this) {
+      mMicroTaskRecursionDepth(0) {
   MOZ_COUNT_CTOR(CycleCollectedJSContext);
 
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
@@ -78,6 +76,7 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
   }
 
   JS::SetHostCleanupFinalizationRegistryCallback(mJSContext, nullptr, nullptr);
+  mFinalizationRegistriesToCleanUp.reset();
 
   JS_SetContextPrivate(mJSContext, nullptr);
 
@@ -102,8 +101,6 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
 
   mAboutToBeNotifiedRejectedPromises.Clear();
   mPendingUnhandledRejections.Clear();
-
-  mFinalizationRegistryCleanup.Destroy();
 
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
@@ -148,7 +145,9 @@ nsresult CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
                            JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(
                                js::SystemAllocPolicy()));
 
-  mFinalizationRegistryCleanup.Init();
+  mFinalizationRegistriesToCleanUp.init(mJSContext);
+  JS::SetHostCleanupFinalizationRegistryCallback(
+      mJSContext, CleanupFinalizationRegistryCallback, this);
 
   // Cast to PerThreadAtomCache for dom::GetAtomCache(JSContext*).
   JS_SetContextPrivate(mJSContext, static_cast<PerThreadAtomCache*>(this));
@@ -749,95 +748,56 @@ nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
   return NS_OK;
 }
 
-class FinalizationRegistryCleanup::CleanupRunnable : public CancelableRunnable {
+class CleanupFinalizationRegistriesRunnable : public CancelableRunnable {
  public:
-  explicit CleanupRunnable(FinalizationRegistryCleanup* aCleanupWork)
-      : CancelableRunnable("CleanupRunnable"), mCleanupWork(aCleanupWork) {}
-
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
-  // bug 1535398.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHODIMP Run() {
-    mCleanupWork->DoCleanup();
-    return NS_OK;
-  }
-
+  explicit CleanupFinalizationRegistriesRunnable(
+      CycleCollectedJSContext* aContext)
+      : CancelableRunnable("CleanupFinalizationRegistriesRunnable"),
+        mContext(aContext) {}
+  NS_DECL_NSIRUNNABLE
  private:
-  FinalizationRegistryCleanup* mCleanupWork;
+  CycleCollectedJSContext* mContext;
 };
 
-FinalizationRegistryCleanup::FinalizationRegistryCleanup(
-    CycleCollectedJSContext* aContext)
-    : mContext(aContext) {}
-
-void FinalizationRegistryCleanup::Destroy() {
-  // This must happen before the CycleCollectedJSContext destructor calls
-  // JS_DestroyContext().
-  mCallbacks.reset();
-}
-
-void FinalizationRegistryCleanup::Init() {
-  JSContext* cx = mContext->Context();
-  mCallbacks.init(cx);
-  JS::SetHostCleanupFinalizationRegistryCallback(cx, QueueCallback, this);
-}
-
-/* static */
-void FinalizationRegistryCleanup::QueueCallback(JSFunction* aDoCleanup,
-                                                JSObject* aIncumbentGlobal,
-                                                void* aData) {
-  FinalizationRegistryCleanup* cleanup =
-      static_cast<FinalizationRegistryCleanup*>(aData);
-  cleanup->QueueCallback(aDoCleanup, aIncumbentGlobal);
-}
-
-void FinalizationRegistryCleanup::QueueCallback(JSFunction* aDoCleanup,
-                                                JSObject* aIncumbentGlobal) {
-  bool firstCallback = mCallbacks.empty();
-
-  MOZ_ALWAYS_TRUE(mCallbacks.append(Callback{aDoCleanup, aIncumbentGlobal}));
-
-  if (firstCallback) {
-    RefPtr<CleanupRunnable> cleanup = new CleanupRunnable(this);
-    NS_DispatchToCurrentThread(cleanup.forget());
-  }
-}
-
-void FinalizationRegistryCleanup::DoCleanup() {
-  if (mCallbacks.empty()) {
-    return;
+NS_IMETHODIMP
+CleanupFinalizationRegistriesRunnable::Run() {
+  if (mContext->mFinalizationRegistriesToCleanUp.empty()) {
+    return NS_OK;
   }
 
   JS::RootingContext* cx = mContext->RootingCx();
 
-  JS::Rooted<CallbackVector> callbacks(cx);
-  std::swap(callbacks.get(), mCallbacks.get());
+  JS::Rooted<CycleCollectedJSContext::ObjectVector> registries(cx);
+  std::swap(registries.get(), mContext->mFinalizationRegistriesToCleanUp.get());
 
-  for (const Callback& callback : callbacks) {
-    JSObject* functionObj = JS_GetFunctionObject(callback.mCallbackFunction);
-    JS::RootedObject globalObj(cx, JS::GetNonCCWObjectGlobal(functionObj));
+  JS::Rooted<JSObject*> registry(cx);
+  for (const auto& r : registries) {
+    registry = r;
 
-    nsIGlobalObject* incumbentGlobal =
-        xpc::NativeGlobal(callback.mIncumbentGlobal);
-    if (!incumbentGlobal) {
-      continue;
-    }
-
-    RefPtr<FinalizationRegistryCleanupCallback> cleanupCallback(
-        new FinalizationRegistryCleanupCallback(functionObj, globalObj, nullptr,
-                                                incumbentGlobal));
-
-    nsIGlobalObject* global =
-        xpc::NativeGlobal(cleanupCallback->CallbackPreserveColor());
-    if (global) {
-      cleanupCallback->Call("FinalizationRegistryCleanup::DoCleanup");
-    }
+    AutoEntryScript aes(registry, "cleanupFinalizationRegistry");
+    mozilla::Unused << JS::CleanupQueuedFinalizationRegistry(aes.cx(),
+                                                             registry);
   }
+
+  return NS_OK;
 }
 
-void FinalizationRegistryCleanup::Callback::trace(JSTracer* trc) {
-  JS::UnsafeTraceRoot(trc, &mCallbackFunction, "mCallbackFunction");
-  JS::UnsafeTraceRoot(trc, &mIncumbentGlobal, "mIncumbentGlobal");
+/* static */
+void CycleCollectedJSContext::CleanupFinalizationRegistryCallback(
+    JSObject* aRegistry, void* aData) {
+  CycleCollectedJSContext* ccjs = static_cast<CycleCollectedJSContext*>(aData);
+  ccjs->QueueFinalizationRegistryForCleanup(aRegistry);
+}
+
+void CycleCollectedJSContext::QueueFinalizationRegistryForCleanup(
+    JSObject* aRegistry) {
+  bool firstRegistry = mFinalizationRegistriesToCleanUp.empty();
+  MOZ_ALWAYS_TRUE(mFinalizationRegistriesToCleanUp.append(aRegistry));
+  if (firstRegistry) {
+    RefPtr<CleanupFinalizationRegistriesRunnable> cleanup =
+        new CleanupFinalizationRegistriesRunnable(this);
+    NS_DispatchToCurrentThread(cleanup.forget());
+  }
 }
 
 }  // namespace mozilla
