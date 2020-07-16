@@ -1216,9 +1216,7 @@ impl BatchBuilder {
                                     ctx.spatial_tree,
                                 );
 
-                                let pic_bounding_rect = map_device_to_surface.map(&device_bounding_rect).unwrap();
-
-                                pic_bounding_rect
+                                map_device_to_surface.map(&device_bounding_rect)
                             } else {
                                 let mut local_bounding_rect = LayoutRect::default();
 
@@ -1242,14 +1240,19 @@ impl BatchBuilder {
                                     *bounding_rect,
                                     ctx.spatial_tree,
                                 );
-                                let pic_bounding_rect = map_prim_to_surface.map(&local_bounding_rect).unwrap();
-
-                                pic_bounding_rect
+                                map_prim_to_surface.map(&local_bounding_rect)
                             };
 
-                            // The text run may have been clipped, for example if part of it is offscreen.
-                            // So intersect our result with the original bounding rect.
-                            let intersected = pic_bounding_rect.intersection(bounding_rect).unwrap_or_else(|| PictureRect::zero());
+                            let intersected = match pic_bounding_rect {
+                                // The text run may have been clipped, for example if part of it is offscreen.
+                                // So intersect our result with the original bounding rect.
+                                Some(rect) => rect
+                                    .intersection(bounding_rect)
+                                    .unwrap_or_else(PictureRect::zero),
+                                // If space mapping went off the rails, fall back to the old behavior.
+                                //TODO: consider skipping the glyph run completely in this case.
+                                None => *bounding_rect,
+                            };
 
                             intersected
                         };
