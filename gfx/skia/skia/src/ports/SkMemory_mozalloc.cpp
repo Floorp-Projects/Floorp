@@ -14,13 +14,17 @@
 #include "mozilla/mozalloc_oom.h"
 #include "prenv.h"
 
-void sk_abort_no_print() {
+bool sk_abort_is_enabled() {
 #ifdef SK_DEBUG
     const char* env = PR_GetEnv("MOZ_SKIA_DISABLE_ASSERTS");
     if (env && *env != '0') {
-        return;
+        return false;
     }
 #endif
+    return true;
+}
+
+void sk_abort_no_print() {
     mozalloc_abort("Abort from sk_abort");
 }
 
