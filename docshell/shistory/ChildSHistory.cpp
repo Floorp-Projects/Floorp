@@ -36,10 +36,17 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
 }
 
 int32_t ChildSHistory::Count() {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent() || mAsyncHistoryLength) {
     uint32_t length = mLength;
     for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
       length += mPendingSHistoryChanges[i].mLengthDelta;
+    }
+
+    if (mAsyncHistoryLength) {
+      MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+      // XXX The assertion may be too strong here, but it fires only
+      //    when the pref is enabled.
+      MOZ_ASSERT(mHistory->GetCount() == int32_t(length));
     }
     return length;
   }
@@ -47,10 +54,19 @@ int32_t ChildSHistory::Count() {
 }
 
 int32_t ChildSHistory::Index() {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent() || mAsyncHistoryLength) {
     uint32_t index = mIndex;
     for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
       index += mPendingSHistoryChanges[i].mIndexDelta;
+    }
+
+    if (mAsyncHistoryLength) {
+      MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+      int32_t realIndex;
+      mHistory->GetIndex(&realIndex);
+      // XXX The assertion may be too strong here, but it fires only
+      //    when the pref is enabled.
+      MOZ_ASSERT(realIndex == int32_t(index));
     }
     return index;
   }
@@ -60,11 +76,16 @@ int32_t ChildSHistory::Index() {
 }
 
 nsID ChildSHistory::AddPendingHistoryChange() {
-  int32_t indexOffset = 1;
-  int32_t lengthOffset = (Index() + indexOffset) - (Count() - 1);
+  int32_t indexDelta = 1;
+  int32_t lengthDelta = (Index() + indexDelta) - (Count() - 1);
+  return AddPendingHistoryChange(indexDelta, lengthDelta);
+}
+
+nsID ChildSHistory::AddPendingHistoryChange(int32_t aIndexDelta,
+                                            int32_t aLengthDelta) {
   nsID changeID = {};
   nsContentUtils::GenerateUUIDInPlace(changeID);
-  PendingSHistoryChange change = {changeID, indexOffset, lengthOffset};
+  PendingSHistoryChange change = {changeID, aIndexDelta, aLengthDelta};
   mPendingSHistoryChanges.AppendElement(change);
   return changeID;
 }
@@ -177,6 +198,27 @@ JSObject* ChildSHistory::WrapObject(JSContext* cx,
 
 nsISupports* ChildSHistory::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
+void ChildSHistory::SetAsyncHistoryLength(bool aEnable, ErrorResult& aRv) {
+  if (StaticPrefs::fission_sessionHistoryInParent() || !mHistory) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (mAsyncHistoryLength == aEnable) {
+    return;
+  }
+
+  mAsyncHistoryLength = aEnable;
+  if (mAsyncHistoryLength) {
+    mHistory->GetIndex(&mIndex);
+    mLength = mHistory->GetCount();
+  } else {
+    mIndex = -1;
+    mLength = 0;
+    mPendingSHistoryChanges.Clear();
+  }
 }
 
 }  // namespace dom
