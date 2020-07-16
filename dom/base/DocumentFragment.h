@@ -74,6 +74,11 @@ class DocumentFragment : public FragmentOrElement {
 
   void SetHost(Element* aHost) { mHost = aHost; }
 
+  void GetInnerHTML(nsAString& aInnerHTML) { GetMarkup(false, aInnerHTML); }
+  void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError) {
+    SetInnerHTMLInternal(aInnerHTML, aError);
+  }
+
   static already_AddRefed<DocumentFragment> Constructor(
       const GlobalObject& aGlobal, ErrorResult& aRv);
 
