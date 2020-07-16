@@ -12,10 +12,6 @@
 
 NS_IMPL_ISUPPORTS(nsXPCTestParams, nsIXPCTestParams)
 
-nsXPCTestParams::nsXPCTestParams() = default;
-
-nsXPCTestParams::~nsXPCTestParams() = default;
-
 #define GENERIC_METHOD_IMPL \
   {                         \
     *_retval = *b;          \
