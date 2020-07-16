@@ -1406,8 +1406,6 @@ STATIC_ATOMS = [
     Atom("G", "G"),
     Atom("g", "g"),
     Atom("gamma", "gamma"),
-    # 'generic' conflicts with msvc11 winrt compiler extensions
-    Atom("generic_", "generic"),
     Atom("glyphRef", "glyphRef"),
     Atom("grad", "grad"),
     Atom("gradientTransform", "gradientTransform"),
