@@ -350,11 +350,13 @@ bool DebuggerMemory::CallData::getAllocationsLogOverflowed() {
 }
 
 bool DebuggerMemory::CallData::getOnGarbageCollection() {
-  return Debugger::getGarbageCollectionHook(cx, args, *memory->getDebugger());
+  return Debugger::getHookImpl(cx, args, *memory->getDebugger(),
+                               Debugger::OnGarbageCollection);
 }
 
 bool DebuggerMemory::CallData::setOnGarbageCollection() {
-  return Debugger::setGarbageCollectionHook(cx, args, *memory->getDebugger());
+  return Debugger::setHookImpl(cx, args, *memory->getDebugger(),
+                               Debugger::OnGarbageCollection);
 }
 
 /* Debugger.Memory.prototype.takeCensus */

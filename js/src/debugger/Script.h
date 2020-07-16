@@ -59,12 +59,13 @@ class DebuggerScript : public NativeObject {
 
   struct CallData;
 
+  static bool getSuccessorOrPredecessorOffsets(JSContext* cx, unsigned argc,
+                                               Value* vp, const char* name,
+                                               bool successor);
+
   Value getInstrumentationId() const {
     return getSlot(INSTRUMENTATION_ID_SLOT);
   }
-
-  bool isInstance() const;
-  Debugger* owner() const;
 
  private:
   static const JSClassOps classOps_;
@@ -78,6 +79,7 @@ class DebuggerScript : public NativeObject {
   class GetPossibleBreakpointsMatcher;
   class GetOffsetMetadataMatcher;
   class GetOffsetLocationMatcher;
+  class GetSuccessorOrPredecessorOffsetsMatcher;
   class GetAllColumnOffsetsMatcher;
   class GetLineOffsetsMatcher;
   struct SetBreakpointMatcher;

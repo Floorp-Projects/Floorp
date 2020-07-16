@@ -465,40 +465,20 @@ struct JSRuntime {
     }
   };
 
-  template <typename T>
-  struct GarbageCollectionWatchersLinkAccess {
-    static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {
-      return aThis->onGarbageCollectionWatchersLink;
-    }
-  };
-
-  using OnNewGlobalWatchersList =
+  using WatchersList =
       mozilla::DoublyLinkedList<js::Debugger,
                                 GlobalObjectWatchersLinkAccess<js::Debugger>>;
-  using OnGarbageCollectionWatchersList = mozilla::DoublyLinkedList<
-      js::Debugger, GarbageCollectionWatchersLinkAccess<js::Debugger>>;
 
  private:
   /*
    * List of all enabled Debuggers that have onNewGlobalObject handler
    * methods established.
    */
-  js::MainThreadData<OnNewGlobalWatchersList> onNewGlobalObjectWatchers_;
-
-  /*
-   * List of all enabled Debuggers that have onGarbageCollection handler
-   * methods established.
-   */
-  js::MainThreadData<OnGarbageCollectionWatchersList>
-      onGarbageCollectionWatchers_;
+  js::MainThreadData<WatchersList> onNewGlobalObjectWatchers_;
 
  public:
-  OnNewGlobalWatchersList& onNewGlobalObjectWatchers() {
+  WatchersList& onNewGlobalObjectWatchers() {
     return onNewGlobalObjectWatchers_.ref();
-  }
-
-  OnGarbageCollectionWatchersList& onGarbageCollectionWatchers() {
-    return onGarbageCollectionWatchers_.ref();
   }
 
  private:

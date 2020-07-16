@@ -167,8 +167,8 @@ DebuggerScript* DebuggerScript::check(JSContext* cx, HandleValue v) {
   DebuggerScript& scriptObj = thisobj->as<DebuggerScript>();
 
   // Check for Debugger.Script.prototype, which is of class
-  // DebuggerScript::class.
-  if (!scriptObj.isInstance()) {
+  // DebuggerScript::class but whose script is null.
+  if (!scriptObj.getReferentCell()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Script",
                               "method", "prototype object");
@@ -233,6 +233,8 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
   bool getPossibleBreakpointOffsets();
   bool getOffsetMetadata();
   bool getOffsetLocation();
+  template <bool Successor>
+  bool getSuccessorOrPredecessorOffsets();
   bool getEffectfulOffsets();
   bool getAllOffsets();
   bool getAllColumnOffsets();
@@ -306,7 +308,7 @@ bool DebuggerScript::CallData::getDisplayName() {
     return false;
   }
   JSFunction* func = obj->getReferentScript()->function();
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   JSString* name = func ? func->displayAtom() : nullptr;
   if (!name) {
@@ -415,7 +417,7 @@ class DebuggerScript::GetSourceMatcher {
 };
 
 bool DebuggerScript::CallData::getSource() {
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   GetSourceMatcher matcher(cx, dbg);
   RootedDebuggerSource sourceObject(cx, referent.match(matcher));
@@ -455,7 +457,7 @@ bool DebuggerScript::CallData::getGlobal() {
   if (!ensureScript()) {
     return false;
   }
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   RootedValue v(cx, ObjectValue(script->global()));
   if (!dbg->wrapDebuggeeValue(cx, &v)) {
@@ -514,7 +516,7 @@ bool DebuggerScript::CallData::getChildScripts() {
   if (!ensureScriptMaybeLazy()) {
     return false;
   }
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   RootedObject result(cx, NewDenseEmptyArray(cx));
   if (!result) {
@@ -1323,6 +1325,83 @@ bool DebuggerScript::CallData::getOffsetLocation() {
   return true;
 }
 
+class DebuggerScript::GetSuccessorOrPredecessorOffsetsMatcher {
+  JSContext* cx_;
+  size_t offset_;
+  bool successor_;
+  MutableHandleObject result_;
+
+ public:
+  GetSuccessorOrPredecessorOffsetsMatcher(JSContext* cx, size_t offset,
+                                          bool successor,
+                                          MutableHandleObject result)
+      : cx_(cx), offset_(offset), successor_(successor), result_(result) {}
+
+  using ReturnType = bool;
+
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
+    if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
+      return false;
+    }
+
+    PcVector adjacent;
+    if (successor_) {
+      if (!GetSuccessorBytecodes(script, script->code() + offset_, adjacent)) {
+        ReportOutOfMemory(cx_);
+        return false;
+      }
+    } else {
+      if (!GetPredecessorBytecodes(script, script->code() + offset_,
+                                   adjacent)) {
+        ReportOutOfMemory(cx_);
+        return false;
+      }
+    }
+
+    result_.set(NewDenseEmptyArray(cx_));
+    if (!result_) {
+      return false;
+    }
+
+    for (jsbytecode* pc : adjacent) {
+      if (!NewbornArrayPush(cx_, result_, NumberValue(pc - script->code()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instance) {
+    JS_ReportErrorASCII(
+        cx_, "getSuccessorOrPredecessorOffsets NYI on wasm instances");
+    return false;
+  }
+};
+
+template <bool Successor>
+bool DebuggerScript::CallData::getSuccessorOrPredecessorOffsets() {
+  if (!args.requireAtLeast(cx, "successorOrPredecessorOffsets", 1)) {
+    return false;
+  }
+  size_t offset;
+  if (!ScriptOffset(cx, args[0], &offset)) {
+    return false;
+  }
+
+  RootedObject result(cx);
+  GetSuccessorOrPredecessorOffsetsMatcher matcher(cx, offset, Successor,
+                                                  &result);
+  if (!referent.match(matcher)) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
 
 // Return whether an opcode is considered effectful: it can have direct side
 // effects that can be observed outside of the current frame. Opcodes are not
@@ -1997,7 +2076,7 @@ bool DebuggerScript::CallData::setBreakpoint() {
   if (!args.requireAtLeast(cx, "Debugger.Script.setBreakpoint", 2)) {
     return false;
   }
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   size_t offset;
   if (!ScriptOffset(cx, args[0], &offset)) {
@@ -2021,7 +2100,7 @@ bool DebuggerScript::CallData::getBreakpoints() {
   if (!ensureScript()) {
     return false;
   }
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   jsbytecode* pc;
   if (args.length() > 0) {
@@ -2118,7 +2197,7 @@ bool DebuggerScript::CallData::clearBreakpoint() {
   if (!args.requireAtLeast(cx, "Debugger.Script.clearBreakpoint", 1)) {
     return false;
   }
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   JSObject* handler = RequireObject(cx, args[0]);
   if (!handler) {
@@ -2135,7 +2214,7 @@ bool DebuggerScript::CallData::clearBreakpoint() {
 }
 
 bool DebuggerScript::CallData::clearAllBreakpoints() {
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
   ClearBreakpointMatcher matcher(cx, dbg, nullptr);
   if (!referent.match(matcher)) {
     return false;
@@ -2343,6 +2422,10 @@ const JSFunctionSpec DebuggerScript::methods_[] = {
     JS_DEBUG_FN("isInCatchScope", isInCatchScope, 1),
     JS_DEBUG_FN("getOffsetMetadata", getOffsetMetadata, 1),
     JS_DEBUG_FN("getOffsetsCoverage", getOffsetsCoverage, 0),
+    JS_DEBUG_FN("getSuccessorOffsets", getSuccessorOrPredecessorOffsets<true>,
+                1),
+    JS_DEBUG_FN("getPredecessorOffsets",
+                getSuccessorOrPredecessorOffsets<false>, 1),
     JS_DEBUG_FN("getEffectfulOffsets", getEffectfulOffsets, 1),
     JS_DEBUG_FN("setInstrumentationId", setInstrumentationId, 1),
 

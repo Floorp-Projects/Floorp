@@ -71,8 +71,11 @@ class DebuggerEnvironment : public NativeObject {
                                        HandleDebuggerEnvironment environment,
                                        HandleId id, HandleValue value);
 
-  bool isInstance() const;
-  Debugger* owner() const;
+ private:
+  static const JSClassOps classOps_;
+
+  static const JSPropertySpec properties_[];
+  static const JSFunctionSpec methods_[];
 
   Env* referent() const {
     Env* env = static_cast<Env*>(getPrivate());
@@ -80,11 +83,7 @@ class DebuggerEnvironment : public NativeObject {
     return env;
   }
 
- private:
-  static const JSClassOps classOps_;
-
-  static const JSPropertySpec properties_[];
-  static const JSFunctionSpec methods_[];
+  Debugger* owner() const;
 
   bool requireDebuggee(JSContext* cx) const;
 
