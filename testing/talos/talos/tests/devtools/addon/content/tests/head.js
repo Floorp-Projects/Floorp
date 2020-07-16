@@ -103,16 +103,26 @@ async function waitForPendingPaints(toolbox) {
 exports.waitForPendingPaints = waitForPendingPaints;
 
 const openToolbox = async function(tool = "webconsole", onLoad) {
+  dump(`Open toolbox on '${tool}'\n`);
   let tab = getActiveTab();
+
+  dump(`Open toolbox - Wait for tab target\n`);
   let target = await TargetFactory.forTab(tab);
+
+  dump(`Open toolbox - Call showToolbox\n`);
   let onToolboxCreated = gDevTools.once("toolbox-created");
   let showPromise = gDevTools.showToolbox(target, tool);
+
+  dump(`Open toolbox - Wait for "toolbox-created"\n`);
   let toolbox = await onToolboxCreated;
 
   if (typeof onLoad == "function") {
+    dump(`Open toolbox - Wait for custom onLoad callback\n`);
     let panel = await toolbox.getPanelWhenReady(tool);
     await onLoad(toolbox, panel);
   }
+
+  dump(`Open toolbox - Wait for showToolbox to resolve\n`);
   await showPromise;
 
   return toolbox;
@@ -137,6 +147,7 @@ exports.recordPendingPaints = recordPendingPaints;
 
 exports.openToolboxAndLog = async function(name, tool, onLoad) {
   const test = runTest(`${name}.open.DAMP`);
+
   let toolbox = await openToolbox(tool, onLoad);
   test.done();
 
