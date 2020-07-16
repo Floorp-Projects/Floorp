@@ -4169,10 +4169,14 @@ mozilla::ipc::IPCResult ContentChild::RecvDisplayLoadError(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvHistoryCommitLength(
-    const MaybeDiscarded<BrowsingContext>& aContext, uint32_t aLength) {
+mozilla::ipc::IPCResult ContentChild::RecvHistoryCommitIndexAndLength(
+    const MaybeDiscarded<BrowsingContext>& aContext, const uint32_t& aIndex,
+    const uint32_t& aLength, const nsID& aChangeID) {
   if (!aContext.IsNullOrDiscarded()) {
-    aContext.get()->GetChildSessionHistory()->SetLength(aLength);
+    ChildSHistory* shistory = aContext.get()->GetChildSessionHistory();
+    if (shistory) {
+      shistory->SetIndexAndLength(aIndex, aLength, aChangeID);
+    }
   }
   return IPC_OK();
 }

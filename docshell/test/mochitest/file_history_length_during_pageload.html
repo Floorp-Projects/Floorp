@@ -1,0 +1,12 @@
+<html>
+  <head>
+    <script>
+      function loadNextPage() {
+        opener.postMessage({ initialLength: history.length}, "*");
+        location.href = 'file_history_length_during_pageload_2.html';
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(loadNextPage);">
+  </body>
+</html>

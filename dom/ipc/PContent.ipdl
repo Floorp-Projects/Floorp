@@ -909,9 +909,9 @@ child:
      */
     async AbortOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
 
-    async HistoryCommitLength(MaybeDiscardedBrowsingContext aContext,
-                              uint32_t aLength);
-
+    async HistoryCommitIndexAndLength(MaybeDiscardedBrowsingContext aContext,
+                                      uint32_t aIndex, uint32_t aLength,
+                                      nsID aChangeID);
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -1635,7 +1635,8 @@ parent:
                      bool? reloadActiveEntry);
 
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
-                        uint64_t aSessionHistoryEntryID);
+                        uint64_t aSessionHistoryEntryID,
+                        nsID aChangeID);
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext,
                     int32_t aOffset) returns(int32_t requestedIndex);
