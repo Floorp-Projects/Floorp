@@ -655,11 +655,6 @@ static inline jsbytecode* GetNextPc(jsbytecode* pc) {
 
 typedef Vector<jsbytecode*, 4, SystemAllocPolicy> PcVector;
 
-bool GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,
-                           PcVector& successors);
-bool GetPredecessorBytecodes(JSScript* script, jsbytecode* pc,
-                             PcVector& predecessors);
-
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 enum class DisassembleSkeptically { No, Yes };
