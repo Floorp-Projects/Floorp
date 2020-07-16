@@ -6619,8 +6619,22 @@ nsresult nsDocShell::CaptureState() {
   NS_ENSURE_TRUE(windowState, NS_ERROR_FAILURE);
 
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gPageCacheLog, LogLevel::Debug))) {
-    nsCOMPtr<nsIURI> uri = mOSHE->GetURI();
     nsAutoCString spec;
+    nsCOMPtr<nsIURI> uri;
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      uri = mActiveEntry->GetURI();
+#ifdef DEBUG
+      nsCOMPtr<nsIURI> debugURI(mOSHE->GetURI());
+      MOZ_ASSERT(!uri == !debugURI);
+      if (uri && debugURI) {
+        bool debugURIEquals;
+        debugURI->Equals(uri, &debugURIEquals);
+        MOZ_ASSERT(debugURIEquals);
+      }
+#endif
+    } else {
+      uri = mOSHE->GetURI();
+    }
     if (uri) {
       uri->GetSpec(spec);
     }
@@ -8211,7 +8225,14 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
 
 #ifdef DEBUG
     if (aState.mHistoryNavBetweenSameDoc) {
-      nsCOMPtr<nsIInputStream> currentPostData = mOSHE->GetPostData();
+      nsCOMPtr<nsIInputStream> currentPostData;
+      if (StaticPrefs::fission_sessionHistoryInParent()) {
+        currentPostData = mActiveEntry->GetPostData();
+        MOZ_ASSERT(!(nsCOMPtr<nsIInputStream>(mOSHE->GetPostData())) ==
+                   !currentPostData);
+      } else {
+        currentPostData = mOSHE->GetPostData();
+      }
       NS_ASSERTION(currentPostData == aLoadState->PostDataStream(),
                    "Different POST data for entries for the same page?");
     }
@@ -8320,9 +8341,13 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   if (mOSHE) {
     /* save current position of scroller(s) (bug 59774) */
     mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
-    DebugOnly<nsresult> rv =
-        mOSHE->GetScrollRestorationIsManual(&scrollRestorationIsManual);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() ==
+                 scrollRestorationIsManual);
+    } else {
+      scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    }
     // Get the postdata and page ident from the current page, if
     // the new load is being done via normal means.  Note that
     // "normal means" can be checked for just by checking for
@@ -8427,7 +8452,16 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
        aLoadState->LoadType() == LOAD_RELOAD_NORMAL) &&
       !scrollRestorationIsManual) {
     needsScrollPosUpdate = true;
-    mOSHE->GetScrollPosition(&bx, &by);
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      mActiveEntry->GetScrollPosition(&bx, &by);
+#ifdef DEBUG
+      nscoord x, y;
+      mOSHE->GetScrollPosition(&x, &y);
+      MOZ_ASSERT(x == bx && y == by);
+#endif
+    } else {
+      mOSHE->GetScrollPosition(&bx, &by);
+    }
   }
 
   // Dispatch the popstate and hashchange events, as appropriate.
@@ -9539,7 +9573,18 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     cacheKey = mOSHE->GetCacheKey();
   }
 
-  bool uriModified = mLSHE ? mLSHE->GetURIWasModified() : false;
+  bool uriModified;
+  if (mLSHE) {
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      uriModified = mLoadingEntry->GetURIWasModified();
+      MOZ_ASSERT(uriModified == mLSHE->GetURIWasModified());
+    } else {
+      uriModified = mLSHE->GetURIWasModified();
+    }
+  } else {
+    uriModified = false;
+  }
+
   bool isXFOError = false;
   if (mFailedChannel) {
     nsresult status;
@@ -10430,18 +10475,22 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
 
     bool scrollRestorationIsManual;
-    nsresult rv =
-        mOSHE->GetScrollRestorationIsManual(&scrollRestorationIsManual);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() ==
+                 scrollRestorationIsManual);
+    } else {
+      scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    }
 
     nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
 
     // Since we're not changing which page we have loaded, pass
     // true for aCloneChildren.
-    rv = AddToSessionHistory(aNewURI, nullptr,
-                             aDocument->NodePrincipal(),  // triggeringPrincipal
-                             nullptr, nullptr, csp, true,
-                             getter_AddRefs(newSHEntry));
+    nsresult rv = AddToSessionHistory(
+        aNewURI, nullptr,
+        aDocument->NodePrincipal(),  // triggeringPrincipal
+        nullptr, nullptr, csp, true, getter_AddRefs(newSHEntry));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(newSHEntry, NS_ERROR_FAILURE);
@@ -10456,7 +10505,16 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
 
     // Set the new SHEntry's title (bug 655273).
     nsString title;
-    mOSHE->GetTitle(title);
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      title = mActiveEntry->GetTitle();
+#ifdef DEBUG
+      nsString debugTitle;
+      mOSHE->GetTitle(debugTitle);
+      MOZ_ASSERT(title.Equals(debugTitle));
+#endif
+    } else {
+      mOSHE->GetTitle(title);
+    }
     newSHEntry->SetTitle(title);
 
     // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
@@ -10560,6 +10618,11 @@ NS_IMETHODIMP
 nsDocShell::GetCurrentScrollRestorationIsManual(bool* aIsManual) {
   *aIsManual = false;
   if (mOSHE) {
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      *aIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() == *aIsManual);
+      return NS_OK;
+    }
     return mOSHE->GetScrollRestorationIsManual(aIsManual);
   }
 
@@ -10922,7 +10985,13 @@ nsDocShell::PersistLayoutHistoryState() {
 
   if (mOSHE) {
     bool scrollRestorationIsManual;
-    Unused << mOSHE->GetScrollRestorationIsManual(&scrollRestorationIsManual);
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() ==
+                 scrollRestorationIsManual);
+    } else {
+      scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    }
     nsCOMPtr<nsILayoutHistoryState> layoutState;
     if (RefPtr<PresShell> presShell = GetPresShell()) {
       rv = presShell->CaptureHistoryState(getter_AddRefs(layoutState));
