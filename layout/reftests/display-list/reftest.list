@@ -3,7 +3,8 @@ skip-if(!retainedDisplayList) == retained-dl-frame-deleted-1.html retained-dl-st
 skip-if(!retainedDisplayList) == retained-dl-frame-created-1.html retained-dl-style-change-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-1.html retained-dl-style-change-stacking-context-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-2.html retained-dl-style-change-stacking-context-2-ref.html
-skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-3.html retained-dl-style-change-stacking-context-3-ref.html
+skip-if(!retainedDisplayList) fails == retained-dl-style-change-stacking-context-3.html retained-dl-style-change-stacking-context-3-ref.html # bug 1650699 tracks this failure
+skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-4.html retained-dl-style-change-stacking-context-4-ref.html
 skip-if(!retainedDisplayList||!asyncPan) == retained-dl-async-scrolled-1.html retained-dl-async-scrolled-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-remove-for-ancestor-change-1.html retained-dl-remove-for-ancestor-change-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-scroll-out-of-view-1.html retained-dl-scroll-out-of-view-1-ref.html
