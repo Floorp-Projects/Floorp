@@ -184,7 +184,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
             'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
 
     command = [
-        '{workdir}/bin/test-linux.sh'.format(**run),
+        '{workdir}/bin/{job_script}'.format(workdir=run['workdir'], job_script=test['job-script']),
     ]
     command.extend(mozharness.get('extra-options', []))
 
