@@ -302,7 +302,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   bool containsSVGGroup = false;
   bool dumpEnabled =
       mWebRenderCommandBuilder.ShouldDumpDisplayList(aDisplayListBuilder);
+  Maybe<AutoDisplayItemCacheSuppressor> cacheSuppressor;
   if (dumpEnabled) {
+    cacheSuppressor.emplace(&mDisplayItemCache);
     printf_stderr("-- WebRender display list build --\n");
   }
 
