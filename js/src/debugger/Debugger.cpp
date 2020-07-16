@@ -527,6 +527,18 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
   cx->runtime()->debuggerList().insertBack(this);
 }
 
+template <typename ElementAccess>
+static void RemoveDebuggerEntry(
+    mozilla::DoublyLinkedList<Debugger, ElementAccess>& list, Debugger* dbg) {
+  // The "probably" here is because there could technically be multiple lists
+  // with this type signature and theoretically the debugger could be an entry
+  // in a different one. That is not actually possible however because there
+  // is only one list the debugger could be in.
+  if (list.ElementProbablyInList(dbg)) {
+    list.remove(dbg);
+  }
+}
+
 Debugger::~Debugger() {
   MOZ_ASSERT(debuggees.empty());
   allocationsLog.clear();
@@ -539,12 +551,8 @@ Debugger::~Debugger() {
   // We don't have to worry about locking here since Debugger is not
   // background finalized.
   JSContext* cx = TlsContext.get();
-  if (onNewGlobalObjectWatchersLink.mPrev ||
-      onNewGlobalObjectWatchersLink.mNext ||
-      cx->runtime()->onNewGlobalObjectWatchers().begin() ==
-          JSRuntime::WatchersList::Iterator(this)) {
-    cx->runtime()->onNewGlobalObjectWatchers().remove(this);
-  }
+  RemoveDebuggerEntry(cx->runtime()->onNewGlobalObjectWatchers(), this);
+  RemoveDebuggerEntry(cx->runtime()->onGarbageCollectionWatchers(), this);
 }
 
 static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
@@ -4146,6 +4154,38 @@ bool Debugger::setHookImpl(JSContext* cx, const CallArgs& args, Debugger& dbg,
   return true;
 }
 
+/* static */
+bool Debugger::getGarbageCollectionHook(JSContext* cx, const CallArgs& args,
+                                        Debugger& dbg) {
+  return getHookImpl(cx, args, dbg, OnGarbageCollection);
+}
+
+/* static */
+bool Debugger::setGarbageCollectionHook(JSContext* cx, const CallArgs& args,
+                                        Debugger& dbg) {
+  Rooted<JSObject*> oldHook(cx, dbg.getHook(OnGarbageCollection));
+
+  if (!setHookImpl(cx, args, dbg, OnGarbageCollection)) {
+    // We want to maintain the invariant that the hook is always set when the
+    // Debugger is in the runtime's list, and vice-versa, so if we return early
+    // and don't adjust the watcher list below, we need to be sure that the
+    // hook didn't change.
+    MOZ_ASSERT(dbg.getHook(OnGarbageCollection) == oldHook);
+    return false;
+  }
+
+  // Add or remove ourselves from the runtime's list of Debuggers that care
+  // about garbage collection.
+  JSObject* newHook = dbg.getHook(OnGarbageCollection);
+  if (!oldHook && newHook) {
+    cx->runtime()->onGarbageCollectionWatchers().pushBack(&dbg);
+  } else if (oldHook && !newHook) {
+    cx->runtime()->onGarbageCollectionWatchers().remove(&dbg);
+  }
+
+  return true;
+}
+
 bool Debugger::CallData::getOnDebuggerStatement() {
   return getHookImpl(cx, args, *dbg, OnDebuggerStatement);
 }
@@ -6810,9 +6850,9 @@ JSObject* GarbageCollectionEvent::toJSObject(JSContext* cx) const {
 JS_PUBLIC_API bool FireOnGarbageCollectionHookRequired(JSContext* cx) {
   AutoCheckCannotGC noGC;
 
-  for (Debugger* dbg : cx->runtime()->debuggerList()) {
-    if (dbg->observedGC(cx->runtime()->gc.majorGCCount()) &&
-        dbg->getHook(Debugger::OnGarbageCollection)) {
+  for (auto& dbg : cx->runtime()->onGarbageCollectionWatchers()) {
+    MOZ_ASSERT(dbg.getHook(Debugger::OnGarbageCollection));
+    if (dbg.observedGC(cx->runtime()->gc.majorGCCount())) {
       return true;
     }
   }
@@ -6830,10 +6870,10 @@ JS_PUBLIC_API bool FireOnGarbageCollectionHook(
     // participated in this GC.
     AutoCheckCannotGC noGC;
 
-    for (Debugger* dbg : cx->runtime()->debuggerList()) {
-      if (dbg->observedGC(data->majorGCNumber()) &&
-          dbg->getHook(Debugger::OnGarbageCollection)) {
-        if (!triggered.append(dbg->object)) {
+    for (auto& dbg : cx->runtime()->onGarbageCollectionWatchers()) {
+      MOZ_ASSERT(dbg.getHook(Debugger::OnGarbageCollection));
+      if (dbg.observedGC(data->majorGCNumber())) {
+        if (!triggered.append(dbg.object)) {
           JS_ReportOutOfMemory(cx);
           return false;
         }
@@ -6844,10 +6884,12 @@ JS_PUBLIC_API bool FireOnGarbageCollectionHook(
   for (; !triggered.empty(); triggered.popBack()) {
     Debugger* dbg = Debugger::fromJSObject(triggered.back());
 
-    mozilla::Unused << dbg->enterDebuggerHook(cx, [&]() -> bool {
-      return dbg->fireOnGarbageCollectionHook(cx, data);
-    });
-    MOZ_ASSERT(!cx->isExceptionPending());
+    if (dbg->getHook(Debugger::OnGarbageCollection)) {
+      mozilla::Unused << dbg->enterDebuggerHook(cx, [&]() -> bool {
+        return dbg->fireOnGarbageCollectionHook(cx, data);
+      });
+      MOZ_ASSERT(!cx->isExceptionPending());
+    }
   }
 
   return true;
