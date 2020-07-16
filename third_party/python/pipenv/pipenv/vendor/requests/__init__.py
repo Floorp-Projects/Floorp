@@ -9,32 +9,32 @@
 Requests HTTP Library
 ~~~~~~~~~~~~~~~~~~~~~
 
-Requests is an HTTP library, written in Python, for human beings. Basic GET
-usage:
+Requests is an HTTP library, written in Python, for human beings.
+Basic GET usage:
 
    >>> import requests
    >>> r = requests.get('https://www.python.org')
    >>> r.status_code
    200
-   >>> 'Python is a programming language' in r.content
+   >>> b'Python is a programming language' in r.content
    True
 
 ... or POST:
 
    >>> payload = dict(key1='value1', key2='value2')
-   >>> r = requests.post('http://httpbin.org/post', data=payload)
+   >>> r = requests.post('https://httpbin.org/post', data=payload)
    >>> print(r.text)
    {
      ...
      "form": {
-       "key2": "value2",
-       "key1": "value1"
+       "key1": "value1",
+       "key2": "value2"
      },
      ...
    }
 
 The other HTTP methods are supported - see `requests.api`. Full documentation
-is at <http://python-requests.org>.
+is at <https://requests.readthedocs.io>.
 
 :copyright: (c) 2017 by Kenneth Reitz.
 :license: Apache 2.0, see LICENSE for more details.
@@ -57,10 +57,10 @@ def check_compatibility(urllib3_version, chardet_version):
     # Check urllib3 for compatibility.
     major, minor, patch = urllib3_version  # noqa: F811
     major, minor, patch = int(major), int(minor), int(patch)
-    # urllib3 >= 1.21.1, <= 1.22
+    # urllib3 >= 1.21.1, <= 1.25
     assert major == 1
     assert minor >= 21
-    assert minor <= 22
+    assert minor <= 25
 
     # Check chardet for compatibility.
     major, minor, patch = chardet_version.split('.')[:3]
@@ -71,11 +71,22 @@ def check_compatibility(urllib3_version, chardet_version):
     assert patch >= 2
 
 
+def _check_cryptography(cryptography_version):
+    # cryptography < 1.3.4
+    try:
+        cryptography_version = list(map(int, cryptography_version.split('.')))
+    except ValueError:
+        return
+
+    if cryptography_version < [1, 3, 4]:
+        warning = 'Old version of cryptography ({}) may cause slowdown.'.format(cryptography_version)
+        warnings.warn(warning, RequestsDependencyWarning)
+
 # Check imported dependencies for compatibility.
 try:
     check_compatibility(urllib3.__version__, chardet.__version__)
 except (AssertionError, ValueError):
-    warnings.warn("urllib3 ({0}) or chardet ({1}) doesn't match a supported "
+    warnings.warn("urllib3 ({}) or chardet ({}) doesn't match a supported "
                   "version!".format(urllib3.__version__, chardet.__version__),
                   RequestsDependencyWarning)
 
@@ -83,6 +94,10 @@ except (AssertionError, ValueError):
 try:
     from urllib3.contrib import pyopenssl
     pyopenssl.inject_into_urllib3()
+
+    # Check cryptography version
+    from cryptography import __version__ as cryptography_version
+    _check_cryptography(cryptography_version)
 except ImportError:
     pass
 
@@ -108,12 +123,7 @@ from .exceptions import (
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging
-try:  # Python 2.7+
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
+from logging import NullHandler
 
 logging.getLogger(__name__).addHandler(NullHandler())
 

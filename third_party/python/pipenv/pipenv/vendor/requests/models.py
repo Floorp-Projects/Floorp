@@ -7,13 +7,12 @@ requests.models
 This module contains the primary objects that power Requests.
 """
 
-import collections
 import datetime
 import sys
 
 # Import encoding now, to avoid implicit import later.
 # Implicit import within threads may cause LookupError when standard library is in a ZIP,
-# such as in Embedded Python. See https://github.com/requests/requests/issues/3578.
+# such as in Embedded Python. See https://github.com/psf/requests/issues/3578.
 import encodings.idna
 
 from urllib3.fields import RequestField
@@ -37,6 +36,7 @@ from .utils import (
     stream_decode_response_unicode, to_key_val_list, parse_header_links,
     iter_slices, guess_json_utf, super_len, check_header_validity)
 from .compat import (
+    Callable, Mapping,
     cookielib, urlunparse, urlsplit, urlencode, str, bytes,
     is_py2, chardet, builtin_str, basestring)
 from .compat import json as complexjson
@@ -155,8 +155,12 @@ class RequestEncodingMixin(object):
 
             if isinstance(fp, (str, bytes, bytearray)):
                 fdata = fp
-            else:
+            elif hasattr(fp, 'read'):
                 fdata = fp.read()
+            elif fp is None:
+                continue
+            else:
+                fdata = fp
 
             rf = RequestField(name=k, data=fdata, filename=fn, headers=fh)
             rf.make_multipart(content_type=ft)
@@ -174,10 +178,10 @@ class RequestHooksMixin(object):
         if event not in self.hooks:
             raise ValueError('Unsupported event specified, with event name "%s"' % (event))
 
-        if isinstance(hook, collections.Callable):
+        if isinstance(hook, Callable):
             self.hooks[event].append(hook)
         elif hasattr(hook, '__iter__'):
-            self.hooks[event].extend(h for h in hook if isinstance(h, collections.Callable))
+            self.hooks[event].extend(h for h in hook if isinstance(h, Callable))
 
     def deregister_hook(self, event, hook):
         """Deregister a previously registered hook.
@@ -200,9 +204,13 @@ class Request(RequestHooksMixin):
     :param url: URL to send.
     :param headers: dictionary of headers to send.
     :param files: dictionary of {filename: fileobject} files to multipart upload.
-    :param data: the body to attach to the request. If a dictionary is provided, form-encoding will take place.
+    :param data: the body to attach to the request. If a dictionary or
+        list of tuples ``[(key, value)]`` is provided, form-encoding will
+        take place.
     :param json: json for the body to attach to the request (if files or data is not specified).
-    :param params: dictionary of URL parameters to append to the URL.
+    :param params: URL parameters to append to the URL. If a dictionary or
+        list of tuples ``[(key, value)]`` is provided, form-encoding will
+        take place.
     :param auth: Auth handler or (user, pass) tuple.
     :param cookies: dictionary or CookieJar of cookies to attach to this request.
     :param hooks: dictionary of callback hooks, for internal usage.
@@ -210,7 +218,7 @@ class Request(RequestHooksMixin):
     Usage::
 
       >>> import requests
-      >>> req = requests.Request('GET', 'http://httpbin.org/get')
+      >>> req = requests.Request('GET', 'https://httpbin.org/get')
       >>> req.prepare()
       <PreparedRequest [GET]>
     """
@@ -270,8 +278,9 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
     Usage::
 
       >>> import requests
-      >>> req = requests.Request('GET', 'http://httpbin.org/get')
+      >>> req = requests.Request('GET', 'https://httpbin.org/get')
       >>> r = req.prepare()
+      >>> r
       <PreparedRequest [GET]>
 
       >>> s = requests.Session()
@@ -350,7 +359,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         #: We're unable to blindly call unicode/str functions
         #: as this will include the bytestring indicator (b'')
         #: on python 3.x.
-        #: https://github.com/requests/requests/pull/2238
+        #: https://github.com/psf/requests/pull/2238
         if isinstance(url, bytes):
             url = url.decode('utf8')
         else:
@@ -461,7 +470,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
 
         is_stream = all([
             hasattr(data, '__iter__'),
-            not isinstance(data, (basestring, list, tuple, collections.Mapping))
+            not isinstance(data, (basestring, list, tuple, Mapping))
         ])
 
         try:
@@ -600,7 +609,7 @@ class Response(object):
 
         #: File-like object representation of response (for advanced usage).
         #: Use of ``raw`` requires that ``stream=True`` be set on the request.
-        # This requirement does not apply for use internally to Requests.
+        #: This requirement does not apply for use internally to Requests.
         self.raw = None
 
         #: Final URL location of Response.
@@ -644,10 +653,7 @@ class Response(object):
         if not self._content_consumed:
             self.content
 
-        return dict(
-            (attr, getattr(self, attr, None))
-            for attr in self.__attrs__
-        )
+        return {attr: getattr(self, attr, None) for attr in self.__attrs__}
 
     def __setstate__(self, state):
         for name, value in state.items():
@@ -686,11 +692,11 @@ class Response(object):
 
     @property
     def ok(self):
-        """Returns True if :attr:`status_code` is less than 400.
+        """Returns True if :attr:`status_code` is less than 400, False if not.
 
         This attribute checks if the status code of the response is between
         400 and 600 to see if there was a client error or a server error. If
-        the status code, is between 200 and 400, this will return True. This
+        the status code is between 200 and 400, this will return True. This
         is **not** a check to see if the response code is ``200 OK``.
         """
         try:
@@ -776,7 +782,7 @@ class Response(object):
 
         return chunks
 
-    def iter_lines(self, chunk_size=ITER_CHUNK_SIZE, decode_unicode=None, delimiter=None):
+    def iter_lines(self, chunk_size=ITER_CHUNK_SIZE, decode_unicode=False, delimiter=None):
         """Iterates over the response data, one line at a time.  When
         stream=True is set on the request, this avoids reading the
         content at once into memory for large responses.
@@ -820,7 +826,7 @@ class Response(object):
             if self.status_code == 0 or self.raw is None:
                 self._content = None
             else:
-                self._content = bytes().join(self.iter_content(CONTENT_CHUNK_SIZE)) or bytes()
+                self._content = b''.join(self.iter_content(CONTENT_CHUNK_SIZE)) or b''
 
         self._content_consumed = True
         # don't need to release the connection; that's been handled by urllib3

@@ -6,7 +6,7 @@ requests.exceptions
 
 This module contains the set of Requests' exceptions.
 """
-from pip9._vendor.urllib3.exceptions import HTTPError as BaseHTTPError
+from pipenv.patched.notpip._vendor.urllib3.exceptions import HTTPError as BaseHTTPError
 
 
 class RequestException(IOError):
@@ -83,6 +83,10 @@ class InvalidURL(RequestException, ValueError):
 
 class InvalidHeader(RequestException, ValueError):
     """The header value provided was somehow invalid."""
+
+
+class InvalidProxyURL(InvalidURL):
+    """The proxy URL provided is invalid."""
 
 
 class ChunkedEncodingError(RequestException):

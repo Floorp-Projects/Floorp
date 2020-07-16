@@ -1,21 +1,25 @@
 from __future__ import absolute_import
+import binascii
 import codecs
+import os
 
-from uuid import uuid4
 from io import BytesIO
 
 from .packages import six
 from .packages.six import b
 from .fields import RequestField
 
-writer = codecs.lookup('utf-8')[3]
+writer = codecs.lookup("utf-8")[3]
 
 
 def choose_boundary():
     """
     Our embarrassingly-simple replacement for mimetools.choose_boundary.
     """
-    return uuid4().hex
+    boundary = binascii.hexlify(os.urandom(16))
+    if not six.PY2:
+        boundary = boundary.decode("ascii")
+    return boundary
 
 
 def iter_field_objects(fields):
@@ -65,14 +69,14 @@ def encode_multipart_formdata(fields, boundary=None):
 
     :param boundary:
         If not specified, then a random boundary will be generated using
-        :func:`mimetools.choose_boundary`.
+        :func:`urllib3.filepost.choose_boundary`.
     """
     body = BytesIO()
     if boundary is None:
         boundary = choose_boundary()
 
     for field in iter_field_objects(fields):
-        body.write(b('--%s\r\n' % (boundary)))
+        body.write(b("--%s\r\n" % (boundary)))
 
         writer(body).write(field.render_headers())
         data = field.data
@@ -85,10 +89,10 @@ def encode_multipart_formdata(fields, boundary=None):
         else:
             body.write(data)
 
-        body.write(b'\r\n')
+        body.write(b"\r\n")
 
-    body.write(b('--%s--\r\n' % (boundary)))
+    body.write(b("--%s--\r\n" % (boundary)))
 
-    content_type = str('multipart/form-data; boundary=%s' % boundary)
+    content_type = str("multipart/form-data; boundary=%s" % boundary)
 
     return body.getvalue(), content_type

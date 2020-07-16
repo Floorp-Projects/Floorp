@@ -12,40 +12,38 @@ from __future__ import absolute_import
 import os
 import sys
 import time
+
 import crayons
-from .environments import (PIPENV_COLORBLIND, PIPENV_HIDE_EMOJIS)
+
+from .environments import PIPENV_COLORBLIND, PIPENV_HIDE_EMOJIS
+
 
 STREAM = sys.stderr
-MILL_TEMPLATE = '%s %s %i/%i\r'
-DOTS_CHAR = '.'
-if os.name != 'nt':
-    if PIPENV_HIDE_EMOJIS:
-        if PIPENV_COLORBLIND:
-            BAR_FILLED_CHAR = '='
-            BAR_EMPTY_CHAR = '-'
-        else:
-            BAR_FILLED_CHAR = str(crayons.green('=', bold=True))
-            BAR_EMPTY_CHAR = str(crayons.black('-'))
+MILL_TEMPLATE = "%s %s %i/%i\r"
+DOTS_CHAR = "."
+if PIPENV_HIDE_EMOJIS:
+    if PIPENV_COLORBLIND:
+        BAR_FILLED_CHAR = "="
+        BAR_EMPTY_CHAR = "-"
     else:
-        if PIPENV_COLORBLIND:
-            BAR_FILLED_CHAR = '▉'
-            BAR_EMPTY_CHAR = ' '
-        else:
-            BAR_FILLED_CHAR = str(crayons.green('▉', bold=True))
-            BAR_EMPTY_CHAR = str(crayons.black('▉'))
-
+        BAR_FILLED_CHAR = str(crayons.green("=", bold=True))
+        BAR_EMPTY_CHAR = str(crayons.black("-"))
 else:
-    BAR_FILLED_CHAR = '='
-    BAR_EMPTY_CHAR = '-'
-
-if (sys.version_info[0] >= 3) and (os.name != 'nt'):
-    BAR_TEMPLATE = u'  %s%s%s %i/%i — {0}\r'.format(crayons.black('%s'))
-else:
-    if os.name == 'nt':
-        BAR_TEMPLATE = '  %s%s%s %i/%i - %s\r'
+    if PIPENV_COLORBLIND:
+        BAR_FILLED_CHAR = "▉"
+        BAR_EMPTY_CHAR = " "
     else:
-        BAR_TEMPLATE = '  %s%s%s %i/%i — %s\r'
-MILL_CHARS = ['|', '/', '-', '\\']
+        BAR_FILLED_CHAR = str(crayons.green("▉", bold=True))
+        BAR_EMPTY_CHAR = str(crayons.black("▉"))
+
+if (sys.version_info[0] >= 3) and (os.name != "nt"):
+    BAR_TEMPLATE = u"  %s%s%s %i/%i — {0}\r".format(crayons.black("%s"))
+else:
+    if os.name == "nt":
+        BAR_TEMPLATE = "  %s%s%s %i/%i - %s\r"
+    else:
+        BAR_TEMPLATE = "  %s%s%s %i/%i — %s\r"
+MILL_CHARS = ["|", "/", "-", "\\"]
 # How long to wait before recalculating the ETA
 ETA_INTERVAL = 1
 # How many intervals (excluding the current one) to calculate the simple moving
@@ -54,7 +52,6 @@ ETA_SMA_WINDOW = 9
 
 
 class Bar(object):
-
     def __enter__(self):
         return self
 
@@ -64,7 +61,7 @@ class Bar(object):
 
     def __init__(
         self,
-        label='',
+        label="",
         width=32,
         hide=None,
         empty_char=BAR_EMPTY_CHAR,
@@ -91,7 +88,7 @@ class Bar(object):
         self.etadelta = time.time()
         self.etadisp = self.format_time(self.eta)
         self.last_progress = 0
-        if (self.expected_size):
+        if self.expected_size:
             self.show(0)
 
     def show(self, progress, count=None):
@@ -104,21 +101,23 @@ class Bar(object):
         if (time.time() - self.etadelta) > ETA_INTERVAL:
             self.etadelta = time.time()
             self.ittimes = self.ittimes[-ETA_SMA_WINDOW:] + [
-                - (self.start - time.time()) / (progress + 1)
+                -(self.start - time.time()) / (progress + 1)
             ]
-            self.eta = sum(self.ittimes) / float(len(self.ittimes)) * (
-                self.expected_size - progress
+            self.eta = (
+                sum(self.ittimes)
+                / float(len(self.ittimes))
+                * (self.expected_size - progress)
             )
             self.etadisp = self.format_time(self.eta)
         x = int(self.width * progress / self.expected_size)
         if not self.hide:
             if (
-                (progress % self.every) == 0 or  # True every "every" updates
-                (progress == self.expected_size)
-            ):  # And when we're done
+                progress % self.every == 0  # True every "every" updates
+                or progress == self.expected_size  # And when we're done
+            ):
                 STREAM.write(
-                    BAR_TEMPLATE %
-                    (
+                    BAR_TEMPLATE
+                    % (
                         self.label,
                         self.filled_char * x,
                         self.empty_char * (self.width - x),
@@ -135,8 +134,8 @@ class Bar(object):
         if not self.hide:
             # Print completed bar with elapsed time
             STREAM.write(
-                BAR_TEMPLATE %
-                (
+                BAR_TEMPLATE
+                % (
                     self.label,
                     self.filled_char * self.width,
                     self.empty_char * 0,
@@ -145,16 +144,16 @@ class Bar(object):
                     elapsed_disp,
                 )
             )
-            STREAM.write('\n')
+            STREAM.write("\n")
             STREAM.flush()
 
     def format_time(self, seconds):
-        return time.strftime('%H:%M:%S', time.gmtime(seconds))
+        return time.strftime("%H:%M:%S", time.gmtime(seconds))
 
 
 def bar(
     it,
-    label='',
+    label="",
     width=32,
     hide=None,
     empty_char=BAR_EMPTY_CHAR,
@@ -179,7 +178,7 @@ def bar(
             bar.show(i + 1)
 
 
-def dots(it, label='', hide=None, every=1):
+def dots(it, label="", hide=None, every=1):
     """Progress iterator. Prints a dot for each item being iterated"""
     count = 0
     if not hide:
@@ -192,16 +191,16 @@ def dots(it, label='', hide=None, every=1):
         count += 1
         yield item
 
-    STREAM.write('\n')
+    STREAM.write("\n")
     STREAM.flush()
 
 
-def mill(it, label='', hide=None, expected_size=None, every=1):
+def mill(it, label="", hide=None, expected_size=None, every=1):
     """Progress iterator. Prints a mill while iterating over the items."""
 
     def _mill_char(_i):
         if _i >= count:
-            return ' '
+            return " "
 
         else:
             return MILL_CHARS[(_i // every) % len(MILL_CHARS)]
@@ -209,12 +208,10 @@ def mill(it, label='', hide=None, expected_size=None, every=1):
     def _show(_i):
         if not hide:
             if (
-                (_i % every) == 0 or
-                (_i == count)  # True every "every" updates
-            ):  # And when we're done
-                STREAM.write(
-                    MILL_TEMPLATE % (label, _mill_char(_i), _i, count)
-                )
+                _i % every == 0  # True every "every" updates
+                or _i == count  # And when we're done
+            ):
+                STREAM.write(MILL_TEMPLATE % (label, _mill_char(_i), _i, count))
                 STREAM.flush()
 
     count = len(it) if expected_size is None else expected_size
@@ -225,5 +222,5 @@ def mill(it, label='', hide=None, expected_size=None, every=1):
 
         _show(i + 1)
     if not hide:
-        STREAM.write('\n')
+        STREAM.write("\n")
         STREAM.flush()

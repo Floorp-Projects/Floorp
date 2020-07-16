@@ -43,8 +43,9 @@ if is_py2:
     import cookielib
     from Cookie import Morsel
     from StringIO import StringIO
+    # Keep OrderedDict for backwards compatibility.
+    from collections import Callable, Mapping, MutableMapping, OrderedDict
 
-    from urllib3.packages.ordered_dict import OrderedDict
 
     builtin_str = str
     bytes = str
@@ -59,7 +60,9 @@ elif is_py3:
     from http import cookiejar as cookielib
     from http.cookies import Morsel
     from io import StringIO
+    # Keep OrderedDict for backwards compatibility.
     from collections import OrderedDict
+    from collections.abc import Callable, Mapping, MutableMapping
 
     builtin_str = str
     str = str

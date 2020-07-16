@@ -2,8 +2,8 @@ r'''Parse strings using a specification based on the Python format() syntax.
 
    ``parse()`` is the opposite of ``format()``
 
-The module is set up to only export ``parse()``, ``search()`` and
-``findall()`` when ``import *`` is used:
+The module is set up to only export ``parse()``, ``search()``, ``findall()``,
+and ``with_pattern()`` when ``import \*`` is used:
 
 >>> from parse import *
 
@@ -21,7 +21,7 @@ Or to search a string for some pattern:
 
 Or find all the occurrences of some pattern in a string:
 
->>> ''.join(r.fixed[0] for r in findall(">{}<", "<p>the <b>bold</b> text</p>"))
+>>> ''.join(r[0] for r in findall(">{}<", "<p>the <b>bold</b> text</p>"))
 'the bold text'
 
 If you're going to use the same pattern to match lots of strings you can
@@ -36,6 +36,12 @@ compile it once:
 
 ("compile" is not exported for ``import *`` usage as it would override the
 built-in ``compile()`` function)
+
+The default behaviour is to match strings case insensitively. You may match with
+case by specifying `case_sensitive=True`:
+
+>>> parse('SPAM', 'spam', case_sensitive=True) is None
+True
 
 
 Format Syntax
@@ -72,9 +78,11 @@ Some simple parse() format string examples:
 {'item': 'hand grenade'}
 >>> print(r['item'])
 hand grenade
+>>> 'item' in r
+True
 
-Dotted names and indexes are possible though the application must make
-additional sense of the result:
+Note that `in` only works if you have named fields. Dotted names and indexes
+are possible though the application must make additional sense of the result:
 
 >>> r = parse("Mmm, {food.type}, I love it!", "Mmm, spam, I love it!")
 >>> print(r)
@@ -90,6 +98,9 @@ spam
 {'name': 'to seek the holy grail!'}
 >>> print(r['quest']['name'])
 to seek the holy grail!
+
+If the text you're matching has braces in it you can match those by including
+a double-brace ``{{`` or ``}}`` in your format string, just like format() does.
 
 
 Format Specification
@@ -118,42 +129,45 @@ The differences between `parse()` and `format()` are:
   In addition some regular expression character group types "D", "w", "W", "s"
   and "S" are also available.
 - The "e" and "g" types are case-insensitive so there is not need for
-  the "E" or "G" types.
+  the "E" or "G" types. The "e" type handles Fortran formatted numbers (no
+  leading 0 before the decimal point).
 
 ===== =========================================== ========
 Type  Characters Matched                          Output
 ===== =========================================== ========
- w    Letters and underscore                      str
- W    Non-letter and underscore                   str
- s    Whitespace                                  str
- S    Non-whitespace                              str
- d    Digits (effectively integer numbers)        int
- D    Non-digit                                   str
- n    Numbers with thousands separators (, or .)  int
- %    Percentage (converted to value/100.0)       float
- f    Fixed-point numbers                         float
- e    Floating-point numbers with exponent        float
+l     Letters (ASCII)                             str
+w     Letters, numbers and underscore             str
+W     Not letters, numbers and underscore         str
+s     Whitespace                                  str
+S     Non-whitespace                              str
+d     Digits (effectively integer numbers)        int
+D     Non-digit                                   str
+n     Numbers with thousands separators (, or .)  int
+%     Percentage (converted to value/100.0)       float
+f     Fixed-point numbers                         float
+F     Decimal numbers                             Decimal
+e     Floating-point numbers with exponent        float
       e.g. 1.1e-10, NAN (all case insensitive)
- g    General number format (either d, f or e)    float
- b    Binary numbers                              int
- o    Octal numbers                               int
- x    Hexadecimal numbers (lower and upper case)  int
- ti   ISO 8601 format date/time                   datetime
+g     General number format (either d, f or e)    float
+b     Binary numbers                              int
+o     Octal numbers                               int
+x     Hexadecimal numbers (lower and upper case)  int
+ti    ISO 8601 format date/time                   datetime
       e.g. 1972-01-20T10:21:36Z ("T" and "Z"
       optional)
- te   RFC2822 e-mail format date/time             datetime
+te    RFC2822 e-mail format date/time             datetime
       e.g. Mon, 20 Jan 1972 10:21:36 +1000
- tg   Global (day/month) format date/time         datetime
+tg    Global (day/month) format date/time         datetime
       e.g. 20/1/1972 10:21:36 AM +1:00
- ta   US (month/day) format date/time             datetime
+ta    US (month/day) format date/time             datetime
       e.g. 1/20/1972 10:21:36 PM +10:30
- tc   ctime() format date/time                    datetime
+tc    ctime() format date/time                    datetime
       e.g. Sun Sep 16 01:03:52 1973
- th   HTTP log format date/time                   datetime
+th    HTTP log format date/time                   datetime
       e.g. 21/Nov/2011:00:07:11 +0000
- ts   Linux system log format date/time           datetime
+ts    Linux system log format date/time           datetime
       e.g. Nov  9 03:37:44
- tt   Time                                        time
+tt    Time                                        time
       e.g. 10:21:36 PM -5:30
 ===== =========================================== ========
 
@@ -175,6 +189,19 @@ And messing about with alignment:
 
 Note that the "center" alignment does not test to make sure the value is
 centered - it just strips leading and trailing whitespace.
+
+Width and precision may be used to restrict the size of matched text
+from the input. Width specifies a minimum size and precision specifies
+a maximum. For example:
+
+>>> parse('{:.2}{:.2}', 'look')           # specifying precision
+<Result ('lo', 'ok') {}>
+>>> parse('{:4}{:4}', 'look at that')     # specifying width
+<Result ('look', 'at that') {}>
+>>> parse('{:4}{:.4}', 'look at that')    # specifying both
+<Result ('look at ', 'that') {}>
+>>> parse('{:2d}{:2d}', '0440')           # parsing two contiguous numbers
+<Result (4, 40) {}>
 
 Some notes for the date and time types:
 
@@ -287,10 +314,65 @@ A more complete example of a custom type might be:
 ...     return yesno_mapping[text.lower()]
 
 
+If the type converter ``pattern`` uses regex-grouping (with parenthesis),
+you should indicate this by using the optional ``regex_group_count`` parameter
+in the ``with_pattern()`` decorator:
+
+>>> @with_pattern(r'((\d+))', regex_group_count=2)
+... def parse_number2(text):
+...    return int(text)
+>>> parse('Answer: {:Number2} {:Number2}', 'Answer: 42 43', dict(Number2=parse_number2))
+<Result (42, 43) {}>
+
+Otherwise, this may cause parsing problems with unnamed/fixed parameters.
+
+
+Potential Gotchas
+-----------------
+
+`parse()` will always match the shortest text necessary (from left to right)
+to fulfil the parse pattern, so for example:
+
+>>> pattern = '{dir1}/{dir2}'
+>>> data = 'root/parent/subdir'
+>>> sorted(parse(pattern, data).named.items())
+[('dir1', 'root'), ('dir2', 'parent/subdir')]
+
+So, even though `{'dir1': 'root/parent', 'dir2': 'subdir'}` would also fit
+the pattern, the actual match represents the shortest successful match for
+`dir1`.
+
 ----
 
 **Version history (in brief)**:
 
+- 1.15.0 Several fixes for parsing non-base 10 numbers (thanks @vladikcomper)
+- 1.14.0 More broad acceptance of Fortran number format (thanks @purpleskyfall)
+- 1.13.1 Project metadata correction.
+- 1.13.0 Handle Fortran formatted numbers with no leading 0 before decimal
+  point (thanks @purpleskyfall).
+  Handle comparison of FixedTzOffset with other types of object.
+- 1.12.1 Actually use the `case_sensitive` arg in compile (thanks @jacquev6)
+- 1.12.0 Do not assume closing brace when an opening one is found (thanks @mattsep)
+- 1.11.1 Revert having unicode char in docstring, it breaks Bamboo builds(?!)
+- 1.11.0 Implement `__contains__` for Result instances.
+- 1.10.0 Introduce a "letters" matcher, since "w" matches numbers
+  also.
+- 1.9.1 Fix deprecation warnings around backslashes in regex strings
+  (thanks Mickael Schoentgen). Also fix some documentation formatting
+  issues.
+- 1.9.0 We now honor precision and width specifiers when parsing numbers
+  and strings, allowing parsing of concatenated elements of fixed width
+  (thanks Julia Signell)
+- 1.8.4 Add LICENSE file at request of packagers.
+  Correct handling of AM/PM to follow most common interpretation.
+  Correct parsing of hexadecimal that looks like a binary prefix.
+  Add ability to parse case sensitively.
+  Add parsing of numbers to Decimal with "F" (thanks John Vandenberg)
+- 1.8.3 Add regex_group_count to with_pattern() decorator to support
+  user-defined types that contain brackets/parenthesis (thanks Jens Engel)
+- 1.8.2 add documentation for including braces in format string
+- 1.8.1 ensure bare hexadecimal digits are not matched
 - 1.8.0 support manual control over result evaluation (thanks Timo Furrer)
 - 1.7.0 parse dict fields (thanks Mark Visser) and adapted to allow
   more than 100 re groups in Python 3.5+ (thanks David King)
@@ -337,15 +419,18 @@ A more complete example of a custom type might be:
   and removed the restriction on mixing fixed-position and named fields
 - 1.0.0 initial release
 
-This code is copyright 2012-2017 Richard Jones <richard@python.org>
+This code is copyright 2012-2019 Richard Jones <richard@python.org>
 See the end of the source file for the license of use.
 '''
-__version__ = '1.8.0'
+
+from __future__ import absolute_import
+__version__ = '1.15.0'
 
 # yes, I now have two problems
 import re
 import sys
 from datetime import datetime, time, tzinfo, timedelta
+from decimal import Decimal
 from functools import partial
 import logging
 
@@ -354,8 +439,8 @@ __all__ = 'parse search findall with_pattern'.split()
 log = logging.getLogger(__name__)
 
 
-def with_pattern(pattern):
-    """Attach a regular expression pattern matcher to a custom type converter
+def with_pattern(pattern, regex_group_count=None):
+    r"""Attach a regular expression pattern matcher to a custom type converter
     function.
 
     This annotates the type converter with the :attr:`pattern` attribute.
@@ -373,20 +458,26 @@ def with_pattern(pattern):
         >>> parse_number.pattern = r"\d+"
 
     :param pattern: regular expression pattern (as text)
+    :param regex_group_count: Indicates how many regex-groups are in pattern.
     :return: wrapped function
     """
     def decorator(func):
         func.pattern = pattern
+        func.regex_group_count = regex_group_count
         return func
     return decorator
 
 
-def int_convert(base):
+def int_convert(base=None):
     '''Convert a string to an integer.
 
     The string may start with a sign.
 
-    It may be of a base other than 10.
+    It may be of a base other than 2, 8, 10 or 16.
+
+    If base isn't specified, it will be detected automatically based
+    on a string format. When string starts with a base indicator, 0#nnnn, 
+    it overrides the default base of 10.
 
     It may also have other non-numeric characters that we can ignore.
     '''
@@ -395,19 +486,28 @@ def int_convert(base):
     def f(string, match, base=base):
         if string[0] == '-':
             sign = -1
+            number_start = 1
+        elif string[0] == '+':
+            sign = 1
+            number_start = 1
         else:
             sign = 1
+            number_start = 0
 
-        if string[0] == '0' and len(string) > 1:
-            if string[1] in 'bB':
-                base = 2
-            elif string[1] in 'oO':
-                base = 8
-            elif string[1] in 'xX':
-                base = 16
-            else:
-                # just go with the base specifed
-                pass
+        # If base wasn't specified, detect it automatically
+        if base is None:
+
+          # Assume decimal number, unless different base is detected
+          base = 10
+
+          # For number formats starting with 0b, 0o, 0x, use corresponding base ...
+          if string[number_start] == '0' and len(string) - number_start > 2:
+              if string[number_start+1] in 'bB':
+                  base = 2
+              elif string[number_start+1] in 'oO':
+                  base = 8
+              elif string[number_start+1] in 'xX':
+                  base = 16
 
         chars = CHARS[:base]
         string = re.sub('[^%s]' % chars, '', string.lower())
@@ -442,6 +542,8 @@ class FixedTzOffset(tzinfo):
         return self.ZERO
 
     def __eq__(self, other):
+        if not isinstance(other, FixedTzOffset):
+            return False
         return self._name == other._name and self._offset == other._offset
 
 
@@ -459,9 +561,9 @@ MONTHS_MAP = dict(
     Nov=11, November=11,
     Dec=12, December=12
 )
-DAYS_PAT = '(Mon|Tue|Wed|Thu|Fri|Sat|Sun)'
-MONTHS_PAT = '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
-ALL_MONTHS_PAT = '(%s)' % '|'.join(MONTHS_MAP)
+DAYS_PAT = r'(Mon|Tue|Wed|Thu|Fri|Sat|Sun)'
+MONTHS_PAT = r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
+ALL_MONTHS_PAT = r'(%s)' % '|'.join(MONTHS_MAP)
 TIME_PAT = r'(\d{1,2}:\d{1,2}(:\d{1,2}(\.\d+)?)?)'
 AM_PAT = r'(\s+[AP]M)'
 TZ_PAT = r'(\s+[-+]\d\d?:?\d\d)'
@@ -479,11 +581,11 @@ def date_convert(string, match, ymd=None, mdy=None, dmy=None,
         m=groups[mm]
         d=groups[dd]
     elif ymd is not None:
-        y, m, d = re.split('[-/\s]', groups[ymd])
+        y, m, d = re.split(r'[-/\s]', groups[ymd])
     elif mdy is not None:
-        m, d, y = re.split('[-/\s]', groups[mdy])
+        m, d, y = re.split(r'[-/\s]', groups[mdy])
     elif dmy is not None:
-        d, m, y = re.split('[-/\s]', groups[dmy])
+        d, m, y = re.split(r'[-/\s]', groups[dmy])
     elif d_m_y is not None:
         d, m, y = d_m_y
         d = groups[d]
@@ -506,14 +608,18 @@ def date_convert(string, match, ymd=None, mdy=None, dmy=None,
         H = int(H)
         M = int(M)
 
-    day_incr = False
     if am is not None:
         am = groups[am]
-        if am and am.strip() == 'PM':
+        if am:
+            am = am.strip()
+        if am == 'AM' and H == 12:
+            # correction for "12" hour functioning as "0" hour: 12:15 AM = 00:15 by 24 hr clock
+            H -= 12
+        elif am == 'PM' and H == 12:
+            # no correction needed: 12PM is midday, 12:00 by 24 hour clock
+            pass
+        elif am == 'PM':
             H += 12
-            if H > 23:
-                day_incr = True
-                H -= 24
 
     if tz is not None:
         tz = groups[tz]
@@ -548,9 +654,6 @@ def date_convert(string, match, ymd=None, mdy=None, dmy=None,
         d = int(d)
         d = datetime(y, m, d, H, M, S, u, tzinfo=tz)
 
-    if day_incr:
-        d = d + timedelta(days=1)
-
     return d
 
 
@@ -564,10 +667,10 @@ class RepeatedNameError(ValueError):
 
 # note: {} are handled separately
 # note: I don't use r'' here because Sublime Text 2 syntax highlight has a fit
-REGEX_SAFETY = re.compile('([?\\\\.[\]()*+\^$!\|])')
+REGEX_SAFETY = re.compile(r'([?\\\\.[\]()*+\^$!\|])')
 
 # allowed field types
-ALLOWED_TYPES = set(list('nbox%fegwWdDsS') +
+ALLOWED_TYPES = set(list('nbox%fFegwWdDsSl') +
     ['t' + c for c in 'ieahgcts'])
 
 
@@ -609,7 +712,7 @@ def extract_format(format, extra_types):
     # the rest is the type, if present
     type = format
     if type and type not in ALLOWED_TYPES and type not in extra_types:
-        raise ValueError('type %r not recognised' % type)
+        raise ValueError('format spec %r not recognised' % type)
 
     return locals()
 
@@ -620,7 +723,7 @@ PARSE_RE = re.compile(r"""({{|}}|{\w*(?:(?:\.\w+)|(?:\[[^\]]+\]))*(?::[^}]+)?})"
 class Parser(object):
     '''Encapsulate a format string that may be used to parse other strings.
     '''
-    def __init__(self, format, extra_types={}):
+    def __init__(self, format, extra_types=None, case_sensitive=False):
         # a mapping of a name as in {hello.world} to a regex-group compatible
         # name, like hello__world Its used to prevent the transformation of
         # name-to-group and group to name to fail subtly, such as in:
@@ -634,7 +737,13 @@ class Parser(object):
         self._name_types = {}
 
         self._format = format
+        if extra_types is None:
+            extra_types = {}
         self._extra_types = extra_types
+        if case_sensitive:
+            self._re_flags = re.DOTALL
+        else:
+            self._re_flags = re.IGNORECASE | re.DOTALL
         self._fixed_fields = []
         self._named_fields = []
         self._group_index = 0
@@ -643,7 +752,7 @@ class Parser(object):
         self.__search_re = None
         self.__match_re = None
 
-        log.debug('format %r -> %r' % (format, self._expression))
+        log.debug('format %r -> %r', format, self._expression)
 
     def __repr__(self):
         if len(self._format) > 20:
@@ -655,8 +764,7 @@ class Parser(object):
     def _search_re(self):
         if self.__search_re is None:
             try:
-                self.__search_re = re.compile(self._expression,
-                    re.IGNORECASE | re.DOTALL)
+                self.__search_re = re.compile(self._expression, self._re_flags)
             except AssertionError:
                 # access error through sys to keep py3k and backward compat
                 e = str(sys.exc_info()[1])
@@ -668,10 +776,9 @@ class Parser(object):
     @property
     def _match_re(self):
         if self.__match_re is None:
-            expression = '^%s$' % self._expression
+            expression = r'^%s$' % self._expression
             try:
-                self.__match_re = re.compile(expression,
-                    re.IGNORECASE | re.DOTALL)
+                self.__match_re = re.compile(expression, self._re_flags)
             except AssertionError:
                 # access error through sys to keep py3k and backward compat
                 e = str(sys.exc_info()[1])
@@ -721,8 +828,8 @@ class Parser(object):
         else:
             return Match(self, m)
 
-    def findall(self, string, pos=0, endpos=None, extra_types={}, evaluate_result=True):
-        '''Search "string" for the all occurrances of "format".
+    def findall(self, string, pos=0, endpos=None, extra_types=None, evaluate_result=True):
+        '''Search "string" for all occurrences of "format".
 
         Optionally start the search at "pos" character index and limit the
         search to a maximum index of endpos - equivalent to
@@ -799,7 +906,7 @@ class Parser(object):
                 e.append(r'\{')
             elif part == '}}':
                 e.append(r'\}')
-            elif part[0] == '{':
+            elif part[0] == '{' and part[-1] == '}':
                 # this will be a braces-delimited field to handle
                 e.append(self._handle_field(part))
             else:
@@ -821,7 +928,7 @@ class Parser(object):
             elif '_' in field:
                 group = field.replace('_', '_' * n)
             else:
-                raise KeyError('duplicated group name %r' % (field, ))
+                raise KeyError('duplicated group name %r' % (field,))
 
         # save off the mapping
         self._group_to_name_map[group] = field
@@ -847,16 +954,16 @@ class Parser(object):
                         name, self._name_types[name]))
                 group = self._name_to_group_map[name]
                 # match previously-seen value
-                return '(?P=%s)' % group
+                return r'(?P=%s)' % group
             else:
                 group = self._to_group_name(name)
                 self._name_types[name] = format
             self._named_fields.append(group)
             # this will become a group, which must not contain dots
-            wrap = '(?P<%s>%%s)' % group
+            wrap = r'(?P<%s>%%s)' % group
         else:
             self._fixed_fields.append(self._group_index)
-            wrap = '(%s)'
+            wrap = r'(%s)'
             if ':' in field:
                 format = field[1:]
             group = self._group_index
@@ -864,35 +971,39 @@ class Parser(object):
         # simplest case: no type specifier ({} or {name})
         if not format:
             self._group_index += 1
-            return wrap % '.+?'
+            return wrap % r'.+?'
 
         # decode the format specification
         format = extract_format(format, self._extra_types)
 
         # figure type conversions, if any
         type = format['type']
-        is_numeric = type and type in 'n%fegdobh'
+        is_numeric = type and type in 'n%fegdobx'
         if type in self._extra_types:
             type_converter = self._extra_types[type]
             s = getattr(type_converter, 'pattern', r'.+?')
+            regex_group_count = getattr(type_converter, 'regex_group_count', 0)
+            if regex_group_count is None:
+                regex_group_count = 0
+            self._group_index += regex_group_count
 
             def f(string, m):
                 return type_converter(string)
             self._type_conversions[group] = f
         elif type == 'n':
-            s = '\d{1,3}([,.]\d{3})*'
+            s = r'\d{1,3}([,.]\d{3})*'
             self._group_index += 1
             self._type_conversions[group] = int_convert(10)
         elif type == 'b':
-            s = '(0[bB])?[01]+'
+            s = r'(0[bB])?[01]+'
             self._type_conversions[group] = int_convert(2)
             self._group_index += 1
         elif type == 'o':
-            s = '(0[oO])?[0-7]+'
+            s = r'(0[oO])?[0-7]+'
             self._type_conversions[group] = int_convert(8)
             self._group_index += 1
         elif type == 'x':
-            s = '(0[xX])?[0-9a-fA-F]+'
+            s = r'(0[xX])?[0-9a-fA-F]+'
             self._type_conversions[group] = int_convert(16)
             self._group_index += 1
         elif type == '%':
@@ -900,18 +1011,25 @@ class Parser(object):
             self._group_index += 1
             self._type_conversions[group] = percentage
         elif type == 'f':
-            s = r'\d+\.\d+'
+            s = r'\d*\.\d+'
             self._type_conversions[group] = lambda s, m: float(s)
+        elif type == 'F':
+            s = r'\d*\.\d+'
+            self._type_conversions[group] = lambda s, m: Decimal(s)
         elif type == 'e':
-            s = r'\d+\.\d+[eE][-+]?\d+|nan|NAN|[-+]?inf|[-+]?INF'
+            s = r'\d*\.\d+[eE][-+]?\d+|nan|NAN|[-+]?inf|[-+]?INF'
             self._type_conversions[group] = lambda s, m: float(s)
         elif type == 'g':
             s = r'\d+(\.\d+)?([eE][-+]?\d+)?|nan|NAN|[-+]?inf|[-+]?INF'
             self._group_index += 2
             self._type_conversions[group] = lambda s, m: float(s)
         elif type == 'd':
-            s = r'\d+|0[xX][0-9a-fA-F]+|[0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+'
-            self._type_conversions[group] = int_convert(10)
+            if format.get('width'):
+                width = r'{1,%s}' % int(format['width'])
+            else:
+                width = '+'
+            s = r'\d{w}|[-+ ]?0[xX][0-9a-fA-F]{w}|[-+ ]?0[bB][01]{w}|[-+ ]?0[oO][0-7]{w}'.format(w=width)
+            self._type_conversions[group] = int_convert() # do not specify numeber base, determine it automatically
         elif type == 'ti':
             s = r'(\d{4}-\d\d-\d\d)((\s+|T)%s)?(Z|\s*[-+]\d\d:?\d\d)?' % \
                 TIME_PAT
@@ -963,16 +1081,24 @@ class Parser(object):
                 am=n + 4, tz=n + 5)
             self._group_index += 5
         elif type == 'ts':
-            s = r'%s(\s+)(\d+)(\s+)(\d{1,2}:\d{1,2}:\d{1,2})?' % (MONTHS_PAT)
+            s = r'%s(\s+)(\d+)(\s+)(\d{1,2}:\d{1,2}:\d{1,2})?' % MONTHS_PAT
             n = self._group_index
             self._type_conversions[group] = partial(date_convert, mm=n+1, dd=n+3,
                 hms=n + 5)
             self._group_index += 5
-
+        elif type == 'l':
+            s = r'[A-Za-z]+'
         elif type:
             s = r'\%s+' % type
+        elif format.get('precision'):
+            if format.get('width'):
+                s = r'.{%s,%s}?' % (format['width'], format['precision'])
+            else:
+                s = r'.{1,%s}?' % format['precision']
+        elif format.get('width'):
+            s = r'.{%s,}?' % format['width']
         else:
-            s = '.+?'
+            s = r'.+?'
 
         align = format['align']
         fill = format['fill']
@@ -985,9 +1111,7 @@ class Parser(object):
                 # configurable fill defaulting to "0"
                 if not fill:
                     fill = '0'
-                s = '%s*' % fill + s
-            elif format['zero']:
-                s = '0*' + s
+                s = r'%s*' % fill + s
 
             # allow numbers to be prefixed with a sign
             s = r'[-+ ]?' + s
@@ -1009,7 +1133,7 @@ class Parser(object):
             if not align:
                 align = '>'
 
-        if fill in '.\+?*[](){}^$':
+        if fill in r'.\+?*[](){}^$':
             fill = '\\' + fill
 
         # align "=" has been handled
@@ -1026,8 +1150,11 @@ class Parser(object):
 class Result(object):
     '''The result of a parse() or search().
 
-    Fixed results may be looked up using result[index]. Named results may be
-    looked up using result['name'].
+    Fixed results may be looked up using `result[index]`.
+
+    Named results may be looked up using `result['name']`.
+
+    Named results may be tested for existence using `'name' in result`.
     '''
     def __init__(self, fixed, named, spans):
         self.fixed = fixed
@@ -1042,6 +1169,9 @@ class Result(object):
     def __repr__(self):
         return '<%s %r %r>' % (self.__class__.__name__, self.fixed,
             self.named)
+
+    def __contains__(self, name):
+        return name in self.named
 
 
 class Match(object):
@@ -1089,7 +1219,7 @@ class ResultIterator(object):
     next = __next__
 
 
-def parse(format, string, extra_types={}, evaluate_result=True):
+def parse(format, string, extra_types=None, evaluate_result=True, case_sensitive=False):
     '''Using "format" attempt to pull values from "string".
 
     The format must match the string contents exactly. If the value
@@ -1106,17 +1236,22 @@ def parse(format, string, extra_types={}, evaluate_result=True):
      .evaluate_result() - This will return a Result instance like you would get
                           with ``evaluate_result`` set to True
 
+    The default behaviour is to match strings case insensitively. You may match with
+    case by specifying case_sensitive=True.
+
     If the format is invalid a ValueError will be raised.
 
     See the module documentation for the use of "extra_types".
 
     In the case there is no match parse() will return None.
     '''
-    return Parser(format, extra_types=extra_types).parse(string, evaluate_result=evaluate_result)
+    p = Parser(format, extra_types=extra_types, case_sensitive=case_sensitive)
+    return p.parse(string, evaluate_result=evaluate_result)
 
 
-def search(format, string, pos=0, endpos=None, extra_types={}, evaluate_result=True):
-    '''Search "string" for the first occurance of "format".
+def search(format, string, pos=0, endpos=None, extra_types=None, evaluate_result=True,
+        case_sensitive=False):
+    '''Search "string" for the first occurrence of "format".
 
     The format may occur anywhere within the string. If
     instead you wish for the format to exactly match the string
@@ -1135,17 +1270,22 @@ def search(format, string, pos=0, endpos=None, extra_types={}, evaluate_result=T
      .evaluate_result() - This will return a Result instance like you would get
                           with ``evaluate_result`` set to True
 
+    The default behaviour is to match strings case insensitively. You may match with
+    case by specifying case_sensitive=True.
+
     If the format is invalid a ValueError will be raised.
 
     See the module documentation for the use of "extra_types".
 
     In the case there is no match parse() will return None.
     '''
-    return Parser(format, extra_types=extra_types).search(string, pos, endpos, evaluate_result=evaluate_result)
+    p = Parser(format, extra_types=extra_types, case_sensitive=case_sensitive)
+    return p.search(string, pos, endpos, evaluate_result=evaluate_result)
 
 
-def findall(format, string, pos=0, endpos=None, extra_types={}, evaluate_result=True):
-    '''Search "string" for the all occurrances of "format".
+def findall(format, string, pos=0, endpos=None, extra_types=None, evaluate_result=True,
+        case_sensitive=False):
+    '''Search "string" for all occurrences of "format".
 
     You will be returned an iterator that holds Result instances
     for each format match found.
@@ -1163,18 +1303,25 @@ def findall(format, string, pos=0, endpos=None, extra_types={}, evaluate_result=
      .evaluate_result() - This will return a Result instance like you would get
                           with ``evaluate_result`` set to True
 
+    The default behaviour is to match strings case insensitively. You may match with
+    case by specifying case_sensitive=True.
+
     If the format is invalid a ValueError will be raised.
 
     See the module documentation for the use of "extra_types".
     '''
+    p = Parser(format, extra_types=extra_types, case_sensitive=case_sensitive)
     return Parser(format, extra_types=extra_types).findall(string, pos, endpos, evaluate_result=evaluate_result)
 
 
-def compile(format, extra_types={}):
+def compile(format, extra_types=None, case_sensitive=False):
     '''Create a Parser instance to parse "format".
 
     The resultant Parser has a method .parse(string) which
     behaves in the same manner as parse(format, string).
+
+    The default behaviour is to match strings case insensitively. You may match with
+    case by specifying case_sensitive=True.
 
     Use this function if you intend to parse many strings
     with the same format.
@@ -1183,10 +1330,10 @@ def compile(format, extra_types={}):
 
     Returns a Parser instance.
     '''
-    return Parser(format, extra_types=extra_types)
+    return Parser(format, extra_types=extra_types, case_sensitive=case_sensitive)
 
 
-# Copyright (c) 2012-2013 Richard Jones <richard@python.org>
+# Copyright (c) 2012-2020 Richard Jones <richard@python.org>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

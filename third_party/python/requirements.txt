@@ -108,9 +108,9 @@ pip-tools==4.5.1 \
     --hash=sha256:693f30e451875796b1b25203247f0b4cf48a4c4a5ab7341f4f33ffd498cdcc98 \
     --hash=sha256:be9c796aa88b2eec5cabf1323ba1cb60a08212b84bfb75b8b4037a8ef8cb8cb6 \
     # via -r requirements-mach-vendor-python.in
-pipenv==2018.5.18 \
-    --hash=sha256:04b9a8b02a3ff12a5502b335850cfdb192adcfd1d6bbdb7a7c47cae9ab9ddece \
-    --hash=sha256:e96d5bfa6822a17b2200d455aa5f9002c14361c50df1b1e51921479d7c09e741 \
+pipenv==2020.06.02 \
+    --hash=sha256:7dd49a7345fa5da7843907bab42a996dece474e45dd309dbd7619739dc60478b \
+    --hash=sha256:cc289dc78feaa14def4e1723b0b4d85ff628c8e5f740eeeb68197b90dafa8dff \
     # via -r requirements-mach-vendor-python.in
 pluggy==0.6.0 \
     --hash=sha256:7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff \

@@ -1,10 +1,17 @@
 import os
 import stat
+from datetime import datetime
 
-from ._compat import open_stream, text_type, filename_to_ui, \
-    get_filesystem_encoding, get_streerror, _get_argv_encoding, PY2
+from ._compat import _get_argv_encoding
+from ._compat import filename_to_ui
+from ._compat import get_filesystem_encoding
+from ._compat import get_streerror
+from ._compat import open_stream
+from ._compat import PY2
+from ._compat import text_type
 from .exceptions import BadParameter
-from .utils import safecall, LazyFile
+from .utils import LazyFile
+from .utils import safecall
 
 
 class ParamType(object):
@@ -20,6 +27,7 @@ class ParamType(object):
         This can be the case when the object is used with prompt
         inputs.
     """
+
     is_composite = False
 
     #: the descriptive name of this type
@@ -61,7 +69,7 @@ class ParamType(object):
         then leading and trailing whitespace is ignored.  Otherwise, leading
         and trailing splitters usually lead to empty items being included.
         """
-        return (rv or '').split(self.envvar_list_splitter)
+        return (rv or "").split(self.envvar_list_splitter)
 
     def fail(self, message, param=None, ctx=None):
         """Helper method to fail with an invalid value message."""
@@ -77,7 +85,6 @@ class CompositeParamType(ParamType):
 
 
 class FuncParamType(ParamType):
-
     def __init__(self, func):
         self.name = func.__name__
         self.func = func
@@ -89,22 +96,22 @@ class FuncParamType(ParamType):
             try:
                 value = text_type(value)
             except UnicodeError:
-                value = str(value).decode('utf-8', 'replace')
+                value = str(value).decode("utf-8", "replace")
             self.fail(value, param, ctx)
 
 
 class UnprocessedParamType(ParamType):
-    name = 'text'
+    name = "text"
 
     def convert(self, value, param, ctx):
         return value
 
     def __repr__(self):
-        return 'UNPROCESSED'
+        return "UNPROCESSED"
 
 
 class StringParamType(ParamType):
-    name = 'text'
+    name = "text"
 
     def convert(self, value, param, ctx):
         if isinstance(value, bytes):
@@ -117,62 +124,150 @@ class StringParamType(ParamType):
                     try:
                         value = value.decode(fs_enc)
                     except UnicodeError:
-                        value = value.decode('utf-8', 'replace')
+                        value = value.decode("utf-8", "replace")
+                else:
+                    value = value.decode("utf-8", "replace")
             return value
         return value
 
     def __repr__(self):
-        return 'STRING'
+        return "STRING"
 
 
 class Choice(ParamType):
-    """The choice type allows a value to be checked against a fixed set of
-    supported values.  All of these values have to be strings.
+    """The choice type allows a value to be checked against a fixed set
+    of supported values. All of these values have to be strings.
+
+    You should only pass a list or tuple of choices. Other iterables
+    (like generators) may lead to surprising results.
+
+    The resulting value will always be one of the originally passed choices
+    regardless of ``case_sensitive`` or any ``ctx.token_normalize_func``
+    being specified.
 
     See :ref:`choice-opts` for an example.
-    """
-    name = 'choice'
 
-    def __init__(self, choices):
+    :param case_sensitive: Set to false to make choices case
+        insensitive. Defaults to true.
+    """
+
+    name = "choice"
+
+    def __init__(self, choices, case_sensitive=True):
         self.choices = choices
+        self.case_sensitive = case_sensitive
 
     def get_metavar(self, param):
-        return '[%s]' % '|'.join(self.choices)
+        return "[{}]".format("|".join(self.choices))
 
     def get_missing_message(self, param):
-        return 'Choose from %s.' % ', '.join(self.choices)
+        return "Choose from:\n\t{}.".format(",\n\t".join(self.choices))
+
+    def convert(self, value, param, ctx):
+        # Match through normalization and case sensitivity
+        # first do token_normalize_func, then lowercase
+        # preserve original `value` to produce an accurate message in
+        # `self.fail`
+        normed_value = value
+        normed_choices = {choice: choice for choice in self.choices}
+
+        if ctx is not None and ctx.token_normalize_func is not None:
+            normed_value = ctx.token_normalize_func(value)
+            normed_choices = {
+                ctx.token_normalize_func(normed_choice): original
+                for normed_choice, original in normed_choices.items()
+            }
+
+        if not self.case_sensitive:
+            if PY2:
+                lower = str.lower
+            else:
+                lower = str.casefold
+
+            normed_value = lower(normed_value)
+            normed_choices = {
+                lower(normed_choice): original
+                for normed_choice, original in normed_choices.items()
+            }
+
+        if normed_value in normed_choices:
+            return normed_choices[normed_value]
+
+        self.fail(
+            "invalid choice: {}. (choose from {})".format(
+                value, ", ".join(self.choices)
+            ),
+            param,
+            ctx,
+        )
+
+    def __repr__(self):
+        return "Choice('{}')".format(list(self.choices))
+
+
+class DateTime(ParamType):
+    """The DateTime type converts date strings into `datetime` objects.
+
+    The format strings which are checked are configurable, but default to some
+    common (non-timezone aware) ISO 8601 formats.
+
+    When specifying *DateTime* formats, you should only pass a list or a tuple.
+    Other iterables, like generators, may lead to surprising results.
+
+    The format strings are processed using ``datetime.strptime``, and this
+    consequently defines the format strings which are allowed.
+
+    Parsing is tried using each format, in order, and the first format which
+    parses successfully is used.
+
+    :param formats: A list or tuple of date format strings, in the order in
+                    which they should be tried. Defaults to
+                    ``'%Y-%m-%d'``, ``'%Y-%m-%dT%H:%M:%S'``,
+                    ``'%Y-%m-%d %H:%M:%S'``.
+    """
+
+    name = "datetime"
+
+    def __init__(self, formats=None):
+        self.formats = formats or ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
+
+    def get_metavar(self, param):
+        return "[{}]".format("|".join(self.formats))
+
+    def _try_to_convert_date(self, value, format):
+        try:
+            return datetime.strptime(value, format)
+        except ValueError:
+            return None
 
     def convert(self, value, param, ctx):
         # Exact match
-        if value in self.choices:
-            return value
+        for format in self.formats:
+            dtime = self._try_to_convert_date(value, format)
+            if dtime:
+                return dtime
 
-        # Match through normalization
-        if ctx is not None and \
-           ctx.token_normalize_func is not None:
-            value = ctx.token_normalize_func(value)
-            for choice in self.choices:
-                if ctx.token_normalize_func(choice) == value:
-                    return choice
-
-        self.fail('invalid choice: %s. (choose from %s)' %
-                  (value, ', '.join(self.choices)), param, ctx)
+        self.fail(
+            "invalid datetime format: {}. (choose from {})".format(
+                value, ", ".join(self.formats)
+            )
+        )
 
     def __repr__(self):
-        return 'Choice(%r)' % list(self.choices)
+        return "DateTime"
 
 
 class IntParamType(ParamType):
-    name = 'integer'
+    name = "integer"
 
     def convert(self, value, param, ctx):
         try:
             return int(value)
-        except (ValueError, UnicodeError):
-            self.fail('%s is not a valid integer' % value, param, ctx)
+        except ValueError:
+            self.fail("{} is not a valid integer".format(value), param, ctx)
 
     def __repr__(self):
-        return 'INT'
+        return "INT"
 
 
 class IntRange(IntParamType):
@@ -183,7 +278,8 @@ class IntRange(IntParamType):
 
     See :ref:`ranges` for an example.
     """
-    name = 'integer range'
+
+    name = "integer range"
 
     def __init__(self, min=None, max=None, clamp=False):
         self.min = min
@@ -197,68 +293,148 @@ class IntRange(IntParamType):
                 return self.min
             if self.max is not None and rv > self.max:
                 return self.max
-        if self.min is not None and rv < self.min or \
-           self.max is not None and rv > self.max:
+        if (
+            self.min is not None
+            and rv < self.min
+            or self.max is not None
+            and rv > self.max
+        ):
             if self.min is None:
-                self.fail('%s is bigger than the maximum valid value '
-                          '%s.' % (rv, self.max), param, ctx)
+                self.fail(
+                    "{} is bigger than the maximum valid value {}.".format(
+                        rv, self.max
+                    ),
+                    param,
+                    ctx,
+                )
             elif self.max is None:
-                self.fail('%s is smaller than the minimum valid value '
-                          '%s.' % (rv, self.min), param, ctx)
+                self.fail(
+                    "{} is smaller than the minimum valid value {}.".format(
+                        rv, self.min
+                    ),
+                    param,
+                    ctx,
+                )
             else:
-                self.fail('%s is not in the valid range of %s to %s.'
-                          % (rv, self.min, self.max), param, ctx)
+                self.fail(
+                    "{} is not in the valid range of {} to {}.".format(
+                        rv, self.min, self.max
+                    ),
+                    param,
+                    ctx,
+                )
         return rv
 
     def __repr__(self):
-        return 'IntRange(%r, %r)' % (self.min, self.max)
+        return "IntRange({}, {})".format(self.min, self.max)
+
+
+class FloatParamType(ParamType):
+    name = "float"
+
+    def convert(self, value, param, ctx):
+        try:
+            return float(value)
+        except ValueError:
+            self.fail(
+                "{} is not a valid floating point value".format(value), param, ctx
+            )
+
+    def __repr__(self):
+        return "FLOAT"
+
+
+class FloatRange(FloatParamType):
+    """A parameter that works similar to :data:`click.FLOAT` but restricts
+    the value to fit into a range.  The default behavior is to fail if the
+    value falls outside the range, but it can also be silently clamped
+    between the two edges.
+
+    See :ref:`ranges` for an example.
+    """
+
+    name = "float range"
+
+    def __init__(self, min=None, max=None, clamp=False):
+        self.min = min
+        self.max = max
+        self.clamp = clamp
+
+    def convert(self, value, param, ctx):
+        rv = FloatParamType.convert(self, value, param, ctx)
+        if self.clamp:
+            if self.min is not None and rv < self.min:
+                return self.min
+            if self.max is not None and rv > self.max:
+                return self.max
+        if (
+            self.min is not None
+            and rv < self.min
+            or self.max is not None
+            and rv > self.max
+        ):
+            if self.min is None:
+                self.fail(
+                    "{} is bigger than the maximum valid value {}.".format(
+                        rv, self.max
+                    ),
+                    param,
+                    ctx,
+                )
+            elif self.max is None:
+                self.fail(
+                    "{} is smaller than the minimum valid value {}.".format(
+                        rv, self.min
+                    ),
+                    param,
+                    ctx,
+                )
+            else:
+                self.fail(
+                    "{} is not in the valid range of {} to {}.".format(
+                        rv, self.min, self.max
+                    ),
+                    param,
+                    ctx,
+                )
+        return rv
+
+    def __repr__(self):
+        return "FloatRange({}, {})".format(self.min, self.max)
 
 
 class BoolParamType(ParamType):
-    name = 'boolean'
+    name = "boolean"
 
     def convert(self, value, param, ctx):
         if isinstance(value, bool):
             return bool(value)
         value = value.lower()
-        if value in ('true', '1', 'yes', 'y'):
+        if value in ("true", "t", "1", "yes", "y"):
             return True
-        elif value in ('false', '0', 'no', 'n'):
+        elif value in ("false", "f", "0", "no", "n"):
             return False
-        self.fail('%s is not a valid boolean' % value, param, ctx)
+        self.fail("{} is not a valid boolean".format(value), param, ctx)
 
     def __repr__(self):
-        return 'BOOL'
-
-
-class FloatParamType(ParamType):
-    name = 'float'
-
-    def convert(self, value, param, ctx):
-        try:
-            return float(value)
-        except (UnicodeError, ValueError):
-            self.fail('%s is not a valid floating point value' %
-                      value, param, ctx)
-
-    def __repr__(self):
-        return 'FLOAT'
+        return "BOOL"
 
 
 class UUIDParameterType(ParamType):
-    name = 'uuid'
+    name = "uuid"
 
     def convert(self, value, param, ctx):
         import uuid
+
         try:
             if PY2 and isinstance(value, text_type):
-                value = value.encode('ascii')
+                value = value.encode("ascii")
             return uuid.UUID(value)
-        except (UnicodeError, ValueError):
-            self.fail('%s is not a valid UUID value' % value, param, ctx)
+        except ValueError:
+            self.fail("{} is not a valid UUID value".format(value), param, ctx)
 
     def __repr__(self):
-        return 'UUID'
+        return "UUID"
 
 
 class File(ParamType):
@@ -273,9 +449,12 @@ class File(ParamType):
     opened in binary mode or for writing.  The encoding parameter can be used
     to force a specific encoding.
 
-    The `lazy` flag controls if the file should be opened immediately or
-    upon first IO.  The default is to be non lazy for standard input and
-    output streams as well as files opened for reading, lazy otherwise.
+    The `lazy` flag controls if the file should be opened immediately or upon
+    first IO. The default is to be non-lazy for standard input and output
+    streams as well as files opened for reading, `lazy` otherwise. When opening a
+    file lazily for reading, it is still opened temporarily for validation, but
+    will not be held open until first IO. lazy is mainly useful when opening
+    for writing to avoid creating the file until it is needed.
 
     Starting with Click 2.0, files can also be opened atomically in which
     case all writes go into a separate file in the same folder and upon
@@ -284,11 +463,13 @@ class File(ParamType):
 
     See :ref:`file-args` for more information.
     """
-    name = 'filename'
+
+    name = "filename"
     envvar_list_splitter = os.path.pathsep
 
-    def __init__(self, mode='r', encoding=None, errors='strict', lazy=None,
-                 atomic=False):
+    def __init__(
+        self, mode="r", encoding=None, errors="strict", lazy=None, atomic=False
+    ):
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
@@ -298,29 +479,30 @@ class File(ParamType):
     def resolve_lazy_flag(self, value):
         if self.lazy is not None:
             return self.lazy
-        if value == '-':
+        if value == "-":
             return False
-        elif 'w' in self.mode:
+        elif "w" in self.mode:
             return True
         return False
 
     def convert(self, value, param, ctx):
         try:
-            if hasattr(value, 'read') or hasattr(value, 'write'):
+            if hasattr(value, "read") or hasattr(value, "write"):
                 return value
 
             lazy = self.resolve_lazy_flag(value)
 
             if lazy:
-                f = LazyFile(value, self.mode, self.encoding, self.errors,
-                             atomic=self.atomic)
+                f = LazyFile(
+                    value, self.mode, self.encoding, self.errors, atomic=self.atomic
+                )
                 if ctx is not None:
                     ctx.call_on_close(f.close_intelligently)
                 return f
 
-            f, should_close = open_stream(value, self.mode,
-                                          self.encoding, self.errors,
-                                          atomic=self.atomic)
+            f, should_close = open_stream(
+                value, self.mode, self.encoding, self.errors, atomic=self.atomic
+            )
             # If a context is provided, we automatically close the file
             # at the end of the context execution (or flush out).  If a
             # context does not exist, it's the caller's responsibility to
@@ -332,11 +514,14 @@ class File(ParamType):
                 else:
                     ctx.call_on_close(safecall(f.flush))
             return f
-        except (IOError, OSError) as e:
-            self.fail('Could not open file: %s: %s' % (
-                filename_to_ui(value),
-                get_streerror(e),
-            ), param, ctx)
+        except (IOError, OSError) as e:  # noqa: B014
+            self.fail(
+                "Could not open file: {}: {}".format(
+                    filename_to_ui(value), get_streerror(e)
+                ),
+                param,
+                ctx,
+            )
 
 
 class Path(ParamType):
@@ -358,20 +543,31 @@ class Path(ParamType):
     :param readable: if true, a readable check is performed.
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
-                         that it's absolute and symlinks are resolved.
+                         that it's absolute and symlinks are resolved.  It
+                         will not expand a tilde-prefix, as this is
+                         supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
-    :param type: optionally a string type that should be used to
-                 represent the path.  The default is `None` which
-                 means the return value will be either bytes or
-                 unicode depending on what makes most sense given the
-                 input data Click deals with.
+    :param path_type: optionally a string type that should be used to
+                      represent the path.  The default is `None` which
+                      means the return value will be either bytes or
+                      unicode depending on what makes most sense given the
+                      input data Click deals with.
     """
+
     envvar_list_splitter = os.path.pathsep
 
-    def __init__(self, exists=False, file_okay=True, dir_okay=True,
-                 writable=False, readable=True, resolve_path=False,
-                 allow_dash=False, path_type=None):
+    def __init__(
+        self,
+        exists=False,
+        file_okay=True,
+        dir_okay=True,
+        writable=False,
+        readable=True,
+        resolve_path=False,
+        allow_dash=False,
+        path_type=None,
+    ):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
@@ -382,14 +578,14 @@ class Path(ParamType):
         self.type = path_type
 
         if self.file_okay and not self.dir_okay:
-            self.name = 'file'
-            self.path_type = 'File'
-        if self.dir_okay and not self.file_okay:
-            self.name = 'directory'
-            self.path_type = 'Directory'
+            self.name = "file"
+            self.path_type = "File"
+        elif self.dir_okay and not self.file_okay:
+            self.name = "directory"
+            self.path_type = "Directory"
         else:
-            self.name = 'path'
-            self.path_type = 'Path'
+            self.name = "path"
+            self.path_type = "Path"
 
     def coerce_path_result(self, rv):
         if self.type is not None and not isinstance(rv, self.type):
@@ -402,7 +598,7 @@ class Path(ParamType):
     def convert(self, value, param, ctx):
         rv = value
 
-        is_dash = self.file_okay and self.allow_dash and rv in (b'-', '-')
+        is_dash = self.file_okay and self.allow_dash and rv in (b"-", "-")
 
         if not is_dash:
             if self.resolve_path:
@@ -413,31 +609,44 @@ class Path(ParamType):
             except OSError:
                 if not self.exists:
                     return self.coerce_path_result(rv)
-                self.fail('%s "%s" does not exist.' % (
-                    self.path_type,
-                    filename_to_ui(value)
-                ), param, ctx)
+                self.fail(
+                    "{} '{}' does not exist.".format(
+                        self.path_type, filename_to_ui(value)
+                    ),
+                    param,
+                    ctx,
+                )
 
             if not self.file_okay and stat.S_ISREG(st.st_mode):
-                self.fail('%s "%s" is a file.' % (
-                    self.path_type,
-                    filename_to_ui(value)
-                ), param, ctx)
+                self.fail(
+                    "{} '{}' is a file.".format(self.path_type, filename_to_ui(value)),
+                    param,
+                    ctx,
+                )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
-                self.fail('%s "%s" is a directory.' % (
-                    self.path_type,
-                    filename_to_ui(value)
-                ), param, ctx)
+                self.fail(
+                    "{} '{}' is a directory.".format(
+                        self.path_type, filename_to_ui(value)
+                    ),
+                    param,
+                    ctx,
+                )
             if self.writable and not os.access(value, os.W_OK):
-                self.fail('%s "%s" is not writable.' % (
-                    self.path_type,
-                    filename_to_ui(value)
-                ), param, ctx)
+                self.fail(
+                    "{} '{}' is not writable.".format(
+                        self.path_type, filename_to_ui(value)
+                    ),
+                    param,
+                    ctx,
+                )
             if self.readable and not os.access(value, os.R_OK):
-                self.fail('%s "%s" is not readable.' % (
-                    self.path_type,
-                    filename_to_ui(value)
-                ), param, ctx)
+                self.fail(
+                    "{} '{}' is not readable.".format(
+                        self.path_type, filename_to_ui(value)
+                    ),
+                    param,
+                    ctx,
+                )
 
         return self.coerce_path_result(rv)
 
@@ -461,7 +670,7 @@ class Tuple(CompositeParamType):
 
     @property
     def name(self):
-        return "<" + " ".join(ty.name for ty in self.types) + ">"
+        return "<{}>".format(" ".join(ty.name for ty in self.types))
 
     @property
     def arity(self):
@@ -469,14 +678,16 @@ class Tuple(CompositeParamType):
 
     def convert(self, value, param, ctx):
         if len(value) != len(self.types):
-            raise TypeError('It would appear that nargs is set to conflict '
-                            'with the composite type arity.')
+            raise TypeError(
+                "It would appear that nargs is set to conflict with the"
+                " composite type arity."
+            )
         return tuple(ty(x, param, ctx) for ty, x in zip(self.types, value))
 
 
 def convert_type(ty, default=None):
-    """Converts a callable or python ty into the most appropriate param
-    ty.
+    """Converts a callable or python type into the most appropriate
+    param type.
     """
     guessed_type = False
     if ty is None and default is not None:
@@ -509,8 +720,9 @@ def convert_type(ty, default=None):
     if __debug__:
         try:
             if issubclass(ty, ParamType):
-                raise AssertionError('Attempted to use an uninstantiated '
-                                     'parameter type (%s).' % ty)
+                raise AssertionError(
+                    "Attempted to use an uninstantiated parameter type ({}).".format(ty)
+                )
         except TypeError:
             pass
     return FuncParamType(ty)

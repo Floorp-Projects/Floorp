@@ -6,14 +6,14 @@ import platform
 import sys
 import ssl
 
-from pip9._vendor import idna
-from pip9._vendor import urllib3
-from pip9._vendor import chardet
+from pipenv.patched.notpip._vendor import idna
+from pipenv.patched.notpip._vendor import urllib3
+from pipenv.patched.notpip._vendor import chardet
 
 from . import __version__ as requests_version
 
 try:
-    from .packages.urllib3.contrib import pyopenssl
+    from pipenv.patched.notpip._vendor.urllib3.contrib import pyopenssl
 except ImportError:
     pyopenssl = None
     OpenSSL = None
@@ -89,8 +89,7 @@ def info():
         'version': getattr(idna, '__version__', ''),
     }
 
-    # OPENSSL_VERSION_NUMBER doesn't exist in the Python 2.6 ssl module.
-    system_ssl = getattr(ssl, 'OPENSSL_VERSION_NUMBER', None)
+    system_ssl = ssl.OPENSSL_VERSION_NUMBER
     system_ssl_info = {
         'version': '%x' % system_ssl if system_ssl is not None else ''
     }
