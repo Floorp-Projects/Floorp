@@ -270,6 +270,13 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     return;
   }
 
+  if (eventType.EqualsLiteral("popupshown") &&
+      aTarget->IsXULElement(nsGkAtoms::tooltip)) {
+    targetDocument->ContentInserted(aTarget->AsContent(),
+                                    aTarget->GetNextSibling());
+    return;
+  }
+
   Accessible* accessible = targetDocument->GetAccessibleOrContainer(aTarget);
   if (!accessible) return;
 
@@ -492,15 +499,6 @@ void RootAccessible::HandlePopupShownEvent(Accessible* aAccessible) {
     return;
   }
 
-  if (role == roles::TOOLTIP) {
-    // There is a single <xul:tooltip> node which Mozilla moves around.
-    // The accessible for it stays the same no matter where it moves.
-    // AT's expect to get an EVENT_SHOW for the tooltip.
-    // In event callback the tooltip's accessible will be ready.
-    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SHOW, aAccessible);
-    return;
-  }
-
   if (role == roles::COMBOBOX_LIST) {
     // Fire expanded state change event for comboboxes and autocompeletes.
     Accessible* combobox = aAccessible->Parent();
@@ -534,12 +532,17 @@ void RootAccessible::HandlePopupShownEvent(Accessible* aAccessible) {
 }
 
 void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
-  // Get popup accessible. There are cases when popup element isn't accessible
-  // but an underlying widget is and behaves like popup, an example is
-  // autocomplete popups.
   DocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
   if (!document) return;
 
+  if (aPopupNode->IsXULElement(nsGkAtoms::tooltip)) {
+    document->ContentRemoved(aPopupNode->AsContent());
+    return;
+  }
+
+  // Get popup accessible. There are cases when popup element isn't accessible
+  // but an underlying widget is and behaves like popup, an example is
+  // autocomplete popups.
   Accessible* popup = document->GetAccessible(aPopupNode);
   if (!popup) {
     Accessible* popupContainer = document->GetContainerAccessible(aPopupNode);
