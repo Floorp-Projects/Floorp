@@ -48,11 +48,12 @@ class MOZ_STACK_CLASS ContentPlaybackController {
   void NextTrack();
   void SkipAd();
   void Stop();
-  void SeekTo();
+  void SeekTo(double aSeekTime, bool aFastSeek);
 
  private:
   void NotifyContentMediaControlKeyReceiver(MediaControlKey aKey);
   void NotifyMediaSession(MediaSessionAction aAction);
+  void NotifyMediaSession(const MediaSessionActionDetails& aDetails);
   void NotifyMediaSessionWhenActionIsSupported(MediaSessionAction aAction);
   bool IsMediaSessionActionSupported(MediaSessionAction aAction) const;
   MediaSession* GetMediaSession() const;
@@ -62,8 +63,8 @@ class MOZ_STACK_CLASS ContentPlaybackController {
 
 class ContentMediaControlKeyHandler {
  public:
-  static void HandleMediaControlKey(BrowsingContext* aContext,
-                                    MediaControlKey aKey);
+  static void HandleMediaControlAction(BrowsingContext* aContext,
+                                       const MediaControlAction& aAction);
 };
 
 }  // namespace dom

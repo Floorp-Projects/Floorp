@@ -15,18 +15,39 @@
 namespace mozilla {
 namespace dom {
 
+// This is used to store seek related properties from MediaSessionActionDetails.
+// However, currently we have no plan to support `seekOffset`.
+// https://w3c.github.io/mediasession/#the-mediasessionactiondetails-dictionary
+struct SeekDetails {
+  SeekDetails() = default;
+  explicit SeekDetails(double aSeekTime) : mSeekTime(aSeekTime) {}
+  SeekDetails(double aSeekTime, bool aFastSeek)
+      : mSeekTime(aSeekTime), mFastSeek(aFastSeek) {}
+  double mSeekTime = 0.0;
+  bool mFastSeek = false;
+};
+
+struct MediaControlAction {
+  MediaControlAction() = default;
+  explicit MediaControlAction(MediaControlKey aKey) : mKey(aKey) {}
+  MediaControlAction(MediaControlKey aKey, const SeekDetails& aDetails)
+      : mKey(aKey), mDetails(Some(aDetails)) {}
+  MediaControlKey mKey = MediaControlKey::EndGuard_;
+  Maybe<SeekDetails> mDetails;
+};
+
 /**
  * MediaControlKeyListener is a pure interface, which is used to monitor
  * MediaControlKey, we can add it onto the MediaControlKeySource,
- * and then everytime when the media key events occur, `OnKeyPressed` will be
- * called so that we can do related handling.
+ * and then everytime when the media key events occur, `OnActionPerformed` will
+ * be called so that we can do related handling.
  */
 class MediaControlKeyListener {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   MediaControlKeyListener() = default;
 
-  virtual void OnKeyPressed(MediaControlKey aKey) = 0;
+  virtual void OnActionPerformed(const MediaControlAction& aAction) = 0;
 
  protected:
   virtual ~MediaControlKeyListener() = default;
@@ -39,7 +60,7 @@ class MediaControlKeyListener {
 class MediaControlKeyHandler final : public MediaControlKeyListener {
  public:
   NS_INLINE_DECL_REFCOUNTING(MediaControlKeyHandler, override)
-  void OnKeyPressed(MediaControlKey aKey) override;
+  void OnActionPerformed(const MediaControlAction& aAction) override;
 
  private:
   virtual ~MediaControlKeyHandler() = default;

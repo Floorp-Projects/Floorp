@@ -666,7 +666,7 @@ GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
 
 void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKey aKey) {
   for (auto& listener : mListeners) {
-    listener->OnKeyPressed(aKey);
+    listener->OnActionPerformed(mozilla::dom::MediaControlAction(aKey));
   }
 }
 

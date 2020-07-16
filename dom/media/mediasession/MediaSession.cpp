@@ -134,12 +134,6 @@ void MediaSession::NotifyHandler(const MediaSessionActionDetails& aDetails) {
   DispatchNotifyHandler(aDetails);
 }
 
-void MediaSession::NotifyHandler(MediaSessionAction aAction) {
-  MediaSessionActionDetails details;
-  details.mAction = aAction;
-  DispatchNotifyHandler(details);
-}
-
 void MediaSession::DispatchNotifyHandler(
     const MediaSessionActionDetails& aDetails) {
   class Runnable final : public mozilla::Runnable {

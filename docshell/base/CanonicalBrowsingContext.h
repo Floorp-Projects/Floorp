@@ -8,7 +8,7 @@
 #define mozilla_dom_CanonicalBrowsingContext_h
 
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/MediaControllerBinding.h"
+#include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/MozPromise.h"
@@ -129,9 +129,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       GlobalObject& aGlobal,
       const Sequence<mozilla::OwningNonNull<BrowsingContext>>& aRoots);
 
-  // This function would update media control key for the current outer window
-  // and propogate the action to other browsing contexts in content processes.
-  void UpdateMediaControlKey(MediaControlKey aKey);
+  // This function would propogate the action to its all child browsing contexts
+  // in content processes.
+  void UpdateMediaControlAction(const MediaControlAction& aAction);
 
   // Triggers a load in the process
   using BrowsingContext::LoadURI;

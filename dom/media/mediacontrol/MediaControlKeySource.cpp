@@ -26,8 +26,9 @@ namespace dom {
           ("MediaControlKeyHandler=%p, " msg, this, ToMediaControlKeyStr(key), \
            ##__VA_ARGS__));
 
-void MediaControlKeyHandler::OnKeyPressed(MediaControlKey aKey) {
-  LOG_KEY("OnKeyPressed '%s'", aKey);
+void MediaControlKeyHandler::OnActionPerformed(
+    const MediaControlAction& aAction) {
+  LOG_KEY("OnActionPerformed '%s'", aAction.mKey);
 
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
@@ -36,7 +37,7 @@ void MediaControlKeyHandler::OnKeyPressed(MediaControlKey aKey) {
     return;
   }
 
-  switch (aKey) {
+  switch (aAction.mKey) {
     case MediaControlKey::Focus:
       controller->Focus();
       return;
@@ -69,6 +70,11 @@ void MediaControlKeyHandler::OnKeyPressed(MediaControlKey aKey) {
     case MediaControlKey::Skipad:
       controller->SkipAd();
       return;
+    case MediaControlKey::Seekto: {
+      const SeekDetails& details = *aAction.mDetails;
+      controller->SeekTo(details.mSeekTime, details.mFastSeek);
+      return;
+    }
     case MediaControlKey::Stop:
       controller->Stop();
       return;
