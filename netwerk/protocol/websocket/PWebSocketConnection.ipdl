@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PHttpConnectionMgr;
+
+namespace mozilla {
+namespace net {
+
+async refcounted protocol PWebSocketConnection
+{
+  manager PHttpConnectionMgr;
+
+parent:
+  async OnTransportAvailable(nsCString securityInfoSerialization);
+  async OnError(nsresult aStatus);
+  async OnTCPClosed();
+  async OnDataReceived(uint8_t[] aData);
+  async OnUpgradeFailed(nsresult aReason);
+
+child:
+  async EnqueueOutgoingData(uint8_t[] aHeader, uint8_t[] aPayload);
+  async StartReading();
+  async DrainSocketData();
+
+  async __delete__();
+
+};
+
+} //namespace net
+} //namespace mozilla
