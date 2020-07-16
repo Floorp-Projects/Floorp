@@ -4556,8 +4556,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // visual scroll offset from the main thread to our scroll offset.
   // The main thread may also ask us to scroll the visual viewport to a
   // particular location. This is different from a layout viewport offset update
-  // in that the layout viewport offset is limited to the layout scroll range
-  // (this will be enforced by the main thread once bug 1516056 is fixed),
+  // in that the layout viewport offset is limited to the layout scroll range,
   // while the visual viewport offset is not.
   // The update type indicates the priority; an eMainThread layout update (or
   // a smooth scroll request which is similar) takes precedence over an eRestore
