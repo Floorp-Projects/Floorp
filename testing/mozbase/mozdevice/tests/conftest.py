@@ -57,7 +57,8 @@ def mock_shell_output(monkeypatch):
     :param object monkeypatch: pytest provided fixture for mocking.
     """
 
-    def shell_output_wrapper(object, cmd, env=None, cwd=None, timeout=None, root=False):
+    def shell_output_wrapper(object, cmd, env=None, cwd=None, timeout=None,
+                             enable_run_as=False):
         """Actual monkeypatch implementation of the shell_output method call.
 
         :param object object: placeholder object representing ADBDevice
@@ -67,6 +68,7 @@ def mock_shell_output(monkeypatch):
         :param cwd: The directory from which to execute.
         :type cwd: str or None
         :param timeout: unused parameter tp represent timeout threshold
+        :param enable_run_as: bool determining if run_as <app> is to be used
         :returns: string - string representation of a simulated call to adb
         """
         if 'pm list package error' in cmd:
@@ -116,6 +118,27 @@ def mock_is_path_internal_storage(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def mock_enable_run_as_for_path(monkeypatch):
+    """Monkeypatches the ADBDevice.enable_run_as_for_path(path) method.
+
+    Always return True
+
+    :param object monkeypatch: pytest provided fixture for mocking.
+    """
+
+    def enable_run_as_for_path_wrapper(object, path):
+        """Actual monkeypatch implementation of the enable_run_as_for_path() call.
+
+        :param str path: The path to test.
+        :returns: boolean
+        """
+        return True
+
+    monkeypatch.setattr(mozdevice.ADBDevice,
+                        'enable_run_as_for_path', enable_run_as_for_path_wrapper)
+
+
+@pytest.fixture(autouse=True)
 def mock_shell_bool(monkeypatch):
     """Monkeypatches the ADBDevice.shell_bool() method call.
 
@@ -126,7 +149,8 @@ def mock_shell_bool(monkeypatch):
     :param object monkeypatch: pytest provided fixture for mocking.
     """
 
-    def shell_bool_wrapper(object, cmd, env=None, cwd=None, timeout=None, root=False):
+    def shell_bool_wrapper(object, cmd, env=None, cwd=None, timeout=None,
+                           enable_run_as=False):
         """Actual monkeypatch implementation of the shell_bool method call.
 
         :param object object: placeholder object representing ADBDevice
@@ -136,6 +160,7 @@ def mock_shell_bool(monkeypatch):
         :param cwd: The directory from which to execute.
         :type cwd: str or None
         :param timeout: unused parameter tp represent timeout threshold
+        :param enable_run_as: bool determining if run_as <app> is to be used
         :returns: string - string representation of a simulated call to adb
         """
         print(cmd)

@@ -26,17 +26,22 @@ _TEST_ROOT = None
 
 
 class ADBProcess(object):
-    """ADBProcess encapsulates the data related to executing the adb process."""
+    """ADBProcess encapsulates the data related to executing the adb process.
+    """
 
     def __init__(self, args):
-        #: command argument argument list.
+        #: command argument list.
         self.args = args
+
         #: Temporary file handle to be used for stdout.
         self.stdout_file = tempfile.NamedTemporaryFile(mode='w+b')
+
         #: boolean indicating if the command timed out.
         self.timedout = None
+
         #: exitcode of the process.
         self.exitcode = None
+
         #: subprocess Process object used to execute the command.
         self.proc = subprocess.Popen(args,
                                      stdout=self.stdout_file,
@@ -56,12 +61,11 @@ class ADBProcess(object):
         # Remove -s <serialno> from the error message to allow bug suggestions
         # to be independent of the individual failing device.
         arg_string = ' '.join(self.args)
-        arg_string = re.sub(' -s [\w-]+', '', arg_string)
+        arg_string = re.sub(r' -s [\w-]+', '', arg_string)
         return ('args: %s, exitcode: %s, stdout: %s' % (
             arg_string, self.exitcode, self.stdout))
 
-# ADBError, ADBRootError, and ADBTimeoutError are treated
-# differently in order that unhandled ADBRootErrors and
+# ADBError and ADBTimeoutError are treated differently in order that
 # ADBTimeoutErrors can be handled distinctly from ADBErrors.
 
 
@@ -95,15 +99,6 @@ class ADBListDevicesError(ADBError):
         self.devices = devices
 
 
-class ADBRootError(Exception):
-    """ADBRootError is raised when a shell command is to be executed as
-    root but the device does not support it. This error is fatal since
-    there is no recovery possible by the script. You must either root
-    your device or change your scripts to not require running as root.
-    """
-    pass
-
-
 class ADBTimeoutError(Exception):
     """ADBTimeoutError is raised when either a host command or shell
     command takes longer than the specified timeout to execute. The
@@ -125,6 +120,13 @@ class ADBTimeoutError(Exception):
     pass
 
 
+class ADBDeviceFactoryError(Exception):
+    """ADBDeviceFactoryError is raised when the ADBDeviceFactory is in
+    an inconsistent state.
+    """
+    pass
+
+
 class ADBCommand(object):
     """ADBCommand provides a basic interface to adb commands
     which is used to provide the 'command' methods for the
@@ -135,6 +137,20 @@ class ADBCommand(object):
     restriction calling ADBCommand's constructor will raise a
     NonImplementedError exception.
 
+    :param str adb: path to adb executable. Defaults to 'adb'.
+    :param str adb_host: host of the adb server.
+    :param int adb_port: port of the adb server.
+    :param str logger_name: logging logger name. Defaults to 'adb'.
+    :param int timeout: The default maximum time in
+        seconds for any spawned adb process to complete before
+        throwing an ADBTimeoutError.  This timeout is per adb call. The
+        total time spent may exceed this value. If it is not
+        specified, the value defaults to 300.
+    :param bool verbose: provide verbose output
+    :param bool use_root: Use root if available on device
+    :raises: :exc:`ADBError`
+             :exc:`ADBTimeoutError`
+
     ::
 
        from mozdevice import ADBCommand
@@ -144,7 +160,6 @@ class ADBCommand(object):
        except NotImplementedError:
            print "ADBCommand can not be instantiated."
     """
-
     def __init__(self,
                  adb='adb',
                  adb_host=None,
@@ -152,33 +167,13 @@ class ADBCommand(object):
                  logger_name='adb',
                  timeout=300,
                  verbose=False,
-                 require_root=True):
-        """Initializes the ADBCommand object.
-
-        :param str adb: path to adb executable. Defaults to 'adb'.
-        :param adb_host: host of the adb server.
-        :type adb_host: str or None
-        :param adb_port: port of the adb server.
-        :type adb_port: integer or None
-        :param str logger_name: logging logger name. Defaults to 'adb'.
-        :param timeout: The default maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.  This timeout is per adb call. The
-            total time spent may exceed this value. If it is not
-            specified, the value defaults to 300.
-        :type timeout: integer or None
-        :param bool verbose: provide verbose output
-        :param bool require_root: check that we have root permissions on device
-
-        :raises: * ADBError
-                 * ADBTimeoutError
-        """
+                 use_root=True):
         if self.__class__ == ADBCommand:
             raise NotImplementedError
 
-        self._logger = self._get_logger(logger_name)
+        self._logger = self._get_logger(logger_name, verbose)
         self._verbose = verbose
-        self._require_root = require_root
+        self._use_root = use_root
         self._adb_path = adb
         self._adb_host = adb_host
         self._adb_port = adb_port
@@ -201,20 +196,35 @@ class ADBCommand(object):
             else:
                 self._adb_version = re_version.match(output[0]).group(1)
 
+            if self._adb_version < '1.0.36':
+                raise ADBError('adb version %s less than minimum 1.0.36' % self._adb_version)
+
         except Exception as exc:
             raise ADBError('%s: %s is not executable.' % (exc, adb))
 
-    def _get_logger(self, logger_name):
+    def _get_logger(self, logger_name, verbose):
         logger = None
+        level = 'DEBUG' if verbose else 'INFO'
         try:
             import mozlog
+            import sys
             logger = mozlog.get_default_logger(logger_name)
+            if not logger:
+                if sys.__stdout__.isatty():
+                    defaults = {"mach": sys.stdout}
+                else:
+                    defaults = {"tbpl": sys.stdout}
+                logger = mozlog.commandline.setup_logging(logger_name,
+                                                          {},
+                                                          defaults,
+                                                          formatter_defaults={'level': level})
         except ImportError:
             pass
 
         if logger is None:
             import logging
             logger = logging.getLogger(logger_name)
+            logger.setLevel(level)
         return logger
 
     # Host Command methods
@@ -224,17 +234,15 @@ class ADBCommand(object):
 
         :param list cmds: The command and its arguments to be
             executed.
-        :param device_serial: The device's
+        :param str device_serial: The device's
             serial number if the adb command is to be executed against
             a specific device.
-        :type device_serial: str or None
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBCommand constructor is used.
-        :type timeout: integer or None
-        :returns: :class:`mozdevice.ADBProcess`
+        :return: :class:`ADBProcess`
 
         command() provides a low level interface for executing
         commands on the host via adb.
@@ -288,21 +296,18 @@ class ADBCommand(object):
 
         :param list cmds: The command and its arguments to be
             executed.
-        :param device_serial: The device's
+        :param str device_serial: The device's
             serial number if the adb command is to be executed against
             a specific device.
-        :type device_serial: str or None
-        :param timeout: The maximum time in seconds
+        :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBCommand constructor is used.
-        :type timeout: integer or None
-        :returns: string - content of stdout.
-
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: str - content of stdout.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         adb_process = None
         try:
@@ -314,7 +319,7 @@ class ADBCommand(object):
                                              timeout=timeout)
             if adb_process.timedout:
                 raise ADBTimeoutError("%s" % adb_process)
-            elif adb_process.exitcode:
+            if adb_process.exitcode:
                 raise ADBProcessError(adb_process)
             output = adb_process.stdout
             if self._verbose:
@@ -338,6 +343,19 @@ class ADBHost(ADBCommand):
     """ADBHost provides a basic interface to adb host commands
     which do not target a specific device.
 
+    :param str adb: path to adb executable. Defaults to 'adb'.
+    :param str adb_host: host of the adb server.
+    :param int adb_port: port of the adb server.
+    :param logger_name: logging logger name. Defaults to 'adb'.
+    :param int timeout: The default maximum time in
+        seconds for any spawned adb process to complete before
+        throwing an ADBTimeoutError.  This timeout is per adb call. The
+        total time spent may exceed this value. If it is not
+        specified, the value defaults to 300.
+    :param bool verbose: provide verbose output
+    :raises: :exc:`ADBError`
+             :exc:`ADBTimeoutError`
+
     ::
 
        from mozdevice import ADBHost
@@ -345,7 +363,6 @@ class ADBHost(ADBCommand):
        adbhost = ADBHost()
        adbhost.start_server()
     """
-
     def __init__(self,
                  adb='adb',
                  adb_host=None,
@@ -353,41 +370,21 @@ class ADBHost(ADBCommand):
                  logger_name='adb',
                  timeout=300,
                  verbose=False):
-        """Initializes the ADBHost object.
-
-        :param str adb: path to adb executable. Defaults to 'adb'.
-        :param adb_host: host of the adb server.
-        :type adb_host: str or None
-        :param adb_port: port of the adb server.
-        :type adb_port: integer or None
-        :param str logger_name: logging logger name. Defaults to 'adb'.
-        :param timeout: The default maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.  This timeout is per adb call. The
-            total time spent may exceed this value. If it is not
-            specified, the value defaults to 300.
-        :type timeout: integer or None
-        :param bool verbose: provide verbose output
-
-        :raises: * ADBError
-                 * ADBTimeoutError
-        """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
-                            timeout=timeout, verbose=verbose, require_root=False)
+                            timeout=timeout, verbose=verbose, use_root=True)
 
     def command(self, cmds, timeout=None):
         """Executes an adb command on the host.
 
         :param list cmds: The command and its arguments to be
             executed.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
-        :type timeout: integer or None
-        :returns: :class:`mozdevice.ADBProcess`
+        :return: :class:`ADBProcess`
 
         command() provides a low level interface for executing
         commands on the host via adb.
@@ -414,31 +411,28 @@ class ADBHost(ADBCommand):
 
         :param list cmds: The command and its arguments to be
             executed.
-        :param timeout: The maximum time in seconds
+        :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBHost constructor is used.
-        :type timeout: integer or None
-        :returns: string - content of stdout.
-
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: str - content of stdout.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         return ADBCommand.command_output(self, cmds, timeout=timeout)
 
     def start_server(self, timeout=None):
         """Starts the adb server.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
 
         Attempting to use start_server with any adb_host value other than None
         will fail with an ADBError exception.
@@ -463,32 +457,32 @@ class ADBHost(ADBCommand):
     def kill_server(self, timeout=None):
         """Kills the adb server.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         self.command_output(["kill-server"], timeout=timeout)
 
     def devices(self, timeout=None):
         """Executes adb devices -l and returns a list of objects describing attached devices.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
-        :type timeout: integer or None
-        :returns: an object contain
-        :raises: * ADBTimeoutError
-                 * ADBListDevicesError
-                 * ADBError
+        :return: an object contain
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBListDevicesError`
+                 :exc:`ADBError`
 
-        The output of adb devices -l ::
+        The output of adb devices -l
+
+        ::
 
             $ adb devices -l
             List of devices attached
@@ -496,8 +490,10 @@ class ADBHost(ADBCommand):
 
         is parsed and placed into an object as in
 
-        [{'device_serial': 'b313b945', 'state': 'device', 'product': 'd2vzw',
-          'usb': '1-7', 'device': 'd2vzw', 'model': 'SCH_I535' }]
+        ::
+
+            [{'device_serial': 'b313b945', 'state': 'device', 'product': 'd2vzw',
+              'usb': '1-7', 'device': 'd2vzw', 'model': 'SCH_I535' }]
         """
         # b313b945               device usb:1-7 product:d2vzw model:SCH_I535 device:d2vzw
         # from Android system/core/adb/transport.c statename()
@@ -535,9 +531,120 @@ class ADBHost(ADBCommand):
         return devices
 
 
+ADBDEVICES = {}
+
+
+def ADBDeviceFactory(device=None,
+                     adb='adb',
+                     adb_host=None,
+                     adb_port=None,
+                     test_root=None,
+                     logger_name='adb',
+                     timeout=300,
+                     verbose=False,
+                     device_ready_retry_wait=20,
+                     device_ready_retry_attempts=3,
+                     use_root=True,
+                     share_test_root=True,
+                     run_as_package=None):
+    """ADBDeviceFactory provides a factory for :class:`ADBDevice`
+    instances that enforces the requirement that only one
+    :class:`ADBDevice` be created for each attached device. It uses
+    the identical arguments as the :class:`ADBDevice`
+    constructor. This is also used to ensure that the device's
+    test_root is initialized to an empty directory before tests are
+    run on the device.
+
+    :return: :class:`ADBDevice`
+    :raises: :exc:`ADBDeviceFactoryError`
+             :exc:`ADBError`
+             :exc:`ADBTimeoutError`
+
+    """
+    if device is not None and device in ADBDEVICES:
+        # We have already created an ADBDevice for this device, just re-use it.
+        adbdevice = ADBDEVICES[device]
+    elif device is None and ADBDEVICES:
+        # We did not specify the device serial number and we have
+        # already created an ADBDevice which means we must only have
+        # one device connected and we can re-use the existing ADBDevice.
+        devices = list(ADBDEVICES.keys())
+        assert len(devices) == 1, \
+            "Only one device may be connected if the device serial number is not specified."
+        adbdevice = ADBDEVICES[devices[0]]
+    elif device is not None and device not in ADBDEVICES or device is None and not ADBDEVICES:
+        # The device has not had an ADBDevice created yet.
+        adbdevice = ADBDevice(device=device,
+                              adb=adb,
+                              adb_host=adb_host,
+                              adb_port=adb_port,
+                              test_root=test_root,
+                              logger_name=logger_name,
+                              timeout=timeout,
+                              verbose=verbose,
+                              device_ready_retry_wait=device_ready_retry_wait,
+                              device_ready_retry_attempts=device_ready_retry_attempts,
+                              use_root=use_root,
+                              share_test_root=share_test_root,
+                              run_as_package=run_as_package)
+        ADBDEVICES[adbdevice._device_serial] = adbdevice
+    else:
+        raise ADBDeviceFactoryError("Inconsistent ADBDeviceFactory: device: %s, ADBDEVICES: %s" % (
+            device, ADBDEVICES))
+    # Clean the test root before testing begins.
+    adbdevice.rm(posixpath.join(adbdevice.test_root, '*'), recursive=True, force=True,
+                 timeout=timeout)
+    # Sync verbose and update the logger configuration in case it has
+    # changed since the initial initialization
+    if verbose != adbdevice._verbose:
+        adbdevice._verbose = verbose
+        adbdevice._logger = adbdevice._get_logger(adbdevice._logger.name, verbose)
+    return adbdevice
+
+
 class ADBDevice(ADBCommand):
     """ADBDevice provides methods which can be used to interact with the
     associated Android-based device.
+
+    :param str device: When a string is passed in device, it
+        is interpreted as the device serial number. This form is not
+        compatible with devices containing a ":" in the serial; in
+        this case ValueError will be raised.  When a dictionary is
+        passed it must have one or both of the keys "device_serial"
+        and "usb". This is compatible with the dictionaries in the
+        list returned by ADBHost.devices(). If the value of
+        device_serial is a valid serial not containing a ":" it will
+        be used to identify the device, otherwise the value of the usb
+        key, prefixed with "usb:" is used.  If None is passed and
+        there is exactly one device attached to the host, that device
+        is used. If there is more than one device attached, ValueError
+        is raised. If no device is attached the constructor will block
+        until a device is attached or the timeout is reached.
+    :param str adb_host: host of the adb server to connect to.
+    :param int adb_port: port of the adb server to connect to.
+    :param str test_root: value containing the test root to be
+        used on the device. This value will be shared among all
+        instances of ADBDevice if share_test_root is True.
+    :param str logger_name: logging logger name. Defaults to 'adb'
+    :param int timeout: The default maximum time in
+        seconds for any spawned adb process to complete before
+        throwing an ADBTimeoutError.  This timeout is per adb call. The
+        total time spent may exceed this value. If it is not
+        specified, the value defaults to 300.
+    :param bool verbose: provide verbose output
+    :param int device_ready_retry_wait: number of seconds to wait
+        between attempts to check if the device is ready after a
+        reboot.
+    :param integer device_ready_retry_attempts: number of attempts when
+        checking if a device is ready.
+    :param bool use_root: Use root if it is available on device
+    :param bool share_test_root: True if instance should share the
+        same test_root value with other ADBInstances. Defaults to True.
+    :param str run_as_package: Name of package to be used in run-as in liew of
+        using su.
+    :raises: :exc:`ADBError`
+             :exc:`ADBTimeoutError`
+             :exc:`ValueError`
 
     ::
 
@@ -545,11 +652,13 @@ class ADBDevice(ADBCommand):
 
        adbdevice = ADBDevice()
        print(adbdevice.list_files("/mnt/sdcard"))
-       if adbdevice.process_exist("org.mozilla.fennec"):
-           print("Fennec is running")
+       if adbdevice.process_exist("org.mozilla.geckoview.test"):
+           print("org.mozilla.geckoview.test is running")
     """
-    SOCKET_DIRECTON_REVERSE = "reverse"
-    SOCKET_DIRECTON_FORWARD = "forward"
+
+    SOCKET_DIRECTION_REVERSE = "reverse"
+
+    SOCKET_DIRECTION_FORWARD = "forward"
 
     def __init__(self,
                  device=None,
@@ -562,61 +671,15 @@ class ADBDevice(ADBCommand):
                  verbose=False,
                  device_ready_retry_wait=20,
                  device_ready_retry_attempts=3,
-                 require_root=True,
-                 share_test_root=True):
-        """Initializes the ADBDevice object.
-
-        :param device: When a string is passed, it is interpreted as the
-            device serial number. This form is not compatible with
-            devices containing a ":" in the serial; in this case
-            ValueError will be raised.
-            When a dictionary is passed it must have one or both of
-            the keys "device_serial" and "usb". This is compatible
-            with the dictionaries in the list returned by
-            ADBHost.devices(). If the value of device_serial is a
-            valid serial not containing a ":" it will be used to
-            identify the device, otherwise the value of the usb key,
-            prefixed with "usb:" is used.
-            If None is passed and there is exactly one device attached
-            to the host, that device is used. If there is more than one
-            device attached, ValueError is raised. If no device is
-            attached the constructor will block until a device is
-            attached or the timeout is reached.
-        :type device: dict, str or None
-        :param adb_host: host of the adb server to connect to.
-        :type adb_host: str or None
-        :param adb_port: port of the adb server to connect to.
-        :type adb_port: integer or None
-        :param str test_root: value containing the test root to be
-            used on the device. This value will be shared among all
-            instances of ADBDevice if share_test_root is True.
-        :param str logger_name: logging logger name. Defaults to 'adb'.
-        :param timeout: The default maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.  This timeout is per adb call. The
-            total time spent may exceed this value. If it is not
-            specified, the value defaults to 300.
-        :type timeout: integer or None
-        :param bool verbose: provide verbose output
-        :param integer device_ready_retry_wait: number of seconds to wait
-            between attempts to check if the device is ready after a
-            reboot.
-        :param integer device_ready_retry_attempts: number of attempts when
-            checking if a device is ready.
-        :param bool require_root: check that we have root permissions on device
-        :param bool share_test_root: True if instance should share the
-            same test_root value with other ADBInstances. Defaults to True.
-
-        :raises: * ADBError
-                 * ADBTimeoutError
-                 * ValueError
-        """
+                 use_root=True,
+                 share_test_root=True,
+                 run_as_package=None):
         global _TEST_ROOT
 
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
                             timeout=timeout, verbose=verbose,
-                            require_root=require_root)
+                            use_root=use_root)
         self._logger.info('Using adb %s' % self._adb_version)
         self._device_serial = self._get_device_serial(device)
         self._initial_test_root = test_root
@@ -624,14 +687,18 @@ class ADBDevice(ADBCommand):
         if share_test_root and not _TEST_ROOT:
             _TEST_ROOT = test_root
         self._test_root = None
+        self._run_as_package = None
         self._device_ready_retry_wait = device_ready_retry_wait
         self._device_ready_retry_attempts = device_ready_retry_attempts
         self._have_root_shell = False
         self._have_su = False
         self._have_android_su = False
+        self._selinux = None
         self._re_internal_storage = None
 
-        self._initialize_boot_state(timeout=timeout)
+        self._wait_for_boot_completed(timeout=timeout)
+
+        self.package_dir = None
 
         # Record the start time of the ADBDevice initialization so we can
         # determine if we should abort with an ADBTimeoutError if it is
@@ -655,32 +722,6 @@ class ADBDevice(ADBCommand):
             # failed to get valid (numeric) version string in all attempts in allowed time
             raise ADBTimeoutError("ADBDevice: unable to determine ro.build.version.sdk.")
 
-        # Catch exceptions due to the potential for segfaults
-        # calling su when using an improperly rooted device.
-
-        uid = 'uid=0'
-        # Do we have a 'Superuser' sh like su?
-        try:
-            if (self._require_root and
-                self.shell_output("su -c id", timeout=timeout).find(uid) != -1):
-                self._have_su = True
-                self._logger.info("su -c supported")
-        except ADBError as e:
-            self._logger.debug("Check for su -c failed: {}".format(e))
-
-        # Check if Android's su 0 command works.
-        # su 0 id will hang on Pixel 2 8.1.0/OPM2.171019.029.B1/4720900
-        # rooted via magisk. If we already have detected su -c support,
-        # we can skip this check.
-        try:
-            if (self._require_root and
-                not self._have_su and
-                self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
-                self._have_android_su = True
-                self._logger.info("su 0 supported")
-        except ADBError as e:
-            self._logger.debug("Check for su 0 failed: {}".format(e))
-
         self._mkdir_p = None
         # Force the use of /system/bin/ls or /system/xbin/ls in case
         # there is /sbin/ls which embeds ansi escape codes to colorize
@@ -699,13 +740,13 @@ class ADBDevice(ADBCommand):
                 boot_completed = True
                 self._ls = "/system/bin/ls"
             except ADBError as e1:
-                self._logger.info("detect /system/bin/ls {}".format(e1))
+                self._logger.debug("detect /system/bin/ls {}".format(e1))
                 try:
                     self.shell_output("/system/xbin/ls /system/xbin/ls", timeout=timeout)
                     boot_completed = True
                     self._ls = "/system/xbin/ls"
                 except ADBError as e2:
-                    self._logger.info("detect /system/xbin/ls : {}".format(e2))
+                    self._logger.debug("detect /system/xbin/ls : {}".format(e2))
             if not boot_completed:
                 time.sleep(2)
         if not boot_completed:
@@ -723,7 +764,7 @@ class ADBDevice(ADBCommand):
                 boot_completed = True
                 self._ls += " -1A"
             except ADBError as e:
-                self._logger.info("detect ls -1A: {}".format(e))
+                self._logger.debug("detect ls -1A: {}".format(e))
                 if 'No such file or directory' not in str(e):
                     boot_completed = True
                     self._ls += " -a"
@@ -746,6 +787,9 @@ class ADBDevice(ADBCommand):
                     self._have_cp = False
                     boot_completed = True
                 elif 'known option' in str(e):
+                    self._have_cp = True
+                    boot_completed = True
+                elif 'invalid option' in str(e):
                     self._have_cp = True
                     boot_completed = True
             if not boot_completed:
@@ -787,9 +831,6 @@ class ADBDevice(ADBCommand):
         if not cleared:
             self._logger.info("Unable to turn off logcat chatty")
 
-        self._selinux = None
-        self.enforcing = 'Permissive'
-
         # Do we have pidof?
         if self.version < version_codes.N:
             # unexpected pidof behavior observed on Android 6 in bug 1514363
@@ -812,26 +853,63 @@ class ADBDevice(ADBCommand):
                     time.sleep(2)
             if not boot_completed:
                 raise ADBTimeoutError("ADBDevice: pidof not found.")
-        self._logger.info("Native pidof support: {}".format(self._have_pidof))
-
-        if require_root:
-            try:
-                # Guarantee that /data/local/tmp exists and is accessible to all.
-                if not self.exists("/data/local/tmp", timeout=timeout, root=True):
-                    # parents=True is required on emulator, where exist() may be flaky
-                    self.mkdir("/data/local/tmp", parents=True, timeout=timeout, root=True)
-                self.chmod("/data/local/tmp", timeout=timeout, root=True)
-            except ADBRootError as e:
-                self._logger.warning(
-                    "{}: Device is not rooted. May have issues accessing test root.".format(e))
-
         # Bug 1529960 observed pidof intermittently returning no results for a
         # running process on the 7.0 x86_64 emulator.
+
         characteristics = self.get_prop("ro.build.characteristics", timeout=timeout)
+
         abi = self.get_prop("ro.product.cpu.abi", timeout=timeout)
         self._have_flaky_pidof = (self.version == version_codes.N and
-                                  abi == 'x86_64' and
-                                  'emulator' in characteristics)
+                                  abi == 'x86_64' and 'emulator' in characteristics)
+        self._logger.info("Native {} pidof support: {}".format(
+            "flaky" if self._have_flaky_pidof else "normal", self._have_pidof))
+
+        if self._use_root:
+            # Detect if root is available, but do not fail if it is not.
+            # Catch exceptions due to the potential for segfaults
+            # calling su when using an improperly rooted device.
+
+            self._check_adb_root(timeout=timeout)
+
+            if not self._have_root_shell:
+                # To work around bug 1525401 where su -c id will return an
+                # exitcode of 1 if selinux permissive is not already in effect,
+                # we need su to turn off selinux prior to checking for su.
+                # We can use shell() directly to prevent the non-zero exitcode
+                # from raising an ADBError.
+                # Note: We are assuming su -c is supported and do not attempt to
+                # use su 0.
+                adb_process = self.shell("su -c setenforce 0")
+                self._logger.info("su -c setenforce 0 exitcode %s, stdout: %s" % (
+                    adb_process.proc.poll(),
+                    adb_process.proc.stdout))
+
+                uid = 'uid=0'
+                # Do we have a 'Superuser' sh like su?
+                try:
+                    if self.shell_output("su -c id", timeout=timeout).find(uid) != -1:
+                        self._have_su = True
+                        self._logger.info("su -c supported")
+                except ADBError as e:
+                    self._logger.debug("Check for su -c failed: {}".format(e))
+
+                # Check if Android's su 0 command works.
+                # su 0 id will hang on Pixel 2 8.1.0/OPM2.171019.029.B1/4720900
+                # rooted via magisk. If we already have detected su -c support,
+                # we can skip this check.
+                try:
+                    if (not self._have_su and
+                        self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
+                        self._have_android_su = True
+                        self._logger.info("su 0 supported")
+                except ADBError as e:
+                    self._logger.debug("Check for su 0 failed: {}".format(e))
+
+        # Guarantee that /data/local/tmp exists and is accessible to all.
+        # It is a fatal error if /data/local/tmp does not exist and can not be created.
+        if not self.exists("/data/local/tmp", timeout=timeout):
+            # parents=True is required on emulator, where exist() may be flaky
+            self.mkdir("/data/local/tmp", parents=True, timeout=timeout)
 
         # Beginning in Android 8.1 /data/anr/traces.txt no longer contains
         # a single file traces.txt but instead will contain individual files
@@ -848,43 +926,15 @@ class ADBDevice(ADBCommand):
             else:
                 stack_trace_dir = '/data/anr'
         self.stack_trace_dir = stack_trace_dir
+        self.enforcing = 'Permissive'
+
+        self.run_as_package = run_as_package
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
-    def _initialize_boot_state(self, timeout=None):
-        """Internal method to prepare the device state during initialization
-        of ADBDevice or after rebooting.
-
-        _initialize_boot_state will wait for sys.boot_completed=1, restarting
-        adbd as root if required, and then set SELinux to Permissive.
-
-        This method must be called during ADBDevice
-        initialization or immediately after rebooting the device.
-
-        :param timeout: The default maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.  This timeout is per adb call. The
-            total time spent may exceed this value. If it is not
-            specified, the value defaults to 300.
-        :type timeout: integer or None
-
-        :raises: * ADBError
-
-        """
-        self._wait_for_boot_completed(timeout=timeout)
-        self._check_adb_root(timeout=timeout)
-
-        # To work around bug 1525401 where su -c id will return an
-        # exitcode of 1 if selinux permissive is not already in effect,
-        # we need su to turn off selinux prior to checking for su.
-        # We can use shell() directly to prevent the non-zero exitcode
-        # from raising an ADBError.
-        # Note: We are assuming su -c is supported and do not attempt to
-        # use su 0.
-        adb_process = self.shell("su -c setenforce 0")
-        self._logger.info("su -c setenforce 0 exitcode %s, stdout: %s" % (
-            adb_process.proc.poll(),
-            adb_process.proc.stdout))
+    @property
+    def is_rooted(self):
+        return self._have_root_shell or self._have_su or self._have_android_su
 
     def _wait_for_boot_completed(self, timeout=None):
         """Internal method to wait for boot to complete.
@@ -892,14 +942,12 @@ class ADBDevice(ADBCommand):
         Wait for sys.boot_completed=1 and raise ADBError if boot does
         not complete within retry attempts.
 
-        :param timeout: The default maximum time in
+        :param int timeout: The default maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value defaults to 300.
-        :type timeout: integer or None
-
-        :raises: * ADBError
+        :raises: :exc:`ADBError`
         """
         for attempt in range(self._device_ready_retry_attempts):
             sys_boot_completed = self.shell_output('getprop sys.boot_completed', timeout=timeout)
@@ -916,10 +964,10 @@ class ADBDevice(ADBCommand):
             if len(devices) > 1:
                 raise ValueError("ADBDevice called with multiple devices "
                                  "attached and no device specified")
-            elif len(devices) == 0:
+            if len(devices) == 0:
                 # We could error here, but this way we'll wait-for-device before we next
                 # run a command, which seems more friendly
-                return
+                return None
             device = devices[0]
 
         # Allow : in device serial if it matches a tcpip device serial.
@@ -961,17 +1009,24 @@ class ADBDevice(ADBCommand):
     def _check_adb_root(self, timeout=None):
         self._have_root_shell = self._check_root_user(timeout=timeout)
 
+        # Exclude these devices from checking for a root shell due to
+        # potential hangs.
+        exclude_set = set()
+        exclude_set.add('E5823')  # Sony Xperia Z5 Compact (E5823)
         # Do we need to run adb root to get a root shell?
         if not self._have_root_shell:
-            try:
-                self.command_output(["root"], timeout=timeout)
-                self._have_root_shell = self._check_root_user(timeout=timeout)
-                if self._have_root_shell:
-                    self._logger.info("adbd restarted as root")
-                else:
-                    self._logger.info("adbd not restarted as root")
-            except ADBError:
-                self._logger.debug("Check for root adbd failed")
+            if self.get_prop('ro.product.model') in exclude_set:
+                self._logger.warning("your device was excluded from attempting adb root.")
+            else:
+                try:
+                    self.command_output(["root"], timeout=timeout)
+                    self._have_root_shell = self._check_root_user(timeout=timeout)
+                    if self._have_root_shell:
+                        self._logger.info("adbd restarted as root")
+                    else:
+                        self._logger.info("adbd not restarted as root")
+                except ADBError:
+                    self._logger.debug("Check for root adbd failed")
 
     def _pidof(self, appname, timeout=None):
         if self._have_pidof:
@@ -1011,6 +1066,7 @@ class ADBDevice(ADBCommand):
     @staticmethod
     def _quote(arg):
         """Utility function to return quoted version of command argument."""
+        # Replace with shlex.quote when we move totally to Python 3.3+?
         if ADBDevice._should_quote(arg):
             if "'" not in arg and '"' not in arg:
                 arg = '"%s"' % arg
@@ -1029,6 +1085,7 @@ class ADBDevice(ADBCommand):
         escaped and quoted version of the command as a string.
         """
         assert isinstance(cmds, list)
+        # Replace with shlex.join when we move totally to Python 3.8+?
         quoted_cmd = " ".join([ADBDevice._quote(arg) for arg in cmds])
 
         return quoted_cmd
@@ -1086,16 +1143,16 @@ class ADBDevice(ADBCommand):
         Return True if the path matches an internal storage path
         as defined by either '/sdcard', '/mnt/sdcard', or any of the
         .*_STORAGE environment variables on the device otherwise False.
+
         :param str path: The path to test.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBDevice constructor is used.
-        :returns: boolean
-
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: boolean
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         if not self._re_internal_storage:
             storage_dirs = set(['/mnt/sdcard', '/sdcard'])
@@ -1109,6 +1166,51 @@ class ADBDevice(ADBCommand):
         return self._re_internal_storage.match(path) is not None
 
     @property
+    def run_as_package(self):
+        """Returns the name of the package which will be used in run-as to change
+        the effective user executing a command."""
+        return self._run_as_package
+
+    @run_as_package.setter
+    def run_as_package(self, value):
+        if self._have_root_shell or self._have_su or self._have_android_su:
+            # When we have root available, use that instead of run-as.
+            return
+
+        # Require these devices to have Verify bytecode turned off due to failures with run-as.
+        include_set = set()
+        include_set.add('SM-G973F')  # Samsung S10g SM-G973F
+
+        if self.get_prop('ro.product.model') in include_set and \
+           self.shell_output("settings get global art_verifier_verify_debuggable") == "1":
+            self._logger.warning("""Your device has Verify bytecode of debuggable apps set which
+            causes problems attempting to use run-as to delegate command execution to debuggable
+            apps. You must turn this setting off in Developer options on your device.
+            """)
+            raise ADBError("Verify bytecode of debuggable apps must be turned off to use run-as")
+
+        self._run_as_package = value
+        if not value:
+            if self._test_root:
+                self._logger.info('Resetting test root from %s to None' % self._test_root)
+            self._test_root = None
+        else:
+            self._logger.info('Setting run_as_package to %s' % value)
+            if not self.is_app_installed(value):
+                raise ADBError('run_as_package %s is not installed.' % value)
+            self.package_dir = '/data/data/%s' % value
+            new_test_root = posixpath.join(self.package_dir, 'test_root')
+            if self.test_root != new_test_root:
+                # Make sure the old test_root is clean.
+                self.rm(posixpath.join(self.test_root, '*'), recursive=True, force=True)
+                self.test_root = posixpath.join(self.package_dir, 'test_root')
+                # Make sure the new test_root is clean.
+                self.rm(posixpath.join(self.test_root, '*'), recursive=True, force=True)
+
+    def enable_run_as_for_path(self, path):
+        return self.package_dir is not None and path.startswith(self.package_dir)
+
+    @property
     def test_root(self):
         """
         The test_root property returns the directory on the device where
@@ -1116,24 +1218,24 @@ class ADBDevice(ADBCommand):
 
         The first time test_root it is called it determines and caches a value
         for the test root on the device. It determines the appropriate test
-        root by attempting to create a 'dummy' directory on each of a list of
+        root by attempting to create a 'proof' directory on each of a list of
         directories and returning the first successful directory as the
         test_root value. The cached value for the test_root will be shared
         by subsequent instances of ADBDevice if self._share_test_root is True.
 
         The default list of directories checked by test_root are:
 
-        - /data/local/tmp/tests
+        - /data/local/tmp/test_root
 
         You may override the default list by providing a test_root argument to
         the :class:`ADBDevice` constructor which will then be used when
-        attempting to create the 'dummy' directory.
+        attempting to create the 'proof' directory.
 
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         if self._test_root is not None:
+            self._logger.debug("Using cached test_root %s" % self._test_root)
             return self._test_root
 
         if self._share_test_root and _TEST_ROOT:
@@ -1149,7 +1251,7 @@ class ADBDevice(ADBCommand):
             # choose /data/local/tmp as the default location for the
             # profile because GeckoView only takes its configuration
             # file from /data/local/tmp.
-            paths = ['/data/local/tmp/tests']
+            paths = ['/data/local/tmp/test_root']
 
         max_attempts = 3
         for attempt in range(1, max_attempts + 1):
@@ -1159,8 +1261,7 @@ class ADBDevice(ADBCommand):
 
                 if self._try_test_root(test_root):
                     self._test_root = test_root
-                    # make sure we can fully access the test root.
-                    self.chmod(self._test_root, recursive=True, root=True)
+                    self._logger.info("Setting test_root to %s" % self._test_root)
                     return self._test_root
 
                 self._logger.debug('_setup_test_root: '
@@ -1179,23 +1280,43 @@ class ADBDevice(ADBCommand):
         # other invocations of ADBDevice will pick
         # up the same value.
         global _TEST_ROOT
+        self._logger.debug('Setting test_root from %s to %s' % (self._test_root, value))
+        if self._test_root and self._test_root != value:
+            self._logger.info('Resetting test root from %s to %s' % (self._test_root, value))
         self._test_root = value
         if self._share_test_root:
             _TEST_ROOT = value
+        if value and not self._try_test_root(value):
+            raise ADBError('Unable to set test_root to %s' % value)
+        readme = posixpath.join(value, 'README')
+        if not self.is_file(readme):
+            tmpf = tempfile.NamedTemporaryFile(mode='w', delete=False)
+            tmpf.write("This directory is used by mozdevice to contain all content "
+                       "related to running tests on this device.\n")
+            tmpf.close()
+            try:
+                self.push(tmpf.name, readme)
+            finally:
+                if tmpf:
+                    os.unlink(tmpf.name)
 
     def _try_test_root(self, test_root):
-        base_path, sub_path = posixpath.split(test_root)
-        if not self.is_dir(base_path, root=self._require_root):
+        base_path, _ = posixpath.split(test_root)
+        if not self.is_dir(base_path):
+            self._logger.debug("_try_test_root: is_dir base_path %s is False" % base_path)
             return False
 
         try:
-            dummy_dir = posixpath.join(test_root, 'dummy')
-            if self.is_dir(dummy_dir, root=self._require_root):
-                self.rm(dummy_dir, recursive=True, root=self._require_root)
-            self.mkdir(dummy_dir, parents=True, root=self._require_root)
-            self.chmod(test_root, recursive=True, root=self._require_root)
-        except ADBError:
-            self._logger.debug("%s is not writable" % test_root)
+            if not self.is_dir(test_root):
+                self._logger.debug("_try_test_root: is_dir test_root %s is False" % test_root)
+                self.mkdir(test_root)
+            proof_dir = posixpath.join(test_root, 'proof')
+            if self.is_dir(proof_dir):
+                self.rm(proof_dir, recursive=True)
+            self.mkdir(proof_dir)
+            self.rm(proof_dir, recursive=True)
+        except ADBError as e:
+            self._logger.warning("%s is not writable: %s" % (test_root, str(e)))
             return False
 
         return True
@@ -1207,13 +1328,12 @@ class ADBDevice(ADBCommand):
 
         :param list cmds: The command and its arguments to be
             executed.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: :class:`mozdevice.ADBProcess`
+        :return: :class:`ADBProcess`
 
         command() provides a low level interface for executing
         commands for a specific device on the host via adb.
@@ -1245,17 +1365,15 @@ class ADBDevice(ADBCommand):
         stdout.
 
         :param list cmds: The command and its arguments to be executed.
-        :param timeout: The maximum time in seconds
+        :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: string - content of stdout.
-
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: str - content of stdout.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         return ADBCommand.command_output(self, cmds,
                                          device_serial=self._device_serial,
@@ -1282,9 +1400,9 @@ class ADBDevice(ADBCommand):
         """Validate direction of the socket connection. Raises ValueError on failure.
 
         :param str direction: The socket direction specifier to validate
-        :raises: * ValueError
+        :raises: :exc:`ValueError`
         """
-        if direction not in [self.SOCKET_DIRECTON_FORWARD, self.SOCKET_DIRECTON_REVERSE]:
+        if direction not in [self.SOCKET_DIRECTION_FORWARD, self.SOCKET_DIRECTION_REVERSE]:
             raise ValueError('Invalid direction specifier {}'.format(direction))
 
     def create_socket_connection(self, direction, local, remote, allow_rebind=True, timeout=None):
@@ -1294,14 +1412,13 @@ class ADBDevice(ADBCommand):
         :param str local: Local port
         :param str remote: Remote port
         :param bool allow_rebind: Do not fail if port is already bound
-        :param timeout: The maximum time in seconds
+        :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ValueError
-                 * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ValueError`
+                 :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         # validate socket direction, and local and remote port formatting.
         self._validate_direction(direction)
@@ -1322,15 +1439,14 @@ class ADBDevice(ADBCommand):
         Return values are of the form (device, local, remote).
 
         :param str direction: 'forward' to list forward socket connections
-                              'reverse' to list reverse socket connections
-        :param timeout: The maximum time in seconds
+                          'reverse' to list reverse socket connections
+        :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ValueError
-                 * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ValueError`
+                 :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         self._validate_direction(direction)
 
@@ -1342,18 +1458,16 @@ class ADBDevice(ADBCommand):
         """Remove existing socket connections for a given direction.
 
         :param str direction: 'forward' to remove forward socket connection
-                              'reverse' to remove reverse socket connection
-        :param local: local port specifier as for ADBDevice.forward. If local
+                          'reverse' to remove reverse socket connection
+        :param str local: local port specifier as for ADBDevice.forward. If local
             is not specified removes all forwards.
-        :type local: str or None
-        :param timeout: The maximum time in seconds
+        :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ValueError
-                 * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ValueError`
+                 :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         self._validate_direction(direction)
 
@@ -1374,7 +1488,7 @@ class ADBDevice(ADBCommand):
 
         See `ADBDevice.create_socket_connection`.
         """
-        self.create_socket_connection(self.SOCKET_DIRECTON_FORWARD,
+        self.create_socket_connection(self.SOCKET_DIRECTION_FORWARD,
                                       local, remote, allow_rebind, timeout)
 
     def list_forwards(self, timeout=None):
@@ -1382,14 +1496,14 @@ class ADBDevice(ADBCommand):
 
         See `ADBDevice.list_socket_connection`.
         """
-        return self.list_socket_connections(self.SOCKET_DIRECTON_FORWARD, timeout)
+        return self.list_socket_connections(self.SOCKET_DIRECTION_FORWARD, timeout)
 
     def remove_forwards(self, local=None, timeout=None):
         """Remove existing port forwards.
 
         See `ADBDevice.remove_socket_connection`.
         """
-        self.remove_socket_connections(self.SOCKET_DIRECTON_FORWARD, local, timeout)
+        self.remove_socket_connections(self.SOCKET_DIRECTION_FORWARD, local, timeout)
 
     # Legacy port reverse methods
 
@@ -1398,7 +1512,7 @@ class ADBDevice(ADBCommand):
 
         See `ADBDevice.create_socket_connection`.
         """
-        self.create_socket_connection(self.SOCKET_DIRECTON_REVERSE,
+        self.create_socket_connection(self.SOCKET_DIRECTION_REVERSE,
                                       local, remote, allow_rebind, timeout)
 
     def list_reverses(self, timeout=None):
@@ -1406,39 +1520,35 @@ class ADBDevice(ADBCommand):
 
         See `ADBDevice.list_socket_connection`.
         """
-        return self.list_socket_connections(self.SOCKET_DIRECTON_REVERSE, timeout)
+        return self.list_socket_connections(self.SOCKET_DIRECTION_REVERSE, timeout)
 
     def remove_reverses(self, local=None, timeout=None):
         """Remove existing reverse socket connections.
 
         See `ADBDevice.remove_socket_connection`.
         """
-        self.remove_socket_connections(self.SOCKET_DIRECTON_REVERSE,
+        self.remove_socket_connections(self.SOCKET_DIRECTION_REVERSE,
                                        local, timeout)
 
     # Device Shell methods
 
-    def shell(self, cmd, env=None, cwd=None, timeout=None, root=False,
-              stdout_callback=None):
+    def shell(self, cmd, env=None, cwd=None, timeout=None,
+              stdout_callback=None, enable_run_as=False):
         """Executes a shell command on the device.
 
         :param str cmd: The command to be executed.
-        :param env: Contains the environment variables and
+        :param dict env: Contains the environment variables and
             their values.
-        :type env: dict or None
-        :param cwd: The directory from which to execute.
-        :type cwd: str or None
-        :param timeout: The maximum time in
+        :param str cwd: The directory from which to execute.
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :param stdout_callback: Function called for each line of output.
-        :returns: :class:`mozdevice.ADBProcess`
-        :raises: ADBRootError
+        :param function stdout_callback: Function called for each line of output.
+        :param bool enable_run_as: Flag used to temporarily enable use
+            of run-as to execute the command.
+        :return: :class:`ADBProcess`
 
         shell() provides a low level interface for executing commands
         on the device via adb shell.
@@ -1501,17 +1611,16 @@ class ADBDevice(ADBCommand):
                 signal.signal(signal.SIGALRM, default_alarm_handler)
             return line
 
-        if root and not self._have_root_shell:
-            # If root was requested and we do not already have a root
-            # shell, then use the appropriate version of su to invoke
-            # the shell cmd. Prefer Android's su version since it may
-            # falsely report support for su -c.
-            if self._have_android_su:
-                cmd = "su 0 %s" % cmd
-            elif self._have_su:
-                cmd = "su -c %s" % ADBDevice._quote(cmd)
-            else:
-                raise ADBRootError('Can not run command %s as root!' % cmd)
+        if self._have_root_shell:
+            pass
+        elif self._have_android_su:
+            cmd = "su 0 %s" % cmd
+        elif self._have_su:
+            cmd = "su -c %s" % ADBDevice._quote(cmd)
+        elif self._run_as_package and enable_run_as:
+            cmd = "run-as %s %s" % (self._run_as_package, cmd)
+        else:
+            pass
 
         # prepend cwd and env to command if necessary
         if cwd:
@@ -1557,7 +1666,10 @@ class ADBDevice(ADBCommand):
                 try:
                     line = _timed_read_line(stdout2)
                     if line and len(line) > 0:
-                        stdout_callback(line.rstrip())
+                        line = line.rstrip()
+                        if self._verbose:
+                            self._logger.info(line)
+                        stdout_callback(line)
                     else:
                         # no new output, so sleep and poll
                         time.sleep(self._polling_interval)
@@ -1588,34 +1700,29 @@ class ADBDevice(ADBCommand):
 
         return adb_process
 
-    def shell_bool(self, cmd, env=None, cwd=None, timeout=None, root=False):
+    def shell_bool(self, cmd, env=None, cwd=None, timeout=None, enable_run_as=False):
         """Executes a shell command on the device returning True on success
         and False on failure.
 
         :param str cmd: The command to be executed.
-        :param env: Contains the environment variables and
+        :param dict env: Contains the environment variables and
             their values.
-        :type env: dict or None
-        :param cwd: The directory from which to execute.
-        :type cwd: str or None
-        :param timeout: The maximum time in
+        :param str cwd: The directory from which to execute.
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :returns: boolean
-
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :param bool enable_run_as: Flag used to temporarily enable use
+            of run-as to execute the command.
+        :return: bool
+        :raises: :exc:`ADBTimeoutError`
         """
         adb_process = None
         try:
             adb_process = self.shell(cmd, env=env, cwd=cwd,
-                                     timeout=timeout, root=root)
+                                     timeout=timeout, enable_run_as=enable_run_as)
             if adb_process.timedout:
                 raise ADBTimeoutError("%s" % adb_process)
             return adb_process.exitcode == 0
@@ -1625,60 +1732,52 @@ class ADBDevice(ADBCommand):
                     output = adb_process.stdout
                     self._logger.debug('shell_bool: %s, '
                                        'timeout: %s, '
-                                       'root: %s, '
                                        'timedout: %s, '
                                        'exitcode: %s, '
                                        'output: %s' %
                                        (' '.join(adb_process.args),
                                         timeout,
-                                        root,
                                         adb_process.timedout,
                                         adb_process.exitcode,
                                         output))
 
                 adb_process.stdout_file.close()
 
-    def shell_output(self, cmd, env=None, cwd=None, timeout=None, root=False):
+    def shell_output(self, cmd, env=None, cwd=None, timeout=None, enable_run_as=False):
         """Executes an adb shell on the device returning stdout.
 
         :param str cmd: The command to be executed.
-        :param env: Contains the environment variables and their values.
-        :type env: dict or None
-        :param cwd: The directory from which to execute.
-        :type cwd: str or None
-        :param timeout: The maximum time in
+        :param dict env: Contains the environment variables and their values.
+        :param str cwd: The directory from which to execute.
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per
             adb call. The total time spent may exceed this
             value. If it is not specified, the value set
             in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command
-            should be executed as root.
-        :returns: string - content of stdout.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :param bool enable_run_as: Flag used to temporarily enable use
+            of run-as to execute the command.
+        :return: str - content of stdout.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         adb_process = None
         try:
             adb_process = self.shell(cmd, env=env, cwd=cwd,
-                                     timeout=timeout, root=root)
+                                     timeout=timeout, enable_run_as=enable_run_as)
             if adb_process.timedout:
                 raise ADBTimeoutError("%s" % adb_process)
-            elif adb_process.exitcode:
+            if adb_process.exitcode:
                 raise ADBProcessError(adb_process)
             output = adb_process.stdout
             if self._verbose:
                 self._logger.debug('shell_output: %s, '
                                    'timeout: %s, '
-                                   'root: %s, '
                                    'timedout: %s, '
                                    'exitcode: %s, '
                                    'output: %s' %
                                    (' '.join(adb_process.args),
                                     timeout,
-                                    root,
                                     adb_process.timedout,
                                     adb_process.exitcode,
                                     output))
@@ -1704,17 +1803,16 @@ class ADBDevice(ADBCommand):
     def clear_logcat(self, timeout=None, buffers=[]):
         """Clears logcat via adb logcat -c.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per
             adb call. The total time spent may exceed this
             value. If it is not specified, the value set
             in the ADBDevice constructor is used.
-        :type timeout: integer or None
         :param list buffers: Log buffers to clear. Valid buffers are
             "radio", "events", and "main". Defaults to "main".
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         buffers = self._get_logcat_buffer_args(buffers)
         cmds = ["logcat", "-c"] + buffers
@@ -1756,20 +1854,19 @@ class ADBDevice(ADBCommand):
         :param list filter_specs: Optional logcat messages to
             be included.
         :param str format: Optional logcat format.
-        :param list filterOutRexps: Optional logcat messages to be
+        :param list filter_out_regexps: Optional logcat messages to be
             excluded.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
         :param list buffers: Log buffers to retrieve. Valid buffers are
             "radio", "events", and "main". Defaults to "main".
-        :returns: list of lines logcat output.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: list of lines logcat output.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         buffers = self._get_logcat_buffer_args(buffers)
         cmds = ["logcat", "-v", format, "-d"] + buffers + filter_specs
@@ -1784,16 +1881,15 @@ class ADBDevice(ADBCommand):
         """Gets value of a property from the device via adb shell getprop.
 
         :param str prop: The propery name.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: string value of property.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: str value of property.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         output = self.shell_output('getprop %s' % prop, timeout=timeout)
         return output
@@ -1801,16 +1897,15 @@ class ADBDevice(ADBCommand):
     def get_state(self, timeout=None):
         """Returns the device's state via adb get-state.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: string value of adb get-state.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: str value of adb get-state.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         output = self.command_output(["get-state"], timeout=timeout).strip()
         return output
@@ -1818,21 +1913,23 @@ class ADBDevice(ADBCommand):
     def get_ip_address(self, interfaces=None, timeout=None):
         """Returns the device's ip address, or None if it doesn't have one
 
-        :param interfaces: Interfaces to allow, or None to allow any
+        :param list interfaces: Interfaces to allow, or None to allow any
             non-loopback interface.
-        :type interfaces: list or None
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: string ip address of the device or None if it could not
+        :return: str ip address of the device or None if it could not
             be found.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
+        if not self.is_rooted:
+            self._logger.warning('Device not rooted. Can not obtain ip address.')
+            return None
+        self._logger.debug("get_ip_address: interfaces: %s" % interfaces)
         if not interfaces:
             interfaces = ["wlan0", "eth0"]
             wifi_interface = self.get_prop('wifi.interface', timeout=timeout)
@@ -1871,7 +1968,8 @@ class ADBDevice(ADBCommand):
             try:
                 output = self.shell_output('ifconfig %s' % interface,
                                            timeout=timeout)
-            except ADBError:
+            except ADBError as e:
+                self._logger.warning('get_ip_address ifconfig %s: %s' % (interface, str(e)))
                 output = ''
 
             for line in output.splitlines():
@@ -1916,7 +2014,8 @@ class ADBDevice(ADBCommand):
         re3_netcfg = re.compile(r'(\w+)\s+UP\s+([1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
         try:
             output = self.shell_output('netcfg', timeout=timeout)
-        except ADBError:
+        except ADBError as e:
+            self._logger.warning('get_ip_address netcfg: %s' % str(e))
             output = ''
         for line in output.splitlines():
             match = re3_netcfg.search(line)
@@ -1937,52 +2036,49 @@ class ADBDevice(ADBCommand):
     def remount(self, timeout=None):
         """Remount /system/ in read/write mode
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError"""
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
+        """
 
         rv = self.command_output(["remount"], timeout=timeout)
         if not rv.startswith("remount succeeded"):
             raise ADBError("Unable to remount device")
 
-    def batch_execute(self, commands, timeout=None, root=False):
+    def batch_execute(self, commands, timeout=None, enable_run_as=False):
         """Writes commands to a temporary file then executes on the device.
 
         :param list commands_list: List of commands to be run by the shell.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :param bool enable_run_as: Flag used to temporarily enable use
+            of run-as to execute the command.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         try:
-            tmpf = tempfile.NamedTemporaryFile(delete=False)
+            tmpf = tempfile.NamedTemporaryFile(mode='w', delete=False)
             tmpf.write('\n'.join(commands))
             tmpf.close()
             script = '/sdcard/{}'.format(os.path.basename(tmpf.name))
             self.push(tmpf.name, script)
-            self.shell_output('sh {}'.format(script), timeout=timeout,
-                              root=root)
+            self.shell_output('sh {}'.format(script), enable_run_as=enable_run_as, timeout=timeout)
         finally:
             if tmpf:
                 os.unlink(tmpf.name)
             if script:
-                self.rm(script, timeout=timeout, root=root)
+                self.rm(script, timeout=timeout)
 
-    def chmod(self, path, recursive=False, mask="777", timeout=None, root=False):
+    def chmod(self, path, recursive=False, mask="777", timeout=None):
         """Recursively changes the permissions of a directory on the
         device.
 
@@ -1990,18 +2086,14 @@ class ADBDevice(ADBCommand):
         :param bool recursive: Flag specifying if the command should be
             executed recursively.
         :param str mask: The octal permissions.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         # Note that on some tests such as webappstartup, an error
         # occurs during recursive calls to chmod where a "No such file
@@ -2013,8 +2105,9 @@ class ADBDevice(ADBCommand):
         # this type of error, but pass on any other errors that are
         # detected.
         path = posixpath.normpath(path.strip())
-        self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
-                           (path, recursive, mask, root))
+        enable_run_as = self.enable_run_as_for_path(path)
+        self._logger.debug('chmod: path=%s, recursive=%s, mask=%s' %
+                           (path, recursive, mask))
         if self.is_path_internal_storage(path, timeout=timeout):
             # External storage on Android is case-insensitive and permissionless
             # therefore even with the proper privileges it is not possible
@@ -2031,14 +2124,15 @@ class ADBDevice(ADBCommand):
         command.append(mask)
 
         if recursive and not self._chmod_R:
-            paths = self.ls(path, recursive=True, timeout=timeout, root=root)
+            paths = self.ls(path, recursive=True, timeout=timeout)
             base = ' '.join(command)
             commands = [' '.join([base, entry]) for entry in paths]
-            self.batch_execute(commands, timeout, root)
+            self.batch_execute(commands, timeout=timeout, enable_run_as=enable_run_as)
         else:
             command.append(path)
             try:
-                self.shell_output(cmd=' '.join(command), timeout=timeout, root=root)
+                self.shell_output(cmd=' '.join(command), timeout=timeout,
+                                  enable_run_as=enable_run_as)
             except ADBProcessError as e:
                 if "No such file or directory" not in str(e):
                     # It appears that chmod -R with symbolic links will exit with
@@ -2046,30 +2140,26 @@ class ADBDevice(ADBCommand):
                     # were transfered.
                     raise
 
-    def chown(self, path, owner, group=None, recursive=False, timeout=None, root=False):
+    def chown(self, path, owner, group=None, recursive=False, timeout=None):
         """Run the chown command on the provided path.
 
         :param str path: path name on the device.
         :param str owner: new owner of the path.
-        :param group: optional parameter specifying the new group the path
+        :param str group: optional parameter specifying the new group the path
                       should belong to.
-        :type group: str or None
         :param bool recursive: optional value specifying whether the command should
                     operate on files and directories recursively.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before throwing
             an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         path = posixpath.normpath(path.strip())
+        enable_run_as = self.enable_run_as_for_path(path)
         if self.is_path_internal_storage(path, timeout=timeout):
             self._logger.warning('Ignoring attempt to chown external storage')
             return
@@ -2091,137 +2181,128 @@ class ADBDevice(ADBCommand):
             # recursive desired, but chown -R is not supported natively.
             # like with chmod, get the list of subpaths, put them into a script
             # then run it with adb with one call.
-            paths = self.ls(path, recursive=True, timeout=timeout, root=root)
+            paths = self.ls(path, recursive=True, timeout=timeout)
             base = ' '.join(command)
             commands = [' '.join([base, entry]) for entry in paths]
 
-            self.batch_execute(commands, timeout, root)
+            self.batch_execute(commands, timeout=timeout, enable_run_as=enable_run_as)
         else:
             # recursive or not, and chown -R is supported natively.
             # command can simply be run as provided by the user.
             command.append(path)
-            self.shell_output(cmd=' '.join(command), timeout=timeout, root=root)
+            self.shell_output(cmd=' '.join(command), timeout=timeout, enable_run_as=enable_run_as)
 
-    def _test_path(self, argument, path, timeout=None, root=False):
+    def _test_path(self, argument, path, timeout=None):
         """Performs path and file type checking.
 
         :param str argument: Command line argument to the test command.
         :param str path: The path or filename on the device.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
         :param bool root: Flag specifying if the command should be
             executed as root.
-        :returns: boolean - True if path or filename fulfills the
+        :return: boolean - True if path or filename fulfills the
             condition of the test.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :raises: :exc:`ADBTimeoutError`
         """
-        if self._device_serial.startswith('emulator'):
-            # Bug 1572563 - work around intermittent test path failures on emulators.
-            if argument == 'f':
-                return (
-                    self.exists(path, timeout=timeout, root=root) and
-                    not self.is_dir(path, timeout=timeout, root=root))
-            if argument == 'd':
-                return self.shell_bool('ls -a {}/'.format(path), timeout=timeout, root=root)
-            if argument == 'e':
-                return self.shell_bool('ls -a {}'.format(path), timeout=timeout, root=root)
-        return self.shell_bool('test -{arg} {path}'.format(arg=argument,
-                                                           path=path),
-                               timeout=timeout, root=root)
+        enable_run_as = self.enable_run_as_for_path(path)
+        if not enable_run_as and \
+           not self._device_serial.startswith('emulator'):
+            return self.shell_bool('test -{arg} {path}'.format(arg=argument,
+                                                               path=path),
+                                   timeout=timeout, enable_run_as=False)
+        # Bug 1572563 - work around intermittent test path failures on emulators.
+        # The shell built-in test is not supported via run-as.
+        if argument == 'f':
+            return (
+                self.exists(path, timeout=timeout) and
+                not self.is_dir(path, timeout=timeout))
+        if argument == 'd':
+            return self.shell_bool('ls -a {}/'.format(path), timeout=timeout,
+                                   enable_run_as=enable_run_as)
+        if argument == 'e':
+            return self.shell_bool('ls -a {}'.format(path), timeout=timeout,
+                                   enable_run_as=enable_run_as)
+        raise ADBError("_test_path: Unknown argument %s" % argument)
 
-    def exists(self, path, timeout=None, root=False):
+    def exists(self, path, timeout=None):
         """Returns True if the path exists on the device.
 
         :param str path: The path name on the device.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
         :param bool root: Flag specifying if the command should be
             executed as root.
-        :returns: boolean - True if path exists.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :return: boolean - True if path exists.
+        :raises: :exc:`ADBTimeoutError`
         """
         path = posixpath.normpath(path)
-        return self._test_path('e', path, timeout=timeout, root=root)
+        return self._test_path('e', path, timeout=timeout)
 
-    def is_dir(self, path, timeout=None, root=False):
+    def is_dir(self, path, timeout=None):
         """Returns True if path is an existing directory on the device.
 
         :param str path: The directory on the device.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :returns: boolean - True if path exists on the device and is a
+        :return: boolean - True if path exists on the device and is a
             directory.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :raises: :exc:`ADBTimeoutError`
         """
         path = posixpath.normpath(path)
-        return self._test_path('d', path, timeout=timeout, root=root)
+        return self._test_path('d', path, timeout=timeout)
 
-    def is_file(self, path, timeout=None, root=False):
+    def is_file(self, path, timeout=None):
         """Returns True if path is an existing file on the device.
 
         :param str path: The file name on the device.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :returns: boolean - True if path exists on the device and is a
+        :return: boolean - True if path exists on the device and is a
             file.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :raises: :exc:`ADBTimeoutError`
         """
         path = posixpath.normpath(path)
-        return self._test_path('f', path, timeout=timeout, root=root)
+        return self._test_path('f', path, timeout=timeout)
 
-    def list_files(self, path, timeout=None, root=False):
+    def list_files(self, path, timeout=None):
         """Return a list of files/directories contained in a directory
         on the device.
 
         :param str path: The directory name on the device.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :returns: list of files/directories contained in the directory.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :return: list of files/directories contained in the directory.
+        :raises: :exc:`ADBTimeoutError`
         """
         path = posixpath.normpath(path.strip())
+        enable_run_as = self.enable_run_as_for_path(path)
         data = []
-        if self.is_dir(path, timeout=timeout, root=root):
+        if self.is_dir(path, timeout=timeout):
             try:
                 data = self.shell_output("%s %s" % (self._ls, path),
                                          timeout=timeout,
-                                         root=root).splitlines()
+                                         enable_run_as=enable_run_as).splitlines()
                 self._logger.debug('list_files: data: %s' % data)
             except ADBError:
                 self._logger.error('Ignoring exception in ADBDevice.list_files\n%s' %
@@ -2230,7 +2311,7 @@ class ADBDevice(ADBCommand):
         self._logger.debug('list_files: %s' % data)
         return data
 
-    def ls(self, path, recursive=False, timeout=None, root=False):
+    def ls(self, path, recursive=False, timeout=None):
         """Return a list of matching files/directories on the device.
 
         The ls method emulates the behavior of the ls shell command.
@@ -2258,20 +2339,17 @@ class ADBDevice(ADBCommand):
             is to be returned. If recursive is False, the returned
             matches will be relative to the path. If recursive is True,
             the returned matches will be absolute paths.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :returns: list of files/directories contained in the directory.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
+        :return: list of files/directories contained in the directory.
+        :raises: :exc:`ADBTimeoutError`
         """
         path = posixpath.normpath(path.strip())
+        enable_run_as = self.enable_run_as_for_path(path)
         parent = ''
         entries = {}
 
@@ -2287,13 +2365,12 @@ class ADBDevice(ADBCommand):
             recursive_flag = '-R'
             if path.startswith('/sdcard') and path.endswith('/'):
                 model = self.get_prop('ro.product.model',
-                                      timeout=timeout,
-                                      root=root)
+                                      timeout=timeout)
                 if model == 'Nexus 4':
                     path += '*'
         lines = self.shell_output('%s %s %s' % (self._ls, recursive_flag, path),
                                   timeout=timeout,
-                                  root=root).splitlines()
+                                  enable_run_as=enable_run_as).splitlines()
         for line in lines:
             line = line.strip()
             if not line:
@@ -2314,25 +2391,21 @@ class ADBDevice(ADBCommand):
         entry_list.sort()
         return entry_list
 
-    def mkdir(self, path, parents=False, timeout=None, root=False):
+    def mkdir(self, path, parents=False, timeout=None):
         """Create a directory on the device.
 
         :param str path: The directory name on the device
             to be created.
         :param bool parents: Flag indicating if the parent directories are
             also to be created. Think mkdir -p path.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         def verify_mkdir(path):
             # Verify that the directory was actually created. On some devices
@@ -2340,7 +2413,7 @@ class ADBDevice(ADBCommand):
             # immediately visible, so retries are allowed.
             retry = 0
             while retry < 10:
-                if self.is_dir(path, timeout=timeout, root=root):
+                if self.is_dir(path, timeout=timeout):
                     return True
                 time.sleep(1)
                 retry += 1
@@ -2349,37 +2422,45 @@ class ADBDevice(ADBCommand):
         self._sync(timeout=timeout)
 
         path = posixpath.normpath(path)
+        enable_run_as = self.enable_run_as_for_path(path)
         if parents:
             if self._mkdir_p is None or self._mkdir_p:
                 # Use shell_bool to catch the possible
                 # non-zero exitcode if -p is not supported.
-                if self.shell_bool('mkdir -p %s' % path, timeout=timeout,
-                                   root=root) or verify_mkdir(path):
+                if (self.shell_bool('mkdir -p %s' % path, timeout=timeout,
+                                    enable_run_as=enable_run_as) or
+                    verify_mkdir(path)):
+                    self.chmod(path, recursive=True, timeout=timeout)
                     self._mkdir_p = True
                     self._sync(timeout=timeout)
                     return
             # mkdir -p is not supported. create the parent
             # directories individually.
-            if not self.is_dir(posixpath.dirname(path), root=root):
+            if not self.is_dir(posixpath.dirname(path)):
                 parts = path.split('/')
                 name = "/"
                 for part in parts[:-1]:
                     if part != "":
                         name = posixpath.join(name, part)
-                        if not self.is_dir(name, root=root):
+                        if not self.is_dir(name):
                             # Use shell_output to allow any non-zero
                             # exitcode to raise an ADBError.
                             self.shell_output('mkdir %s' % name,
-                                              timeout=timeout, root=root)
+                                              timeout=timeout,
+                                              enable_run_as=enable_run_as)
+                            self.chmod(name, recursive=True,
+                                       timeout=timeout)
                             self._sync(timeout=timeout)
 
         # If parents is True and the directory does exist, we don't
         # need to do anything. Otherwise we call mkdir. If the
         # directory already exists or if it is a file instead of a
         # directory, mkdir will fail and we will raise an ADBError.
-        if not parents or not self.is_dir(path, root=root):
-            self.shell_output('mkdir %s' % path, timeout=timeout, root=root)
+        if not parents or not self.is_dir(path):
+            self.shell_output('mkdir %s' % path, timeout=timeout,
+                              enable_run_as=enable_run_as)
             self._sync(timeout=timeout)
+            self.chmod(path, recursive=True, timeout=timeout)
         if not verify_mkdir(path):
             raise ADBError('mkdir %s Failed' % path)
 
@@ -2390,15 +2471,14 @@ class ADBDevice(ADBCommand):
             directory name.
         :param str remote: The name of the remote file or
             directory name.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         self._sync(timeout=timeout)
 
@@ -2407,7 +2487,10 @@ class ADBDevice(ADBCommand):
         remote = posixpath.normpath(remote)
         copy_required = False
         sdcard_remote = None
-        if os.path.isdir(local):
+        if os.path.isfile(local) and self.is_dir(remote):
+            # force push to use the correct filename in the remote directory
+            remote = posixpath.join(remote, posixpath.basename(local))
+        elif os.path.isdir(local):
             copy_required = True
             temp_parent = tempfile.mkdtemp()
             remote_name = os.path.basename(remote)
@@ -2421,10 +2504,35 @@ class ADBDevice(ADBCommand):
             # copy the source directory *into* the destination
             # directory otherwise it will copy the source directory
             # *onto* the destination directory.
-            if self._adb_version >= '1.0.36' and self.is_dir(remote):
+            if self.is_dir(remote):
                 remote = '/'.join(remote.rstrip('/').split('/')[:-1])
         try:
-            self.command_output(["push", local, remote], timeout=timeout)
+            if not self._run_as_package:
+                self.command_output(["push", local, remote], timeout=timeout)
+                self.chmod(remote, recursive=True, timeout=timeout)
+            else:
+                # When using run-as to work around the lack of root on a
+                # device, we can not push directly to the app's
+                # internal storage since the shell user under which
+                # the push runs does not have permission to write to
+                # the app's directory. Instead, we use a two stage
+                # operation where we first push to a temporary
+                # intermediate location under /data/local/tmp which
+                # should be writable by the shell user, then using
+                # run-as, copy the data into the app's internal
+                # storage.
+                try:
+                    with tempfile.NamedTemporaryFile(delete=True) as tmpf:
+                        intermediate = posixpath.join('/data/local/tmp',
+                                                      posixpath.basename(tmpf.name))
+                    self.command_output(["push", local, intermediate], timeout=timeout)
+                    self.chmod(intermediate, recursive=True, timeout=timeout)
+                    parent_dir = posixpath.dirname(remote)
+                    if not self.is_dir(parent_dir, timeout=timeout):
+                        self.mkdir(parent_dir, parents=True, timeout=timeout)
+                    self.cp(intermediate, remote, recursive=True, timeout=timeout)
+                finally:
+                    self.rm(intermediate, recursive=True, force=True, timeout=timeout)
         except ADBProcessError as e:
             if "remote secure_mkdirs failed" not in str(e):
                 raise
@@ -2437,12 +2545,11 @@ class ADBDevice(ADBCommand):
             # permissions issues, then moving it from the sdcard to
             # the final destination.
             self._logger.info("Falling back to using intermediate /sdcard in push.")
-            self.mkdir(posixpath.dirname(remote), parents=True, timeout=timeout, root=True)
+            self.mkdir(posixpath.dirname(remote), parents=True, timeout=timeout)
             with tempfile.NamedTemporaryFile(delete=True) as tmpf:
                 sdcard_remote = posixpath.join('/sdcard', posixpath.basename(tmpf.name))
             self.command_output(["push", local, sdcard_remote], timeout=timeout)
-            self.cp(sdcard_remote, remote, recursive=True, timeout=timeout, root=True)
-            self.chmod(remote, recursive=True, timeout=timeout, root=True)
+            self.cp(sdcard_remote, remote, recursive=True, timeout=timeout)
         except BaseException:
             raise
         finally:
@@ -2450,7 +2557,7 @@ class ADBDevice(ADBCommand):
             if copy_required:
                 shutil.rmtree(temp_parent)
             if sdcard_remote:
-                self.rm(sdcard_remote, recursive=True, force=True, timeout=timeout, root=True)
+                self.rm(sdcard_remote, recursive=True, force=True, timeout=timeout)
 
     def pull(self, remote, local, timeout=None):
         """Pulls a file or directory from the device.
@@ -2459,15 +2566,14 @@ class ADBDevice(ADBCommand):
             directory.
         :param str local: The path of the local file or
             directory name.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         self._sync(timeout=timeout)
 
@@ -2476,8 +2582,7 @@ class ADBDevice(ADBCommand):
         remote = posixpath.normpath(remote)
         copy_required = False
         original_local = local
-        if self._adb_version >= '1.0.36' and \
-           os.path.isdir(local) and self.is_dir(remote):
+        if os.path.isdir(local) and self.is_dir(remote):
             # See do_sync_pull in
             # https://android.googlesource.com/platform/system/core/+/master/adb/file_sync_client.cpp
             # Work around change in behavior in adb 1.0.36 where if
@@ -2500,9 +2605,40 @@ class ADBDevice(ADBCommand):
             else:
                 local = '/'.join(local.rstrip('/').split('/')[:-1])
         try:
-            # We must first make the remote directory readable.
-            self.chmod(remote, recursive=True, timeout=timeout, root=True)
-            self.command_output(["pull", remote, local], timeout=timeout)
+            if not self._run_as_package:
+                # We must first make the remote directory readable.
+                self.chmod(remote, recursive=True, timeout=timeout)
+                self.command_output(["pull", remote, local], timeout=timeout)
+            else:
+                # When using run-as to work around the lack of root on
+                # a device, we can not pull directly from the apps
+                # internal storage since the shell user under which
+                # the pull runs does not have permission to read from
+                # the app's directory. Instead, we use a two stage
+                # operation where we first use run-as to copy the data
+                # from the app's internal storage to a temporary
+                # intermediate location under /data/local/tmp which
+                # should be writable by the shell user, then using
+                # pull, to copy the data off of the device.
+                try:
+                    with tempfile.NamedTemporaryFile(delete=True) as tmpf:
+                        intermediate = posixpath.join('/data/local/tmp',
+                                                      posixpath.basename(tmpf.name))
+                    # When using run-as <app>, we must first use the
+                    # shell to create the intermediate and chmod it
+                    # before the app will be able to access it.
+                    if self.is_dir(remote, timeout=timeout):
+                        self.mkdir(posixpath.join(intermediate, remote_name), parents=True,
+                                   timeout=timeout)
+                    else:
+                        self.shell_output("echo > %s" % intermediate, timeout=timeout)
+                        self.chmod(intermediate, timeout=timeout)
+                    self.cp(remote, intermediate, recursive=True, timeout=timeout)
+                    self.command_output(["pull", intermediate, local], timeout=timeout)
+                except ADBError as e:
+                    self._logger.error("pull %s %s: %s" % (intermediate, local, str(e)))
+                finally:
+                    self.rm(intermediate, recursive=True, force=True, timeout=timeout)
         finally:
             if copy_required:
                 dir_util.copy_tree(local, original_local)
@@ -2514,15 +2650,14 @@ class ADBDevice(ADBCommand):
         :param str remote: The path of the remote file.
         :param offset: If specified, return only content beyond this offset.
         :param length: If specified, limit content length accordingly.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         self._sync(timeout=timeout)
 
@@ -2534,13 +2669,12 @@ class ADBDevice(ADBCommand):
                 if offset is not None and length is not None:
                     tf2.seek(offset)
                     return six.ensure_str(tf2.read(length))
-                elif offset is not None:
+                if offset is not None:
                     tf2.seek(offset)
                     return six.ensure_str(tf2.read())
-                else:
-                    return six.ensure_str(tf2.read())
+                return six.ensure_str(tf2.read())
 
-    def rm(self, path, recursive=False, force=False, timeout=None, root=False):
+    def rm(self, path, recursive=False, force=False, timeout=None):
         """Delete files or directories on the device.
 
         :param str path: The path of the remote file or directory.
@@ -2549,55 +2683,57 @@ class ADBDevice(ADBCommand):
         :param bool force: Flag which if True will not raise an
             error when attempting to delete a non-existent file. Default
             is False.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
+        path = posixpath.normpath(path)
+        enable_run_as = self.enable_run_as_for_path(path)
         self._sync(timeout=timeout)
 
         cmd = "rm"
         if recursive:
             cmd += " -r"
         try:
-            self.shell_output("%s %s" % (cmd, path), timeout=timeout, root=root)
+            self.shell_output("%s %s" % (cmd, path), timeout=timeout,
+                              enable_run_as=enable_run_as)
             self._sync(timeout=timeout)
-            if self.exists(path, timeout=timeout, root=root):
+            if self.exists(path, timeout=timeout):
                 raise ADBError('rm("%s") failed to remove path.' % path)
         except ADBError as e:
             if not force and 'No such file or directory' in str(e):
                 raise
             if 'Directory not empty' in str(e):
                 raise
+            if self._verbose and 'No such file or directory' not in str(e):
+                self._logger.error(
+                    'rm %s recursive=%s force=%s timeout=%s enable_run_as=%s: %s' % (
+                        path, recursive, force, timeout, enable_run_as, str(e)))
 
-    def rmdir(self, path, timeout=None, root=False):
+    def rmdir(self, path, timeout=None):
         """Delete empty directory on the device.
 
         :param str path: The directory name on the device.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
-        self.shell_output("rmdir %s" % path, timeout=timeout, root=root)
+        path = posixpath.normpath(path)
+        enable_run_as = self.enable_run_as_for_path(path)
+        self.shell_output("rmdir %s" % path, timeout=timeout,
+                          enable_run_as=enable_run_as)
         self._sync(timeout=timeout)
-        if self.is_dir(path, timeout=timeout, root=root):
+        if self.is_dir(path, timeout=timeout):
             raise ADBError('rmdir("%s") failed to remove directory.' % path)
 
     # Process management methods
@@ -2606,17 +2742,16 @@ class ADBDevice(ADBCommand):
         """Returns list of tuples (pid, name, user) for running
         processes on device.
 
-        :param timeout: The maximum time
+        :param int timeout: The maximum time
             in seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified,
             the value set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: list of (pid, name, user) tuples for running processes
+        :return: list of (pid, name, user) tuples for running processes
             on the device.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         adb_process = None
         max_attempts = 2
@@ -2625,7 +2760,7 @@ class ADBDevice(ADBCommand):
                 adb_process = self.shell("ps", timeout=timeout)
                 if adb_process.timedout:
                     raise ADBTimeoutError("%s" % adb_process)
-                elif adb_process.exitcode:
+                if adb_process.exitcode:
                     raise ADBProcessError(adb_process)
                 # first line is the headers
                 header = six.ensure_str(adb_process.stdout_file.readline())
@@ -2670,27 +2805,22 @@ class ADBDevice(ADBCommand):
                 adb_process.stdout_file.close()
 
     def kill(self, pids, sig=None, attempts=3, wait=5,
-             timeout=None, root=False):
+             timeout=None):
         """Kills processes on the device given a list of process ids.
 
         :param list pids: process ids to be killed.
-        :param sig: signal to be sent to the process.
-        :type sig: integer or None
+        :param int sig: signal to be sent to the process.
         :param integer attempts: number of attempts to try to
             kill the processes.
         :param integer wait: number of seconds to wait after each attempt.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :param bool root: Flag specifying if the command should
-            be executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         pid_list = [str(pid) for pid in pids]
         for attempt in range(attempts):
@@ -2699,7 +2829,7 @@ class ADBDevice(ADBCommand):
                 args.append("-%d" % sig)
             args.extend(pid_list)
             try:
-                self.shell_output(' '.join(args), timeout=timeout, root=root)
+                self.shell_output(' '.join(args), timeout=timeout)
             except ADBError as e:
                 if 'No such process' not in str(e):
                     raise
@@ -2717,30 +2847,26 @@ class ADBDevice(ADBCommand):
             raise ADBError('kill: processes %s not killed' % pid_list)
 
     def pkill(self, appname, sig=None, attempts=3, wait=5,
-              timeout=None, root=False):
+              timeout=None):
         """Kills a processes on the device matching a name.
 
         :param str appname: The app name of the process to
             be killed. Note that only the first 75 characters of the
             process name are significant.
-        :param sig: optional signal to be sent to the process.
-        :type sig: integer or None
+        :param int sig: optional signal to be sent to the process.
         :param integer attempts: number of attempts to try to
             kill the processes.
         :param integer wait: number of seconds to wait after each attempt.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
         :param bool root: Flag specifying if the command should
             be executed as root.
-
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         pids = self._pidof(appname, timeout=timeout)
 
@@ -2749,7 +2875,7 @@ class ADBDevice(ADBCommand):
 
         try:
             self.kill(pids, sig, attempts=attempts, wait=wait,
-                      timeout=timeout, root=root)
+                      timeout=timeout)
         except ADBError as e:
             if self.process_exist(appname, timeout=timeout):
                 raise e
@@ -2761,17 +2887,16 @@ class ADBDevice(ADBCommand):
         :param str process_name: The name of the process
             to check. Note that only the first 75 characters of the
             process name are significant.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: boolean - True if process exists.
+        :return: boolean - True if process exists.
 
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         if not isinstance(process_name, six.string_types):
             raise ADBError("Process name %s is not a string" % process_name)
@@ -2794,8 +2919,7 @@ class ADBDevice(ADBCommand):
             return True
         return False
 
-    def cp(self, source, destination, recursive=False, timeout=None,
-           root=False):
+    def cp(self, source, destination, recursive=False, timeout=None):
         """Copies a file or directory on the device.
 
         :param source: string containing the path of the source file or
@@ -2805,48 +2929,51 @@ class ADBDevice(ADBCommand):
         :param recursive: optional boolean indicating if a recursive copy is to
             be performed. Required if the source is a directory. Defaults to
             False. Think cp -R source destination.
-        :param timeout: optional integer specifying the maximum time in
+        :param int timeout: optional integer specifying the maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         source = posixpath.normpath(source)
         destination = posixpath.normpath(destination)
+        enable_run_as = self.enable_run_as_for_path(source) or \
+            self.enable_run_as_for_path(destination)
         if self._have_cp:
             r = '-R' if recursive else ''
             self.shell_output('cp %s %s %s' % (r, source, destination),
-                              timeout=timeout, root=root)
+                              timeout=timeout, enable_run_as=enable_run_as)
+            self.chmod(destination, recursive=recursive, timeout=timeout)
             self._sync(timeout=timeout)
             return
 
         # Emulate cp behavior depending on if source and destination
         # already exists and whether they are a directory or file.
-        if not self.exists(source, timeout=timeout, root=root):
+        if not self.exists(source, timeout=timeout):
             raise ADBError("cp: can't stat '%s': No such file or directory" %
                            source)
 
-        if self.is_file(source, timeout=timeout, root=root):
-            if self.is_dir(destination, timeout=timeout, root=root):
+        if self.is_file(source, timeout=timeout):
+            if self.is_dir(destination, timeout=timeout):
                 # Copy the source file into the destination directory
                 destination = posixpath.join(destination,
                                              posixpath.basename(source))
             self.shell_output('dd if=%s of=%s' % (source, destination),
-                              timeout=timeout, root=root)
+                              timeout=timeout)
+            self.chmod(destination, recursive=recursive, timeout=timeout)
             self._sync(timeout=timeout)
             return
 
-        if self.is_file(destination, timeout=timeout, root=root):
+        if self.is_file(destination, timeout=timeout):
             raise ADBError('cp: %s: Not a directory' % destination)
 
         if not recursive:
             raise ADBError("cp: omitting directory '%s'" % source)
 
-        if self.is_dir(destination, timeout=timeout, root=root):
+        if self.is_dir(destination, timeout=timeout):
             # Copy the source directory into the destination directory.
             destination_dir = posixpath.join(destination,
                                              posixpath.basename(source))
@@ -2857,50 +2984,52 @@ class ADBDevice(ADBCommand):
 
         try:
             # Do not create parent directories since cp does not.
-            self.mkdir(destination_dir, timeout=timeout, root=root)
+            self.mkdir(destination_dir, timeout=timeout)
         except ADBError as e:
             if 'File exists' not in str(e):
                 raise
 
-        for i in self.list_files(source, timeout=timeout, root=root):
+        for i in self.list_files(source, timeout=timeout):
             self.cp(posixpath.join(source, i),
                     posixpath.join(destination_dir, i),
                     recursive=recursive,
-                    timeout=timeout, root=root)
+                    timeout=timeout)
+        self.chmod(destination_dir, recursive=True, timeout=timeout)
 
-    def mv(self, source, destination, timeout=None, root=False):
+    def mv(self, source, destination, timeout=None):
         """Moves a file or directory on the device.
 
         :param source: string containing the path of the source file or
             directory.
         :param destination: string containing the path of the destination file
             or directory.
-        :param timeout: optional integer specifying the maximum time in
+        :param int timeout: optional integer specifying the maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :raises: * ADBTimeoutError
-                 * ADBRootError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         source = posixpath.normpath(source)
         destination = posixpath.normpath(destination)
+        enable_run_as = self.enable_run_as_for_path(source) or \
+            self.enable_run_as_for_path(destination)
         self.shell_output('mv %s %s' % (source, destination), timeout=timeout,
-                          root=root)
+                          enable_run_as=enable_run_as)
 
     def reboot(self, timeout=None):
         """Reboots the device.
 
-        :param timeout: optional integer specifying the maximum time in
+        :param int timeout: optional integer specifying the maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
 
         reboot() reboots the device, issues an adb wait-for-device in order to
         wait for the device to complete rebooting, then calls is_device_ready()
@@ -2915,21 +3044,21 @@ class ADBDevice(ADBCommand):
 
         """
         self.command_output(["reboot"], timeout=timeout)
-        self._initialize_boot_state(timeout=timeout)
+        self._wait_for_boot_completed(timeout=timeout)
         return self.is_device_ready(timeout=timeout)
 
     def get_sysinfo(self, timeout=None):
         """
         Returns a detailed dictionary of information strings about the device.
 
-        :param timeout: optional integer specifying the maximum time in
+        :param int timeout: optional integer specifying the maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
 
-        :raises: * ADBTimeoutError
+        :raises: :exc:`ADBTimeoutError`
         """
         results = {"info": self.get_info(timeout=timeout)}
         for service in ("meminfo", "cpuinfo", "dbinfo", "procstats", "usagestats",
@@ -2952,14 +3081,14 @@ class ADBDevice(ADBCommand):
              - `uptime` - uptime of the device
 
             If `directive` is `None`, will return all available information
-        :param timeout: optional integer specifying the maximum time in
+        :param int timeout: optional integer specifying the maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         directives = ['battery', 'disk', 'id', 'os', 'process', 'systime',
                       'uptime']
@@ -3021,17 +3150,11 @@ class ADBDevice(ADBCommand):
         """Set SELinux mode.
         :param str value: The new SELinux mode. Should be one of
             Permissive, 0, Enforcing, 1 but it is not validated.
-
-        We do not attempt to set SELinux when _require_root is False.  This
-        allows experimentation with running unrooted devices.
         """
         try:
-            if not self._require_root:
-                self._logger.info('Ignoring attempt to set SELinux %s.' % value)
-            else:
-                self._logger.info('Setting SELinux %s' % value)
-                self.shell_output("setenforce %s" % value, root=True)
-        except (ADBError, ADBRootError) as e:
+            self.shell_output("setenforce %s" % value)
+            self._logger.info('Setting SELinux %s' % value)
+        except ADBError as e:
             self._logger.warning('Unable to set SELinux Permissive due to %s.' % e)
 
     # Informational methods
@@ -3039,16 +3162,15 @@ class ADBDevice(ADBCommand):
     def get_battery_percentage(self, timeout=None):
         """Returns the battery charge as a percentage.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: battery charge as a percentage.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: battery charge as a percentage.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         level = None
         scale = None
@@ -3073,16 +3195,15 @@ class ADBDevice(ADBCommand):
     def get_top_activity(self, timeout=None):
         """Returns the name of the top activity (focused app) reported by dumpsys
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :type timeout: integer or None
-        :returns: package name of top activity or None (cannot be determined)
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: package name of top activity or None (cannot be determined)
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         if self.version < version_codes.Q:
             return self._get_top_activity_P(timeout=timeout)
@@ -3107,7 +3228,7 @@ class ADBDevice(ADBCommand):
         if m:
             line = m.group(0)
             # Extract package name: string of non-whitespace ending in forward slash
-            m = re.search('(\S+)/$', line)
+            m = re.search(r'(\S+)/$', line)
             if m:
                 package = m.group(1)
         if self._verbose:
@@ -3126,12 +3247,12 @@ class ADBDevice(ADBCommand):
         except Exception:
             # dumpsys intermittently fails on some platforms (4.3 arm emulator)
             return package
-        m = re.search('mFocusedApp=AppWindowToken{\w+ token=Token{'
-                      '\w+ ActivityRecord{\w+ w+ (\w+)/w+ \w+}}}', data)
+        m = re.search(r'mFocusedApp=AppWindowToken{\w+ token=Token{'
+                      r'\w+ ActivityRecord{\w+ w+ (\w+)/w+ \w+}}}', data)
         if m:
             line = m.group(1)
             # Extract package name: string of non-whitespace ending in forward slash
-            m = re.search('(\S+)/', line)
+            m = re.search(r'(\S+)/', line)
             if m:
                 package = m.group(1)
         if self._verbose:
@@ -3146,15 +3267,14 @@ class ADBDevice(ADBCommand):
         This method uses the android only package manager to check for
         readiness.
 
-        :param timeout: The maximum time
+        :param int timeout: The maximum time
             in seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         # command_output automatically inserts a 'wait-for-device'
         # argument to adb. Issuing an empty command is the same as adb
@@ -3164,8 +3284,6 @@ class ADBDevice(ADBCommand):
         # versions of adb.
         self._wait_for_boot_completed(timeout=timeout)
         pm_error_string = "Error: Could not access the Package Manager"
-        pm_list_commands = ["packages", "permission-groups", "permissions",
-                            "instrumentation", "features", "libraries"]
         ready_path = os.path.join(self.test_root, "ready")
         for attempt in range(self._device_ready_retry_attempts):
             failure = 'Unknown failure'
@@ -3182,15 +3300,13 @@ class ADBDevice(ADBCommand):
                         self.rmdir(ready_path, timeout=timeout)
                     self.mkdir(ready_path, timeout=timeout)
                     self.rmdir(ready_path, timeout=timeout)
-                    # Invoke the pm list commands to see if it is up and
+                    # Invoke the pm list packages command to see if it is up and
                     # running.
-                    for pm_list_cmd in pm_list_commands:
-                        data = self.shell_output("pm list %s" % pm_list_cmd,
-                                                 timeout=timeout)
-                        if pm_error_string in data:
-                            failure = data
-                            success = False
-                            break
+                    data = self.shell_output("pm list packages org.mozilla",
+                                             timeout=timeout)
+                    if pm_error_string in data:
+                        failure = data
+                        success = False
             except ADBError as e:
                 success = False
                 failure = str(e)
@@ -3206,20 +3322,18 @@ class ADBDevice(ADBCommand):
     def power_on(self, timeout=None):
         """Sets the device's power stayon value.
 
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         try:
             self.shell_output('svc power stayon true',
-                              timeout=timeout,
-                              root=True)
+                              timeout=timeout)
         except ADBError as e:
             # Executing this via adb shell errors, but not interactively.
             # Any other exitcode is a real error.
@@ -3248,7 +3362,8 @@ class ADBDevice(ADBCommand):
             self._logger.info("Granting important runtime permissions to %s" % app_name)
             for permission in permissions:
                 try:
-                    self.shell_output('pm grant %s %s' % (app_name, permission))
+                    self.shell_output('pm grant %s %s' % (app_name, permission), timeout=timeout,
+                                      enable_run_as=False)
                 except ADBError as e:
                     self._logger.warning("Unable to grant runtime permission %s to %s due to %s" %
                                          (permission, app_name, e))
@@ -3258,16 +3373,18 @@ class ADBDevice(ADBCommand):
 
         :param str apk_path: The apk file name to be installed.
         :param bool replace: If True, replace existing application.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :return: string - name of installed package.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
+        dump_packages = "dumpsys package packages"
+        packages_before = set(self.shell_output(dump_packages).split('\n'))
         cmd = ["install"]
         if replace:
             cmd.append("-r")
@@ -3276,22 +3393,32 @@ class ADBDevice(ADBCommand):
         if data.find('Success') == -1:
             raise ADBError("install failed for %s. Got: %s" %
                            (apk_path, data))
+        packages_after = set(self.shell_output(dump_packages).split('\n'))
+        packages_diff = packages_after - packages_before
+        package_name = None
+        re_pkg = re.compile(r'\s+pkg=Package{[^ ]+ (.*)}')
+        for diff in packages_diff:
+            match = re_pkg.match(diff)
+            if match:
+                package_name = match.group(1)
+                break
+        return package_name
 
     def is_app_installed(self, app_name, timeout=None):
         """Returns True if an app is installed on the device.
 
         :param str app_name: name of the app to be checked.
-        :param timeout: maximum time in seconds for any spawned
+        :param int timeout: maximum time in seconds for any spawned
             adb process to complete before throwing an ADBTimeoutError.
             This timeout is per adb call. If it is not specified,
             the value set in the ADB constructor is used.
-        :type timeout: integer or None
 
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         pm_error_string = 'Error: Could not access the Package Manager'
-        data = self.shell_output("pm list package %s" % app_name, timeout=timeout)
+        data = self.shell_output("pm list package %s" % app_name, timeout=timeout,
+                                 enable_run_as=False)
         if pm_error_string in data:
             raise ADBError(pm_error_string)
         output = [line for line in data.splitlines() if line.strip()]
@@ -3306,25 +3433,22 @@ class ADBDevice(ADBCommand):
         :param str app_name: Name of application (e.g. `com.android.chrome`)
         :param str activity_name: Name of activity to launch (e.g. `.Main`)
         :param str intent: Intent to launch application with
-        :param url: URL to open
-        :type url: str or None
-        :param extras: Extra arguments for application.
-        :type extras: dict or None
+        :param str url: URL to open
+        :param dict extras: Extra arguments for application.
         :param bool wait: If True, wait for application to start before
             returning.
         :param bool fail_if_running: Raise an exception if instance of
             application is already running.
         :param bool grant_runtime_permissions: Grant special runtime
             permissions.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         # If fail_if_running is True, we throw an exception here. Only one
         # instance of an application can be running at once on Android,
@@ -3377,26 +3501,22 @@ class ADBDevice(ADBCommand):
         :param str app_name: Name of fennec application (e.g.
             `org.mozilla.fennec`)
         :param str intent: Intent to launch application.
-        :param moz_env: Mozilla specific environment to pass into
+        :param str moz_env: Mozilla specific environment to pass into
             application.
-        :type moz_env: str or None
-        :param extra_args: Extra arguments to be parsed by fennec.
-        :type extra_args: str or None
-        :param url: URL to open
-        :type url: str or None
+        :param str extra_args: Extra arguments to be parsed by fennec.
+        :param str url: URL to open
         :param bool wait: If True, wait for application to start before
             returning.
         :param bool fail_if_running: Raise an exception if instance of
             application is already running.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         extras = {}
 
@@ -3428,25 +3548,23 @@ class ADBDevice(ADBCommand):
         :param str activity_name: Activity name, like `GeckoViewActivity`, or
             `TestRunnerActivity`.
         :param str intent: Intent to launch application.
-        :type moz_env: str or None
-        :param extra_args: Extra arguments to be parsed by the app.
-        :type extra_args: str or None
-        :param url: URL to open
-        :type url: str or None
+        :param str moz_env: Mozilla specific environment to pass into
+            application.
+        :param str extra_args: Extra arguments to be parsed by the app.
+        :param str url: URL to open
         :param bool e10s: If True, run in multiprocess mode.
         :param bool wait: If True, wait for application to start before
             returning.
         :param bool fail_if_running: Raise an exception if instance of
             application is already running.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         extras = {}
 
@@ -3467,7 +3585,7 @@ class ADBDevice(ADBCommand):
                                 wait=wait, fail_if_running=fail_if_running,
                                 timeout=timeout)
 
-    def stop_application(self, app_name, timeout=None, root=False):
+    def stop_application(self, app_name, timeout=None):
         """Stops the specified application
 
         For Android 3.0+, we use the "am force-stop" to do this, which
@@ -3477,21 +3595,19 @@ class ADBDevice(ADBCommand):
         less reliable and does require root.
 
         :param str app_name: Name of application (e.g. `com.android.chrome`)
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
         :param bool root: Flag specifying if the command should be
             executed as root.
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         if self.version >= version_codes.HONEYCOMB:
-            self.shell_output("am force-stop %s" % app_name,
-                              timeout=timeout, root=root)
+            self.shell_output("am force-stop %s" % app_name, timeout=timeout)
         else:
             num_tries = 0
             max_tries = 5
@@ -3499,7 +3615,7 @@ class ADBDevice(ADBCommand):
                 if num_tries > max_tries:
                     raise ADBError("Couldn't successfully kill %s after %s "
                                    "tries" % (app_name, max_tries))
-                self.pkill(app_name, timeout=timeout, root=root)
+                self.pkill(app_name, timeout=timeout)
                 num_tries += 1
 
                 # sleep for a short duration to make sure there are no
@@ -3516,21 +3632,21 @@ class ADBDevice(ADBCommand):
         :param bool reboot: Flag indicating that the device should
             be rebooted after the app is uninstalled. No reboot occurs
             if the app is not installed.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         if self.is_app_installed(app_name, timeout=timeout):
             data = self.command_output(["uninstall", app_name], timeout=timeout)
             if data.find('Success') == -1:
                 self._logger.debug('uninstall_app failed: %s' % data)
                 raise ADBError("uninstall failed for %s. Got: %s" % (app_name, data))
+            self.run_as_package = None
             if reboot:
                 self.reboot(timeout=timeout)
 
@@ -3539,15 +3655,14 @@ class ADBDevice(ADBCommand):
 
         :param str apk_path: The apk file name to be
             updated.
-        :param timeout: The maximum time in
+        :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
         """
         cmd = ["install", "-r"]
         if self.version >= version_codes.M:
