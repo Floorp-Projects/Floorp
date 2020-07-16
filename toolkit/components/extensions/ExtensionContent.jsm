@@ -321,8 +321,8 @@ class Script {
   /**
    * @param {BrowserExtensionContent} extension
    * @param {WebExtensionContentScript|object} matcher
-   *        An object with a "matchesWindow" method and content script execution
-   *        details. This is usually a plain WebExtensionContentScript object,
+   *        An object with a "matchesWindowGlobal" method and content script
+   *        execution details. This is usually a plain WebExtensionContentScript
    *        except when the script is run via `tabs.executeScript`. In this
    *        case, the object may have some extra properties:
    *        wantReturnValue, removeCSS, cssOrigin, jsCode
@@ -427,8 +427,8 @@ class Script {
     }
   }
 
-  matchesWindow(window) {
-    return this.matcher.matchesWindow(window);
+  matchesWindowGlobal(windowGlobal) {
+    return this.matcher.matchesWindowGlobal(windowGlobal);
   }
 
   async injectInto(window) {
@@ -630,8 +630,8 @@ class UserScript extends Script {
   /**
    * @param {BrowserExtensionContent} extension
    * @param {WebExtensionContentScript|object} matcher
-   *        An object with a "matchesWindow" method and content script execution
-   *        details.
+   *        An object with a "matchesWindowGlobal" method and content script
+   *        execution details.
    */
   constructor(extension, matcher) {
     super(extension, matcher);
@@ -1189,10 +1189,8 @@ var ExtensionContent = {
 
     const executeInWin = innerId => {
       let wg = WindowGlobalChild.getByInnerWindowId(innerId);
-      let bc = wg && !wg.isClosed && wg.isCurrentGlobal && wg.browsingContext;
-
-      if (bc && bc.docShell && script.matchesWindow(bc.window)) {
-        return script.injectInto(bc.window);
+      if (wg?.isCurrentGlobal && script.matchesWindowGlobal(wg)) {
+        return script.injectInto(wg.browsingContext.window);
       }
     };
 

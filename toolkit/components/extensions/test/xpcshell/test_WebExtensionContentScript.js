@@ -148,7 +148,7 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     },
   ];
 
-  // matchesWindow tests against content frames
+  // matchesWindowGlobal tests against content frames
   await contentPage.spawn({ tests, urls }, args => {
     this.windows = new Map();
     this.windows.set(this.content.location.href, this.content);
@@ -172,8 +172,9 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     for (let [i, test] of tests.entries()) {
       for (let [frame, url] of Object.entries(args.urls)) {
         let should = test[frame] ? "should" : "should not";
+        let wgc = this.windows.get(url).windowGlobalChild;
         Assert.equal(
-          test.script.matchesWindow(this.windows.get(url)),
+          test.script.matchesWindowGlobal(wgc),
           test[frame],
           `Script ${i} ${should} match the ${frame} frame`
         );

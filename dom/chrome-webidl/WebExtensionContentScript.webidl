@@ -31,7 +31,7 @@ interface MozDocumentMatcher {
    * Returns true if the given window matches. This should be used
    * to determine whether to run a script in a window at load time.
    */
-  boolean matchesWindow(WindowProxy window);
+  boolean matchesWindowGlobal(WindowGlobalChild windowGlobal);
 
   /**
    * If true, match all frames. If false, match only top-level frames.
