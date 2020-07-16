@@ -171,8 +171,14 @@ class HostLayerManager : public LayerManager {
   void RecordUpdateTime(float aValue);
 
   TimeStamp GetCompositionTime() const { return mCompositionTime; }
-  void SetCompositionTime(TimeStamp aTimeStamp) {
+  CompositionOpportunityId GetCompositionOpportunityId() const {
+    return mCompositionOpportunityId;
+  }
+
+  void SetCompositionInfo(TimeStamp aTimeStamp,
+                          CompositionOpportunityId aCompositionOpportunityId) {
     mCompositionTime = aTimeStamp;
+    mCompositionOpportunityId = aCompositionOpportunityId;
     if (!mCompositionTime.IsNull() && !mCompositeUntilTime.IsNull() &&
         mCompositionTime >= mCompositeUntilTime) {
       mCompositeUntilTime = TimeStamp();
@@ -224,6 +230,9 @@ class HostLayerManager : public LayerManager {
 
   // Render time for the current composition.
   TimeStamp mCompositionTime;
+
+  // CompositionOpportunityId of the current composition.
+  CompositionOpportunityId mCompositionOpportunityId;
 
   // When nonnull, during rendering, some compositable indicated that it will
   // change its rendering at this time. In order not to miss it, we composite
