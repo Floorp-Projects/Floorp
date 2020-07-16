@@ -29,7 +29,7 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
                            ? icScript->inliningRoot()
                            : script->jitScript()->getOrCreateInliningRoot(cx);
   JitSpew(JitSpew_WarpTrialInlining,
-          "Trial inlining for %s script %s:%u%u (%p) (inliningRoot=%p)",
+          "Trial inlining for %s script %s:%u:%u (%p) (inliningRoot=%p)",
           (isRecursive ? "inner" : "outer"), script->filename(),
           script->lineno(), script->column(), frame->script(), root);
 
@@ -148,10 +148,30 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
   return data;
 }
 
-bool TrialInliner::shouldInline(JSFunction* target) {
+/*static*/
+bool TrialInliner::canInline(JSFunction* target) {
+  if (!target->hasJitScript()) {
+    return false;
+  }
+  JSScript* script = target->nonLazyScript();
+  if (!script->jitScript()->hasBaselineScript() || script->uninlineable() ||
+      script->needsArgsObj()) {
+    return false;
+  }
+  return true;
+}
+
+bool TrialInliner::shouldInline(JSFunction* target, BytecodeLocation loc) {
+  if (!canInline(target)) {
+    return false;
+  }
+  JitSpew(JitSpew_WarpTrialInlining,
+          "Inlining candidate JSOp::%s: callee script %s:%u:%u",
+          CodeName(loc.getOp()), target->nonLazyScript()->filename(),
+          target->nonLazyScript()->lineno(), target->nonLazyScript()->column());
+
   // TODO: Actual heuristics
-  return target->hasJitScript() &&
-         target->baseScript()->jitScript()->hasBaselineScript();
+  return true;
 }
 
 ICScript* TrialInliner::createInlinedICScript(JSFunction* target) {
@@ -218,12 +238,8 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
     return true;
   }
 
-  JitSpew(JitSpew_WarpTrialInlining,
-          "Inlining candidate JSOp::%s: callee function %p",
-          CodeName(loc.getOp()), data->target);
-
   // Decide whether to inline the target.
-  if (!shouldInline(data->target)) {
+  if (!shouldInline(data->target, loc)) {
     return true;
   }
 
