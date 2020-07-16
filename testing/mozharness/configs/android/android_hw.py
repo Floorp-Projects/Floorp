@@ -20,5 +20,5 @@ config = {
     "tooltool_cache": "/builds/tooltool_cache",
     # from android_common.py
     "download_tooltool": True,
-    "xpcshell_extra": "--remoteTestRoot=/data/local/tmp/test_root",
+    "xpcshell_extra": "--remoteTestRoot=/data/local/tests",
 }
