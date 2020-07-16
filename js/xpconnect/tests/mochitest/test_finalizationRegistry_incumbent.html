@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test FinalizationRegistry tracks its incumbent global</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      let resolvePromise, rejectPromise;
+
+      async function runTest(global, callback) {
+        let fr = new global.FinalizationRegistry(callback);
+        fr.register({}, undefined);
+
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+
+        let promise = new Promise((resolve, reject) => {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+
+        return promise;
+      }
+
+      function receiveMessage(event) {
+        resolvePromise(event.source.sourceName);
+      }
+
+      async function go() {
+        // This test uses FinalizationRegistry to trigger a callback and reports
+        // the incumbent global in the callback using postMessage. In all cases
+        // the author function that scheduled the callback is runTest(), so the
+        // incumbent global should be the main window.
+
+        SimpleTest.waitForExplicitFinish();
+
+        window.sourceName = "main";
+        window.addEventListener("message", receiveMessage, false);
+
+        let other = window.frames[0];
+        other.sourceName = "other";
+        other.addEventListener("message", receiveMessage, false);
+
+        is(await runTest(window, v => window.postMessage(v)), "main");
+        is(await runTest(window, window.postMessage.bind(window)), "main");
+        is(await runTest(other, v => other.postMessage(v)), "main");
+        is(await runTest(other, other.postMessage.bind(other)), "main");
+        is(await runTest(window, v => other.postMessage(v)), "main");
+        is(await runTest(window, other.postMessage.bind(other)), "main");
+        is(await runTest(other, v => window.postMessage(v)), "main");
+        is(await runTest(other, window.postMessage.bind(window)), "main");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <div style="display: none">
+      <!-- A subframe so we have another global to work with -->
+      <iframe></iframe>
+    </div>
+  </body>
+</html>
