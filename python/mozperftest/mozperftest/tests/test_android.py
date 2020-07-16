@@ -16,8 +16,6 @@ class FakeDevice:
         self._logger = mock.MagicMock()
         self._have_su = True
         self._have_android_su = True
-        self._have_root_shell = True
-        self.is_rooted = True
 
     def clear_logcat(self, *args, **kwargs):
         return True
@@ -62,8 +60,6 @@ def test_android_perf_tuning_rooted(device):
     # on rooted devices correctly
     device._have_su = True
     device._have_android_su = True
-    device._have_root_shell = True
-    device.is_rooted = True
     with mock.patch(
         "mozperftest.system.android_perf_tuner.PerformanceTuner.set_kernel_performance_parameters"
     ) as mockfunc:
@@ -78,8 +74,6 @@ def test_android_perf_tuning_nonrooted(device):
     # on non-rooted devices correctly
     device._have_su = False
     device._have_android_su = False
-    device._have_root_shell = False
-    device.is_rooted = False
     with mock.patch(
         "mozperftest.system.android_perf_tuner.PerformanceTuner.set_kernel_performance_parameters"
     ) as mockfunc:

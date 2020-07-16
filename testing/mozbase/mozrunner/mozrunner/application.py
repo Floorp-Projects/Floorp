@@ -9,7 +9,7 @@ from distutils.spawn import find_executable
 import os
 import posixpath
 
-from mozdevice import ADBDeviceFactory
+from mozdevice import ADBDevice
 from mozprofile import (
     Profile,
     ChromeProfile,
@@ -117,7 +117,7 @@ class FennecContext(RemoteContext):
         if device_serial in devices:
             device = devices[device_serial]
         else:
-            device = ADBDeviceFactory(adb=adb_path, device=device_serial)
+            device = ADBDevice(adb=adb_path, device=device_serial)
             devices[device_serial] = device
         return device
 

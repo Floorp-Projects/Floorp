@@ -41,37 +41,55 @@ class AndroidMixin(object):
     @property
     def adb_path(self):
         '''Get the path to the adb executable.
+
+        Defer the use of query_exe() since it is defined by the
+        BaseScript Mixin which hasn't finished initialing by the
+        time the AndroidMixin is first initialized.
         '''
-        self.activate_virtualenv()
         if not self._adb_path:
-            self._adb_path = self.query_exe('adb')
+            try:
+                self._adb_path = self.query_exe('adb')
+            except AttributeError:
+                # Ignore attribute errors since BaseScript will
+                # attempt to access properties before the other Mixins
+                # have completed initialization. We recover afterwards
+                # when additional attemps occur after initialization
+                # is completed.
+                pass
         return self._adb_path
 
     @property
     def device(self):
-        if not self._device:
-            # We must access the adb_path property to activate the
-            # virtualenv before importing mozdevice in order to
-            # import the mozdevice installed into the virtualenv and
-            # not any system-wide installation of mozdevice.
-            adb = self.adb_path
-            import mozdevice
-            self._device = mozdevice.ADBDeviceFactory(adb=adb,
-                                                      device=self.device_serial,
-                                                      verbose=True)
+        if not self._device and self.adb_path:
+            try:
+                import mozdevice
+                self._device = mozdevice.ADBDevice(adb=self.adb_path,
+                                                   device=self.device_serial,
+                                                   verbose=True)
+                self.info("New mozdevice with adb=%s, device=%s" %
+                          (self.adb_path, self.device_serial))
+            except AttributeError:
+                # As in adb_path, above.
+                pass
         return self._device
 
     @property
     def is_android(self):
-        c = self.config
-        installer_url = c.get('installer_url', None)
-        return self.device_serial is not None or self.is_emulator or \
-            (installer_url is not None and installer_url.endswith(".apk"))
+        try:
+            c = self.config
+            installer_url = c.get('installer_url', None)
+            return self.device_serial is not None or self.is_emulator or \
+                (installer_url is not None and installer_url.endswith(".apk"))
+        except AttributeError:
+            return False
 
     @property
     def is_emulator(self):
-        c = self.config
-        return True if c.get('emulator_avd_name') else False
+        try:
+            c = self.config
+            return True if c.get('emulator_avd_name') else False
+        except AttributeError:
+            return False
 
     def _get_repo_url(self, path):
         """
@@ -324,7 +342,7 @@ class AndroidMixin(object):
         """
         import mozdevice
         try:
-            self.device.run_as_package = self.device.install_app(apk, replace=replace)
+            self.device.install_app(apk, replace=replace)
         except (mozdevice.ADBError, mozdevice.ADBProcessError, mozdevice.ADBTimeoutError) as e:
             self.info('Failed to install %s on %s: %s %s' %
                       (apk, self.device_name,
@@ -360,10 +378,10 @@ class AndroidMixin(object):
             pass
         return False
 
-    def shell_output(self, cmd, enable_run_as=False):
+    def shell_output(self, cmd):
         import mozdevice
         try:
-            return self.device.shell_output(cmd, timeout=30, enable_run_as=enable_run_as)
+            return self.device.shell_output(cmd, timeout=30)
         except (mozdevice.ADBTimeoutError) as e:
             self.info('Failed to run shell command %s from %s: %s %s' %
                       (cmd, self.device_name,
@@ -452,16 +470,16 @@ class AndroidMixin(object):
     def delete_ANRs(self):
         remote_dir = self.device.stack_trace_dir
         try:
-            if not self.device.is_dir(remote_dir):
-                self.device.mkdir(remote_dir)
+            if not self.device.is_dir(remote_dir, root=True):
+                self.mkdir(remote_dir, root=True)
+                self.chmod(remote_dir, root=True)
                 self.info("%s created" % remote_dir)
                 return
-            self.device.chmod(remote_dir, recursive=True)
-            for trace_file in self.device.ls(remote_dir, recursive=True):
+            for trace_file in self.device.ls(remote_dir, root=True):
                 trace_path = posixpath.join(remote_dir, trace_file)
-                if self.device.is_file(trace_path):
-                    self.device.rm(trace_path)
-                    self.info("%s deleted" % trace_path)
+                self.device.chmod(trace_path, root=True)
+                self.device.rm(trace_path, root=True)
+                self.info("%s deleted" % trace_path)
         except Exception as e:
             self.info("failed to delete %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
 
@@ -475,7 +493,7 @@ class AndroidMixin(object):
             if not self.device.is_dir(remote_dir):
                 self.info("%s not found; ANR check skipped" % remote_dir)
                 return
-            self.device.chmod(remote_dir, recursive=True)
+            self.device.chmod(remote_dir, recursive=True, root=True)
             self.device.pull(remote_dir, dirs['abs_blob_upload_dir'])
             self.delete_ANRs()
         except Exception as e:
@@ -484,16 +502,16 @@ class AndroidMixin(object):
     def delete_tombstones(self):
         remote_dir = "/data/tombstones"
         try:
-            if not self.device.is_dir(remote_dir):
-                self.device.mkdir(remote_dir)
+            if not self.device.is_dir(remote_dir, root=True):
+                self.mkdir(remote_dir, root=True)
+                self.chmod(remote_dir, root=True)
                 self.info("%s created" % remote_dir)
                 return
-            self.device.chmod(remote_dir, recursive=True)
-            for trace_file in self.device.ls(remote_dir, recursive=True):
+            for trace_file in self.device.ls(remote_dir, root=True):
                 trace_path = posixpath.join(remote_dir, trace_file)
-                if self.device.is_file(trace_path):
-                    self.device.rm(trace_path)
-                    self.info("%s deleted" % trace_path)
+                self.device.chmod(trace_path, root=True)
+                self.device.rm(trace_path, root=True)
+                self.info("%s deleted" % trace_path)
         except Exception as e:
             self.info("failed to delete %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
 
@@ -507,7 +525,7 @@ class AndroidMixin(object):
             if not self.device.is_dir(remote_dir):
                 self.info("%s not found; tombstone check skipped" % remote_dir)
                 return
-            self.device.chmod(remote_dir, recursive=True)
+            self.device.chmod(remote_dir, recursive=True, root=True)
             self.device.pull(remote_dir, dirs['abs_blob_upload_dir'])
             self.delete_tombstones()
         except Exception as e:
