@@ -155,8 +155,6 @@ jobs:
         parent: debian10-base
         packages:
             - deb8-valgrind
-    android-test:
-        symbol: I(android-test)
     fetch:
         symbol: I(fetch)
         parent: debian10-raw
