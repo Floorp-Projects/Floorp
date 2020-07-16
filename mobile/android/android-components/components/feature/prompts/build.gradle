@@ -11,6 +11,7 @@ android {
     defaultConfig {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -47,6 +48,10 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
+
+    androidTestImplementation project(':support-android-test')
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
 }
 
 apply from: '../../../publish.gradle'

@@ -7,6 +7,7 @@
 package mozilla.components.support.ktx.kotlin
 
 import mozilla.components.support.utils.URLStringUtils
+import java.io.File
 import java.net.MalformedURLException
 import java.net.URL
 import java.security.MessageDigest
@@ -135,4 +136,12 @@ fun String.isSameOriginAs(other: String): Boolean {
  */
 fun String.sanitizeURL(): String {
     return this.trim()
+}
+
+/**
+ * Remove any unwanted character from string containing file name.
+ * For example for an input of "/../../../../../../directory/file.txt" you will get "file.txt"
+ */
+fun String.sanitizeFileName(): String {
+    return this.substringAfterLast(File.separatorChar)
 }

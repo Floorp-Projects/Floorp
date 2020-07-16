@@ -169,4 +169,16 @@ class StringTest {
         assertFalse("https://mozilla.org".isResourceUrl())
         assertFalse("http://mozilla.org".isResourceUrl())
     }
+
+    @Test
+    fun sanitizeFileName() {
+        var file = "/../../../../../../../../../../directory/file.txt"
+        val fileName = "file.txt"
+
+        assertEquals(fileName, file.sanitizeFileName())
+
+        file = "/root/directory/file.txt"
+
+        assertEquals(fileName, file.sanitizeFileName())
+    }
 }
