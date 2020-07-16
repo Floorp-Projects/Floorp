@@ -80,6 +80,8 @@ class MOZ_RAII TrialInliner {
   MOZ_MUST_USE bool tryInlining();
   MOZ_MUST_USE bool maybeInlineCall(const ICEntry& entry, BytecodeLocation loc);
 
+  static bool canInline(JSFunction* target);
+
  private:
   ICStub* maybeSingleStub(const ICEntry& entry);
   void cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
@@ -88,7 +90,7 @@ class MOZ_RAII TrialInliner {
   void replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                      CacheKind kind);
 
-  bool shouldInline(JSFunction* target);
+  bool shouldInline(JSFunction* target, BytecodeLocation loc);
 
   JSContext* cx_;
   HandleScript script_;
