@@ -489,7 +489,7 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           type=str,
                           dest="remoteTestRoot",
                           help="Remote directory to use as test root "
-                               "(eg. /mnt/sdcard/tests or /data/local/tests).")
+                               "(eg. /data/local/tmp/test_root).")
 
         self.add_argument("--httpd-path",
                           action="store",
