@@ -228,7 +228,7 @@ void LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp,
                                        EndTransactionFlags aFlags) {
   AUTO_PROFILER_LABEL("LayerManager::EndTransaction", GRAPHICS);
 
-  SetCompositionTime(aTimeStamp);
+  SetCompositionInfo(aTimeStamp, CompositionOpportunityId{});
 
   TextureSourceProvider::AutoReadUnlockTextures unlock(mTextureSourceProvider);
 
