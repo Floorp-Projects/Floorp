@@ -158,7 +158,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                 onPositiveButtonClicked = onPositiveButtonClicked
             )
             dialog.show(parentFragmentManager, PERMISSIONS_DIALOG_FRAGMENT_TAG)
-            requireContext().components.analytics.metrics.track(Event.AddonInstalled(addon.id))
         }
     }
 
