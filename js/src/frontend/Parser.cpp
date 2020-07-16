@@ -1649,6 +1649,17 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     p->value()->setClosedOver();
   }
 
+  // Reserve an environment slot for a "*namespace*" psuedo-binding and mark as
+  // closed-over. We do not know until module linking if this will be used.
+  if (!noteDeclaredName(cx_->names().starNamespaceStar, DeclarationKind::Const,
+                        pos())) {
+    return nullptr;
+  }
+  modulepc.varScope()
+      .lookupDeclaredName(cx_->names().starNamespaceStar)
+      ->value()
+      ->setClosedOver();
+
   if (!CheckParseTree(cx_, alloc_, stmtList)) {
     return null();
   }
@@ -5150,14 +5161,47 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
     return null();
   }
 
-  // Handle the form |export *| by adding a special export batch
-  // specifier to the list.
-  NullaryNodeType exportSpec = handler_.newExportBatchSpec(pos());
-  if (!exportSpec) {
+  bool foundAs;
+  if (!tokenStream.matchToken(&foundAs, TokenKind::As)) {
     return null();
   }
 
-  handler_.addList(kid, exportSpec);
+  if (foundAs) {
+    if (!mustMatchToken(TokenKindIsPossibleIdentifierName,
+                        JSMSG_NO_EXPORT_NAME)) {
+      return null();
+    }
+
+    NameNodeType exportName = newName(anyChars.currentName());
+    if (!exportName) {
+      return null();
+    }
+
+    if (!checkExportedNameForClause(exportName)) {
+      return null();
+    }
+
+    NameNodeType importName = newName(cx_->names().star);
+    if (!importName) {
+      return null();
+    }
+
+    BinaryNodeType exportSpec = handler_.newExportSpec(importName, exportName);
+    if (!exportSpec) {
+      return null();
+    }
+
+    handler_.addList(kid, exportSpec);
+  } else {
+    // Handle the form |export *| by adding a special export batch
+    // specifier to the list.
+    NullaryNodeType exportSpec = handler_.newExportBatchSpec(pos());
+    if (!exportSpec) {
+      return null();
+    }
+
+    handler_.addList(kid, exportSpec);
+  }
 
   if (!mustMatchToken(TokenKind::From, JSMSG_FROM_AFTER_EXPORT_STAR)) {
     return null();

@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError module -- export-star-as-namespace-from-module is not supported
+// |reftest| error:SyntaxError module
 // Copyright (C) 2018 Valerie Young. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

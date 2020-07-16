@@ -443,6 +443,13 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("export * from 'a' ", opts);
   test("export * from 'a'; ", opts);
 
+  test("export * ", opts);
+  test("export * as ", opts);
+  test("export * as ns ", opts);
+  test("export * as ns from ", opts);
+  test("export * as ns from 'a' ", opts);
+  test("export * as ns from 'a'; ", opts);
+
   test("export function ", opts);
   test("export function f ", opts);
   test("export function f( ", opts);
