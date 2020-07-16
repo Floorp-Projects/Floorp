@@ -103,7 +103,9 @@ class MenuItem extends PureComponent {
     }
 
     const win = this.labelRef.current.ownerDocument.defaultView;
-    win.cancelIdleCallback(this.preloadCallback);
+    if (win) {
+      win.cancelIdleCallback(this.preloadCallback);
+    }
     this.preloadCallback = null;
   }
 

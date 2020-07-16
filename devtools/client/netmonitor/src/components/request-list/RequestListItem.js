@@ -153,6 +153,7 @@ const UPDATED_REQ_ITEM_PROPS = [
   "responseCookies",
   "responseHeaders",
   "waitingTime",
+  "isEventStream",
 ];
 
 const UPDATED_REQ_PROPS = [

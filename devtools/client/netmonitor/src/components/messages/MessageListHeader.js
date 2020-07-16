@@ -41,10 +41,12 @@ class MessageListHeader extends Component {
     evt.preventDefault();
     const { resetColumns, toggleColumn, columns } = this.props;
 
-    this.contextMenu = new MessageListHeaderContextMenu({
-      toggleColumn,
-      resetColumns,
-    });
+    if (!this.contextMenu) {
+      this.contextMenu = new MessageListHeaderContextMenu({
+        toggleColumn,
+        resetColumns,
+      });
+    }
     this.contextMenu.open(evt, columns);
   }
 
