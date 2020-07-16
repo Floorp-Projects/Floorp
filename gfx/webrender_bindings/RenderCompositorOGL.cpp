@@ -33,11 +33,8 @@ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
 
 RenderCompositorOGL::RenderCompositorOGL(
     RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)),
-      mGL(aGL),
-      mUsePartialPresent(false) {
+    : RenderCompositor(std::move(aWidget)), mGL(aGL) {
   MOZ_ASSERT(mGL);
-  mUsePartialPresent = gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
 }
 
 RenderCompositorOGL::~RenderCompositorOGL() {
@@ -62,24 +59,7 @@ bool RenderCompositorOGL::BeginFrame() {
 RenderedFrameId RenderCompositorOGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
-  if (!mUsePartialPresent || aDirtyRects.IsEmpty() ||
-      !mGL->HasCopySubBuffer()) {
-    mGL->SwapBuffers();
-  } else {
-    gfx::IntRect rect;
-    auto bufferSize = GetBufferSize();
-    for (const DeviceIntRect& r : aDirtyRects) {
-      const auto width = std::min(r.size.width, bufferSize.width);
-      const auto height = std::min(r.size.height, bufferSize.height);
-      const auto left = std::max(0, std::min(r.origin.x, bufferSize.width));
-      const auto bottom =
-          std::max(0, std::min(r.origin.y + height, bufferSize.height));
-      rect.OrWith(
-          gfx::IntRect(left, (bufferSize.height - bottom), width, height));
-    }
-
-    mGL->CopySubBuffer(rect.x, rect.y, rect.width, rect.height);
-  }
+  mGL->SwapBuffers();
   return frameId;
 }
 
