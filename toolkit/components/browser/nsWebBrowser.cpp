@@ -138,9 +138,6 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   Unused << docShell->AddProgressListener(docShellTreeOwner,
                                           nsIWebProgress::NOTIFY_ALL);
 
-  NS_ENSURE_SUCCESS(
-      docShell->InitWindow(nullptr, docShellParentWidget, 0, 0, 0, 0), nullptr);
-
   docShell->SetTreeOwner(docShellTreeOwner);
 
   // If the webbrowser is a content docshell item then we won't hear any
@@ -152,7 +149,10 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     aBrowsingContext->InitSessionHistory();
   }
 
-  NS_ENSURE_SUCCESS(docShell->Create(), nullptr);
+  nsresult rv = docShell->InitWindow(nullptr, docShellParentWidget, 0, 0, 0, 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
   docShellTreeOwner->AddToWatcher();  // evil twin of Remove in SetDocShell(0)
   docShellTreeOwner->AddChromeListeners();

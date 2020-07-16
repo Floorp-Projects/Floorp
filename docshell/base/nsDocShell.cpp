@@ -371,7 +371,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
 #ifdef DEBUG
       mInEnsureScriptEnv(false),
 #endif
-      mCreated(false),
+      mInitialized(false),
       mAllowSubframes(true),
       mAllowJavascript(true),
       mAllowMetaRedirects(true),
@@ -458,6 +458,35 @@ nsDocShell::~nsDocShell() {
              nsIDToCString(mHistoryID).get(), url.get()));
   }
 #endif
+}
+
+bool nsDocShell::Initialize() {
+  if (mInitialized) {
+    // We've already been initialized.
+    return true;
+  }
+
+  NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
+               "Unexpected item type in docshell");
+
+  NS_ENSURE_TRUE(Preferences::GetRootBranch(), false);
+  mInitialized = true;
+
+  mDisableMetaRefreshWhenInactive =
+      Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
+                           mDisableMetaRefreshWhenInactive);
+
+  mDeviceSizeIsPageSize = Preferences::GetBool(
+      "docshell.device_size_is_page_size", mDeviceSizeIsPageSize);
+
+  nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+  if (serv) {
+    const char* msg = mItemType == typeContent ? NS_WEBNAVIGATION_CREATE
+                                               : NS_CHROME_WEBNAVIGATION_CREATE;
+    serv->NotifyObservers(GetAsSupports(this), msg, nullptr);
+  }
+
+  return true;
 }
 
 /* static */
@@ -4077,38 +4106,16 @@ nsDocShell::InitWindow(nativeWindow aParentNativeWindow,
                        int32_t aWidth, int32_t aHeight) {
   SetParentWidget(aParentWidget);
   SetPositionAndSize(aX, aY, aWidth, aHeight, 0);
+  NS_ENSURE_TRUE(Initialize(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::Create() {
-  if (mCreated) {
-    // We've already been created
-    return NS_OK;
-  }
-
-  NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
-               "Unexpected item type in docshell");
-
-  NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
-  mCreated = true;
-
-  mDisableMetaRefreshWhenInactive =
-      Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
-                           mDisableMetaRefreshWhenInactive);
-
-  mDeviceSizeIsPageSize = Preferences::GetBool(
-      "docshell.device_size_is_page_size", mDeviceSizeIsPageSize);
-
-  nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-  if (serv) {
-    const char* msg = mItemType == typeContent ? NS_WEBNAVIGATION_CREATE
-                                               : NS_CHROME_WEBNAVIGATION_CREATE;
-    serv->NotifyObservers(GetAsSupports(this), msg, nullptr);
-  }
-
-  return NS_OK;
+  // Implementations have been moved to nsDocShell::Initialize
+  MOZ_DIAGNOSTIC_ASSERT(false);
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
