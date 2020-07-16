@@ -31,6 +31,7 @@ use cranelift_codegen::ir::{
     TrapCode, Type,
 };
 use cranelift_codegen::isa::TargetIsa;
+use cranelift_codegen::machinst::MachStackMap;
 use cranelift_codegen::CodegenResult;
 use cranelift_codegen::Context;
 use cranelift_wasm::{FuncIndex, FuncTranslator, ModuleTranslationState, WasmResult};
@@ -178,7 +179,7 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
         let contains_calls = self.contains_calls();
 
         info!(
-            "Emitting {} bytes, frame_pushed={}\n.",
+            "Emitting {} bytes, frame_pushed={}.",
             total_size, frame_pushed
         );
 
@@ -223,10 +224,9 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
 
         if self.static_environ.ref_types_enabled {
             if self.context.mach_compile_result.is_some() {
-                // TODO Bug 1633721: new backend: support stackmaps.
-                log::warn!("new isel backend doesn't support stackmaps yet");
+                self.emit_stackmaps_from_vcode(stackmaps);
             } else {
-                self.emit_stackmaps(stackmaps);
+                self.emit_stackmaps_from_clif_insts(stackmaps);
             }
         }
 
@@ -242,15 +242,25 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
     /// Note a stackmap is associated to the address of the next instruction following the actual
     /// instruction needing the stack map. This is because this is the only information
     /// Spidermonkey has access to when it looks up a stack map (during stack frame iteration).
-    fn emit_stackmaps(&self, mut stackmaps: bindings::Stackmaps) {
+    fn emit_stackmaps_from_clif_insts(&self, mut stackmaps: bindings::Stackmaps) {
         let encinfo = self.isa.encoding_info();
         let func = &self.context.func;
         let stack_slots = &func.stack_slots;
+
+        debug_assert!(
+            stack_slots.layout_info.unwrap().inbound_args_size == 0,
+            "We do not expect the stackmap to cover inbound args"
+        );
+
         for block in func.layout.blocks() {
             let mut pending_safepoint = None;
             for (offset, inst, inst_size) in func.inst_offsets(block, &encinfo) {
                 if let Some(stackmap) = pending_safepoint.take() {
-                    stackmaps.add_stackmap(stack_slots, offset + inst_size, stackmap);
+                    stackmaps.add_stackmap(
+                        /* inbound_args_size = */ 0,
+                        offset + inst_size,
+                        &stackmap,
+                    );
                 }
                 if func.dfg[inst].opcode() == ir::Opcode::Safepoint {
                     let args = func.dfg.inst_args(inst);
@@ -259,6 +269,25 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
                 }
             }
             debug_assert!(pending_safepoint.is_none());
+        }
+    }
+
+    /// Iterate over safepoint information contained in the returned `MachBufferFinalized`.
+    fn emit_stackmaps_from_vcode(&self, mut stackmaps: bindings::Stackmaps) {
+        let mach_buf = &self.context.mach_compile_result.as_ref().unwrap().buffer;
+        let mach_stackmaps = mach_buf.stackmaps();
+
+        for &MachStackMap {
+            offset_end,
+            ref stackmap,
+            ..
+        } in mach_stackmaps
+        {
+            debug!(
+                "Stack map at end-of-insn offset {}: {:?}",
+                offset_end, stackmap
+            );
+            stackmaps.add_stackmap(/* inbound_args_size = */ 0, offset_end, stackmap);
         }
     }
 

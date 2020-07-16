@@ -241,19 +241,16 @@ bool wasm::CraneliftAvailable(JSContext* cx) {
 
 bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
-  // Cranelift has no debugging support, no gc support, no multi-value support,
-  // no threads, no simd, and on ARM64, no reference types.
+  // Cranelift has no debugging support, no gc support, no threads, and no
+  // simd.
   bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
   bool gc = cx->options().wasmGc();
   bool threads =
       cx->realm() &&
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
 #if defined(JS_CODEGEN_ARM64)
-  bool reftypesOnArm64 = cx->options().wasmReftypes();
-  bool multiValue = false;
+  bool multiValue = false;  // `false` --> not disabled.
 #else
-  // On other platforms, assume reftypes has been implemented.
-  bool reftypesOnArm64 = false;
   bool multiValue = WasmMultiValueFlag(cx);
 #endif
   bool simd = WasmSimdFlag(cx);
@@ -271,14 +268,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (threads && !Append(reason, "threads", &sep)) {
       return false;
     }
-    if (reftypesOnArm64 && !Append(reason, "reftypes", &sep)) {
-      return false;
-    }
     if (simd && !Append(reason, "simd", &sep)) {
       return false;
     }
   }
-  *isDisabled = debug || gc || multiValue || threads || reftypesOnArm64 || simd;
+  *isDisabled = debug || gc || multiValue || threads || simd;
   return true;
 }
 
