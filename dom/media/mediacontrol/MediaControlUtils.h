@@ -37,6 +37,8 @@ inline const char* ToMediaControlKeyStr(MediaControlKey aKey) {
       return "Seek forward";
     case MediaControlKey::Skipad:
       return "Skip Ad";
+    case MediaControlKey::Seekto:
+      return "Seek to";
     case MediaControlKey::Stop:
       return "Stop";
     default:
@@ -61,6 +63,8 @@ inline const char* ToMediaSessionActionStr(MediaSessionAction aAction) {
       return "next track";
     case MediaSessionAction::Skipad:
       return "skip ad";
+    case MediaSessionAction::Seekto:
+      return "Seek to";
     default:
       MOZ_ASSERT(aAction == MediaSessionAction::Stop);
       return "stop";
@@ -84,6 +88,8 @@ inline MediaControlKey ConvertMediaSessionActionToControlKey(
       return MediaControlKey::Nexttrack;
     case MediaSessionAction::Skipad:
       return MediaControlKey::Skipad;
+    case MediaSessionAction::Seekto:
+      return MediaControlKey::Seekto;
     default:
       MOZ_ASSERT(aAction == MediaSessionAction::Stop);
       return MediaControlKey::Stop;

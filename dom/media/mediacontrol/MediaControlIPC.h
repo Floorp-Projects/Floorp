@@ -10,6 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/dom/MediaControllerBinding.h"
+#include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/MediaPlaybackStatus.h"
 
 namespace IPC {
@@ -32,6 +33,44 @@ struct ParamTraits<mozilla::dom::MediaAudibleState>
           mozilla::dom::MediaAudibleState,
           mozilla::dom::MediaAudibleState::eInaudible,
           mozilla::dom::MediaAudibleState::eAudible> {};
+
+template <>
+struct ParamTraits<mozilla::dom::SeekDetails> {
+  typedef mozilla::dom::SeekDetails paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mSeekTime);
+    WriteParam(aMsg, aParam.mFastSeek);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (!ReadParam(aMsg, aIter, &aResult->mSeekTime) ||
+        !ReadParam(aMsg, aIter, &aResult->mFastSeek)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::MediaControlAction> {
+  typedef mozilla::dom::MediaControlAction paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mKey);
+    WriteParam(aMsg, aParam.mDetails);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (!ReadParam(aMsg, aIter, &aResult->mKey) ||
+        !ReadParam(aMsg, aIter, &aResult->mDetails)) {
+      return false;
+    }
+    return true;
+  }
+};
 
 }  // namespace IPC
 

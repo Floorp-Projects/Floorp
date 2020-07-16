@@ -64,9 +64,8 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
 
   bool IsSupportedAction(MediaSessionAction aAction) const;
 
-  // Use these methods to trigger media session action handler asynchronously.
+  // Use this method to trigger media session action handler asynchronously.
   void NotifyHandler(const MediaSessionActionDetails& aDetails);
-  void NotifyHandler(MediaSessionAction aAction);
 
   void Shutdown();
 

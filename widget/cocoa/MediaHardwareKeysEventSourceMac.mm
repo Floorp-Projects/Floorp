@@ -174,7 +174,7 @@ CGEventRef MediaHardwareKeysEventSourceMac::EventTapCallback(CGEventTapProxy pro
 
   LOG2("Get media key %s", source, ToMediaControlKeyStr(keyCode));
   for (auto iter = source->mListeners.begin(); iter != source->mListeners.end(); ++iter) {
-    (*iter)->OnKeyPressed(ToMediaControlKey(keyCode));
+    (*iter)->OnActionPerformed(MediaControlAction(ToMediaControlKey(keyCode)));
   }
   return event;
 }

@@ -8,6 +8,7 @@
 #define mozilla_dom_ContentChild_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/ProcessActor.h"
 #include "mozilla/dom/RemoteType.h"
@@ -635,8 +636,9 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
       const MaybeDiscarded<BrowsingContext>& aContext);
 
-  mozilla::ipc::IPCResult RecvUpdateMediaControlKey(
-      const MaybeDiscarded<BrowsingContext>& aContext, MediaControlKey aKey);
+  mozilla::ipc::IPCResult RecvUpdateMediaControlAction(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const MediaControlAction& aAction);
 
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
   void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);
