@@ -2669,10 +2669,15 @@ static const char* const months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 /* ES5 B.2.6. */
-MOZ_ALWAYS_INLINE bool date_toGMTString_impl(JSContext* cx,
-                                             const CallArgs& args) {
-  double utctime =
-      args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
+static bool date_toGMTString(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toGMTString");
+  if (!unwrapped) {
+    return false;
+  }
+
+  double utctime = unwrapped->UTCTime().toNumber();
   if (!IsFinite(utctime)) {
     args.rval().setString(cx->names().InvalidDate);
     return true;
@@ -2694,16 +2699,16 @@ MOZ_ALWAYS_INLINE bool date_toGMTString_impl(JSContext* cx,
   return true;
 }
 
-static bool date_toGMTString(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toGMTString_impl>(cx, args);
-}
-
 /* ES6 draft 2015-01-15 20.3.4.36. */
-MOZ_ALWAYS_INLINE bool date_toISOString_impl(JSContext* cx,
-                                             const CallArgs& args) {
-  double utctime =
-      args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
+static bool date_toISOString(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toISOString");
+  if (!unwrapped) {
+    return false;
+  }
+
+  double utctime = unwrapped->UTCTime().toNumber();
   if (!IsFinite(utctime)) {
     JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
                               JSMSG_INVALID_DATE);
@@ -2732,11 +2737,6 @@ MOZ_ALWAYS_INLINE bool date_toISOString_impl(JSContext* cx,
   }
   args.rval().setString(str);
   return true;
-}
-
-static bool date_toISOString(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toISOString_impl>(cx, args);
 }
 
 /* ES5 15.9.5.44. */
@@ -2979,10 +2979,8 @@ static bool FormatDate(JSContext* cx, double utcTime, FormatSpec format,
 }
 
 #if !JS_HAS_INTL_API
-static bool ToLocaleFormatHelper(JSContext* cx, HandleObject obj,
+static bool ToLocaleFormatHelper(JSContext* cx, double utcTime,
                                  const char* format, MutableHandleValue rval) {
-  double utcTime = obj->as<DateObject>().UTCTime().toNumber();
-
   char buf[100];
   if (!IsFinite(utcTime)) {
     strcpy(buf, js_InvalidDate_str);
@@ -3028,97 +3026,107 @@ static bool ToLocaleFormatHelper(JSContext* cx, HandleObject obj,
 }
 
 /* ES5 15.9.5.5. */
-MOZ_ALWAYS_INLINE bool date_toLocaleString_impl(JSContext* cx,
-                                                const CallArgs& args) {
+static bool date_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto* unwrapped =
+      UnwrapAndTypeCheckThis<DateObject>(cx, args, "toLocaleString");
+  if (!unwrapped) {
+    return false;
+  }
+
   /*
    * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
    * with msvc; '%#c' requests that a full year be used in the result string.
    */
   static const char format[] =
-#  if defined(_WIN32) && !defined(__MWERKS__)
+#  if defined(_WIN32)
       "%#c"
 #  else
       "%c"
 #  endif
       ;
 
-  Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
-  return ToLocaleFormatHelper(cx, dateObj, format, args.rval());
+  return ToLocaleFormatHelper(cx, unwrapped->UTCTime().toNumber(), format,
+                              args.rval());
 }
 
-static bool date_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+static bool date_toLocaleDateString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toLocaleString_impl>(cx, args);
-}
 
-/* ES5 15.9.5.6. */
-MOZ_ALWAYS_INLINE bool date_toLocaleDateString_impl(JSContext* cx,
-                                                    const CallArgs& args) {
+  auto* unwrapped =
+      UnwrapAndTypeCheckThis<DateObject>(cx, args, "toLocaleDateString");
+  if (!unwrapped) {
+    return false;
+  }
+
   /*
    * Use '%#x' for windows, because '%x' is backward-compatible and non-y2k
    * with msvc; '%#x' requests that a full year be used in the result string.
    */
   static const char format[] =
-#  if defined(_WIN32) && !defined(__MWERKS__)
+#  if defined(_WIN32)
       "%#x"
 #  else
       "%x"
 #  endif
       ;
 
-  Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
-  return ToLocaleFormatHelper(cx, dateObj, format, args.rval());
-}
-
-static bool date_toLocaleDateString(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toLocaleDateString_impl>(cx, args);
-}
-
-/* ES5 15.9.5.7. */
-MOZ_ALWAYS_INLINE bool date_toLocaleTimeString_impl(JSContext* cx,
-                                                    const CallArgs& args) {
-  Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
-  return ToLocaleFormatHelper(cx, dateObj, "%X", args.rval());
+  return ToLocaleFormatHelper(cx, unwrapped->UTCTime().toNumber(), format,
+                              args.rval());
 }
 
 static bool date_toLocaleTimeString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toLocaleTimeString_impl>(cx, args);
+
+  auto* unwrapped =
+      UnwrapAndTypeCheckThis<DateObject>(cx, args, "toLocaleTimeString");
+  if (!unwrapped) {
+    return false;
+  }
+
+  return ToLocaleFormatHelper(cx, unwrapped->UTCTime().toNumber(), "%X",
+                              args.rval());
 }
 #endif /* !JS_HAS_INTL_API */
 
-/* ES5 15.9.5.4. */
-MOZ_ALWAYS_INLINE bool date_toTimeString_impl(JSContext* cx,
-                                              const CallArgs& args) {
-  return FormatDate(
-      cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-      FormatSpec::Time, args.rval());
-}
-
 static bool date_toTimeString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toTimeString_impl>(cx, args);
-}
 
-/* ES5 15.9.5.3. */
-MOZ_ALWAYS_INLINE bool date_toDateString_impl(JSContext* cx,
-                                              const CallArgs& args) {
-  return FormatDate(
-      cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-      FormatSpec::Date, args.rval());
+  auto* unwrapped =
+      UnwrapAndTypeCheckThis<DateObject>(cx, args, "toTimeString");
+  if (!unwrapped) {
+    return false;
+  }
+
+  return FormatDate(cx, unwrapped->UTCTime().toNumber(), FormatSpec::Time,
+                    args.rval());
 }
 
 static bool date_toDateString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toDateString_impl>(cx, args);
+
+  auto* unwrapped =
+      UnwrapAndTypeCheckThis<DateObject>(cx, args, "toDateString");
+  if (!unwrapped) {
+    return false;
+  }
+
+  return FormatDate(cx, unwrapped->UTCTime().toNumber(), FormatSpec::Date,
+                    args.rval());
 }
 
-MOZ_ALWAYS_INLINE bool date_toSource_impl(JSContext* cx, const CallArgs& args) {
+static bool date_toSource(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toSource");
+  if (!unwrapped) {
+    return false;
+  }
+
   JSStringBuilder sb(cx);
   if (!sb.append("(new Date(") ||
-      !NumberValueToStringBuffer(
-          cx, args.thisv().toObject().as<DateObject>().UTCTime(), sb) ||
+      !NumberValueToStringBuffer(cx, unwrapped->UTCTime(), sb) ||
       !sb.append("))")) {
     return false;
   }
@@ -3131,33 +3139,28 @@ MOZ_ALWAYS_INLINE bool date_toSource_impl(JSContext* cx, const CallArgs& args) {
   return true;
 }
 
-static bool date_toSource(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toSource_impl>(cx, args);
-}
-
-// ES6 20.3.4.41.
-MOZ_ALWAYS_INLINE bool date_toString_impl(JSContext* cx, const CallArgs& args) {
-  // Steps 1-2.
-  return FormatDate(
-      cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-      FormatSpec::DateTime, args.rval());
-}
-
 bool date_toString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_toString_impl>(cx, args);
-}
 
-MOZ_ALWAYS_INLINE bool date_valueOf_impl(JSContext* cx, const CallArgs& args) {
-  Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
-  args.rval().set(dateObj->UTCTime());
-  return true;
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toString");
+  if (!unwrapped) {
+    return false;
+  }
+
+  return FormatDate(cx, unwrapped->UTCTime().toNumber(), FormatSpec::DateTime,
+                    args.rval());
 }
 
 bool js::date_valueOf(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsDate, date_valueOf_impl>(cx, args);
+
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "valueOf");
+  if (!unwrapped) {
+    return false;
+  }
+
+  args.rval().set(unwrapped->UTCTime());
+  return true;
 }
 
 // ES6 20.3.4.45 Date.prototype[@@toPrimitive]
