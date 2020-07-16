@@ -1960,6 +1960,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   AUTO_PROFILER_TRACING_MARKER("Paint", "CompositeToTarget", GRAPHICS);
   if (mPaused || !mReceivedDisplayList) {
     ResetPreviousSampleTime();
+    mCompositionOpportunityId = mCompositionOpportunityId.Next();
     TimeStamp now = TimeStamp::Now();
     PROFILER_ADD_TEXT_MARKER("SkippedComposite",
                              mPaused ? "Paused"_ns : "No display list"_ns,
@@ -1987,6 +1988,8 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
                              JS::ProfilingCategoryPair::GRAPHICS, now, now);
     return;
   }
+
+  mCompositionOpportunityId = mCompositionOpportunityId.Next();
   MaybeGenerateFrame(aId, /* aForceGenerateFrame */ false);
 }
 
