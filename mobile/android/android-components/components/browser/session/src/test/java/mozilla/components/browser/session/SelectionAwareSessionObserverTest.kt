@@ -148,7 +148,6 @@ class SelectionAwareSessionObserverTest {
         observer.onTrackerBlockingEnabledChanged(session, true)
         observer.onTrackerBlocked(session, Tracker(""), emptyList())
         observer.onDesktopModeChanged(session, true)
-        observer.onFullScreenChanged(session, true)
         observer.onThumbnailChanged(session, Mockito.spy(Bitmap::class.java))
         observer.onSessionRemoved(session)
         observer.onAllSessionsRemoved()

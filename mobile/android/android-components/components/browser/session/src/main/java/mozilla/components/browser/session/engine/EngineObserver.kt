@@ -218,11 +218,15 @@ internal class EngineObserver(
     }
 
     override fun onFullScreenChange(enabled: Boolean) {
-        session.fullScreenMode = enabled
+        store?.dispatch(ContentAction.FullScreenChangedAction(
+            session.id, enabled
+        ))
     }
 
     override fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int) {
-        session.layoutInDisplayCutoutMode = layoutInDisplayCutoutMode
+        store?.dispatch(ContentAction.ViewportFitChangedAction(
+            session.id, layoutInDisplayCutoutMode
+        ))
     }
 
     override fun onThumbnailChange(bitmap: Bitmap?) {

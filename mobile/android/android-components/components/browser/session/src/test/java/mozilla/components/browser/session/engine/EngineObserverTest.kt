@@ -434,31 +434,53 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverNotifiesFullscreenMode() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
 
         observer.onFullScreenChange(true)
-        assertEquals(true, session.fullScreenMode)
+
+        verify(store).dispatch(ContentAction.FullScreenChangedAction(
+            "test-id", true
+        ))
+        reset(store)
+
         observer.onFullScreenChange(false)
-        assertEquals(false, session.fullScreenMode)
+
+        verify(store).dispatch(ContentAction.FullScreenChangedAction(
+            "test-id", false
+        ))
     }
 
     @Test
     fun engineObserverNotifiesMetaViewportFitChange() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val store: BrowserStore = mock()
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val observer = EngineObserver(session, store)
 
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
-        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT,
-            session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+        ))
+        reset(store)
+
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES)
-        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
-            session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        ))
+        reset(store)
+
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER)
-        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER,
-            session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+        ))
+        reset(store)
+
         observer.onMetaViewportFitChanged(123)
-        assertEquals(123, session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", 123
+        ))
+        reset(store)
     }
 
     @Test
