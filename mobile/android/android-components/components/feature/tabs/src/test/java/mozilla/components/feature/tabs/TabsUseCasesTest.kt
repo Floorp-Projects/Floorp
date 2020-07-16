@@ -6,7 +6,7 @@ package mozilla.components.feature.tabs
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.Session.Source
+import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.store.BrowserStore

@@ -31,6 +31,7 @@ import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -45,11 +46,11 @@ import kotlin.properties.Delegates
 /**
  * Value type that represents the state of a browser session. Changes can be observed.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class Session(
     initialUrl: String,
     val private: Boolean = false,
-    val source: Source = Source.NONE,
+    val source: SessionState.Source = SessionState.Source.NONE,
     val id: String = UUID.randomUUID().toString(),
     val contextId: String? = null,
     delegate: Observable<Observer> = ObserverRegistry()
@@ -110,66 +111,6 @@ class Session(
      * @property issuer name of the certificate authority who issued the SSL certificate.
      */
     data class SecurityInfo(val secure: Boolean = false, val host: String = "", val issuer: String = "")
-
-    /**
-     * Represents the origin of a session to describe how and why it was created.
-     */
-    enum class Source {
-        /**
-         * Created to handle an ACTION_SEND (share) intent
-         */
-        ACTION_SEND,
-
-        /**
-         * Created to handle an ACTION_SEARCH and ACTION_WEB_SEARCH intent
-         */
-        ACTION_SEARCH,
-
-        /**
-         * Created to handle an ACTION_VIEW intent
-         */
-        ACTION_VIEW,
-
-        /**
-         * Created to handle a CustomTabs intent
-         */
-        CUSTOM_TAB,
-
-        /**
-         * User interacted with the home screen
-         */
-        HOME_SCREEN,
-
-        /**
-         * User interacted with a menu
-         */
-        MENU,
-
-        /**
-         * User opened a new tab
-         */
-        NEW_TAB,
-
-        /**
-         * Default value and for testing purposes
-         */
-        NONE,
-
-        /**
-         * Default value and for testing purposes
-         */
-        TEXT_SELECTION,
-
-        /**
-         * User entered a URL or search term
-         */
-        USER_ENTERED,
-
-        /**
-         * This session was restored
-         */
-        RESTORED
-    }
 
     /**
      * The currently loading or loaded URL.

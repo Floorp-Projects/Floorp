@@ -7,6 +7,7 @@ package mozilla.components.browser.session
 import android.graphics.Bitmap
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -678,7 +679,7 @@ class SessionManagerTest {
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
         assertEquals(actualEngineSession, session.engineSessionHolder.engineSession)
 
-        val privateSession = Session("https://www.mozilla.org", true, Session.Source.NONE)
+        val privateSession = Session("https://www.mozilla.org", true, SessionState.Source.NONE)
         sessionManager.add(privateSession)
         assertNull(store.state.findTab(privateSession.id)!!.engineState.engineSession)
         assertEquals(privateEngineSession, sessionManager.getOrCreateEngineSession(privateSession))

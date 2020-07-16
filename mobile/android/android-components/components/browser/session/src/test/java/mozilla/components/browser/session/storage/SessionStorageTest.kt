@@ -11,7 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.Session.Source
+import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession

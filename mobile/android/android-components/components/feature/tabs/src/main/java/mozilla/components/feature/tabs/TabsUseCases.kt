@@ -5,7 +5,7 @@
 package mozilla.components.feature.tabs
 
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.Session.Source
+import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore

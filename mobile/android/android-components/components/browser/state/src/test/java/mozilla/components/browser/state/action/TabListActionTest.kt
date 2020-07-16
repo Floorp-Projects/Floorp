@@ -7,6 +7,7 @@ package mozilla.components.browser.state.action
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -91,6 +92,21 @@ class TabListActionTest {
         assertNull(store.state.tabs[2].parentId)
         assertEquals(tab1.id, store.state.tabs[1].parentId)
         assertEquals(tab2.id, store.state.tabs[3].parentId)
+    }
+
+    @Test
+    fun `AddTabAction - Specify source`() {
+        val store = BrowserStore()
+
+        val tab1 = createTab("https://www.mozilla.org")
+        val tab2 = createTab("https://www.firefox.com", source = SessionState.Source.MENU)
+
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(SessionState.Source.NONE, store.state.tabs[0].source)
+        assertEquals(SessionState.Source.MENU, store.state.tabs[1].source)
     }
 
     @Test

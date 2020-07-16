@@ -26,6 +26,10 @@ permalink: /changelog/
 * **feature-addons**
     * AddonManager now receives a `WebExtensionRuntime` instead of an `Engine`. This has no impact to consumers of `feature-addons` as `Engine` already implements `WebExtensionRuntime`.
 
+* **browser-session**
+  * ⚠️ **This is a breaking change**: `Session.Source` was moved to browser-state and is now `SessionState.Source`. No change is required other than fixing imports.
+
+
 # 50.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...v50.0.0)

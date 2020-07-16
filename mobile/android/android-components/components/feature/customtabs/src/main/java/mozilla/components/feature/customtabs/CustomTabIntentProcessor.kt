@@ -11,6 +11,7 @@ import android.provider.Browser
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
@@ -57,7 +58,7 @@ class CustomTabIntentProcessor(
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val session = Session(url, private = isPrivate, source = Session.Source.CUSTOM_TAB)
+            val session = Session(url, private = isPrivate, source = SessionState.Source.CUSTOM_TAB)
             session.customTabConfig = createCustomTabConfigFromIntent(intent, resources)
 
             sessionManager.add(session)

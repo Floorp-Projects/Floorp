@@ -20,7 +20,8 @@ fun Session.toTabSessionState(): TabSessionState {
         toContentState(),
         toTrackingProtectionState(),
         parentId = parentId,
-        contextId = contextId
+        contextId = contextId,
+        source = source
     )
 }
 

@@ -24,7 +24,8 @@ data class CustomTabSessionState(
     val config: CustomTabConfig,
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
-    override val contextId: String? = null
+    override val contextId: String? = null,
+    override val source: SessionState.Source = SessionState.Source.CUSTOM_TAB
 ) : SessionState {
 
     override fun createCopy(

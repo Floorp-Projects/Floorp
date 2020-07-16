@@ -7,6 +7,7 @@ package mozilla.components.browser.session.ext
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -26,6 +27,8 @@ class SessionExtensionsTest {
         assertEquals(tabState.id, session.id)
         assertEquals(tabState.content.url, session.url)
         assertEquals(tabState.parentId, session.parentId)
+        assertEquals(tabState.source, session.source)
+        assertEquals(SessionState.Source.NONE, tabState.source)
         assertNull(tabState.contextId)
     }
 
@@ -35,7 +38,20 @@ class SessionExtensionsTest {
         val tabState = session.toTabSessionState()
         assertEquals(tabState.id, session.id)
         assertEquals(tabState.content.url, session.url)
+        assertEquals(tabState.source, session.source)
+        assertEquals(SessionState.Source.NONE, tabState.source)
         assertEquals(tabState.contextId, session.contextId)
+    }
+
+    @Test
+    fun `toTabSessionState - Can convert tab session with source`() {
+        val session = Session("https://mozilla.org", source = SessionState.Source.ACTION_VIEW)
+        val tabState = session.toTabSessionState()
+        assertEquals(tabState.id, session.id)
+        assertEquals(tabState.content.url, session.url)
+        assertNull(tabState.contextId)
+        assertEquals(tabState.source, session.source)
+        assertEquals(SessionState.Source.ACTION_VIEW, tabState.source)
     }
 
     @Test
@@ -46,6 +62,8 @@ class SessionExtensionsTest {
         val customTabState = session.toCustomTabSessionState()
         assertEquals(customTabState.id, session.id)
         assertEquals(customTabState.content.url, session.url)
+        assertEquals(SessionState.Source.CUSTOM_TAB, customTabState.source)
+        assertEquals(customTabState.contextId, session.contextId)
         assertSame(customTabState.config, session.customTabConfig)
         assertNull(customTabState.contextId)
     }
@@ -58,6 +76,8 @@ class SessionExtensionsTest {
         val customTabState = session.toCustomTabSessionState()
         assertEquals(customTabState.id, session.id)
         assertEquals(customTabState.content.url, session.url)
+        assertEquals(SessionState.Source.CUSTOM_TAB, customTabState.source)
+        assertEquals(customTabState.contextId, session.contextId)
         assertSame(customTabState.config, session.customTabConfig)
         assertEquals(customTabState.contextId, session.contextId)
     }
