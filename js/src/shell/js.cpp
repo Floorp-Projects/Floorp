@@ -97,7 +97,7 @@
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
 #include "js/BuildId.h"      // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
-#include "js/CharacterEncoding.h"
+#include "js/CharacterEncoding.h"  // JS::StringIsASCII
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
@@ -106,6 +106,7 @@
 #include "js/ErrorReport.h"              // JS::PrintError
 #include "js/Exception.h"                // JS::StealPendingExceptionStack
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
+#include "js/GCAPI.h"                    // JS::AutoCheckCannotGC
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/JSON.h"
@@ -5229,16 +5230,35 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JSString* scriptContents = args[0].toString();
+  RootedLinearString linearString(cx, scriptContents->ensureLinear(cx));
+  if (!linearString) {
+    return false;
+  }
+
+  bool isAscii = false;
+  if (linearString->hasLatin1Chars()) {
+    JS::AutoCheckCannotGC nogc;
+    isAscii = JS::StringIsASCII(mozilla::MakeSpan(
+        reinterpret_cast<const char*>(linearString->latin1Chars(nogc)),
+        linearString->length()));
+  }
 
   AutoStableStringChars stableChars(cx);
-  if (!stableChars.init(cx, scriptContents)) {
-    return false;
+  if (isAscii) {
+    if (!stableChars.init(cx, scriptContents)) {
+      return false;
+    }
+    MOZ_ASSERT(stableChars.isLatin1());
+  } else {
+    if (!stableChars.initTwoByte(cx, scriptContents)) {
+      return false;
+    }
   }
 
   size_t length = scriptContents->length();
 #ifdef JS_ENABLE_SMOOSH
   if (smoosh) {
-    if (stableChars.isLatin1()) {
+    if (isAscii) {
       const Latin1Char* chars = stableChars.latin1Range().begin().get();
       if (goal == frontend::ParseGoal::Script) {
         if (!SmooshParseScript(cx, chars, length)) {
@@ -5252,7 +5272,8 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
       args.rval().setUndefined();
       return true;
     }
-    JS_ReportErrorASCII(cx, "SmooshMonkey does not support two-byte chars yet");
+    JS_ReportErrorASCII(cx,
+                        "SmooshMonkey does not support non-ASCII chars yet");
     return false;
   }
 #endif  // JS_ENABLE_SMOOSH
@@ -5271,10 +5292,10 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (stableChars.isLatin1()) {
-    const Latin1Char* chars_ = stableChars.latin1Range().begin().get();
-    auto chars = reinterpret_cast<const mozilla::Utf8Unit*>(chars_);
-    if (!FullParseTest<mozilla::Utf8Unit>(cx, options, chars, length,
+  if (isAscii) {
+    const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
+    auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
+    if (!FullParseTest<mozilla::Utf8Unit>(cx, options, utf8, length,
                                           compilationInfo, goal)) {
       return false;
     }
