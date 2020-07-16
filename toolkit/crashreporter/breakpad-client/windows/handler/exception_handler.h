@@ -156,9 +156,9 @@ class ExceptionHandler {
     HANDLER_EXCEPTION = 1 << 0,          // SetUnhandledExceptionFilter
     HANDLER_INVALID_PARAMETER = 1 << 1,  // _set_invalid_parameter_handler
     HANDLER_PURECALL = 1 << 2,           // _set_purecall_handler
-    HANDLER_ALL = HANDLER_EXCEPTION |
-                  HANDLER_INVALID_PARAMETER |
-                  HANDLER_PURECALL
+    HANDLER_HEAP_CORRUPTION = 1 << 4,    // AddVectoredExceptionHandler
+    HANDLER_ALL = HANDLER_EXCEPTION | HANDLER_INVALID_PARAMETER |
+                  HANDLER_PURECALL | HANDLER_HEAP_CORRUPTION
   };
 
   // Creates a new ExceptionHandler instance to handle writing minidumps.
@@ -343,6 +343,10 @@ class ExceptionHandler {
   // function is called.
   static void HandlePureVirtualCall();
 
+  // This function will be called by the vectored exception handler and will
+  // generate a minidump only for exceptions of type STATUS_HEAP_CORRUPTION.
+  static LONG WINAPI HandleHeapCorruption(EXCEPTION_POINTERS* exinfo);
+
   // This is called on the exception thread or on another thread that
   // the user wishes to produce a dump from.  It calls
   // WriteMinidumpWithException on the handler thread, avoiding stack
@@ -450,6 +454,10 @@ class ExceptionHandler {
   // The CRT allows you to override the default handler for pure
   // virtual function calls.
   _purecall_handler previous_pch_;
+
+  // Vectored exception handler used for catching STATUS_HEAP_CORRUPTION
+  // exceptions
+  PVOID heap_corruption_veh_;
 
   // The exception handler thread.
   HANDLE handler_thread_;
