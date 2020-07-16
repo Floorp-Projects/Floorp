@@ -52,7 +52,6 @@ UNIFIED_SOURCES += [
     'SVGFilterFrame.cpp',
     'SVGFilterInstance.cpp',
     'SVGForeignObjectFrame.cpp',
-    'SVGGenericContainerFrame.cpp',
     'SVGGeometryFrame.cpp',
     'SVGGFrame.cpp',
     'SVGGradientFrame.cpp',
