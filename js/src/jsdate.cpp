@@ -2677,10 +2677,10 @@ static const char* const months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 /* ES5 B.2.6. */
-static bool date_toGMTString(JSContext* cx, unsigned argc, Value* vp) {
+static bool date_toUTCString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toGMTString");
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toUTCString");
   if (!unwrapped) {
     return false;
   }
@@ -3235,7 +3235,7 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("setUTCSeconds", date_setUTCSeconds, 2, 0),
     JS_FN("setMilliseconds", date_setMilliseconds, 1, 0),
     JS_FN("setUTCMilliseconds", date_setUTCMilliseconds, 1, 0),
-    JS_FN("toUTCString", date_toGMTString, 0, 0),
+    JS_FN("toUTCString", date_toUTCString, 0, 0),
 #if JS_HAS_INTL_API
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Date_toLocaleString", 0, 0),
     JS_SELF_HOSTED_FN("toLocaleDateString", "Date_toLocaleDateString", 0, 0),
