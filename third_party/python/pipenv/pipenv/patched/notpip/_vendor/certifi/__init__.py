@@ -1,3 +1,3 @@
-from .core import where, old_where
+from .core import where
 
-__version__ = "2018.01.18"
+__version__ = "2019.11.28"

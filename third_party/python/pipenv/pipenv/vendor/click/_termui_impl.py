@@ -1,30 +1,34 @@
+# -*- coding: utf-8 -*-
 """
-    click._termui_impl
-    ~~~~~~~~~~~~~~~~~~
-
-    This module contains implementations for the termui module.  To keep the
-    import time of Click down, some infrequently used functionality is placed
-    in this module and only imported as needed.
-
-    :copyright: (c) 2014 by Armin Ronacher.
-    :license: BSD, see LICENSE for more details.
+This module contains implementations for the termui module. To keep the
+import time of Click down, some infrequently used functionality is
+placed in this module and only imported as needed.
 """
+import contextlib
+import math
 import os
 import sys
 import time
-import math
-from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN
-from .utils import echo
+
+from ._compat import _default_text_stdout
+from ._compat import CYGWIN
+from ._compat import get_best_encoding
+from ._compat import int_types
+from ._compat import isatty
+from ._compat import open_stream
+from ._compat import range_type
+from ._compat import strip_ansi
+from ._compat import term_len
+from ._compat import WIN
 from .exceptions import ClickException
+from .utils import echo
 
-
-if os.name == 'nt':
-    BEFORE_BAR = '\r'
-    AFTER_BAR = '\n'
+if os.name == "nt":
+    BEFORE_BAR = "\r"
+    AFTER_BAR = "\n"
 else:
-    BEFORE_BAR = '\r\033[?25l'
-    AFTER_BAR = '\033[?25h\n'
+    BEFORE_BAR = "\r\033[?25l"
+    AFTER_BAR = "\033[?25h\n"
 
 
 def _length_hint(obj):
@@ -40,19 +44,29 @@ def _length_hint(obj):
             hint = get_hint(obj)
         except TypeError:
             return None
-        if hint is NotImplemented or \
-           not isinstance(hint, (int, long)) or \
-           hint < 0:
+        if hint is NotImplemented or not isinstance(hint, int_types) or hint < 0:
             return None
         return hint
 
 
 class ProgressBar(object):
-
-    def __init__(self, iterable, length=None, fill_char='#', empty_char=' ',
-                 bar_template='%(bar)s', info_sep='  ', show_eta=True,
-                 show_percent=None, show_pos=False, item_show_func=None,
-                 label=None, file=None, color=None, width=30):
+    def __init__(
+        self,
+        iterable,
+        length=None,
+        fill_char="#",
+        empty_char=" ",
+        bar_template="%(bar)s",
+        info_sep="  ",
+        show_eta=True,
+        show_percent=None,
+        show_pos=False,
+        item_show_func=None,
+        label=None,
+        file=None,
+        color=None,
+        width=30,
+    ):
         self.fill_char = fill_char
         self.empty_char = empty_char
         self.bar_template = bar_template
@@ -61,7 +75,7 @@ class ProgressBar(object):
         self.show_percent = show_percent
         self.show_pos = show_pos
         self.item_show_func = item_show_func
-        self.label = label or ''
+        self.label = label or ""
         if file is None:
             file = _default_text_stdout()
         self.file = file
@@ -73,7 +87,7 @@ class ProgressBar(object):
             length = _length_hint(iterable)
         if iterable is None:
             if length is None:
-                raise TypeError('iterable or length is required')
+                raise TypeError("iterable or length is required")
             iterable = range_type(length)
         self.iter = iter(iterable)
         self.length = length
@@ -88,6 +102,7 @@ class ProgressBar(object):
         self.current_item = None
         self.is_hidden = not isatty(self.file)
         self._last_line = None
+        self.short_limit = 0.5
 
     def __enter__(self):
         self.entered = True
@@ -99,12 +114,26 @@ class ProgressBar(object):
 
     def __iter__(self):
         if not self.entered:
-            raise RuntimeError('You need to use progress bars in a with block.')
+            raise RuntimeError("You need to use progress bars in a with block.")
         self.render_progress()
-        return self
+        return self.generator()
+
+    def __next__(self):
+        # Iteration is defined in terms of a generator function,
+        # returned by iter(self); use that to define next(). This works
+        # because `self.iter` is an iterable consumed by that generator,
+        # so it is re-entry safe. Calling `next(self.generator())`
+        # twice works and does "what you want".
+        return next(iter(self))
+
+    # Python 2 compat
+    next = __next__
+
+    def is_fast(self):
+        return time.time() - self.start <= self.short_limit
 
     def render_finish(self):
-        if self.is_hidden:
+        if self.is_hidden or self.is_fast():
             return
         self.file.write(AFTER_BAR)
         self.file.flush()
@@ -129,48 +158,53 @@ class ProgressBar(object):
 
     def format_eta(self):
         if self.eta_known:
-            t = self.eta + 1
+            t = int(self.eta)
             seconds = t % 60
-            t /= 60
+            t //= 60
             minutes = t % 60
-            t /= 60
+            t //= 60
             hours = t % 24
-            t /= 24
+            t //= 24
             if t > 0:
-                days = t
-                return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
+                return "{}d {:02}:{:02}:{:02}".format(t, hours, minutes, seconds)
             else:
-                return '%02d:%02d:%02d' % (hours, minutes, seconds)
-        return ''
+                return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
+        return ""
 
     def format_pos(self):
         pos = str(self.pos)
         if self.length_known:
-            pos += '/%s' % self.length
+            pos += "/{}".format(self.length)
         return pos
 
     def format_pct(self):
-        return ('% 4d%%' % int(self.pct * 100))[1:]
+        return "{: 4}%".format(int(self.pct * 100))[1:]
+
+    def format_bar(self):
+        if self.length_known:
+            bar_length = int(self.pct * self.width)
+            bar = self.fill_char * bar_length
+            bar += self.empty_char * (self.width - bar_length)
+        elif self.finished:
+            bar = self.fill_char * self.width
+        else:
+            bar = list(self.empty_char * (self.width or 1))
+            if self.time_per_iteration != 0:
+                bar[
+                    int(
+                        (math.cos(self.pos * self.time_per_iteration) / 2.0 + 0.5)
+                        * self.width
+                    )
+                ] = self.fill_char
+            bar = "".join(bar)
+        return bar
 
     def format_progress_line(self):
         show_percent = self.show_percent
 
         info_bits = []
-        if self.length_known:
-            bar_length = int(self.pct * self.width)
-            bar = self.fill_char * bar_length
-            bar += self.empty_char * (self.width - bar_length)
-            if show_percent is None:
-                show_percent = not self.show_pos
-        else:
-            if self.finished:
-                bar = self.fill_char * self.width
-            else:
-                bar = list(self.empty_char * (self.width or 1))
-                if self.time_per_iteration != 0:
-                    bar[int((math.cos(self.pos * self.time_per_iteration)
-                        / 2.0 + 0.5) * self.width)] = self.fill_char
-                bar = ''.join(bar)
+        if self.length_known and show_percent is None:
+            show_percent = not self.show_pos
 
         if self.show_pos:
             info_bits.append(self.format_pos())
@@ -183,51 +217,52 @@ class ProgressBar(object):
             if item_info is not None:
                 info_bits.append(item_info)
 
-        return (self.bar_template % {
-            'label': self.label,
-            'bar': bar,
-            'info': self.info_sep.join(info_bits)
-        }).rstrip()
+        return (
+            self.bar_template
+            % {
+                "label": self.label,
+                "bar": self.format_bar(),
+                "info": self.info_sep.join(info_bits),
+            }
+        ).rstrip()
 
     def render_progress(self):
         from .termui import get_terminal_size
-        nl = False
 
         if self.is_hidden:
-            buf = [self.label]
-            nl = True
-        else:
-            buf = []
-            # Update width in case the terminal has been resized
-            if self.autowidth:
-                old_width = self.width
-                self.width = 0
-                clutter_length = term_len(self.format_progress_line())
-                new_width = max(0, get_terminal_size()[0] - clutter_length)
-                if new_width < old_width:
-                    buf.append(BEFORE_BAR)
-                    buf.append(' ' * self.max_width)
-                    self.max_width = new_width
-                self.width = new_width
+            return
 
-            clear_width = self.width
-            if self.max_width is not None:
-                clear_width = self.max_width
+        buf = []
+        # Update width in case the terminal has been resized
+        if self.autowidth:
+            old_width = self.width
+            self.width = 0
+            clutter_length = term_len(self.format_progress_line())
+            new_width = max(0, get_terminal_size()[0] - clutter_length)
+            if new_width < old_width:
+                buf.append(BEFORE_BAR)
+                buf.append(" " * self.max_width)
+                self.max_width = new_width
+            self.width = new_width
 
-            buf.append(BEFORE_BAR)
-            line = self.format_progress_line()
-            line_len = term_len(line)
-            if self.max_width is None or self.max_width < line_len:
-                self.max_width = line_len
-            buf.append(line)
+        clear_width = self.width
+        if self.max_width is not None:
+            clear_width = self.max_width
 
-            buf.append(' ' * (clear_width - line_len))
-        line = ''.join(buf)
+        buf.append(BEFORE_BAR)
+        line = self.format_progress_line()
+        line_len = term_len(line)
+        if self.max_width is None or self.max_width < line_len:
+            self.max_width = line_len
 
+        buf.append(line)
+        buf.append(" " * (clear_width - line_len))
+        line = "".join(buf)
         # Render the line only if it changed.
-        if line != self._last_line:
+
+        if line != self._last_line and not self.is_fast():
             self._last_line = line
-            echo(line, file=self.file, color=self.color, nl=nl)
+            echo(line, file=self.file, color=self.color, nl=False)
             self.file.flush()
 
     def make_step(self, n_steps):
@@ -239,7 +274,16 @@ class ProgressBar(object):
             return
 
         self.last_eta = time.time()
-        self.avg = self.avg[-6:] + [-(self.start - time.time()) / (self.pos)]
+
+        # self.avg is a rolling list of length <= 7 of steps where steps are
+        # defined as time elapsed divided by the total progress through
+        # self.length.
+        if self.pos:
+            step = (time.time() - self.start) / self.pos
+        else:
+            step = time.time() - self.start
+
+        self.avg = self.avg[-6:] + [step]
 
         self.eta_known = self.length_known
 
@@ -252,82 +296,93 @@ class ProgressBar(object):
         self.current_item = None
         self.finished = True
 
-    def next(self):
+    def generator(self):
+        """Return a generator which yields the items added to the bar
+        during construction, and updates the progress bar *after* the
+        yielded block returns.
+        """
+        # WARNING: the iterator interface for `ProgressBar` relies on
+        # this and only works because this is a simple generator which
+        # doesn't create or manage additional state. If this function
+        # changes, the impact should be evaluated both against
+        # `iter(bar)` and `next(bar)`. `next()` in particular may call
+        # `self.generator()` repeatedly, and this must remain safe in
+        # order for that interface to work.
+        if not self.entered:
+            raise RuntimeError("You need to use progress bars in a with block.")
+
         if self.is_hidden:
-            return next(self.iter)
-        try:
-            rv = next(self.iter)
-            self.current_item = rv
-        except StopIteration:
+            for rv in self.iter:
+                yield rv
+        else:
+            for rv in self.iter:
+                self.current_item = rv
+                yield rv
+                self.update(1)
             self.finish()
             self.render_progress()
-            raise StopIteration()
-        else:
-            self.update(1)
-            return rv
-
-    if not PY2:
-        __next__ = next
-        del next
 
 
-def pager(text, color=None):
+def pager(generator, color=None):
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
-        return _nullpager(stdout, text, color)
-    pager_cmd = (os.environ.get('PAGER', None) or '').strip()
+        return _nullpager(stdout, generator, color)
+    pager_cmd = (os.environ.get("PAGER", None) or "").strip()
     if pager_cmd:
         if WIN:
-            return _tempfilepager(text, pager_cmd, color)
-        return _pipepager(text, pager_cmd, color)
-    if os.environ.get('TERM') in ('dumb', 'emacs'):
-        return _nullpager(stdout, text, color)
-    if WIN or sys.platform.startswith('os2'):
-        return _tempfilepager(text, 'more <', color)
-    if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
-        return _pipepager(text, 'less', color)
+            return _tempfilepager(generator, pager_cmd, color)
+        return _pipepager(generator, pager_cmd, color)
+    if os.environ.get("TERM") in ("dumb", "emacs"):
+        return _nullpager(stdout, generator, color)
+    if WIN or sys.platform.startswith("os2"):
+        return _tempfilepager(generator, "more <", color)
+    if hasattr(os, "system") and os.system("(less) 2>/dev/null") == 0:
+        return _pipepager(generator, "less", color)
 
     import tempfile
+
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
-            return _pipepager(text, 'more', color)
-        return _nullpager(stdout, text, color)
+        if hasattr(os, "system") and os.system('more "{}"'.format(filename)) == 0:
+            return _pipepager(generator, "more", color)
+        return _nullpager(stdout, generator, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(text, cmd, color):
+def _pipepager(generator, cmd, color):
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
     import subprocess
+
     env = dict(os.environ)
 
     # If we're piping to less we might support colors under the
     # condition that
-    cmd_detail = cmd.rsplit('/', 1)[-1].split()
-    if color is None and cmd_detail[0] == 'less':
-        less_flags = os.environ.get('LESS', '') + ' '.join(cmd_detail[1:])
+    cmd_detail = cmd.rsplit("/", 1)[-1].split()
+    if color is None and cmd_detail[0] == "less":
+        less_flags = "{}{}".format(os.environ.get("LESS", ""), " ".join(cmd_detail[1:]))
         if not less_flags:
-            env['LESS'] = '-R'
+            env["LESS"] = "-R"
             color = True
-        elif 'r' in less_flags or 'R' in less_flags:
+        elif "r" in less_flags or "R" in less_flags:
             color = True
 
-    if not color:
-        text = strip_ansi(text)
-
-    c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
-                         env=env)
+    c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, env=env)
     encoding = get_best_encoding(c.stdin)
     try:
-        c.stdin.write(text.encode(encoding, 'replace'))
-        c.stdin.close()
+        for text in generator:
+            if not color:
+                text = strip_ansi(text)
+
+            c.stdin.write(text.encode(encoding, "replace"))
     except (IOError, KeyboardInterrupt):
         pass
+    else:
+        c.stdin.close()
 
     # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
     # search or other commands inside less).
@@ -346,32 +401,34 @@ def _pipepager(text, cmd, color):
             break
 
 
-def _tempfilepager(text, cmd, color):
+def _tempfilepager(generator, cmd, color):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
+
     filename = tempfile.mktemp()
+    # TODO: This never terminates if the passed generator never terminates.
+    text = "".join(generator)
     if not color:
         text = strip_ansi(text)
     encoding = get_best_encoding(sys.stdout)
-    with open_stream(filename, 'wb')[0] as f:
+    with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system(cmd + ' "' + filename + '"')
+        os.system('{} "{}"'.format(cmd, filename))
     finally:
         os.unlink(filename)
 
 
-def _nullpager(stream, text, color):
+def _nullpager(stream, generator, color):
     """Simply print unformatted text.  This is the ultimate fallback."""
-    if not color:
-        text = strip_ansi(text)
-    stream.write(text)
+    for text in generator:
+        if not color:
+            text = strip_ansi(text)
+        stream.write(text)
 
 
 class Editor(object):
-
-    def __init__(self, editor=None, env=None, require_save=True,
-                 extension='.txt'):
+    def __init__(self, editor=None, env=None, require_save=True, extension=".txt"):
         self.editor = editor
         self.env = env
         self.require_save = require_save
@@ -380,19 +437,20 @@ class Editor(object):
     def get_editor(self):
         if self.editor is not None:
             return self.editor
-        for key in 'VISUAL', 'EDITOR':
+        for key in "VISUAL", "EDITOR":
             rv = os.environ.get(key)
             if rv:
                 return rv
         if WIN:
-            return 'notepad'
-        for editor in 'vim', 'nano':
-            if os.system('which %s >/dev/null 2>&1' % editor) == 0:
+            return "notepad"
+        for editor in "sensible-editor", "vim", "nano":
+            if os.system("which {} >/dev/null 2>&1".format(editor)) == 0:
                 return editor
-        return 'vi'
+        return "vi"
 
     def edit_file(self, filename):
         import subprocess
+
         editor = self.get_editor()
         if self.env:
             environ = os.environ.copy()
@@ -400,47 +458,47 @@ class Editor(object):
         else:
             environ = None
         try:
-            c = subprocess.Popen('%s "%s"' % (editor, filename),
-                                 env=environ, shell=True)
+            c = subprocess.Popen(
+                '{} "{}"'.format(editor, filename), env=environ, shell=True,
+            )
             exit_code = c.wait()
             if exit_code != 0:
-                raise ClickException('%s: Editing failed!' % editor)
+                raise ClickException("{}: Editing failed!".format(editor))
         except OSError as e:
-            raise ClickException('%s: Editing failed: %s' % (editor, e))
+            raise ClickException("{}: Editing failed: {}".format(editor, e))
 
     def edit(self, text):
         import tempfile
 
-        text = text or ''
-        if text and not text.endswith('\n'):
-            text += '\n'
+        text = text or ""
+        if text and not text.endswith("\n"):
+            text += "\n"
 
-        fd, name = tempfile.mkstemp(prefix='editor-', suffix=self.extension)
+        fd, name = tempfile.mkstemp(prefix="editor-", suffix=self.extension)
         try:
             if WIN:
-                encoding = 'utf-8-sig'
-                text = text.replace('\n', '\r\n')
+                encoding = "utf-8-sig"
+                text = text.replace("\n", "\r\n")
             else:
-                encoding = 'utf-8'
+                encoding = "utf-8"
             text = text.encode(encoding)
 
-            f = os.fdopen(fd, 'wb')
+            f = os.fdopen(fd, "wb")
             f.write(text)
             f.close()
             timestamp = os.path.getmtime(name)
 
             self.edit_file(name)
 
-            if self.require_save \
-               and os.path.getmtime(name) == timestamp:
+            if self.require_save and os.path.getmtime(name) == timestamp:
                 return None
 
-            f = open(name, 'rb')
+            f = open(name, "rb")
             try:
                 rv = f.read()
             finally:
                 f.close()
-            return rv.decode('utf-8-sig').replace('\r\n', '\n')
+            return rv.decode("utf-8-sig").replace("\r\n", "\n")
         finally:
             os.unlink(name)
 
@@ -453,18 +511,18 @@ def open_url(url, wait=False, locate=False):
             import urllib
         except ImportError:
             import urllib
-        if url.startswith('file://'):
+        if url.startswith("file://"):
             url = urllib.unquote(url[7:])
         return url
 
-    if sys.platform == 'darwin':
-        args = ['open']
+    if sys.platform == "darwin":
+        args = ["open"]
         if wait:
-            args.append('-W')
+            args.append("-W")
         if locate:
-            args.append('-R')
+            args.append("-R")
         args.append(_unquote_file(url))
-        null = open('/dev/null', 'w')
+        null = open("/dev/null", "w")
         try:
             return subprocess.Popen(args, stderr=null).wait()
         finally:
@@ -472,59 +530,106 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = 'explorer /select,"%s"' % _unquote_file(
-                url.replace('"', ''))
+            args = 'explorer /select,"{}"'.format(_unquote_file(url.replace('"', "")))
         else:
-            args = 'start %s "" "%s"' % (
-                wait and '/WAIT' or '', url.replace('"', ''))
+            args = 'start {} "" "{}"'.format(
+                "/WAIT" if wait else "", url.replace('"', "")
+            )
+        return os.system(args)
+    elif CYGWIN:
+        if locate:
+            url = _unquote_file(url)
+            args = 'cygstart "{}"'.format(os.path.dirname(url).replace('"', ""))
+        else:
+            args = 'cygstart {} "{}"'.format("-w" if wait else "", url.replace('"', ""))
         return os.system(args)
 
     try:
         if locate:
-            url = os.path.dirname(_unquote_file(url)) or '.'
+            url = os.path.dirname(_unquote_file(url)) or "."
         else:
             url = _unquote_file(url)
-        c = subprocess.Popen(['xdg-open', url])
+        c = subprocess.Popen(["xdg-open", url])
         if wait:
             return c.wait()
         return 0
     except OSError:
-        if url.startswith(('http://', 'https://')) and not locate and not wait:
+        if url.startswith(("http://", "https://")) and not locate and not wait:
             import webbrowser
+
             webbrowser.open(url)
             return 0
         return 1
 
 
 def _translate_ch_to_exc(ch):
-    if ch == '\x03':
+    if ch == u"\x03":
         raise KeyboardInterrupt()
-    if ch == '\x04':
+    if ch == u"\x04" and not WIN:  # Unix-like, Ctrl+D
+        raise EOFError()
+    if ch == u"\x1a" and WIN:  # Windows, Ctrl+Z
         raise EOFError()
 
 
 if WIN:
     import msvcrt
 
+    @contextlib.contextmanager
+    def raw_terminal():
+        yield
+
     def getchar(echo):
-        rv = msvcrt.getch()
+        # The function `getch` will return a bytes object corresponding to
+        # the pressed character. Since Windows 10 build 1803, it will also
+        # return \x00 when called a second time after pressing a regular key.
+        #
+        # `getwch` does not share this probably-bugged behavior. Moreover, it
+        # returns a Unicode object by default, which is what we want.
+        #
+        # Either of these functions will return \x00 or \xe0 to indicate
+        # a special key, and you need to call the same function again to get
+        # the "rest" of the code. The fun part is that \u00e0 is
+        # "latin small letter a with grave", so if you type that on a French
+        # keyboard, you _also_ get a \xe0.
+        # E.g., consider the Up arrow. This returns \xe0 and then \x48. The
+        # resulting Unicode string reads as "a with grave" + "capital H".
+        # This is indistinguishable from when the user actually types
+        # "a with grave" and then "capital H".
+        #
+        # When \xe0 is returned, we assume it's part of a special-key sequence
+        # and call `getwch` again, but that means that when the user types
+        # the \u00e0 character, `getchar` doesn't return until a second
+        # character is typed.
+        # The alternative is returning immediately, but that would mess up
+        # cross-platform handling of arrow keys and others that start with
+        # \xe0. Another option is using `getch`, but then we can't reliably
+        # read non-ASCII characters, because return values of `getch` are
+        # limited to the current 8-bit codepage.
+        #
+        # Anyway, Click doesn't claim to do this Right(tm), and using `getwch`
+        # is doing the right thing in more situations than with `getch`.
         if echo:
-            msvcrt.putchar(rv)
+            func = msvcrt.getwche
+        else:
+            func = msvcrt.getwch
+
+        rv = func()
+        if rv in (u"\x00", u"\xe0"):
+            # \x00 and \xe0 are control characters that indicate special key,
+            # see above.
+            rv += func()
         _translate_ch_to_exc(rv)
-        if PY2:
-            enc = getattr(sys.stdin, 'encoding', None)
-            if enc is not None:
-                rv = rv.decode(enc, 'replace')
-            else:
-                rv = rv.decode('cp1252', 'replace')
         return rv
+
+
 else:
     import tty
     import termios
 
-    def getchar(echo):
+    @contextlib.contextmanager
+    def raw_terminal():
         if not isatty(sys.stdin):
-            f = open('/dev/tty')
+            f = open("/dev/tty")
             fd = f.fileno()
         else:
             fd = sys.stdin.fileno()
@@ -533,9 +638,7 @@ else:
             old_settings = termios.tcgetattr(fd)
             try:
                 tty.setraw(fd)
-                ch = os.read(fd, 32)
-                if echo and isatty(sys.stdout):
-                    sys.stdout.write(ch)
+                yield fd
             finally:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
                 sys.stdout.flush()
@@ -543,5 +646,12 @@ else:
                     f.close()
         except termios.error:
             pass
-        _translate_ch_to_exc(ch)
-        return ch.decode(get_best_encoding(sys.stdin), 'replace')
+
+    def getchar(echo):
+        with raw_terminal() as fd:
+            ch = os.read(fd, 32)
+            ch = ch.decode(get_best_encoding(sys.stdin), "replace")
+            if echo and isatty(sys.stdout):
+                sys.stdout.write(ch)
+            _translate_ch_to_exc(ch)
+            return ch
