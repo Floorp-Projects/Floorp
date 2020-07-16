@@ -374,7 +374,7 @@ class All(CompositeStrategy):
     @classmethod
     def reduce(cls, results):
         for rv in results:
-            if !rv:
+            if not rv:
                 return rv
         return True
 
