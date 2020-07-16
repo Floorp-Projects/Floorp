@@ -473,6 +473,10 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
+            'pattern': 'testing/condprofile/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
             'pattern': 'third_party/python/**',
         },
         {

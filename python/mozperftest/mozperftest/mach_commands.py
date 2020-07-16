@@ -114,6 +114,9 @@ class PerftestTests(MachCommandBase):
         default=False,
         help="Skip flake8 and black",
     )
+    @CommandArgument(
+        "-v", "--verbose", action="store_true", default=False, help="Verbose mode",
+    )
     def run_tests(self, **kwargs):
         MachCommandBase._activate_virtualenv(self)
 
@@ -180,6 +183,10 @@ class PerftestTests(MachCommandBase):
 
         import pytest
 
+        options = "-xs"
+        if kwargs.get("verbose"):
+            options += "v"
+
         with temporary_env(COVERAGE_RCFILE=str(here / ".coveragerc")):
             if run_coverage_check:
                 assert self._run_python_script(
@@ -188,7 +195,7 @@ class PerftestTests(MachCommandBase):
             args = [
                 "run",
                 pytest.__file__,
-                "-xs",
+                options,
                 tests,
             ]
             assert self._run_python_script("coverage", *args, label="running tests")

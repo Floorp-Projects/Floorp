@@ -29,6 +29,7 @@ def matches(args, *flags):
 
     Maybe with an argument.
     """
+
     for flag in flags:
         if flag in args or any(arg.startswith(flag + "=") for arg in args):
             return True

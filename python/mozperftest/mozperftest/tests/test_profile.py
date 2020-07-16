@@ -4,12 +4,40 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import mozunit
+from unittest import mock
+import tempfile
+
 from mozperftest.tests.support import get_running_env
-from mozperftest.test.profile import Profile
+from mozperftest.system.profile import Profile, ProfileNotFoundError
 
 
 def test_profile():
     mach_cmd, metadata, env = get_running_env()
+
+    with Profile(env, mach_cmd) as profile:
+        profile(metadata)
+        profile_dir = env.get_arg("profile-directory")
+        assert os.path.exists(profile_dir)
+
+    assert not os.path.exists(profile_dir)
+
+
+CALLS = [0]
+
+
+def _return_profile(*args, **kw):
+    if CALLS[0] == 0:
+        CALLS[0] = 1
+        raise ProfileNotFoundError()
+
+    tempdir = tempfile.mkdtemp()
+
+    return tempdir
+
+
+@mock.patch("mozperftest.system.profile.get_profile", new=_return_profile)
+def test_conditionedprofile():
+    mach_cmd, metadata, env = get_running_env(profile_conditioned=True)
 
     with Profile(env, mach_cmd) as profile:
         profile(metadata)
