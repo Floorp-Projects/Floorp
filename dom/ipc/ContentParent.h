@@ -1309,7 +1309,7 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvHistoryCommit(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      uint64_t aSessionHistoryEntryID);
+      const uint64_t& aSessionHistoryEntryID, const nsID& aChangeID);
 
   mozilla::ipc::IPCResult RecvHistoryGo(
       const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
