@@ -789,17 +789,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         if (flags & PR_LD_LOCAL) {
             dl_flags |= RTLD_LOCAL;
         }
-#if defined(DARWIN)
-        /* ensure the file exists if it contains a slash character i.e. path */
-        /* DARWIN's dlopen ignores the provided path and checks for the */
-        /* plain filename in DYLD_LIBRARY_PATH */
-        if (strchr(name, PR_DIRECTORY_SEPARATOR) == NULL ||
-            PR_Access(name, PR_ACCESS_EXISTS) == PR_SUCCESS) {
-            h = dlopen(name, dl_flags);
-        }
-#else
         h = dlopen(name, dl_flags);
-#endif
 #elif defined(USE_HPSHL)
         int shl_flags = 0;
         shl_t h;
