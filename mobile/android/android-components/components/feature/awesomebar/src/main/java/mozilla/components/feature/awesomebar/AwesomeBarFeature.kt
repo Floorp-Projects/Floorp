@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.view.View
-import kotlinx.coroutines.Deferred
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
@@ -149,13 +148,13 @@ class AwesomeBarFeature(
      * @param showDescription whether or not to add the search engine name as description.
      */
     fun addSearchActionProvider(
-        searchEngine: Deferred<SearchEngine>,
+        searchEngineGetter: suspend () -> SearchEngine,
         searchUseCase: SearchUseCases.SearchUseCase,
         icon: Bitmap? = null,
         showDescription: Boolean = false
     ): AwesomeBarFeature {
         awesomeBar.addProviders(SearchActionProvider(
-            searchEngine,
+            searchEngineGetter,
             searchUseCase,
             icon,
             showDescription
