@@ -325,11 +325,7 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 pref("browser.urlbar.openintab", false);
 
 // If true, we show tail suggestions when available.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.urlbar.richSuggestions.tail", true);
-#else
-pref("browser.urlbar.richSuggestions.tail", false);
-#endif
 
 // Whether aliases are styled as a "chiclet" separated from the Urlbar.
 // Also controls the other urlbar.update2 prefs.
