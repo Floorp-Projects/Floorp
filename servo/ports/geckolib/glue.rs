@@ -3983,41 +3983,6 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ComputedValues_HasOverriddenAppearance(
-    cv: &ComputedValues,
-    appearance: specified::Appearance,
-) -> bool {
-    use style::properties::{CSSWideKeyword, PropertyDeclaration};
-
-    let rules = match cv.rules {
-        Some(ref rules) => rules,
-        None => return false,
-    };
-
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-
-    let id = PropertyDeclarationId::Longhand(LonghandId::MozAppearance);
-
-    // Look for any -moz-appearance declarations on rules at the Author level
-    // which set some non-default value.  revert would cause us to revert to
-    // the default value, so don't count that.  Declarations with variables
-    // could resolve to a default or non-default value depending on computed
-    // style, but should be rare enough on -moz-appearance to be OK to count
-    // as a non-default value.
-    rules
-        .self_and_ancestors()
-        .filter(|n| n.cascade_level().origin() == Origin::Author)
-        .flat_map(|n| n.style_source().unwrap().read(&guard).get_at_importance(id, n.importance()))
-        .any(|declaration| {
-            match declaration {
-                PropertyDeclaration::MozAppearance(a) => *a != appearance,
-                _ => declaration.get_css_wide_keyword() != Some(CSSWideKeyword::Revert),
-            }
-        })
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_StyleSet_Init(doc: &structs::Document) -> *mut RawServoStyleSet {
     let data = Box::new(PerDocumentStyleData::new(doc));
 
