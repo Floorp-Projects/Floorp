@@ -10,6 +10,7 @@ with Files('**'):
 XPIDL_SOURCES += [
     'nsITransportProvider.idl',
     'nsIWebSocketChannel.idl',
+    'nsIWebSocketConnection.idl',
     'nsIWebSocketEventService.idl',
     'nsIWebSocketListener.idl',
 ]
@@ -31,6 +32,7 @@ EXPORTS.mozilla.net += [
 UNIFIED_SOURCES += [
     'BaseWebSocketChannel.cpp',
     'IPCTransportProvider.cpp',
+    'nsWebSocketConnection.cpp',
     'WebSocketChannel.cpp',
     'WebSocketChannelChild.cpp',
     'WebSocketChannelParent.cpp',
