@@ -89,7 +89,7 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Kacana teu bener kaalihkeunna</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Panyungsi eureun nyobaan mulut hal anu direkéskeun. Lokana ngarahkeun rekésna nepi ka moal anggeus-anggeus.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Pamaluruh eureun nyobaan mulut hal anu direkéskeun. Lokana ngarahkeun rekésna nepi ka moal anggeus-anggeus.</p>
       <ul>
         <li>Anjeun numpurkeun atawa meungpeuk réréméh anu dipénta ku ieu loka?</li>
         <li>Lamun teu bisa bérés ku nampa réréméh loka, sigana masalahna dina konpigurasi serper sarta lain tina piranti anjeun.</li>
