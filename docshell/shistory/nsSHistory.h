@@ -162,6 +162,12 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                      int32_t* aOutEndIndex);
   void NotifyListenersContentViewerEvicted(uint32_t aNumEvicted);
 
+  int32_t Length() { return int32_t(mEntries.Length()); }
+  int32_t Index() { return mIndex; }
+  mozilla::dom::BrowsingContext* GetBrowsingContext() { return mRootBC; }
+  bool HasOngoingUpdate() { return mHasOngoingUpdate; }
+  void SetHasOngoingUpdate(bool aVal) { mHasOngoingUpdate = aVal; }
+
  protected:
   virtual ~nsSHistory();
 
@@ -225,9 +231,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                                             nsISHEntry* aNewEntry);
 
  protected:
-  // Length of mEntries.
-  int32_t Length() { return int32_t(mEntries.Length()); }
 
+  bool mHasOngoingUpdate;
   bool mIsRemote;
   nsTArray<nsCOMPtr<nsISHEntry>> mEntries;  // entries are never null
  private:
