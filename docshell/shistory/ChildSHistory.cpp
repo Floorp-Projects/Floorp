@@ -37,15 +37,46 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
 
 int32_t ChildSHistory::Count() {
   if (StaticPrefs::fission_sessionHistoryInParent()) {
-    return mLength;
+    uint32_t length = mLength;
+    for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
+      length += mPendingSHistoryChanges[i].mLengthDelta;
+    }
+    return length;
   }
   return mHistory->GetCount();
 }
 
 int32_t ChildSHistory::Index() {
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    uint32_t index = mIndex;
+    for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
+      index += mPendingSHistoryChanges[i].mIndexDelta;
+    }
+    return index;
+  }
   int32_t index;
   mHistory->GetIndex(&index);
   return index;
+}
+
+nsID ChildSHistory::AddPendingHistoryChange() {
+  int32_t indexOffset = 1;
+  int32_t lengthOffset = (Index() + indexOffset) - (Count() - 1);
+  nsID changeID = {};
+  nsContentUtils::GenerateUUIDInPlace(changeID);
+  PendingSHistoryChange change = {changeID, indexOffset, lengthOffset};
+  mPendingSHistoryChanges.AppendElement(change);
+  return changeID;
+}
+
+void ChildSHistory::SetIndexAndLength(uint32_t aIndex, uint32_t aLength,
+                                      const nsID& aChangeID) {
+  mIndex = aIndex;
+  mLength = aLength;
+  mPendingSHistoryChanges.RemoveElementsBy(
+      [aChangeID](const PendingSHistoryChange& aChange) {
+        return aChange.mChangeID == aChangeID;
+      });
 }
 
 void ChildSHistory::Reload(uint32_t aReloadFlags, ErrorResult& aRv) {
