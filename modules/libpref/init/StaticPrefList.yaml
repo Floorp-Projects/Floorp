@@ -1454,7 +1454,7 @@
 # Is support for composite operations from the Web Animations API enabled?
 - name: dom.animations-api.compositing.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 # Is support for the core interfaces of Web Animations API enabled?
