@@ -1069,7 +1069,8 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
     ScheduleComposition();
   }
 
-  mLayerManager->SetCompositionInfo(TimeStamp(), CompositionOpportunityId{});
+  // TODO(bug 1328602) Need an equivalent that works with the rende thread.
+  mLayerManager->SetCompositionTime(TimeStamp());
 
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
                                           start);

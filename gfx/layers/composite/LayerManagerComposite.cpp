@@ -557,7 +557,7 @@ void LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
   // Set composition timestamp here because we need it in
   // ComputeEffectiveTransforms (so the correct video frame size is picked) and
   // also to compute invalid regions properly.
-  SetCompositionInfo(aTimeStamp, CompositionOpportunityId{});
+  SetCompositionTime(aTimeStamp);
 
   if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     MOZ_ASSERT(!aTimeStamp.IsNull());
