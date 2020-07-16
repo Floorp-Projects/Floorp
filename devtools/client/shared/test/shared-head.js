@@ -1080,3 +1080,27 @@ async function moveWindowTo(win, left, top) {
 function getCurrentTestFilePath() {
   return gTestPath.replace("chrome://mochitests/content/browser/", "");
 }
+
+/**
+ * Wait for a single resource of the provided resourceType.
+ *
+ * @param {ResourceWatcher} resourceWatcher
+ *        The ResourceWatcher instance that should emit the expected resource.
+ * @param {String} resourceType
+ *        One of ResourceWatcher.TYPES, type of the expected resource.
+ * @return {Object}
+ *         - resource {Object} the resource itself
+ *         - targetFront {TargetFront} the target which owns the resource
+ */
+function waitForResourceOnce(resourceWatcher, resourceType) {
+  return new Promise(resolve => {
+    const onAvailable = ({ targetFront, resource }) => {
+      resolve({ targetFront, resource });
+      resourceWatcher.unwatchResources([resourceType], { onAvailable });
+    };
+    resourceWatcher.watchResources([resourceType], {
+      ignoreExistingResources: true,
+      onAvailable,
+    });
+  });
+}
