@@ -8203,9 +8203,10 @@ bool nsWindow::GetTopLevelWindowActiveState(nsIFrame* aFrame) {
 
 static nsIFrame* FindTitlebarFrame(nsIFrame* aFrame) {
   for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
-    const nsStyleDisplay* frameDisp = childFrame->StyleDisplay();
-    if (frameDisp->mAppearance == StyleAppearance::MozWindowTitlebar ||
-        frameDisp->mAppearance == StyleAppearance::MozWindowTitlebarMaximized) {
+    StyleAppearance appearance =
+        childFrame->StyleDisplay()->EffectiveAppearance();
+    if (appearance == StyleAppearance::MozWindowTitlebar ||
+        appearance == StyleAppearance::MozWindowTitlebarMaximized) {
       return childFrame;
     }
 
