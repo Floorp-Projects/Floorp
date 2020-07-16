@@ -209,9 +209,10 @@ class AecLogging extends Control {
 
   let peerConnections = renderElement("div");
   let connectionLog = renderElement("div");
+  let userPrefs = renderElement("div");
 
   const content = document.querySelector("#content");
-  content.append(peerConnections, connectionLog);
+  content.append(peerConnections, connectionLog, userPrefs);
 
   function refresh() {
     const pcDiv = renderElements("div", { className: "stats" }, [
@@ -250,10 +251,11 @@ class AecLogging extends Control {
       div.append(...log.map(line => renderText("p", line)));
       logDiv.append(div);
     }
-
     // Replace previous info
     peerConnections.replaceWith(pcDiv);
     connectionLog.replaceWith(logDiv);
+    userPrefs.replaceWith((userPrefs = renderUserPrefs()));
+
     peerConnections = pcDiv;
     connectionLog = logDiv;
   }
@@ -261,6 +263,7 @@ class AecLogging extends Control {
 
   window.setInterval(
     async history => {
+      userPrefs.replaceWith((userPrefs = renderUserPrefs()));
       const reports = await getStats();
       reports.forEach(report => {
         const replace = (id, renderFunc) => {
@@ -896,6 +899,44 @@ function candidateToString({
   }
   proxied = type == "local-candidate" ? ` [${proxied}]` : "";
   return `${address}:${port}/${protocol}(${candidateType})${proxied}`;
+}
+
+function renderUserPrefs() {
+  const getPref = key => {
+    switch (Services.prefs.getPrefType(key)) {
+      case Services.prefs.PREF_BOOL:
+        return Services.prefs.getBoolPref(key);
+      case Services.prefs.PREF_INT:
+        return Services.prefs.getIntPref(key);
+      case Services.prefs.PREF_STRING:
+        return Services.prefs.getStringPref(key);
+    }
+    return "";
+  };
+  const prefs = [
+    "media.peerconnection",
+    "media.navigator",
+    "media.getusermedia",
+  ];
+  const renderPref = p => renderText("p", `${p}: ${getPref(p)}`);
+  const display = prefs
+    .flatMap(Services.prefs.getChildList)
+    .filter(Services.prefs.prefHasUserValue)
+    .map(renderPref);
+  return renderElements(
+    "div",
+    {
+      id: "prefs",
+      className: "prefs",
+      style: display.length ? "" : "visibility:hidden",
+    },
+    [
+      renderElements("span", { className: "section-heading" }, [
+        renderText("h3", string("custom_webrtc_configuration_heading")),
+      ]),
+      ...display,
+    ]
+  );
 }
 
 function renderFoldableSection(parent, options = {}) {

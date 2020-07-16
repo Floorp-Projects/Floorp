@@ -28,7 +28,7 @@ table {
   margin: 0.5em 0.5em;
 }
 
-.log p {
+.log p, .prefs p {
   font-family: monospace;
   padding-left: 2em;
   text-indent: -2em;
