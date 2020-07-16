@@ -834,6 +834,13 @@ impl<'alloc> ASTDump for OptionalChain<'alloc> {
                 property.dump_with_atoms_at(out, atoms, slices, depth + 1);
                 write!(out, ")").expect("failed to dump");
             }
+            OptionalChain::PrivateFieldExpressionTail { field, .. } => {
+                write!(out, "(PrivateFieldExpressionTail").expect("failed to dump");
+                write!(out, " ").expect("failed to dump");
+                write!(out, "field=").expect("failed to dump");
+                field.dump_with_atoms_at(out, atoms, slices, depth + 1);
+                write!(out, ")").expect("failed to dump");
+            }
             OptionalChain::CallExpressionTail { arguments, .. } => {
                 write!(out, "(CallExpressionTail").expect("failed to dump");
                 write!(out, " ").expect("failed to dump");
@@ -845,6 +852,9 @@ impl<'alloc> ASTDump for OptionalChain<'alloc> {
                 ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             OptionalChain::StaticMemberExpression(ast) => {
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
+            }
+            OptionalChain::PrivateFieldExpression(ast) => {
                 ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
             OptionalChain::CallExpression(ast) => {
@@ -1165,6 +1175,9 @@ impl<'alloc> ASTDump for MemberAssignmentTarget<'alloc> {
             MemberAssignmentTarget::ComputedMemberAssignmentTarget(ast) => {
                 ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
+            MemberAssignmentTarget::PrivateFieldAssignmentTarget(ast) => {
+                ast.dump_with_atoms_at(out, atoms, slices, depth);
+            }
             MemberAssignmentTarget::StaticMemberAssignmentTarget(ast) => {
                 ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
@@ -1183,6 +1196,21 @@ impl<'alloc> ASTDump for ComputedMemberAssignmentTarget<'alloc> {
         newline(out, depth + 1);
         write!(out, "expression=").expect("failed to dump");
         self.expression.dump_with_atoms_at(out, atoms, slices, depth + 1);
+        write!(out, ")").expect("failed to dump");
+    }
+}
+
+impl<'alloc> ASTDump for PrivateFieldAssignmentTarget<'alloc> {
+    fn dump_with_atoms_at<W>(&self, out: &mut W, atoms: &SourceAtomSet, slices: &SourceSliceList, depth: usize)
+        where W: io::Write
+    {
+        write!(out, "(PrivateFieldAssignmentTarget").expect("failed to dump");
+        newline(out, depth + 1);
+        write!(out, "object=").expect("failed to dump");
+        self.object.dump_with_atoms_at(out, atoms, slices, depth + 1);
+        newline(out, depth + 1);
+        write!(out, "field=").expect("failed to dump");
+        self.field.dump_with_atoms_at(out, atoms, slices, depth + 1);
         write!(out, ")").expect("failed to dump");
     }
 }

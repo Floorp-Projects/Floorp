@@ -3,6 +3,7 @@
 use crate::frame_slot::FrameSlot;
 use crate::function::FunctionFlags;
 use crate::gcthings::GCThing;
+use crate::scope::ScopeIndex;
 use crate::scope_notes::ScopeNote;
 use ast::source_atom_set::SourceAtomSetIndex;
 
@@ -262,6 +263,8 @@ pub struct ScriptStencil {
     pub fun_name: Option<SourceAtomSetIndex>,
     pub fun_nargs: u16,
     pub fun_flags: FunctionFlags,
+
+    pub lazy_function_enclosing_scope_index: Option<ScopeIndex>,
 }
 
 impl ScriptStencil {
@@ -278,6 +281,7 @@ impl ScriptStencil {
             fun_name: None,
             fun_nargs: 0,
             fun_flags: FunctionFlags::empty(),
+            lazy_function_enclosing_scope_index: None,
         }
     }
 
@@ -287,6 +291,7 @@ impl ScriptStencil {
         is_generator: bool,
         is_async: bool,
         fun_flags: FunctionFlags,
+        lazy_function_enclosing_scope_index: ScopeIndex,
     ) -> Self {
         let mut flags = ImmutableScriptFlagsEnum::IsFunction as u32;
         if is_generator {
@@ -304,6 +309,7 @@ impl ScriptStencil {
             fun_name,
             fun_nargs: 0,
             fun_flags,
+            lazy_function_enclosing_scope_index: Some(lazy_function_enclosing_scope_index),
         }
     }
 

@@ -19,19 +19,25 @@ def shifted_path_to(pt: ParseTable, n: int, right_of: Path) -> typing.Iterator[P
     state = right_of[0].src
     assert isinstance(state, int)
     for edge in pt.states[state].backedges:
-        assert pt.term_is_shifted(edge.term)
         if isinstance(edge.term, Action) and edge.term.update_stack():
             # Some Action such as Unwind and Replay are actions which are
             # forking the execution state from the parse stable state.
             # While computing the shifted_path_to, we only iterate over the
             # parse table states.
             continue
+        assert pt.term_is_shifted(edge.term)
         if pt.term_is_stacked(edge.term):
             s_n = n - 1
             if n == 0:
                 continue
         else:
             s_n = n
+            if n == 0 and not pt.assume_inconsistent:
+                # If the parse table is no longer inconsistent, then there is
+                # no point on walking back on actions as they are expected to
+                # be resolved. Thus we cannot have the restrictions issue that
+                # we have on inconsistent parse tables.
+                continue
         from_edge = Edge(edge.src, edge.term)
         for path in shifted_path_to(pt, s_n, [from_edge] + right_of):
             yield path
