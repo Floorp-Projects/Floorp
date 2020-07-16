@@ -5,7 +5,6 @@
 package mozilla.components.browser.session
 
 import android.content.ComponentCallbacks2
-import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
@@ -14,9 +13,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -802,32 +799,6 @@ class SessionManagerMigrationTest {
     }
 
     @Test
-    fun `Adding a hit result`() {
-        val store = BrowserStore()
-        val manager = SessionManager(engine = mock(), store = store)
-
-        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
-        manager.add(session)
-
-        assertNull(session.hitResult.peek())
-        assertNull(store.state.findTab("session")!!.content.hitResult)
-
-        val hitResult: HitResult = HitResult.UNKNOWN("test")
-        session.hitResult = Consumable.from(hitResult)
-
-        assertEquals(hitResult, session.hitResult.peek())
-        store.state.findTab("session")!!.also { tab ->
-            assertNotNull(tab.content.hitResult)
-            assertSame(hitResult, tab.content.hitResult)
-        }
-
-        session.hitResult.consume { true }
-        store.state.findTab("session")!!.also { tab ->
-            assertNull(tab.content.hitResult)
-        }
-    }
-
-    @Test
     fun `Linking session to engine session`() {
         val store = BrowserStore()
         val engine: Engine = mock()
@@ -913,32 +884,6 @@ class SessionManagerMigrationTest {
         store.state.findTab("session2")!!.also { tab ->
             assertEquals(engineSession, tab.engineState.engineSession)
         }
-    }
-
-    @Test
-    fun `Adding a find result`() {
-        val store = BrowserStore()
-        val manager = SessionManager(engine = mock(), store = store)
-
-        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
-        manager.add(session)
-
-        assertTrue(session.findResults.isEmpty())
-        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
-
-        val result = Session.FindResult(0, 0, false)
-        session.findResults += result
-
-        assertEquals(1, session.findResults.size)
-        assertEquals(result, session.findResults.last())
-        store.state.findTab("session")!!.also { tab ->
-            assertEquals(1, tab.content.findResults.size)
-            assertEquals(result.toFindResultState(), tab.content.findResults.last())
-        }
-
-        session.findResults = emptyList()
-        assertTrue(session.findResults.isEmpty())
-        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
     }
 
     @Test

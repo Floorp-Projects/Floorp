@@ -14,6 +14,7 @@ import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -39,6 +40,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -373,76 +375,112 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverPassingHitResult() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
         val hitResult = HitResult.UNKNOWN("data://foobar")
 
         observer.onLongPress(hitResult)
 
-        session.hitResult.consume {
-            assertEquals("data://foobar", it.src)
-            assertTrue(it is HitResult.UNKNOWN)
-            true
-        }
+        verify(store).dispatch(
+            ContentAction.UpdateHitResultAction("test-id", hitResult)
+        )
     }
 
     @Test
     fun engineObserverClearsFindResults() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
 
-        val result1 = Session.FindResult(0, 1, false)
-        val result2 = Session.FindResult(1, 2, true)
         observer.onFindResult(0, 1, false)
-        observer.onFindResult(1, 2, true)
-        assertEquals(listOf(result1, result2), session.findResults)
+
+        verify(store).dispatch(ContentAction.AddFindResultAction(
+            "test-id", FindResultState(0, 1, false)
+        ))
+        reset(store)
 
         observer.onFind("mozilla")
-        assertEquals(emptyList<Session.FindResult>(), session.findResults)
+
+        verify(store).dispatch(
+            ContentAction.ClearFindResultsAction("test-id")
+        )
     }
 
     @Test
     fun engineObserverClearsFindResultIfNewPageStartsLoading() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
 
-        val result1 = Session.FindResult(0, 1, false)
-        val result2 = Session.FindResult(1, 2, true)
         observer.onFindResult(0, 1, false)
+
+        verify(store).dispatch(ContentAction.AddFindResultAction(
+            "test-id", FindResultState(0, 1, false)
+        ))
+        reset(store)
+
         observer.onFindResult(1, 2, true)
-        assertEquals(listOf(result1, result2), session.findResults)
+
+        verify(store).dispatch(ContentAction.AddFindResultAction(
+            "test-id", FindResultState(1, 2, true)
+        ))
+        reset(store)
 
         observer.onLoadingStateChange(true)
-        assertEquals(emptyList<String>(), session.findResults)
+
+        verify(store).dispatch(ContentAction.ClearFindResultsAction("test-id"))
     }
 
     @Test
     fun engineObserverNotifiesFullscreenMode() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
 
         observer.onFullScreenChange(true)
-        assertEquals(true, session.fullScreenMode)
+
+        verify(store).dispatch(ContentAction.FullScreenChangedAction(
+            "test-id", true
+        ))
+        reset(store)
+
         observer.onFullScreenChange(false)
-        assertEquals(false, session.fullScreenMode)
+
+        verify(store).dispatch(ContentAction.FullScreenChangedAction(
+            "test-id", false
+        ))
     }
 
     @Test
     fun engineObserverNotifiesMetaViewportFitChange() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+        val store: BrowserStore = mock()
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val observer = EngineObserver(session, store)
 
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
-        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT,
-            session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+        ))
+        reset(store)
+
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES)
-        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES,
-            session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        ))
+        reset(store)
+
         observer.onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER)
-        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER,
-            session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+        ))
+        reset(store)
+
         observer.onMetaViewportFitChanged(123)
-        assertEquals(123, session.layoutInDisplayCutoutMode)
+        verify(store).dispatch(ContentAction.ViewportFitChangedAction(
+            "test-id", 123
+        ))
+        reset(store)
     }
 
     @Test

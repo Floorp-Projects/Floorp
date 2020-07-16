@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.contextmenu
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
@@ -14,22 +12,19 @@ import mozilla.components.concept.engine.HitResult
 /**
  * Contains use cases related to the context menu feature.
  *
- * @param sessionManager the application's [SessionManager].
+ * @param store the application's [BrowserStore].
  */
 class ContextMenuUseCases(
-    sessionManager: SessionManager,
     store: BrowserStore
 ) {
     class ConsumeHitResultUseCase(
-        private val sessionManager: SessionManager
+        private val store: BrowserStore
     ) {
         /**
-         * Consumes the [HitResult] from the [Session] with the given [tabId].
+         * Consumes the [HitResult] from the [BrowserStore] with the given [tabId].
          */
         operator fun invoke(tabId: String) {
-            sessionManager.findSessionById(tabId)?.let {
-                it.hitResult.consume { true }
-            }
+            store.dispatch(ContentAction.ConsumeHitResultAction(tabId))
         }
     }
 
@@ -37,7 +32,7 @@ class ContextMenuUseCases(
         private val store: BrowserStore
     ) {
         /**
-         * Adds a [Download] to the [Session] with the given [tabId].
+         * Adds a [DownloadState] to the [BrowserStore] with the given [tabId].
          *
          * This is a hacky workaround. After we have migrated everything from browser-session to
          * browser-state we should revisits this and find a better solution.
@@ -49,6 +44,6 @@ class ContextMenuUseCases(
         }
     }
 
-    val consumeHitResult = ConsumeHitResultUseCase(sessionManager)
+    val consumeHitResult = ConsumeHitResultUseCase(store)
     val injectDownload = InjectDownloadUseCase(store)
 }

@@ -11,18 +11,12 @@ import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
-import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
-import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
-import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
-import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
-import mozilla.components.browser.state.action.ContentAction.FullScreenChangedAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
-import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
@@ -31,7 +25,6 @@ import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailActi
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
 import mozilla.components.browser.state.action.ContentAction.UpdateWebAppManifestAction
-import mozilla.components.browser.state.action.ContentAction.ViewportFitChangedAction
 import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
@@ -39,7 +32,6 @@ import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -100,14 +92,7 @@ class Session(
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
-        fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
-        fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
-        fun onFullScreenChanged(session: Session, enabled: Boolean) = Unit
-        /**
-         * @param layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
-         */
-        fun onMetaViewportFitChanged(session: Session, layoutInDisplayCutoutMode: Int) = Unit
         fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
@@ -185,15 +170,6 @@ class Session(
          */
         RESTORED
     }
-
-    /**
-     * A value type representing a result of a "find in page" operation.
-     *
-     * @property activeMatchOrdinal the zero-based ordinal of the currently selected match.
-     * @property numberOfMatches the match count
-     * @property isDoneCounting true if the find operation has completed, otherwise false.
-     */
-    data class FindResult(val activeMatchOrdinal: Int, val numberOfMatches: Int, val isDoneCounting: Boolean)
 
     /**
      * The currently loading or loaded URL.
@@ -377,41 +353,6 @@ class Session(
     }
 
     /**
-     * List of results of that latest "find in page" operation.
-     */
-    var findResults: List<FindResult> by Delegates.observable(emptyList()) { _, old, new ->
-        notifyObservers(old, new) {
-            if (new.isNotEmpty()) {
-                onFindResult(this@Session, new.last())
-            }
-        }
-
-        if (new.isNotEmpty()) {
-            store?.syncDispatch(AddFindResultAction(id, new.last().toFindResultState()))
-        } else {
-            store?.syncDispatch(ClearFindResultsAction(id))
-        }
-    }
-
-    /**
-     * The target of the latest long click operation.
-     */
-    var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
-        store?.let {
-            val hitResult = result.peek()
-            if (hitResult == null) {
-                it.syncDispatch(ConsumeHitResultAction(id))
-            } else {
-                it.syncDispatch(UpdateHitResultAction(id, hitResult))
-                result.onConsume { it.syncDispatch(ConsumeHitResultAction(id)) }
-            }
-        }
-
-        val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
-        !result.consumeBy(consumers)
-    }
-
-    /**
      * The target of the latest thumbnail.
      */
     var thumbnail: Bitmap? by Delegates.observable<Bitmap?>(null) { _, _, new ->
@@ -426,23 +367,6 @@ class Session(
      */
     var desktopMode: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onDesktopModeChanged(this@Session, new) }
-    }
-
-    /**
-     * Exits fullscreen mode if it's in that state.
-     */
-    var fullScreenMode: Boolean by Delegates.observable(false) { _, old, new ->
-        if (notifyObservers(old, new) { onFullScreenChanged(this@Session, new) }) {
-            store?.syncDispatch(FullScreenChangedAction(id, new))
-        }
-    }
-
-    /**
-     * Display cutout mode state.
-     */
-    var layoutInDisplayCutoutMode: Int by Delegates.observable(0) { _, _, new ->
-        notifyObservers { onMetaViewportFitChanged(this@Session, new) }
-        store?.syncDispatch(ViewportFitChangedAction(id, new))
     }
 
     /**
