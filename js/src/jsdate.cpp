@@ -1971,11 +1971,11 @@ static bool date_getUTCSeconds(JSContext* cx, unsigned argc, Value* vp) {
  * UT +00:19:32.
  */
 
-static bool date_getUTCMilliseconds(JSContext* cx, unsigned argc, Value* vp) {
+static bool getMilliseconds(JSContext* cx, unsigned argc, Value* vp,
+                            const char* methodName) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  auto* unwrapped =
-      UnwrapAndTypeCheckThis<DateObject>(cx, args, "getUTCMilliseconds");
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, methodName);
   if (!unwrapped) {
     return false;
   }
@@ -1987,6 +1987,14 @@ static bool date_getUTCMilliseconds(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setNumber(result);
   return true;
+}
+
+static bool date_getMilliseconds(JSContext* cx, unsigned argc, Value* vp) {
+  return getMilliseconds(cx, argc, vp, "getMilliseconds");
+}
+
+static bool date_getUTCMilliseconds(JSContext* cx, unsigned argc, Value* vp) {
+  return getMilliseconds(cx, argc, vp, "getUTCMilliseconds");
 }
 
 static bool date_getTimezoneOffset(JSContext* cx, unsigned argc, Value* vp) {
@@ -3209,7 +3217,7 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("getUTCMinutes", date_getUTCMinutes, 0, 0),
     JS_FN("getSeconds", date_getSeconds, 0, 0),
     JS_FN("getUTCSeconds", date_getUTCSeconds, 0, 0),
-    JS_FN("getMilliseconds", date_getUTCMilliseconds, 0, 0),
+    JS_FN("getMilliseconds", date_getMilliseconds, 0, 0),
     JS_FN("getUTCMilliseconds", date_getUTCMilliseconds, 0, 0),
     JS_FN("setTime", date_setTime, 1, 0),
     JS_FN("setYear", date_setYear, 1, 0),
