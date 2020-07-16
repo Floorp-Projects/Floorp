@@ -696,3 +696,19 @@ TEST_F(GfxConfigManager, WebRenderAtRefreshRateThreshold) {
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
 }
+
+TEST_F(GfxConfigManager, WebRenderWhenXRenderEnabled) {
+  mXRenderEnabled = true;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+

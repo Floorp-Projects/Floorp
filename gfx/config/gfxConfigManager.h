@@ -34,6 +34,7 @@ class gfxConfigManager {
         mWrPictureCaching(false),
         mWrPartialPresent(false),
         mGPUProcessAllowSoftware(false),
+        mXRenderEnabled(false),
         mWrEnvForceEnabled(false),
         mWrEnvForceDisabled(false),
         mHwStretchingSupport(false),
@@ -81,6 +82,7 @@ class gfxConfigManager {
   bool mWrPictureCaching;
   bool mWrPartialPresent;
   bool mGPUProcessAllowSoftware;
+  bool mXRenderEnabled;
 
   /**
    * Environment variables

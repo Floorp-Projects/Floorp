@@ -66,6 +66,7 @@ void gfxConfigManager::Init() {
 
 #ifdef MOZ_WIDGET_GTK
   mDisableHwCompositingNoWr = true;
+  mXRenderEnabled = mozilla::Preferences::GetBool("gfx.xrender.enabled");
 #endif
 
 #ifdef NIGHTLY_BUILD
@@ -265,6 +266,13 @@ void gfxConfigManager::ConfigureWebRender() {
     mFeatureWr->ForceDisable(FeatureStatus::UnavailableInSafeMode,
                              "Safe-mode is enabled",
                              "FEATURE_FAILURE_SAFE_MODE"_ns);
+  }
+
+  if (mXRenderEnabled) {
+    // XRender and WebRender don't play well together. XRender is disabled by
+    // default. If the user opts into it don't enable webrender.
+    mFeatureWr->ForceDisable(FeatureStatus::Blocked,"XRender is enabled",
+                             "FEATURE_FAILURE_XRENDER"_ns);
   }
 
   mFeatureWrAngle->DisableByDefault(FeatureStatus::OptIn,
