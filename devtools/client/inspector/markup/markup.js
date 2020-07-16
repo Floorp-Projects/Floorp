@@ -300,6 +300,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   );
   this._onWalkerNodeStatesChanged = this._onWalkerNodeStatesChanged.bind(this);
   this._onFocus = this._onFocus.bind(this);
+  this._onFrameRootAvailable = this._onFrameRootAvailable.bind(this);
   this._onMouseClick = this._onMouseClick.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
   this._onMouseOut = this._onMouseOut.bind(this);
@@ -316,6 +317,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._elt.addEventListener("mouseout", this._onMouseOut);
   this._frame.addEventListener("focus", this._onFocus);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
+  this.inspector.on("frame-root-available", this._onFrameRootAvailable);
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
   this.inspector.toolbox.nodePicker.on(
@@ -1398,13 +1400,26 @@ MarkupView.prototype = {
     }
 
     this.setContainer(node, container, slotted);
-    container.childrenDirty = true;
-
-    this._updateChildren(container);
+    this._forceUpdateChildren(container);
 
     this.inspector.emit("container-created", container);
 
     return container;
+  },
+
+  /**
+   * Called when receiving the "frame-root-available" event from the inspector.
+   * "frame-root-available" will be emitted by the inspector when a root-node
+   * resource becomes available for a non-top-level target.
+   */
+  _onFrameRootAvailable: async function(nodeFront) {
+    const parentNodeFront = nodeFront.parentNode();
+    const container = this.getContainer(parentNodeFront);
+    if (container) {
+      // If there is no container for the parentNodeFront, the markup view is
+      // currently not watching this part of the tree.
+      this._forceUpdateChildren(container, { flash: true, updateLevel: true });
+    }
   },
 
   /**
@@ -1447,16 +1462,12 @@ MarkupView.prototype = {
         type === "slotchange" ||
         type === "shadowRootAttached"
       ) {
-        container.childrenDirty = true;
-        // Update the children to take care of changes in the markup view DOM
-        // and update container (and its subtree) DOM tree depth level for
-        // accessibility where necessary.
-        this._updateChildren(container, { flash: true }).then(() =>
-          container.updateLevel()
-        );
+        this._forceUpdateChildren(container, {
+          flash: true,
+          updateLevel: true,
+        });
       } else if (type === "inlineTextChild") {
-        container.childrenDirty = true;
-        this._updateChildren(container, { flash: true });
+        this._forceUpdateChildren(container, { flash: true });
         container.update();
       }
     }
@@ -2008,8 +2019,7 @@ MarkupView.prototype = {
       if (!container.elt.parentNode) {
         const parentContainer = this.getContainer(parent);
         if (parentContainer) {
-          parentContainer.childrenDirty = true;
-          this._updateChildren(parentContainer, { expand: true });
+          this._forceUpdateChildren(parentContainer, { expand: true });
         }
       }
 
@@ -2047,6 +2057,22 @@ MarkupView.prototype = {
     }
 
     return centered;
+  },
+
+  _forceUpdateChildren: async function(container, options = {}) {
+    const { flash, updateLevel, expand } = options;
+
+    // Set childrenDirty to true to force fetching new children.
+    container.childrenDirty = true;
+
+    // Update the children to take care of changes in the markup view DOM
+    await this._updateChildren(container, { expand, flash });
+
+    if (updateLevel) {
+      // Update container (and its subtree) DOM tree depth level for
+      // accessibility where necessary.
+      container.updateLevel();
+    }
   },
 
   /**
@@ -2217,8 +2243,7 @@ MarkupView.prototype = {
 
     button.addEventListener("click", () => {
       container.maxChildren = -1;
-      container.childrenDirty = true;
-      this._updateChildren(container);
+      this._forceUpdateChildren(container);
     });
 
     return elt;
@@ -2319,6 +2344,7 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
+    this.inspector.off("frame-root-available", this._onFrameRootAvailable);
     this.inspector.toolbox.nodePicker.off(
       "picker-node-hovered",
       this._onToolboxPickerHover
