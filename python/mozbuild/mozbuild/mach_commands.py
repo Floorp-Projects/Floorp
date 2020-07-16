@@ -464,7 +464,7 @@ class GTestCommands(MachCommandBase):
                      dest='remote_test_root',
                      group='Android',
                      help='Remote directory to use as test root '
-                     '(eg. /mnt/sdcard/tests or /data/local/tests).')
+                     '(eg. /data/local/tmp/test_root).')
     @CommandArgument('--libxul',
                      dest='libxul_path',
                      group='Android',
