@@ -15,7 +15,8 @@ DisplayItemCache::DisplayItemCache()
       mMaximumSize(0),
       mPipelineId{},
       mCaching(false),
-      mInvalid(false) {}
+      mInvalid(false),
+      mSuppressed(false) {}
 
 void DisplayItemCache::SetDisplayList(nsDisplayListBuilder* aBuilder,
                                       nsDisplayList* aList) {

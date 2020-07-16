@@ -1075,6 +1075,7 @@ impl DisplayListBuilder {
         W: Write
     {
         let mut temp = BuiltDisplayList::default();
+        temp.descriptor.extra_data_offset = self.data.len();
         mem::swap(&mut temp.data, &mut self.data);
 
         let mut index: usize = 0;
