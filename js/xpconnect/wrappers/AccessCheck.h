@@ -11,12 +11,6 @@
 #include "js/Wrapper.h"
 #include "nsString.h"
 
-#ifdef XP_MACOSX
-// AssertMacros.h defines 'check' which conflicts with the method declarations
-// in this file.
-#  undef check
-#endif
-
 namespace xpc {
 
 class AccessCheck {
