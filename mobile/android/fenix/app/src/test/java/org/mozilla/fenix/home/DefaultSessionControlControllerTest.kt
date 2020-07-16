@@ -128,9 +128,21 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleDeleteCollectionTapped() {
-        val collection: TabCollection = mockk(relaxed = true)
+        val collection = mockk<TabCollection> {
+            every { title } returns "Collection"
+        }
+        every {
+            activity.resources.getString(R.string.tab_collection_dialog_message, "Collection")
+        } returns "Are you sure you want to delete Collection?"
+
         controller.handleDeleteCollectionTapped(collection)
-        verify { showDeleteCollectionPrompt(collection, null, any()) }
+        verify {
+            showDeleteCollectionPrompt(
+                collection,
+                null,
+                "Are you sure you want to delete Collection?"
+            )
+        }
     }
 
     @Test

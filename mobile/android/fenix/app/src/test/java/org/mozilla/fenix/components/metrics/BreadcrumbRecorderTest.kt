@@ -13,6 +13,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.base.crash.Breadcrumb
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 internal class BreadcrumbRecorderTest {
@@ -36,17 +37,18 @@ internal class BreadcrumbRecorderTest {
             )
         )
 
-        fun getBreadcrumbMessage(@Suppress("UNUSED_PARAMETER") destination: NavDestination): String {
-            return "test"
-        }
-
         val navController: NavController = mockk()
         val navDestination: NavDestination = mockk()
 
-        val breadCrumbRecorder =
-            BreadcrumbsRecorder(reporter, navController, ::getBreadcrumbMessage)
+        val breadCrumbRecorder = BreadcrumbsRecorder(reporter, navController) { "test" }
         breadCrumbRecorder.onDestinationChanged(navController, navDestination, null)
 
-        verify { reporter.recordCrashBreadcrumb(any()) }
+        verify {
+            reporter.recordCrashBreadcrumb(withArg {
+                assertEquals("test", it.message)
+                assertEquals("DestinationChanged", it.category)
+                assertEquals(Breadcrumb.Level.INFO, it.level)
+            })
+        }
     }
 }

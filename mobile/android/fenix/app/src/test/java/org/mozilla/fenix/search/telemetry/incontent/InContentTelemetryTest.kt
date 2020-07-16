@@ -61,7 +61,7 @@ class InContentTelemetryTest {
 
         telemetry.processMessage(message)
 
-        verify { telemetry.trackPartnerUrlTypeMetric(url, any()) }
+        verify { telemetry.trackPartnerUrlTypeMetric(url, listOf(first, second)) }
     }
 
     @Test

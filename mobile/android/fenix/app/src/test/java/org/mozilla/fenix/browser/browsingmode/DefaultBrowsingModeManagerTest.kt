@@ -32,12 +32,12 @@ class DefaultBrowsingModeManagerTest {
         manager.mode = BrowsingMode.Private
         manager.mode = BrowsingMode.Private
 
-        verify(exactly = 3) { callback.invoke(any()) }
+        verify(exactly = 3) { callback.invoke(BrowsingMode.Private) }
 
         manager.mode = BrowsingMode.Normal
         manager.mode = BrowsingMode.Normal
 
-        verify(exactly = 5) { callback.invoke(any()) }
+        verify(exactly = 2) { callback.invoke(BrowsingMode.Normal) }
     }
 
     @Test

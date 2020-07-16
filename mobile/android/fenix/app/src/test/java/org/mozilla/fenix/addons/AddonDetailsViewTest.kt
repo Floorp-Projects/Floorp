@@ -81,25 +81,28 @@ class AddonDetailsViewTest {
 
     @Test
     fun `bind addons version`() {
-        detailsView.bind(baseAddon.copy(
+        val addon1 = baseAddon.copy(
             version = "1.0.0",
             installedState = null
-        ))
+        )
+
+        detailsView.bind(addon1)
         assertEquals("1.0.0", view.version_text.text)
         view.version_text.performLongClick()
-        verify(exactly = 0) { interactor.showUpdaterDialog(any()) }
+        verify(exactly = 0) { interactor.showUpdaterDialog(addon1) }
 
-        detailsView.bind(baseAddon.copy(
+        val addon2 = baseAddon.copy(
             version = "1.0.0",
             installedState = Addon.InstalledState(
                 id = "",
                 version = "2.0.0",
                 optionsPageUrl = null
             )
-        ))
+        )
+        detailsView.bind(addon2)
         assertEquals("2.0.0", view.version_text.text)
         view.version_text.performLongClick()
-        verify { interactor.showUpdaterDialog(any()) }
+        verify { interactor.showUpdaterDialog(addon2) }
     }
 
     @Test

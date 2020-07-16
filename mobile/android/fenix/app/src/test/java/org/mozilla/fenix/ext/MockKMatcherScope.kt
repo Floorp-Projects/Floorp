@@ -1,5 +1,6 @@
 package org.mozilla.fenix.ext
 
+import android.content.Intent
 import androidx.navigation.NavDirections
 import io.mockk.Matcher
 import io.mockk.MockKMatcherScope
@@ -11,6 +12,13 @@ import mozilla.components.support.ktx.android.os.contentEquals
  */
 fun MockKMatcherScope.directionsEq(value: NavDirections) = match(EqNavDirectionsMatcher(value))
 
+/**
+ * Verify that two intents are the same for the purposes of intent resolution (filtering).
+ * Checks if their action, data, type, identity, class, and categories are the same.
+ * Does not compare extras.
+ */
+fun MockKMatcherScope.intentFilterEq(value: Intent) = match(EqIntentFilterMatcher(value))
+
 private data class EqNavDirectionsMatcher(private val value: NavDirections) : Matcher<NavDirections> {
 
     override fun match(arg: NavDirections?): Boolean =
@@ -18,4 +26,14 @@ private data class EqNavDirectionsMatcher(private val value: NavDirections) : Ma
 
     override fun substitute(map: Map<Any, Any>) =
         copy(value = value.internalSubstitute(map))
+}
+
+private data class EqIntentFilterMatcher(private val value: Intent) : Matcher<Intent> {
+
+    override fun match(arg: Intent?): Boolean = value.filterEquals(arg)
+
+    override fun substitute(map: Map<Any, Any>) =
+        copy(value = value.internalSubstitute(map))
+
+    override fun toString() = "intentFilterEq($value)"
 }
