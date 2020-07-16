@@ -31,6 +31,7 @@ pub fn generate() -> Result<String, String> {
     let build_target = get_build_target(Some(&windows_cpu_arch))?;
     let channel = get_channel(&resource_path)?;
     let os_version = get_os_version(Some(&windows_cpu_arch))?;
+    let locale = get_locale(&resource_path)?;
     let (distribution, distribution_version) = get_distribution_info(&resource_path)?;
     let system_capabilities = get_system_capabilities()?;
 
@@ -40,7 +41,7 @@ pub fn generate() -> Result<String, String> {
     let url = url.replace("%BUILD_ID%", &build_id);
     let url = url.replace("%BUILD_TARGET%", &build_target);
     let url = url.replace("%OS_VERSION%", &os_version);
-    let url = url.replace("%LOCALE%", constants::LOCALE);
+    let url = url.replace("%LOCALE%", &locale);
     let url = url.replace("%CHANNEL%", &channel);
     let url = url.replace("%PLATFORM_VERSION%", constants::GRE_MILESTONE);
     let url = url.replace("%SYSTEM_CAPABILITIES%", &system_capabilities);
@@ -154,6 +155,22 @@ fn get_os_version(_maybe_windows_cpu_arch: Option<&str>) -> Result<String, Strin
     }
 
     Ok(encode_uri_component(&version_string))
+}
+
+fn get_locale(resource_path: &Path) -> Result<String, String> {
+    let locale_ini_path = resource_path.join("locale.ini");
+    let locale_ini_path_str = locale_ini_path
+        .to_str()
+        .ok_or("Path to locale.ini is not valid Unicode")?;
+    let locale_ini = Ini::load_from_file(locale_ini_path_str)
+        .map_err(|e| format!("Unable to read locale.ini: {}", e))?;
+    let locale_section = locale_ini
+        .section(Some("locale"))
+        .ok_or("locale.ini has no locale section")?;
+    let locale = locale_section
+        .get("locale")
+        .ok_or("locale.ini has no locale in its locale section")?;
+    Ok(locale.clone())
 }
 
 /// This mimics Javascript's encodeURIComponent.
