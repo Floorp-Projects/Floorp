@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -67,7 +66,6 @@ open class FenixApplication : LocaleAwareApplication() {
     var visibilityLifecycleCallback: VisibilityLifecycleCallback? = null
         private set
 
-    @ExperimentalCoroutinesApi
     override fun onCreate() {
         super.onCreate()
 
@@ -116,7 +114,6 @@ open class FenixApplication : LocaleAwareApplication() {
         Log.addSink(AndroidLogSink())
     }
 
-    @ExperimentalCoroutinesApi
     @CallSuper
     open fun setupInMainProcessOnly() {
         run {

@@ -9,15 +9,14 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
-import org.mozilla.fenix.components.tips.Tip
 
 // This method got a little complex with the addition of the tab tray feature flag
 // When we remove the tabs from the home screen this will get much simpler again.
@@ -110,7 +109,6 @@ private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapI
         AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
 }
 
-@ExperimentalCoroutinesApi
 class SessionControlView(
     override val containerView: View?,
     interactor: SessionControlInteractor,

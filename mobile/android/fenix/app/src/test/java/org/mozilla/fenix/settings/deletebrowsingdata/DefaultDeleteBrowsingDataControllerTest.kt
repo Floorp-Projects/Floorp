@@ -10,37 +10,28 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.engine.Engine
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.components
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultDeleteBrowsingDataControllerTest {
 
-    private val mainThreadSurrogate = newSingleThreadContext("UI thread")
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
     private val context: Context = mockk(relaxed = true)
     private lateinit var controller: DefaultDeleteBrowsingDataController
 
     @Before
     fun setup() {
-        Dispatchers.setMain(mainThreadSurrogate)
-
         every { context.components.core.engine.clearData(any()) } just Runs
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
-        mainThreadSurrogate.close()
     }
 
     @Test

@@ -9,18 +9,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -35,10 +33,12 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultSessionControlControllerTest {
 
-    private val mainThreadSurrogate = newSingleThreadContext("UI thread")
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+
     private val activity: HomeActivity = mockk(relaxed = true)
     private val fragmentStore: HomeFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
@@ -62,7 +62,6 @@ class DefaultSessionControlControllerTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(mainThreadSurrogate)
         mockkStatic("org.mozilla.fenix.ext.ContextKt")
         every { activity.components.core.engine } returns engine
         every { activity.components.core.sessionManager } returns sessionManager
@@ -89,12 +88,6 @@ class DefaultSessionControlControllerTest {
             openPrivacyNotice = openPrivacyNotice,
             showTabTray = showTabTray
         )
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
-        mainThreadSurrogate.close()
     }
 
     @Test

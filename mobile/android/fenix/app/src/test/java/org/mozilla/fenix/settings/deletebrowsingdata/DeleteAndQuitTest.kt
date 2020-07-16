@@ -6,24 +6,21 @@
 
 package org.mozilla.fenix.settings.deletebrowsingdata
 
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
 import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
@@ -31,13 +28,15 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(FenixRobolectricTestRunner::class)
 class DeleteAndQuitTest {
 
-    private val mainThreadSurrogate = newSingleThreadContext("UI thread")
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
     private var activity: HomeActivity = mockk(relaxed = true)
     lateinit var settings: Settings
@@ -54,19 +53,11 @@ class DeleteAndQuitTest {
             clear()
         }
 
-        Dispatchers.setMain(mainThreadSurrogate)
-
         every { activity.components.core.historyStorage } returns historyStorage
         every { activity.components.core.permissionStorage } returns permissionStorage
         every { activity.components.useCases.tabsUseCases } returns tabUseCases
         every { tabUseCases.removeAllTabs } returns removeAllTabsUseCases
         every { activity.components.core.engine } returns engine
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
-        mainThreadSurrogate.close()
     }
 
     private fun Settings.clear() {

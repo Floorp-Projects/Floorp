@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.lib.state.ext.flowScoped
@@ -18,6 +19,8 @@ class MigrationPushRenewer(
     private val service: PushProcessor?,
     private val store: MigrationStore
 ) {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun start() {
         // Observe for migration completed.
         store.flowScoped { flow ->

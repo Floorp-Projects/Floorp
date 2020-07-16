@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.migration.FennecMigrator
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
+import org.mozilla.fenix.migration.MigrationTelemetryListener
 
 /**
  * An application class which knows how to migrate Fennec data.

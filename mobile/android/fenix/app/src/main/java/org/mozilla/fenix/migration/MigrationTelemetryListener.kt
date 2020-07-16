@@ -2,8 +2,9 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix
+package org.mozilla.fenix.migration
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
@@ -16,6 +17,8 @@ class MigrationTelemetryListener(
     private val metrics: MetricController,
     private val store: MigrationStore
 ) {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun start() {
         // Observe for migration completed.
         store.flowScoped { flow ->
