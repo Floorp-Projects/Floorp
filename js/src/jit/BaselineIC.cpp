@@ -2128,6 +2128,11 @@ bool FallbackICCodeCompiler::emitGetElem(bool hasReceiver) {
 
   leaveStubFrame(masm, true);
 
+  if (!IsTypeInferenceEnabled()) {
+    EmitReturnFromIC(masm);
+    return true;
+  }
+
   // When we get here, ICStubReg contains the ICGetElem_Fallback stub,
   // which we can't use to enter the TypeMonitor IC, because it's a
   // MonitoredFallbackStub instead of a MonitoredStub. So, we cheat. Note that
@@ -2771,6 +2776,11 @@ bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
 
   leaveStubFrame(masm, true);
 
+  if (!IsTypeInferenceEnabled()) {
+    EmitReturnFromIC(masm);
+    return true;
+  }
+
   // When we get here, ICStubReg contains the ICGetProp_Fallback stub,
   // which we can't use to enter the TypeMonitor IC, because it's a
   // MonitoredFallbackStub instead of a MonitoredStub. So, we cheat. Note that
@@ -3376,6 +3386,11 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
     masm.assumeUnreachable("Failed to return object in constructing call.");
 #endif
     masm.bind(&skipThisReplace);
+  }
+
+  if (!IsTypeInferenceEnabled()) {
+    EmitReturnFromIC(masm);
+    return true;
   }
 
   // At this point, ICStubReg points to the ICCall_Fallback stub, which is NOT
