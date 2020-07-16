@@ -43,9 +43,6 @@ class DebianBootstrapper(
         'zip',
     ]
 
-    # Subclasses can add packages to this variable to have them installed.
-    DISTRO_PACKAGES = []
-
     # Ubuntu and Debian don't often differ, but they do for npm.
     DEBIAN_PACKAGES = [
         # Comment the npm package until Debian bring it back
@@ -59,6 +56,7 @@ class DebianBootstrapper(
         'libcurl4-openssl-dev',
         'libdbus-1-dev',
         'libdbus-glib-1-dev',
+        'libdrm-dev',
         'libgtk-3-dev',
         'libgtk2.0-dev',
         'libpulse-dev',
@@ -68,18 +66,12 @@ class DebianBootstrapper(
         'yasm',
     ]
 
-    # Subclasses can add packages to this variable to have them installed.
-    BROWSER_DISTRO_PACKAGES = []
-
     # These are common packages for building Firefox for Android
     # (mobile/android) for all Debian-derived distros (such as Ubuntu).
     MOBILE_ANDROID_COMMON_PACKAGES = [
         'openjdk-8-jdk-headless',  # Android's `sdkmanager` requires Java 1.8 exactly.
         'wget',  # For downloading the Android SDK and NDK.
     ]
-
-    # Subclasses can add packages to this variable to have them installed.
-    MOBILE_ANDROID_DISTRO_PACKAGES = []
 
     def __init__(self, distro, version, dist_id, codename, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
@@ -89,7 +81,7 @@ class DebianBootstrapper(
         self.dist_id = dist_id
         self.codename = codename
 
-        self.packages = self.COMMON_PACKAGES + self.DISTRO_PACKAGES
+        self.packages = list(self.COMMON_PACKAGES)
         if self.distro == 'debian':
             self.packages += self.DEBIAN_PACKAGES
         # Due to the Python 2 EOL, newer versions of Ubuntu don't carry the
@@ -106,9 +98,6 @@ class DebianBootstrapper(
                 self.packages.append('python-pip')
 
             self.packages.append('python-dev')
-        self.browser_packages = self.BROWSER_COMMON_PACKAGES + self.BROWSER_DISTRO_PACKAGES
-        self.mobile_android_packages = self.MOBILE_ANDROID_COMMON_PACKAGES + \
-            self.MOBILE_ANDROID_DISTRO_PACKAGES
 
     def install_system_packages(self):
         # Python 3 may not be present on all distros. Search for it and
@@ -144,7 +133,7 @@ class DebianBootstrapper(
 
     def ensure_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
-        self.apt_install(*self.browser_packages)
+        self.apt_install(*self.BROWSER_COMMON_PACKAGES)
         modern = self.is_nasm_modern()
         if not modern:
             self.apt_install('nasm')
@@ -153,7 +142,7 @@ class DebianBootstrapper(
         # Multi-part process:
         # 1. System packages.
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-        self.apt_install(*self.mobile_android_packages)
+        self.apt_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
 
         # 2. Android pieces.
         self.ensure_java()
