@@ -472,12 +472,17 @@ pub enum OptionalChain<'alloc> {
         property: IdentifierName,
         loc: SourceLocation,
     },
+    PrivateFieldExpressionTail {
+        field: PrivateIdentifier,
+        loc: SourceLocation,
+    },
     CallExpressionTail {
         arguments: Arguments<'alloc>,
         loc: SourceLocation,
     },
     ComputedMemberExpression(ComputedMemberExpression<'alloc>),
     StaticMemberExpression(StaticMemberExpression<'alloc>),
+    PrivateFieldExpression(PrivateFieldExpression<'alloc>),
     CallExpression(CallExpression<'alloc>),
 }
 
@@ -610,6 +615,7 @@ pub enum ExpressionOrSuper<'alloc> {
 #[derive(Debug, PartialEq)]
 pub enum MemberAssignmentTarget<'alloc> {
     ComputedMemberAssignmentTarget(ComputedMemberAssignmentTarget<'alloc>),
+    PrivateFieldAssignmentTarget(PrivateFieldAssignmentTarget<'alloc>),
     StaticMemberAssignmentTarget(StaticMemberAssignmentTarget<'alloc>),
 }
 
@@ -617,6 +623,13 @@ pub enum MemberAssignmentTarget<'alloc> {
 pub struct ComputedMemberAssignmentTarget<'alloc> {
     pub object: ExpressionOrSuper<'alloc>,
     pub expression: arena::Box<'alloc, Expression<'alloc>>,
+    pub loc: SourceLocation,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct PrivateFieldAssignmentTarget<'alloc> {
+    pub object: ExpressionOrSuper<'alloc>,
+    pub field: PrivateIdentifier,
     pub loc: SourceLocation,
 }
 
@@ -927,7 +940,7 @@ pub struct StaticMemberExpression<'alloc> {
 
 #[derive(Debug, PartialEq)]
 pub struct PrivateFieldExpression<'alloc> {
-    pub object: arena::Box<'alloc, Expression<'alloc>>,
+    pub object: ExpressionOrSuper<'alloc>,
     pub field: PrivateIdentifier,
     pub loc: SourceLocation,
 }
