@@ -112,6 +112,7 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "debugger/Frame-inl.h"    // for DebuggerFrame::hasGeneratorInfo
+#include "debugger/Object-inl.h"   // for DebuggerObject::owner and isInstance.
 #include "debugger/Script-inl.h"   // for DebuggerScript::getReferent
 #include "gc/GC-inl.h"             // for ZoneCellIter
 #include "gc/Marking-inl.h"        // for MaybeForwarded
@@ -555,15 +556,6 @@ Debugger::~Debugger() {
   RemoveDebuggerEntry(cx->runtime()->onGarbageCollectionWatchers(), this);
 }
 
-static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
-              unsigned(DebuggerScript::OWNER_SLOT));
-static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
-              unsigned(DebuggerSource::OWNER_SLOT));
-static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
-              unsigned(JSSLOT_DEBUGOBJECT_OWNER));
-static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
-              unsigned(DebuggerEnvironment::OWNER_SLOT));
-
 #ifdef DEBUG
 /* static */
 bool Debugger::isChildJSObject(JSObject* obj) {
@@ -574,15 +566,6 @@ bool Debugger::isChildJSObject(JSObject* obj) {
          obj->getClass() == &DebuggerEnvironment::class_;
 }
 #endif
-
-/* static */
-Debugger* Debugger::fromChildJSObject(JSObject* obj) {
-  MOZ_ASSERT(isChildJSObject(obj));
-  JSObject* dbgobj = &obj->as<NativeObject>()
-                          .getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER)
-                          .toObject();
-  return fromJSObject(dbgobj);
-}
 
 bool Debugger::hasMemory() const {
   return object->getReservedSlot(JSSLOT_DEBUG_MEMORY_INSTANCE).isObject();
@@ -1128,7 +1111,7 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
       // For each Debugger.Frame, fire its onPop handler, if any.
       for (size_t i = 0; i < frames.length(); i++) {
         HandleDebuggerFrame frameobj = frames[i];
-        Debugger* dbg = Debugger::fromChildJSObject(frameobj);
+        Debugger* dbg = frameobj->owner();
         EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
         // Removing a global from a Debugger's debuggee set kills all of that
@@ -1464,19 +1447,18 @@ bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static NativeObject* ToNativeDebuggerObject(JSContext* cx,
-                                            MutableHandleObject obj) {
-  if (obj->getClass() != &DebuggerObject::class_) {
+static DebuggerObject* ToNativeDebuggerObject(JSContext* cx,
+                                              MutableHandleObject obj) {
+  if (!obj->is<DebuggerObject>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_NOT_EXPECTED_TYPE, "Debugger",
                               "Debugger.Object", obj->getClass()->name);
     return nullptr;
   }
 
-  NativeObject* ndobj = &obj->as<NativeObject>();
+  DebuggerObject* ndobj = &obj->as<DebuggerObject>();
 
-  Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
-  if (owner.isUndefined()) {
+  if (!ndobj->isInstance()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROTO,
                               "Debugger.Object", "Debugger.Object");
     return nullptr;
@@ -1486,13 +1468,12 @@ static NativeObject* ToNativeDebuggerObject(JSContext* cx,
 }
 
 bool Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj) {
-  NativeObject* ndobj = ToNativeDebuggerObject(cx, obj);
+  DebuggerObject* ndobj = ToNativeDebuggerObject(cx, obj);
   if (!ndobj) {
     return false;
   }
 
-  Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
-  if (&owner.toObject() != object) {
+  if (ndobj->owner() != Debugger::fromJSObject(object)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DEBUG_WRONG_OWNER, "Debugger.Object");
     return false;
@@ -2656,7 +2637,7 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
         continue;
       }
 
-      Debugger* dbg = Debugger::fromChildJSObject(frame);
+      Debugger* dbg = frame->owner();
       EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
       bool result = dbg->enterDebuggerHook(cx, [&]() -> bool {
@@ -3681,14 +3662,14 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
     return false;
   }
 
-  Debugger* dbg = Debugger::fromChildJSObject(src);
-  MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
-
   if (src->is<DebuggerFrame>()) {
+    DebuggerFrame* frame = &src->as<DebuggerFrame>();
+    Debugger* dbg = frame->owner();
+    MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
+
     if (dst.is<BaseScript>()) {
       // The generatorFrames map is not keyed on the associated JSScript. Get
       // the key from the source object and check everything matches.
-      DebuggerFrame* frame = &src->as<DebuggerFrame>();
       AbstractGeneratorObject* genObj = &frame->unwrappedGenerator();
       return frame->generatorScript() == &dst.as<BaseScript>() &&
              dbg->generatorFrames.hasEntry(genObj, src);
@@ -3699,14 +3680,21 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
                &dst.as<JSObject>().as<AbstractGeneratorObject>(), src);
   }
   if (src->is<DebuggerObject>()) {
+    Debugger* dbg = src->as<DebuggerObject>().owner();
+    MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
     return dst.is<JSObject>() &&
            dbg->objects.hasEntry(&dst.as<JSObject>(), src);
   }
   if (src->is<DebuggerEnvironment>()) {
+    Debugger* dbg = src->as<DebuggerEnvironment>().owner();
+    MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
     return dst.is<JSObject>() &&
            dbg->environments.hasEntry(&dst.as<JSObject>(), src);
   }
   if (src->is<DebuggerScript>()) {
+    Debugger* dbg = src->as<DebuggerScript>().owner();
+    MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
+
     return src->as<DebuggerScript>().getReferent().match(
         [=](BaseScript* script) {
           return dst.is<BaseScript>() && script == &dst.as<BaseScript>() &&
@@ -3718,6 +3706,9 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
         });
   }
   if (src->is<DebuggerSource>()) {
+    Debugger* dbg = src->as<DebuggerSource>().owner();
+    MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
+
     return src->as<DebuggerSource>().getReferent().match(
         [=](ScriptSourceObject* sso) {
           return dst.is<JSObject>() && sso == &dst.as<JSObject>() &&
@@ -5009,14 +5000,13 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         return false;
       }
 
-      Value owner =
-          debuggerSource.toObject().as<DebuggerSource>().getReservedSlot(
-              DebuggerSource::OWNER_SLOT);
+      DebuggerSource& debuggerSourceObj =
+          debuggerSource.toObject().as<DebuggerSource>();
 
       // The given source must have an owner. Otherwise, it's a
       // Debugger.Source.prototype, which would match no scripts, and is
       // probably a mistake.
-      if (!owner.isObject()) {
+      if (!debuggerSourceObj.isInstance()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_DEBUG_PROTO, "Debugger.Source",
                                   "Debugger.Source");
@@ -5026,14 +5016,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       // If it does have an owner, it should match the Debugger we're
       // calling findScripts on. It would work fine even if it didn't,
       // but mixing Debugger.Sources is probably a sign of confusion.
-      if (&owner.toObject() != debugger->object) {
+      if (debuggerSourceObj.owner() != debugger) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_DEBUG_WRONG_OWNER, "Debugger.Source");
         return false;
       }
 
       hasSource = true;
-      source = debuggerSource.toObject().as<DebuggerSource>().getReferent();
+      source = debuggerSourceObj.getReferent();
     }
 
     // Check for a 'displayURL' property.
@@ -6374,7 +6364,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
 
   for (size_t i = 0; i < frames.length(); i++) {
     HandleDebuggerFrame frameobj = frames[i];
-    Debugger* dbg = Debugger::fromChildJSObject(frameobj);
+    Debugger* dbg = frameobj->owner();
 
     // Update frame object's ScriptFrameIter::data pointer.
     if (!frameobj->replaceFrameIterData(cx, iter)) {

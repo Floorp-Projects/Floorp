@@ -88,7 +88,7 @@ static DebuggerEnvironment* DebuggerEnvironment_checkThis(
   if (!thisobj) {
     return nullptr;
   }
-  if (thisobj->getClass() != &DebuggerEnvironment::class_) {
+  if (!thisobj->is<DebuggerEnvironment>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Environment",
                               "method", thisobj->getClass()->name);
@@ -97,9 +97,8 @@ static DebuggerEnvironment* DebuggerEnvironment_checkThis(
 
   // Forbid Debugger.Environment.prototype, which is of class
   // DebuggerEnvironment::class_ but isn't a real working Debugger.Environment.
-  // The prototype object is distinguished by having no referent.
   DebuggerEnvironment* nthisobj = &thisobj->as<DebuggerEnvironment>();
-  if (!nthisobj->getPrivate()) {
+  if (!nthisobj->isInstance()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Environment",
                               "method", "prototype object");
