@@ -3319,6 +3319,17 @@
     "keyed": true,
     "description": "Error code when http3 connection is closed. Look at Http3Session for more details."
   },
+  "HTTP3_REQUEST_PER_CONN": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1652104],
+    "description": "HTTP3: Streams created per connection"
+  },
   "HTTP_CONTENT_ENCODING": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

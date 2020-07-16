@@ -181,6 +181,9 @@ void Http3Session::Shutdown() {
 Http3Session::~Http3Session() {
   LOG3(("Http3Session::~Http3Session %p", this));
 
+  Telemetry::Accumulate(Telemetry::HTTP3_REQUEST_PER_CONN,
+                        mTransactionCount);
+
   Shutdown();
 }
 
@@ -655,6 +658,7 @@ nsresult Http3Session::TryActivating(
 
   MOZ_ASSERT(*aStreamId != UINT64_MAX);
   mStreamIdHash.Put(*aStreamId, RefPtr{aStream});
+  mTransactionCount++;
   return NS_OK;
 }
 
