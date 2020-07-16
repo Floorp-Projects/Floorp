@@ -37,12 +37,10 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.settings.SupportUtils
 
 @SuppressWarnings("TooManyFunctions")
 class SavedLoginsFragment : Fragment() {
@@ -88,9 +86,14 @@ class SavedLoginsFragment : Fragment() {
             )
         }
         val savedLoginsController: SavedLoginsController =
-            SavedLoginsController(savedLoginsStore, requireContext().settings())
-        savedLoginsInteractor =
-            SavedLoginsInteractor(savedLoginsController, ::itemClicked, ::openLearnMore)
+            SavedLoginsController(
+                    store = savedLoginsStore,
+                    navController = findNavController(),
+                    browserNavigator = ::openToBrowserAndLoad,
+                    settings = requireContext().settings(),
+                    metrics = requireContext().components.analytics.metrics
+            )
+        savedLoginsInteractor = SavedLoginsInteractor(savedLoginsController)
         savedLoginsView = SavedLoginsView(view.savedLoginsLayout, savedLoginsInteractor)
         loadAndMapLogins()
         return view
@@ -138,20 +141,8 @@ class SavedLoginsFragment : Fragment() {
         super.onPause()
     }
 
-    private fun itemClicked(item: SavedLogin) {
-        context?.components?.analytics?.metrics?.track(Event.OpenOneLogin)
-        val directions =
-            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(item.guid)
-        findNavController().navigate(directions)
-    }
-
-    private fun openLearnMore() {
-        (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
-                (SupportUtils.SumoTopic.SYNC_SETUP),
-            newTab = true,
-            from = BrowserDirection.FromSavedLoginsFragment
-        )
+    private fun openToBrowserAndLoad(searchTermOrURL: String, newTab: Boolean, from: BrowserDirection) {
+        (activity as HomeActivity).openToBrowserAndLoad(searchTermOrURL, newTab, from)
     }
 
     private fun loadAndMapLogins() {
@@ -222,11 +213,15 @@ class SavedLoginsFragment : Fragment() {
         sortingStrategyMenu = SavedLoginsSortingStrategyMenu(requireContext(), itemToHighlight) {
             when (it) {
                 SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort -> {
-                    savedLoginsInteractor.sort(SortingStrategy.Alphabetically(requireContext().applicationContext))
+                    savedLoginsInteractor.onSortingStrategyChanged(
+                        SortingStrategy.Alphabetically(requireContext().applicationContext)
+                    )
                 }
 
                 SavedLoginsSortingStrategyMenu.Item.LastUsedSort -> {
-                    savedLoginsInteractor.sort(SortingStrategy.LastUsed(requireContext().applicationContext))
+                    savedLoginsInteractor.onSortingStrategyChanged(
+                        SortingStrategy.LastUsed(requireContext().applicationContext)
+                    )
                 }
             }
         }

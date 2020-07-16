@@ -52,6 +52,6 @@ class LoginsListViewHolderTest {
         holder.bind(baseLogin)
 
         view.performClick()
-        verify { interactor.itemClicked(baseLogin) }
+        verify { interactor.onItemClicked(baseLogin) }
     }
 }

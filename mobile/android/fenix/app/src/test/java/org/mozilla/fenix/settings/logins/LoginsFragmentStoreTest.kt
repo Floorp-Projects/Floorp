@@ -10,6 +10,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LoginsFragmentStoreTest {
@@ -122,5 +123,20 @@ class LoginsFragmentStoreTest {
         assertEquals(SavedLoginsSortingStrategyMenu.Item.LastUsedSort, store.state.highlightedItem)
         assertEquals("example", store.state.searchedForText)
         assertEquals(listOf(exampleLogin), store.state.filteredItems)
+    }
+
+    @Test
+    fun `LoginSelected action`() {
+        val store = LoginsFragmentStore(baseState.copy(
+                isLoading = false,
+                loginList = listOf(mockk()),
+                filteredItems = listOf(mockk())
+        ))
+
+        store.dispatch(LoginsAction.LoginSelected(mockk())).joinBlocking()
+
+        assertTrue(store.state.isLoading)
+        assertTrue(store.state.loginList.isEmpty())
+        assertTrue(store.state.filteredItems.isEmpty())
     }
 }

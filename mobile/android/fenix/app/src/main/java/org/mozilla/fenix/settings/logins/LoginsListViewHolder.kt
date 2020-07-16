@@ -34,7 +34,7 @@ class LoginsListViewHolder(
         updateFavIcon(item.origin)
 
         view.setOnClickListener {
-            interactor.itemClicked(item)
+            interactor.onItemClicked(item)
         }
     }
 

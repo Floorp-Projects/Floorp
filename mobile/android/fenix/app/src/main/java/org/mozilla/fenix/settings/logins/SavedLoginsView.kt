@@ -9,11 +9,16 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_saved_logins.view.*
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.addUnderline
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -40,7 +45,7 @@ class SavedLoginsView(
         with(view.saved_passwords_empty_learn_more) {
             movementMethod = LinkMovementMethod.getInstance()
             addUnderline()
-            setOnClickListener { interactor.onLearnMore() }
+            setOnClickListener { interactor.onLearnMoreClicked() }
         }
 
         with(view.saved_passwords_empty_message) {
@@ -54,6 +59,7 @@ class SavedLoginsView(
     }
 
     fun update(state: LoginsListState) {
+        // todo MVI views should not have logic. Needs refactoring.
         if (state.isLoading) {
             view.progress_bar.isVisible = true
         } else {
@@ -67,29 +73,63 @@ class SavedLoginsView(
 
 /**
  * Interactor for the saved logins screen
+ *
+ * @param savedLoginsController [SavedLoginsController] which will be delegated for all users interactions.
  */
 class SavedLoginsInteractor(
-    private val savedLoginsController: SavedLoginsController,
-    private val itemClicked: (SavedLogin) -> Unit,
-    private val learnMore: () -> Unit
+    private val savedLoginsController: SavedLoginsController
 ) {
-    fun itemClicked(item: SavedLogin) {
-        itemClicked.invoke(item)
+    fun onItemClicked(item: SavedLogin) {
+        savedLoginsController.handleItemClicked(item)
     }
-    fun onLearnMore() {
-        learnMore.invoke()
+
+    fun onLearnMoreClicked() {
+        savedLoginsController.handleLearnMoreClicked()
     }
-    fun sort(sortingStrategy: SortingStrategy) {
+
+    fun onSortingStrategyChanged(sortingStrategy: SortingStrategy) {
         savedLoginsController.handleSort(sortingStrategy)
     }
 }
 
 /**
  * Controller for the saved logins screen
+ *
+ * @param store Store used to hold in-memory collection state.
+ * @param navController NavController manages app navigation within a NavHost.
+ * @param browserNavigator Controller allowing browser navigation to any Uri.
+ * @param settings SharedPreferences wrapper for easier usage.
+ * @param metrics Controller that handles telemetry events.
  */
-class SavedLoginsController(val store: LoginsFragmentStore, val settings: Settings) {
+class SavedLoginsController(
+    private val store: LoginsFragmentStore,
+    private val navController: NavController,
+    private val browserNavigator: (
+        searchTermOrURL: String,
+        newTab: Boolean,
+        from: BrowserDirection
+    ) -> Unit,
+    private val settings: Settings,
+    private val metrics: MetricController
+) {
     fun handleSort(sortingStrategy: SortingStrategy) {
         store.dispatch(LoginsAction.SortLogins(sortingStrategy))
         settings.savedLoginsSortingStrategy = sortingStrategy
+    }
+
+    fun handleItemClicked(item: SavedLogin) {
+        store.dispatch(LoginsAction.LoginSelected(item))
+        metrics.track(Event.OpenOneLogin)
+        navController.navigate(
+            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(item.guid)
+        )
+    }
+
+    fun handleLearnMoreClicked() {
+        browserNavigator.invoke(
+            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SYNC_SETUP),
+            true,
+            BrowserDirection.FromSavedLoginsFragment
+        )
     }
 }
