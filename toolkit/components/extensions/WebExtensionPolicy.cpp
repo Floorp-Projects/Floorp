@@ -9,6 +9,7 @@
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 #include "mozilla/AddonManagerWebAPI.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "nsContentUtils.h"
@@ -668,6 +669,17 @@ bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL) const {
   }
 
   return true;
+}
+
+bool MozDocumentMatcher::MatchesWindowGlobal(WindowGlobalChild& aWindow) const {
+  if (aWindow.IsClosed() || !aWindow.IsCurrentGlobal()) {
+    return false;
+  }
+  nsGlobalWindowInner* inner = aWindow.GetWindowGlobal();
+  if (!inner || !inner->GetDocShell()) {
+    return false;
+  }
+  return Matches(inner->GetOuterWindow());
 }
 
 JSObject* MozDocumentMatcher::WrapObject(JSContext* aCx,
