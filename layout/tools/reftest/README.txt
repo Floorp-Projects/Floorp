@@ -537,6 +537,14 @@ when doing an invalidation test. Causing a repaint in your
 MozReftestInvalidate handler (for example, by changing the body's background
 colour) will accurately test whether the element is painted.
 
+Display List Tests: class="reftest-[no-]display-list"
+=====================================================
+
+These classes work similarly to reftest-no-paint, but check if the element has
+display items created or not. These classes are useful for checking the behaviour
+of retained display lists, where the display list is incrementally updated by
+changes, rather than thrown out and rebuilt from scratch.
+
 Opaque Layer Tests: class="reftest-opaque-layer"
 ================================================
 
