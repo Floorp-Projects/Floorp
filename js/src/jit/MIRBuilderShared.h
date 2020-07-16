@@ -178,7 +178,7 @@ class MOZ_STACK_CLASS CallInfo {
 
   // Before doing any pop to the stack, capture whatever flows into the
   // instruction, such that we can restore it later.
-  AbortReasonOr<Ok> savePriorCallStack(MIRGenerator* mir, MBasicBlock* current,
+  MOZ_MUST_USE bool savePriorCallStack(MIRGenerator* mir, MBasicBlock* current,
                                        size_t peekDepth);
 
   void popPriorCallStack(MBasicBlock* current) {
@@ -189,7 +189,7 @@ class MOZ_STACK_CLASS CallInfo {
     }
   }
 
-  AbortReasonOr<Ok> pushPriorCallStack(MIRGenerator* mir,
+  MOZ_MUST_USE bool pushPriorCallStack(MIRGenerator* mir,
                                        MBasicBlock* current) {
     if (priorArgs_.empty()) {
       return pushCallStack(mir, current);
@@ -197,18 +197,18 @@ class MOZ_STACK_CLASS CallInfo {
     for (MDefinition* def : priorArgs_) {
       current->push(def);
     }
-    return Ok();
+    return true;
   }
 
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
-  AbortReasonOr<Ok> pushCallStack(MIRGenerator* mir, MBasicBlock* current) {
+  MOZ_MUST_USE bool pushCallStack(MIRGenerator* mir, MBasicBlock* current) {
     // Ensure sufficient space in the slots: needed for inlining from FunApply.
     if (apply_) {
       uint32_t depth = current->stackDepth() + numFormals();
       if (depth > current->nslots()) {
         if (!current->increaseSlots(depth - current->nslots())) {
-          return mir->abort(AbortReason::Alloc);
+          return false;
         }
       }
     }
@@ -224,7 +224,7 @@ class MOZ_STACK_CLASS CallInfo {
       current->push(getNewTarget());
     }
 
-    return Ok();
+    return true;
   }
 
   uint32_t argc() const { return args_.length(); }
