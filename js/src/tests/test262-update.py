@@ -39,7 +39,6 @@ RELEASE_OR_BETA = set([
     "Intl.DateTimeFormat-fractionalSecondDigits",
     "Intl.DateTimeFormat-dayPeriod",
     "Intl.DateTimeFormat-formatRange",
-    "AggregateError",
 ])
 
 
