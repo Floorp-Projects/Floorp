@@ -1309,47 +1309,45 @@ nsresult WhiteSpaceVisibilityKeeper::
   const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
       nonPreformattedVisibleWhiteSpacesAtEnd.ComparePoint(
           aRangeToDelete.EndRef());
-  if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
-          PointPosition::StartOfFragment ||
-      pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd ==
+  if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd !=
+          PointPosition::StartOfFragment &&
+      pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd !=
           PointPosition::MiddleOfFragment) {
-    // If start of deleting range follows white-spaces or end of delete
-    // will be start of a line, the following text cannot start with an
-    // ASCII white-space for keeping it visible.
-    if (textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
-            aRangeToDelete.StartRef())) {
-      EditorDOMPointInText nextCharOfStartOfEnd =
-          textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
-              aRangeToDelete.EndRef());
-      if (nextCharOfStartOfEnd.IsSet() &&
-          !nextCharOfStartOfEnd.IsEndOfContainer() &&
-          nextCharOfStartOfEnd.IsCharASCIISpace()) {
-        // startToDelete will be referred bellow so that we need to keep
-        // it a valid point.
-        AutoEditorDOMPointChildInvalidator forgetChild(startToDelete);
-        if (nextCharOfStartOfEnd.IsStartOfContainer() ||
-            nextCharOfStartOfEnd.IsPreviousCharASCIISpace()) {
-          nextCharOfStartOfEnd =
-              textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
-                  nextCharOfStartOfEnd);
-        }
-        EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-            textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
-                nextCharOfStartOfEnd);
-        nsresult rv =
-            WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-                aHTMLEditor, nextCharOfStartOfEnd,
-                endOfCollapsibleASCIIWhiteSpaces);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "WhiteSpaceVisibilityKeeper::"
-              "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
-          return rv;
-        }
-      }
-    }
+    return NS_OK;
   }
-  return NS_OK;
+  // If start of deleting range follows white-spaces or end of delete
+  // will be start of a line, the following text cannot start with an
+  // ASCII white-space for keeping it visible.
+  if (!textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
+          aRangeToDelete.StartRef())) {
+    return NS_OK;
+  }
+  EditorDOMPointInText nextCharOfStartOfEnd =
+      textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
+          aRangeToDelete.EndRef());
+  if (!nextCharOfStartOfEnd.IsSet() ||
+      nextCharOfStartOfEnd.IsEndOfContainer() ||
+      !nextCharOfStartOfEnd.IsCharASCIISpace()) {
+    return NS_OK;
+  }
+  // startToDelete will be referred bellow so that we need to keep
+  // it a valid point.
+  AutoEditorDOMPointChildInvalidator forgetChild(startToDelete);
+  if (nextCharOfStartOfEnd.IsStartOfContainer() ||
+      nextCharOfStartOfEnd.IsPreviousCharASCIISpace()) {
+    nextCharOfStartOfEnd =
+        textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
+            nextCharOfStartOfEnd);
+  }
+  EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+      textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
+          nextCharOfStartOfEnd);
+  nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+      aHTMLEditor, nextCharOfStartOfEnd, endOfCollapsibleASCIIWhiteSpaces);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "WhiteSpaceVisibilityKeeper::"
+                       "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+  return rv;
 }
 
 // static
@@ -1410,44 +1408,42 @@ nsresult WhiteSpaceVisibilityKeeper::
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
           nonPreformattedVisibleWhiteSpacesAtStart.ComparePoint(
               aRangeToDelete.StartRef());
-  if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
-          PointPosition::MiddleOfFragment ||
-      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart ==
+  if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart !=
+          PointPosition::MiddleOfFragment &&
+      pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart !=
           PointPosition::EndOfFragment) {
-    // If end of the deleting range is (was) followed by white-spaces or
-    // previous character of start of deleting range will be immediately
-    // before a block boundary, the text cannot ends with an ASCII white-space
-    // for keeping it visible.
-    if (textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
-            aRangeToDelete.EndRef())) {
-      EditorDOMPointInText atPreviousCharOfStart =
-          textFragmentDataAtStart.GetPreviousEditableCharPoint(startToDelete);
-      if (atPreviousCharOfStart.IsSet() &&
-          !atPreviousCharOfStart.IsEndOfContainer() &&
-          atPreviousCharOfStart.IsCharASCIISpace()) {
-        if (atPreviousCharOfStart.IsStartOfContainer() ||
-            atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
-          atPreviousCharOfStart =
-              textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
-                  atPreviousCharOfStart);
-        }
-        EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-            textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
-                atPreviousCharOfStart);
-        nsresult rv =
-            WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-                aHTMLEditor, atPreviousCharOfStart,
-                endOfCollapsibleASCIIWhiteSpaces);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP()"
-              " failed");
-          return rv;
-        }
-      }
-    }
+    return NS_OK;
   }
-  return NS_OK;
+  // If end of the deleting range is (was) followed by white-spaces or
+  // previous character of start of deleting range will be immediately
+  // before a block boundary, the text cannot ends with an ASCII white-space
+  // for keeping it visible.
+  if (!textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
+          aRangeToDelete.EndRef())) {
+    return NS_OK;
+  }
+  EditorDOMPointInText atPreviousCharOfStart =
+      textFragmentDataAtStart.GetPreviousEditableCharPoint(startToDelete);
+  if (!atPreviousCharOfStart.IsSet() ||
+      atPreviousCharOfStart.IsEndOfContainer() ||
+      !atPreviousCharOfStart.IsCharASCIISpace()) {
+    return NS_OK;
+  }
+  if (atPreviousCharOfStart.IsStartOfContainer() ||
+      atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
+    atPreviousCharOfStart =
+        textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
+            atPreviousCharOfStart);
+  }
+  EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+      textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
+          atPreviousCharOfStart);
+  nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
+      aHTMLEditor, atPreviousCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "WhiteSpaceVisibilityKeeper::"
+                       "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+  return rv;
 }
 
 // static
