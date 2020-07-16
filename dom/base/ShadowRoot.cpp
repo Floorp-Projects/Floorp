@@ -606,15 +606,6 @@ Element* ShadowRoot::GetActiveElement() {
   return GetRetargetedFocusedElement();
 }
 
-void ShadowRoot::GetInnerHTML(nsAString& aInnerHTML) {
-  GetMarkup(false, aInnerHTML);
-}
-
-void ShadowRoot::SetInnerHTML(const nsAString& aInnerHTML,
-                              ErrorResult& aError) {
-  SetInnerHTMLInternal(aInnerHTML, aError);
-}
-
 nsINode* ShadowRoot::ImportNodeAndAppendChildAt(nsINode& aParentNode,
                                                 nsINode& aNode, bool aDeep,
                                                 mozilla::ErrorResult& rv) {
