@@ -142,8 +142,6 @@ nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(PresShell* aPresShell,
 nsIFrame* NS_NewSVGInnerSVGFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGGeometryFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGGFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGenericContainerFrame(PresShell* aPresShell,
-                                         ComputedStyle* aStyle);
 nsContainerFrame* NS_NewSVGForeignObjectFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGAFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -5006,7 +5004,6 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
       SIMPLE_SVG_CREATE(rect, NS_NewSVGGeometryFrame),
       SIMPLE_SVG_CREATE(path, NS_NewSVGGeometryFrame),
       SIMPLE_SVG_CREATE(defs, NS_NewSVGContainerFrame),
-      SIMPLE_SVG_CREATE(generic_, NS_NewSVGGenericContainerFrame),
       {nsGkAtoms::text,
        FCDATA_WITH_WRAPPING_BLOCK(
            FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_ALLOW_BLOCK_STYLES,
