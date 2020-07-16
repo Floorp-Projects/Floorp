@@ -254,6 +254,9 @@ class DebuggerFrame : public NativeObject {
 
   bool hasAnyHooks() const;
 
+  bool isInstance() const;
+  Debugger* owner() const;
+
  private:
   static const JSClassOps classOps_;
 
@@ -269,8 +272,6 @@ class DebuggerFrame : public NativeObject {
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   struct CallData;
-
-  Debugger* owner() const;
 
   MOZ_MUST_USE bool incrementStepperCounter(JSContext* cx,
                                             AbstractFramePtr referent);

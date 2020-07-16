@@ -33,8 +33,6 @@ class EvalOptions;
 class GlobalObject;
 class PromiseObject;
 
-enum { JSSLOT_DEBUGOBJECT_OWNER, JSSLOT_DEBUGOBJECT_COUNT };
-
 class DebuggerObject : public NativeObject {
  public:
   static const JSClass class_;
@@ -176,6 +174,9 @@ class DebuggerObject : public NativeObject {
   double promiseLifetime() const;
   double promiseTimeToResolution() const;
 
+  bool isInstance() const;
+  Debugger* owner() const;
+
  private:
   enum { OWNER_SLOT };
 
@@ -193,7 +194,6 @@ class DebuggerObject : public NativeObject {
     return obj;
   }
 
-  Debugger* owner() const;
   PromiseObject* promise() const;
 
   static MOZ_MUST_USE bool requireGlobal(JSContext* cx,

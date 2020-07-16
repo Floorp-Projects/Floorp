@@ -153,7 +153,7 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
                                  const Completion& completion,
                                  ResumeMode& resumeMode,
                                  MutableHandleValue vp) {
-  Debugger* dbg = Debugger::fromChildJSObject(frame);
+  Debugger* dbg = frame->owner();
 
   RootedValue completionValue(cx);
   if (!completion.buildCompletionValue(cx, dbg, &completionValue)) {
@@ -171,7 +171,14 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
 
 size_t ScriptedOnPopHandler::allocSize() const { return sizeof(*this); }
 
+// The Debugger.Frame.prototype object also has a class of
+// DebuggerFrame::class_ so we differentiate instances from the prototype
+// based on the presence of an owner debugger.
+inline bool js::DebuggerFrame::isInstance() const {
+  return !getReservedSlot(OWNER_SLOT).isUndefined();
+}
 inline js::Debugger* js::DebuggerFrame::owner() const {
+  MOZ_ASSERT(isInstance());
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
   return Debugger::fromJSObject(dbgobj);
 }
@@ -1231,7 +1238,7 @@ DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv) {
   if (!thisobj) {
     return nullptr;
   }
-  if (thisobj->getClass() != &class_) {
+  if (!thisobj->is<DebuggerFrame>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               "method", thisobj->getClass()->name);
@@ -1241,11 +1248,8 @@ DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv) {
   RootedDebuggerFrame frame(cx, &thisobj->as<DebuggerFrame>());
 
   // Forbid Debugger.Frame.prototype, which is of class DebuggerFrame::class_
-  // but isn't really a working Debugger.Frame object. The prototype object
-  // is distinguished by having a nullptr private value. Also, forbid popped
-  // frames.
-  if (!frame->getPrivate() &&
-      frame->getReservedSlot(OWNER_SLOT).isUndefined()) {
+  // but isn't really a working Debugger.Frame object.
+  if (!frame->isInstance()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               "method", "prototype object");
@@ -1637,7 +1641,7 @@ static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
     arg.setUndefined();
   }
 
-  if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &arg)) {
+  if (!thisobj->owner()->wrapDebuggeeValue(cx, &arg)) {
     return false;
   }
   args.rval().set(arg);
@@ -1705,7 +1709,7 @@ bool DebuggerFrame::CallData::getScript() {
 
   RootedDebuggerScript scriptObject(cx);
 
-  Debugger* debug = Debugger::fromChildJSObject(frame);
+  Debugger* debug = frame->owner();
   if (frame->isOnStack()) {
     FrameIter iter = frame->getFrameIter(cx);
     AbstractFramePtr framePtr = iter.abstractFramePtr();
