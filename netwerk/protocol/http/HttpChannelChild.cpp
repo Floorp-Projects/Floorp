@@ -1464,6 +1464,23 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvFinishInterceptedRedirect() {
 
 void HttpChannelChild::DeleteSelf() { Send__delete__(this); }
 
+void HttpChannelChild::NotifyOrReleaseListeners(nsresult rv) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_SUCCEEDED(rv) || (mOnStartRequestCalled && mOnStopRequestCalled)) {
+    ReleaseListeners();
+    return;
+  }
+
+  if (NS_SUCCEEDED(mStatus)) {
+    mStatus = rv;
+  }
+
+  // This is enough what we need.  Undelivered notifications will be pushed.
+  // DoNotifyListener ensures the call to ReleaseListeners when done.
+  DoNotifyListener();
+}
+
 void HttpChannelChild::DoNotifyListener() {
   LOG(("HttpChannelChild::DoNotifyListener this=%p", this));
   MOZ_ASSERT(NS_IsMainThread());
@@ -1930,7 +1947,11 @@ void HttpChannelChild::ProcessDivertMessages() {
 bool HttpChannelChild::Redirect3Complete(OverrideRunnable* aRunnable) {
   LOG(("HttpChannelChild::Redirect3Complete [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = NS_OK;
+
+  // Using an error as the default so that when we fail to forward this redirect
+  // to the target channel, we make sure to notify the current listener from
+  // CleanupRedirectingChannel.
+  nsresult rv = NS_BINDING_ABORTED;
 
   nsCOMPtr<nsIRedirectResultListener> vetoHook;
   GetCallback(vetoHook);
@@ -1993,7 +2014,8 @@ void HttpChannelChild::CleanupRedirectingChannel(nsresult rv) {
     mInterceptListener->Cleanup();
     mInterceptListener = nullptr;
   }
-  ReleaseListeners();
+
+  NotifyOrReleaseListeners(rv);
   CleanupBackgroundChannel();
 }
 

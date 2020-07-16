@@ -487,6 +487,11 @@ class HttpChannelChild final : public PHttpChannelChild,
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
 
+  // Calls OnStartRequest and/or OnStopRequest on our listener in case we didn't
+  // do that so far.  If we already did, it will just release references to
+  // cleanup.
+  void NotifyOrReleaseListeners(nsresult rv);
+
   // true after successful AsyncOpen until OnStopRequest completes.
   bool RemoteChannelExists() { return CanSend() && !mKeptAlive; }
 
