@@ -1055,6 +1055,10 @@ class EditorDOMRangeBase final {
     MOZ_ASSERT(IsPositioned());
     return IsPositioned() && mStart.GetContainer() == mEnd.GetContainer();
   }
+  bool IsInContentNodes() const {
+    MOZ_ASSERT(IsPositioned());
+    return IsPositioned() && mStart.IsInContentNode() && mEnd.IsInContentNode();
+  }
   bool IsInTextNodes() const {
     MOZ_ASSERT(IsPositioned());
     return IsPositioned() && mStart.IsInTextNode() && mEnd.IsInTextNode();
