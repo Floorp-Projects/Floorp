@@ -1320,7 +1320,6 @@ Document::Document(const char* aContentType)
       mParserAborted(false),
       mReportedUseCounters(false),
       mHasReportedShadowDOMUsage(false),
-      mDocTreeHadAudibleMedia(false),
       mDocTreeHadPlayRevoked(false),
       mHasDelayedRefreshEvent(false),
       mLoadEventFiring(false),
@@ -1904,11 +1903,6 @@ Document::~Document() {
 
       if (MOZ_UNLIKELY(mMathMLEnabled)) {
         ScalarAdd(Telemetry::ScalarID::MATHML_DOC_COUNT, 1);
-      }
-
-      ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_COUNT, 1);
-      if (mDocTreeHadAudibleMedia) {
-        ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_MEDIA_COUNT, 1);
       }
 
       if (IsHTMLDocument()) {
@@ -15276,12 +15270,10 @@ bool Document::ConsumeTransientUserGestureActivation() {
 }
 
 void Document::SetDocTreeHadAudibleMedia() {
-  Document* topLevelDoc = GetTopLevelContentDocument();
-  if (!topLevelDoc) {
-    return;
+  RefPtr<WindowContext> topWc = GetTopLevelWindowContext();
+  if (topWc && !topWc->GetDocTreeHadAudibleMedia()) {
+    topWc->SetDocTreeHadAudibleMedia(true);
   }
-
-  topLevelDoc->mDocTreeHadAudibleMedia = true;
 }
 
 void Document::SetDocTreeHadPlayRevoked() {

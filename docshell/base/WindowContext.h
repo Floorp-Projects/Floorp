@@ -46,6 +46,9 @@ class BrowsingContextGroup;
    * mixed content loads to happen */                                  \
   FIELD(AllowMixedContent, bool)                                       \
   FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)        \
+  /* True if this document tree contained an HTMLMediaElement that     \
+   * played audibly. This should only be set on top level context. */  \
+  FIELD(DocTreeHadAudibleMedia, bool)                                  \
   FIELD(AutoplayPermission, uint32_t)                                  \
   FIELD(DelegatedPermissions,                                          \
         PermissionDelegateHandler::DelegatedPermissionList)            \
@@ -160,6 +163,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               const bool& aIsThirdPartyTrackingResourceWindow,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsSecureContext>, const bool& aIsSecureContext,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_DocTreeHadAudibleMedia>, const bool& aValue,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AutoplayPermission>, const uint32_t& aValue,
               ContentParent* aSource);
