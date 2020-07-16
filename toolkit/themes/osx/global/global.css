@@ -19,7 +19,8 @@
 
   --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
   /* ::::: Styles ::::: */
-  -moz-appearance: dialog;
+  appearance: auto;
+  -moz-default-appearance: dialog;
   background-color: #FFFFFF;
   color: -moz-DialogText;
   font: message-box;
@@ -75,7 +76,7 @@ xul|iframe {
 /* ::::: Miscellaneous formatting ::::: */
 
 :root:-moz-lwtheme {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 :root[lwtheme-image]:-moz-lwtheme-darktext {
@@ -164,7 +165,7 @@ xul|notification > xul|hbox > xul|button {
   padding: 1px 10px;
   min-width: 60px;
   min-height: 16px;
-  -moz-appearance: none;
+  appearance: none;
   border-radius: 10000px;
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
   color: @roundButtonColor@;

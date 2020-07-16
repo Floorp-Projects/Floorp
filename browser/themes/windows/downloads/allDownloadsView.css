@@ -24,7 +24,7 @@
 
 @media (-moz-windows-default-theme) {
   /*
-  -moz-appearance: menuitem is almost right, but the hover effect is not
+  -moz-default-appearance: menuitem is almost right, but the hover effect is not
   transparent and is lighter than desired.
 
   Copied from the autocomplete richlistbox styling in

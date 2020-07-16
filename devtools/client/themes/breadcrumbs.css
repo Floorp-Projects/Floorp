@@ -27,7 +27,7 @@
 
 .scrollbutton-up,
 .scrollbutton-down {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   box-shadow: none;
   border: none;
@@ -39,7 +39,7 @@
 
 .scrollbutton-up > .toolbarbutton-icon,
 .scrollbutton-down > .toolbarbutton-icon {
-  -moz-appearance: none;
+  appearance: none;
   width: 20px;
   height: 16px;
   background-size: 16px;

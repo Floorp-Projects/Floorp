@@ -6,7 +6,8 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :host {
-  -moz-appearance: searchfield;
+  appearance: auto;
+  -moz-default-appearance: searchfield;
   font-size: 12px;
   cursor: text;
   margin: 4px; /* matches <input> global.css margin */

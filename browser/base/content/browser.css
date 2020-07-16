@@ -93,7 +93,7 @@ body {
 #toolbar-menubar[autohide="true"][inactive="true"]:not([customizing="true"]) {
   min-height: 0 !important;
   height: 0 !important;
-  -moz-appearance: none !important;
+  appearance: none !important;
 }
 %endif
 
@@ -350,7 +350,8 @@ toolbar[customizing] #whats-new-menu-button {
 }
 
 .titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-box;
   position: relative;
 }
 
@@ -369,7 +370,8 @@ toolbarpaletteitem {
 
 %ifdef XP_MACOSX
 #titlebar-fullscreen-button {
-  -moz-appearance: -moz-mac-fullscreen-button;
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-fullscreen-button;
 }
 
 /**
@@ -1036,7 +1038,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 
 /* Give this menupopup an arrow panel styling */
 #BMB_bookmarksPopup {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: none;
   /* The popup inherits -moz-image-region from the button, must reset it */
@@ -1322,7 +1324,7 @@ toolbarpaletteitem > toolbaritem {
 }
 
 .dragfeedback-tab {
-  -moz-appearance: none;
+  appearance: none;
   opacity: 0.65;
   -moz-window-shadow: none;
 }

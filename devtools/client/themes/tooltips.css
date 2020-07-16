@@ -126,7 +126,7 @@ strong {
 }
 
 .tooltip-xul-wrapper {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   overflow: visible;
   border-style: none;
@@ -418,7 +418,7 @@ strong {
 }
 
 .tooltip-container[type="doorhanger"] .menuitem > button.command:-moz-any([role="menuitem"],[role="menuitemcheckbox"],[role="link"]) {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   color: var(--theme-arrowpanel-color);
   background-color: transparent;

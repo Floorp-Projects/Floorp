@@ -293,7 +293,7 @@
 
 /* Make native number steppers disappear by treating it as text field*/
 .font-value-input[type=number] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Swap around order of value input and unit dropdown for RTL */
@@ -322,7 +322,7 @@
   background-position: right 4px center;
   fill: var(--theme-icon-color);
   -moz-context-properties: fill;
-  -moz-appearance: none;
+  appearance: none;
   box-shadow: none;
   padding: 1px 10px 1px 2px;
   min-width: 3.8em;

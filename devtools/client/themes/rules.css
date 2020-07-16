@@ -376,7 +376,7 @@
 /* The SVG checkbox on Windows and Linux */
 :root[platform="win"] .ruleview-enableproperty,
 :root[platform="linux"] .ruleview-enableproperty {
-  -moz-appearance: none;
+  appearance: none;
   float: left;
   left: -27px;
   box-sizing: content-box;
@@ -411,7 +411,8 @@
 }
 
 :root[platform="mac"] .ruleview-enableproperty {
-  -moz-appearance: checkbox;
+  appearance: auto;
+  -moz-default-appearance: checkbox;
 }
 
 .ruleview-warning,

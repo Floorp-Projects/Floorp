@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  -moz-appearance: -moz-menulist-arrow-button;
+  appearance: auto;
+  -moz-default-appearance: -moz-menulist-arrow-button;
   width: 16px;
   height: 16px;
   /* Cut off inheritance for dropmarkers within other widgets where

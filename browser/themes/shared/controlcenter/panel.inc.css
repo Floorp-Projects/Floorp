@@ -189,7 +189,7 @@
   min-width: auto;
   width: 38px;
   border-style: none;
-  -moz-appearance: none;
+  appearance: none;
   background: url("chrome://global/skin/icons/arrow-left.svg") center no-repeat;
   background-size: 16px, auto;
   -moz-context-properties: fill, fill-opacity;
@@ -304,7 +304,7 @@
   border-radius: 0;
   outline: 3px solid transparent;
   -moz-outline-radius: var(--toolbarbutton-border-radius);
-  -moz-appearance: none;
+  appearance: none;
 }
 
 #protections-popup-info-button > image {
@@ -461,7 +461,7 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-sendReportView-collection-url {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
 }
 
@@ -480,7 +480,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-category {
   /* Overwrite toolbarbutton styles */
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   padding-inline-start: 0;
 }
@@ -723,7 +723,7 @@ description#identity-popup-content-verifier,
 
 .tracking-protection-button {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
-  -moz-appearance: none;
+  appearance: none;
   margin-block: 1em 0;
   margin-inline: 0 8px;
   display: none;
@@ -825,7 +825,7 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-remove-button {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   margin-inline-start: 2px;
   border-width: 0;
@@ -949,7 +949,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-tp-switch {
-  -moz-appearance: none;
+  appearance: none;
   box-sizing: border-box;
   min-width: 26px;
   border-radius: 10px;
@@ -1004,7 +1004,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-footer-button {
   /* Overwrite toolbarbutton styles */
-  -moz-appearance: none;
+  appearance: none;
   min-height: 24px;
   padding-inline-start: var(--horizontal-padding);
   margin: 0;
@@ -1070,7 +1070,7 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-milestones-content {
-  -moz-appearance: none;
+  appearance: none;
   padding: var(--vertical-section-padding) calc(var(--horizontal-padding) * 0.5);
   margin: 0;
 }

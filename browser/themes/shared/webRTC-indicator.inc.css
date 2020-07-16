@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: 0;
   border-radius: 5px;
@@ -60,7 +60,7 @@ body {
 }
 
 button {
-  -moz-appearance: none;
+  appearance: none;
   border-style: none;
   margin: 0;
   -moz-context-properties: fill, fill-opacity;

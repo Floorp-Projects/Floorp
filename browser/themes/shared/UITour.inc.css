@@ -7,7 +7,7 @@
 /* UI Tour */
 
 #UITourHighlightContainer {
-  -moz-appearance: none;
+  appearance: none;
   -moz-window-shadow: none;
   border: none;
   background-color: transparent;
@@ -63,7 +63,7 @@
 
 #UITourTooltipClose {
   position: relative;
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   background-color: transparent;
   min-width: 0;
@@ -110,7 +110,7 @@
 }
 
 #UITourTooltipButtons > button:not(.button-link) {
-  -moz-appearance: none;
+  appearance: none;
   background-color: rgb(251,251,251);
   border-radius: 3px;
   border: 1px solid;
@@ -129,7 +129,7 @@
 
 #UITourTooltipButtons > label,
 #UITourTooltipButtons > button.button-link:not(:hover) {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: none;
   box-shadow: none;

@@ -11,7 +11,8 @@
 /* ::::: radio ::::: */
 
 radio {
-  -moz-appearance: radio-container;
+  appearance: auto;
+  -moz-default-appearance: radio-container;
   -moz-box-align: center;
   margin: 2px 4px;
   padding-top: 1px;
@@ -21,7 +22,8 @@ radio {
 }
 
 .radio-check {
-  -moz-appearance: radio;
+  appearance: auto;
+  -moz-default-appearance: radio;
   margin: 1px 0;
 }
 

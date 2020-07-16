@@ -285,7 +285,7 @@ Form controls
 
 /* Buttons from Photon */
 .default-button, .primary-button {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   height: calc(var(--base-unit) * 8);
   padding-inline-start: calc(var(--base-unit) * 5);

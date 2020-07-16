@@ -115,7 +115,7 @@ a:active {
 }
 
 .buttons > button {
-  -moz-appearance: none;
+  appearance: none;
   font-size: 1em;
   border: 1px solid transparent;
   border-right: none;

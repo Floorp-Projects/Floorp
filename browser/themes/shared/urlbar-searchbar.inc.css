@@ -273,7 +273,7 @@
   position: relative;
   border: none;
   background: transparent;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 /* Page action panel */
@@ -713,7 +713,7 @@
 /* Zoom button */
 
 #urlbar-zoom-button {
-  -moz-appearance: none;
+  appearance: none;
   color: inherit;
   font-size: .8em;
   padding: 0 8px;

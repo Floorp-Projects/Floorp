@@ -12,7 +12,7 @@ xul|scrollbar[root="true"] {
 }
 
 xul|scrollbar {
-  -moz-appearance: initial;
+  appearance: none;
   pointer-events: none;
   display: block;
 }
@@ -30,7 +30,7 @@ xul|scrollbar[orient="vertical"] {
 }
 
 xul|scrollbar[orient="vertical"] xul|thumb {
-  -moz-appearance: initial;
+  appearance: none;
   max-width: 2px;
   min-width: 2px;
 }
@@ -41,7 +41,7 @@ xul|scrollbar[orient="horizontal"] {
 }
 
 xul|scrollbar[orient="horizontal"] xul|thumb {
-  -moz-appearance: initial;
+  appearance: none;
   max-height: 2px;
   min-height: 2px;
 }
@@ -54,7 +54,7 @@ xul|scrollbar[disabled] {
 }
 
 xul|scrollbarbutton {
-  -moz-appearance: initial;
+  appearance: none;
   min-height: 6px;
   min-width: 6px;
   visibility: hidden;

@@ -14,7 +14,7 @@
 /* General styles */
 
 *|*.plain {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0 !important;
   border: none;
   padding: 0;
@@ -41,7 +41,7 @@ html|textarea {
   background-size: contain;
   background-color: transparent;
   background-repeat: no-repeat;
-  -moz-appearance: none;
+  appearance: none;
   -moz-window-shadow: none;
   /* Set pointer-events: none; so that mousemove events can be handled by browser-content.js. */
   pointer-events: none;
@@ -62,7 +62,7 @@ html|textarea {
 }
 
 .panel-footer > xul|button {
-  -moz-appearance: none;
+  appearance: none;
   border-top: 1px solid var(--panel-separator-color);
   /* !important overrides :hover and :active colors from button.css: */
   color: inherit !important;

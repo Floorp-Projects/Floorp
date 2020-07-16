@@ -308,7 +308,7 @@ input:-moz-focusring {
 .viewport-dimension-input {
   text-align: center;
   width: 3em;
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .viewport-dimension-separator {
@@ -665,7 +665,7 @@ input:-moz-focusring {
 }
 
 #device-form-pixel-ratio input {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 #device-form-user-agent {

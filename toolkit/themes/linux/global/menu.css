@@ -18,7 +18,8 @@ menubar {
 menu,
 menuitem,
 menucaption {
-  -moz-appearance: menuitem;
+  appearance: auto;
+  -moz-default-appearance: menuitem;
   -moz-box-align: center;
   max-width: 42em;
   list-style-image: none;
@@ -32,7 +33,7 @@ menuitem[_moz-menuactive="true"] {
 }
 
 menuitem[customoptionstyling="true"] {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 menuitem[customoptionstyling="true"][_moz-menuactive="true"] {
@@ -138,7 +139,8 @@ menulist > menupopup > menu {
   /* These next two rules are needed to prevent inheritance and thus ugliness */
   list-style-image: none;
   -moz-image-region: auto;
-  -moz-appearance: menuarrow;
+  appearance: auto;
+  -moz-default-appearance: menuarrow;
 }
 
 .menubar-left {
@@ -162,21 +164,25 @@ menulist > menupopup > menu > .menu-iconic-left {
 /* ::::: checkbox menuitem ::::: */
 
 menuitem[checked="true"] {
-  -moz-appearance: checkmenuitem !important;
+  appearance: auto !important;
+  -moz-default-appearance: checkmenuitem !important;
 }
 
 menuitem[type="checkbox"] {
-  -moz-appearance: checkmenuitem !important;
+  appearance: auto !important;
+  -moz-default-appearance: checkmenuitem !important;
 }
 
 /* ::::: radio menuitem ::::: */
 
 menuitem[type="radio"] {
-  -moz-appearance: radiomenuitem !important;
+  appearance: auto !important;
+  -moz-default-appearance: radiomenuitem !important;
 }
 
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  -moz-appearance: menuseparator;
+  appearance: auto !important;
+  -moz-default-appearance: menuseparator !important;
 }

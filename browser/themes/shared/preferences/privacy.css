@@ -145,7 +145,7 @@
 }
 
 .arrowhead {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   border-radius: 2px;
   min-height: 20px;

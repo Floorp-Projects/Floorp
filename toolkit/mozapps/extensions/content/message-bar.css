@@ -107,7 +107,7 @@
 }
 
 .icon::after {
-  -moz-appearance: none;
+  appearance: none;
   -moz-context-properties: fill, stroke;
   fill: currentColor;
   stroke: currentColor;
