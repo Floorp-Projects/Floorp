@@ -7,7 +7,7 @@
 /* bookmark panel submenus */
 
 #BMB_bookmarksPopup menupopup[placespopup=true] {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: none;
   padding: 0;

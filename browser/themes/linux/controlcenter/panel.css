@@ -6,7 +6,7 @@
 
 .identity-popup-expander > .button-box,
 .identity-popup-permission-remove-button > .button-box {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 .identity-popup-expander:-moz-focusring,

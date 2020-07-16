@@ -20,7 +20,7 @@
 
 #viewGroup > radio {
   list-style-image: url("chrome://browser/skin/pageInfo.png");
-  -moz-appearance: none;
+  appearance: none;
   min-width: 4.5em;
   margin: 0;
   padding: 3px;
@@ -151,7 +151,8 @@ treechildren::-moz-tree-cell-text(broken) {
 #permList {
   margin: .5em;
   overflow: auto;
-  -moz-appearance: listbox;
+  appearance: auto;
+  -moz-default-appearance: listbox;
   color: -moz-fieldtext;
 }
 

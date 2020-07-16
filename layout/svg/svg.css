@@ -53,8 +53,7 @@ svg:not(:root), symbol, image, marker, pattern, foreignObject {
 }
 
 foreignObject {
-  -moz-appearance: none ! important;
-  -moz-default-appearance: none ! important;
+  appearance: none ! important;
   margin: 0 ! important;
   padding: 0 ! important;
   border-width: 0 ! important;
@@ -63,8 +62,7 @@ foreignObject {
 
 @media all and (-moz-is-resource-document) {
  foreignObject *|* {
-   -moz-appearance: none !important;
-   -moz-default-appearance: none !important;
+   appearance: none !important;
  }
 }
 

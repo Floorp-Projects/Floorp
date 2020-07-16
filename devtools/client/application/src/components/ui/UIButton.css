@@ -24,7 +24,7 @@
 }
 
 .ui-button {
-  -moz-appearance: none;
+  appearance: none;
   transition: background-color 0.05s ease-in-out;
 
   margin: 0;

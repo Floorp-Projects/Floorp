@@ -241,7 +241,7 @@ body {
 }
 
 #new-pref-type {
-    -moz-appearance: none;
+    appearance: none;
     color: inherit;
     border-inline-start: 1px solid var(--deemphasized-border-color) !important;
     text-align: center;

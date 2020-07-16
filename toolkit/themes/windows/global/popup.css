@@ -17,7 +17,8 @@ panel {
 }
 
 menupopup {
-  -moz-appearance: menupopup;
+  appearance: auto;
+  -moz-default-appearance: menupopup;
 }
 
 menupopup > menu > menupopup {
@@ -27,7 +28,7 @@ menupopup > menu > menupopup {
 }
 
 panel[type="arrow"] {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: none;
 }
@@ -125,7 +126,7 @@ panel[type="arrow"].panel-no-padding::part(arrowcontent) {
 /* rules for popups associated with menulists */
 
 menulist > menupopup {
-  -moz-appearance: none;
+  appearance: none;
   min-width: 0;
   background-color: -moz-Field;
 }

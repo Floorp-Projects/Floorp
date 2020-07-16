@@ -80,7 +80,7 @@
 }
 
 #main-menubar > menu {
-  -moz-appearance: none;
+  appearance: none;
   color: inherit;
 }
 
@@ -129,7 +129,7 @@
 
 #navigator-toolbox,
 .browser-toolbar {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 .browser-toolbar:not(.titlebar-color) {
@@ -243,7 +243,8 @@
 }
 
 #print-preview-toolbar:not(:-moz-lwtheme) {
-  -moz-appearance: toolbox;
+  appearance: auto;
+  -moz-default-appearance: toolbox;
 }
 
 #browser-bottombox:not(:-moz-lwtheme) {
@@ -253,11 +254,13 @@
 /* Titlebar */
 
 :root[tabsintitlebar][sizemode="normal"] #titlebar {
-  -moz-appearance: -moz-window-titlebar;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-titlebar;
 }
 
 :root[tabsintitlebar][sizemode="maximized"] #titlebar {
-  -moz-appearance: -moz-window-titlebar-maximized;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-titlebar-maximized;
 }
 
 @media (-moz-windows-compositor: 0) {
@@ -285,11 +288,11 @@
 
 .titlebar-buttonbox {
   /* For all Windows configurations except for Windows Aero and Windows Aero Basic,
-   * the default -moz-appearance of -moz-window-button-box and
+   * the default -moz-default-appearance of -moz-window-button-box and
    * -moz-window-button-box-maximized adds unwanted margins to the button box. We
    * special case Windows Aero and Windows Aero Basic in browser-aero.css.
    */
-  -moz-appearance: none;
+  appearance: none;
   /* The button box must appear on top of the navigator-toolbox in order for
    * click and hover mouse events to work properly for the button in the restored
    * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
@@ -314,19 +317,23 @@
 /* Window control buttons */
 
 .titlebar-min {
-  -moz-appearance: -moz-window-button-minimize;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-minimize;
 }
 
 .titlebar-max {
-  -moz-appearance: -moz-window-button-maximize;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-maximize;
 }
 
 .titlebar-restore {
-  -moz-appearance: -moz-window-button-restore;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-restore;
 }
 
 .titlebar-close {
-  -moz-appearance: -moz-window-button-close;
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-close;
 }
 
 @media (-moz-windows-classic: 0) {
@@ -377,7 +384,7 @@ menuitem.bookmark-item {
 #minimize-button,
 #restore-button,
 #close-button {
-  -moz-appearance: none;
+  appearance: none;
   padding: 6px 12px;
   -moz-context-properties: stroke;
   stroke: currentColor;
@@ -438,7 +445,7 @@ menuitem.bookmark-item {
   #minimize-button,
   #restore-button,
   #close-button {
-    -moz-appearance: none;
+    appearance: none;
     border-style: none;
     margin: 0;
     /* Important to ensure this applies even on toolbar[brighttext] */
@@ -615,7 +622,7 @@ menuitem.bookmark-item {
 }
 
 toolbarbutton.bookmark-item[dragover="true"][open="true"] {
-  -moz-appearance: none;
+  appearance: none;
   background: Highlight !important;
   color: HighlightText !important;
 }
@@ -701,7 +708,7 @@ notification[value="translation"] {
 }
 
 .translation-menupopup {
-  -moz-appearance: none;
+  appearance: none;
 }
 
 /* Bookmarks roots menu-items */

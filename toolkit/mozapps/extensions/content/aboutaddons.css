@@ -620,7 +620,7 @@ addon-permissions-list > .addon-detail-row:first-of-type {
 }
 
 button.tab-button {
-  -moz-appearance: none;
+  appearance: none;
   border-inline: none;
   border-block: 2px solid transparent;
   border-radius: 0;

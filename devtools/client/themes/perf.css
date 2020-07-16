@@ -175,7 +175,7 @@ a.perf-photon-button:focus {
   border: 1px solid transparent;
 
   /* Presentational: */
-  -moz-appearance: none;
+  appearance: none;
   background-color: var(--grey-20);
   background-image: url('chrome://global/skin/icons/arrow-dropdown-12.svg');
   background-position: right 4px center;

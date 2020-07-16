@@ -123,7 +123,7 @@
 /* Toolbox tabbar */
 
 .devtools-tabbar {
-  -moz-appearance: none;
+  appearance: none;
   /* For narrow devtool width, we define the each column width of tabbar.
     Defined layout is as follow:
 
@@ -270,7 +270,7 @@
 /* Toolbox controls */
 
 .devtools-tabbar-button {
-  -moz-appearance: none;
+  appearance: none;
   position: relative;
   display: flex;
   align-items: center;

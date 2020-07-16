@@ -439,7 +439,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #customization-palette .toolbarbutton-1 {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-orient: vertical;
   padding: 12px 0 9px;
   margin: 0;
@@ -519,7 +519,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   padding: 11px 0;
   box-sizing: border-box;
   min-height: 40px;
-  -moz-appearance: none;
+  appearance: none;
   box-shadow: none;
   border: none;
   border-radius: 0;
@@ -864,7 +864,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 
 .PanelUI-fxa-signin-button,
 .PanelUI-remotetabs-button {
-  -moz-appearance: none;
+  appearance: none;
   background-color: #0060df;
   /* !important for the color as an OSX specific rule when a lightweight theme
      is used for buttons in the toolbox overrides. See bug 1238531 for details */
@@ -1032,7 +1032,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1 {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   min-height: 24px;
   padding: 4px 12px;
@@ -1053,7 +1053,7 @@ panelview .toolbarbutton-1,
 }
 
 .subviewbutton > .menu-right {
-  -moz-appearance: none;
+  appearance: none;
   list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
@@ -1101,7 +1101,7 @@ panelview .toolbarbutton-1,
 }
 
 .subviewbutton.panel-subview-footer > .menu-text {
-  -moz-appearance: none;
+  appearance: none;
   padding-inline-start: 0 !important; /* to override menu.css on Windows */
   padding-inline-end: 6px;
   -moz-box-flex: 0;
@@ -1350,7 +1350,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 .PanelUI-subView toolbarseparator,
 .cui-widget-panelview menuseparator,
 .cui-widget-panel toolbarseparator {
-  -moz-appearance: none;
+  appearance: none;
   min-height: 0;
   border-top: 1px solid var(--panel-separator-color);
   border-bottom: none;
@@ -1443,7 +1443,7 @@ toolbarpaletteitem[place="menu-panel"] > .toolbaritem-combined-buttons > toolbar
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > separator {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-align: stretch;
   margin: .5em 0;
   width: 1px;
@@ -1510,7 +1510,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewbutton > .menu-iconic-left {
-  -moz-appearance: none;
+  appearance: none;
   margin-inline-end: 0;
 }
 
@@ -1551,7 +1551,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewradio {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-align: center;
   padding: 1px;
   margin: 0 0 2px;
@@ -1574,7 +1574,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewradio > .radio-check {
-  -moz-appearance: none;
+  appearance: none;
   width: 16px;
   height: 16px;
   border: 1px solid #e7e7e7;
@@ -1634,7 +1634,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #PanelUI-panic-view-button {
-  -moz-appearance: none;
+  appearance: none;
   background-color: #d92316;
   color: white;
   margin: 5px 15px 11px;
@@ -1665,7 +1665,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   border: 1px solid #ccc;
   border-radius: 3px;
   padding: 10px;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 #panic-button-success-closebutton:hover {
@@ -1769,7 +1769,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewbutton.download > .action-button {
-  -moz-appearance: none; /* To avoid native Windows hover styling */
+  appearance: none; /* To avoid native Windows hover styling */
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 1;
@@ -1888,7 +1888,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
    duplicated here to ensure they apply correctly. See
    https://searchfox.org/mozilla-central/rev/7908ce29657cfd623993046bd8e38664e1c0b28e/toolkit/themes/shared/in-content/common.inc.css#559 */
 #PanelUI-whatsNew checkbox {
-  -moz-appearance: none;
+  appearance: none;
   height: 30px;
   margin: 0;
 }
@@ -1900,7 +1900,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-whatsNew .checkbox-check {
-  -moz-appearance: none;
+  appearance: none;
   width: 20px;
   height: 20px;
   padding: 1px;
@@ -2154,7 +2154,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-info button {
-  -moz-appearance: none;
+  appearance: none;
   padding: 2px;
   margin: 4px 13px 13px;
   color: #fff;
@@ -2173,7 +2173,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-presets {
-  -moz-appearance: none;
+  appearance: none;
   position: relative; /* Ensure there is a stacking context for the dropdown arrow. */
   width: 100%;
   min-height: 24px;
@@ -2204,7 +2204,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-presets menupopup {
-  -moz-appearance: none;
+  appearance: none;
   border: 1px solid #B7B7B7;
   border-radius: 2px;
   background-color: #FFF;
@@ -2212,7 +2212,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-presets menuitem {
-  -moz-appearance: none;
+  appearance: none;
   font-size: 1em;
   color: #000;
   padding-block: 0.2em;
@@ -2244,7 +2244,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-content-custom-button {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   color: #0046A4;
   font-size: 12px;
@@ -2301,7 +2301,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 .PanelUI-profiler-button {
-  -moz-appearance: none;
+  appearance: none;
   background-color: #e0e0e1;
   border-radius: 2px;
   color: #000;

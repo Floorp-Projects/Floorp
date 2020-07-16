@@ -11,18 +11,21 @@
 /* ::::: radio ::::: */
 
 radio {
-  -moz-appearance: radio-container;
+  appearance: auto;
+  -moz-default-appearance: radio-container;
   -moz-box-align: center;
   margin: 2px 4px;
 }
 
 .radio-check {
-  -moz-appearance: radio;
+  appearance: auto;
+  -moz-default-appearance: radio;
   margin: 2px;
 }
 
 .radio-label-box {
-  -moz-appearance: radio-label;
+  appearance: auto;
+  -moz-default-appearance: radio-label;
 }
 
 .radio-icon[src] {

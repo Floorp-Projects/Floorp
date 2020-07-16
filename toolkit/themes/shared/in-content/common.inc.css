@@ -147,7 +147,7 @@
 
 :root {
   font: message-box;
-  -moz-appearance: none;
+  appearance: none;
   background-color: var(--in-content-page-background);
   color: var(--in-content-page-color);
 }
@@ -185,7 +185,7 @@ html|h2 {
 /* tabpanels and tabs */
 
 xul|tabpanels {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   padding: 0;
   background-color: transparent;
@@ -200,7 +200,7 @@ xul|tabs {
 }
 
 xul|tab {
-  -moz-appearance: none;
+  appearance: none;
   margin-top: 0;
   padding: 4px 20px 0 !important;
   min-height: 44px;
@@ -232,7 +232,7 @@ button,
 html|select,
 html|input[type="color"],
 xul|menulist {
-  -moz-appearance: none;
+  appearance: none;
   min-height: 32px;
   /* !important overrides button.css for disabled and default XUL buttons: */
   color: inherit !important;
@@ -382,7 +382,7 @@ xul|*.close-icon > xul|*.button-box {
 }
 
 xul|menulist::part(dropmarker) {
-  -moz-appearance: none;
+  appearance: none;
   margin-inline-end: 4px;
   padding: 0;
   border: none;
@@ -398,7 +398,7 @@ xul|menulist::part(dropmarker-icon) {
 }
 
 xul|menulist > xul|menupopup {
-  -moz-appearance: none;
+  appearance: none;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: var(--in-content-box-background);
@@ -406,7 +406,7 @@ xul|menulist > xul|menupopup {
 
 xul|menulist > xul|menupopup xul|menu,
 xul|menulist > xul|menupopup xul|menuitem {
-  -moz-appearance: none;
+  appearance: none;
   font-size: 1em;
   color: var(--in-content-text-color);
   padding-block: 0.2em;
@@ -434,7 +434,7 @@ xul|menulist > xul|menupopup > xul|menuitem[disabled="true"] {
 }
 
 xul|menulist > xul|menupopup xul|menuseparator {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   padding: 0;
   border-top: 1px solid var(--in-content-box-border-color);
@@ -451,7 +451,7 @@ html|input[type="url"],
 html|input[type="number"],
 html|textarea,
 xul|search-textbox {
-  -moz-appearance: none;
+  appearance: none;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   color: inherit;
@@ -559,14 +559,14 @@ html|a:hover:active,
 /* Checkboxes and radio buttons */
 
 xul|checkbox {
-  -moz-appearance: none;
+  appearance: none;
   height: 30px;
   margin: 2px 0;
 }
 
 xul|*.checkbox-check,
 html|input[type="checkbox"] {
-  -moz-appearance: none;
+  appearance: none;
   width: 20px;
   height: 20px;
   padding: 1px;
@@ -618,11 +618,11 @@ html|*.toggle-container-with-text {
 
 xul|radio {
   margin-inline-start: 0;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 xul|*.radio-check {
-  -moz-appearance: none;
+  appearance: none;
   width: 20px;
   height: 20px;
   border: 1px solid var(--in-content-box-border-color);
@@ -655,7 +655,7 @@ xul|*.radio-label-box {
 /* Category List */
 
 #categories {
-  -moz-appearance: none;
+  appearance: none;
   background-color: initial; /* override the background-color set on all richlistboxes in common.inc.css */
   margin: 70px 0 0;
   border-width: 0;
@@ -670,7 +670,7 @@ html|*#categories {
 
 #categories > .category {
   min-height: 48px;
-  -moz-appearance: none;
+  appearance: none;
   margin-inline-start: 34px;
   padding-inline: 10px;
   transition: background-color 150ms;
@@ -808,7 +808,7 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
 html|select[size][multiple],
 xul|listheader,
 xul|richlistbox {
-  -moz-appearance: none;
+  appearance: none;
   margin-inline: 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
@@ -862,7 +862,7 @@ xul|panel[type="autocomplete-richlistbox"] {
 /* Trees */
 
 xul|tree {
-  -moz-appearance: none;
+  appearance: none;
   font-size: 1em;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
@@ -878,7 +878,7 @@ xul|richlistbox:-moz-focusring {
 }
 
 xul|treecols {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   border-bottom: 1px solid var(--in-content-border-color);
   padding: 0;
@@ -886,7 +886,7 @@ xul|treecols {
 
 xul|treecol:not([hideheader="true"]),
 xul|treecolpicker {
-  -moz-appearance: none;
+  appearance: none;
   border: none;
   background-color: var(--in-content-box-background-hover);
   color: #808080;

@@ -11,7 +11,8 @@
 /* ::::: checkbox ::::: */
 
 checkbox {
-  -moz-appearance: checkbox-container;
+  appearance: auto;
+  -moz-default-appearance: checkbox-container;
   -moz-box-align: center;
   margin: 2px 4px;
   padding-top: 1px;
@@ -50,7 +51,8 @@ checkbox[disabled="true"] {
 /* ::::: checkmark image ::::: */
 
 .checkbox-check {
-  -moz-appearance: checkbox;
+  appearance: auto;
+  -moz-default-appearance: checkbox;
   -moz-box-align: center;
   min-width: 13px;
   min-height: 13px;

@@ -494,7 +494,7 @@ search-textbox {
 /********** menulist **********/
 
 menulist[popuponly] {
-  -moz-appearance: none !important;
+  appearance: none !important;
   margin: 0 !important;
   height: 0 !important;
   min-height: 0 !important;

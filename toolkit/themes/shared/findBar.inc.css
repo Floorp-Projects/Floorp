@@ -49,7 +49,7 @@ html|html[lwtheme-image] findbar {
 }
 
 html|input.findbar-textbox {
-  -moz-appearance: none;
+  appearance: none;
   background-color: -moz-Field;
   border: 1px solid var(--lwt-toolbar-field-border-color, ThreeDShadow);
   border-start-start-radius: 2px;
@@ -88,7 +88,7 @@ html|input.findbar-textbox.minimal {
 .findbar-find-previous,
 .findbar-find-next {
   margin-inline-start: 0;
-  -moz-appearance: none;
+  appearance: none;
   background: rgba(255,255,255,.2);
   border: 1px solid ThreeDShadow;
   padding: 2px 5px;

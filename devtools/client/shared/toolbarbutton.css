@@ -9,7 +9,7 @@
  */
 
 .devtools-toolbarbutton {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: none;
   border-radius: 2px;

@@ -81,7 +81,7 @@ toolbar[brighttext] {
 
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
-  -moz-appearance: none;
+  appearance: none;
   padding: 0 var(--toolbarbutton-inner-padding) !important;
 }
 
@@ -94,12 +94,12 @@ toolbar[brighttext] {
 }
 
 .findbar-button {
-  -moz-appearance: none;
+  appearance: none;
   color: inherit;
 }
 
 toolbar .toolbarbutton-1 {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   padding: 0 var(--toolbarbutton-outer-padding);
   -moz-box-pack: center;
@@ -304,7 +304,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   max-width: 13em;
   margin: 0 2px;
   padding: 4px;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 :root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {

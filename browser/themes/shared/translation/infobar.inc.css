@@ -32,14 +32,15 @@ notification[value="translation"] hbox[anonid="details"] {
 
 notification[value="translation"] button,
 notification[value="translation"] menulist {
-  -moz-appearance: none;
+  appearance: none;
   border-radius: 2px;
   min-width: 0;
   box-shadow: 0 1px rgba(255, 255, 255, 0.5), 0 1px rgba(255, 255, 255, 0.5) inset;
 }
 
 notification[value="translation"] menulist::part(dropmarker) {
-  -moz-appearance: toolbarbutton-dropdown;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton-dropdown;
   border: none;
   background-color: transparent;
   margin: auto;

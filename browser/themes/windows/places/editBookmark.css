@@ -7,7 +7,7 @@
   .expander-down {
     --expander-background-color-selected: rgba(249, 249, 250, 0.15);
     --expander-background-color-hover: rgba(250, 250, 249, 0.1);
-    -moz-appearance: none;
+    appearance: none;
   }
 
   .expander-up:hover,
@@ -80,7 +80,8 @@
 }
 
 #editBMPanel_tagsSelector > richlistitem > image {
-  -moz-appearance: checkbox;
+  appearance: auto;
+  -moz-default-appearance: checkbox;
   -moz-box-align: center;
   margin: 0 2px;
   border: 1px solid -moz-DialogText;

@@ -125,7 +125,7 @@ button::selection {
 
 .devtools-autocomplete-listbox {
   --autocomplete-item-padding-inline: 8px;
-  -moz-appearance: none !important;
+  appearance: none !important;
   background-color: transparent;
   border-width: 0px !important;
   margin: 0;
@@ -299,7 +299,7 @@ checkbox:-moz-focusring {
 /* Toolbar buttons */
 .devtools-togglebutton,
 .devtools-button {
-  -moz-appearance: none;
+  appearance: none;
   background: transparent;
   border: none;
   border-radius: 2px;
@@ -467,7 +467,7 @@ checkbox:-moz-focusring {
 .devtools-textinput,
 .devtools-searchinput,
 .devtools-filterinput {
-  -moz-appearance: none;
+  appearance: none;
   margin: 0;
   padding: 0 4px;
   font: inherit;
@@ -737,7 +737,7 @@ checkbox:-moz-focusring {
 .devtools-checkbox-toggle {
   --x-pos: .15em;
   /* Reset native checkbox styling. */
-  -moz-appearance: none;
+  appearance: none;
   background-color: var(--toggle-track-color);
   cursor: pointer;
   /* Change font-size to scale. */

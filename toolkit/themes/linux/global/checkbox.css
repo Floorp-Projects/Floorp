@@ -11,13 +11,15 @@
 /* ::::: checkbox ::::: */
 
 checkbox {
-  -moz-appearance: checkbox-container;
+  appearance: auto;
+  -moz-default-appearance: checkbox-container;
   -moz-box-align: center;
   margin: 2px 4px;
 }
 
 .checkbox-label-box {
-  -moz-appearance: checkbox-label;
+  appearance: auto;
+  -moz-default-appearance: checkbox-label;
 }
 
 .checkbox-icon[src] {
@@ -45,7 +47,8 @@ checkbox[disabled="true"] {
 /* ::::: checkmark image ::::: */
 
 .checkbox-check {
-  -moz-appearance: checkbox;
+  appearance: auto;
+  -moz-default-appearance: checkbox;
   margin: 2px;
 }
 

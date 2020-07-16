@@ -10,7 +10,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 tooltip {
-  -moz-appearance: tooltip;
+  appearance: auto;
+  -moz-default-appearance: tooltip;
   margin-top: 21px;
   max-width: 40em;
   color: InfoText;

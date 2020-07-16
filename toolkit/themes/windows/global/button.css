@@ -11,7 +11,7 @@
 /* :::::::::: button :::::::::: */
 
 button {
-  -moz-appearance: button;
+  appearance: button;
   margin: 1px 5px 2px;
   min-width: 6.3em;
   color: ButtonText;
@@ -69,7 +69,7 @@ button[disabled="true"] {
 /* ::::: menu buttons ::::: */
 
 .button-menu-dropmarker {
-  -moz-appearance: none;
+  appearance: none;
   list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
@@ -86,7 +86,7 @@ button.plain {
 
 button[type="disclosure"] {
   margin: 0;
-  -moz-appearance: none;
+  appearance: none;
   list-style-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
   -moz-context-properties: fill;
   fill: currentColor;

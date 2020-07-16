@@ -183,7 +183,7 @@ tr:not(.deleted) > .cell-value {
 
 td.cell-value > form > input[type="text"],
 td.cell-value > form > input[type="number"] {
-  -moz-appearance: textfield;
+  appearance: textfield;
   margin: 0;
   width: 100%;
   box-sizing: border-box;

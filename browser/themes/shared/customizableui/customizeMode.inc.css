@@ -66,7 +66,7 @@
   border: 1px solid #b1b1b1;
   border-radius: 2px;
   background-color: #fcfcfd;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 .customizationmode-checkbox,
@@ -338,7 +338,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 
 .customization-uidensity-menuitem,
 .customization-lwtheme-menu-theme {
-  -moz-appearance: none;
+  appearance: none;
   border: 1px solid transparent;
   margin: 0 -5px 5px;
   padding-block: 0;
@@ -411,7 +411,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 }
 
 .customization-lwtheme-menu-footeritem {
-  -moz-appearance: none;
+  appearance: none;
   -moz-box-flex: 1;
   color: inherit;
   border-style: none;
@@ -445,7 +445,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   /* Native styling adds more 'oompf' to the popup box-shadow, so simulate that
    * as best as we can here: */
   box-shadow: 0 0 1px hsla(0,0%,0%,.3), 0 4px 10px hsla(0,0%,0%,.3);
-  -moz-appearance: none;
+  appearance: none;
   border-radius: var(--arrowpanel-border-radius);
 %else
   border: 1px solid var(--arrowpanel-border-color);

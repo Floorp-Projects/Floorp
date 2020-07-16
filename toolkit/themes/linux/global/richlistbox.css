@@ -5,7 +5,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 richlistbox {
-  -moz-appearance: listbox;
+  appearance: auto;
+  -moz-default-appearance: listbox;
   margin: 2px 4px;
   background-color: -moz-Field;
   color: -moz-FieldText;

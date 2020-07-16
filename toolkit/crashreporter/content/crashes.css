@@ -44,7 +44,7 @@ table {
 }
 
 a.button-as-link {
-  -moz-appearance: none;
+  appearance: none;
   min-height: 30px;
   color: var(--in-content-text-color) !important;
   border: 1px solid var(--in-content-box-border-color) !important;

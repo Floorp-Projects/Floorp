@@ -129,7 +129,7 @@
 }
 
 #alertSettings {
-  -moz-appearance: none;
+  appearance: none;
   background-color: transparent;
   border-width: 0;
   border-radius: 20px;

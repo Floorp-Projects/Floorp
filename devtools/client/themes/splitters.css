@@ -45,7 +45,7 @@
 
 splitter.devtools-horizontal-splitter,
 .devtools-side-splitter {
-  -moz-appearance: none;
+  appearance: none;
   background-image: none;
   border: 0;
   border-style: solid;

@@ -5,7 +5,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 button {
-  -moz-appearance: button;
+  appearance: button;
   /* The horizontal margin used here come from the Aqua Human Interface
      Guidelines, there should be 12 pixels between two buttons. */
   margin: 5px 6px 3px;
@@ -55,7 +55,7 @@ button[disabled="true"] {
 
 .button-menu-dropmarker {
   display: none;
-  -moz-appearance: none;
+  appearance: none;
 }
 
 /* ::::: plain buttons ::::: */
@@ -68,6 +68,7 @@ button.plain {
 /* ::::: help button ::::: */
 
 button[dlgtype="help"] {
-  -moz-appearance: -moz-mac-help-button;
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-help-button;
   width: 20px;
 }

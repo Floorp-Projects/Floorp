@@ -59,7 +59,8 @@
   padding-block: 2px;
   padding-inline: 4px 1px;
   margin-inline-end: 2px;
-  -moz-appearance: toolbarbutton;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
 %ifdef XP_WIN
 % use standard menu colors on OS/2
   color: -moz-DialogText;
@@ -129,12 +130,12 @@
 
 @media (-moz-windows-classic: 0) {
   #placesToolbox {
-    -moz-appearance: none;
+    appearance: none;
     background-color: transparent;
   }
 
   #placesToolbar {
-    -moz-appearance: none;
+    appearance: none;
     background-color: -moz-Dialog;
     color: -moz-dialogText;
   }
@@ -205,7 +206,7 @@
   }
 
   #placesToolbar > toolbarbutton {
-    -moz-appearance: none;
+    appearance: none;
   }
 
   #placesToolbar > toolbarbutton:not([disabled]):hover {
@@ -213,7 +214,7 @@
   }
 
   #placesMenu > menu {
-    -moz-appearance: none;
+    appearance: none;
     color: var(--organizer-text-primary-color);
   }
 
@@ -224,7 +225,7 @@
   }
 
   #searchFilter {
-    -moz-appearance: none;
+    appearance: none;
     background-color: var(--organizer-background-color-content);
     color: var(--organizer-text-primary-color);
     border: 1px solid transparent;
@@ -289,7 +290,7 @@
   }
 
   #contentView treecol {
-    -moz-appearance: none;
+    appearance: none;
     background: var(--organizer-background-intermediate-color);
     color: var(--organizer-text-primary-color);
     border-inline-end: 1px solid var(--organizer-border-color);
@@ -300,7 +301,7 @@
   }
 
   #editBMPanel_tagsSelectorRow > richlistbox {
-    -moz-appearance: none;
+    appearance: none;
     color: var(--organizer-text-primary-color);
     background-color: var(--organizer-background-color-content);
   }
