@@ -352,6 +352,31 @@ class SettingsTest {
     }
 
     @Test
+    fun showPwaFragment() {
+        // When just created
+        // Then
+        assertFalse(settings.shouldShowPwaOnboarding)
+
+        // When visited once
+        settings.incrementVisitedInstallableCount()
+
+        // Then
+        assertFalse(settings.shouldShowPwaOnboarding)
+
+        // When visited twice
+        settings.incrementVisitedInstallableCount()
+
+        // Then
+        assertFalse(settings.shouldShowPwaOnboarding)
+
+        // When visited thrice
+        settings.incrementVisitedInstallableCount()
+
+        // Then
+        assertTrue(settings.shouldShowPwaOnboarding)
+    }
+
+    @Test
     fun sitePermissionsPhoneFeatureCameraAction() {
         // When just created
         // Then

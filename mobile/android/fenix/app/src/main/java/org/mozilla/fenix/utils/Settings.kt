@@ -53,6 +53,7 @@ class Settings private constructor(
         const val showLoginsSecureWarningSyncMaxCount = 1
         const val showLoginsSecureWarningMaxCount = 1
         const val trackingProtectionOnboardingMaximumCount = 1
+        const val pwaVisitsToShowPromptMaxCount = 3
         const val FENIX_PREFERENCES = "fenix_preferences"
 
         private const val showSearchWidgetCFRMaxCount = 3
@@ -146,9 +147,18 @@ class Settings private constructor(
 
     // If any of the prefs have been modified, quit displaying the fenix moved tip
     fun shouldDisplayFenixMovingTip(): Boolean =
-        preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_fenix_nightly_tip), true) &&
-            preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_firefox_nightly_tip), true) &&
-            preferences.getBoolean(appContext.getString(R.string.pref_key_migrating_from_fenix_tip), true)
+        preferences.getBoolean(
+            appContext.getString(R.string.pref_key_migrating_from_fenix_nightly_tip),
+            true
+        ) &&
+                preferences.getBoolean(
+                    appContext.getString(R.string.pref_key_migrating_from_firefox_nightly_tip),
+                    true
+                ) &&
+                preferences.getBoolean(
+                    appContext.getString(R.string.pref_key_migrating_from_fenix_tip),
+                    true
+                )
 
     private val activeSearchCount by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_count),
@@ -167,9 +177,9 @@ class Settings private constructor(
 
     fun shouldDisplaySearchWidgetCFR(): Boolean =
         isActiveSearcher &&
-        searchWidgetCFRDismissCount < showSearchWidgetCFRMaxCount &&
-        !searchWidgetInstalled &&
-        !searchWidgetCFRManuallyDismissed
+                searchWidgetCFRDismissCount < showSearchWidgetCFRMaxCount &&
+                !searchWidgetInstalled &&
+                !searchWidgetCFRManuallyDismissed
 
     private val searchWidgetCFRDisplayCount by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count),
@@ -236,10 +246,10 @@ class Settings private constructor(
 
     val isCrashReportingEnabled: Boolean
         get() = isCrashReportEnabledInBuild &&
-            preferences.getBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
-                true
-            )
+                preferences.getBoolean(
+                    appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
+                    true
+                )
 
     val isRemoteDebuggingEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_remote_debugging),
@@ -267,7 +277,7 @@ class Settings private constructor(
     val shouldShowTrackingProtectionOnboarding: Boolean
         get() = !isOverrideTPPopupsForPerformanceTest &&
                 (trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
-                !trackingProtectionOnboardingShownThisSession)
+                        !trackingProtectionOnboardingShownThisSession)
 
     var showSecretDebugMenuThisSession = false
 
@@ -418,14 +428,14 @@ class Settings private constructor(
                 BrowsingMode.Normal
             }
         }
-
         set(value) {
             val lastKnownModeWasPrivate = (value == BrowsingMode.Private)
 
             preferences.edit()
                 .putBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_last_known_mode_private),
-                    lastKnownModeWasPrivate)
+                    appContext.getPreferenceKey(R.string.pref_key_last_known_mode_private),
+                    lastKnownModeWasPrivate
+                )
                 .apply()
 
             field = value
@@ -495,7 +505,9 @@ class Settings private constructor(
         }
 
     val accessibilityServicesEnabled: Boolean
-        get() { return touchExplorationIsEnabled || switchServiceIsEnabled }
+        get() {
+            return touchExplorationIsEnabled || switchServiceIsEnabled
+        }
 
     val toolbarSettingString: String
         get() = when {
@@ -569,22 +581,41 @@ class Settings private constructor(
         default = false
     )
 
-    val shouldShowFirstTimePwaFragment: Boolean
+    fun incrementVisitedInstallableCount() {
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_install_pwa_visits),
+            pwaInstallableVisitCount + 1
+        ).apply()
+    }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val pwaInstallableVisitCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_install_pwa_visits),
+        default = 0
+    )
+
+    private val userNeedsToVisitInstallableSites: Boolean
+        get() = pwaInstallableVisitCount < pwaVisitsToShowPromptMaxCount
+
+    val shouldShowPwaOnboarding: Boolean
         get() {
+            // We only want to show this on the 3rd time a user visits a site
+            if (userNeedsToVisitInstallableSites) return false
+
             // ShortcutManager::pinnedShortcuts is only available on Oreo+
-            if (!userKnowsAboutPWAs && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val alreadyHavePWaInstalled =
+            if (!userKnowsAboutPwas && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val alreadyHavePwaInstalled =
                     appContext.getSystemService(ShortcutManager::class.java)
                         .pinnedShortcuts.size > 0
 
                 // Users know about PWAs onboarding if they already have PWAs installed.
-                userKnowsAboutPWAs = alreadyHavePWaInstalled
+                userKnowsAboutPwas = alreadyHavePwaInstalled
             }
             // Show dialog only if user does not know abut PWAs
-            return !userKnowsAboutPWAs
+            return !userKnowsAboutPwas
         }
 
-    var userKnowsAboutPWAs by booleanPreference(
+    var userKnowsAboutPwas by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_user_knows_about_pwa),
         default = false
     )
@@ -809,8 +840,12 @@ class Settings private constructor(
     var savedLoginsSortingStrategy: SortingStrategy
         get() {
             return when (savedLoginsSortingStrategyString) {
-                SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> SortingStrategy.Alphabetically(appContext)
-                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> SortingStrategy.LastUsed(appContext)
+                SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> SortingStrategy.Alphabetically(
+                    appContext
+                )
+                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> SortingStrategy.LastUsed(
+                    appContext
+                )
                 else -> SortingStrategy.Alphabetically(appContext)
             }
         }

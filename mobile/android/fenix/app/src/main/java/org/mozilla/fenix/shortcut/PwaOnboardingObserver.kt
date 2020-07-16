@@ -14,20 +14,23 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.utils.Settings
 
 /**
- * Displays the [FirstTimePwaFragment] info dialog when a PWA is first opened in the browser.
+ * Displays the [PwaOnboardingDialogFragment] info dialog when a PWA is opened in the browser for the third time.
  */
-class FirstTimePwaObserver(
+class PwaOnboardingObserver(
     private val navController: NavController,
     private val settings: Settings,
     private val webAppUseCases: WebAppUseCases
 ) : Session.Observer {
 
     override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
-        if (webAppUseCases.isInstallable() && settings.shouldShowFirstTimePwaFragment) {
-            val directions = BrowserFragmentDirections.actionBrowserFragmentToFirstTimePwaFragment()
-            navController.nav(R.id.browserFragment, directions)
-
-            settings.userKnowsAboutPWAs = true
+        if (webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
+            settings.incrementVisitedInstallableCount()
+            if (settings.shouldShowPwaOnboarding) {
+                val directions =
+                    BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
+                navController.nav(R.id.browserFragment, directions)
+                settings.userKnowsAboutPwas = true
+            }
         }
     }
 }

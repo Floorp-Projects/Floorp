@@ -16,9 +16,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 
 /**
- * Dialog displayed the first time the user navigates to an installable web app.
+ * Dialog displayed the third time the user navigates to an installable web app.
  */
-class FirstTimePwaFragment : DialogFragment() {
+class PwaOnboardingDialogFragment : DialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.CreateShortcutDialogStyle)
@@ -28,7 +28,7 @@ class FirstTimePwaFragment : DialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_pwa_first_time, container, false)
+    ): View? = inflater.inflate(R.layout.fragment_pwa_onboarding, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

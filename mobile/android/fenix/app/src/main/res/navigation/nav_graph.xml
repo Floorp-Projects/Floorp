@@ -221,8 +221,8 @@
             android:id="@+id/action_browserFragment_to_createShortcutFragment"
             app:destination="@id/createShortcutFragment" />
         <action
-            android:id="@+id/action_browserFragment_to_firstTimePwaFragment"
-            app:destination="@id/firstTimePwaFragment" />
+            android:id="@+id/action_browserFragment_to_pwaOnboardingDialogFragment"
+            app:destination="@id/pwaOnboardingDialogFragment" />
         <action
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
@@ -680,10 +680,9 @@
         android:name="org.mozilla.fenix.shortcut.CreateShortcutFragment"
         tools:layout="@layout/fragment_create_shortcut" />
     <dialog
-        android:id="@+id/firstTimePwaFragment"
-        android:name="org.mozilla.fenix.shortcut.FirstTimePwaFragment"
-        android:label="fragment_pwa_first_time"
-        tools:layout="@layout/fragment_pwa_first_time" />
+        android:id="@+id/pwaOnboardingDialogFragment"
+        android:name="org.mozilla.fenix.shortcut.PwaOnboardingDialogFragment"
+        tools:layout="@layout/fragment_pwa_onboarding" />
 
     <dialog
         android:id="@+id/shareFragment"
