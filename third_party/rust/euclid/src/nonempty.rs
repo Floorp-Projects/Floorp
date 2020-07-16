@@ -1,9 +1,9 @@
-use {Rect, Box2D, Box3D, Vector2D, Vector3D, size2, point2, point3};
-use approxord::{min, max};
+use crate::{Box2D, Box3D, Rect, Vector2D, Vector3D};
+use core::cmp::PartialEq;
 use core::ops::Deref;
 use core::ops::{Add, Sub};
-use core::cmp::{PartialEq};
-
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
@@ -29,22 +29,8 @@ where
     T: Copy + PartialOrd + Add<T, Output = T> + Sub<T, Output = T>,
 {
     #[inline]
-    pub fn union(&self, other: &NonEmpty<Rect<T, U>>) -> NonEmpty<Rect<T, U>> {
-        let origin = point2(
-            min(self.min_x(), other.min_x()),
-            min(self.min_y(), other.min_y()),
-        );
-
-        let lower_right_x = max(self.max_x(), other.max_x());
-        let lower_right_y = max(self.max_y(), other.max_y());
-
-        NonEmpty(Rect {
-            origin,
-            size: size2(
-                lower_right_x - origin.x,
-                lower_right_y - origin.y,
-            ),
-        })
+    pub fn union(&self, other: &Self) -> Self {
+        NonEmpty(self.0.to_box2d().union(&other.0.to_box2d()).to_rect())
     }
 
     #[inline]
@@ -66,17 +52,8 @@ where
     T: Copy + PartialOrd,
 {
     #[inline]
-    pub fn union(&self, other: &NonEmpty<Box2D<T, U>>) -> NonEmpty<Box2D<T, U>> {
-        NonEmpty(Box2D {
-            min: point2(
-                min(self.min.x, other.min.x),
-                min(self.min.y, other.min.y),
-            ),
-            max: point2(
-                max(self.max.x, other.max.x),
-                max(self.max.y, other.max.y),
-            ),
-        })
+    pub fn union(&self, other: &Self) -> Self {
+        NonEmpty(self.0.union(&other.0))
     }
 
     /// Returns true if this box contains the interior of the other box.
@@ -104,19 +81,8 @@ where
     T: Copy + PartialOrd,
 {
     #[inline]
-    pub fn union(&self, other: &NonEmpty<Box3D<T, U>>) -> NonEmpty<Box3D<T, U>> {
-        NonEmpty(Box3D {
-            min: point3(
-                min(self.min.x, other.min.x),
-                min(self.min.y, other.min.y),
-                min(self.min.z, other.min.z),
-            ),
-            max: point3(
-                max(self.max.x, other.max.x),
-                max(self.max.y, other.max.y),
-                max(self.max.z, other.max.z),
-            ),
-        })
+    pub fn union(&self, other: &Self) -> Self {
+        NonEmpty(self.0.union(&other.0))
     }
 
     /// Returns true if this box contains the interior of the other box.
@@ -143,7 +109,8 @@ where
 
 #[test]
 fn empty_nonempty() {
-    use default;
+    use crate::default;
+    use crate::point2;
 
     // zero-width
     let box1: default::Box2D<i32> = Box2D {
@@ -174,7 +141,8 @@ fn empty_nonempty() {
 
 #[test]
 fn nonempty_union() {
-    use default;
+    use crate::default;
+    use crate::{point2, point3, size2};
 
     let box1: default::Box2D<i32> = Box2D {
         min: point2(-10, 2),
@@ -185,7 +153,13 @@ fn nonempty_union() {
         max: point2(10, 5),
     };
 
-    assert_eq!(box1.union(&box2), *box1.to_non_empty().unwrap().union(&box2.to_non_empty().unwrap()));
+    assert_eq!(
+        box1.union(&box2),
+        *box1
+            .to_non_empty()
+            .unwrap()
+            .union(&box2.to_non_empty().unwrap())
+    );
 
     let box3: default::Box3D<i32> = Box3D {
         min: point3(1, -10, 2),
@@ -196,7 +170,13 @@ fn nonempty_union() {
         max: point3(7, 10, 5),
     };
 
-    assert_eq!(box3.union(&box4), *box3.to_non_empty().unwrap().union(&box4.to_non_empty().unwrap()));
+    assert_eq!(
+        box3.union(&box4),
+        *box3
+            .to_non_empty()
+            .unwrap()
+            .union(&box4.to_non_empty().unwrap())
+    );
 
     let rect1: default::Rect<i32> = Rect {
         origin: point2(1, 2),
@@ -207,18 +187,26 @@ fn nonempty_union() {
         size: size2(1, 10),
     };
 
-    assert_eq!(rect1.union(&rect2), *rect1.to_non_empty().unwrap().union(&rect2.to_non_empty().unwrap()));
+    assert_eq!(
+        rect1.union(&rect2),
+        *rect1
+            .to_non_empty()
+            .unwrap()
+            .union(&rect2.to_non_empty().unwrap())
+    );
 }
 
 #[test]
 fn nonempty_contains() {
-    use default;
-    use {vec2, vec3};
+    use crate::default;
+    use crate::{point2, point3, size2, vec2, vec3};
 
     let r: NonEmpty<default::Rect<i32>> = Rect {
         origin: point2(-20, 15),
         size: size2(100, 200),
-    }.to_non_empty().unwrap();
+    }
+    .to_non_empty()
+    .unwrap();
 
     assert!(r.contains_rect(&r));
     assert!(!r.contains_rect(&r.translate(vec2(1, 0))));
@@ -229,7 +217,9 @@ fn nonempty_contains() {
     let b: NonEmpty<default::Box2D<i32>> = Box2D {
         min: point2(-10, 5),
         max: point2(30, 100),
-    }.to_non_empty().unwrap();
+    }
+    .to_non_empty()
+    .unwrap();
 
     assert!(b.contains_box(&b));
     assert!(!b.contains_box(&b.translate(vec2(1, 0))));
@@ -240,7 +230,9 @@ fn nonempty_contains() {
     let b: NonEmpty<default::Box3D<i32>> = Box3D {
         min: point3(-1, -10, 5),
         max: point3(10, 30, 100),
-    }.to_non_empty().unwrap();
+    }
+    .to_non_empty()
+    .unwrap();
 
     assert!(b.contains_box(&b));
     assert!(!b.contains_box(&b.translate(vec3(0, 1, 0))));
