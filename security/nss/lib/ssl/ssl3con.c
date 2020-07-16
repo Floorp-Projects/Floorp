@@ -784,15 +784,19 @@ ssl_HasCert(const sslSocket *ss, PRUint16 maxVersion, SSLAuthType authType)
  * Both by policy and by having a token that supports it. */
 static PRBool
 ssl_SignatureSchemeAccepted(PRUint16 minVersion,
-                            SSLSignatureScheme scheme)
+                            SSLSignatureScheme scheme,
+                            PRBool forCert)
 {
     /* Disable RSA-PSS schemes if there are no tokens to verify them. */
     if (ssl_IsRsaPssSignatureScheme(scheme)) {
         if (!PK11_TokenExists(auth_alg_defs[ssl_auth_rsa_pss])) {
             return PR_FALSE;
         }
-    } else if (ssl_IsRsaPkcs1SignatureScheme(scheme)) {
-        /* Disable PKCS#1 signatures if we are limited to TLS 1.3. */
+    } else if (!forCert && ssl_IsRsaPkcs1SignatureScheme(scheme)) {
+        /* Disable PKCS#1 signatures if we are limited to TLS 1.3.
+         * We still need to advertise PKCS#1 signatures in CH and CR
+         * for certificate signatures.
+         */
         if (minVersion >= SSL_LIBRARY_VERSION_TLS_1_3) {
             return PR_FALSE;
         }
@@ -851,7 +855,8 @@ ssl_CheckSignatureSchemes(sslSocket *ss)
     /* Ensure that there is a signature scheme that can be accepted.*/
     for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
         if (ssl_SignatureSchemeAccepted(ss->vrange.min,
-                                        ss->ssl3.signatureSchemes[i])) {
+                                        ss->ssl3.signatureSchemes[i],
+                                        PR_FALSE /* forCert */)) {
             return SECSuccess;
         }
     }
@@ -880,7 +885,7 @@ ssl_HasSignatureScheme(const sslSocket *ss, SSLAuthType authType)
         PRBool acceptable = authType == schemeAuthType ||
                             (schemeAuthType == ssl_auth_rsa_pss &&
                              authType == ssl_auth_rsa_sign);
-        if (acceptable && ssl_SignatureSchemeAccepted(ss->version, scheme)) {
+        if (acceptable && ssl_SignatureSchemeAccepted(ss->version, scheme, PR_FALSE /* forCert */)) {
             return PR_TRUE;
         }
     }
@@ -9803,12 +9808,13 @@ ssl3_SendServerKeyExchange(sslSocket *ss)
 }
 
 SECStatus
-ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, sslBuffer *buf)
+ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool forCert,
+                   sslBuffer *buf)
 {
     SSLSignatureScheme filtered[MAX_SIGNATURE_SCHEMES] = { 0 };
     unsigned int filteredCount = 0;
 
-    SECStatus rv = ssl3_FilterSigAlgs(ss, minVersion, PR_FALSE,
+    SECStatus rv = ssl3_FilterSigAlgs(ss, minVersion, PR_FALSE, forCert,
                                       PR_ARRAY_SIZE(filtered),
                                       filtered, &filteredCount);
     if (rv != SECSuccess) {
@@ -9843,8 +9849,21 @@ ssl3_EncodeFilteredSigAlgs(const sslSocket *ss, const SSLSignatureScheme *scheme
     return sslBuffer_InsertLength(buf, lengthOffset, 2);
 }
 
+/*
+ * In TLS 1.3 we are permitted to advertise support for PKCS#1
+ * schemes. This doesn't affect the signatures in TLS itself, just
+ * those on certificates. Not advertising PKCS#1 signatures creates a
+ * serious compatibility risk as it excludes many certificate chains
+ * that include PKCS#1. Hence, forCert is used to enable advertising
+ * PKCS#1 support. Note that we include these in signature_algorithms
+ * because we don't yet support signature_algorithms_cert. TLS 1.3
+ * requires that PKCS#1 schemes are placed last in the list if they
+ * are present. This sorting can be removed once we support
+ * signature_algorithms_cert.
+ */
 SECStatus
 ssl3_FilterSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool disableRsae,
+                   PRBool forCert,
                    unsigned int maxSchemes, SSLSignatureScheme *filteredSchemes,
                    unsigned int *numFilteredSchemes)
 {
@@ -9856,13 +9875,30 @@ ssl3_FilterSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool disableRsae,
     }
 
     *numFilteredSchemes = 0;
+    PRBool allowUnsortedPkcs1 = forCert && minVersion < SSL_LIBRARY_VERSION_TLS_1_3;
     for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
         if (disableRsae && ssl_IsRsaeSignatureScheme(ss->ssl3.signatureSchemes[i])) {
             continue;
         }
         if (ssl_SignatureSchemeAccepted(minVersion,
-                                        ss->ssl3.signatureSchemes[i])) {
+                                        ss->ssl3.signatureSchemes[i],
+                                        allowUnsortedPkcs1)) {
             filteredSchemes[(*numFilteredSchemes)++] = ss->ssl3.signatureSchemes[i];
+        }
+    }
+    if (forCert && !allowUnsortedPkcs1) {
+        for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+            if (disableRsae && ssl_IsRsaeSignatureScheme(ss->ssl3.signatureSchemes[i])) {
+                continue;
+            }
+            if (!ssl_SignatureSchemeAccepted(minVersion,
+                                             ss->ssl3.signatureSchemes[i],
+                                             PR_FALSE) &&
+                ssl_SignatureSchemeAccepted(minVersion,
+                                            ss->ssl3.signatureSchemes[i],
+                                            PR_TRUE)) {
+                filteredSchemes[(*numFilteredSchemes)++] = ss->ssl3.signatureSchemes[i];
+            }
         }
     }
     return SECSuccess;
@@ -9901,7 +9937,7 @@ ssl3_SendCertificateRequest(sslSocket *ss)
 
     length = 1 + certTypesLength + 2 + calen;
     if (isTLS12) {
-        rv = ssl3_EncodeSigAlgs(ss, ss->version, &sigAlgsBuf);
+        rv = ssl3_EncodeSigAlgs(ss, ss->version, PR_TRUE /* forCert */, &sigAlgsBuf);
         if (rv != SECSuccess) {
             return rv;
         }

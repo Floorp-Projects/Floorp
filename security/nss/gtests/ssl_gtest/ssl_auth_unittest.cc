@@ -1591,6 +1591,47 @@ TEST_P(TlsConnectTls13, Tls13DsaIsNotAdvertisedServer) {
             capture->extension());
 }
 
+TEST_P(TlsConnectTls13, Tls13RsaPkcs1IsAdvertisedClient) {
+  EnsureTlsSetup();
+  static const SSLSignatureScheme kSchemes[] = {ssl_sig_rsa_pkcs1_sha256,
+                                                ssl_sig_rsa_pss_rsae_sha256};
+  client_->SetSignatureSchemes(kSchemes, PR_ARRAY_SIZE(kSchemes));
+  auto capture =
+      MakeTlsFilter<TlsExtensionCapture>(client_, ssl_signature_algorithms_xtn);
+  Connect();
+  // We should only have the one signature algorithm advertised.
+  static const uint8_t kExpectedExt[] = {0,
+                                         4,
+                                         ssl_sig_rsa_pss_rsae_sha256 >> 8,
+                                         ssl_sig_rsa_pss_rsae_sha256 & 0xff,
+                                         ssl_sig_rsa_pkcs1_sha256 >> 8,
+                                         ssl_sig_rsa_pkcs1_sha256 & 0xff};
+  ASSERT_EQ(DataBuffer(kExpectedExt, sizeof(kExpectedExt)),
+            capture->extension());
+}
+
+TEST_P(TlsConnectTls13, Tls13RsaPkcs1IsAdvertisedServer) {
+  EnsureTlsSetup();
+  static const SSLSignatureScheme kSchemes[] = {ssl_sig_rsa_pkcs1_sha256,
+                                                ssl_sig_rsa_pss_rsae_sha256};
+  server_->SetSignatureSchemes(kSchemes, PR_ARRAY_SIZE(kSchemes));
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_signature_algorithms_xtn, true);
+  capture->SetHandshakeTypes({kTlsHandshakeCertificateRequest});
+  capture->EnableDecryption();
+  server_->RequestClientAuth(false);  // So we get a CertificateRequest.
+  Connect();
+  // We should only have the one signature algorithm advertised.
+  static const uint8_t kExpectedExt[] = {0,
+                                         4,
+                                         ssl_sig_rsa_pss_rsae_sha256 >> 8,
+                                         ssl_sig_rsa_pss_rsae_sha256 & 0xff,
+                                         ssl_sig_rsa_pkcs1_sha256 >> 8,
+                                         ssl_sig_rsa_pkcs1_sha256 & 0xff};
+  ASSERT_EQ(DataBuffer(kExpectedExt, sizeof(kExpectedExt)),
+            capture->extension());
+}
+
 // variant, version, certificate, auth type, signature scheme
 typedef std::tuple<SSLProtocolVariant, uint16_t, std::string, SSLAuthType,
                    SSLSignatureScheme>
