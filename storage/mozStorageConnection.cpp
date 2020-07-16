@@ -668,29 +668,12 @@ nsresult Connection::initialize(nsIFileURL* aFileURL) {
   bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
   int srv =
       ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(exclusive));
-
-  if (exclusive && (srv == SQLITE_LOCKED || srv == SQLITE_BUSY)) {
-    // Retry without trying to get an exclusive lock.
-    exclusive = false;
-    srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(false));
-  }
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
   rv = initializeInternal();
-  if (exclusive &&
-      (rv == NS_ERROR_STORAGE_BUSY || rv == NS_ERROR_FILE_IS_LOCKED)) {
-    // Usually SQLite will fail to acquire an exclusive lock on opening, but in
-    // some cases it may successfully open the database and then lock on the
-    // first query execution. When initializeInternal fails it closes the
-    // connection, so we can try to restart it in non-exclusive mode.
-    srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(false));
-    if (srv == SQLITE_OK) {
-      rv = initializeInternal();
-    }
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
