@@ -235,7 +235,6 @@
 #include "mozilla/dom/U2F.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/Worklet.h"
-#include "AccessCheck.h"
 
 #ifdef HAVE_SIDEBAR
 #  include "mozilla/dom/ExternalBinding.h"
@@ -244,6 +243,13 @@
 #ifdef MOZ_WEBSPEECH
 #  include "mozilla/dom/SpeechSynthesis.h"
 #endif
+
+// Apple system headers seem to have a check() macro.  <sigh>
+#ifdef check
+class nsIScriptTimeoutHandler;
+#  undef check
+#endif  // check
+#include "AccessCheck.h"
 
 #ifdef ANDROID
 #  include <android/log.h>

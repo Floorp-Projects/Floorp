@@ -251,8 +251,8 @@ struct ShellContext {
   Vector<OffThreadJob*, 0, SystemAllocPolicy> offThreadJobs;
 
   // Queued finalization registry cleanup jobs.
-  using FunctionVector = GCVector<JSFunction*, 0, SystemAllocPolicy>;
-  JS::PersistentRooted<FunctionVector> finalizationRegistryCleanupCallbacks;
+  using ObjectVector = GCVector<JSObject*, 0, SystemAllocPolicy>;
+  JS::PersistentRooted<ObjectVector> finalizationRegistriesToCleanUp;
 };
 
 extern ShellContext* GetShellContext(JSContext* cx);
