@@ -4675,6 +4675,24 @@ networking:
       - 'main'
     release_channel_collection: opt-out
 
+  http3_enabled:
+    bug_numbers:
+      - 1652104
+    description: >
+      True if HTTP3 is enabled at the start of a session.
+    expires: never
+    kind: boolean
+    keyed: false
+    notification_emails:
+      - necko@mozilla.com
+      - ddamjanovic@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 blocklist:
   lastModified_rs_addons:
     bug_numbers:

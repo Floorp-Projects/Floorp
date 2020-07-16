@@ -483,6 +483,8 @@ nsresult nsHttpHandler::Init() {
   Preferences::RegisterPrefixCallbacks(nsHttpHandler::PrefsChanged,
                                        gCallbackPrefs, this);
   PrefsChanged(nullptr);
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED, mHttp3Enabled);
 
   mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 
