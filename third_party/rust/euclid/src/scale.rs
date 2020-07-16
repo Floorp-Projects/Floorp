@@ -8,15 +8,17 @@
 // except according to those terms.
 //! A type-checked scaling factor between units.
 
-use num::One;
+use crate::num::One;
 
+use crate::{Point2D, Rect, Size2D, Vector2D};
+use core::cmp::Ordering;
+use core::fmt;
+use core::hash::{Hash, Hasher};
+use core::marker::PhantomData;
+use core::ops::{Add, Div, Mul, Neg, Sub};
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
-use serde;
-use core::fmt;
-use core::ops::{Add, Div, Mul, Neg, Sub};
-use core::marker::PhantomData;
-use {Point2D, Rect, Size2D, Vector2D};
+use serde::{Deserialize, Serialize};
 
 /// A scaling factor between two different units of measurement.
 ///
@@ -39,13 +41,140 @@ use {Point2D, Rect, Size2D, Vector2D};
 /// ```
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(bound(serialize = "T: serde::Serialize", deserialize = "T: serde::Deserialize<'de>")))]
+#[cfg_attr(
+    feature = "serde",
+    serde(bound(
+        serialize = "T: serde::Serialize",
+        deserialize = "T: serde::Deserialize<'de>"
+    ))
+)]
 pub struct Scale<T, Src, Dst>(pub T, #[doc(hidden)] pub PhantomData<(Src, Dst)>);
 
 impl<T, Src, Dst> Scale<T, Src, Dst> {
     #[inline]
     pub const fn new(x: T) -> Self {
         Scale(x, PhantomData)
+    }
+
+    /// Returns the given point transformed by this scale.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use euclid::{Scale, point2};
+    /// enum Mm {};
+    /// enum Cm {};
+    ///
+    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
+    ///
+    /// assert_eq!(to_mm.transform_point(point2(42, -42)), point2(420, -420));
+    /// ```
+    #[inline]
+    pub fn transform_point(&self, point: Point2D<T, Src>) -> Point2D<T::Output, Dst>
+    where
+        T: Clone + Mul,
+    {
+        Point2D::new(point.x * self.get(), point.y * self.get())
+    }
+
+    /// Returns the given vector transformed by this scale.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use euclid::{Scale, vec2};
+    /// enum Mm {};
+    /// enum Cm {};
+    ///
+    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
+    ///
+    /// assert_eq!(to_mm.transform_vector(vec2(42, -42)), vec2(420, -420));
+    /// ```
+    #[inline]
+    pub fn transform_vector(&self, vec: Vector2D<T, Src>) -> Vector2D<T::Output, Dst>
+    where
+        T: Clone + Mul,
+    {
+        Vector2D::new(vec.x * self.get(), vec.y * self.get())
+    }
+
+    /// Returns the given vector transformed by this scale.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use euclid::{Scale, size2};
+    /// enum Mm {};
+    /// enum Cm {};
+    ///
+    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
+    ///
+    /// assert_eq!(to_mm.transform_size(size2(42, -42)), size2(420, -420));
+    /// ```
+    #[inline]
+    pub fn transform_size(&self, size: Size2D<T, Src>) -> Size2D<T::Output, Dst>
+    where
+        T: Clone + Mul,
+    {
+        Size2D::new(size.width * self.get(), size.height * self.get())
+    }
+
+    /// Returns the given rect transformed by this scale.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use euclid::{Scale, rect};
+    /// enum Mm {};
+    /// enum Cm {};
+    ///
+    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
+    ///
+    /// assert_eq!(to_mm.transform_rect(&rect(1, 2, 42, -42)), rect(10, 20, 420, -420));
+    /// ```
+    #[inline]
+    pub fn transform_rect(&self, rect: &Rect<T, Src>) -> Rect<T::Output, Dst>
+    where
+        T: Copy + Mul,
+    {
+        Rect::new(
+            self.transform_point(rect.origin),
+            self.transform_size(rect.size),
+        )
+    }
+
+    /// Returns the inverse of this scale.
+    #[inline]
+    pub fn inverse(&self) -> Scale<T::Output, Dst, Src>
+    where
+        T: Clone + Neg,
+    {
+        Scale::new(-self.get())
+    }
+
+    /// Returns `true` if this scale has no effect.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use euclid::Scale;
+    /// use euclid::num::One;
+    /// enum Mm {};
+    /// enum Cm {};
+    ///
+    /// let cm_per_mm: Scale<f32, Mm, Cm> = Scale::new(0.1);
+    /// let mm_per_mm: Scale<f32, Mm, Mm> = Scale::new(1.0);
+    ///
+    /// assert_eq!(cm_per_mm.is_identity(), false);
+    /// assert_eq!(mm_per_mm.is_identity(), true);
+    /// assert_eq!(mm_per_mm, Scale::one());
+    /// ```
+    #[inline]
+    pub fn is_identity(&self) -> bool
+    where
+        T: PartialEq + One,
+    {
+        self.0 == T::one()
     }
 }
 
@@ -54,14 +183,7 @@ impl<T: Clone, Src, Dst> Scale<T, Src, Dst> {
     pub fn get(&self) -> T {
         self.0.clone()
     }
-}
 
-impl<Src, Dst> Scale<f32, Src, Dst> {
-    /// Identity scaling, could be used to safely transit from one space to another.
-    pub const ONE: Self = Scale(1.0, PhantomData);
-}
-
-impl<T: Clone + One + Div<T, Output = T>, Src, Dst> Scale<T, Src, Dst> {
     /// The inverse Scale (1.0 / self).
     ///
     /// # Example
@@ -75,36 +197,12 @@ impl<T: Clone + One + Div<T, Output = T>, Src, Dst> Scale<T, Src, Dst> {
     ///
     /// assert_eq!(cm_per_mm.inv(), Scale::new(10.0));
     /// ```
-    pub fn inv(&self) -> Scale<T, Dst, Src> {
+    pub fn inv(&self) -> Scale<T::Output, Dst, Src>
+    where
+        T: One + Div,
+    {
         let one: T = One::one();
-        Scale::new(one / self.get())
-    }
-}
-
-// scale0 * scale1
-impl<T: Mul<T, Output = T>, A, B, C> Mul<Scale<T, B, C>> for Scale<T, A, B> {
-    type Output = Scale<T, A, C>;
-    #[inline]
-    fn mul(self, other: Scale<T, B, C>) -> Scale<T, A, C> {
-        Scale::new(self.0 * other.0)
-    }
-}
-
-// scale0 + scale1
-impl<T: Add<T, Output = T>, Src, Dst> Add for Scale<T, Src, Dst> {
-    type Output = Scale<T, Src, Dst>;
-    #[inline]
-    fn add(self, other: Scale<T, Src, Dst>) -> Scale<T, Src, Dst> {
-        Scale::new(self.0 + other.0)
-    }
-}
-
-// scale0 - scale1
-impl<T: Sub<T, Output = T>, Src, Dst> Sub for Scale<T, Src, Dst> {
-    type Output = Scale<T, Src, Dst>;
-    #[inline]
-    fn sub(self, other: Scale<T, Src, Dst>) -> Scale<T, Src, Dst> {
-        Scale::new(self.0 - other.0)
+        Scale::new(one / self.0.clone())
     }
 }
 
@@ -165,110 +263,39 @@ impl<T: NumCast + Clone, Src, Dst> Scale<T, Src, Dst> {
     }
 }
 
-impl<T, Src, Dst> Scale<T, Src, Dst>
-where
-    T: Copy + Mul<T, Output = T> + Neg<Output = T> + PartialEq + One,
-{
-    /// Returns the given point transformed by this scale.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use euclid::{Scale, point2};
-    /// enum Mm {};
-    /// enum Cm {};
-    ///
-    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
-    ///
-    /// assert_eq!(to_mm.transform_point(point2(42, -42)), point2(420, -420));
-    /// ```
-    #[inline]
-    pub fn transform_point(&self, point: Point2D<T, Src>) -> Point2D<T, Dst> {
-        Point2D::new(point.x * self.get(), point.y * self.get())
-    }
+impl<Src, Dst> Scale<f32, Src, Dst> {
+    /// Identity scaling, could be used to safely transit from one space to another.
+    pub const ONE: Self = Scale(1.0, PhantomData);
+}
 
-    /// Returns the given vector transformed by this scale.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use euclid::{Scale, vec2};
-    /// enum Mm {};
-    /// enum Cm {};
-    ///
-    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
-    ///
-    /// assert_eq!(to_mm.transform_vector(vec2(42, -42)), vec2(420, -420));
-    /// ```
-    #[inline]
-    pub fn transform_vector(&self, vec: Vector2D<T, Src>) -> Vector2D<T, Dst> {
-        Vector2D::new(vec.x * self.get(), vec.y * self.get())
-    }
+// scale0 * scale1
+// (A,B) * (B,C) = (A,C)
+impl<T: Mul, A, B, C> Mul<Scale<T, B, C>> for Scale<T, A, B> {
+    type Output = Scale<T::Output, A, C>;
 
-    /// Returns the given vector transformed by this scale.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use euclid::{Scale, size2};
-    /// enum Mm {};
-    /// enum Cm {};
-    ///
-    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
-    ///
-    /// assert_eq!(to_mm.transform_size(size2(42, -42)), size2(420, -420));
-    /// ```
     #[inline]
-    pub fn transform_size(&self, size: Size2D<T, Src>) -> Size2D<T, Dst> {
-        Size2D::new(size.width * self.get(), size.height * self.get())
+    fn mul(self, other: Scale<T, B, C>) -> Self::Output {
+        Scale::new(self.0 * other.0)
     }
+}
 
-    /// Returns the given rect transformed by this scale.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use euclid::{Scale, rect};
-    /// enum Mm {};
-    /// enum Cm {};
-    ///
-    /// let to_mm: Scale<i32, Cm, Mm> = Scale::new(10);
-    ///
-    /// assert_eq!(to_mm.transform_rect(&rect(1, 2, 42, -42)), rect(10, 20, 420, -420));
-    /// ```
+// scale0 + scale1
+impl<T: Add, Src, Dst> Add for Scale<T, Src, Dst> {
+    type Output = Scale<T::Output, Src, Dst>;
+
     #[inline]
-    pub fn transform_rect(&self, rect: &Rect<T, Src>) -> Rect<T, Dst> {
-        Rect::new(
-            self.transform_point(rect.origin),
-            self.transform_size(rect.size),
-        )
+    fn add(self, other: Scale<T, Src, Dst>) -> Self::Output {
+        Scale::new(self.0 + other.0)
     }
+}
 
-    /// Returns the inverse of this scale.
-    #[inline]
-    pub fn inverse(&self) -> Scale<T, Dst, Src> {
-        Scale::new(-self.get())
-    }
+// scale0 - scale1
+impl<T: Sub, Src, Dst> Sub for Scale<T, Src, Dst> {
+    type Output = Scale<T::Output, Src, Dst>;
 
-    /// Returns `true` if this scale has no effect.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use euclid::Scale;
-    /// use euclid::num::One;
-    /// enum Mm {};
-    /// enum Cm {};
-    ///
-    /// let cm_per_mm: Scale<f32, Mm, Cm> = Scale::new(0.1);
-    /// let mm_per_mm: Scale<f32, Mm, Mm> = Scale::new(1.0);
-    ///
-    /// assert_eq!(cm_per_mm.is_identity(), false);
-    /// assert_eq!(mm_per_mm.is_identity(), true);
-    /// ```
     #[inline]
-    pub fn is_identity(&self) -> bool {
-        self.0 == T::one()
+    fn sub(self, other: Scale<T, Src, Dst>) -> Self::Output {
+        Scale::new(self.0 - other.0)
     }
 }
 
@@ -278,6 +305,20 @@ where
 impl<T: PartialEq, Src, Dst> PartialEq for Scale<T, Src, Dst> {
     fn eq(&self, other: &Scale<T, Src, Dst>) -> bool {
         self.0 == other.0
+    }
+}
+
+impl<T: Eq, Src, Dst> Eq for Scale<T, Src, Dst> {}
+
+impl<T: PartialOrd, Src, Dst> PartialOrd for Scale<T, Src, Dst> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<T: Ord, Src, Dst> Ord for Scale<T, Src, Dst> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.cmp(&other.0)
     }
 }
 
@@ -301,6 +342,25 @@ impl<T: fmt::Display, Src, Dst> fmt::Display for Scale<T, Src, Dst> {
     }
 }
 
+impl<T: Default, Src, Dst> Default for Scale<T, Src, Dst> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+
+impl<T: Hash, Src, Dst> Hash for Scale<T, Src, Dst> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state)
+    }
+}
+
+impl<T: One, Src, Dst> One for Scale<T, Src, Dst> {
+    #[inline]
+    fn one() -> Self {
+        Scale::new(T::one())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Scale;
@@ -317,12 +377,21 @@ mod tests {
         let mm_per_cm: Scale<f32, Cm, Mm> = cm_per_mm.inv();
         assert_eq!(mm_per_cm.get(), 10.0);
 
+        let one: Scale<f32, Mm, Mm> = cm_per_mm * mm_per_cm;
+        assert_eq!(one.get(), 1.0);
+
+        let one: Scale<f32, Cm, Cm> = mm_per_cm * cm_per_mm;
+        assert_eq!(one.get(), 1.0);
+
         let cm_per_inch: Scale<f32, Inch, Cm> = mm_per_inch * cm_per_mm;
+        //  mm     cm     cm
+        // ---- x ---- = ----
+        // inch    mm    inch
         assert_eq!(cm_per_inch, Scale::new(2.54));
 
         let a: Scale<isize, Inch, Inch> = Scale::new(2);
         let b: Scale<isize, Inch, Inch> = Scale::new(3);
-        assert!(a != b);
+        assert_ne!(a, b);
         assert_eq!(a, a.clone());
         assert_eq!(a.clone() + b.clone(), Scale::new(5));
         assert_eq!(a - b, Scale::new(-1));
