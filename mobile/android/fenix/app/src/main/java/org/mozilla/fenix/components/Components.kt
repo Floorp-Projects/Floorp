@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.components
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
+import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
@@ -106,5 +106,5 @@ class Components(private val context: Context) {
     val migrationStore by lazy { MigrationStore() }
     val performance by lazy { PerformanceComponent() }
     val push by lazy { Push(context, analytics.crashReporter) }
-    val wifiConnectionMonitor by lazy { WifiConnectionMonitor(context as Application) }
+    val wifiConnectionMonitor by lazy { WifiConnectionMonitor(context.getSystemService()!!) }
 }

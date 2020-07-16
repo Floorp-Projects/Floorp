@@ -18,29 +18,21 @@ import org.mozilla.fenix.utils.Settings
 class SitePermissionsWifiIntegration(
     private val settings: Settings,
     private val wifiConnectionMonitor: WifiConnectionMonitor
-) : LifecycleAwareFeature {
+) : LifecycleAwareFeature, WifiConnectionMonitor.Observer {
 
     /**
      * Adds listener for autoplay setting [AUTOPLAY_ALLOW_ON_WIFI]. Sets all autoplay to allowed when
      * WIFI is connected, blocked otherwise.
      */
-    private val wifiConnectedListener: ((Boolean) -> Unit) by lazy {
-        { connected: Boolean ->
-            val setting =
-                if (connected) SitePermissionsRules.Action.ALLOWED else SitePermissionsRules.Action.BLOCKED
-            if (settings.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) == AUTOPLAY_ALLOW_ON_WIFI) {
-                settings.setSitePermissionsPhoneFeatureAction(
-                    PhoneFeature.AUTOPLAY_AUDIBLE,
-                    setting
-                )
-                settings.setSitePermissionsPhoneFeatureAction(
-                    PhoneFeature.AUTOPLAY_INAUDIBLE,
-                    setting
-                )
-            } else {
-                // The autoplay setting has changed, we can remove the listener
-                removeWifiConnectedListener()
-            }
+    override fun onWifiConnectionChanged(connected: Boolean) {
+        val setting =
+            if (connected) SitePermissionsRules.Action.ALLOWED else SitePermissionsRules.Action.BLOCKED
+        if (settings.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) == AUTOPLAY_ALLOW_ON_WIFI) {
+            settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_AUDIBLE, setting)
+            settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, setting)
+        } else {
+            // The autoplay setting has changed, we can remove the listener
+            removeWifiConnectedListener()
         }
     }
 
@@ -55,11 +47,11 @@ class SitePermissionsWifiIntegration(
     }
 
     fun addWifiConnectedListener() {
-        wifiConnectionMonitor.addOnWifiConnectedChangedListener(wifiConnectedListener)
+        wifiConnectionMonitor.register(this)
     }
 
     fun removeWifiConnectedListener() {
-        wifiConnectionMonitor.removeOnWifiConnectedChangedListener(wifiConnectedListener)
+        wifiConnectionMonitor.unregister(this)
     }
 
     // Until https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed, AUTOPLAY_ALLOW_ALL

@@ -12,6 +12,11 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.ext.components
 
+/**
+ * Starts and stops SyncedTabsStorage based on the authentication state.
+ * @param context Used to get synced tabs storage, due to cyclic dependency.
+ * @param accountManager Used to check and observe account authentication state.
+ */
 class SyncedTabsIntegration(
     private val context: Context,
     private val accountManager: FxaAccountManager

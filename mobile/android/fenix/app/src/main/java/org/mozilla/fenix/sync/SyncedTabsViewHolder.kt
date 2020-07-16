@@ -47,8 +47,8 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         private fun bindHeader(device: AdapterItem.Device) {
 
             val deviceLogoDrawable = when (device.device.deviceType) {
-                DeviceType.DESKTOP -> { R.drawable.mozac_ic_device_desktop }
-                else -> { R.drawable.mozac_ic_device_mobile }
+                DeviceType.DESKTOP -> R.drawable.mozac_ic_device_desktop
+                else -> R.drawable.mozac_ic_device_mobile
             }
 
             itemView.synced_tabs_group_name.text = device.device.displayName

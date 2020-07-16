@@ -5,11 +5,12 @@
 package org.mozilla.fenix.wifi
 
 import android.app.Application
-import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
  * Attaches itself to the [Application] and listens for WIFI available/not available events. This
@@ -25,30 +26,28 @@ import android.net.NetworkRequest
  *  app.components.wifiConnectionListener.start()
  * ```
  */
-class WifiConnectionMonitor(app: Application) {
-    private val callbacks = mutableSetOf<(Boolean) -> Unit>()
-    private val connectivityManager = app.getSystemService(Context.CONNECTIVITY_SERVICE) as
-            ConnectivityManager
+class WifiConnectionMonitor(
+    private val connectivityManager: ConnectivityManager
+) : Observable<WifiConnectionMonitor.Observer> by ObserverRegistry() {
 
-    private var lastKnownStateWasAvailable: Boolean? = null
+    private var callbackReceived: Boolean = false
     private var isRegistered = false
 
     private val frameworkListener = object : ConnectivityManager.NetworkCallback() {
         override fun onLost(network: Network?) {
-            callbacks.forEach { it(false) }
-            lastKnownStateWasAvailable = false
+            notifyAtLeastOneObserver { onWifiConnectionChanged(connected = false) }
+            callbackReceived = true
         }
 
         override fun onAvailable(network: Network?) {
-            callbacks.forEach { it(true) }
-            lastKnownStateWasAvailable = true
+            notifyAtLeastOneObserver { onWifiConnectionChanged(connected = true) }
+            callbackReceived = true
         }
     }
 
     /**
      * Attaches the [WifiConnectionMonitor] to the application. After this has been called, callbacks
-     * added via [addOnWifiConnectedChangedListener] will be called until either the app exits, or
-     * [stop] is called.
+     * added via [register] will be called until either the app exits, or [stop] is called.
      *
      * Any existing callbacks will be called with the current state when this is called.
      */
@@ -62,10 +61,8 @@ class WifiConnectionMonitor(app: Application) {
         // AFAICT, the framework does not send an event when a new NetworkCallback is registered
         // while the WIFI is not connected, so we push this manually. If the WIFI is on, it will send
         // a follow up event shortly
-        val noCallbacksReceivedYet = lastKnownStateWasAvailable == null
-        if (noCallbacksReceivedYet) {
-            lastKnownStateWasAvailable = false
-            callbacks.forEach { it(false) }
+        if (!callbackReceived) {
+            notifyAtLeastOneObserver { onWifiConnectionChanged(connected = false) }
         }
 
         connectivityManager.registerNetworkCallback(request, frameworkListener)
@@ -74,7 +71,7 @@ class WifiConnectionMonitor(app: Application) {
 
     /**
      * Detatches the [WifiConnectionMonitor] from the app. No callbacks added via
-     * [addOnWifiConnectedChangedListener] will be called after this has been called.
+     * [register] will be called after this has been called.
      */
     fun stop() {
         // Framework code will throw if an unregistered listener attempts to unregister.
@@ -83,25 +80,7 @@ class WifiConnectionMonitor(app: Application) {
         isRegistered = false
     }
 
-    /**
-     * Adds [onWifiChanged] to a list of listeners that will be called whenever WIFI connects or
-     * disconnects.
-     *
-     * If [onWifiChanged] is successfully added (i.e., it is a new listener), it will be immediately
-     * called with the last known state.
-     */
-    fun addOnWifiConnectedChangedListener(onWifiChanged: (Boolean) -> Unit) {
-        val lastKnownState = lastKnownStateWasAvailable
-        if (callbacks.add(onWifiChanged) && lastKnownState != null) {
-            onWifiChanged(lastKnownState)
-        }
-    }
-
-    /**
-     * Removes [onWifiChanged] from the list of listeners to be called whenever WIFI connects or
-     * disconnects.
-     */
-    fun removeOnWifiConnectedChangedListener(onWifiChanged: (Boolean) -> Unit) {
-        callbacks.remove(onWifiChanged)
+    interface Observer {
+        fun onWifiConnectionChanged(connected: Boolean)
     }
 }
