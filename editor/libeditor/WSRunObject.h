@@ -1254,24 +1254,17 @@ class WhiteSpaceVisibilityKeeper final {
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToSplit);
 
   /**
-   * ReplaceASCIIWhiteSpacesWithOneNBSP() replaces the range between
-   * aAtFirstASCIIWhiteSpace and aEndOfCollapsibleASCIIWhiteSpace with
-   * one NBSP char.  If they span multiple text nodes, this puts an NBSP
-   * into the text node at aAtFirstASCIIWhiteSpace.  Then, removes other
-   * ASCII white-spaces in the following text nodes.
-   * Note that this assumes that all characters in the range is ASCII
-   * white-spaces.
+   * ReplaceTextAndRemoveEmptyTextNodes() replaces the range between
+   * aRangeToReplace with aReplaceString simply.  Additionally, removes
+   * empty text nodes in the range.
    *
-   * @param aAtFirstASCIIWhiteSpace             First ASCII white-space
-   *                                            position.
-   * @param aEndOfCollapsibleASCIIWhiteSpaces   The position after last ASCII
-   *                                            white-space.
+   * @param aRangeToReplace     Range to replace text.
+   * @param aReplaceString      The new string.  Empty string is allowed.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
-  ReplaceASCIIWhiteSpacesWithOneNBSP(
-      HTMLEditor& aHTMLEditor,
-      const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
-      const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces);
+  ReplaceTextAndRemoveEmptyTextNodes(
+      HTMLEditor& aHTMLEditor, const EditorDOMRangeInTexts& aRangeToReplace,
+      const nsAString& aReplaceString);
 };
 
 }  // namespace mozilla

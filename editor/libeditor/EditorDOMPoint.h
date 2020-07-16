@@ -71,6 +71,7 @@ typedef EditorDOMPointBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>>
     EditorDOMPoint;
 typedef EditorDOMPointBase<nsINode*, nsIContent*> EditorRawDOMPoint;
 typedef EditorDOMPointBase<RefPtr<dom::Text>, nsIContent*> EditorDOMPointInText;
+typedef EditorDOMPointBase<dom::Text*, nsIContent*> EditorRawDOMPointInText;
 
 template <typename ParentType, typename ChildType>
 class EditorDOMPointBase final {
@@ -986,6 +987,7 @@ class EditorDOMRangeBase;
 typedef EditorDOMRangeBase<EditorDOMPoint> EditorDOMRange;
 typedef EditorDOMRangeBase<EditorRawDOMPoint> EditorRawDOMRange;
 typedef EditorDOMRangeBase<EditorDOMPointInText> EditorDOMRangeInTexts;
+typedef EditorDOMRangeBase<EditorRawDOMPointInText> EditorRawDOMRangeInTexts;
 
 template <typename EditorDOMPointType>
 class EditorDOMRangeBase final {

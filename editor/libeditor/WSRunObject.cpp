@@ -201,31 +201,33 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
                  PointPosition::StartOfFragment ||
              pointPositionWithVisibleWhiteSpaces ==
                  PointPosition::MiddleOfFragment) {
-      EditorDOMPointInText atNextCharOfInsertionPoint =
+      EditorRawDOMPointInText atNextCharOfInsertionPoint =
           textFragmentDataAtInsertionPoint.GetInclusiveNextEditableCharPoint(
               pointToInsert);
       if (atNextCharOfInsertionPoint.IsSet() &&
           !atNextCharOfInsertionPoint.IsEndOfContainer() &&
           atNextCharOfInsertionPoint.IsCharASCIISpace()) {
-        EditorDOMPointInText atPreviousCharOfNextCharOfInsertionPoint =
+        EditorRawDOMPointInText atPreviousCharOfNextCharOfInsertionPoint =
             textFragmentDataAtInsertionPoint.GetPreviousEditableCharPoint(
                 atNextCharOfInsertionPoint);
         if (!atPreviousCharOfNextCharOfInsertionPoint.IsSet() ||
             atPreviousCharOfNextCharOfInsertionPoint.IsEndOfContainer() ||
             !atPreviousCharOfNextCharOfInsertionPoint.IsCharASCIISpace()) {
           // We are at start of non-nbsps.  Convert to a single nbsp.
-          EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+          EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
               textFragmentDataAtInsertionPoint
                   .GetEndOfCollapsibleASCIIWhiteSpaces(
                       atNextCharOfInsertionPoint);
           nsresult rv =
-              WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-                  aHTMLEditor, atNextCharOfInsertionPoint,
-                  endOfCollapsibleASCIIWhiteSpaces);
+              WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+                  aHTMLEditor,
+                  EditorDOMRangeInTexts(atNextCharOfInsertionPoint,
+                                        endOfCollapsibleASCIIWhiteSpaces),
+                  nsDependentSubstring(&kNBSP, 1));
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "WhiteSpaceVisibilityKeeper::"
-                "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+                "ReplaceTextAndRemoveEmptyTextNodes() failed");
             return Err(rv);
           }
         }
@@ -1322,7 +1324,7 @@ nsresult WhiteSpaceVisibilityKeeper::
           aRangeToDelete.StartRef())) {
     return NS_OK;
   }
-  EditorDOMPointInText nextCharOfStartOfEnd =
+  EditorRawDOMPointInText nextCharOfStartOfEnd =
       textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
           aRangeToDelete.EndRef());
   if (!nextCharOfStartOfEnd.IsSet() ||
@@ -1339,14 +1341,17 @@ nsresult WhiteSpaceVisibilityKeeper::
         textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
             nextCharOfStartOfEnd);
   }
-  EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+  EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
       textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
           nextCharOfStartOfEnd);
-  nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-      aHTMLEditor, nextCharOfStartOfEnd, endOfCollapsibleASCIIWhiteSpaces);
+  nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+      aHTMLEditor,
+      EditorDOMRangeInTexts(nextCharOfStartOfEnd,
+                            endOfCollapsibleASCIIWhiteSpaces),
+      nsDependentSubstring(&kNBSP, 1));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "WhiteSpaceVisibilityKeeper::"
-                       "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+                       "ReplaceTextAndRemoveEmptyTextNodes() failed");
   return rv;
 }
 
@@ -1422,7 +1427,7 @@ nsresult WhiteSpaceVisibilityKeeper::
           aRangeToDelete.EndRef())) {
     return NS_OK;
   }
-  EditorDOMPointInText atPreviousCharOfStart =
+  EditorRawDOMPointInText atPreviousCharOfStart =
       textFragmentDataAtStart.GetPreviousEditableCharPoint(startToDelete);
   if (!atPreviousCharOfStart.IsSet() ||
       atPreviousCharOfStart.IsEndOfContainer() ||
@@ -1435,14 +1440,17 @@ nsresult WhiteSpaceVisibilityKeeper::
         textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
             atPreviousCharOfStart);
   }
-  EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+  EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
       textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
           atPreviousCharOfStart);
-  nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-      aHTMLEditor, atPreviousCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+  nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+      aHTMLEditor,
+      EditorDOMRangeInTexts(atPreviousCharOfStart,
+                            endOfCollapsibleASCIIWhiteSpaces),
+      nsDependentSubstring(&kNBSP, 1));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "WhiteSpaceVisibilityKeeper::"
-                       "ReplaceASCIIWhiteSpacesWithOneNBSP() failed");
+                       "ReplaceTextAndRemoveEmptyTextNodes() failed");
   return rv;
 }
 
@@ -1475,7 +1483,7 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
   EditorDOMPoint pointToSplit(aPointToSplit);
   if (pointPositionWithVisibleWhiteSpaces == PointPosition::StartOfFragment ||
       pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment) {
-    EditorDOMPointInText atNextCharOfStart =
+    EditorRawDOMPointInText atNextCharOfStart =
         textFragmentDataAtSplitPoint.GetInclusiveNextEditableCharPoint(
             pointToSplit);
     if (atNextCharOfStart.IsSet() && !atNextCharOfStart.IsEndOfContainer() &&
@@ -1489,15 +1497,18 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
             textFragmentDataAtSplitPoint
                 .GetFirstASCIIWhiteSpacePointCollapsedTo(atNextCharOfStart);
       }
-      EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+      EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
           textFragmentDataAtSplitPoint.GetEndOfCollapsibleASCIIWhiteSpaces(
               atNextCharOfStart);
       nsresult rv =
-          WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-              aHTMLEditor, atNextCharOfStart, endOfCollapsibleASCIIWhiteSpaces);
+          WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+              aHTMLEditor,
+              EditorDOMRangeInTexts(atNextCharOfStart,
+                                    endOfCollapsibleASCIIWhiteSpaces),
+              nsDependentSubstring(&kNBSP, 1));
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP() "
+            "WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes() "
             "failed");
         return rv;
       }
@@ -1509,7 +1520,7 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
   // NBSP.
   if (pointPositionWithVisibleWhiteSpaces == PointPosition::MiddleOfFragment ||
       pointPositionWithVisibleWhiteSpaces == PointPosition::EndOfFragment) {
-    EditorDOMPointInText atPreviousCharOfStart =
+    EditorRawDOMPointInText atPreviousCharOfStart =
         textFragmentDataAtSplitPoint.GetPreviousEditableCharPoint(pointToSplit);
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
@@ -1520,16 +1531,18 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
             textFragmentDataAtSplitPoint
                 .GetFirstASCIIWhiteSpacePointCollapsedTo(atPreviousCharOfStart);
       }
-      EditorDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
+      EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
           textFragmentDataAtSplitPoint.GetEndOfCollapsibleASCIIWhiteSpaces(
               atPreviousCharOfStart);
       nsresult rv =
-          WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-              aHTMLEditor, atPreviousCharOfStart,
-              endOfCollapsibleASCIIWhiteSpaces);
+          WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+              aHTMLEditor,
+              EditorDOMRangeInTexts(atPreviousCharOfStart,
+                                    endOfCollapsibleASCIIWhiteSpaces),
+              nsDependentSubstring(&kNBSP, 1));
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP() "
+            "WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes() "
             "failed");
         return rv;
       }
@@ -1823,43 +1836,37 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
 }
 
 // static
-nsresult WhiteSpaceVisibilityKeeper::ReplaceASCIIWhiteSpacesWithOneNBSP(
-    HTMLEditor& aHTMLEditor,
-    const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
-    const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces) {
-  MOZ_ASSERT(aAtFirstASCIIWhiteSpace.IsSetAndValid());
-  MOZ_ASSERT(!aAtFirstASCIIWhiteSpace.IsEndOfContainer());
-  MOZ_ASSERT(aAtFirstASCIIWhiteSpace.IsCharASCIISpace());
-  MOZ_ASSERT(aEndOfCollapsibleASCIIWhiteSpaces.IsSetAndValid());
-  MOZ_ASSERT(aEndOfCollapsibleASCIIWhiteSpaces.IsEndOfContainer() ||
-             !aEndOfCollapsibleASCIIWhiteSpaces.IsCharASCIISpace());
+nsresult WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
+    HTMLEditor& aHTMLEditor, const EditorDOMRangeInTexts& aRangeToReplace,
+    const nsAString& aReplaceString) {
+  MOZ_ASSERT(aRangeToReplace.IsPositioned());
+  MOZ_ASSERT(aRangeToReplace.StartRef().IsSetAndValid());
+  MOZ_ASSERT(aRangeToReplace.EndRef().IsSetAndValid());
+  MOZ_ASSERT(aRangeToReplace.StartRef().IsBefore(aRangeToReplace.EndRef()));
 
   AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
   nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-      MOZ_KnownLive(*aAtFirstASCIIWhiteSpace.ContainerAsText()),
-      aAtFirstASCIIWhiteSpace.Offset(),
-      aAtFirstASCIIWhiteSpace.ContainerAsText() ==
-              aEndOfCollapsibleASCIIWhiteSpaces.ContainerAsText()
-          ? aEndOfCollapsibleASCIIWhiteSpaces.Offset() -
-                aAtFirstASCIIWhiteSpace.Offset()
-          : aAtFirstASCIIWhiteSpace.ContainerAsText()->TextLength() -
-                aAtFirstASCIIWhiteSpace.Offset(),
-      nsDependentSubstring(&kNBSP, 1));
+      MOZ_KnownLive(*aRangeToReplace.StartRef().ContainerAsText()),
+      aRangeToReplace.StartRef().Offset(),
+      aRangeToReplace.InSameContainer()
+          ? aRangeToReplace.EndRef().Offset() -
+                aRangeToReplace.StartRef().Offset()
+          : aRangeToReplace.StartRef().ContainerAsText()->TextLength() -
+                aRangeToReplace.StartRef().Offset(),
+      aReplaceString);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
     return rv;
   }
 
-  if (aAtFirstASCIIWhiteSpace.GetContainer() ==
-      aEndOfCollapsibleASCIIWhiteSpaces.GetContainer()) {
+  if (aRangeToReplace.InSameContainer()) {
     return NS_OK;
   }
 
-  // We need to remove the following unnecessary ASCII white-spaces because we
-  // collapsed them into the start node.
   rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-      EditorDOMPointInText::AtEndOf(*aAtFirstASCIIWhiteSpace.ContainerAsText()),
-      aEndOfCollapsibleASCIIWhiteSpaces);
+      EditorDOMPointInText::AtEndOf(
+          *aRangeToReplace.StartRef().ContainerAsText()),
+      aRangeToReplace.EndRef());
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
