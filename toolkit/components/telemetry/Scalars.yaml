@@ -613,7 +613,7 @@ browser.ui:
       - 1620358
     description: >
       The widgets in the toolbars.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: boolean
     keyed: true
@@ -631,7 +631,7 @@ browser.ui:
       - 1620358
     description: >
       Records when widgets are added, removed or moved in the UI.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -650,7 +650,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with keyboard shortcuts.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -668,7 +668,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the menu bar.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -686,7 +686,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the tab bar.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -704,7 +704,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the nav bar.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -722,7 +722,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the bookmarks bar.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -740,7 +740,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the app menu.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -758,7 +758,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the tab context menu.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -776,7 +776,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the content context menu.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -794,7 +794,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with items in the overflow menu.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -813,7 +813,7 @@ browser.ui.interaction:
     description: >
       Records a count of interactions with items in the pinned area of the
       overflow menu.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -831,7 +831,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with page action items in the url bar.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -849,7 +849,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records a count of interactions with page action items in the panel.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -867,7 +867,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records the items interacted with in the Home section of preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -885,7 +885,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records the items interacted with in the General section of preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -903,7 +903,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records the items interacted with in the Privacy section of preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -921,7 +921,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records the items interacted with in the Search section of preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -940,7 +940,7 @@ browser.ui.interaction:
     description: >
       Records the items interacted with in the Search results section of
       preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -958,7 +958,7 @@ browser.ui.interaction:
       - 1620358
     description: >
       Records the items interacted with in the Sync section of preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
@@ -977,7 +977,46 @@ browser.ui.interaction:
     description: >
       Records the items interacted with in the Containers section of
       preferences.
-      See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - shong@mozilla.com
+      - dtownsend@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  preferences_paneExperimental:
+    bug_numbers:
+      - 1620358
+      - 1651986
+    description: >
+      Records the items interacted with in the Experimental section of
+      preferences.
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - shong@mozilla.com
+      - dtownsend@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  preferences_paneUnknown:
+    bug_numbers:
+      - 1620358
+      - 1651986
+    description: >
+      Records the items interacted with in any other section of preferences.
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
     expires: never
     kind: uint
     keyed: true
