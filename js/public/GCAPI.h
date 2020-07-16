@@ -404,14 +404,14 @@ typedef void (*JSWeakPointerCompartmentCallback)(JSContext* cx,
                                                  void* data);
 
 /*
- * This is called to tell the embedding that the FinalizationRegistry object
- * |registry| has cleanup work, and that then engine should be called back at an
- * appropriate later time to perform this cleanup.
+ * This is called to tell the embedding that a FinalizationRegistry object has
+ * cleanup work, and that the engine should be called back at an appropriate
+ * later time to perform this cleanup, by calling the function |doCleanup|.
  *
  * This callback must not do anything that could cause GC.
  */
-using JSHostCleanupFinalizationRegistryCallback = void (*)(JSObject* registry,
-                                                           void* data);
+using JSHostCleanupFinalizationRegistryCallback =
+    void (*)(JSFunction* doCleanup, JSObject* incumbentGlobal, void* data);
 
 /**
  * Each external string has a pointer to JSExternalStringCallbacks. Embedders
