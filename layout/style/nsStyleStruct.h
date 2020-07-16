@@ -1334,6 +1334,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleAppearance EffectiveAppearance() const {
     switch (mAppearance) {
       case mozilla::StyleAppearance::Auto:
+      case mozilla::StyleAppearance::Searchfield:
+      case mozilla::StyleAppearance::Textarea:
+      case mozilla::StyleAppearance::Checkbox:
+      case mozilla::StyleAppearance::Radio:
+      case mozilla::StyleAppearance::Menulist:
+      case mozilla::StyleAppearance::Listbox:
+      case mozilla::StyleAppearance::Meter:
+      case mozilla::StyleAppearance::ProgressBar:
+        // These are all the values that behave like `auto`.
         return mDefaultAppearance;
       case mozilla::StyleAppearance::Textfield:
         // `appearance: textfield` should behave like `auto` on all elements
@@ -1350,6 +1359,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
         if (mDefaultAppearance == mozilla::StyleAppearance::NumberInput) {
           return mAppearance;
         }
+        return mDefaultAppearance;
+      case mozilla::StyleAppearance::MenulistButton:
+        // `appearance: menulist-button` should behave like `auto` on all
+        // elements except for drop down selects, but since we have very little
+        // difference between menulist and menulist-button handling, we don't
+        // bother.
         return mDefaultAppearance;
       case mozilla::StyleAppearance::Button:
         // `appearance: button` should behave like `auto` for a specific list
