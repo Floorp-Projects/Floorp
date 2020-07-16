@@ -72,6 +72,7 @@ class DeviceRunner(BaseRunner):
         self.device.setup_profile(self.profile)
 
         app = self.app_ctx.remote_process
+        self.device.run_as_package = app
         args = ["-no-remote", "-profile", self.app_ctx.remote_profile]
         args.extend(self.cmdargs)
         env = self._device_env
