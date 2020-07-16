@@ -286,8 +286,8 @@ class MOZ_STACK_CLASS
  private:
   nsresult CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
       const nsAString& aInputString, const nsAString& aContextStr,
-      bool aTrustedInput, nsCOMPtr<nsINode>& targetNode,
-      RefPtr<DocumentFragment>& documentFragmentToInsert) const;
+      bool aTrustedInput, nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
+      RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const;
 
   static bool FindTargetNodeOfContextForPastedHTML(nsINode& aStart,
                                                    nsCOMPtr<nsINode>& aResult);
@@ -3189,8 +3189,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
         const nsAString& aInputString, const nsAString& aContextStr,
-        bool aTrustedInput, nsCOMPtr<nsINode>& targetNode,
-        RefPtr<DocumentFragment>& documentFragmentToInsert) const {
+        bool aTrustedInput, nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
+        RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const {
   RefPtr<Document> document = mHTMLEditor.GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_FAILURE;
@@ -3233,17 +3233,20 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
         *documentFragmentForContext);
 
     FragmentFromPasteCreator::FindTargetNodeOfContextForPastedHTML(
-        *documentFragmentForContext, targetNode);
+        *documentFragmentForContext, aParentNodeOfPastedHTMLInContext);
   }
 
-  nsCOMPtr<nsIContent> targetContent = nsIContent::FromNodeOrNull(targetNode);
-  MOZ_ASSERT_IF(targetNode, targetContent);
+  nsCOMPtr<nsIContent> parentContentOfPastedHTMLInContext =
+      nsIContent::FromNodeOrNull(aParentNodeOfPastedHTMLInContext);
+  MOZ_ASSERT_IF(aParentNodeOfPastedHTMLInContext,
+                parentContentOfPastedHTMLInContext);
 
   // create fragment for pasted html
   nsAtom* contextLocalNameAtom;
-  if (targetContent) {
-    contextLocalNameAtom = targetContent->NodeInfo()->NameAtom();
-    if (targetContent->IsHTMLElement(nsGkAtoms::html)) {
+  if (parentContentOfPastedHTMLInContext) {
+    contextLocalNameAtom =
+        parentContentOfPastedHTMLInContext->NodeInfo()->NameAtom();
+    if (parentContentOfPastedHTMLInContext->IsHTMLElement(nsGkAtoms::html)) {
       contextLocalNameAtom = nsGkAtoms::body;
     }
   } else {
@@ -3251,14 +3254,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   }
   nsresult rv =
       fragmentParser.ParsePastedHTML(aInputString, contextLocalNameAtom,
-                                     getter_AddRefs(documentFragmentToInsert));
+                                     getter_AddRefs(aDocumentFragmentToInsert));
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML()"
         " failed");
     return rv;
   }
-  if (!documentFragmentToInsert) {
+  if (!aDocumentFragmentToInsert) {
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML()"
         " returned nullptr");
@@ -3266,20 +3269,21 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   }
 
   FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
-      *documentFragmentToInsert);
+      *aDocumentFragmentToInsert);
 
-  if (targetNode) {
+  if (aParentNodeOfPastedHTMLInContext) {
     // unite the two trees
     IgnoredErrorResult ignoredError;
-    targetContent->AppendChild(*documentFragmentToInsert, ignoredError);
+    parentContentOfPastedHTMLInContext->AppendChild(*aDocumentFragmentToInsert,
+                                                    ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
                          "nsINode::AppendChild() failed, but ignored");
-    documentFragmentToInsert = documentFragmentForContext;
+    aDocumentFragmentToInsert = documentFragmentForContext;
   }
 
   rv = FragmentFromPasteCreator::
       RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
-          *documentFragmentToInsert, NodesToRemove::eOnlyListItems);
+          *aDocumentFragmentToInsert, NodesToRemove::eOnlyListItems);
 
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
@@ -3299,10 +3303,10 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
   MOZ_ASSERT(aOutStartNode);
   MOZ_ASSERT(aOutEndNode);
 
-  nsCOMPtr<nsINode> targetNode;
+  nsCOMPtr<nsINode> parentNodeOfPastedHTMLInContext;
   RefPtr<DocumentFragment> documentFragmentToInsert;
   nsresult rv = CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
-      aInputString, aContextStr, aTrustedInput, targetNode,
+      aInputString, aContextStr, aTrustedInput, parentNodeOfPastedHTMLInContext,
       documentFragmentToInsert);
   if (NS_FAILED(rv)) {
     NS_WARNING(
@@ -3313,8 +3317,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
 
   // If there was no context, then treat all of the data we did get as the
   // pasted data.
-  if (targetNode) {
-    *aOutEndNode = *aOutStartNode = targetNode;
+  if (parentNodeOfPastedHTMLInContext) {
+    *aOutEndNode = *aOutStartNode = parentNodeOfPastedHTMLInContext;
   } else {
     *aOutEndNode = *aOutStartNode = documentFragmentToInsert;
   }
