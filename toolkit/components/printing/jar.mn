@@ -15,4 +15,7 @@ toolkit.jar:
 #endif
    content/global/printPreviewToolbar.js            (content/printPreviewToolbar.js)
    content/global/printUtils.js                     (content/printUtils.js)
+   content/global/print.js                          (content/print.js)
+   content/global/print.html                        (content/print.html)
+   content/global/print.css                         (content/print.css)
    content/global/simplifyMode.css                  (content/simplifyMode.css)

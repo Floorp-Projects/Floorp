@@ -58,6 +58,13 @@
  *
  */
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "PRINT_TAB_MODAL",
+  "print.tab_modal.enabled",
+  false
+);
+
 var gFocusedElement = null;
 
 var PrintUtils = {
@@ -104,6 +111,39 @@ var PrintUtils = {
     }
 
     return null;
+  },
+
+  /**
+   * Opens the tab modal version of the print UI for the current tab.
+   *
+   * @param aBrowsingContext
+   *        The BrowsingContext of the window to print.
+   */
+  _openTabModalPrint(aBrowsingContext) {
+    let printPath = "chrome://global/content/print.html";
+    gBrowser.loadOneTab(
+      `${printPath}?browsingContextId=${aBrowsingContext.id}`,
+      {
+        inBackground: false,
+        relatedToCurrent: true,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      }
+    );
+  },
+
+  /**
+   * Initialize a print, this will open the tab modal UI if it is enabled or
+   * defer to the native dialog/silent print.
+   *
+   * @param aBrowsingContext
+   *        The BrowsingContext of the window to print.
+   */
+  startPrintWindow(aBrowsingContext) {
+    if (PRINT_TAB_MODAL) {
+      this._openTabModalPrint(aBrowsingContext);
+    } else {
+      this.printWindow(aBrowsingContext);
+    }
   },
 
   /**
@@ -192,6 +232,11 @@ var PrintUtils = {
    *        to it will be used).
    */
   printPreview(aListenerObj) {
+    if (PRINT_TAB_MODAL) {
+      this._openTabModalPrint(aListenerObj.getSourceBrowser().browsingContext);
+      return;
+    }
+
     // If we already have a toolbar someone is calling printPreview() to get us
     // to refresh the display and aListenerObj won't be passed.
     let printPreviewTB = document.getElementById("print-preview-toolbar");

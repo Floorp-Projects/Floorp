@@ -347,6 +347,9 @@ pref("print.shrink-to-fit.scale-limit-percent", 20);
 // Whether we should display simplify page checkbox on print preview UI
 pref("print.use_simplify_page", false);
 
+// The tab modal print dialog is currently only for testing/experiments.
+pref("print.tab_modal.enabled", false);
+
 // Disable support for MathML
 pref("mathml.disabled",    false);
 
