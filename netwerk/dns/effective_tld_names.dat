@@ -12104,12 +12104,23 @@ iserv.dev
 iobb.net
 
 //Jelastic, Inc. : https://jelastic.com/
-// Submitetd by Ihor Kolodyuk <ik@jelastic.com>
+// Submited by Ihor Kolodyuk <ik@jelastic.com>
+jele.cloud
+jele.club
+dopaas.com
 hidora.com
+jcloud.ik-server.com
 demo.jelastic.com
 j.scaleforce.com.cy
+jele.host
 mircloud.host
+jele.io
+cloudjiffy.net
 jls-sto1.elastx.net
+jelastic.saveincloud.net
+jelastic.regruhosting.ru
+jele.site
+jelastic.team
 j.layershift.co.uk
 
 // Jino : https://www.jino.ru
@@ -12296,6 +12307,10 @@ co.pl
 azurewebsites.net
 azure-mobile.net
 cloudapp.net
+
+// minion.systems : http://minion.systems
+// Submitted by Robert Böttinger <r@minion.systems>
+csx.cc
 
 // Mozilla Corporation : https://mozilla.com
 // Submitted by Ben Francis <bfrancis@mozilla.com>
@@ -12563,6 +12578,10 @@ cloudycluster.net
 // Submitted by Eddie Jones <eddie@onefoldmedia.com>
 nid.io
 
+// Open Social : https://www.getopensocial.com/
+// Submitted by Alexander Varwijk <security@getopensocial.com>
+opensocial.site
+
 // OpenCraft GmbH : http://opencraft.com/
 // Submitted by Sven Marnach <sven@opencraft.com>
 opencraft.hosting
@@ -12635,7 +12654,10 @@ on-web.fr
 
 // Platform.sh : https://platform.sh
 // Submitted by Nikola Kotur <nikola@platform.sh>
-*.platform.sh
+bc.platform.sh
+ent.platform.sh
+eu.platform.sh
+us.platform.sh
 *.platformsh.site
 
 // Platter: https://platter.dev
@@ -13149,6 +13171,10 @@ wedeploy.sh
 // Submitted by Jung Jin <jungseok.jin@wdc.com>
 remotewd.com
 
+// WIARD Enterprises : https://wiardweb.com
+// Submitted by Kidd Hustle <kiddhustle@wiardweb.com>
+pages.wiardweb.com
+
 // Wikimedia Labs : https://wikitech.wikimedia.org
 // Submitted by Arturo Borrero Gonzalez <aborrero@wikimedia.org>
 wmflabs.org
@@ -13167,6 +13193,10 @@ community-pro.de
 diskussionsbereich.de
 community-pro.net
 meinforum.net
+
+// www.com.vc : http://www.com.vc
+// Submitted by Li Hui <lihui@sinopub.com>
+cn.vu
 
 // XenonCloud GbR: https://xenoncloud.net
 // Submitted by Julian Uphoff <publicsuffixlist@xenoncloud.net>
@@ -13231,5 +13261,9 @@ enterprisecloud.nu
 // Mintere : https://mintere.com/
 // Submitted by Ben Aubin <security@mintere.com>
 mintere.site
+
+// WP Engine : https://wpengine.com/
+// Submitted by Michael Smith <michael.smith@wpengine.com>
+wpenginepowered.com
 
 // ===END PRIVATE DOMAINS===
