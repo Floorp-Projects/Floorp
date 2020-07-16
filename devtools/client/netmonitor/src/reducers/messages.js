@@ -174,21 +174,15 @@ function openMessageDetails(state, action) {
  */
 function clearMessages(state) {
   const nextState = { ...state };
-  nextState.messages = new Map(nextState.messages);
+  const defaultState = Messages();
+  nextState.messages = new Map(state.messages);
   nextState.messages.delete(nextState.currentChannelId);
 
-  return {
-    ...Messages(),
-    // Preserving the Map objects as they might contain state for other channelIds
-    messages: nextState.messages,
-    // Preserving the currentChannelId as there would not be another reset of channelId
-    currentChannelId: nextState.currentChannelId,
-    // Preserving the columns as they are set from pref
-    columns: nextState.columns,
-    messageFilterType: nextState.messageFilterType,
-    messageFilterText: nextState.messageFilterText,
-    showControlFrames: nextState.showControlFrames,
-  };
+  // Reset fields to default state.
+  nextState.selectedMessage = defaultState.selectedMessage;
+  nextState.messageDetailsOpen = defaultState.messageDetailsOpen;
+
+  return nextState;
 }
 
 /**
