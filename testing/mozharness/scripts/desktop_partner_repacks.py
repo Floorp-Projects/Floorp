@@ -151,7 +151,7 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
 
     def repack(self):
         """creates the repacks"""
-        repack_cmd = [sys.executable, "tc-partner-repacks.py",
+        repack_cmd = ["python2", "tc-partner-repacks.py",
                       "-v", self.config['version'],
                       "-n", str(self.config['build_number'])]
         if self.config.get('platform'):
