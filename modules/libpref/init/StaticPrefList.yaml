@@ -7240,7 +7240,7 @@
   value: true
 #elif defined(XP_MACOSX)
   value: true
-#elif defined(XP_UNIX) && !defined(ANDROID)
+#elif defined(XP_UNIX)
   value: true
 #else
   value: false
@@ -7253,7 +7253,7 @@
   value: true
 #elif defined(XP_MACOSX)
   value: true
-#elif defined(XP_UNIX) && !defined(ANDROID)
+#elif defined(XP_UNIX)
   value: true
 #else
   value: false
