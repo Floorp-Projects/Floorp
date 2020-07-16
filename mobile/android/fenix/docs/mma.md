@@ -145,6 +145,16 @@ User Attributes
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/4694#issuecomment-520591275">#4694</a></td>
   </tr>
   <tr>
+    <td>`tracking_protection_enabled`</td>
+    <td>A boolean indicating that the user has enabled tracking protection</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/11965#issuecomment-649731798">#11965</a></td>
+  </tr>
+  <tr>
+    <td>`tracking_protection_setting`</td>
+    <td>A string indicating the level at which the user has set tracking protection. Possible values are `none`, `standard`, `strict` and `custom`</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/11965#issuecomment-649731798">#11965</a></td>
+  </tr>
+  <tr>
     <td>`fenix`</td>
     <td>A boolean indicating that this is a Fenix installation</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/8208">#8208</a></td>

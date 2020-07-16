@@ -102,6 +102,15 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
 
             val installedApps = MozillaProductDetector.getInstalledMozillaProducts(application)
 
+            val trackingProtection = application.settings().run {
+                when {
+                    !shouldUseTrackingProtection -> "none"
+                    useStandardTrackingProtection -> "standard"
+                    useStrictTrackingProtection -> "strict"
+                    else -> "custom"
+                }
+            }
+
             Leanplum.start(application, hashMapOf(
                 "default_browser" to MozillaProductDetector.getMozillaBrowserDefault(application).orEmpty(),
                 "fennec_installed" to installedApps.contains(MozillaProducts.FIREFOX.productName),
@@ -110,6 +119,8 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
                 "fxa_signed_in" to application.settings().fxaSignedIn,
                 "fxa_has_synced_items" to application.settings().fxaHasSyncedItems,
                 "search_widget_installed" to application.settings().searchWidgetInstalled,
+                "tracking_protection_enabled" to application.settings().shouldUseTrackingProtection,
+                "tracking_protection_setting" to trackingProtection,
                 "fenix" to true
             ))
 
