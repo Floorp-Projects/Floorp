@@ -290,8 +290,6 @@ class ComputedStyle {
 
   StyleWritingMode WritingMode() const { return {mSource.WritingMode().mBits}; }
 
-  bool HasOverriddenAppearance(StyleAppearance) const;
-
  protected:
   // Needs to be friend so that it can call the destructor without making it
   // public.

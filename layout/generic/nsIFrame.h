@@ -904,9 +904,6 @@ class nsIFrame : public nsQueryFrame {
   // Use PeekStyleData instead.
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle);
 
- private:
-  void RecordAppearanceTelemetry();
-
  public:
 /**
  * Define typesafe getter functions for each style struct by
