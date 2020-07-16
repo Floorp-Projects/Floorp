@@ -204,6 +204,19 @@ class AwesomeBarFeatureTest {
     }
 
     @Test
+    fun `addSearchActionProvider adds provider`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+
+        verify(awesomeBar, never()).addProviders(any())
+
+        feature.addSearchActionProvider(mock(), mock())
+
+        verify(awesomeBar).addProviders(any())
+    }
+
+    @Test
     fun `Feature invokes custom start and complete hooks`() {
         val toolbar: Toolbar = mock()
         val awesomeBar: AwesomeBar = mock()
