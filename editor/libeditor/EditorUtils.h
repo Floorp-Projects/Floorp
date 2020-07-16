@@ -782,6 +782,78 @@ class MOZ_RAII DOMSubtreeIterator final : public DOMIterator {
       delete;
 };
 
+/**
+ * ReplaceRangeDataBase() represents range to be replaced and replacing string.
+ */
+template <typename EditorDOMPointType>
+class MOZ_STACK_CLASS ReplaceRangeDataBase final {
+ public:
+  ReplaceRangeDataBase() = default;
+  template <typename OtherEditorDOMRangeType>
+  ReplaceRangeDataBase(const OtherEditorDOMRangeType& aRange,
+                       const nsAString& aReplaceString)
+      : mRange(aRange), mReplaceString(aReplaceString) {}
+  template <typename StartPointType, typename EndPointType>
+  ReplaceRangeDataBase(const StartPointType& aStart, const EndPointType& aEnd,
+                       const nsAString& aReplaceString)
+      : mRange(aStart, aEnd), mReplaceString(aReplaceString) {}
+
+  bool IsSet() const { return mRange.IsPositioned(); }
+  bool IsSetAndValid() const { return mRange.IsPositionedAndValid(); }
+  bool Collapsed() const { return mRange.Collapsed(); }
+  bool HasReplaceString() const { return !mReplaceString.IsEmpty(); }
+  const EditorDOMPointType& StartRef() const { return mRange.StartRef(); }
+  const EditorDOMPointType& EndRef() const { return mRange.EndRef(); }
+  const EditorDOMRangeBase<EditorDOMPointType>& RangeRef() const {
+    return mRange;
+  }
+  const nsString& ReplaceStringRef() const { return mReplaceString; }
+
+  template <typename PointType>
+  MOZ_NEVER_INLINE_DEBUG void SetStart(const PointType& aStart) {
+    mRange.SetStart(aStart);
+  }
+  template <typename PointType>
+  MOZ_NEVER_INLINE_DEBUG void SetEnd(const PointType& aEnd) {
+    mRange.SetEnd(aEnd);
+  }
+  template <typename StartPointType, typename EndPointType>
+  MOZ_NEVER_INLINE_DEBUG void SetStartAndEnd(const StartPointType& aStart,
+                                             const EndPointType& aEnd) {
+    mRange.SetRange(aStart, aEnd);
+  }
+  template <typename OtherEditorDOMRangeType>
+  MOZ_NEVER_INLINE_DEBUG void SetRange(const OtherEditorDOMRangeType& aRange) {
+    mRange = aRange;
+  }
+  void SetReplaceString(const nsAString& aReplaceString) {
+    mReplaceString = aReplaceString;
+  }
+  template <typename StartPointType, typename EndPointType>
+  MOZ_NEVER_INLINE_DEBUG void SetStartAndEnd(const StartPointType& aStart,
+                                             const EndPointType& aEnd,
+                                             const nsAString& aReplaceString) {
+    SetStartAndEnd(aStart, aEnd);
+    SetReplaceString(aReplaceString);
+  }
+  template <typename OtherEditorDOMRangeType>
+  MOZ_NEVER_INLINE_DEBUG void Set(const OtherEditorDOMRangeType& aRange,
+                                  const nsAString& aReplaceString) {
+    SetRange(aRange);
+    SetReplaceString(aReplaceString);
+  }
+
+ private:
+  EditorDOMRangeBase<EditorDOMPointType> mRange;
+  // This string may be used with ReplaceTextTransaction.  Therefore, for
+  // avoiding memory copy, we should store it with nsString rather than
+  // nsAutoString.
+  nsString mReplaceString;
+};
+
+using ReplaceRangeData = ReplaceRangeDataBase<EditorDOMPoint>;
+using ReplaceRangeInTextsData = ReplaceRangeDataBase<EditorDOMPointInText>;
+
 class EditorUtils final {
  public:
   using EditorType = EditorBase::EditorType;
