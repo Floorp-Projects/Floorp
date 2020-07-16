@@ -60,7 +60,11 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
   // BytecodeInfo::jumpTargetNormallyReachable) and when the analysis reaches a
   // jump target it updates its normallyReachable flag based on the target's
   // flag.
+  //
+  // Inlining a function without a normally reachable return can cause similar
+  // problems. To avoid this, we mark such functions as uninlineable.
   bool normallyReachable = true;
+  bool normallyReachableReturn = false;
 
   for (const BytecodeLocation& it : AllBytecodesIterable(script_)) {
     JSOp op = it.getOp();
@@ -145,6 +149,13 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
         break;
 #endif
 
+      case JSOp::Return:
+      case JSOp::RetRval:
+        if (normallyReachable) {
+          normallyReachableReturn = true;
+        }
+        break;
+
       default:
         break;
     }
@@ -201,6 +212,10 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
     if (info.initialized) {
       info.hasResumeOffset = true;
     }
+  }
+
+  if (!normallyReachableReturn) {
+    script_->setUninlineable();
   }
 
   return true;
