@@ -18,10 +18,11 @@ class LocaleSettingsStoreTest {
 
     @Before
     fun setup() {
-        val localeList = ArrayList<Locale>()
-        localeList.add(Locale("fr")) // default
-        localeList.add(otherLocale)
-        localeList.add(selectedLocale)
+        val localeList = listOf(
+            Locale("fr"), // default
+            otherLocale,
+            selectedLocale
+        )
 
         localeSettingsStore =
             LocaleSettingsStore(LocaleSettingsState(localeList, localeList, selectedLocale))

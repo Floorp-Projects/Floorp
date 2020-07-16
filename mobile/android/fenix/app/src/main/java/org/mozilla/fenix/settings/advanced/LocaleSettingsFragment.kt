@@ -43,7 +43,7 @@ class LocaleSettingsFragment : Fragment() {
         store = getStore()
         interactor = LocaleSettingsInteractor(
             controller = DefaultLocaleSettingsController(
-                context = requireContext(),
+                activity = requireActivity(),
                 localeSettingsStore = store
             )
         )
