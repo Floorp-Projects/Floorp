@@ -41,12 +41,12 @@ def change_charging_state(device, device_type, enable=True, timeout=10):
         if device_type == "Pixel 2":
             status = 0 if enable else 1
             device.shell_bool(
-                "echo %s > %s" % (status, P2_PATH), root=True, timeout=timeout
+                "echo %s > %s" % (status, P2_PATH), timeout=timeout
             )
         elif device_type == "Moto G (5)":
             status = 1 if enable else 0
             device.shell_bool(
-                "echo %s > %s" % (status, G5_PATH), root=True, timeout=timeout
+                "echo %s > %s" % (status, G5_PATH), timeout=timeout
             )
     except (ADBTimeoutError, ADBError) as e:
         raise Exception(
@@ -360,6 +360,9 @@ def finish_android_power_test(raptor, test_name, os_baseline=False):
             LOG.info("Approximate power test time %s" % str(test_time))
 
             def calculate_pc(power_measure, baseline_measure):
+                if not baseline_measure:
+                    LOG.error("Power test baseline_measure is Zero.")
+                    return 0
                 return (100 * (
                     (power_measure + baseline_measure) /
                     baseline_measure

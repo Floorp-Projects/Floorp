@@ -15,7 +15,7 @@ import time
 import mozcrash
 from cpu import start_android_cpu_profiler
 from logger.logger import RaptorLogger
-from mozdevice import ADBDevice, ADBProcessError
+from mozdevice import ADBDeviceFactory, ADBProcessError
 from performance_tuning import tune_performance
 from perftest import PerftestAndroid
 from power import (
@@ -39,8 +39,6 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
         self.config.update({"activity": activity, "intent": intent})
 
-        self.remote_test_root = "/data/local/tmp/tests/raptor"
-        self.remote_profile = os.path.join(self.remote_test_root, "profile")
         self.os_baseline_data = None
         self.power_test_time = None
         self.screen_off_timeout = 0
@@ -49,17 +47,19 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
     def setup_adb_device(self):
         if self.device is None:
-            self.device = ADBDevice(verbose=True)
+            self.device = ADBDeviceFactory(verbose=True)
             if not self.config.get("disable_perf_tuning", False):
                 tune_performance(self.device, log=LOG)
 
+        self.device.run_as_package = self.config['binary']
+        self.remote_test_root = os.path.join(self.device.test_root, "raptor")
+        self.remote_profile = os.path.join(self.remote_test_root, "profile")
         if self.config['power_test']:
             disable_charging(self.device)
 
         LOG.info("creating remote root folder for raptor: %s" % self.remote_test_root)
-        self.device.rm(self.remote_test_root, force=True, recursive=True, root=True)
-        self.device.mkdir(self.remote_test_root, parents=True, root=True)
-        self.device.chmod(self.remote_test_root, recursive=True, root=True)
+        self.device.rm(self.remote_test_root, force=True, recursive=True)
+        self.device.mkdir(self.remote_test_root, parents=True)
 
         self.clear_app_data()
         self.set_debug_app_flag()
@@ -415,9 +415,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
     def clean_up(self):
         LOG.info("removing test folder for raptor: %s" % self.remote_test_root)
-        # We must use root=True since the browser will have created files in
-        # the profile.
-        self.device.rm(self.remote_test_root, force=True, recursive=True, root=True)
+        self.device.rm(self.remote_test_root, force=True, recursive=True)
 
         if self.config['power_test']:
             enable_charging(self.device)
