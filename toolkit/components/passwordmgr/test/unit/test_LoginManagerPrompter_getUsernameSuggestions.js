@@ -3,35 +3,51 @@ let { LoginManagerPrompter } = ChromeUtils.import(
 );
 
 const TEST_CASES = [
-  // TODO uncomment in bug 1641413
-  //   {
-  //     description: "page values should appear before saved values",
-  //     savedLogins: [{ username: "savedUsername", password: "savedPassword" }],
-  //     possibleUsernames: ["pageUsername"],
-  //     expectedSuggestions: [
-  //       { text: "pageUsername", style: "possible-username" },
-  //       { text: "savedUsername", style: "login" },
-  //     ],
-  //   },
+  {
+    description: "page values should appear before saved values",
+    savedLogins: [{ username: "savedUsername", password: "savedPassword" }],
+    possibleUsernames: ["pageUsername"],
+    expectedSuggestions: [
+      { text: "pageUsername", style: "possible-username" },
+      { text: "savedUsername", style: "login" },
+    ],
+  },
   {
     description: "duplicate page values should be deduped",
     savedLogins: [],
     possibleUsernames: ["pageUsername", "pageUsername", "pageUsername2"],
     expectedSuggestions: [
-      { text: "pageUsername", style: "" },
-      { text: "pageUsername2", style: "" },
+      { text: "pageUsername", style: "possible-username" },
+      { text: "pageUsername2", style: "possible-username" },
     ],
   },
-  // TODO uncomment in bug 1641413
-  //   {
-  //     description: "page values should dedupe and win over saved values",
-  //     savedLogins: [{ username: "username", password: "savedPassword" }],
-  //     possibleUsernames: ["username"],
-  //     expectedSuggestions: [{ text: "username", style: "possible-username" }],
-  //   },
+  {
+    description: "page values should dedupe and win over saved values",
+    savedLogins: [{ username: "username", password: "savedPassword" }],
+    possibleUsernames: ["username"],
+    expectedSuggestions: [{ text: "username", style: "possible-username" }],
+  },
+  {
+    description: "empty usernames should be filtered out",
+    savedLogins: [{ username: "", password: "savedPassword" }],
+    possibleUsernames: [""],
+    expectedSuggestions: [],
+  },
+  {
+    description: "auth logins should be displayed alongside normal ones",
+    savedLogins: [
+      { username: "normalUsername", password: "normalPassword" },
+      { isAuth: true, username: "authUsername", password: "authPassword" },
+    ],
+    possibleUsernames: [""],
+    expectedSuggestions: [
+      { text: "normalUsername", style: "login" },
+      { text: "authUsername", style: "login" },
+    ],
+  },
 ];
 
-const LOGIN = LoginTestUtils.testData.formLogin({
+const LOGIN = TestData.formLogin({
   origin: "https://example.com",
   formActionOrigin: "https://example.com",
   username: "LOGIN is used only for its origin",
@@ -40,14 +56,25 @@ const LOGIN = LoginTestUtils.testData.formLogin({
 
 function _saveLogins(logins) {
   logins
-    .map(loginData =>
-      LoginTestUtils.testData.formLogin({
-        origin: "https://example.com",
-        formActionOrigin: "https://example.com",
-        username: loginData.username,
-        password: loginData.password,
-      })
-    )
+    .map(loginData => {
+      let login;
+      if (loginData.isAuth) {
+        login = TestData.authLogin({
+          origin: "https://example.com",
+          httpRealm: "example-realm",
+          username: loginData.username,
+          password: loginData.password,
+        });
+      } else {
+        login = TestData.formLogin({
+          origin: "https://example.com",
+          formActionOrigin: "https://example.com",
+          username: loginData.username,
+          password: loginData.password,
+        });
+      }
+      return login;
+    })
     .forEach(login => Services.logins.addLogin(login));
 }
 
@@ -73,13 +100,13 @@ function _compare(expectedArr, actualArr) {
   }
 }
 
-function _test(testCase) {
+async function _test(testCase) {
   info(`Starting test case: ${testCase.description}`);
   info(`Storing saved logins: ${JSON.stringify(testCase.savedLogins)}`);
   _saveLogins(testCase.savedLogins);
 
   info("Computing results");
-  let result = LoginManagerPrompter._getUsernameSuggestions(
+  let result = await LoginManagerPrompter._getUsernameSuggestions(
     LOGIN,
     testCase.possibleUsernames
   );
@@ -90,8 +117,8 @@ function _test(testCase) {
   LoginTestUtils.clearData();
 }
 
-add_task(function test_LoginManagerPrompter_getUsernameSuggestions() {
+add_task(async function test_LoginManagerPrompter_getUsernameSuggestions() {
   for (let tc of TEST_CASES) {
-    _test(tc);
+    await _test(tc);
   }
 });
