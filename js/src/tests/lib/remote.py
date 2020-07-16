@@ -19,7 +19,7 @@ def push_libs(options, device, dest_dir):
         if file in required_libs:
             remote_file = posixpath.join(dest_dir, file)
             device.push(os.path.join(options.local_lib, file), remote_file)
-            device.chmod(remote_file, root=True)
+            device.chmod(remote_file)
 
 
 def push_progs(options, device, progs, dest_dir):
@@ -28,13 +28,12 @@ def push_progs(options, device, progs, dest_dir):
         remote_file = posixpath.join(dest_dir,
                                      os.path.basename(local_file))
         device.push(local_file, remote_file)
-        device.chmod(remote_file, root=True)
+        device.chmod(remote_file)
 
 
-def init_remote_dir(device, path, root=True):
-    device.rm(path, recursive=True, force=True, root=root)
-    device.mkdir(path, parents=True, root=root)
-    device.chmod(path, recursive=True, root=root)
+def init_remote_dir(device, path):
+    device.rm(path, recursive=True, force=True)
+    device.mkdir(path, parents=True)
 
 
 # We only have one device per test run.
@@ -50,15 +49,15 @@ def init_device(options):
     if DEVICE is not None:
         return DEVICE
 
-    from mozdevice import ADBDevice, ADBError, ADBTimeoutError
+    from mozdevice import ADBDeviceFactory, ADBError, ADBTimeoutError
     try:
         if not options.local_lib:
             # if not specified, use the local directory containing
             # the js binary to find the necessary libraries.
             options.local_lib = posixpath.dirname(options.js_shell)
 
-        DEVICE = ADBDevice(device=options.device_serial,
-                           test_root=options.remote_test_root)
+        DEVICE = ADBDeviceFactory(device=options.device_serial,
+                                  test_root=options.remote_test_root)
 
         init_remote_dir(DEVICE, options.remote_test_root)
 

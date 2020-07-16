@@ -169,7 +169,7 @@ def main(argv):
                     type=str, dest='device_serial', default=None,
                     help='ADB device serial number of remote device to test')
     op.add_argument('--remoteTestRoot', dest='remote_test_root', action='store',
-                    type=str, default='/data/local/tests',
+                    type=str, default='/data/local/tmp/test_root',
                     help='The remote directory to use as test root'
                     ' (e.g.  %(default)s)')
     op.add_argument('--localLib', dest='local_lib', action='store',

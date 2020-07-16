@@ -361,7 +361,7 @@ class JitTest:
         for inc in self.other_script_includes:
             cmd += ['-f', scriptdir_var + inc]
         if self.skip_if_cond:
-            cmd += ['-e', "if ({}) quit({})".format(self.skip_if_cond, self.SKIPPED_EXIT_STATUS)]
+            cmd += ['-e', 'if ({}) quit({})'.format(self.skip_if_cond, self.SKIPPED_EXIT_STATUS)]
         cmd += ['--module-load-path', moduledir]
         if self.is_module:
             cmd += ['--module', path]
@@ -425,6 +425,7 @@ def run_test_remote(test, device, prefix, options):
     if test.tz_pacific:
         env['TZ'] = 'PST8PDT'
 
+    # replace with shlex.join when move to Python 3.8+
     cmd = ADBDevice._escape_command_line(cmd)
     start = datetime.now()
     try:
@@ -787,11 +788,11 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
 
         init_remote_dir(device, jit_tests_dir)
         device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
-        device.chmod(jtd_tests, recursive=True, root=True)
+        device.chmod(jtd_tests, recursive=True)
 
         device.push(os.path.dirname(TEST_DIR), options.remote_test_root,
                     timeout=600)
-        device.chmod(options.remote_test_root, recursive=True, root=True)
+        device.chmod(options.remote_test_root, recursive=True)
     except (ADBError, ADBTimeoutError):
         print("TEST-UNEXPECTED-FAIL | jit_test.py" +
               " : Device initialization failed")
