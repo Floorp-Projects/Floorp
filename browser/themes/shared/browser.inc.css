@@ -640,6 +640,7 @@ menupopup::part(drop-indicator) {
   appearance: none;
   justify-self: end;
   margin-inline-end: 8px;
+  align-self: center;
 }
 
 .ac-dropmarker::part(icon) {
