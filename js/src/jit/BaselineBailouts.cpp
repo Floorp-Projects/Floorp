@@ -1293,7 +1293,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
   // Ensure we have a TypeMonitor fallback stub so we don't crash in JIT code
   // when we try to enter it. See callers of offsetOfFallbackMonitorStub.
-  if (BytecodeOpHasTypeSet(JSOp(*pc))) {
+  if (BytecodeOpHasTypeSet(JSOp(*pc)) && IsTypeInferenceEnabled()) {
     ICFallbackStub* fallbackStub = icEntry.fallbackStub();
     if (!fallbackStub->toMonitoredFallbackStub()->getFallbackMonitorStub(
             cx, script)) {
