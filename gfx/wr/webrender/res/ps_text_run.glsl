@@ -152,8 +152,6 @@ void text_shader_main_vs(
 
     vec2 snap_bias = get_snap_bias(subpx_dir);
 
-    vec2 quad_pos = quad_position();
-
     // Glyph space refers to the pixel space used by glyph rasterization during frame
     // building. If a non-identity transform was used, WR_FEATURE_GLYPH_TRANSFORM will
     // be set. Otherwise, regardless of whether the raster space is LOCAL or SCREEN,
@@ -186,13 +184,13 @@ void text_shader_main_vs(
     RectWithSize local_rect = transform_rect(glyph_rect, glyph_transform_inv);
 
     // Select the corner of the glyph's local space rect that we are processing.
-    vec2 local_pos = local_rect.p0 + local_rect.size * quad_pos;
+    vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
 
     // If the glyph's local rect would fit inside the local clip rect, then select a corner from
     // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
     // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
     if (rect_inside_rect(local_rect, ph.local_clip_rect)) {
-        local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * quad_pos);
+        local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
     }
 #else
     float raster_scale = float(ph.user_data.x) / 65535.0;
@@ -228,7 +226,7 @@ void text_shader_main_vs(
                                            glyph_scale_inv * (res.uv_rect.zw - res.uv_rect.xy));
 
     // Select the corner of the glyph rect that we are processing.
-    vec2 local_pos = glyph_rect.p0 + glyph_rect.size * quad_pos;
+    vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
 #endif
 
     VertexInfo vi = write_vertex(
