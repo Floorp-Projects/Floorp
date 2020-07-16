@@ -1332,12 +1332,36 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   mozilla::StyleAppearance EffectiveAppearance() const {
-    if (mAppearance == mozilla::StyleAppearance::Auto ||
-        (mAppearance == mozilla::StyleAppearance::Button &&
-         mButtonAppearance == mozilla::StyleButtonAppearance::Disallow)) {
-      return mDefaultAppearance;
+    switch (mAppearance) {
+      case mozilla::StyleAppearance::Auto:
+        return mDefaultAppearance;
+      case mozilla::StyleAppearance::Textfield:
+        // `appearance: textfield` should behave like `auto` on all elements
+        // except <input type=search> elements, which we identify using the
+        // internal -moz-default-appearance property.  (In the browser chrome
+        // we have some other elements that set `-moz-default-appearance:
+        // searchfield`, but not in content documents.)
+        if (mDefaultAppearance == mozilla::StyleAppearance::Searchfield) {
+          return mAppearance;
+        }
+        // We also need to support `appearance: textfield` on <input
+        // type=number>, since that is the only way in Gecko to disable the
+        // spinners.
+        if (mDefaultAppearance == mozilla::StyleAppearance::NumberInput) {
+          return mAppearance;
+        }
+        return mDefaultAppearance;
+      case mozilla::StyleAppearance::Button:
+        // `appearance: button` should behave like `auto` for a specific list
+        // of widget elements, and we encode that using the internal
+        // -moz-button-appearance property.
+        if (mButtonAppearance == mozilla::StyleButtonAppearance::Disallow) {
+          return mDefaultAppearance;
+        }
+        return mAppearance;
+      default:
+        return mAppearance;
     }
-    return mAppearance;
   }
 
   static mozilla::StyleDisplayOutside DisplayOutside(
