@@ -2,6 +2,7 @@
 
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
+const ABOUT_WELCOME_OVERRIDE_CONTENT = "browser.aboutwelcome.overrideContent";
 
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
@@ -10,10 +11,107 @@ const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
 
+const SIMPLIFIED_WELCOME_CONTENT = {
+  title: {
+    string_id: "onboarding-welcome-header",
+  },
+  startButton: {
+    label: {
+      string_id: "onboarding-start-browsing-button-label",
+    },
+    message_id: "START_BROWSING_BUTTON",
+    action: {
+      type: "OPEN_AWESOME_BAR",
+    },
+  },
+  cards: [
+    {
+      content: {
+        title: {
+          string_id: "onboarding-data-sync-title",
+        },
+        text: {
+          string_id: "onboarding-data-sync-text2",
+        },
+        icon: "devices",
+        primary_button: {
+          label: {
+            string_id: "onboarding-data-sync-button2",
+          },
+          action: {
+            type: "OPEN_URL",
+            addFlowParams: true,
+            data: {
+              args:
+                "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
+              where: "tabshifted",
+            },
+          },
+        },
+      },
+      id: "TRAILHEAD_CARD_2",
+      order: 1,
+      blockOnClick: false,
+    },
+    {
+      content: {
+        title: {
+          string_id: "onboarding-firefox-monitor-title",
+        },
+        text: {
+          string_id: "onboarding-firefox-monitor-text2",
+        },
+        icon: "ffmonitor",
+        primary_button: {
+          label: {
+            string_id: "onboarding-firefox-monitor-button",
+          },
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://monitor.firefox.com/",
+              where: "tabshifted",
+            },
+          },
+        },
+      },
+      id: "TRAILHEAD_CARD_3",
+      order: 2,
+      blockOnClick: false,
+    },
+    {
+      content: {
+        title: {
+          string_id: "onboarding-browse-privately-title",
+        },
+        text: {
+          string_id: "onboarding-browse-privately-text",
+        },
+        icon: "private",
+        primary_button: {
+          label: {
+            string_id: "onboarding-browse-privately-button",
+          },
+          action: {
+            type: "OPEN_PRIVATE_BROWSER_WINDOW",
+          },
+        },
+      },
+      id: "TRAILHEAD_CARD_4",
+      order: 3,
+      blockOnClick: true,
+    },
+  ],
+};
+
 /**
  * Sets the aboutwelcome pref to enabled simplified welcome UI
  */
 async function setAboutWelcomePref(value) {
+  await pushPrefs([
+    ABOUT_WELCOME_OVERRIDE_CONTENT,
+    JSON.stringify(SIMPLIFIED_WELCOME_CONTENT),
+  ]);
   return pushPrefs([SEPARATE_ABOUT_WELCOME_PREF, value]);
 }
 
@@ -79,9 +177,14 @@ async function test_open_private_browser(browser, message) {
 
 // Test Fxaccounts MetricsFlowURI
 
-add_task(function setup() {
+add_task(async function setup() {
   const sandbox = sinon.createSandbox();
   sandbox.stub(FxAccounts.config, "promiseMetricsFlowURI").resolves("");
+
+  await pushPrefs([
+    ABOUT_WELCOME_OVERRIDE_CONTENT,
+    JSON.stringify(SIMPLIFIED_WELCOME_CONTENT),
+  ]);
 
   registerCleanupFunction(() => {
     sandbox.restore();
