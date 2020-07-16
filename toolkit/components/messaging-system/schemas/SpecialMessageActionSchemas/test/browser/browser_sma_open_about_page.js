@@ -10,7 +10,7 @@ add_task(async function test_OPEN_ABOUT_PAGE() {
   );
   await SMATestUtils.executeAndValidateAction({
     type: "OPEN_ABOUT_PAGE",
-    data: { args: "logins", entrypoint: "foo=bar" },
+    data: { args: "logins", entrypoint: "foo=bar", where: "tabshifted" },
   });
 
   const tab = await tabPromise;
