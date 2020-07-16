@@ -81,8 +81,11 @@ class ImageComposite {
   void ClearImages();
   void SetImages(nsTArray<TimedImage>&& aNewImages);
 
-  int32_t mLastFrameID;
-  int32_t mLastProducerID;
+ protected:
+  void UpdateCompositedFrame(const TimedImage* aImage);
+
+  int32_t mLastFrameID = -1;
+  int32_t mLastProducerID = -1;
 
  private:
   nsTArray<TimedImage> mImages;
@@ -103,9 +106,9 @@ class ImageComposite {
   /**
    * Bias to apply to the next frame.
    */
-  Bias mBias;
-  uint32_t mDroppedFrames;
-  uint32_t mLastChosenImageIndex;
+  Bias mBias = BIAS_NONE;
+  uint32_t mDroppedFrames = 0;
+  uint32_t mLastChosenImageIndex = 0;
 };
 
 }  // namespace layers
