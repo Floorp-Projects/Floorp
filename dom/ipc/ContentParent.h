@@ -1309,15 +1309,11 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvHistoryCommit(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      const uint64_t& aSessionHistoryEntryID, const nsID& aChangeID);
+      uint64_t aSessionHistoryEntryID);
 
   mozilla::ipc::IPCResult RecvHistoryGo(
       const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
       HistoryGoResolver&& aResolveRequestedIndex);
-
-  mozilla::ipc::IPCResult RecvSessionHistoryUpdate(
-      const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aIndex,
-      const int32_t& aLength, const nsID& aChangeID);
 
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
