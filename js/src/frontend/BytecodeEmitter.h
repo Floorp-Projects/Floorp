@@ -852,6 +852,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       const std::function<bool(uint32_t)>& pushOperandsCallback);
   MOZ_MUST_USE bool emitInstrumentationForOpcodeSlow(JSOp op,
                                                      uint32_t atomIndex);
+
+  MOZ_MUST_USE bool allowSelfHostedIter(ParseNode* parseNode);
 };
 
 class MOZ_RAII AutoCheckUnstableEmitterScope {
