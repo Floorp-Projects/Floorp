@@ -52,7 +52,6 @@ hw-g5-applink-fenix:
             --android-activity org.mozilla.fenix.IntentReceiverActivity
             --android-clear-logcat
             --android-capture-logcat logcat
-            --android-perf-tuning
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk fenix_nightlysim_multicommit_armeabi_v7a
             --hooks testing/performance/hooks_applink.py
@@ -113,7 +112,6 @@ hw-g5-applink-gv:
             --android-activity org.mozilla.geckoview_example.GeckoViewActivity
             --android-clear-logcat
             --android-capture-logcat logcat
-            --android-perf-tuning
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk gve_nightly_api16
             --hooks testing/performance/hooks_applink.py
@@ -205,6 +203,7 @@ hw-p2-main-fenix:
             --android-activity .App
             --android-clear-logcat
             --android-capture-logcat logcat
+            --android-perf-tuning
             --androidlog
             --androidlog-first-timestamp ".*Start proc.*org\.mozilla\..*\..*App.*"
             --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
