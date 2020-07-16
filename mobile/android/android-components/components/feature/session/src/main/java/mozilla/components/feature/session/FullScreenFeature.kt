@@ -27,7 +27,7 @@ open class FullScreenFeature(
     private val fullScreenChanged: (Boolean) -> Unit
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private var scope: CoroutineScope? = null
-    private var observation: Observation? = null
+    private var observation: Observation = createDefaultObservation()
 
     /**
      * Starts the feature and a observer to listen for fullscreen changes.
@@ -35,9 +35,9 @@ open class FullScreenFeature(
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
-                .map { tab -> tab?.toObservation() }
+                .map { tab -> tab.toObservation() }
                 .ifChanged()
-                .collect { foo -> onChange(foo) }
+                .collect { observation -> onChange(observation) }
         }
     }
 
@@ -45,13 +45,13 @@ open class FullScreenFeature(
         scope?.cancel()
     }
 
-    private fun onChange(observation: Observation?) {
-        if (observation?.inFullScreen != this.observation?.inFullScreen) {
-            fullScreenChanged(observation?.inFullScreen ?: false)
+    private fun onChange(observation: Observation) {
+        if (observation.inFullScreen != this.observation.inFullScreen) {
+            fullScreenChanged(observation.inFullScreen)
         }
 
-        if (observation?.layoutInDisplayCutoutMode != this.observation?.layoutInDisplayCutoutMode) {
-            viewportFitChanged(observation?.layoutInDisplayCutoutMode ?: 0)
+        if (observation.layoutInDisplayCutoutMode != this.observation.layoutInDisplayCutoutMode) {
+            viewportFitChanged(observation.layoutInDisplayCutoutMode)
         }
 
         this.observation = observation
@@ -63,12 +63,13 @@ open class FullScreenFeature(
      * @return Returns true if the fullscreen mode was successfully exited; false if no effect was taken.
      */
     override fun onBackPressed(): Boolean {
-        observation?.let {
-            if (it.inFullScreen) {
-                sessionUseCases.exitFullscreen(it.tabId)
-                return true
-            }
+        val observation = observation
+
+        if (observation.inFullScreen && observation.tabId != null) {
+            sessionUseCases.exitFullscreen(observation.tabId)
+            return true
         }
+
         return false
     }
 }
@@ -77,11 +78,21 @@ open class FullScreenFeature(
  * Simple holder data class to keep a reference to the last values we observed.
  */
 private data class Observation(
-    val tabId: String,
+    val tabId: String?,
     val inFullScreen: Boolean,
     val layoutInDisplayCutoutMode: Int
 )
 
-private fun SessionState.toObservation(): Observation {
-    return Observation(id, content.fullScreen, content.layoutInDisplayCutoutMode)
+private fun SessionState?.toObservation(): Observation {
+    return if (this != null) {
+        Observation(id, content.fullScreen, content.layoutInDisplayCutoutMode)
+    } else {
+        createDefaultObservation()
+    }
 }
+
+private fun createDefaultObservation() = Observation(
+    tabId = null,
+    inFullScreen = false,
+    layoutInDisplayCutoutMode = 0
+)

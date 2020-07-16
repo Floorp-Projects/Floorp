@@ -71,7 +71,7 @@ class FullScreenFeatureTest {
     }
 
     @Test
-    fun `Starting with selected tab`() {
+    fun `Starting with selected tab will not invoke callbacks with default state`() {
         var viewPort: Int? = null
         var fullscreen: Boolean? = null
 
@@ -93,8 +93,45 @@ class FullScreenFeatureTest {
         testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
-        assertEquals(0, viewPort)
-        assertFalse(fullscreen!!)
+        assertNull(viewPort)
+        assertNull(fullscreen)
+    }
+
+    @Test
+    fun `Starting with selected tab`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+            selectedTabId = "A"
+        ))
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "A",
+            true
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "A",
+            42
+        )).joinBlocking()
+
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = null,
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        assertEquals(42, viewPort)
+        assertTrue(fullscreen!!)
     }
 
     @Test
@@ -122,7 +159,7 @@ class FullScreenFeatureTest {
             true
         )).joinBlocking()
 
-        assertEquals(0, viewPort)
+        assertNull(viewPort)
         assertTrue(fullscreen!!)
     }
 
@@ -234,13 +271,6 @@ class FullScreenFeatureTest {
             fullScreenChanged = { value -> fullscreen = value }
         )
 
-        feature.start()
-
-        assertEquals(0, viewPort)
-        assertFalse(fullscreen!!)
-
-        feature.stop()
-
         store.dispatch(ContentAction.FullScreenChangedAction(
             "B",
             true
@@ -248,16 +278,33 @@ class FullScreenFeatureTest {
 
         store.dispatch(ContentAction.ViewportFitChangedAction(
             "B",
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+        )).joinBlocking()
+
+        feature.start()
+
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER, viewPort)
+        assertTrue(fullscreen!!)
+
+        feature.stop()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "B",
+            false
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "B",
             WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         )).joinBlocking()
 
-        assertEquals(0, viewPort)
-        assertFalse(fullscreen!!)
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER, viewPort)
+        assertTrue(fullscreen!!)
 
         feature.start()
 
         assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
-        assertTrue(fullscreen!!)
+        assertFalse(fullscreen!!)
     }
 
     @Test
