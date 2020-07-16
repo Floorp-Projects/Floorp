@@ -1226,7 +1226,8 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 nsresult WhiteSpaceVisibilityKeeper::
     MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
         HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete) {
-  if (NS_WARN_IF(!aRangeToDelete.IsPositioned())) {
+  if (NS_WARN_IF(!aRangeToDelete.IsPositionedAndValid()) ||
+      NS_WARN_IF(!aRangeToDelete.IsInContentNodes())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1238,9 +1239,12 @@ nsresult WhiteSpaceVisibilityKeeper::
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
 
   RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+  TextFragmentData textFragmentDataAtStart(rangeToDelete.StartRef(),
+                                           editingHost);
+  TextFragmentData textFragmentDataAtEnd(rangeToDelete.EndRef(), editingHost);
   ReplaceRangeData replaceRangeDataAtEnd =
-      GetReplaceRangeDataAtEndOfDeletionRange(aHTMLEditor, rangeToDelete,
-                                              editingHost);
+      textFragmentDataAtEnd.GetReplaceRangeDataAtEndOfDeletionRange(
+          textFragmentDataAtStart);
   if (replaceRangeDataAtEnd.IsSet() && !replaceRangeDataAtEnd.Collapsed()) {
     MOZ_ASSERT(rangeToDelete.EndRef().EqualsOrIsBefore(
         replaceRangeDataAtEnd.EndRef()));
@@ -1304,14 +1308,30 @@ nsresult WhiteSpaceVisibilityKeeper::
       MOZ_ASSERT(startToDelete.EqualsOrIsBefore(endToDelete));
       rangeToDelete.SetStartAndEnd(startToDelete, endToDelete);
     }
-  }
-  if (editingHost != aHTMLEditor.GetActiveEditingHost()) {
-    NS_WARNING("Active editing host was changed");
-    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+
+    if (mayBecomeUnexpectedDOMTree) {
+      // If focus is changed by mutation event listeners, we should stop
+      // handling this edit action.
+      if (editingHost != aHTMLEditor.GetActiveEditingHost()) {
+        NS_WARNING("Active editing host was changed");
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      if (!rangeToDelete.IsInContentNodes()) {
+        NS_WARNING("The modified range was not in content");
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      // If the DOM tree might be changed by mutation event listeners, we
+      // should retrieve the latest data for avoiding to delete/replace
+      // unexpected range.
+      textFragmentDataAtStart =
+          TextFragmentData(rangeToDelete.StartRef(), editingHost);
+      textFragmentDataAtEnd =
+          TextFragmentData(rangeToDelete.EndRef(), editingHost);
+    }
   }
   ReplaceRangeData replaceRangeDataAtStart =
-      GetReplaceRangeDataAtStartOfDeletionRange(aHTMLEditor, rangeToDelete,
-                                                editingHost);
+      textFragmentDataAtStart.GetReplaceRangeDataAtStartOfDeletionRange(
+          textFragmentDataAtEnd);
   if (!replaceRangeDataAtStart.IsSet() || replaceRangeDataAtStart.Collapsed()) {
     return NS_OK;
   }
@@ -1338,38 +1358,36 @@ nsresult WhiteSpaceVisibilityKeeper::
   return rv;
 }
 
-// static
 ReplaceRangeData
-WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtEndOfDeletionRange(
-    HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
-    Element* aEditingHost) {
-  MOZ_ASSERT(aRangeToDelete.IsPositionedAndValid());
+WSRunScanner::TextFragmentData::GetReplaceRangeDataAtEndOfDeletionRange(
+    const TextFragmentData& aTextFragmentDataAtStartToDelete) {
+  const EditorDOMPoint& startToDelete =
+      aTextFragmentDataAtStartToDelete.ScanStartRef();
+  const EditorDOMPoint& endToDelete = mScanStartPoint;
 
-  TextFragmentData textFragmentDataAtStart(aRangeToDelete.StartRef(),
-                                           aEditingHost);
-  TextFragmentData textFragmentDataAtEnd(aRangeToDelete.EndRef(), aEditingHost);
-  if (textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(
-          aRangeToDelete.EndRef())) {
+  MOZ_ASSERT(startToDelete.IsSetAndValid());
+  MOZ_ASSERT(endToDelete.IsSetAndValid());
+  MOZ_ASSERT(startToDelete.EqualsOrIsBefore(endToDelete));
+
+  if (EndRef().EqualsOrIsBefore(endToDelete)) {
     return ReplaceRangeData();
   }
 
   // If deleting range is followed by invisible trailing white-spaces, we need
   // to remove it for making them not visible.
   const EditorDOMRange invisibleTrailingWhiteSpaceRangeAtEnd =
-      textFragmentDataAtEnd.GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(
-          aRangeToDelete.EndRef());
+      GetNewInvisibleTrailingWhiteSpaceRangeIfSplittingAt(endToDelete);
   if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
     if (invisibleTrailingWhiteSpaceRangeAtEnd.Collapsed()) {
       return ReplaceRangeData();
     }
     // XXX Why don't we remove all invisible white-spaces?
-    MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeAtEnd.StartRef() ==
-               aRangeToDelete.EndRef());
+    MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeAtEnd.StartRef() == endToDelete);
     return ReplaceRangeData(invisibleTrailingWhiteSpaceRangeAtEnd,
                             EmptyString());
   }
 
-  if (textFragmentDataAtEnd.IsPreformatted()) {
+  if (IsPreformatted()) {
     return ReplaceRangeData();
   }
 
@@ -1377,13 +1395,12 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtEndOfDeletionRange(
   // is not preformatted, we might need to replace the following ASCII
   // white-spaces with an NBSP.
   const VisibleWhiteSpacesData nonPreformattedVisibleWhiteSpacesAtEnd =
-      textFragmentDataAtEnd.VisibleWhiteSpacesDataRef();
+      VisibleWhiteSpacesDataRef();
   if (!nonPreformattedVisibleWhiteSpacesAtEnd.IsInitialized()) {
     return ReplaceRangeData();
   }
   const PointPosition pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd =
-      nonPreformattedVisibleWhiteSpacesAtEnd.ComparePoint(
-          aRangeToDelete.EndRef());
+      nonPreformattedVisibleWhiteSpacesAtEnd.ComparePoint(endToDelete);
   if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd !=
           PointPosition::StartOfFragment &&
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtEnd !=
@@ -1393,13 +1410,12 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtEndOfDeletionRange(
   // If start of deleting range follows white-spaces or end of delete
   // will be start of a line, the following text cannot start with an
   // ASCII white-space for keeping it visible.
-  if (!textFragmentDataAtStart.FollowingContentMayBecomeFirstVisibleContent(
-          aRangeToDelete.StartRef())) {
+  if (!aTextFragmentDataAtStartToDelete
+           .FollowingContentMayBecomeFirstVisibleContent(startToDelete)) {
     return ReplaceRangeData();
   }
   EditorRawDOMPointInText nextCharOfStartOfEnd =
-      textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
-          aRangeToDelete.EndRef());
+      GetInclusiveNextEditableCharPoint(endToDelete);
   if (!nextCharOfStartOfEnd.IsSet() ||
       nextCharOfStartOfEnd.IsEndOfContainer() ||
       !nextCharOfStartOfEnd.IsCharASCIISpace()) {
@@ -1408,36 +1424,34 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtEndOfDeletionRange(
   if (nextCharOfStartOfEnd.IsStartOfContainer() ||
       nextCharOfStartOfEnd.IsPreviousCharASCIISpace()) {
     nextCharOfStartOfEnd =
-        textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
-            nextCharOfStartOfEnd);
+        aTextFragmentDataAtStartToDelete
+            .GetFirstASCIIWhiteSpacePointCollapsedTo(nextCharOfStartOfEnd);
   }
   EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-      textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
+      aTextFragmentDataAtStartToDelete.GetEndOfCollapsibleASCIIWhiteSpaces(
           nextCharOfStartOfEnd);
   return ReplaceRangeData(nextCharOfStartOfEnd,
                           endOfCollapsibleASCIIWhiteSpaces,
                           nsDependentSubstring(&kNBSP, 1));
 }
 
-// static
 ReplaceRangeData
-WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtStartOfDeletionRange(
-    HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
-    Element* aEditingHost) {
-  MOZ_ASSERT(aRangeToDelete.IsPositionedAndValid());
+WSRunScanner::TextFragmentData::GetReplaceRangeDataAtStartOfDeletionRange(
+    const TextFragmentData& aTextFragmentDataAtEndToDelete) {
+  const EditorDOMPoint& startToDelete = mScanStartPoint;
+  const EditorDOMPoint& endToDelete =
+      aTextFragmentDataAtEndToDelete.ScanStartRef();
 
-  TextFragmentData textFragmentDataAtStart(aRangeToDelete.StartRef(),
-                                           aEditingHost);
-  if (aRangeToDelete.StartRef().EqualsOrIsBefore(
-          textFragmentDataAtStart.StartRef())) {
+  MOZ_ASSERT(startToDelete.IsSetAndValid());
+  MOZ_ASSERT(endToDelete.IsSetAndValid());
+  MOZ_ASSERT(startToDelete.EqualsOrIsBefore(endToDelete));
+
+  if (startToDelete.EqualsOrIsBefore(StartRef())) {
     return ReplaceRangeData();
   }
-  TextFragmentData textFragmentDataAtEnd(aRangeToDelete.EndRef(), aEditingHost);
 
   const EditorDOMRange invisibleLeadingWhiteSpaceRangeAtStart =
-      textFragmentDataAtStart
-          .GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(
-              aRangeToDelete.StartRef());
+      GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt(startToDelete);
 
   // If deleting range follows invisible leading white-spaces, we need to
   // remove them for making them not visible.
@@ -1451,7 +1465,7 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtStartOfDeletionRange(
                             EmptyString());
   }
 
-  if (textFragmentDataAtStart.IsPreformatted()) {
+  if (IsPreformatted()) {
     return ReplaceRangeData();
   }
 
@@ -1459,14 +1473,13 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtStartOfDeletionRange(
   // preformatted, we might need to replace previous ASCII white-spaces with
   // an NBSP.
   const VisibleWhiteSpacesData nonPreformattedVisibleWhiteSpacesAtStart =
-      textFragmentDataAtStart.VisibleWhiteSpacesDataRef();
+      VisibleWhiteSpacesDataRef();
   if (!nonPreformattedVisibleWhiteSpacesAtStart.IsInitialized()) {
     return ReplaceRangeData();
   }
   const PointPosition
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart =
-          nonPreformattedVisibleWhiteSpacesAtStart.ComparePoint(
-              aRangeToDelete.StartRef());
+          nonPreformattedVisibleWhiteSpacesAtStart.ComparePoint(startToDelete);
   if (pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart !=
           PointPosition::MiddleOfFragment &&
       pointPositionWithNonPreformattedVisibleWhiteSpacesAtStart !=
@@ -1477,13 +1490,12 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtStartOfDeletionRange(
   // previous character of start of deleting range will be immediately
   // before a block boundary, the text cannot ends with an ASCII white-space
   // for keeping it visible.
-  if (!textFragmentDataAtEnd.PrecedingContentMayBecomeInvisible(
-          aRangeToDelete.EndRef())) {
+  if (!aTextFragmentDataAtEndToDelete.PrecedingContentMayBecomeInvisible(
+          endToDelete)) {
     return ReplaceRangeData();
   }
   EditorRawDOMPointInText atPreviousCharOfStart =
-      textFragmentDataAtStart.GetPreviousEditableCharPoint(
-          aRangeToDelete.StartRef());
+      GetPreviousEditableCharPoint(startToDelete);
   if (!atPreviousCharOfStart.IsSet() ||
       atPreviousCharOfStart.IsEndOfContainer() ||
       !atPreviousCharOfStart.IsCharASCIISpace()) {
@@ -1492,12 +1504,10 @@ WhiteSpaceVisibilityKeeper::GetReplaceRangeDataAtStartOfDeletionRange(
   if (atPreviousCharOfStart.IsStartOfContainer() ||
       atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
     atPreviousCharOfStart =
-        textFragmentDataAtStart.GetFirstASCIIWhiteSpacePointCollapsedTo(
-            atPreviousCharOfStart);
+        GetFirstASCIIWhiteSpacePointCollapsedTo(atPreviousCharOfStart);
   }
   EditorRawDOMPointInText endOfCollapsibleASCIIWhiteSpaces =
-      textFragmentDataAtStart.GetEndOfCollapsibleASCIIWhiteSpaces(
-          atPreviousCharOfStart);
+      GetEndOfCollapsibleASCIIWhiteSpaces(atPreviousCharOfStart);
   return ReplaceRangeData(atPreviousCharOfStart,
                           endOfCollapsibleASCIIWhiteSpaces,
                           nsDependentSubstring(&kNBSP, 1));
