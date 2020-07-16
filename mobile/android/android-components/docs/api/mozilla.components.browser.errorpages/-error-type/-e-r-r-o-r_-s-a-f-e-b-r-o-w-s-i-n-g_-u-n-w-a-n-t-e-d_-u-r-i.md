@@ -2,7 +2,7 @@
 
 # ERROR_SAFEBROWSING_UNWANTED_URI
 
-`ERROR_SAFEBROWSING_UNWANTED_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L237)
+`ERROR_SAFEBROWSING_UNWANTED_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L241)
 
 ### Inherited Properties
 

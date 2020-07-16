@@ -1,29 +1,23 @@
-[android-components](../../index.md) / [mozilla.components.support.images](../index.md) / [ImageRequest](./index.md)
+[android-components](../../index.md) / [mozilla.components.support.images](../index.md) / [ImageLoadRequest](./index.md)
 
-# ImageRequest
+# ImageLoadRequest
 
-`data class ImageRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/images/src/main/java/mozilla/components/support/images/ImageRequest.kt#L15)
+`data class ImageLoadRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/images/src/main/java/mozilla/components/support/images/ImageRequest.kt#L20)
 
 A request to load an image.
-
-### Types
-
-| Name | Summary |
-|---|---|
-| [Size](-size/index.md) | `enum class Size`<br>Supported sizes. |
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ImageRequest(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, size: `[`Size`](-size/index.md)` = Size.DEFAULT)`<br>A request to load an image. |
+| [&lt;init&gt;](-init-.md) | `ImageLoadRequest(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`)`<br>A request to load an image. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The id of the image to retrieve. |
-| [size](size.md) | `val size: `[`Size`](-size/index.md)<br>The preferred size of the image that should be loaded. |
+| [size](size.md) | `val size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The preferred size of the image that should be loaded in pixels. |
 
 ### Extension Functions
 

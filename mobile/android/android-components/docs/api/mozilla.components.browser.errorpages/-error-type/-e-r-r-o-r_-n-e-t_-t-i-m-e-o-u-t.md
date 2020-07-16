@@ -2,7 +2,7 @@
 
 # ERROR_NET_TIMEOUT
 
-`ERROR_NET_TIMEOUT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L137)
+`ERROR_NET_TIMEOUT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L141)
 
 ### Inherited Properties
 

@@ -2,7 +2,7 @@
 
 # interceptsAppInitiatedRequests
 
-`open fun interceptsAppInitiatedRequests(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L101)
+`open fun interceptsAppInitiatedRequests(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L103)
 
 Returns whether or not this [RequestInterceptor](index.md) should intercept load
 requests initiated by the app (via direct calls to [EngineSession.loadUrl](../../mozilla.components.concept.engine/-engine-session/load-url.md)).

@@ -2,7 +2,7 @@
 
 # getInputResult
 
-`fun getInputResult(): `[`InputResult`](../../mozilla.components.concept.engine/-engine-view/-input-result/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L715)
+`fun getInputResult(): `[`InputResult`](../../mozilla.components.concept.engine/-engine-view/-input-result/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L716)
 
 Overrides [EngineView.getInputResult](../../mozilla.components.concept.engine/-engine-view/get-input-result.md)
 

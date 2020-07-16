@@ -13,6 +13,6 @@ Loads the given URL.
 `parent` - the parent (referring) [EngineSession](index.md) i.e. the session that
 triggered creating this one.
 
-`flags` - the [LoadUrlFlags](-load-url-flags/index.md) to use when loading the provider url.
+`flags` - the [LoadUrlFlags](-load-url-flags/index.md) to use when loading the provided url.
 
 `additionalHeaders` - the extra headers to use when loading the provided url.
