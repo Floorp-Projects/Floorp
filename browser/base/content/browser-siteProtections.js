@@ -385,6 +385,7 @@ var TrackingProtection = {
 
   observe() {
     this.updateEnabled();
+    this.updateCategoryItem();
   },
 
   get trackingProtectionLevel2Enabled() {
@@ -407,6 +408,9 @@ var TrackingProtection = {
     this.enabledInPrivateWindows = Services.prefs.getBoolPref(
       this.PREF_ENABLED_IN_PRIVATE_WINDOWS
     );
+  },
+
+  updateCategoryItem() {
     if (this.categoryItem) {
       this.categoryItem.classList.toggle("blocked", this.enabled);
     }
@@ -1191,9 +1195,7 @@ var gProtectionsHandler = {
       this.maybeSetMilestoneCounterText();
 
       for (let blocker of this.blockers) {
-        if (blocker.updateCategoryItem) {
-          blocker.updateCategoryItem();
-        }
+        blocker.updateCategoryItem();
       }
 
       let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
