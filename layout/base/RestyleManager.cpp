@@ -506,14 +506,15 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
       return nsChangeHint_ReconstructFrame;
     }
 
-    auto* disp = primaryFrame->StyleDisplay();
-    if (disp->HasAppearance()) {
+    StyleAppearance appearance =
+        primaryFrame->StyleDisplay()->EffectiveAppearance();
+    if (appearance != StyleAppearance::None) {
       nsPresContext* pc = primaryFrame->PresContext();
       nsITheme* theme = pc->Theme();
-      if (theme->ThemeSupportsWidget(pc, primaryFrame, disp->mAppearance)) {
+      if (theme->ThemeSupportsWidget(pc, primaryFrame, appearance)) {
         bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, nullptr,
-                                  &repaint, nullptr);
+        theme->WidgetStateChanged(primaryFrame, appearance, nullptr, &repaint,
+                                  nullptr);
         if (repaint) {
           changeHint |= nsChangeHint_RepaintFrame;
         }
@@ -3343,13 +3344,13 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 
   if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {
     // See if we have appearance information for a theme.
-    const nsStyleDisplay* disp = primaryFrame->StyleDisplay();
-    if (disp->HasAppearance()) {
+    StyleAppearance appearance =
+        primaryFrame->StyleDisplay()->EffectiveAppearance();
+    if (appearance != StyleAppearance::None) {
       nsITheme* theme = PresContext()->Theme();
-      if (theme->ThemeSupportsWidget(PresContext(), primaryFrame,
-                                     disp->mAppearance)) {
+      if (theme->ThemeSupportsWidget(PresContext(), primaryFrame, appearance)) {
         bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
+        theme->WidgetStateChanged(primaryFrame, appearance, aAttribute,
                                   &repaint, aOldValue);
         if (repaint) {
           changeHint |= nsChangeHint_RepaintFrame;

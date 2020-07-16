@@ -607,7 +607,8 @@ imgRequestProxy* nsImageBoxFrame::GetRequestFromStyle() {
   const nsStyleDisplay* disp = StyleDisplay();
   if (disp->HasAppearance()) {
     nsPresContext* pc = PresContext();
-    if (pc->Theme()->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
+    if (pc->Theme()->ThemeSupportsWidget(pc, this,
+                                         disp->EffectiveAppearance())) {
       return nullptr;
     }
   }

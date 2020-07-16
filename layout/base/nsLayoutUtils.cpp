@@ -5524,8 +5524,8 @@ static nscoord AddIntrinsicSizeOffset(
     LayoutDeviceIntSize devSize;
     bool canOverride = true;
     nsPresContext* pc = aFrame->PresContext();
-    pc->Theme()->GetMinimumWidgetSize(pc, aFrame, disp->mAppearance, &devSize,
-                                      &canOverride);
+    pc->Theme()->GetMinimumWidgetSize(pc, aFrame, disp->EffectiveAppearance(),
+                                      &devSize, &canOverride);
     nscoord themeSize = pc->DevPixelsToAppUnits(
         aAxis == eAxisVertical ? devSize.height : devSize.width);
     // GetMinimumWidgetSize() returns a border-box width.
@@ -7451,12 +7451,12 @@ nsTransparencyMode nsLayoutUtils::GetFrameTransparency(
   if (HasNonZeroCorner(aCSSRootFrame->StyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  if (aCSSRootFrame->StyleDisplay()->mAppearance ==
-      StyleAppearance::MozWinGlass)
-    return eTransparencyGlass;
+  StyleAppearance appearance =
+      aCSSRootFrame->StyleDisplay()->EffectiveAppearance();
 
-  if (aCSSRootFrame->StyleDisplay()->mAppearance ==
-      StyleAppearance::MozWinBorderlessGlass)
+  if (appearance == StyleAppearance::MozWinGlass) return eTransparencyGlass;
+
+  if (appearance == StyleAppearance::MozWinBorderlessGlass)
     return eTransparencyBorderlessGlass;
 
   nsITheme::Transparency transparency;
@@ -8642,9 +8642,9 @@ nsRect nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
     // border-box path with border-radius disabled.
     if (transparency != nsITheme::eOpaque) {
       nsPresContext* presContext = aFrame->PresContext();
-      presContext->Theme()->GetWidgetOverflow(presContext->DeviceContext(),
-                                              aFrame, styleDisplay->mAppearance,
-                                              &inputRect);
+      presContext->Theme()->GetWidgetOverflow(
+          presContext->DeviceContext(), aFrame,
+          styleDisplay->EffectiveAppearance(), &inputRect);
     }
   }
 

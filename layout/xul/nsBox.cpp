@@ -115,14 +115,14 @@ nsresult nsIFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding) {
 nsresult nsIFrame::GetXULBorder(nsMargin& aBorder) {
   aBorder.SizeTo(0, 0, 0, 0);
 
-  const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->HasAppearance()) {
+  StyleAppearance appearance = StyleDisplay()->EffectiveAppearance();
+  if (appearance != StyleAppearance::None) {
     // Go to the theme for the border.
     nsPresContext* pc = PresContext();
     nsITheme* theme = pc->Theme();
-    if (theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
+    if (theme->ThemeSupportsWidget(pc, this, appearance)) {
       LayoutDeviceIntMargin margin =
-          theme->GetWidgetBorder(pc->DeviceContext(), this, disp->mAppearance);
+          theme->GetWidgetBorder(pc->DeviceContext(), this, appearance);
       aBorder =
           LayoutDevicePixel::ToAppUnits(margin, pc->AppUnitsPerDevPixel());
       return NS_OK;
@@ -135,15 +135,15 @@ nsresult nsIFrame::GetXULBorder(nsMargin& aBorder) {
 }
 
 nsresult nsIFrame::GetXULPadding(nsMargin& aBorderAndPadding) {
-  const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->HasAppearance()) {
+  StyleAppearance appearance = StyleDisplay()->EffectiveAppearance();
+  if (appearance != StyleAppearance::None) {
     // Go to the theme for the padding.
     nsPresContext* pc = PresContext();
     nsITheme* theme = pc->Theme();
-    if (theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
+    if (theme->ThemeSupportsWidget(pc, this, appearance)) {
       LayoutDeviceIntMargin padding;
-      bool useThemePadding = theme->GetWidgetPadding(
-          pc->DeviceContext(), this, disp->mAppearance, &padding);
+      bool useThemePadding = theme->GetWidgetPadding(pc->DeviceContext(), this,
+                                                     appearance, &padding);
       if (useThemePadding) {
         aBorderAndPadding =
             LayoutDevicePixel::ToAppUnits(padding, pc->AppUnitsPerDevPixel());
@@ -407,10 +407,10 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   const nsStyleDisplay* display = aBox->StyleDisplay();
   if (display->HasAppearance()) {
     nsITheme* theme = pc->Theme();
-    if (theme->ThemeSupportsWidget(pc, aBox, display->mAppearance)) {
+    StyleAppearance appearance = display->EffectiveAppearance();
+    if (theme->ThemeSupportsWidget(pc, aBox, appearance)) {
       LayoutDeviceIntSize size;
-      theme->GetMinimumWidgetSize(pc, aBox, display->mAppearance, &size,
-                                  &canOverride);
+      theme->GetMinimumWidgetSize(pc, aBox, appearance, &size, &canOverride);
       if (size.width) {
         aSize.width = pc->DevPixelsToAppUnits(size.width);
         aWidthSet = true;
@@ -420,7 +420,7 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
         aHeightSet = true;
       }
     } else {
-      switch (display->mAppearance) {
+      switch (appearance) {
         case StyleAppearance::ScrollbarVertical:
           aSize.width = GetScrollbarWidthNoTheme(aBox);
           aWidthSet = true;

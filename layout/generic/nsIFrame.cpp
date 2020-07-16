@@ -1574,7 +1574,7 @@ nsMargin nsIFrame::GetUsedBorder() const {
   if (mutable_this->IsThemed(disp)) {
     nsPresContext* pc = PresContext();
     LayoutDeviceIntMargin widgetBorder = pc->Theme()->GetWidgetBorder(
-        pc->DeviceContext(), mutable_this, disp->mAppearance);
+        pc->DeviceContext(), mutable_this, disp->EffectiveAppearance());
     border =
         LayoutDevicePixel::ToAppUnits(widgetBorder, pc->AppUnitsPerDevPixel());
     return border;
@@ -1604,7 +1604,8 @@ nsMargin nsIFrame::GetUsedPadding() const {
     nsPresContext* pc = PresContext();
     LayoutDeviceIntMargin widgetPadding;
     if (pc->Theme()->GetWidgetPadding(pc->DeviceContext(), mutable_this,
-                                      disp->mAppearance, &widgetPadding)) {
+                                      disp->EffectiveAppearance(),
+                                      &widgetPadding)) {
       return LayoutDevicePixel::ToAppUnits(widgetPadding,
                                            pc->AppUnitsPerDevPixel());
     }
@@ -2457,8 +2458,8 @@ void nsIFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
   // focus indicators.
   if (outline.mOutlineStyle.IsAuto()) {
     auto* disp = StyleDisplay();
-    if (IsThemed(disp) &&
-        PresContext()->Theme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+    if (IsThemed(disp) && PresContext()->Theme()->ThemeDrawsFocusForWidget(
+                              disp->EffectiveAppearance())) {
       return;
     }
   }
@@ -4091,8 +4092,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const nsStyleDisplay* ourDisp = StyleDisplay();
   // REVIEW: Taken from nsBoxFrame::Paint
   // Don't paint our children if the theme object is a leaf.
-  if (IsThemed(ourDisp) &&
-      !PresContext()->Theme()->WidgetIsContainer(ourDisp->mAppearance))
+  if (IsThemed(ourDisp) && !PresContext()->Theme()->WidgetIsContainer(
+                               ourDisp->EffectiveAppearance()))
     return;
 
   // Since we're now sure that we're adding this frame to the display list
@@ -5884,14 +5885,14 @@ static nsIFrame::IntrinsicSizeOffsetData IntrinsicSizeOffsets(
     nsPresContext* presContext = aFrame->PresContext();
 
     LayoutDeviceIntMargin border = presContext->Theme()->GetWidgetBorder(
-        presContext->DeviceContext(), aFrame, disp->mAppearance);
+        presContext->DeviceContext(), aFrame, disp->EffectiveAppearance());
     result.border = presContext->DevPixelsToAppUnits(
         verticalAxis ? border.TopBottom() : border.LeftRight());
 
     LayoutDeviceIntMargin padding;
-    if (presContext->Theme()->GetWidgetPadding(presContext->DeviceContext(),
-                                               aFrame, disp->mAppearance,
-                                               &padding)) {
+    if (presContext->Theme()->GetWidgetPadding(
+            presContext->DeviceContext(), aFrame, disp->EffectiveAppearance(),
+            &padding)) {
       result.padding = presContext->DevPixelsToAppUnits(
           verticalAxis ? padding.TopBottom() : padding.LeftRight());
     }
@@ -6151,7 +6152,7 @@ LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
     bool canOverride = true;
     nsPresContext* presContext = PresContext();
     presContext->Theme()->GetMinimumWidgetSize(
-        presContext, this, disp->mAppearance, &widget, &canOverride);
+        presContext, this, disp->EffectiveAppearance(), &widget, &canOverride);
 
     // Convert themed widget's physical dimensions to logical coords
     LogicalSize size(aWM,
@@ -9269,8 +9270,9 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   if (!::IsXULBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
     nsPresContext* presContext = PresContext();
-    if (presContext->Theme()->GetWidgetOverflow(presContext->DeviceContext(),
-                                                this, disp->mAppearance, &r)) {
+    if (presContext->Theme()->GetWidgetOverflow(
+            presContext->DeviceContext(), this, disp->EffectiveAppearance(),
+            &r)) {
       nsRect& vo = aOverflowAreas.VisualOverflow();
       vo.UnionRectEdges(vo, r);
     }

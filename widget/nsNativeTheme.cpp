@@ -204,8 +204,9 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
       // only if the scrollable area doesn't override the widget style.
       parentFrame = parentFrame->GetParent();
       if (parentFrame) {
-        return IsWidgetStyled(aPresContext, parentFrame,
-                              parentFrame->StyleDisplay()->mAppearance);
+        return IsWidgetStyled(
+            aPresContext, parentFrame,
+            parentFrame->StyleDisplay()->EffectiveAppearance());
       }
     }
   }
@@ -581,8 +582,8 @@ nsIFrame* nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(
 
   // Check same appearance and adjacency.
   if (!sibling ||
-      sibling->StyleDisplay()->mAppearance !=
-          aFrame->StyleDisplay()->mAppearance ||
+      sibling->StyleDisplay()->EffectiveAppearance() !=
+          aFrame->StyleDisplay()->EffectiveAppearance() ||
       (sibling->GetRect().XMost() != aFrame->GetRect().X() &&
        aFrame->GetRect().XMost() != sibling->GetRect().X()))
     return nullptr;

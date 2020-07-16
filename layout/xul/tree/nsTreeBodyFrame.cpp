@@ -1807,19 +1807,18 @@ nsITheme* nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
 
   bool useTheme = false;
   nsITheme* theme = nullptr;
-  const nsStyleDisplay* twistyDisplayData = aTwistyContext->StyleDisplay();
-  if (twistyDisplayData->mAppearance != StyleAppearance::None) {
+  StyleAppearance appearance =
+      aTwistyContext->StyleDisplay()->EffectiveAppearance();
+  if (appearance != StyleAppearance::None) {
     theme = aPresContext->Theme();
-    if (theme->ThemeSupportsWidget(aPresContext, nullptr,
-                                   twistyDisplayData->mAppearance))
+    if (theme->ThemeSupportsWidget(aPresContext, nullptr, appearance))
       useTheme = true;
   }
 
   if (useTheme) {
     LayoutDeviceIntSize minTwistySizePx;
     bool canOverride = true;
-    theme->GetMinimumWidgetSize(aPresContext, this,
-                                twistyDisplayData->mAppearance,
+    theme->GetMinimumWidgetSize(aPresContext, this, appearance,
                                 &minTwistySizePx, &canOverride);
 
     // GMWS() returns size in pixels, we need to convert it back to app units
@@ -2536,7 +2535,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
 static bool IsInSourceList(nsIFrame* aFrame) {
   for (nsIFrame* frame = aFrame; frame;
        frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
-    if (frame->StyleDisplay()->mAppearance ==
+    if (frame->StyleDisplay()->EffectiveAppearance() ==
         StyleAppearance::MozMacSourceList) {
       return true;
     }
@@ -2588,7 +2587,7 @@ void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         nsTreeUtils::TokenizeProperties(properties, mScratchArray);
         ComputedStyle* rowContext =
             GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeRow());
-        auto appearance = rowContext->StyleDisplay()->mAppearance;
+        auto appearance = rowContext->StyleDisplay()->EffectiveAppearance();
         if (appearance != StyleAppearance::None) {
           if (theme->ThemeSupportsWidget(PresContext(), this, appearance)) {
             nsITheme::ThemeGeometryType type =
@@ -2769,7 +2768,7 @@ ImgDrawResult nsTreeBodyFrame::PaintRow(int32_t aRowIndex,
 
   // Paint our borders and background for our row rect.
   nsITheme* theme = nullptr;
-  auto appearance = rowContext->StyleDisplay()->mAppearance;
+  auto appearance = rowContext->StyleDisplay()->EffectiveAppearance();
   if (appearance != StyleAppearance::None) {
     theme = aPresContext->Theme();
   }
@@ -2897,11 +2896,11 @@ ImgDrawResult nsTreeBodyFrame::PaintSeparator(int32_t aRowIndex,
       GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeSeparator());
   bool useTheme = false;
   nsITheme* theme = nullptr;
-  const nsStyleDisplay* displayData = separatorContext->StyleDisplay();
-  if (displayData->HasAppearance()) {
+  StyleAppearance appearance =
+      separatorContext->StyleDisplay()->EffectiveAppearance();
+  if (appearance != StyleAppearance::None) {
     theme = aPresContext->Theme();
-    if (theme->ThemeSupportsWidget(aPresContext, nullptr,
-                                   displayData->mAppearance))
+    if (theme->ThemeSupportsWidget(aPresContext, nullptr, appearance))
       useTheme = true;
   }
 
@@ -2911,9 +2910,8 @@ ImgDrawResult nsTreeBodyFrame::PaintSeparator(int32_t aRowIndex,
   if (useTheme) {
     nsRect dirty;
     dirty.IntersectRect(aSeparatorRect, aDirtyRect);
-    theme->DrawWidgetBackground(&aRenderingContext, this,
-                                displayData->mAppearance, aSeparatorRect,
-                                dirty);
+    theme->DrawWidgetBackground(&aRenderingContext, this, appearance,
+                                aSeparatorRect, dirty);
   } else {
     const nsStylePosition* stylePosition = separatorContext->StylePosition();
 
@@ -3182,9 +3180,10 @@ ImgDrawResult nsTreeBodyFrame::PaintTwisty(
       // draw over it. Besides, we have to prevent imagelib from drawing it.
       nsRect dirty;
       dirty.IntersectRect(twistyRect, aDirtyRect);
-      theme->DrawWidgetBackground(&aRenderingContext, this,
-                                  twistyContext->StyleDisplay()->mAppearance,
-                                  twistyRect, dirty);
+      theme->DrawWidgetBackground(
+          &aRenderingContext, this,
+          twistyContext->StyleDisplay()->EffectiveAppearance(), twistyRect,
+          dirty);
     } else {
       // Time to paint the twisty.
       // Adjust the rect for its border and padding.
