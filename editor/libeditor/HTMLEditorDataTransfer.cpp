@@ -289,6 +289,9 @@ class MOZ_STACK_CLASS
       bool aTrustedInput, nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
       RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const;
 
+  static nsAtom* DetermineContextLocalNameForParsingPastedHTML(
+      const nsIContent* aParentContentOfPastedHTMLInContext);
+
   static bool FindTargetNodeOfContextForPastedHTML(nsINode& aStart,
                                                    nsCOMPtr<nsINode>& aResult);
 
@@ -3186,6 +3189,22 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
   return rv;
 }
 
+// static
+nsAtom* HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
+    DetermineContextLocalNameForParsingPastedHTML(
+        const nsIContent* aParentContentOfPastedHTMLInContext) {
+  if (!aParentContentOfPastedHTMLInContext) {
+    return nsGkAtoms::body;
+  }
+
+  nsAtom* contextLocalNameAtom =
+      aParentContentOfPastedHTMLInContext->NodeInfo()->NameAtom();
+
+  return (aParentContentOfPastedHTMLInContext->IsHTMLElement(nsGkAtoms::html))
+             ? nsGkAtoms::body
+             : contextLocalNameAtom;
+}
+
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
         const nsAString& aInputString, const nsAString& aContextStr,
@@ -3241,17 +3260,9 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   MOZ_ASSERT_IF(aParentNodeOfPastedHTMLInContext,
                 parentContentOfPastedHTMLInContext);
 
-  // create fragment for pasted html
-  nsAtom* contextLocalNameAtom;
-  if (parentContentOfPastedHTMLInContext) {
-    contextLocalNameAtom =
-        parentContentOfPastedHTMLInContext->NodeInfo()->NameAtom();
-    if (parentContentOfPastedHTMLInContext->IsHTMLElement(nsGkAtoms::html)) {
-      contextLocalNameAtom = nsGkAtoms::body;
-    }
-  } else {
-    contextLocalNameAtom = nsGkAtoms::body;
-  }
+  nsAtom* contextLocalNameAtom =
+      FragmentFromPasteCreator::DetermineContextLocalNameForParsingPastedHTML(
+          parentContentOfPastedHTMLInContext);
   nsresult rv =
       fragmentParser.ParsePastedHTML(aInputString, contextLocalNameAtom,
                                      getter_AddRefs(aDocumentFragmentToInsert));
