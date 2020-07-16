@@ -33,17 +33,17 @@ const poisoned = {
 };
 
 assert.throws(RangeError, function() {
-  Atomics.wait(i64a, Infinity, poisoned, poisoned);
-}, '`Atomics.wait(i64a, Infinity, poisoned, poisoned)` throws RangeError');
+  Atomics.waitAsync(i64a, Infinity, poisoned, poisoned);
+}, '`Atomics.waitAsync(i64a, Infinity, poisoned, poisoned)` throws RangeError');
 assert.throws(RangeError, function() {
-  Atomics.wait(i64a, -1, poisoned, poisoned);
-}, '`Atomics.wait(i64a, -1, poisoned, poisoned)` throws RangeError');
+  Atomics.waitAsync(i64a, -1, poisoned, poisoned);
+}, '`Atomics.waitAsync(i64a, -1, poisoned, poisoned)` throws RangeError');
 assert.throws(RangeError, function() {
-  Atomics.wait(i64a, 4, poisoned, poisoned);
-}, '`Atomics.wait(i64a, 4, poisoned, poisoned)` throws RangeError');
+  Atomics.waitAsync(i64a, 4, poisoned, poisoned);
+}, '`Atomics.waitAsync(i64a, 4, poisoned, poisoned)` throws RangeError');
 assert.throws(RangeError, function() {
-  Atomics.wait(i64a, 200, poisoned, poisoned);
-}, '`Atomics.wait(i64a, 200, poisoned, poisoned)` throws RangeError');
+  Atomics.waitAsync(i64a, 200, poisoned, poisoned);
+}, '`Atomics.waitAsync(i64a, 200, poisoned, poisoned)` throws RangeError');
 
 
 reportCompare(0, 0);

@@ -1,8 +1,5 @@
-commit b5650d23a55d32f95a3d59b55b53b8e613aa545f
-Author: André Bargull <andre.bargull@gmail.com>
-Date:   Thu Jun 25 08:35:46 2020 -0700
+commit d3bfa94c16ef8b3c7e2cf8510852f610c369161e
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Wed Jul 15 13:46:48 2020 -0700
 
-    Don't call $DONE twice in S25.4.4_A2.1_T3.js (#2679)
-    
-    Reverts the change from 040eb5393a6c3e854a7ab5e86b54f3dac841162e to avoid
-    calling $DONE twice in the test file.
+    Fix bad renaming, main should upstream to master

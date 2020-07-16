@@ -30,6 +30,8 @@ info: |
 
 features: [Atomics.waitAsync, Atomics, TypedArray, SharedArrayBuffer]
 ---*/
+assert.sameValue(typeof Atomics.waitAsync, 'function');
+
 const timeout = {
   valueOf() {
     throw new Test262Error("timeout coerced");
