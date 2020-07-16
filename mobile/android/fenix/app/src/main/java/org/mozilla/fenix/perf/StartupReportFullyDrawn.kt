@@ -7,8 +7,8 @@ package org.mozilla.fenix.perf
 import android.app.Activity
 import android.view.View
 import androidx.core.view.doOnPreDraw
-import kotlinx.android.synthetic.main.activity_home.*
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.reportFullyDrawnSafe
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSiteItemViewHolder
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.APP_LINK
@@ -36,7 +36,7 @@ class StartupReportFullyDrawn {
                 state is StartupState.Cold && state.destination == APP_LINK) {
             // Instrumenting the first frame drawn should be good enough for app link for now.
             isInstrumented = true
-            attachReportFullyDrawn(activity, activity.rootContainer)
+            attachReportFullyDrawn(activity, activity.findViewById(R.id.rootContainer))
         }
     }
 
@@ -59,7 +59,7 @@ class StartupReportFullyDrawn {
         }
     }
 
-    private fun attachReportFullyDrawn(activity: HomeActivity, view: View) {
+    private fun attachReportFullyDrawn(activity: Activity, view: View) {
         // For greater accuracy, we could add an onDrawListener instead of a preDrawListener but:
         // - single use onDrawListeners are not built-in and it's non-trivial to write one
         // - the difference in timing is minimal (< 7ms on Pixel 2)
