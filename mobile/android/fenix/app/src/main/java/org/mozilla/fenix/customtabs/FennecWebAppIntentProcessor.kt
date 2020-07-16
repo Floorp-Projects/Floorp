@@ -11,9 +11,9 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -60,7 +60,7 @@ class FennecWebAppIntentProcessor(
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val webAppManifest = runBlocking { loadManifest(safeIntent, url) }
 
-            val session = Session(url, private = false, source = Source.HOME_SCREEN)
+            val session = Session(url, private = false, source = SessionState.Source.HOME_SCREEN)
             session.webAppManifest = webAppManifest
             session.customTabConfig =
                 webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()

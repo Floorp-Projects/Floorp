@@ -15,6 +15,7 @@ import io.mockk.verifyAll
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.session.SessionUseCases
@@ -56,7 +57,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
         val fennecShortcutsIntent = Intent(ACTION_FENNEC_HOMESCREEN_SHORTCUT)
         val testUrl = "http://mozilla.org"
         fennecShortcutsIntent.data = Uri.parse(testUrl)
-        val expectedSession = Session(testUrl, private = false, source = Session.Source.HOME_SCREEN)
+        val expectedSession = Session(testUrl, private = false, source = SessionState.Source.HOME_SCREEN)
 
         val wasIntentProcessed = processor.process(fennecShortcutsIntent)
 

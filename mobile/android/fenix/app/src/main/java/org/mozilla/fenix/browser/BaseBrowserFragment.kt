@@ -808,7 +808,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
             val sessionManager = requireComponents.core.sessionManager
-            return if (session.source == Session.Source.ACTION_VIEW) {
+            return if (session.source == SessionState.Source.ACTION_VIEW) {
                 activity?.finish()
                 sessionManager.remove(session)
                 true

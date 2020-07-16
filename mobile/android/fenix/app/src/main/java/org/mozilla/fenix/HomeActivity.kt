@@ -33,8 +33,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.BrowserTabsTray
@@ -545,7 +545,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 components.useCases.searchUseCases.newTabSearch
                     .invoke(
                         searchTerms,
-                        Session.Source.USER_ENTERED,
+                        SessionState.Source.USER_ENTERED,
                         true,
                         mode.isPrivate,
                         searchEngine = engine
