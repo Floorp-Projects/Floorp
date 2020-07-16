@@ -36,7 +36,14 @@ rawPackets.set(`GET request`, {
   "cause": {
     "type": "img",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
-    "stacktraceAvailable": false
+    "lastFrame": {
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+      "lineNumber": 3,
+      "columnNumber": 1,
+      "functionName": "triggerPacket",
+      "asyncCause": null
+    },
+    "stacktraceAvailable": true
   },
   "response": {
     "httpVersion": "HTTP/1.1",
@@ -86,7 +93,14 @@ rawPackets.set(`GET request update`, {
   "cause": {
     "type": "img",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
-    "stacktraceAvailable": false
+    "lastFrame": {
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+      "lineNumber": 3,
+      "columnNumber": 1,
+      "functionName": "triggerPacket",
+      "asyncCause": null
+    },
+    "stacktraceAvailable": true
   },
   "response": {
     "httpVersion": "HTTP/1.1",
