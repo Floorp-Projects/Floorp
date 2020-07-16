@@ -39,6 +39,7 @@ SEARCH_PATHS = [
     "python/mozperftest",
     "python/mozterm",
     "python/mozversioncontrol",
+    "testing/condprofile",
     "testing/mozbase/mozdevice",
     "testing/mozbase/mozfile",
     "testing/mozbase/mozinfo",

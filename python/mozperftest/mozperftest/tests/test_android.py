@@ -199,7 +199,7 @@ def test_android_log_cat(device):
 
         mach_cmd, metadata, env = get_running_env(**args)
         system = env.layers[SYSTEM]
-        andro = system.layers[0]
+        andro = system.layers[1]
 
         with system as layer, silence(system):
             andro.device = device

@@ -9,7 +9,7 @@ import random
 import pytest
 
 from mozperftest.tests.support import get_running_env, EXAMPLE_TEST
-from mozperftest.environment import TEST
+from mozperftest.environment import TEST, SYSTEM
 from mozperftest.test.browsertime import add_options
 from mozperftest.test.browsertime.runner import (
     NodeException,
@@ -44,12 +44,13 @@ def test_browser(*mocked):
         browsertime_extra_options="one=1,two=2",
     )
 
+    sys = env.layers[SYSTEM]
     browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
 
     try:
-        with browser as b, silence():
-            b(metadata)
+        with sys as s, browser as b, silence():
+            b(s(metadata))
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)
     assert mach_cmd.run_process.call_count == 1
@@ -91,9 +92,10 @@ def test_browser_failed(*mocked):
     mach_cmd.run_process.return_value = 1
     browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
+    sys = env.layers[SYSTEM]
 
-    with browser as b, silence(), pytest.raises(NodeException):
-        b(metadata)
+    with sys as s, browser as b, silence(), pytest.raises(NodeException):
+        b(s(metadata))
 
 
 @mock.patch("mozperftest.test.browsertime.runner.install_package")
@@ -111,9 +113,10 @@ def test_browser_desktop(*mocked):
     )
     browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
+    sys = env.layers[SYSTEM]
 
     try:
-        with browser as b, silence():
+        with sys as s, browser as b, silence():
             # just checking that the setup_helper property gets
             # correctly initialized
             browsertime = browser.layers[-1]
@@ -121,7 +124,7 @@ def test_browser_desktop(*mocked):
             helper = browsertime.setup_helper
             assert browsertime.setup_helper is helper
 
-            b(metadata)
+            b(s(metadata))
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)
 
@@ -153,10 +156,11 @@ def test_install_url(*mocked):
     mach, metadata, env = get_running_env(browsertime_install_url=url)
     browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
+    sys = env.layers[SYSTEM]
 
     try:
-        with temporary_env(MOZ_AUTOMATION="1"), browser as b, silence():
-            b(metadata)
+        with sys as s, temporary_env(MOZ_AUTOMATION="1"), browser as b, silence():
+            b(s(metadata))
     finally:
         shutil.rmtree(mach._mach_context.state_dir)
 
@@ -176,11 +180,12 @@ def test_install_url_bad(*mocked):
     mach, metadata, env = get_running_env(browsertime_install_url="meh")
     browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
+    sys = env.layers[SYSTEM]
 
     with pytest.raises(ValueError):
         try:
-            with browser as b, silence():
-                b(metadata)
+            with sys as s, browser as b, silence():
+                b(s(metadata))
         finally:
             shutil.rmtree(mach._mach_context.state_dir)
 

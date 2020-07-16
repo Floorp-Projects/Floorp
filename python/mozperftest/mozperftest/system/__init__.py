@@ -4,15 +4,16 @@
 from mozperftest.layers import Layers
 from mozperftest.system.proxy import ProxyRunner
 from mozperftest.system.android import AndroidDevice
+from mozperftest.system.profile import Profile
 
 
 def get_layers():
-    return (ProxyRunner, AndroidDevice)
+    return Profile, ProxyRunner, AndroidDevice
 
 
 def pick_system(env, flavor, mach_cmd):
     if flavor == "desktop-browser":
-        return Layers(env, mach_cmd, (ProxyRunner,))
+        return Layers(env, mach_cmd, (Profile, ProxyRunner,))
     if flavor == "mobile-browser":
-        return Layers(env, mach_cmd, (ProxyRunner, AndroidDevice))
+        return Layers(env, mach_cmd, (Profile, ProxyRunner, AndroidDevice))
     raise NotImplementedError(flavor)
