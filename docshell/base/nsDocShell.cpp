@@ -479,11 +479,10 @@ bool nsDocShell::Initialize() {
   mDeviceSizeIsPageSize = Preferences::GetBool(
       "docshell.device_size_is_page_size", mDeviceSizeIsPageSize);
 
-  nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-  if (serv) {
+  if (nsCOMPtr<nsIObserverService> serv = services::GetObserverService()) {
     const char* msg = mItemType == typeContent ? NS_WEBNAVIGATION_CREATE
                                                : NS_CHROME_WEBNAVIGATION_CREATE;
-    serv->NotifyObservers(GetAsSupports(this), msg, nullptr);
+    serv->NotifyWhenScriptSafe(GetAsSupports(this), msg, nullptr);
   }
 
   return true;

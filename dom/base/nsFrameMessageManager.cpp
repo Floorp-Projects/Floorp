@@ -810,13 +810,10 @@ void nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback) {
 
 void nsFrameMessageManager::Close() {
   if (!mClosed) {
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "nsFrameMessageManager::Close", [self = nsCOMPtr<nsISupports>(this)]() {
-          if (nsCOMPtr<nsIObserverService> obs =
-                  mozilla::services::GetObserverService()) {
-            obs->NotifyObservers(self, "message-manager-close", nullptr);
-          }
-        }));
+    if (nsCOMPtr<nsIObserverService> obs =
+            mozilla::services::GetObserverService()) {
+      obs->NotifyWhenScriptSafe(this, "message-manager-close", nullptr);
+    }
   }
   mClosed = true;
   mCallback = nullptr;
@@ -828,14 +825,10 @@ void nsFrameMessageManager::Disconnect(bool aRemoveFromParent) {
   Close();
 
   if (!mDisconnected) {
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "nsFrameMessageManager::Disconnect",
-        [self = nsCOMPtr<nsISupports>(this)]() {
-          if (nsCOMPtr<nsIObserverService> obs =
-                  mozilla::services::GetObserverService()) {
-            obs->NotifyObservers(self, "message-manager-disconnect", nullptr);
-          }
-        }));
+    if (nsCOMPtr<nsIObserverService> obs =
+            mozilla::services::GetObserverService()) {
+      obs->NotifyWhenScriptSafe(this, "message-manager-disconnect", nullptr);
+    }
   }
 
   ClearParentManager(aRemoveFromParent);
