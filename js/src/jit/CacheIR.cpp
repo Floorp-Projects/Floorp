@@ -6386,6 +6386,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntrinsicGuardToStringIterator:
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
     case InlinableNative::IntrinsicGuardToWrapForValidIterator:
+    case InlinableNative::IntrinsicGuardToIteratorHelper:
+    case InlinableNative::IntrinsicGuardToAsyncIteratorHelper:
       return tryAttachGuardToClass(callee, native);
     case InlinableNative::IntrinsicSubstringKernel:
       return tryAttachSubstringKernel(callee);

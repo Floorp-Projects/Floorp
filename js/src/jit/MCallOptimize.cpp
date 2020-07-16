@@ -375,6 +375,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
     case InlinableNative::IntrinsicGuardToWrapForValidIterator:
     case InlinableNative::IntrinsicGuardToIteratorHelper:
+    case InlinableNative::IntrinsicGuardToAsyncIteratorHelper:
       return inlineGuardToClass(callInfo, inlNative);
     case InlinableNative::IntrinsicObjectHasPrototype:
       return inlineObjectHasPrototype(callInfo);

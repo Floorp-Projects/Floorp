@@ -158,6 +158,7 @@
   _(IntrinsicGuardToRegExpStringIterator)          \
   _(IntrinsicGuardToWrapForValidIterator)          \
   _(IntrinsicGuardToIteratorHelper)                \
+  _(IntrinsicGuardToAsyncIteratorHelper)           \
                                                    \
   _(IntrinsicGuardToMapObject)                     \
   _(IntrinsicGetNextMapEntryForIterator)           \

@@ -861,6 +861,7 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/from/proxy-wrap-t
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/return-iterator-if-iterable.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/return-wrapper-if-not-iterable.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/return-wrapper-if-not-iterator-instance.js
+shell-option(--enable-iterator-helpers) script non262/Iterator/from/wrap-functions-on-other-global.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/wrap-method-with-non-wrap-this-throws.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/wrap-next-forwards-value.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/wrap-next-not-object-throws.js
@@ -951,7 +952,9 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/toArray
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/toArray/value-throws-iterator-not-closed.js
 
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/generator-methods-throw-on-iterator-helpers.js
+shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/iterator-helpers-from-other-global.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/iterator-helper-methods-throw-on-generators.js
+shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/lazy-methods-from-other-global.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/lazy-methods-handle-empty-iterators.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/lazy-methods-interleaved.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/lazy-methods-iterator-closed-on-call-throws.js

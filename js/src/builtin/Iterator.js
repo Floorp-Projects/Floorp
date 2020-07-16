@@ -152,8 +152,14 @@ function IteratorFrom(O) {
 function WrapForValidIteratorNext(value) {
   // Step 1-2.
   let O;
-  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null)
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, O));
+  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null) {
+    if (arguments.length === 0) {
+      return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
+                          "WrapForValidIteratorNext");
+    }
+    return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
+                        value, "WrapForValidIteratorNext");
+  }
   const iterated = UnsafeGetReservedSlot(O, ITERATED_SLOT);
   // Step 3.
   let result;
@@ -172,8 +178,10 @@ function WrapForValidIteratorNext(value) {
 function WrapForValidIteratorReturn(value) {
   // Step 1-2.
   let O;
-  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null)
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, O));
+  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null) {
+    return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
+                        value, "WrapForValidIteratorReturn");
+  }
   const iterated = UnsafeGetReservedSlot(O, ITERATED_SLOT);
 
   // Step 3.
@@ -198,7 +206,8 @@ function WrapForValidIteratorThrow(value) {
   // Step 1-2.
   let O;
   if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, O));
+    return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
+                        value, "WrapForValidIteratorThrow");
   }
   const iterated = UnsafeGetReservedSlot(O, ITERATED_SLOT);
   // Step 3.
@@ -217,7 +226,8 @@ function WrapForValidIteratorThrow(value) {
 function IteratorHelperNext(value) {
   let O;
   if (!IsObject(this) || (O = GuardToIteratorHelper(this)) === null) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, O));
+    return callFunction(CallIteratorHelperMethodIfWrapped, this,
+                        value, "IteratorHelperNext");
   }
   const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callContentFunction(GeneratorNext, generator, value);
@@ -226,7 +236,8 @@ function IteratorHelperNext(value) {
 function IteratorHelperReturn(value) {
   let O;
   if (!IsObject(this) || (O = GuardToIteratorHelper(this)) === null) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, O));
+    return callFunction(CallIteratorHelperMethodIfWrapped, this,
+                        value, "IteratorHelperReturn");
   }
   const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callContentFunction(GeneratorReturn, generator, value);
@@ -235,7 +246,8 @@ function IteratorHelperReturn(value) {
 function IteratorHelperThrow(value) {
   let O;
   if (!IsObject(this) || (O = GuardToIteratorHelper(this)) === null) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, O));
+    return callFunction(CallIteratorHelperMethodIfWrapped, this,
+                        value, "IteratorHelperThrow");
   }
   const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callContentFunction(GeneratorThrow, generator, value);
