@@ -1,1313 +1,1338 @@
-/* Copyright 2017 Mozilla Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-// See https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md
+use crate::{AliasSectionReader, InstanceSectionReader, ModuleSectionReader};
+use crate::{BinaryReader, BinaryReaderError, FunctionBody, Range, Result};
+use crate::{DataSectionReader, ElementSectionReader, ExportSectionReader};
+use crate::{FunctionSectionReader, ImportSectionReader, TypeSectionReader};
+use crate::{GlobalSectionReader, MemorySectionReader, TableSectionReader};
+use std::convert::TryInto;
+use std::fmt;
+use std::iter;
 
-use std::boxed::Box;
-use std::vec::Vec;
-
-use crate::limits::{
-    MAX_WASM_FUNCTIONS, MAX_WASM_FUNCTION_LOCALS, MAX_WASM_STRING_SIZE, MAX_WASM_TABLE_ENTRIES,
-};
-
-use crate::primitives::{
-    BinaryReaderError, CustomSectionKind, ExternalKind, GlobalType, ImportSectionEntryType,
-    LinkingType, MemoryType, Naming, Operator, RelocType, Result, SectionCode, TableType, Type,
-    TypeDef,
-};
-
-use crate::readers::*;
-
-use crate::binary_reader::{BinaryReader, Range};
-
-const MAX_DATA_CHUNK_SIZE: usize = MAX_WASM_STRING_SIZE;
-
-#[derive(Debug)]
-pub struct LocalName<'a> {
-    pub index: u32,
-    pub locals: Box<[Naming<'a>]>,
+/// An incremental parser of a binary WebAssembly module.
+///
+/// This type is intended to be used to incrementally parse a WebAssembly module
+/// as bytes become available for the module. This can also be used to parse
+/// modules that are already entirely resident within memory.
+///
+/// This primary function for a parser is the [`Parser::parse`] function which
+/// will incrementally consume input. You can also use the [`Parser::parse_all`]
+/// function to parse a module that is entirely resident in memory.
+#[derive(Debug, Clone)]
+pub struct Parser {
+    state: State,
+    offset: u64,
+    max_size: u64,
 }
 
-#[derive(Debug)]
-pub enum NameEntry<'a> {
-    Module(&'a str),
-    Function(Box<[Naming<'a>]>),
-    Local(Box<[LocalName<'a>]>),
+#[derive(Debug, Clone)]
+enum State {
+    ModuleHeader,
+    SectionStart,
+    FunctionBody { remaining: u32, len: u32 },
+    ModuleCode { remaining: u32, len: u32 },
 }
 
+/// A successful return payload from [`Parser::parse`].
+///
+/// On success one of two possible values can be returned, either that more data
+/// is needed to continue parsing or a chunk of the input was parsed, indicating
+/// how much of it was parsed.
 #[derive(Debug)]
-pub struct RelocEntry {
-    pub ty: RelocType,
-    pub offset: u32,
-    pub index: u32,
-    pub addend: Option<u32>,
-}
+pub enum Chunk<'a> {
+    /// This can be returned at any time and indicates that more data is needed
+    /// to proceed with parsing. Zero bytes were consumed from the input to
+    /// [`Parser::parse`]. The `usize` value here is a hint as to how many more
+    /// bytes are needed to continue parsing.
+    NeedMoreData(u64),
 
-enum InitExpressionContinuationSection {
-    Global,
-    Element,
-    Data,
-}
-
-#[derive(Debug)]
-pub enum ParserState<'a> {
-    Error(BinaryReaderError),
-    Initial,
-    BeginWasm {
-        version: u32,
+    /// A chunk was successfully parsed.
+    Parsed {
+        /// This many bytes of the `data` input to [`Parser::parse`] were
+        /// consumed to produce `payload`.
+        consumed: usize,
+        /// The value that we actually parsed.
+        payload: Payload<'a>,
     },
-    EndWasm,
-    BeginSection {
-        code: SectionCode<'a>,
+}
+
+/// Values that can be parsed from a wasm module.
+///
+/// This enumeration is all possible chunks of pieces that can be parsed by a
+/// [`Parser`] from a binary WebAssembly module. Note that for many sections the
+/// entire section is parsed all at once, whereas other functions, like the code
+/// section, are parsed incrementally. This is a distinction where some
+/// sections, like the type section, are required to be fully resident in memory
+/// (fully downloaded) before proceeding. Other sections, like the code section,
+/// can be processed in a streaming fashion where each function is extracted
+/// individually so it can possibly be shipped to another thread while you wait
+/// for more functions to get downloaded.
+///
+/// Note that payloads, when returned, do not indicate that the wasm module is
+/// valid. For example when you receive a `Payload::TypeSection` the type
+/// section itself has not yet actually been parsed. The reader returned will be
+/// able to parse it, but you'll have to actually iterate the reader to do the
+/// full parse. Each payload returned is intended to be a *window* into the
+/// original `data` passed to [`Parser::parse`] which can be further processed
+/// if necessary.
+pub enum Payload<'a> {
+    /// Indicates the header of a WebAssembly binary.
+    ///
+    /// This header also indicates the version number that was parsed, which is
+    /// currently always 1.
+    Version {
+        /// The version number found
+        num: u32,
+        /// The range of bytes that were parsed to consume the header of the
+        /// module. Note that this range is relative to the start of the byte
+        /// stream.
         range: Range,
     },
-    EndSection,
-    SkippingSection,
-    ReadingCustomSection(CustomSectionKind),
-    ReadingSectionRawData,
-    SectionRawData(&'a [u8]),
 
-    TypeSectionEntry(TypeDef<'a>),
-    ImportSectionEntry {
-        module: &'a str,
-        field: Option<&'a str>,
-        ty: ImportSectionEntryType,
-    },
-    FunctionSectionEntry(u32),
-    TableSectionEntry(TableType),
-    MemorySectionEntry(MemoryType),
-    ExportSectionEntry {
-        field: &'a str,
-        kind: ExternalKind,
-        index: u32,
-    },
-    NameSectionEntry(NameEntry<'a>),
-    StartSectionEntry(u32),
-    DataCountSectionEntry(u32),
-
-    BeginInitExpressionBody,
-    InitExpressionOperator(Operator<'a>),
-    EndInitExpressionBody,
-
-    BeginFunctionBody {
+    /// A type section was received, and the provided reader can be used to
+    /// parse the contents of the type section.
+    TypeSection(crate::TypeSectionReader<'a>),
+    /// A import section was received, and the provided reader can be used to
+    /// parse the contents of the import section.
+    ImportSection(crate::ImportSectionReader<'a>),
+    /// An alias section was received, and the provided reader can be used to
+    /// parse the contents of the alias section.
+    AliasSection(crate::AliasSectionReader<'a>),
+    /// An instance section was received, and the provided reader can be used to
+    /// parse the contents of the instance section.
+    InstanceSection(crate::InstanceSectionReader<'a>),
+    /// A module section was received, and the provided reader can be used to
+    /// parse the contents of the module section.
+    ModuleSection(crate::ModuleSectionReader<'a>),
+    /// A function section was received, and the provided reader can be used to
+    /// parse the contents of the function section.
+    FunctionSection(crate::FunctionSectionReader<'a>),
+    /// A table section was received, and the provided reader can be used to
+    /// parse the contents of the table section.
+    TableSection(crate::TableSectionReader<'a>),
+    /// A memory section was received, and the provided reader can be used to
+    /// parse the contents of the memory section.
+    MemorySection(crate::MemorySectionReader<'a>),
+    /// A global section was received, and the provided reader can be used to
+    /// parse the contents of the global section.
+    GlobalSection(crate::GlobalSectionReader<'a>),
+    /// An export section was received, and the provided reader can be used to
+    /// parse the contents of the export section.
+    ExportSection(crate::ExportSectionReader<'a>),
+    /// A start section was received, and the `u32` here is the index of the
+    /// start function.
+    StartSection {
+        /// The start function index
+        func: u32,
+        /// The range of bytes that specify the `func` field, specified in
+        /// offsets relative to the start of the byte stream.
         range: Range,
     },
-    FunctionBodyLocals {
-        locals: Box<[(u32, Type)]>,
-    },
-    CodeOperator(Operator<'a>),
-    EndFunctionBody,
-    SkippingFunctionBody,
-
-    BeginElementSectionEntry {
-        /// `None` means this is a passive or defined entry
-        table: ElemSectionEntryTable,
-        ty: Type,
-    },
-    ElementSectionEntryBody(Box<[ElementItem]>),
-    EndElementSectionEntry,
-
-    BeginPassiveDataSectionEntry,
-    BeginActiveDataSectionEntry(u32),
-    EndDataSectionEntry,
-    BeginDataSectionEntryBody(u32),
-    DataSectionEntryBodyChunk(&'a [u8]),
-    EndDataSectionEntryBody,
-
-    BeginGlobalSectionEntry(GlobalType),
-    EndGlobalSectionEntry,
-
-    RelocSectionHeader(SectionCode<'a>),
-    RelocSectionEntry(RelocEntry),
-    LinkingSectionEntry(LinkingType),
-
-    SourceMappingURL(&'a str),
-
-    ModuleSectionEntry(u32),
-    AliasSectionEntry(Alias),
-    BeginInstantiate {
-        module: u32,
+    /// An element section was received, and the provided reader can be used to
+    /// parse the contents of the element section.
+    ElementSection(crate::ElementSectionReader<'a>),
+    /// A data count section was received, and the `u32` here is the contents of
+    /// the data count section.
+    DataCountSection {
+        /// The number of data segments.
         count: u32,
+        /// The range of bytes that specify the `count` field, specified in
+        /// offsets relative to the start of the byte stream.
+        range: Range,
     },
-    InstantiateParameter {
-        kind: ExternalKind,
-        index: u32,
+    /// A data section was received, and the provided reader can be used to
+    /// parse the contents of the data section.
+    DataSection(crate::DataSectionReader<'a>),
+    /// A custom section was found.
+    CustomSection {
+        /// The name of the custom section.
+        name: &'a str,
+        /// The offset, relative to the start of the original module, that the
+        /// payload for this custom section starts at.
+        data_offset: usize,
+        /// The actual contents of the custom section.
+        data: &'a [u8],
     },
-    EndInstantiate,
-    InlineModule(ModuleCode<'a>),
-}
 
-#[derive(Debug, Copy, Clone)]
-pub enum ElemSectionEntryTable {
-    Passive,
-    Declared,
-    Active(u32),
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum ParserInput {
-    Default,
-    SkipSection,
-    SkipFunctionBody,
-    ReadCustomSection,
-    ReadSectionRawData,
-}
-
-pub trait WasmDecoder<'a> {
-    fn read(&mut self) -> &ParserState<'a>;
-    fn push_input(&mut self, input: ParserInput);
-    fn read_with_input(&mut self, input: ParserInput) -> &ParserState<'a>;
-    fn create_binary_reader<'b>(&mut self) -> BinaryReader<'b>
-    where
-        'a: 'b;
-    fn last_state(&self) -> &ParserState<'a>;
-}
-
-enum ParserSectionReader<'a> {
-    None,
-    CodeSectionReader(CodeSectionReader<'a>),
-    DataSectionReader(DataSectionReader<'a>),
-    ElementSectionReader(ElementSectionReader<'a>),
-    ExportSectionReader(ExportSectionReader<'a>),
-    FunctionSectionReader(FunctionSectionReader<'a>),
-    GlobalSectionReader(GlobalSectionReader<'a>),
-    ImportSectionReader(ImportSectionReader<'a>),
-    MemorySectionReader(MemorySectionReader<'a>),
-    TableSectionReader(TableSectionReader<'a>),
-    TypeSectionReader(TypeSectionReader<'a>),
-    NameSectionReader(NameSectionReader<'a>),
-    LinkingSectionReader(LinkingSectionReader<'a>),
-    RelocSectionReader(RelocSectionReader<'a>),
-    ModuleSectionReader(ModuleSectionReader<'a>),
-    AliasSectionReader(AliasSectionReader<'a>),
-    InstanceSectionReader(InstanceSectionReader<'a>),
-    ModuleCodeSectionReader(ModuleCodeSectionReader<'a>),
-}
-
-macro_rules! section_reader {
-    ($self:ident, $ty_and_name:ident) => {
-        if let ParserSectionReader::$ty_and_name(ref mut reader) = $self.section_reader {
-            reader
-        } else {
-            panic!("expected {} reader", stringify!($ty_and_name));
-        }
-    };
-}
-
-macro_rules! start_section_reader {
-    ($self:ident, $ty_and_name:ident, $factory:ident) => {{
-        let reader = $self
-            .current_section
-            .as_ref()
-            .expect("section")
-            .$factory()?;
-        $self.section_entries_left = reader.get_count();
-        $self.section_reader = ParserSectionReader::$ty_and_name(reader);
-    }};
-}
-
-/// The `Parser` type. A simple event-driven parser of WebAssembly binary
-/// format. The `read(&mut self)` is used to iterate through WebAssembly records.
-pub struct Parser<'a> {
-    data: &'a [u8],
-    state: ParserState<'a>,
-    module_reader: Option<ModuleReader<'a>>,
-    current_section: Option<Section<'a>>,
-    section_reader: ParserSectionReader<'a>,
-    element_items: Option<ElementItems<'a>>,
-    current_function_body: Option<FunctionBody<'a>>,
-    init_expr_continuation: Option<InitExpressionContinuationSection>,
-    current_data_segment: Option<&'a [u8]>,
-    binary_reader: Option<BinaryReader<'a>>,
-    operators_reader: Option<OperatorsReader<'a>>,
-    instance_args: Option<InstanceArgsReader<'a>>,
-    section_entries_left: u32,
-}
-
-impl<'a> Parser<'a> {
-    /// Constructs `Parser` type.
+    /// Indicator of the start of the code section.
     ///
-    /// # Examples
-    /// ```
-    /// let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    ///     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    ///     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// let mut parser = wasmparser::Parser::new(data);
-    /// ```
-    pub fn new(data: &[u8]) -> Parser {
+    /// This entry is returned whenever the code section starts. The `count`
+    /// field indicates how many entries are in this code section. After
+    /// receiving this start marker you're guaranteed that the next `count`
+    /// items will be either `CodeSectionEntry` or an error will be returned.
+    ///
+    /// This, unlike other sections, is intended to be used for streaming the
+    /// contents of the code section. The code section is not required to be
+    /// fully resident in memory when we parse it. Instead a [`Parser`] is
+    /// capable of parsing piece-by-piece of a code section.
+    CodeSectionStart {
+        /// The number of functions in this section.
+        count: u32,
+        /// The range of bytes that represent this section, specified in
+        /// offsets relative to the start of the byte stream.
+        range: Range,
+        /// The size, in bytes, of the remaining contents of this section.
+        ///
+        /// This can be used in combination with [`Parser::skip_section`]
+        /// where the caller will know how many bytes to skip before feeding
+        /// bytes into `Parser` again.
+        size: u32,
+    },
+
+    /// An entry of the code section, a function, was parsed.
+    ///
+    /// This entry indicates that a function was successfully received from the
+    /// code section, and the payload here is the window into the original input
+    /// where the function resides. Note that the function itself has not been
+    /// parsed, it's only been outlined. You'll need to process the
+    /// `FunctionBody` provided to test whether it parses and/or is valid.
+    CodeSectionEntry(crate::FunctionBody<'a>),
+
+    /// Indicator of the start of the module code section.
+    ///
+    /// This behaves the same as the `CodeSectionStart` payload being returned.
+    /// You're guaranteed the next `count` items will be of type
+    /// `ModuleCodeSectionEntry`.
+    ModuleCodeSectionStart {
+        /// The number of inline modules in this section.
+        count: u32,
+        /// The range of bytes that represent this section, specified in
+        /// offsets relative to the start of the byte stream.
+        range: Range,
+        /// The size, in bytes, of the remaining contents of this section.
+        size: u32,
+    },
+
+    /// An entry of the module code section, a module, was parsed.
+    ///
+    /// This variant is special in that it returns a sub-`Parser`. Upon
+    /// receiving a `ModuleCodeSectionEntry` it is expected that the returned
+    /// `Parser` will be used instead of the parent `Parser` until the parse has
+    /// finished. You'll need to feed data into the `Parser` returned until it
+    /// returns `Payload::End`. After that you'll switch back to the parent
+    /// parser to resume parsing the rest of the module code section.
+    ///
+    /// Note that binaries will not be parsed correctly if you feed the data for
+    /// a nested module into the parent [`Parser`].
+    ModuleCodeSectionEntry {
+        /// The parser to use to parse the contents of the nested submodule.
+        /// This parser should be used until it reports `End`.
+        parser: Parser,
+        /// The range of bytes, relative to the start of the input stream, of
+        /// the bytes containing this submodule.
+        range: Range,
+    },
+
+    /// An unknown section was found.
+    ///
+    /// This variant is returned for all unknown sections in a wasm file. This
+    /// likely wants to be interpreted as an error by consumers of the parser,
+    /// but this can also be used to parse sections unknown to wasmparser at
+    /// this time.
+    UnknownSection {
+        /// The 8-bit identifier for this section.
+        id: u8,
+        /// The contents of this section.
+        contents: &'a [u8],
+        /// The range of bytes, relative to the start of the original data
+        /// stream, that the contents of this section reside in.
+        range: Range,
+    },
+
+    /// The end of the WebAssembly module was reached.
+    End,
+}
+
+impl Parser {
+    /// Creates a new module parser.
+    ///
+    /// Reports errors and ranges relative to `offset` provided, where `offset`
+    /// is some logical offset within the input stream that we're parsing.
+    pub fn new(offset: u64) -> Parser {
         Parser {
-            data,
-            state: ParserState::Initial,
-            module_reader: None,
-            current_section: None,
-            section_reader: ParserSectionReader::None,
-            element_items: None,
-            current_function_body: None,
-            init_expr_continuation: None,
-            current_data_segment: None,
-            binary_reader: None,
-            operators_reader: None,
-            instance_args: None,
-            section_entries_left: 0,
-        }
-    }
-
-    pub fn eof(&self) -> bool {
-        match self.state {
-            ParserState::EndWasm => true,
-            ParserState::BeginWasm { .. } | ParserState::EndSection => {
-                self.module_reader.as_ref().expect("module reader").eof()
-            }
-            _ => false, // in-process of reading
-        }
-    }
-
-    pub fn current_position(&self) -> usize {
-        if let ParserState::Initial = self.state {
-            return 0;
-        }
-        if self.binary_reader.is_some() {
-            return self
-                .binary_reader
-                .as_ref()
-                .expect("binary reader")
-                .original_position();
-        }
-        if self.operators_reader.is_some() {
-            return self
-                .operators_reader
-                .as_ref()
-                .expect("operators reader")
-                .original_position();
-        }
-        match self.section_reader {
-            ParserSectionReader::CodeSectionReader(ref reader) => {
-                return reader.original_position()
-            }
-            ParserSectionReader::DataSectionReader(ref reader) => {
-                return reader.original_position()
-            }
-            ParserSectionReader::ElementSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::ExportSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::FunctionSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::GlobalSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::ImportSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::MemorySectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::TableSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::TypeSectionReader(ref reader) => {
-                return reader.original_position()
-            }
-            ParserSectionReader::NameSectionReader(ref reader) => {
-                return reader.original_position()
-            }
-            ParserSectionReader::LinkingSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            ParserSectionReader::RelocSectionReader(ref reader) => {
-                return reader.original_position();
-            }
-            _ => (),
-        };
-        // TODO might not cover all cases
-        self.module_reader
-            .as_ref()
-            .expect("module reader")
-            .current_position()
-    }
-
-    fn read_module(&mut self) -> Result<()> {
-        let module_reader = ModuleReader::new(self.data)?;
-        let version = module_reader.get_version();
-        self.module_reader = Some(module_reader);
-        self.state = ParserState::BeginWasm { version };
-        Ok(())
-    }
-
-    fn read_section_header(&mut self) -> Result<()> {
-        let section = self.module_reader.as_mut().expect("module reader").read()?;
-        let code = section.code;
-        let range = section.range();
-        self.current_section = Some(section);
-        self.state = ParserState::BeginSection { code, range };
-        Ok(())
-    }
-
-    fn read_type_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let type_entry = section_reader!(self, TypeSectionReader).read()?;
-        self.state = ParserState::TypeSectionEntry(type_entry);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_import_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let Import { module, field, ty } = section_reader!(self, ImportSectionReader).read()?;
-        self.state = ParserState::ImportSectionEntry { module, field, ty };
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_function_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let func_type = section_reader!(self, FunctionSectionReader).read()?;
-        self.state = ParserState::FunctionSectionEntry(func_type);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_memory_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let memory_type = section_reader!(self, MemorySectionReader).read()?;
-        self.state = ParserState::MemorySectionEntry(memory_type);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_global_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let Global { ty, init_expr } = section_reader!(self, GlobalSectionReader).read()?;
-        self.state = ParserState::BeginGlobalSectionEntry(ty);
-        self.operators_reader = Some(init_expr.get_operators_reader());
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_init_expression_body(&mut self, cont: InitExpressionContinuationSection) {
-        self.state = ParserState::BeginInitExpressionBody;
-        self.init_expr_continuation = Some(cont);
-    }
-
-    fn read_init_expression_operator(&mut self) -> Result<()> {
-        let op = self
-            .operators_reader
-            .as_mut()
-            .expect("operator reader")
-            .read()?;
-        if let Operator::End = op {
-            self.operators_reader = None;
-            self.state = ParserState::EndInitExpressionBody;
-            return Ok(());
-        }
-        self.state = ParserState::InitExpressionOperator(op);
-        Ok(())
-    }
-
-    fn read_export_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let Export { field, kind, index } = section_reader!(self, ExportSectionReader).read()?;
-        self.state = ParserState::ExportSectionEntry { field, kind, index };
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_element_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let Element { kind, items, ty } = section_reader!(self, ElementSectionReader).read()?;
-        let table = match kind {
-            ElementKind::Passive => ElemSectionEntryTable::Passive,
-            ElementKind::Declared => ElemSectionEntryTable::Declared,
-            ElementKind::Active {
-                table_index,
-                init_expr,
-            } => {
-                self.operators_reader = Some(init_expr.get_operators_reader());
-                ElemSectionEntryTable::Active(table_index)
-            }
-        };
-        self.state = ParserState::BeginElementSectionEntry { table, ty };
-        self.element_items = Some(items);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_element_entry_body(&mut self) -> Result<()> {
-        let mut reader = self
-            .element_items
-            .take()
-            .expect("element items")
-            .get_items_reader()?;
-        let num_elements = reader.get_count() as usize;
-        if num_elements > MAX_WASM_TABLE_ENTRIES {
-            return Err(BinaryReaderError::new(
-                "num_elements is out of bounds",
-                0, // reader.position - 1, // TODO offset
-            ));
-        }
-        let mut elements = Vec::with_capacity(num_elements);
-        for _ in 0..num_elements {
-            elements.push(reader.read()?);
-        }
-        self.state = ParserState::ElementSectionEntryBody(elements.into_boxed_slice());
-        Ok(())
-    }
-
-    fn read_function_body(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            self.current_function_body = None;
-            return self.check_section_end();
-        }
-        let function_body = section_reader!(self, CodeSectionReader).read()?;
-        let range = function_body.range();
-        self.state = ParserState::BeginFunctionBody { range };
-        self.current_function_body = Some(function_body);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_function_body_locals(&mut self) -> Result<()> {
-        let function_body = self.current_function_body.as_mut().expect("function body");
-        let mut reader = function_body.get_locals_reader()?;
-        let local_count = reader.get_count() as usize;
-        if local_count > MAX_WASM_FUNCTION_LOCALS {
-            return Err(BinaryReaderError::new(
-                "local_count is out of bounds",
-                reader.original_position() - 1,
-            ));
-        }
-        let mut locals: Vec<(u32, Type)> = Vec::with_capacity(local_count);
-        let mut locals_total: usize = 0;
-        for _ in 0..local_count {
-            let (count, ty) = reader.read()?;
-            locals_total = locals_total.checked_add(count as usize).ok_or_else(|| {
-                BinaryReaderError::new(
-                    "locals_total is out of bounds",
-                    reader.original_position() - 1,
-                )
-            })?;
-            if locals_total > MAX_WASM_FUNCTION_LOCALS {
-                return Err(BinaryReaderError::new(
-                    "locals_total is out of bounds",
-                    reader.original_position() - 1,
-                ));
-            }
-            locals.push((count, ty));
-        }
-        self.operators_reader = Some(function_body.get_operators_reader()?);
-        self.state = ParserState::FunctionBodyLocals {
-            locals: locals.into_boxed_slice(),
-        };
-        Ok(())
-    }
-
-    fn read_code_operator(&mut self) -> Result<()> {
-        if self
-            .operators_reader
-            .as_ref()
-            .expect("operator reader")
-            .eof()
-        {
-            if let ParserState::CodeOperator(Operator::End) = self.state {
-                self.state = ParserState::EndFunctionBody;
-                self.operators_reader = None;
-                self.current_function_body = None;
-                return Ok(());
-            }
-            let reader = self.operators_reader.as_ref().expect("operator reader");
-            return Err(BinaryReaderError::new(
-                "Expected end of function marker",
-                reader.original_position(),
-            ));
-        }
-        let reader = self.operators_reader.as_mut().expect("operator reader");
-        let op = reader.read()?;
-        self.state = ParserState::CodeOperator(op);
-        Ok(())
-    }
-
-    fn read_table_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let table_entry = section_reader!(self, TableSectionReader).read()?;
-        self.state = ParserState::TableSectionEntry(table_entry);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_data_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let Data { kind, data } = section_reader!(self, DataSectionReader).read()?;
-        match kind {
-            DataKind::Passive => {
-                self.state = ParserState::BeginPassiveDataSectionEntry;
-            }
-            DataKind::Active {
-                memory_index,
-                init_expr,
-            } => {
-                self.state = ParserState::BeginActiveDataSectionEntry(memory_index);
-                self.operators_reader = Some(init_expr.get_operators_reader());
-            }
-        }
-        self.current_data_segment = Some(data);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_data_entry_body(&mut self) -> Result<()> {
-        let size = self.current_data_segment.expect("data entry").len();
-        self.state = ParserState::BeginDataSectionEntryBody(size as u32);
-        Ok(())
-    }
-
-    fn read_naming<'b>(
-        mut naming_reader: NamingReader<'a>,
-        limit: usize,
-    ) -> Result<Box<[Naming<'b>]>>
-    where
-        'a: 'b,
-    {
-        let count = naming_reader.get_count() as usize;
-        if count > limit {
-            return Err(BinaryReaderError::new(
-                "name map size is out of bound",
-                naming_reader.original_position() - 1,
-            ));
-        }
-        let mut result = Vec::with_capacity(count);
-        for _ in 0..count {
-            result.push(naming_reader.read()?);
-        }
-        Ok(result.into_boxed_slice())
-    }
-
-    fn read_name_entry(&mut self) -> Result<()> {
-        if section_reader!(self, NameSectionReader).eof() {
-            return self.position_to_section_end();
-        }
-        let entry = match section_reader!(self, NameSectionReader).read()? {
-            Name::Module(name) => NameEntry::Module(name.get_name()?),
-            Name::Function(func) => {
-                NameEntry::Function(Self::read_naming(func.get_map()?, MAX_WASM_FUNCTIONS)?)
-            }
-            Name::Local(locals) => {
-                let mut reader = locals.get_function_local_reader()?;
-                let funcs_len = reader.get_count() as usize;
-                if funcs_len > MAX_WASM_FUNCTIONS {
-                    return Err(BinaryReaderError::new(
-                        "function count is out of bounds",
-                        reader.original_position() - 1,
-                    ));
-                }
-                let mut funcs: Vec<LocalName<'a>> = Vec::with_capacity(funcs_len);
-                for _ in 0..funcs_len {
-                    let func = reader.read()?;
-                    funcs.push(LocalName {
-                        index: func.func_index,
-                        locals: Self::read_naming(func.get_map()?, MAX_WASM_FUNCTION_LOCALS)?,
-                    });
-                }
-                NameEntry::Local(funcs.into_boxed_slice())
-            }
-        };
-        self.state = ParserState::NameSectionEntry(entry);
-        Ok(())
-    }
-
-    fn read_source_mapping(&mut self) -> Result<()> {
-        let url = self
-            .current_section
-            .as_ref()
-            .expect("section")
-            .get_sourcemappingurl_section_content()?;
-        self.state = ParserState::SourceMappingURL(url);
-        Ok(())
-    }
-
-    // See https://github.com/WebAssembly/tool-conventions/blob/master/Linking.md
-    fn read_reloc_header(&mut self) -> Result<()> {
-        let section_code = section_reader!(self, RelocSectionReader).get_section_code();
-        self.state = ParserState::RelocSectionHeader(section_code);
-        Ok(())
-    }
-
-    fn read_reloc_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let Reloc {
-            ty,
+            state: State::ModuleHeader,
             offset,
-            index,
-            addend,
-        } = section_reader!(self, RelocSectionReader).read()?;
-        self.state = ParserState::RelocSectionEntry(RelocEntry {
-            ty,
-            offset,
-            index,
-            addend,
-        });
-        self.section_entries_left -= 1;
-        Ok(())
+            max_size: u64::max_value(),
+        }
     }
 
-    fn read_linking_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let entry = section_reader!(self, LinkingSectionReader).read()?;
-        self.state = ParserState::LinkingSectionEntry(entry);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_module_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let module_ty = section_reader!(self, ModuleSectionReader).read()?;
-        self.state = ParserState::ModuleSectionEntry(module_ty);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_alias_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let alias_ty = section_reader!(self, AliasSectionReader).read()?;
-        self.state = ParserState::AliasSectionEntry(alias_ty);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_instance_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let instance = section_reader!(self, InstanceSectionReader).read()?;
-        let args = instance.args()?;
-        self.state = ParserState::BeginInstantiate {
-            module: instance.module(),
-            count: args.get_count(),
+    /// Attempts to parse a chunk of data.
+    ///
+    /// This method will attempt to parse the next incremental portion of a
+    /// WebAssembly binary. Data available for the module is provided as `data`,
+    /// and the data can be incomplete if more data has yet to arrive for the
+    /// module. The `eof` flag indicates whether `data` represents all possible
+    /// data for the module and no more data will ever be received.
+    ///
+    /// There are two ways parsing can succeed with this method:
+    ///
+    /// * `Chunk::NeedMoreData` - this indicates that there is not enough bytes
+    ///   in `data` to parse a chunk of this module. The caller needs to wait
+    ///   for more data to be available in this situation before calling this
+    ///   method again. It is guaranteed that this is only returned if `eof` is
+    ///   `false`.
+    ///
+    /// * `Chunk::Parsed` - this indicates that a chunk of the input was
+    ///   successfully parsed. The payload is available in this variant of what
+    ///   was parsed, and this also indicates how many bytes of `data` was
+    ///   consumed. It's expected that the caller will not provide these bytes
+    ///   back to the [`Parser`] again.
+    ///
+    /// Note that all `Chunk` return values are connected, with a lifetime, to
+    /// the input buffer. Each parsed chunk borrows the input buffer and is a
+    /// view into it for successfully parsed chunks.
+    ///
+    /// It is expected that you'll call this method until `Payload::End` is
+    /// reached, at which point you're guaranteed that the module has completely
+    /// parsed. Note that complete parsing, for the top-level wasm module,
+    /// implies that `data` is empty and `eof` is `true`.
+    ///
+    /// # Errors
+    ///
+    /// Parse errors are returned as an `Err`. Errors can happen when the
+    /// structure of the module is unexpected, or if sections are too large for
+    /// example. Note that errors are not returned for malformed *contents* of
+    /// sections here. Sections are generally not individually parsed and each
+    /// returned [`Payload`] needs to be iterated over further to detect all
+    /// errors.
+    ///
+    /// # Examples
+    ///
+    /// An example of reading a wasm file from a stream (`std::io::Read`) and
+    /// incrementally parsing it.
+    ///
+    /// ```
+    /// use std::io::Read;
+    /// use anyhow::Result;
+    /// use wasmparser::{Parser, Chunk, Payload::*};
+    ///
+    /// fn parse(mut reader: impl Read) -> Result<()> {
+    ///     let mut buf = Vec::new();
+    ///     let mut parser = Parser::new(0);
+    ///     let mut eof = false;
+    ///     let mut stack = Vec::new();
+    ///
+    ///     loop {
+    ///         let (payload, consumed) = match parser.parse(&buf, eof)? {
+    ///             Chunk::NeedMoreData(hint) => {
+    ///                 assert!(!eof); // otherwise an error would be returned
+    ///
+    ///                 // Use the hint to preallocate more space, then read
+    ///                 // some more data into our buffer.
+    ///                 //
+    ///                 // Note that the buffer management here is not ideal,
+    ///                 // but it's compact enough to fit in an example!
+    ///                 let len = buf.len();
+    ///                 buf.extend((0..hint).map(|_| 0u8));
+    ///                 let n = reader.read(&mut buf[len..])?;
+    ///                 buf.truncate(len + n);
+    ///                 eof = n == 0;
+    ///                 continue;
+    ///             }
+    ///
+    ///             Chunk::Parsed { consumed, payload } => (payload, consumed),
+    ///         };
+    ///
+    ///         match payload {
+    ///             // Each of these would be handled individually as necessary
+    ///             Version { .. } => { /* ... */ }
+    ///             TypeSection(_) => { /* ... */ }
+    ///             ImportSection(_) => { /* ... */ }
+    ///             AliasSection(_) => { /* ... */ }
+    ///             InstanceSection(_) => { /* ... */ }
+    ///             ModuleSection(_) => { /* ... */ }
+    ///             FunctionSection(_) => { /* ... */ }
+    ///             TableSection(_) => { /* ... */ }
+    ///             MemorySection(_) => { /* ... */ }
+    ///             GlobalSection(_) => { /* ... */ }
+    ///             ExportSection(_) => { /* ... */ }
+    ///             StartSection { .. } => { /* ... */ }
+    ///             ElementSection(_) => { /* ... */ }
+    ///             DataCountSection { .. } => { /* ... */ }
+    ///             DataSection(_) => { /* ... */ }
+    ///
+    ///             // Here we know how many functions we'll be receiving as
+    ///             // `CodeSectionEntry`, so we can prepare for that, and
+    ///             // afterwards we can parse and handle each function
+    ///             // individually.
+    ///             CodeSectionStart { .. } => { /* ... */ }
+    ///             CodeSectionEntry(body) => {
+    ///                 // here we can iterate over `body` to parse the function
+    ///                 // and its locals
+    ///             }
+    ///
+    ///             // When parsing nested modules we need to switch which
+    ///             // `Parser` we're using.
+    ///             ModuleCodeSectionStart { .. } => { /* ... */ }
+    ///             ModuleCodeSectionEntry { parser: subparser, .. } => {
+    ///                 stack.push(parser);
+    ///                 parser = subparser;
+    ///             }
+    ///
+    ///             CustomSection { name, .. } => { /* ... */ }
+    ///
+    ///             // most likely you'd return an error here
+    ///             UnknownSection { id, .. } => { /* ... */ }
+    ///
+    ///             // Once we've reached the end of a module we either resume
+    ///             // at the parent module or we break out of the loop because
+    ///             // we're done.
+    ///             End => {
+    ///                 if let Some(parent_parser) = stack.pop() {
+    ///                     parser = parent_parser;
+    ///                 } else {
+    ///                     break;
+    ///                 }
+    ///             }
+    ///         }
+    ///
+    ///         // once we're done processing the payload we can forget the
+    ///         // original.
+    ///         buf.drain(..consumed);
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    ///
+    /// # parse(&b"\0asm\x01\0\0\0"[..]).unwrap();
+    /// ```
+    pub fn parse<'a>(&mut self, data: &'a [u8], eof: bool) -> Result<Chunk<'a>> {
+        let (data, eof) = if usize_to_u64(data.len()) > self.max_size {
+            (&data[..(self.max_size as usize)], true)
+        } else {
+            (data, eof)
         };
-        self.instance_args = Some(args);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_instantiate_field(&mut self) -> Result<()> {
-        let instance = self.instance_args.as_mut().unwrap();
-        if instance.eof() {
-            self.instance_args = None;
-            self.state = ParserState::EndInstantiate;
-        } else {
-            let (kind, index) = self.instance_args.as_mut().unwrap().read()?;
-            self.state = ParserState::InstantiateParameter { kind, index };
-        }
-        Ok(())
-    }
-
-    fn read_module_code_entry(&mut self) -> Result<()> {
-        if self.section_entries_left == 0 {
-            return self.check_section_end();
-        }
-        let module = section_reader!(self, ModuleCodeSectionReader).read()?;
-        self.state = ParserState::InlineModule(module);
-        self.section_entries_left -= 1;
-        Ok(())
-    }
-
-    fn read_section_body(&mut self) -> Result<()> {
-        match self.state {
-            ParserState::BeginSection {
-                code: SectionCode::Type,
-                ..
-            } => {
-                start_section_reader!(self, TypeSectionReader, get_type_section_reader);
-                self.read_type_entry()?;
+        // TODO: thread through `offset: u64` to `BinaryReader`, remove
+        // the cast here.
+        let mut reader = BinaryReader::new_with_offset(data, self.offset as usize);
+        match self.parse_reader(&mut reader, eof) {
+            Ok(payload) => {
+                // Be sure to update our offset with how far we got in the
+                // reader
+                self.offset += usize_to_u64(reader.position);
+                self.max_size -= usize_to_u64(reader.position);
+                Ok(Chunk::Parsed {
+                    consumed: reader.position,
+                    payload,
+                })
             }
-            ParserState::BeginSection {
-                code: SectionCode::Import,
-                ..
-            } => {
-                start_section_reader!(self, ImportSectionReader, get_import_section_reader);
-                self.read_import_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Function,
-                ..
-            } => {
-                start_section_reader!(self, FunctionSectionReader, get_function_section_reader);
-                self.read_function_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Memory,
-                ..
-            } => {
-                start_section_reader!(self, MemorySectionReader, get_memory_section_reader);
-                self.read_memory_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Global,
-                ..
-            } => {
-                start_section_reader!(self, GlobalSectionReader, get_global_section_reader);
-                self.read_global_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Export,
-                ..
-            } => {
-                start_section_reader!(self, ExportSectionReader, get_export_section_reader);
-                self.read_export_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Element,
-                ..
-            } => {
-                start_section_reader!(self, ElementSectionReader, get_element_section_reader);
-                self.read_element_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Code,
-                ..
-            } => {
-                start_section_reader!(self, CodeSectionReader, get_code_section_reader);
-                self.read_function_body()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Table,
-                ..
-            } => {
-                start_section_reader!(self, TableSectionReader, get_table_section_reader);
-                self.read_table_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Data,
-                ..
-            } => {
-                start_section_reader!(self, DataSectionReader, get_data_section_reader);
-                self.read_data_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Start,
-                ..
-            } => {
-                let func_index = self
-                    .current_section
-                    .as_ref()
-                    .expect("section")
-                    .get_start_section_content()?;
-                self.state = ParserState::StartSectionEntry(func_index);
-            }
-            ParserState::BeginSection {
-                code: SectionCode::DataCount,
-                ..
-            } => {
-                let func_index = self
-                    .current_section
-                    .as_ref()
-                    .expect("section")
-                    .get_data_count_section_content()?;
-                self.state = ParserState::DataCountSectionEntry(func_index);
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Module,
-                ..
-            } => {
-                start_section_reader!(self, ModuleSectionReader, get_module_section_reader);
-                self.read_module_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Alias,
-                ..
-            } => {
-                start_section_reader!(self, AliasSectionReader, get_alias_section_reader);
-                self.read_alias_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Instance,
-                ..
-            } => {
-                start_section_reader!(self, InstanceSectionReader, get_instance_section_reader);
-                self.read_instance_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::ModuleCode,
-                ..
-            } => {
-                start_section_reader!(
-                    self,
-                    ModuleCodeSectionReader,
-                    get_module_code_section_reader
-                );
-                self.read_module_code_entry()?;
-            }
-            ParserState::BeginSection {
-                code: SectionCode::Custom { .. },
-                ..
-            } => {
-                self.create_custom_section_binary_reader();
-                self.read_section_body_bytes()?;
-            }
-            _ => unreachable!(),
-        }
-        Ok(())
-    }
-
-    fn create_custom_section_binary_reader(&mut self) {
-        let reader = self
-            .current_section
-            .as_ref()
-            .expect("section")
-            .get_binary_reader();
-        self.binary_reader = Some(reader);
-    }
-
-    fn read_custom_section_body(&mut self) -> Result<()> {
-        match self.state {
-            ParserState::ReadingCustomSection(CustomSectionKind::Name) => {
-                let reader = self
-                    .current_section
-                    .as_ref()
-                    .expect("section")
-                    .get_name_section_reader()?;
-                self.section_reader = ParserSectionReader::NameSectionReader(reader);
-                self.read_name_entry()?;
-            }
-            ParserState::ReadingCustomSection(CustomSectionKind::SourceMappingURL) => {
-                self.read_source_mapping()?;
-            }
-            ParserState::ReadingCustomSection(CustomSectionKind::Reloc) => {
-                start_section_reader!(self, RelocSectionReader, get_reloc_section_reader);
-                self.read_reloc_header()?;
-            }
-            ParserState::ReadingCustomSection(CustomSectionKind::Linking) => {
-                start_section_reader!(self, LinkingSectionReader, get_linking_section_reader);
-                self.read_linking_entry()?;
-            }
-            ParserState::ReadingCustomSection(CustomSectionKind::Producers)
-            | ParserState::ReadingCustomSection(CustomSectionKind::Unknown) => {
-                self.create_custom_section_binary_reader();
-                self.read_section_body_bytes()?;
-            }
-            _ => unreachable!(),
-        }
-        Ok(())
-    }
-
-    fn position_to_section_end(&mut self) -> Result<()> {
-        self.current_section = None;
-        self.binary_reader = None;
-        self.state = ParserState::EndSection;
-        Ok(())
-    }
-
-    fn check_section_end(&mut self) -> Result<()> {
-        match self.section_reader {
-            ParserSectionReader::CodeSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::DataSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::ElementSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::ExportSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::FunctionSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::GlobalSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::ImportSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::MemorySectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::TableSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::TypeSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::LinkingSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::RelocSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::ModuleSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::ModuleCodeSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::InstanceSectionReader(ref reader) => reader.ensure_end()?,
-            ParserSectionReader::AliasSectionReader(ref reader) => reader.ensure_end()?,
-            _ => unreachable!(),
-        }
-        self.position_to_section_end()
-    }
-
-    fn read_section_body_bytes(&mut self) -> Result<()> {
-        if self.binary_reader.as_ref().expect("binary reader").eof() {
-            self.state = ParserState::EndSection;
-            self.binary_reader = None;
-            return Ok(());
-        }
-        let binary_reader = self.binary_reader.as_mut().expect("binary reader");
-        let to_read = if binary_reader.buffer.len() - binary_reader.position < MAX_DATA_CHUNK_SIZE {
-            binary_reader.buffer.len() - binary_reader.position
-        } else {
-            MAX_DATA_CHUNK_SIZE
-        };
-        let bytes = binary_reader.read_bytes(to_read)?;
-        self.state = ParserState::SectionRawData(bytes);
-        Ok(())
-    }
-
-    fn read_data_chunk(&mut self) -> Result<()> {
-        let data = self.current_data_segment.expect("data");
-        if data.is_empty() {
-            self.state = ParserState::EndDataSectionEntryBody;
-            self.current_data_segment = None;
-            return Ok(());
-        }
-        let to_read = if data.len() > MAX_DATA_CHUNK_SIZE {
-            MAX_DATA_CHUNK_SIZE
-        } else {
-            data.len()
-        };
-        let (head, tail) = data.split_at(to_read);
-        self.current_data_segment = Some(tail);
-        self.state = ParserState::DataSectionEntryBodyChunk(head);
-        Ok(())
-    }
-
-    fn read_next_section(&mut self) -> Result<()> {
-        if self.module_reader.as_ref().expect("module_reader").eof() {
-            self.current_section = None;
-            self.state = ParserState::EndWasm;
-        } else {
-            self.read_section_header()?;
-        }
-        Ok(())
-    }
-
-    fn read_wrapped(&mut self) -> Result<()> {
-        match self.state {
-            ParserState::EndWasm => panic!("Parser in end state"),
-            ParserState::Error(_) => panic!("Parser in error state"),
-            ParserState::Initial => self.read_module()?,
-            ParserState::BeginWasm { .. } | ParserState::EndSection => self.read_next_section()?,
-            ParserState::BeginSection { .. } => self.read_section_body()?,
-            ParserState::SkippingSection => {
-                self.position_to_section_end()?;
-                self.read_next_section()?;
-            }
-            ParserState::TypeSectionEntry(_) => self.read_type_entry()?,
-            ParserState::ImportSectionEntry { .. } => self.read_import_entry()?,
-            ParserState::FunctionSectionEntry(_) => self.read_function_entry()?,
-            ParserState::MemorySectionEntry(_) => self.read_memory_entry()?,
-            ParserState::TableSectionEntry(_) => self.read_table_entry()?,
-            ParserState::ExportSectionEntry { .. } => self.read_export_entry()?,
-            ParserState::BeginGlobalSectionEntry(_) => {
-                self.read_init_expression_body(InitExpressionContinuationSection::Global)
-            }
-            ParserState::EndGlobalSectionEntry => self.read_global_entry()?,
-            ParserState::BeginElementSectionEntry {
-                table: ElemSectionEntryTable::Active(_),
-                ..
-            } => self.read_init_expression_body(InitExpressionContinuationSection::Element),
-            ParserState::BeginElementSectionEntry { .. } => self.read_element_entry_body()?,
-            ParserState::BeginInitExpressionBody | ParserState::InitExpressionOperator(_) => {
-                self.read_init_expression_operator()?
-            }
-            ParserState::BeginPassiveDataSectionEntry => self.read_data_entry_body()?,
-            ParserState::BeginActiveDataSectionEntry(_) => {
-                self.read_init_expression_body(InitExpressionContinuationSection::Data)
-            }
-            ParserState::EndInitExpressionBody => {
-                match self.init_expr_continuation {
-                    Some(InitExpressionContinuationSection::Global) => {
-                        self.state = ParserState::EndGlobalSectionEntry
-                    }
-                    Some(InitExpressionContinuationSection::Element) => {
-                        self.read_element_entry_body()?
-                    }
-                    Some(InitExpressionContinuationSection::Data) => self.read_data_entry_body()?,
-                    None => unreachable!(),
+            Err(e) => {
+                // If we're at EOF then there's no way we can recover from any
+                // error, so continue to propagate it.
+                if eof {
+                    return Err(e);
                 }
-                self.init_expr_continuation = None;
-            }
-            ParserState::BeginFunctionBody { .. } => self.read_function_body_locals()?,
-            ParserState::FunctionBodyLocals { .. } | ParserState::CodeOperator(_) => {
-                self.read_code_operator()?
-            }
-            ParserState::EndFunctionBody => self.read_function_body()?,
-            ParserState::SkippingFunctionBody => {
-                self.current_function_body = None;
-                self.read_function_body()?;
-            }
-            ParserState::EndDataSectionEntry => self.read_data_entry()?,
-            ParserState::BeginDataSectionEntryBody(_)
-            | ParserState::DataSectionEntryBodyChunk(_) => self.read_data_chunk()?,
-            ParserState::EndDataSectionEntryBody => {
-                self.state = ParserState::EndDataSectionEntry;
-            }
-            ParserState::ElementSectionEntryBody(_) => {
-                self.state = ParserState::EndElementSectionEntry;
-            }
-            ParserState::EndElementSectionEntry => self.read_element_entry()?,
-            ParserState::StartSectionEntry(_) => self.position_to_section_end()?,
-            ParserState::DataCountSectionEntry(_) => self.position_to_section_end()?,
-            ParserState::NameSectionEntry(_) => self.read_name_entry()?,
-            ParserState::SourceMappingURL(_) => self.position_to_section_end()?,
-            ParserState::RelocSectionHeader(_) => {
-                let mut reader = self
-                    .current_section
-                    .as_ref()
-                    .expect("section")
-                    .get_binary_reader();
-                self.section_entries_left = reader.read_var_u32()?;
-                self.binary_reader = Some(reader);
-                self.read_reloc_entry()?;
-            }
-            ParserState::RelocSectionEntry(_) => self.read_reloc_entry()?,
-            ParserState::LinkingSectionEntry(_) => self.read_linking_entry()?,
-            ParserState::ReadingCustomSection(_) => self.read_custom_section_body()?,
-            ParserState::ReadingSectionRawData | ParserState::SectionRawData(_) => {
-                self.read_section_body_bytes()?
-            }
-            ParserState::ModuleSectionEntry(_) => self.read_module_entry()?,
-            ParserState::AliasSectionEntry(_) => self.read_alias_entry()?,
-            ParserState::BeginInstantiate { .. } | ParserState::InstantiateParameter { .. } => {
-                self.read_instantiate_field()?
-            }
-            ParserState::EndInstantiate => self.read_instance_entry()?,
-            ParserState::InlineModule(_) => self.read_module_code_entry()?,
-        }
-        Ok(())
-    }
 
-    fn skip_section(&mut self) {
-        match self.state {
-            ParserState::Initial
-            | ParserState::EndWasm
-            | ParserState::Error(_)
-            | ParserState::BeginWasm { .. }
-            | ParserState::EndSection => panic!("Invalid reader state during skip section"),
-            _ => self.state = ParserState::SkippingSection,
+                // If our error doesn't look like it can be resolved with more
+                // data being pulled down, then propagate it, otherwise switch
+                // the error to "feed me please"
+                match e.inner.needed_hint {
+                    Some(hint) => Ok(Chunk::NeedMoreData(usize_to_u64(hint))),
+                    None => Err(e),
+                }
+            }
         }
     }
 
-    fn skip_function_body(&mut self) {
-        match self.state {
-            ParserState::BeginFunctionBody { .. }
-            | ParserState::FunctionBodyLocals { .. }
-            | ParserState::CodeOperator(_) => self.state = ParserState::SkippingFunctionBody,
-            _ => panic!("Invalid reader state during skip function body"),
-        }
-    }
+    fn parse_reader<'a>(
+        &mut self,
+        reader: &mut BinaryReader<'a>,
+        eof: bool,
+    ) -> Result<Payload<'a>> {
+        use Payload::*;
 
-    fn read_custom_section(&mut self) {
         match self.state {
-            ParserState::BeginSection {
-                code: SectionCode::Custom { kind, .. },
-                ..
+            State::ModuleHeader => {
+                let start = reader.original_position();
+                let num = reader.read_file_header()?;
+                self.state = State::SectionStart;
+                Ok(Version {
+                    num,
+                    range: Range {
+                        start,
+                        end: reader.original_position(),
+                    },
+                })
+            }
+            State::SectionStart => {
+                // If we're at eof and there are no bytes in our buffer, then
+                // that means we reached the end of the wasm file since it's
+                // just a bunch of sections concatenated after the module
+                // header.
+                if eof && reader.bytes_remaining() == 0 {
+                    return Ok(Payload::End);
+                }
+
+                let id = reader.read_var_u7()? as u8;
+                let len_pos = reader.position;
+                let mut len = reader.read_var_u32()?;
+
+                // Test to make sure that this section actually fits within
+                // `Parser::max_size`. This doesn't matter for top-level modules
+                // but it is required for nested modules to correctly ensure
+                // that all sections live entirely within their section of the
+                // file.
+                let section_overflow = self
+                    .max_size
+                    .checked_sub(usize_to_u64(reader.position))
+                    .and_then(|s| s.checked_sub(len.into()))
+                    .is_none();
+                if section_overflow {
+                    return Err(BinaryReaderError::new("section too large", len_pos));
+                }
+
+                match id {
+                    0 => {
+                        let mut content = subreader(reader, len)?;
+                        // Note that if this fails we can't read any more bytes,
+                        // so clear the "we'd succeed if we got this many more
+                        // bytes" because we can't recover from "eof" at this point.
+                        let name = content.read_string().map_err(clear_hint)?;
+                        Ok(Payload::CustomSection {
+                            name,
+                            data_offset: content.original_position(),
+                            data: content.remaining_buffer(),
+                        })
+                    }
+                    1 => section(reader, len, TypeSectionReader::new, TypeSection),
+                    2 => section(reader, len, ImportSectionReader::new, ImportSection),
+                    3 => section(reader, len, FunctionSectionReader::new, FunctionSection),
+                    4 => section(reader, len, TableSectionReader::new, TableSection),
+                    5 => section(reader, len, MemorySectionReader::new, MemorySection),
+                    6 => section(reader, len, GlobalSectionReader::new, GlobalSection),
+                    7 => section(reader, len, ExportSectionReader::new, ExportSection),
+                    8 => {
+                        let (func, range) = single_u32(reader, len, "start")?;
+                        Ok(StartSection { func, range })
+                    }
+                    9 => section(reader, len, ElementSectionReader::new, ElementSection),
+                    10 => {
+                        let start = reader.original_position();
+                        let count = delimited(reader, &mut len, |r| r.read_var_u32())?;
+                        let range = Range {
+                            start,
+                            end: reader.original_position() + len as usize,
+                        };
+                        self.state = State::FunctionBody {
+                            remaining: count,
+                            len,
+                        };
+                        Ok(CodeSectionStart {
+                            count,
+                            range,
+                            size: len,
+                        })
+                    }
+                    11 => section(reader, len, DataSectionReader::new, DataSection),
+                    12 => {
+                        let (count, range) = single_u32(reader, len, "data count")?;
+                        Ok(DataCountSection { count, range })
+                    }
+                    100 => section(reader, len, ModuleSectionReader::new, ModuleSection),
+                    101 => section(reader, len, InstanceSectionReader::new, InstanceSection),
+                    102 => section(reader, len, AliasSectionReader::new, AliasSection),
+                    103 => {
+                        let start = reader.original_position();
+                        let count = delimited(reader, &mut len, |r| r.read_var_u32())?;
+                        let range = Range {
+                            start,
+                            end: reader.original_position() + len as usize,
+                        };
+                        self.state = State::ModuleCode {
+                            remaining: count,
+                            len,
+                        };
+                        Ok(ModuleCodeSectionStart {
+                            count,
+                            range,
+                            size: len,
+                        })
+                    }
+                    id => {
+                        let offset = reader.original_position();
+                        let contents = reader.read_bytes(len as usize)?;
+                        let range = Range {
+                            start: offset,
+                            end: offset + len as usize,
+                        };
+                        Ok(UnknownSection {
+                            id,
+                            contents,
+                            range,
+                        })
+                    }
+                }
+            }
+
+            // Once we hit 0 remaining incrementally parsed items, with 0
+            // remaining bytes in each section, we're done and can switch back
+            // to parsing sections.
+            State::FunctionBody {
+                remaining: 0,
+                len: 0,
+            }
+            | State::ModuleCode {
+                remaining: 0,
+                len: 0,
             } => {
-                self.state = ParserState::ReadingCustomSection(kind);
+                self.state = State::SectionStart;
+                self.parse_reader(reader, eof)
             }
-            _ => panic!("Invalid reader state during reading custom section"),
-        }
-    }
 
-    fn read_raw_section_data(&mut self) {
-        match self.state {
-            ParserState::BeginSection { .. } => {
-                self.binary_reader = Some(
-                    self.current_section
-                        .as_ref()
-                        .expect("section")
-                        .get_binary_reader(),
-                );
-                self.state = ParserState::ReadingSectionRawData;
+            // ... otherwise trailing bytes with no remaining entries in these
+            // sections indicates an error.
+            State::FunctionBody { remaining: 0, len } | State::ModuleCode { remaining: 0, len } => {
+                debug_assert!(len > 0);
+                let offset = reader.original_position();
+                Err(BinaryReaderError::new(
+                    "trailing bytes at end of section",
+                    offset,
+                ))
             }
-            _ => panic!("Invalid reader state during reading raw section data"),
+
+            // Functions are relatively easy to parse when we know there's at
+            // least one remaining and at least one byte available to read
+            // things.
+            //
+            // We use the remaining length try to read a u32 size of the
+            // function, and using that size we require the entire function be
+            // resident in memory. This means that we're reading whole chunks of
+            // functions at a time.
+            //
+            // Limiting via `Parser::max_size` (nested modules) happens above in
+            // `fn parse`, and limiting by our section size happens via
+            // `delimited`. Actual parsing of the function body is delegated to
+            // the caller to iterate over the `FunctionBody` structure.
+            State::FunctionBody { remaining, mut len } => {
+                let body = delimited(reader, &mut len, |r| {
+                    let size = r.read_var_u32()?;
+                    let offset = r.original_position();
+                    Ok(FunctionBody::new(offset, r.read_bytes(size as usize)?))
+                })?;
+                self.state = State::FunctionBody {
+                    remaining: remaining - 1,
+                    len,
+                };
+                Ok(CodeSectionEntry(body))
+            }
+
+            // Modules are trickier than functions. What's going to happen here
+            // is that we'll be offloading parsing to a sub-`Parser`. This
+            // sub-`Parser` will be delimited to not read past the size of the
+            // module that's specified.
+            //
+            // So the first thing that happens here is we read the size of the
+            // module. We use `delimited` to make sure the bytes specifying the
+            // size of the module are themselves within the module code section.
+            //
+            // Once we've read the size of a module, however, there's a few
+            // pieces of state that we need to update. We as a parser will not
+            // receive the next `size` bytes, so we need to update our internal
+            // bookkeeping to account for that:
+            //
+            // * The `len`, number of bytes remaining in this section, is
+            //   decremented by `size`. This can underflow, however, meaning
+            //   that the size of the module doesn't fit within the section.
+            //
+            // * Our `Parser::max_size` field needs to account for the bytes
+            //   that we're reading. Note that this is guaranteed to not
+            //   underflow, however, because whenever we parse a section header
+            //   we guarantee that its contents fit within our `max_size`.
+            //
+            // To update `len` we do that when updating `self.state`, and to
+            // update `max_size` we do that inline. Note that this will get
+            // further tweaked after we return with the bytes we read specifying
+            // the size of the module itself.
+            State::ModuleCode { remaining, mut len } => {
+                let size = delimited(reader, &mut len, |r| r.read_var_u32())?;
+                match len.checked_sub(size) {
+                    Some(i) => len = i,
+                    None => {
+                        return Err(BinaryReaderError::new(
+                            "Unexpected EOF",
+                            reader.original_position(),
+                        ));
+                    }
+                }
+                self.state = State::ModuleCode {
+                    remaining: remaining - 1,
+                    len,
+                };
+                let range = Range {
+                    start: reader.original_position(),
+                    end: reader.original_position() + size as usize,
+                };
+                self.max_size -= u64::from(size);
+                self.offset += u64::from(size);
+                let mut parser = Parser::new(usize_to_u64(reader.original_position()));
+                parser.max_size = size.into();
+                Ok(ModuleCodeSectionEntry { parser, range })
+            }
         }
     }
-}
 
-impl<'a> WasmDecoder<'a> for Parser<'a> {
-    /// Reads next record from the WebAssembly binary data. The methods returns
-    /// reference to current state of the parser. See `ParserState` num.
+    /// Convenience function that can be used to parse a module entirely
+    /// resident in memory.
+    ///
+    /// This function will parse the `data` provided as a WebAssembly module,
+    /// assuming that `data` represents the entire WebAssembly module.
+    ///
+    /// Note that when this function yields `ModuleCodeSectionEntry`
+    /// no action needs to be taken with the returned parser. The parser will be
+    /// automatically switched to internally and more payloads will continue to
+    /// get returned.
+    pub fn parse_all<'a>(
+        self,
+        mut data: &'a [u8],
+    ) -> impl Iterator<Item = Result<Payload<'a>>> + 'a {
+        let mut stack = Vec::new();
+        let mut cur = self;
+        let mut done = false;
+        iter::from_fn(move || {
+            if done {
+                return None;
+            }
+            let payload = match cur.parse(data, true) {
+                // Propagate all errors
+                Err(e) => return Some(Err(e)),
+
+                // This isn't possible because `eof` is always true.
+                Ok(Chunk::NeedMoreData(_)) => unreachable!(),
+
+                Ok(Chunk::Parsed { payload, consumed }) => {
+                    data = &data[consumed..];
+                    payload
+                }
+            };
+
+            match &payload {
+                // If a module ends then we either finished the current
+                // module or, if there's a parent, we switch back to
+                // resuming parsing the parent.
+                Payload::End => match stack.pop() {
+                    Some(p) => cur = p,
+                    None => done = true,
+                },
+
+                // When we enter a nested module then we need to update our
+                // current parser, saving off the previous state.
+                //
+                // Afterwards we turn the loop again to recurse in parsing the
+                // nested module.
+                Payload::ModuleCodeSectionEntry { parser, range: _ } => {
+                    stack.push(cur.clone());
+                    cur = parser.clone();
+                }
+
+                _ => {}
+            }
+
+            Some(Ok(payload))
+        })
+    }
+
+    /// Skip parsing the code or module code section entirely.
+    ///
+    /// This function can be used to indicate, after receiving
+    /// `CodeSectionStart` or `ModuleCodeSectionStart`, that the section
+    /// will not be parsed.
+    ///
+    /// The caller will be responsible for skipping `size` bytes (found in the
+    /// `CodeSectionStart` or `ModuleCodeSectionStart` payload). Bytes should
+    /// only be fed into `parse` after the `size` bytes have been skipped.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the parser is not in a state where it's
+    /// parsing the code or module code section.
     ///
     /// # Examples
-    /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::WasmDecoder;
-    /// let mut parser = wasmparser::Parser::new(data);
-    /// {
-    ///     let state = parser.read();
-    ///     println!("First state {:?}", state);
-    /// }
-    /// {
-    ///     let state = parser.read();
-    ///     println!("Second state {:?}", state);
-    /// }
-    /// ```
-    fn read(&mut self) -> &ParserState<'a> {
-        let result = self.read_wrapped();
-        if result.is_err() {
-            self.state = ParserState::Error(result.err().unwrap());
-        }
-        &self.state
-    }
-
-    fn push_input(&mut self, input: ParserInput) {
-        match input {
-            ParserInput::Default => (),
-            ParserInput::SkipSection => self.skip_section(),
-            ParserInput::SkipFunctionBody => self.skip_function_body(),
-            ParserInput::ReadCustomSection => self.read_custom_section(),
-            ParserInput::ReadSectionRawData => self.read_raw_section_data(),
-        }
-    }
-
-    /// Creates a BinaryReader when current state is ParserState::BeginSection
-    /// or ParserState::BeginFunctionBody.
     ///
-    /// # Examples
     /// ```
-    /// # let data = &[0x0, 0x61, 0x73, 0x6d, 0x1, 0x0, 0x0, 0x0, 0x1, 0x84,
-    /// #              0x80, 0x80, 0x80, 0x0, 0x1, 0x60, 0x0, 0x0, 0x3, 0x83,
-    /// #              0x80, 0x80, 0x80, 0x0, 0x2, 0x0, 0x0, 0x6, 0x81, 0x80,
-    /// #              0x80, 0x80, 0x0, 0x0, 0xa, 0x91, 0x80, 0x80, 0x80, 0x0,
-    /// #              0x2, 0x83, 0x80, 0x80, 0x80, 0x0, 0x0, 0x1, 0xb, 0x83,
-    /// #              0x80, 0x80, 0x80, 0x0, 0x0, 0x0, 0xb];
-    /// use wasmparser::{WasmDecoder, Parser, ParserState, TypeDef};
-    /// let mut parser = Parser::new(data);
-    /// let mut types = Vec::new();
-    /// let mut function_types = Vec::new();
-    /// let mut function_readers = Vec::new();
-    /// loop {
-    ///     match parser.read() {
-    ///         ParserState::Error(_) |
-    ///         ParserState::EndWasm => break,
-    ///         ParserState::TypeSectionEntry(TypeDef::Func(ty)) => {
-    ///             types.push(ty.clone());
-    ///         }
-    ///         ParserState::FunctionSectionEntry(id) => {
-    ///             function_types.push(id.clone());
-    ///         }
-    ///         ParserState::BeginFunctionBody {..} => {
-    ///             let reader = parser.create_binary_reader();
-    ///             function_readers.push(reader);
-    ///         }
-    ///         _ => continue
-    ///     }
-    /// }
-    /// for (i, reader) in function_readers.iter_mut().enumerate() {
-    ///     // Access the function type through the types table.
-    ///     let ty = &types[function_types[i] as usize];
-    ///     println!("\nFunction {} of type {:?}", i, ty);
-    ///     // Read the local declarations required by the function body.
-    ///     let local_decls_len = reader.read_local_count().unwrap();
-    ///     let mut local_decls = Vec::with_capacity(local_decls_len);
-    ///     let mut local_count = ty.params.len();
-    ///     for _ in 0..local_decls_len {
-    ///         let local_decl = reader.read_local_decl(&mut local_count).unwrap();
-    ///         local_decls.push(local_decl);
-    ///     }
-    ///     println!("Function locals: vars {:?}; total {} ", local_decls, local_count);
-    ///     // Read the operations of the function body.
-    ///     while let Ok(ref op) = reader.read_operator() {
-    ///         println!("  {:?}", op);
-    ///     }
-    /// }
-    /// ```
-    fn create_binary_reader<'b>(&mut self) -> BinaryReader<'b>
-    where
-        'a: 'b,
-    {
-        match self.state {
-            ParserState::BeginSection { .. } => self
-                .current_section
-                .as_ref()
-                .expect("section")
-                .get_binary_reader(),
-            ParserState::BeginFunctionBody { .. } | ParserState::FunctionBodyLocals { .. } => self
-                .current_function_body
-                .as_ref()
-                .expect("function body")
-                .get_binary_reader(),
-            _ => panic!("Invalid reader state during get binary reader operation"),
-        }
-    }
-
-    /// Reads next record from the WebAssembly binary data. It also allows to
-    /// control how parser will treat the next record(s). The method accepts the
-    /// `ParserInput` parameter that allows e.g. to skip section or function
-    /// operators. The methods returns reference to current state of the parser.
+    /// use wasmparser::{Result, Parser, Chunk, Range, SectionReader, Payload::*};
     ///
-    /// # Examples
-    /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::WasmDecoder;
-    /// let mut parser = wasmparser::Parser::new(data);
-    /// let mut next_input = wasmparser::ParserInput::Default;
-    /// loop {
-    ///     let state = parser.read_with_input(next_input);
-    ///     match *state {
-    ///         wasmparser::ParserState::EndWasm => break,
-    ///         wasmparser::ParserState::BeginWasm { .. } |
-    ///         wasmparser::ParserState::EndSection =>
-    ///             next_input = wasmparser::ParserInput::Default,
-    ///         wasmparser::ParserState::BeginSection { ref code, .. } => {
-    ///             println!("Found section: {:?}", code);
-    ///             next_input = wasmparser::ParserInput::SkipSection;
-    ///         },
-    ///         _ => unreachable!()
+    /// fn objdump_headers(mut wasm: &[u8]) -> Result<()> {
+    ///     let mut parser = Parser::new(0);
+    ///     loop {
+    ///         let payload = match parser.parse(wasm, true)? {
+    ///             Chunk::Parsed { consumed, payload } => {
+    ///                 wasm = &wasm[consumed..];
+    ///                 payload
+    ///             }
+    ///             // this state isn't possible with `eof = true`
+    ///             Chunk::NeedMoreData(_) => unreachable!(),
+    ///         };
+    ///         match payload {
+    ///             TypeSection(s) => print_range("type section", &s.range()),
+    ///             ImportSection(s) => print_range("import section", &s.range()),
+    ///             // .. other sections
+    ///
+    ///             // Print the range of the code section we see, but don't
+    ///             // actually iterate over each individual function.
+    ///             CodeSectionStart { range, size, .. } => {
+    ///                 print_range("code section", &range);
+    ///                 parser.skip_section();
+    ///                 wasm = &wasm[size as usize..];
+    ///             }
+    ///             End => break,
+    ///             _ => {}
+    ///         }
     ///     }
+    ///     Ok(())
+    /// }
+    ///
+    /// fn print_range(section: &str, range: &Range) {
+    ///     println!("{:>40}: {:#010x} - {:#010x}", section, range.start, range.end);
     /// }
     /// ```
-    fn read_with_input(&mut self, input: ParserInput) -> &ParserState<'a> {
-        self.push_input(input);
-        self.read()
-    }
-
-    fn last_state(&self) -> &ParserState<'a> {
-        &self.state
-    }
-}
-
-impl<'a> From<ModuleReader<'a>> for Parser<'a> {
-    fn from(reader: ModuleReader<'a>) -> Parser<'a> {
-        let mut parser = Parser::default();
-        parser.state = ParserState::BeginWasm {
-            version: reader.get_version(),
+    pub fn skip_section(&mut self) {
+        let skip = match self.state {
+            State::FunctionBody { remaining: _, len } | State::ModuleCode { remaining: _, len } => {
+                len
+            }
+            _ => panic!("wrong state to call `skip_section`"),
         };
-        parser.module_reader = Some(reader);
-        return parser;
+        self.offset += u64::from(skip);
+        self.max_size -= u64::from(skip);
+        self.state = State::SectionStart;
     }
 }
 
-impl<'a> Default for Parser<'a> {
-    fn default() -> Parser<'a> {
-        Parser::new(&[])
+fn usize_to_u64(a: usize) -> u64 {
+    a.try_into().unwrap()
+}
+
+/// Parses an entire section resident in memory into a `Payload`.
+///
+/// Requires that `len` bytes are resident in `reader` and uses `ctor`/`variant`
+/// to construct the section to return.
+fn section<'a, T>(
+    reader: &mut BinaryReader<'a>,
+    len: u32,
+    ctor: fn(&'a [u8], usize) -> Result<T>,
+    variant: fn(T) -> Payload<'a>,
+) -> Result<Payload<'a>> {
+    let offset = reader.original_position();
+    let payload = reader.read_bytes(len as usize)?;
+    // clear the hint for "need this many more bytes" here because we already
+    // read all the bytes, so it's not possible to read more bytes if this
+    // fails.
+    let reader = ctor(payload, offset).map_err(clear_hint)?;
+    Ok(variant(reader))
+}
+
+/// Creates a new `BinaryReader` from the given `reader` which will be reading
+/// the first `len` bytes.
+///
+/// This means that `len` bytes must be resident in memory at the time of this
+/// reading.
+fn subreader<'a>(reader: &mut BinaryReader<'a>, len: u32) -> Result<BinaryReader<'a>> {
+    let offset = reader.original_position();
+    let payload = reader.read_bytes(len as usize)?;
+    Ok(BinaryReader::new_with_offset(payload, offset))
+}
+
+/// Reads a section that is represented by a single uleb-encoded `u32`.
+fn single_u32<'a>(reader: &mut BinaryReader<'a>, len: u32, desc: &str) -> Result<(u32, Range)> {
+    let range = Range {
+        start: reader.original_position(),
+        end: reader.original_position() + len as usize,
+    };
+    let mut content = subreader(reader, len)?;
+    // We can't recover from "unexpected eof" here because our entire section is
+    // already resident in memory, so clear the hint for how many more bytes are
+    // expected.
+    let index = content.read_var_u32().map_err(clear_hint)?;
+    if !content.eof() {
+        return Err(BinaryReaderError::new(
+            format!("Unexpected content in the {} section", desc),
+            content.original_position(),
+        ));
+    }
+    Ok((index, range))
+}
+
+/// Attempts to parse using `f`.
+///
+/// This will update `*len` with the number of bytes consumed, and it will cause
+/// a failure to be returned instead of the number of bytes consumed exceeds
+/// what `*len` currently is.
+fn delimited<'a, T>(
+    reader: &mut BinaryReader<'a>,
+    len: &mut u32,
+    f: impl FnOnce(&mut BinaryReader<'a>) -> Result<T>,
+) -> Result<T> {
+    let start = reader.position;
+    let ret = f(reader)?;
+    *len = match (reader.position - start)
+        .try_into()
+        .ok()
+        .and_then(|i| len.checked_sub(i))
+    {
+        Some(i) => i,
+        None => return Err(BinaryReaderError::new("Unexpected EOF", start)),
+    };
+    Ok(ret)
+}
+
+impl Default for Parser {
+    fn default() -> Parser {
+        Parser::new(0)
+    }
+}
+
+impl fmt::Debug for Payload<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Payload::*;
+        match self {
+            CustomSection {
+                name,
+                data_offset,
+                data: _,
+            } => f
+                .debug_struct("CustomSection")
+                .field("name", name)
+                .field("data_offset", data_offset)
+                .field("data", &"...")
+                .finish(),
+            Version { num, range } => f
+                .debug_struct("Version")
+                .field("num", num)
+                .field("range", range)
+                .finish(),
+            TypeSection(_) => f.debug_tuple("TypeSection").field(&"...").finish(),
+            ImportSection(_) => f.debug_tuple("ImportSection").field(&"...").finish(),
+            AliasSection(_) => f.debug_tuple("AliasSection").field(&"...").finish(),
+            InstanceSection(_) => f.debug_tuple("InstanceSection").field(&"...").finish(),
+            ModuleSection(_) => f.debug_tuple("ModuleSection").field(&"...").finish(),
+            FunctionSection(_) => f.debug_tuple("FunctionSection").field(&"...").finish(),
+            TableSection(_) => f.debug_tuple("TableSection").field(&"...").finish(),
+            MemorySection(_) => f.debug_tuple("MemorySection").field(&"...").finish(),
+            GlobalSection(_) => f.debug_tuple("GlobalSection").field(&"...").finish(),
+            ExportSection(_) => f.debug_tuple("ExportSection").field(&"...").finish(),
+            ElementSection(_) => f.debug_tuple("ElementSection").field(&"...").finish(),
+            DataSection(_) => f.debug_tuple("DataSection").field(&"...").finish(),
+            StartSection { func, range } => f
+                .debug_struct("StartSection")
+                .field("func", func)
+                .field("range", range)
+                .finish(),
+            DataCountSection { count, range } => f
+                .debug_struct("DataCountSection")
+                .field("count", count)
+                .field("range", range)
+                .finish(),
+            CodeSectionStart { count, range, size } => f
+                .debug_struct("CodeSectionStart")
+                .field("count", count)
+                .field("range", range)
+                .field("size", size)
+                .finish(),
+            CodeSectionEntry(_) => f.debug_tuple("CodeSectionEntry").field(&"...").finish(),
+            ModuleCodeSectionStart { count, range, size } => f
+                .debug_struct("ModuleCodeSectionStart")
+                .field("count", count)
+                .field("range", range)
+                .field("size", size)
+                .finish(),
+            ModuleCodeSectionEntry { parser: _, range } => f
+                .debug_struct("ModuleCodeSectionEntry")
+                .field("range", range)
+                .finish(),
+            UnknownSection { id, range, .. } => f
+                .debug_struct("UnknownSection")
+                .field("id", id)
+                .field("range", range)
+                .finish(),
+            End => f.write_str("End"),
+        }
+    }
+}
+
+fn clear_hint(mut err: BinaryReaderError) -> BinaryReaderError {
+    err.inner.needed_hint = None;
+    err
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! assert_matches {
+        ($a:expr, $b:pat $(,)?) => {
+            match $a {
+                $b => {}
+                a => panic!("`{:?}` doesn't match `{}`", a, stringify!($b)),
+            }
+        };
+    }
+
+    #[test]
+    fn header() {
+        assert!(Parser::default().parse(&[], true).is_err());
+        assert_matches!(
+            Parser::default().parse(&[], false),
+            Ok(Chunk::NeedMoreData(4)),
+        );
+        assert_matches!(
+            Parser::default().parse(b"\0", false),
+            Ok(Chunk::NeedMoreData(3)),
+        );
+        assert_matches!(
+            Parser::default().parse(b"\0asm", false),
+            Ok(Chunk::NeedMoreData(4)),
+        );
+        assert_matches!(
+            Parser::default().parse(b"\0asm\x01\0\0\0", false),
+            Ok(Chunk::Parsed {
+                consumed: 8,
+                payload: Payload::Version { num: 1, .. },
+            }),
+        );
+    }
+
+    fn parser_after_header() -> Parser {
+        let mut p = Parser::default();
+        assert_matches!(
+            p.parse(b"\0asm\x01\0\0\0", false),
+            Ok(Chunk::Parsed {
+                consumed: 8,
+                payload: Payload::Version { num: 1, .. },
+            }),
+        );
+        return p;
+    }
+
+    #[test]
+    fn start_section() {
+        assert_matches!(
+            parser_after_header().parse(&[], false),
+            Ok(Chunk::NeedMoreData(1)),
+        );
+        assert!(parser_after_header().parse(&[8], true).is_err());
+        assert!(parser_after_header().parse(&[8, 1], true).is_err());
+        assert!(parser_after_header().parse(&[8, 2], true).is_err());
+        assert_matches!(
+            parser_after_header().parse(&[8], false),
+            Ok(Chunk::NeedMoreData(1)),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[8, 1], false),
+            Ok(Chunk::NeedMoreData(1)),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[8, 2], false),
+            Ok(Chunk::NeedMoreData(2)),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[8, 1, 1], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::StartSection { func: 1, .. },
+            }),
+        );
+        assert!(parser_after_header().parse(&[8, 2, 1, 1], false).is_err());
+        assert!(parser_after_header().parse(&[8, 0], false).is_err());
+    }
+
+    #[test]
+    fn end_works() {
+        assert_matches!(
+            parser_after_header().parse(&[], true),
+            Ok(Chunk::Parsed {
+                consumed: 0,
+                payload: Payload::End,
+            }),
+        );
+    }
+
+    #[test]
+    fn type_section() {
+        assert!(parser_after_header().parse(&[1], true).is_err());
+        assert!(parser_after_header().parse(&[1, 0], false).is_err());
+        // assert!(parser_after_header().parse(&[8, 2], true).is_err());
+        assert_matches!(
+            parser_after_header().parse(&[1], false),
+            Ok(Chunk::NeedMoreData(1)),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[1, 1], false),
+            Ok(Chunk::NeedMoreData(1)),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[1, 1, 1], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::TypeSection(_),
+            }),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[1, 1, 1, 2, 3, 4], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::TypeSection(_),
+            }),
+        );
+    }
+
+    #[test]
+    fn custom_section() {
+        assert!(parser_after_header().parse(&[0], true).is_err());
+        assert!(parser_after_header().parse(&[0, 0], false).is_err());
+        assert!(parser_after_header().parse(&[0, 1, 1], false).is_err());
+        assert_matches!(
+            parser_after_header().parse(&[0, 2, 1], false),
+            Ok(Chunk::NeedMoreData(1)),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[0, 1, 0], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::CustomSection {
+                    name: "",
+                    data_offset: 11,
+                    data: b"",
+                },
+            }),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[0, 2, 1, b'a'], false),
+            Ok(Chunk::Parsed {
+                consumed: 4,
+                payload: Payload::CustomSection {
+                    name: "a",
+                    data_offset: 12,
+                    data: b"",
+                },
+            }),
+        );
+        assert_matches!(
+            parser_after_header().parse(&[0, 2, 0, b'a'], false),
+            Ok(Chunk::Parsed {
+                consumed: 4,
+                payload: Payload::CustomSection {
+                    name: "",
+                    data_offset: 11,
+                    data: b"a",
+                },
+            }),
+        );
+    }
+
+    #[test]
+    fn function_section() {
+        assert!(parser_after_header().parse(&[10], true).is_err());
+        assert!(parser_after_header().parse(&[10, 0], true).is_err());
+        assert!(parser_after_header().parse(&[10, 1], true).is_err());
+        assert_matches!(
+            parser_after_header().parse(&[10], false),
+            Ok(Chunk::NeedMoreData(1))
+        );
+        assert_matches!(
+            parser_after_header().parse(&[10, 1], false),
+            Ok(Chunk::NeedMoreData(1))
+        );
+        let mut p = parser_after_header();
+        assert_matches!(
+            p.parse(&[10, 1, 0], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::CodeSectionStart { count: 0, .. },
+            }),
+        );
+        assert_matches!(
+            p.parse(&[], true),
+            Ok(Chunk::Parsed {
+                consumed: 0,
+                payload: Payload::End,
+            }),
+        );
+        let mut p = parser_after_header();
+        assert_matches!(
+            p.parse(&[10, 2, 1, 0], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::CodeSectionStart { count: 1, .. },
+            }),
+        );
+        assert_matches!(
+            p.parse(&[0], false),
+            Ok(Chunk::Parsed {
+                consumed: 1,
+                payload: Payload::CodeSectionEntry(_),
+            }),
+        );
+        assert_matches!(
+            p.parse(&[], true),
+            Ok(Chunk::Parsed {
+                consumed: 0,
+                payload: Payload::End,
+            }),
+        );
+
+        // 1 byte section with 1 function can't read the function body because
+        // the section is too small
+        let mut p = parser_after_header();
+        assert_matches!(
+            p.parse(&[10, 1, 1], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::CodeSectionStart { count: 1, .. },
+            }),
+        );
+        assert_eq!(
+            p.parse(&[0], false).unwrap_err().message(),
+            "Unexpected EOF"
+        );
+
+        // section with 2 functions but section is cut off
+        let mut p = parser_after_header();
+        assert_matches!(
+            p.parse(&[10, 2, 2], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::CodeSectionStart { count: 2, .. },
+            }),
+        );
+        assert_matches!(
+            p.parse(&[0], false),
+            Ok(Chunk::Parsed {
+                consumed: 1,
+                payload: Payload::CodeSectionEntry(_),
+            }),
+        );
+        assert_matches!(p.parse(&[], false), Ok(Chunk::NeedMoreData(1)));
+        assert_eq!(
+            p.parse(&[0], false).unwrap_err().message(),
+            "Unexpected EOF",
+        );
+
+        // trailing data is bad
+        let mut p = parser_after_header();
+        assert_matches!(
+            p.parse(&[10, 3, 1], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::CodeSectionStart { count: 1, .. },
+            }),
+        );
+        assert_matches!(
+            p.parse(&[0], false),
+            Ok(Chunk::Parsed {
+                consumed: 1,
+                payload: Payload::CodeSectionEntry(_),
+            }),
+        );
+        assert_eq!(
+            p.parse(&[0], false).unwrap_err().message(),
+            "trailing bytes at end of section",
+        );
+    }
+
+    #[test]
+    fn module_code_errors() {
+        // no bytes to say size of section
+        assert!(parser_after_header().parse(&[103], true).is_err());
+        // section must start with a u32
+        assert!(parser_after_header().parse(&[103, 0], true).is_err());
+        // EOF before we finish reading the section
+        assert!(parser_after_header().parse(&[103, 1], true).is_err());
+    }
+
+    #[test]
+    fn module_code_one() {
+        let mut p = parser_after_header();
+        assert_matches!(p.parse(&[103], false), Ok(Chunk::NeedMoreData(1)));
+        assert_matches!(p.parse(&[103, 9], false), Ok(Chunk::NeedMoreData(1)));
+        // Module code section, 10 bytes large, one module.
+        assert_matches!(
+            p.parse(&[103, 10, 1], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::ModuleCodeSectionStart { count: 1, .. },
+            })
+        );
+        // Declare an empty module, which will be 8 bytes large for the header.
+        // Switch to the sub-parser on success.
+        let mut sub = match p.parse(&[8], false) {
+            Ok(Chunk::Parsed {
+                consumed: 1,
+                payload: Payload::ModuleCodeSectionEntry { parser, .. },
+            }) => parser,
+            other => panic!("bad parse {:?}", other),
+        };
+
+        // Parse the header of the submodule with the sub-parser.
+        assert_matches!(sub.parse(&[], false), Ok(Chunk::NeedMoreData(4)));
+        assert_matches!(sub.parse(b"\0asm", false), Ok(Chunk::NeedMoreData(4)));
+        assert_matches!(
+            sub.parse(b"\0asm\x01\0\0\0", false),
+            Ok(Chunk::Parsed {
+                consumed: 8,
+                payload: Payload::Version { num: 1, .. },
+            }),
+        );
+
+        // The sub-parser should be byte-limited so the next byte shouldn't get
+        // consumed, it's intended for the parent parser.
+        assert_matches!(
+            sub.parse(&[10], false),
+            Ok(Chunk::Parsed {
+                consumed: 0,
+                payload: Payload::End,
+            }),
+        );
+
+        // The parent parser should now be back to resuming, and we simulate it
+        // being done with bytes to ensure that it's safely at the end,
+        // completing the module code section.
+        assert_matches!(p.parse(&[], false), Ok(Chunk::NeedMoreData(1)));
+        assert_matches!(
+            p.parse(&[], true),
+            Ok(Chunk::Parsed {
+                consumed: 0,
+                payload: Payload::End,
+            }),
+        );
+    }
+
+    #[test]
+    fn nested_section_too_big() {
+        let mut p = parser_after_header();
+        // Module code section, 12 bytes large, one module. This leaves 11 bytes
+        // of payload for the module definition itself.
+        assert_matches!(
+            p.parse(&[103, 12, 1], false),
+            Ok(Chunk::Parsed {
+                consumed: 3,
+                payload: Payload::ModuleCodeSectionStart { count: 1, .. },
+            })
+        );
+        // Use one byte to say we're a 10 byte module, which fits exactly within
+        // our module code section.
+        let mut sub = match p.parse(&[10], false) {
+            Ok(Chunk::Parsed {
+                consumed: 1,
+                payload: Payload::ModuleCodeSectionEntry { parser, .. },
+            }) => parser,
+            other => panic!("bad parse {:?}", other),
+        };
+
+        // use 8 bytes to parse the header, leaving 2 remaining bytes in our
+        // module.
+        assert_matches!(
+            sub.parse(b"\0asm\x01\0\0\0", false),
+            Ok(Chunk::Parsed {
+                consumed: 8,
+                payload: Payload::Version { num: 1, .. },
+            }),
+        );
+
+        // We can't parse a section which declares its bigger than the outer
+        // module. This is section 1, one byte big, with one content byte. The
+        // content byte, however, lives outside of the parent's module code
+        // section.
+        assert_eq!(
+            sub.parse(&[1, 1, 0], false).unwrap_err().message(),
+            "section too large",
+        );
     }
 }

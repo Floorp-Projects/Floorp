@@ -14,7 +14,7 @@
  */
 
 use crate::{
-    BinaryReader, ImportSectionEntryType, Result, SectionIteratorLimited, SectionReader,
+    BinaryReader, ImportSectionEntryType, Range, Result, SectionIteratorLimited, SectionReader,
     SectionWithLimitedItems,
 };
 
@@ -25,6 +25,7 @@ pub struct Import<'a> {
     pub ty: ImportSectionEntryType,
 }
 
+#[derive(Clone)]
 pub struct ImportSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -49,15 +50,9 @@ impl<'a> ImportSectionReader<'a> {
     ///
     /// # Examples
     /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00,
-    /// #     0x02, 0x07, 0x01, 0x01, 0x41, 0x01, 0x66, 0x00, 0x00,
-    /// #     0x03, 0x02, 0x01, 0x00, 0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::ModuleReader;
-    /// let mut reader = ModuleReader::new(data).expect("module reader");
-    /// let section = reader.read().expect("type section");
-    /// let section = reader.read().expect("import section");
-    /// let mut import_reader = section.get_import_section_reader().expect("import section reader");
+    /// use wasmparser::ImportSectionReader;
+    /// # let data: &[u8] = &[0x01, 0x01, 0x41, 0x01, 0x66, 0x00, 0x00];
+    /// let mut import_reader = ImportSectionReader::new(data, 0).unwrap();
     /// for _ in 0..import_reader.get_count() {
     ///     let import = import_reader.read().expect("import");
     ///     println!("Import: {:?}", import);
@@ -81,6 +76,9 @@ impl<'a> SectionReader for ImportSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         ImportSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

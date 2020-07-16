@@ -14,7 +14,7 @@ use crate::ir::Inst as IRInst;
 use crate::ir::{InstructionData, Opcode, TrapCode, Type};
 use crate::machinst::lower::*;
 use crate::machinst::*;
-use crate::{CodegenError, CodegenResult};
+use crate::CodegenResult;
 
 use crate::isa::aarch64::inst::*;
 use crate::isa::aarch64::AArch64Backend;
@@ -736,20 +736,11 @@ pub(crate) fn lower_vector_compare<C: LowerCtx<I = Inst>>(
     ty: Type,
     cond: Cond,
 ) -> CodegenResult<()> {
-    match ty {
-        F32X4 | F64X2 | I8X16 | I16X8 | I32X4 => {}
-        _ => {
-            return Err(CodegenError::Unsupported(format!(
-                "unsupported SIMD type: {:?}",
-                ty
-            )));
-        }
-    };
-
     let is_float = match ty {
         F32X4 | F64X2 => true,
         _ => false,
     };
+    let size = VectorSize::from_ty(ty);
     // 'Less than' operations are implemented by swapping
     // the order of operands and using the 'greater than'
     // instructions.
@@ -784,7 +775,7 @@ pub(crate) fn lower_vector_compare<C: LowerCtx<I = Inst>>(
         rd,
         rn,
         rm,
-        ty,
+        size,
     });
 
     if cond == Cond::Ne {
@@ -792,7 +783,7 @@ pub(crate) fn lower_vector_compare<C: LowerCtx<I = Inst>>(
             op: VecMisc2::Not,
             rd,
             rn: rd.to_reg(),
-            ty: I8X16,
+            size,
         });
     }
 
@@ -829,8 +820,8 @@ pub fn ty_bits(ty: Type) -> usize {
         B1 => 1,
         B8 | I8 => 8,
         B16 | I16 => 16,
-        B32 | I32 | F32 => 32,
-        B64 | I64 | F64 => 64,
+        B32 | I32 | F32 | R32 => 32,
+        B64 | I64 | F64 | R64 => 64,
         B128 | I128 => 128,
         IFLAGS | FFLAGS => 32,
         B8X8 | I8X8 | B16X4 | I16X4 | B32X2 | I32X2 => 64,
@@ -842,7 +833,7 @@ pub fn ty_bits(ty: Type) -> usize {
 
 pub(crate) fn ty_is_int(ty: Type) -> bool {
     match ty {
-        B1 | B8 | I8 | B16 | I16 | B32 | I32 | B64 | I64 => true,
+        B1 | B8 | I8 | B16 | I16 | B32 | I32 | B64 | I64 | R32 | R64 => true,
         F32 | F64 | B128 | I128 | I8X8 | I8X16 | I16X4 | I16X8 | I32X2 | I32X4 | I64X2 => false,
         IFLAGS | FFLAGS => panic!("Unexpected flags type"),
         _ => panic!("ty_is_int() on unknown type: {:?}", ty),
@@ -988,16 +979,7 @@ pub(crate) fn lower_icmp_or_ifcmp_to_flags<C: LowerCtx<I = Inst>>(
         (false, true) => NarrowValueMode::SignExtend64,
         (false, false) => NarrowValueMode::ZeroExtend64,
     };
-    let inputs = [
-        InsnInput {
-            insn: insn,
-            input: 0,
-        },
-        InsnInput {
-            insn: insn,
-            input: 1,
-        },
-    ];
+    let inputs = [InsnInput { insn, input: 0 }, InsnInput { insn, input: 1 }];
     let ty = ctx.input_ty(insn, 0);
     let rn = put_input_in_reg(ctx, inputs[0], narrow_mode);
     let rm = put_input_in_rse_imm12(ctx, inputs[1], narrow_mode);
@@ -1010,16 +992,7 @@ pub(crate) fn lower_icmp_or_ifcmp_to_flags<C: LowerCtx<I = Inst>>(
 pub(crate) fn lower_fcmp_or_ffcmp_to_flags<C: LowerCtx<I = Inst>>(ctx: &mut C, insn: IRInst) {
     let ty = ctx.input_ty(insn, 0);
     let bits = ty_bits(ty);
-    let inputs = [
-        InsnInput {
-            insn: insn,
-            input: 0,
-        },
-        InsnInput {
-            insn: insn,
-            input: 1,
-        },
-    ];
+    let inputs = [InsnInput { insn, input: 0 }, InsnInput { insn, input: 1 }];
     let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
     let rm = put_input_in_reg(ctx, inputs[1], NarrowValueMode::None);
     match bits {

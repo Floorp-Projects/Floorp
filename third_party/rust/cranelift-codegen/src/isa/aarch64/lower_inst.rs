@@ -58,96 +58,117 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         Opcode::Iadd => {
             let rd = get_output_reg(ctx, outputs[0]);
             let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
-            let rm = put_input_in_rse_imm12(ctx, inputs[1], NarrowValueMode::None);
             let ty = ty.unwrap();
-            let alu_op = choose_32_64(ty, ALUOp::Add32, ALUOp::Add64);
-            ctx.emit(alu_inst_imm12(alu_op, rd, rn, rm));
+            if ty_bits(ty) < 128 {
+                let rm = put_input_in_rse_imm12(ctx, inputs[1], NarrowValueMode::None);
+                let alu_op = choose_32_64(ty, ALUOp::Add32, ALUOp::Add64);
+                ctx.emit(alu_inst_imm12(alu_op, rd, rn, rm));
+            } else {
+                let rm = put_input_in_reg(ctx, inputs[1], NarrowValueMode::None);
+                ctx.emit(Inst::VecRRR {
+                    rd,
+                    rn,
+                    rm,
+                    alu_op: VecALUOp::Add,
+                    size: VectorSize::from_ty(ty),
+                });
+            }
         }
         Opcode::Isub => {
             let rd = get_output_reg(ctx, outputs[0]);
             let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
-            let rm = put_input_in_rse_imm12(ctx, inputs[1], NarrowValueMode::None);
             let ty = ty.unwrap();
-            let alu_op = choose_32_64(ty, ALUOp::Sub32, ALUOp::Sub64);
-            ctx.emit(alu_inst_imm12(alu_op, rd, rn, rm));
+            if ty_bits(ty) < 128 {
+                let rm = put_input_in_rse_imm12(ctx, inputs[1], NarrowValueMode::None);
+                let alu_op = choose_32_64(ty, ALUOp::Sub32, ALUOp::Sub64);
+                ctx.emit(alu_inst_imm12(alu_op, rd, rn, rm));
+            } else {
+                let rm = put_input_in_reg(ctx, inputs[1], NarrowValueMode::None);
+                ctx.emit(Inst::VecRRR {
+                    rd,
+                    rn,
+                    rm,
+                    alu_op: VecALUOp::Sub,
+                    size: VectorSize::from_ty(ty),
+                });
+            }
         }
-        Opcode::UaddSat | Opcode::SaddSat => {
-            // We use the vector instruction set's saturating adds (UQADD /
-            // SQADD), which require vector registers.
-            let is_signed = op == Opcode::SaddSat;
-            let narrow_mode = if is_signed {
-                NarrowValueMode::SignExtend64
-            } else {
-                NarrowValueMode::ZeroExtend64
-            };
-            let alu_op = if is_signed {
-                VecALUOp::SQAddScalar
-            } else {
-                VecALUOp::UQAddScalar
-            };
-            let va = ctx.alloc_tmp(RegClass::V128, I128);
-            let vb = ctx.alloc_tmp(RegClass::V128, I128);
-            let ra = put_input_in_reg(ctx, inputs[0], narrow_mode);
-            let rb = put_input_in_reg(ctx, inputs[1], narrow_mode);
+        Opcode::UaddSat | Opcode::SaddSat | Opcode::UsubSat | Opcode::SsubSat => {
+            // We use the scalar SIMD & FP saturating additions and subtractions
+            // (SQADD / UQADD / SQSUB / UQSUB), which require scalar FP registers.
+            let is_signed = op == Opcode::SaddSat || op == Opcode::SsubSat;
+            let ty = ty.unwrap();
             let rd = get_output_reg(ctx, outputs[0]);
-            ctx.emit(Inst::MovToVec64 { rd: va, rn: ra });
-            ctx.emit(Inst::MovToVec64 { rd: vb, rn: rb });
-            ctx.emit(Inst::VecRRR {
-                rd: va,
-                rn: va.to_reg(),
-                rm: vb.to_reg(),
-                alu_op,
-                ty: I64,
-            });
-            ctx.emit(Inst::MovFromVec {
-                rd,
-                rn: va.to_reg(),
-                idx: 0,
-                ty: I64,
-            });
-        }
+            if ty_bits(ty) < 128 {
+                let narrow_mode = if is_signed {
+                    NarrowValueMode::SignExtend64
+                } else {
+                    NarrowValueMode::ZeroExtend64
+                };
+                let fpu_op = match op {
+                    Opcode::UaddSat => FPUOp2::Uqadd64,
+                    Opcode::SaddSat => FPUOp2::Sqadd64,
+                    Opcode::UsubSat => FPUOp2::Uqsub64,
+                    Opcode::SsubSat => FPUOp2::Sqsub64,
+                    _ => unreachable!(),
+                };
+                let va = ctx.alloc_tmp(RegClass::V128, I128);
+                let vb = ctx.alloc_tmp(RegClass::V128, I128);
+                let ra = put_input_in_reg(ctx, inputs[0], narrow_mode);
+                let rb = put_input_in_reg(ctx, inputs[1], narrow_mode);
+                ctx.emit(Inst::MovToVec64 { rd: va, rn: ra });
+                ctx.emit(Inst::MovToVec64 { rd: vb, rn: rb });
+                ctx.emit(Inst::FpuRRR {
+                    fpu_op,
+                    rd: va,
+                    rn: va.to_reg(),
+                    rm: vb.to_reg(),
+                });
+                ctx.emit(Inst::MovFromVec {
+                    rd,
+                    rn: va.to_reg(),
+                    idx: 0,
+                    size: VectorSize::Size64x2,
+                });
+            } else {
+                let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
+                let rm = put_input_in_reg(ctx, inputs[1], NarrowValueMode::None);
 
-        Opcode::UsubSat | Opcode::SsubSat => {
-            let is_signed = op == Opcode::SsubSat;
-            let narrow_mode = if is_signed {
-                NarrowValueMode::SignExtend64
-            } else {
-                NarrowValueMode::ZeroExtend64
-            };
-            let alu_op = if is_signed {
-                VecALUOp::SQSubScalar
-            } else {
-                VecALUOp::UQSubScalar
-            };
-            let va = ctx.alloc_tmp(RegClass::V128, I128);
-            let vb = ctx.alloc_tmp(RegClass::V128, I128);
-            let ra = put_input_in_reg(ctx, inputs[0], narrow_mode);
-            let rb = put_input_in_reg(ctx, inputs[1], narrow_mode);
-            let rd = get_output_reg(ctx, outputs[0]);
-            ctx.emit(Inst::MovToVec64 { rd: va, rn: ra });
-            ctx.emit(Inst::MovToVec64 { rd: vb, rn: rb });
-            ctx.emit(Inst::VecRRR {
-                rd: va,
-                rn: va.to_reg(),
-                rm: vb.to_reg(),
-                alu_op,
-                ty: I64,
-            });
-            ctx.emit(Inst::MovFromVec {
-                rd,
-                rn: va.to_reg(),
-                idx: 0,
-                ty: I64,
-            });
+                let alu_op = match op {
+                    Opcode::UaddSat => VecALUOp::Uqadd,
+                    Opcode::SaddSat => VecALUOp::Sqadd,
+                    Opcode::UsubSat => VecALUOp::Uqsub,
+                    Opcode::SsubSat => VecALUOp::Sqsub,
+                    _ => unreachable!(),
+                };
+
+                ctx.emit(Inst::VecRRR {
+                    rd,
+                    rn,
+                    rm,
+                    alu_op,
+                    size: VectorSize::from_ty(ty),
+                });
+            }
         }
 
         Opcode::Ineg => {
             let rd = get_output_reg(ctx, outputs[0]);
-            let rn = zero_reg();
-            let rm = put_input_in_rse_imm12(ctx, inputs[0], NarrowValueMode::None);
             let ty = ty.unwrap();
-            let alu_op = choose_32_64(ty, ALUOp::Sub32, ALUOp::Sub64);
-            ctx.emit(alu_inst_imm12(alu_op, rd, rn, rm));
+            if ty_bits(ty) < 128 {
+                let rn = zero_reg();
+                let rm = put_input_in_rse_imm12(ctx, inputs[0], NarrowValueMode::None);
+                let alu_op = choose_32_64(ty, ALUOp::Sub32, ALUOp::Sub64);
+                ctx.emit(alu_inst_imm12(alu_op, rd, rn, rm));
+            } else {
+                let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
+                ctx.emit(Inst::VecMisc {
+                    op: VecMisc2::Neg,
+                    rd,
+                    rn,
+                    size: VectorSize::from_ty(ty),
+                });
+            }
         }
 
         Opcode::Imul => {
@@ -155,14 +176,24 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
             let rm = put_input_in_reg(ctx, inputs[1], NarrowValueMode::None);
             let ty = ty.unwrap();
-            let alu_op = choose_32_64(ty, ALUOp::MAdd32, ALUOp::MAdd64);
-            ctx.emit(Inst::AluRRRR {
-                alu_op,
-                rd,
-                rn,
-                rm,
-                ra: zero_reg(),
-            });
+            if ty_bits(ty) < 128 {
+                let alu_op = choose_32_64(ty, ALUOp::MAdd32, ALUOp::MAdd64);
+                ctx.emit(Inst::AluRRRR {
+                    alu_op,
+                    rd,
+                    rn,
+                    rm,
+                    ra: zero_reg(),
+                });
+            } else {
+                ctx.emit(Inst::VecRRR {
+                    alu_op: VecALUOp::Mul,
+                    rd,
+                    rn,
+                    rm,
+                    size: VectorSize::from_ty(ty),
+                });
+            }
         }
 
         Opcode::Umulhi | Opcode::Smulhi => {
@@ -282,14 +313,11 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 //   msub rd, rd, rm, rn  ; rd = rn - rd * rm
 
                 // Check for divide by 0.
-                let branch_size = 8;
-                ctx.emit(Inst::OneWayCondBr {
-                    target: BranchTarget::ResolvedOffset(branch_size),
-                    kind: CondBrKind::NotZero(rm),
-                });
-
                 let trap_info = (ctx.srcloc(insn), TrapCode::IntegerDivisionByZero);
-                ctx.emit(Inst::Udf { trap_info });
+                ctx.emit(Inst::TrapIf {
+                    trap_info,
+                    kind: CondBrKind::Zero(rm),
+                });
 
                 ctx.emit(Inst::AluRRRR {
                     alu_op: ALUOp::MSub64,
@@ -300,17 +328,17 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 });
             } else {
                 if div_op == ALUOp::SDiv64 {
-                    //   cbz rm, #20
+                    //   cbnz rm, #8
+                    //   udf ; divide by zero
                     //   cmn rm, 1
                     //   ccmp rn, 1, #nzcv, eq
-                    //   b.vc 12
+                    //   b.vc #8
                     //   udf ; signed overflow
-                    //   udf ; divide by zero
 
                     // Check for divide by 0.
-                    let branch_size = 20;
-                    ctx.emit(Inst::OneWayCondBr {
-                        target: BranchTarget::ResolvedOffset(branch_size),
+                    let trap_info = (ctx.srcloc(insn), TrapCode::IntegerDivisionByZero);
+                    ctx.emit(Inst::TrapIf {
+                        trap_info,
                         kind: CondBrKind::Zero(rm),
                     });
 
@@ -319,7 +347,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     // The following checks must be done in 32-bit or 64-bit, depending
                     // on the input type. Even though the initial div instruction is
                     // always done in 64-bit currently.
-                    let size = InstSize::from_ty(ty);
+                    let size = OperandSize::from_ty(ty);
                     // Check RHS is -1.
                     ctx.emit(Inst::AluRRImm12 {
                         alu_op: choose_32_64(ty, ALUOp::AddS32, ALUOp::AddS64),
@@ -336,27 +364,22 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                         nzcv: NZCV::new(false, false, false, false),
                         cond: Cond::Eq,
                     });
-                    ctx.emit(Inst::OneWayCondBr {
-                        target: BranchTarget::ResolvedOffset(12),
-                        kind: CondBrKind::Cond(Cond::Vc),
-                    });
-
                     let trap_info = (ctx.srcloc(insn), TrapCode::IntegerOverflow);
-                    ctx.emit(Inst::Udf { trap_info });
+                    ctx.emit(Inst::TrapIf {
+                        trap_info,
+                        kind: CondBrKind::Cond(Cond::Vs),
+                    });
                 } else {
                     //   cbnz rm, #8
                     //   udf ; divide by zero
 
                     // Check for divide by 0.
-                    let branch_size = 8;
-                    ctx.emit(Inst::OneWayCondBr {
-                        target: BranchTarget::ResolvedOffset(branch_size),
-                        kind: CondBrKind::NotZero(rm),
+                    let trap_info = (ctx.srcloc(insn), TrapCode::IntegerDivisionByZero);
+                    ctx.emit(Inst::TrapIf {
+                        trap_info,
+                        kind: CondBrKind::Zero(rm),
                     });
                 }
-
-                let trap_info = (ctx.srcloc(insn), TrapCode::IntegerDivisionByZero);
-                ctx.emit(Inst::Udf { trap_info });
             }
         }
 
@@ -398,7 +421,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     op: VecMisc2::Not,
                     rd,
                     rn: rm,
-                    ty,
+                    size: VectorSize::from_ty(ty),
                 });
             }
         }
@@ -442,32 +465,64 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     rd,
                     rn,
                     rm,
-                    ty,
+                    size: VectorSize::from_ty(ty),
                 });
             }
         }
 
         Opcode::Ishl | Opcode::Ushr | Opcode::Sshr => {
             let ty = ty.unwrap();
-            let size = InstSize::from_bits(ty_bits(ty));
-            let narrow_mode = match (op, size) {
-                (Opcode::Ishl, _) => NarrowValueMode::None,
-                (Opcode::Ushr, InstSize::Size64) => NarrowValueMode::ZeroExtend64,
-                (Opcode::Ushr, InstSize::Size32) => NarrowValueMode::ZeroExtend32,
-                (Opcode::Sshr, InstSize::Size64) => NarrowValueMode::SignExtend64,
-                (Opcode::Sshr, InstSize::Size32) => NarrowValueMode::SignExtend32,
-                _ => unreachable!(),
-            };
             let rd = get_output_reg(ctx, outputs[0]);
-            let rn = put_input_in_reg(ctx, inputs[0], narrow_mode);
-            let rm = put_input_in_reg_immshift(ctx, inputs[1], ty_bits(ty));
-            let alu_op = match op {
-                Opcode::Ishl => choose_32_64(ty, ALUOp::Lsl32, ALUOp::Lsl64),
-                Opcode::Ushr => choose_32_64(ty, ALUOp::Lsr32, ALUOp::Lsr64),
-                Opcode::Sshr => choose_32_64(ty, ALUOp::Asr32, ALUOp::Asr64),
-                _ => unreachable!(),
-            };
-            ctx.emit(alu_inst_immshift(alu_op, rd, rn, rm));
+            if ty_bits(ty) < 128 {
+                let size = OperandSize::from_bits(ty_bits(ty));
+                let narrow_mode = match (op, size) {
+                    (Opcode::Ishl, _) => NarrowValueMode::None,
+                    (Opcode::Ushr, OperandSize::Size64) => NarrowValueMode::ZeroExtend64,
+                    (Opcode::Ushr, OperandSize::Size32) => NarrowValueMode::ZeroExtend32,
+                    (Opcode::Sshr, OperandSize::Size64) => NarrowValueMode::SignExtend64,
+                    (Opcode::Sshr, OperandSize::Size32) => NarrowValueMode::SignExtend32,
+                    _ => unreachable!(),
+                };
+                let rn = put_input_in_reg(ctx, inputs[0], narrow_mode);
+                let rm = put_input_in_reg_immshift(ctx, inputs[1], ty_bits(ty));
+                let alu_op = match op {
+                    Opcode::Ishl => choose_32_64(ty, ALUOp::Lsl32, ALUOp::Lsl64),
+                    Opcode::Ushr => choose_32_64(ty, ALUOp::Lsr32, ALUOp::Lsr64),
+                    Opcode::Sshr => choose_32_64(ty, ALUOp::Asr32, ALUOp::Asr64),
+                    _ => unreachable!(),
+                };
+                ctx.emit(alu_inst_immshift(alu_op, rd, rn, rm));
+            } else {
+                let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
+                let size = VectorSize::from_ty(ty);
+                let (alu_op, is_right_shift) = match op {
+                    Opcode::Ishl => (VecALUOp::Sshl, false),
+                    Opcode::Ushr => (VecALUOp::Ushl, true),
+                    Opcode::Sshr => (VecALUOp::Sshl, true),
+                    _ => unreachable!(),
+                };
+
+                let rm = if is_right_shift {
+                    // Right shifts are implemented with a negative left shift.
+                    let tmp = ctx.alloc_tmp(RegClass::I64, I32);
+                    let rm = put_input_in_rse_imm12(ctx, inputs[1], NarrowValueMode::None);
+                    let rn = zero_reg();
+                    ctx.emit(alu_inst_imm12(ALUOp::Sub32, tmp, rn, rm));
+                    tmp.to_reg()
+                } else {
+                    put_input_in_reg(ctx, inputs[1], NarrowValueMode::None)
+                };
+
+                ctx.emit(Inst::VecDup { rd, rn: rm, size });
+
+                ctx.emit(Inst::VecRRR {
+                    alu_op,
+                    rd,
+                    rn,
+                    rm: rd.to_reg(),
+                    size,
+                });
+            }
         }
 
         Opcode::Rotr | Opcode::Rotl => {
@@ -1107,7 +1162,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     rd,
                     rn,
                     rm,
-                    ty,
+                    size: VectorSize::from_ty(ty),
                 });
             }
         }
@@ -1134,7 +1189,26 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         }
 
         Opcode::IsNull | Opcode::IsInvalid => {
-            panic!("Reference types not supported");
+            // Null references are represented by the constant value 0; invalid references are
+            // represented by the constant value -1. See `define_reftypes()` in
+            // `meta/src/isa/x86/encodings.rs` to confirm.
+            let rd = get_output_reg(ctx, outputs[0]);
+            let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
+            let ty = ctx.input_ty(insn, 0);
+            let (alu_op, const_value) = match op {
+                Opcode::IsNull => {
+                    // cmp rn, #0
+                    (choose_32_64(ty, ALUOp::SubS32, ALUOp::SubS64), 0)
+                }
+                Opcode::IsInvalid => {
+                    // cmn rn, #1
+                    (choose_32_64(ty, ALUOp::AddS32, ALUOp::AddS64), 1)
+                }
+                _ => unreachable!(),
+            };
+            let const_value = ResultRSEImm12::Imm12(Imm12::maybe_from_u64(const_value).unwrap());
+            ctx.emit(alu_inst_imm12(alu_op, writable_zero_reg(), rn, const_value));
+            ctx.emit(Inst::CSet { rd, cond: Cond::Eq });
         }
 
         Opcode::Copy => {
@@ -1145,6 +1219,21 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         }
 
         Opcode::Bint | Opcode::Breduce | Opcode::Bextend | Opcode::Ireduce => {
+            // If this is a Bint from a Trueif/Trueff/IsNull/IsInvalid, then the result is already
+            // 64-bit-zero-extended, even if the CLIF type doesn't say so, because it was produced
+            // by a CSet. In this case, we do not need to do any zero-extension.
+            let input_info = ctx.get_input(insn, 0);
+            let src_op = input_info
+                .inst
+                .map(|(src_inst, _)| ctx.data(src_inst).opcode());
+            let narrow_mode = match (src_op, op) {
+                (Some(Opcode::Trueif), Opcode::Bint)
+                | (Some(Opcode::Trueff), Opcode::Bint)
+                | (Some(Opcode::IsNull), Opcode::Bint)
+                | (Some(Opcode::IsInvalid), Opcode::Bint) => NarrowValueMode::None,
+                _ => NarrowValueMode::ZeroExtend64,
+            };
+
             // All of these ops are simply a move from a zero-extended source.
             // Here is why this works, in each case:
             //
@@ -1157,7 +1246,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             // - Ireduce: changing width of an integer. Smaller ints are stored
             //   with undefined high-order bits, so we can simply do a copy.
 
-            let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::ZeroExtend64);
+            let rn = put_input_in_reg(ctx, inputs[0], narrow_mode);
             let rd = get_output_reg(ctx, outputs[0]);
             let ty = ctx.input_ty(insn, 0);
             ctx.emit(Inst::gen_move(rd, rn, ty));
@@ -1203,7 +1292,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                         rd,
                         rn,
                         idx: 0,
-                        ty: I64,
+                        size: VectorSize::Size64x2,
                     });
                 }
             }
@@ -1290,7 +1379,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
 
         Opcode::Trap | Opcode::ResumableTrap => {
             let trap_info = (ctx.srcloc(insn), inst_trapcode(ctx.data(insn)).unwrap());
-            ctx.emit(Inst::Udf { trap_info })
+            ctx.emit_safepoint(Inst::Udf { trap_info });
         }
 
         Opcode::Trapif | Opcode::Trapff => {
@@ -1324,19 +1413,15 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 cond
             };
 
-            // Branch around the break instruction with inverted cond. Go straight to lowered
-            // one-target form; this is logically part of a single-in single-out template lowering.
-            let cond = cond.invert();
-            ctx.emit(Inst::OneWayCondBr {
-                target: BranchTarget::ResolvedOffset(8),
+            ctx.emit(Inst::TrapIf {
+                trap_info,
                 kind: CondBrKind::Cond(cond),
             });
-
-            ctx.emit(Inst::Udf { trap_info })
+            ctx.emit_safepoint(Inst::Udf { trap_info })
         }
 
         Opcode::Safepoint => {
-            panic!("safepoint support not implemented!");
+            panic!("safepoint instructions not used by new backend's safepoints!");
         }
 
         Opcode::Trapz | Opcode::Trapnz | Opcode::ResumableTrapnz => {
@@ -1467,15 +1552,16 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 let idx = *imm;
                 let rd = get_output_reg(ctx, outputs[0]);
                 let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
+                let size = VectorSize::from_ty(ctx.input_ty(insn, 0));
                 let ty = ty.unwrap();
 
                 if ty_is_int(ty) {
-                    ctx.emit(Inst::MovFromVec { rd, rn, idx, ty });
+                    ctx.emit(Inst::MovFromVec { rd, rn, idx, size });
                 // Plain moves are faster on some processors.
                 } else if idx == 0 {
                     ctx.emit(Inst::gen_move(rd, rn, ty));
                 } else {
-                    ctx.emit(Inst::FpuMoveFromVec { rd, rn, idx, ty });
+                    ctx.emit(Inst::FpuMoveFromVec { rd, rn, idx, size });
                 }
             } else {
                 unreachable!();
@@ -1485,11 +1571,12 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         Opcode::Splat => {
             let rn = put_input_in_reg(ctx, inputs[0], NarrowValueMode::None);
             let rd = get_output_reg(ctx, outputs[0]);
-            let ty = ctx.input_ty(insn, 0);
-            let inst = if ty_is_int(ty) {
-                Inst::VecDup { rd, rn, ty }
+            let input_ty = ctx.input_ty(insn, 0);
+            let size = VectorSize::from_ty(ty.unwrap());
+            let inst = if ty_is_int(input_ty) {
+                Inst::VecDup { rd, rn, size }
             } else {
-                Inst::VecDupFromFpu { rd, rn, ty }
+                Inst::VecDupFromFpu { rd, rn, size }
             };
             ctx.emit(inst);
         }
@@ -1507,21 +1594,22 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             // cmp xm, #0
             // cset xm, ne
 
-            let input_ty = ctx.input_ty(insn, 0);
+            let size = VectorSize::from_ty(ctx.input_ty(insn, 0));
+
             if op == Opcode::VanyTrue {
                 ctx.emit(Inst::VecRRR {
                     alu_op: VecALUOp::Umaxp,
                     rd: tmp,
                     rn: rm,
                     rm: rm,
-                    ty: input_ty,
+                    size,
                 });
             } else {
                 ctx.emit(Inst::VecLanes {
                     op: VecLanesOp::Uminv,
                     rd: tmp,
                     rn: rm,
-                    ty: input_ty,
+                    size,
                 });
             };
 
@@ -1529,7 +1617,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 rd,
                 rn: tmp.to_reg(),
                 idx: 0,
-                ty: I64,
+                size: VectorSize::Size64x2,
             });
 
             ctx.emit(Inst::AluRRImm12 {
@@ -1711,12 +1799,11 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             } else {
                 ctx.emit(Inst::FpuCmp64 { rn, rm: rn });
             }
-            ctx.emit(Inst::OneWayCondBr {
-                target: BranchTarget::ResolvedOffset(8),
-                kind: CondBrKind::Cond(lower_fp_condcode(FloatCC::Ordered)),
-            });
             let trap_info = (ctx.srcloc(insn), TrapCode::BadConversionToInteger);
-            ctx.emit(Inst::Udf { trap_info });
+            ctx.emit(Inst::TrapIf {
+                trap_info,
+                kind: CondBrKind::Cond(lower_fp_condcode(FloatCC::Unordered)),
+            });
 
             let tmp = ctx.alloc_tmp(RegClass::V128, I128);
 
@@ -1752,12 +1839,11 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     rn,
                     rm: tmp.to_reg(),
                 });
-                ctx.emit(Inst::OneWayCondBr {
-                    target: BranchTarget::ResolvedOffset(8),
-                    kind: CondBrKind::Cond(lower_fp_condcode(low_cond)),
-                });
                 let trap_info = (ctx.srcloc(insn), TrapCode::IntegerOverflow);
-                ctx.emit(Inst::Udf { trap_info });
+                ctx.emit(Inst::TrapIf {
+                    trap_info,
+                    kind: CondBrKind::Cond(lower_fp_condcode(low_cond).invert()),
+                });
 
                 // <= high_bound
                 lower_constant_f32(ctx, tmp, high_bound);
@@ -1765,12 +1851,11 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     rn,
                     rm: tmp.to_reg(),
                 });
-                ctx.emit(Inst::OneWayCondBr {
-                    target: BranchTarget::ResolvedOffset(8),
-                    kind: CondBrKind::Cond(lower_fp_condcode(FloatCC::LessThan)),
-                });
                 let trap_info = (ctx.srcloc(insn), TrapCode::IntegerOverflow);
-                ctx.emit(Inst::Udf { trap_info });
+                ctx.emit(Inst::TrapIf {
+                    trap_info,
+                    kind: CondBrKind::Cond(lower_fp_condcode(FloatCC::LessThan).invert()),
+                });
             } else {
                 // From float64.
                 let (low_bound, low_cond, high_bound) = match (signed, out_bits) {
@@ -1795,12 +1880,11 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     rn,
                     rm: tmp.to_reg(),
                 });
-                ctx.emit(Inst::OneWayCondBr {
-                    target: BranchTarget::ResolvedOffset(8),
-                    kind: CondBrKind::Cond(lower_fp_condcode(low_cond)),
-                });
                 let trap_info = (ctx.srcloc(insn), TrapCode::IntegerOverflow);
-                ctx.emit(Inst::Udf { trap_info });
+                ctx.emit(Inst::TrapIf {
+                    trap_info,
+                    kind: CondBrKind::Cond(lower_fp_condcode(low_cond).invert()),
+                });
 
                 // <= high_bound
                 lower_constant_f64(ctx, tmp, high_bound);
@@ -1808,12 +1892,11 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                     rn,
                     rm: tmp.to_reg(),
                 });
-                ctx.emit(Inst::OneWayCondBr {
-                    target: BranchTarget::ResolvedOffset(8),
-                    kind: CondBrKind::Cond(lower_fp_condcode(FloatCC::LessThan)),
-                });
                 let trap_info = (ctx.srcloc(insn), TrapCode::IntegerOverflow);
-                ctx.emit(Inst::Udf { trap_info });
+                ctx.emit(Inst::TrapIf {
+                    trap_info,
+                    kind: CondBrKind::Cond(lower_fp_condcode(FloatCC::LessThan).invert()),
+                });
             };
 
             // Do the conversion.
@@ -2050,6 +2133,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         | Opcode::X86Insertps
         | Opcode::X86Movsd
         | Opcode::X86Movlhps
+        | Opcode::X86Palignr
         | Opcode::X86Psll
         | Opcode::X86Psrl
         | Opcode::X86Psra
@@ -2060,7 +2144,6 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         | Opcode::X86Pminu
         | Opcode::X86Pmullq
         | Opcode::X86Pmuludq
-        | Opcode::X86Packss
         | Opcode::X86Punpckh
         | Opcode::X86Punpckl
         | Opcode::X86Vcvtudq2ps
@@ -2069,8 +2152,14 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             panic!("x86-specific opcode in supposedly arch-neutral IR!");
         }
 
-        Opcode::Iabs => unimplemented!(),
         Opcode::AvgRound => unimplemented!(),
+        Opcode::Iabs => unimplemented!(),
+        Opcode::Snarrow
+        | Opcode::Unarrow
+        | Opcode::SwidenLow
+        | Opcode::SwidenHigh
+        | Opcode::UwidenLow
+        | Opcode::UwidenHigh => unimplemented!(),
         Opcode::TlsValue => unimplemented!(),
     }
 
@@ -2307,7 +2396,8 @@ pub(crate) fn lower_branch<C: LowerCtx<I = Inst>>(
                 let rtmp1 = ctx.alloc_tmp(RegClass::I64, I32);
                 let rtmp2 = ctx.alloc_tmp(RegClass::I64, I32);
 
-                // Bounds-check and branch to default.
+                // Bounds-check, leaving condition codes for JTSequence's
+                // branch to default target below.
                 if let Some(imm12) = Imm12::maybe_from_u64(jt_size as u64) {
                     ctx.emit(Inst::AluRRImm12 {
                         alu_op: ALUOp::SubS32,
@@ -2324,14 +2414,10 @@ pub(crate) fn lower_branch<C: LowerCtx<I = Inst>>(
                         rm: rtmp1.to_reg(),
                     });
                 }
-                let default_target = BranchTarget::Label(targets[0]);
-                ctx.emit(Inst::OneWayCondBr {
-                    target: default_target.clone(),
-                    kind: CondBrKind::Cond(Cond::Hs), // unsigned >=
-                });
 
                 // Emit the compound instruction that does:
                 //
+                // b.hs default
                 // adr rA, jt
                 // ldrsw rB, [rA, rIndex, UXTW 2]
                 // add rA, rA, rB
@@ -2350,6 +2436,7 @@ pub(crate) fn lower_branch<C: LowerCtx<I = Inst>>(
                     .skip(1)
                     .map(|bix| BranchTarget::Label(*bix))
                     .collect();
+                let default_target = BranchTarget::Label(targets[0]);
                 let targets_for_term: Vec<MachLabel> = targets.to_vec();
                 ctx.emit(Inst::JTSequence {
                     ridx,
@@ -2357,7 +2444,8 @@ pub(crate) fn lower_branch<C: LowerCtx<I = Inst>>(
                     rtmp2,
                     info: Box::new(JTSequenceInfo {
                         targets: jt_targets,
-                        targets_for_term: targets_for_term,
+                        default_target,
+                        targets_for_term,
                     }),
                 });
             }

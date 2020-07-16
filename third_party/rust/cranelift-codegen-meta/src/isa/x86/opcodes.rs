@@ -314,13 +314,21 @@ pub static PABSD: [u8; 4] = [0x66, 0x0f, 0x38, 0x1e];
 /// xmm1 (SSSE3).
 pub static PABSW: [u8; 4] = [0x66, 0x0f, 0x38, 0x1d];
 
-/// Converts 8 packed signed word integers from xmm1 and from xxm2/m128 into 16 packed signed byte
+/// Converts 8 packed signed word integers from xmm1 and from xmm2/m128 into 16 packed signed byte
 /// integers in xmm1 using signed saturation (SSE2).
 pub static PACKSSWB: [u8; 3] = [0x66, 0x0f, 0x63];
 
 /// Converts 4 packed signed doubleword integers from xmm1 and from xmm2/m128 into 8 packed signed
 /// word integers in xmm1 using signed saturation (SSE2).
 pub static PACKSSDW: [u8; 3] = [0x66, 0x0f, 0x6b];
+
+/// Converts 8 packed signed word integers from xmm1 and from xmm2/m128 into 16 packed unsigned byte
+/// integers in xmm1 using unsigned saturation (SSE2).
+pub static PACKUSWB: [u8; 3] = [0x66, 0x0f, 0x67];
+
+/// Converts 4 packed signed doubleword integers from xmm1 and from xmm2/m128 into 8 unpacked signed
+/// word integers in xmm1 using unsigned saturation (SSE4.1).
+pub static PACKUSDW: [u8; 4] = [0x66, 0x0f, 0x38, 0x2b];
 
 /// Add packed byte integers from xmm2/m128 and xmm1 (SSE2).
 pub static PADDB: [u8; 3] = [0x66, 0x0f, 0xfc];
@@ -345,6 +353,10 @@ pub static PADDUSB: [u8; 3] = [0x66, 0x0f, 0xdc];
 
 /// Add packed unsigned word integers from xmm2/m128 and xmm1 saturate the results (SSE).
 pub static PADDUSW: [u8; 3] = [0x66, 0x0f, 0xdd];
+
+/// Concatenate destination and source operands, extract a byte-aligned result into xmm1 that is
+/// shifted to the right by the constant number of bytes in imm8 (SSSE3).
+pub static PALIGNR: [u8; 4] = [0x66, 0x0f, 0x3a, 0x0f];
 
 /// Bitwise AND of xmm2/m128 and xmm1 (SSE2).
 pub static PAND: [u8; 3] = [0x66, 0x0f, 0xdb];
@@ -465,7 +477,7 @@ pub static PMOVSXBW: [u8; 4] = [0x66, 0x0f, 0x38, 0x20];
 pub static PMOVSXWD: [u8; 4] = [0x66, 0x0f, 0x38, 0x23];
 
 /// Sign extend 2 packed 32-bit integers in the low 8 bytes of xmm2/m64 to 2 packed 64-bit
-/// integers in xmm1.
+/// integers in xmm1 (SSE4.1).
 pub static PMOVSXDQ: [u8; 4] = [0x66, 0x0f, 0x38, 0x25];
 
 /// Zero extend 8 packed 8-bit integers in the low 8 bytes of xmm2/m64 to 8 packed 16-bit
@@ -477,7 +489,7 @@ pub static PMOVZXBW: [u8; 4] = [0x66, 0x0f, 0x38, 0x30];
 pub static PMOVZXWD: [u8; 4] = [0x66, 0x0f, 0x38, 0x33];
 
 /// Zero extend 2 packed 32-bit integers in the low 8 bytes of xmm2/m64 to 2 packed 64-bit
-/// integers in xmm1.
+/// integers in xmm1 (SSE4.1).
 pub static PMOVZXDQ: [u8; 4] = [0x66, 0x0f, 0x38, 0x35];
 
 /// Multiply the packed signed word integers in xmm1 and xmm2/m128, and store the low 16 bits of

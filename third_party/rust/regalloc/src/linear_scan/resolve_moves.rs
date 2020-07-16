@@ -1,7 +1,7 @@
 use super::{next_use, IntId, Location, RegUses, VirtualInterval};
 use crate::{
     data_structures::{BlockIx, InstPoint, Point},
-    inst_stream::{InstToInsert, InstToInsertAndPoint},
+    inst_stream::{InstExtPoint, InstToInsert, InstToInsertAndExtPoint},
     sparse_set::SparseSet,
     Function, RealReg, Reg, SpillSlot, TypedIxVec, VirtualReg, Writable,
 };
@@ -17,7 +17,7 @@ fn resolve_moves_in_block<F: Function>(
     reg_uses: &RegUses,
     scratches_by_rc: &[Option<RealReg>],
     spill_slot: &mut u32,
-    moves_in_blocks: &mut Vec<InstToInsertAndPoint>,
+    moves_in_blocks: &mut Vec<InstToInsertAndExtPoint>,
     tmp_ordered_moves: &mut Vec<MoveOp>,
     tmp_stack: &mut Vec<MoveOp>,
 ) {
@@ -132,13 +132,13 @@ fn resolve_moves_in_block<F: Function>(
                             "inblock fixup: {:?} spill {:?} -> {:?} at {:?}",
                             interval.id, rreg, spill, at_inst
                         );
-                        spills_at_inst.push(InstToInsertAndPoint::new(
+                        spills_at_inst.push(InstToInsertAndExtPoint::new(
                             InstToInsert::Spill {
                                 to_slot: spill,
                                 from_reg: rreg,
-                                for_vreg: vreg,
+                                for_vreg: Some(vreg),
                             },
-                            at_inst,
+                            InstExtPoint::from_inst_point(at_inst),
                         ));
                     }
 
@@ -324,8 +324,8 @@ fn resolve_moves_across_blocks<F: Function>(
     intervals: &Vec<VirtualInterval>,
     scratches_by_rc: &[Option<RealReg>],
     spill_slot: &mut u32,
-    moves_at_block_starts: &mut Vec<InstToInsertAndPoint>,
-    moves_at_block_ends: &mut Vec<InstToInsertAndPoint>,
+    moves_at_block_starts: &mut Vec<InstToInsertAndExtPoint>,
+    moves_at_block_ends: &mut Vec<InstToInsertAndExtPoint>,
     tmp_ordered_moves: &mut Vec<MoveOp>,
     tmp_stack: &mut Vec<MoveOp>,
 ) {
@@ -500,7 +500,7 @@ pub(crate) fn run<F: Function>(
     liveouts: &TypedIxVec<BlockIx, SparseSet<Reg>>,
     spill_slot: &mut u32,
     scratches_by_rc: &[Option<RealReg>],
-) -> Vec<InstToInsertAndPoint> {
+) -> Vec<InstToInsertAndExtPoint> {
     info!("resolve_moves");
 
     // Keep three lists of moves to insert:
@@ -624,14 +624,14 @@ impl MoveOp {
                 MoveOperand::Stack(to) => InstToInsert::Spill {
                     to_slot: to,
                     from_reg: from,
-                    for_vreg: self.vreg,
+                    for_vreg: Some(self.vreg),
                 },
             },
             MoveOperand::Stack(from) => match self.to {
                 MoveOperand::Reg(to) => InstToInsert::Reload {
                     to_reg: Writable::from_reg(to),
                     from_slot: from,
-                    for_vreg: self.vreg,
+                    for_vreg: Some(self.vreg),
                 },
                 MoveOperand::Stack(_to) => unreachable!("stack to stack move"),
             },
@@ -749,7 +749,7 @@ fn emit_moves(
     ordered_moves: &Vec<MoveOp>,
     num_spill_slots: &mut u32,
     scratches_by_rc: &[Option<RealReg>],
-    moves_in_blocks: &mut Vec<InstToInsertAndPoint>,
+    moves_in_blocks: &mut Vec<InstToInsertAndExtPoint>,
 ) {
     let mut spill_slot = None;
     let mut in_cycle = false;
@@ -770,9 +770,12 @@ fn emit_moves(
                     let inst = InstToInsert::Reload {
                         to_reg: Writable::from_reg(dst_reg),
                         from_slot: spill_slot.expect("should have a cycle spill slot"),
-                        for_vreg: mov.vreg,
+                        for_vreg: Some(mov.vreg),
                     };
-                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    moves_in_blocks.push(InstToInsertAndExtPoint::new(
+                        inst,
+                        InstExtPoint::from_inst_point(at_inst),
+                    ));
                     trace!(
                         "finishing cycle: {:?} -> {:?}",
                         spill_slot.unwrap(),
@@ -785,15 +788,21 @@ fn emit_moves(
                     let inst = InstToInsert::Reload {
                         to_reg: Writable::from_reg(scratch),
                         from_slot: spill_slot.expect("should have a cycle spill slot"),
-                        for_vreg: mov.vreg,
+                        for_vreg: Some(mov.vreg),
                     };
-                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    moves_in_blocks.push(InstToInsertAndExtPoint::new(
+                        inst,
+                        InstExtPoint::from_inst_point(at_inst),
+                    ));
                     let inst = InstToInsert::Spill {
                         to_slot: dst_spill,
                         from_reg: scratch,
-                        for_vreg: mov.vreg,
+                        for_vreg: Some(mov.vreg),
                     };
-                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    moves_in_blocks.push(InstToInsertAndExtPoint::new(
+                        inst,
+                        InstExtPoint::from_inst_point(at_inst),
+                    ));
                     trace!(
                         "finishing cycle: {:?} -> {:?} -> {:?}",
                         spill_slot.unwrap(),
@@ -828,9 +837,12 @@ fn emit_moves(
                     let inst = InstToInsert::Spill {
                         to_slot: spill_slot.unwrap(),
                         from_reg: src_reg,
-                        for_vreg: mov.vreg,
+                        for_vreg: Some(mov.vreg),
                     };
-                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    moves_in_blocks.push(InstToInsertAndExtPoint::new(
+                        inst,
+                        InstExtPoint::from_inst_point(at_inst),
+                    ));
                     trace!("starting cycle: {:?} -> {:?}", src_reg, spill_slot.unwrap());
                 }
                 MoveOperand::Stack(src_spill) => {
@@ -839,15 +851,21 @@ fn emit_moves(
                     let inst = InstToInsert::Reload {
                         to_reg: Writable::from_reg(scratch),
                         from_slot: src_spill,
-                        for_vreg: mov.vreg,
+                        for_vreg: Some(mov.vreg),
                     };
-                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    moves_in_blocks.push(InstToInsertAndExtPoint::new(
+                        inst,
+                        InstExtPoint::from_inst_point(at_inst),
+                    ));
                     let inst = InstToInsert::Spill {
                         to_slot: spill_slot.expect("should have a cycle spill slot"),
                         from_reg: scratch,
-                        for_vreg: mov.vreg,
+                        for_vreg: Some(mov.vreg),
                     };
-                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    moves_in_blocks.push(InstToInsertAndExtPoint::new(
+                        inst,
+                        InstExtPoint::from_inst_point(at_inst),
+                    ));
                     trace!(
                         "starting cycle: {:?} -> {:?} -> {:?}",
                         src_spill,
@@ -862,7 +880,10 @@ fn emit_moves(
 
         // A normal move which is not part of a cycle.
         let inst = mov.gen_inst();
-        moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+        moves_in_blocks.push(InstToInsertAndExtPoint::new(
+            inst,
+            InstExtPoint::from_inst_point(at_inst),
+        ));
         trace!("moving {:?} -> {:?}", mov.from, mov.to);
     }
 }

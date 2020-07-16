@@ -818,6 +818,45 @@ impl<T: Clone + PartialOrd> AVLTree<T> {
         }
     }
 
+    // Find `item` in the tree, and replace it with `replacement`.  `item` and `replacement`
+    // must compare equal per the comparison function `cmp`.  Returns a bool indicating whether
+    // `item` was found (and hence, replaced).  There's no comparison fast-path here
+    // (meaning, `cmp` is `&F` and not `Option<&F>`) only because so far there is no use case
+    // for it.
+    pub fn find_and_replace<F>(&mut self, item: T, replacement: T, cmp: &F) -> bool
+    where
+        F: Fn(T, T) -> Option<Ordering>,
+    {
+        let mut n = self.root;
+        loop {
+            if n == AVL_NULL {
+                return false;
+            }
+            let cmp_arg_left: T = item.clone();
+            let cmp_arg_right: T = self.pool[n as usize].item.clone();
+            match cmp(cmp_arg_left, cmp_arg_right) {
+                Some(Ordering::Less) => {
+                    n = self.pool[n as usize].left;
+                }
+                Some(Ordering::Greater) => {
+                    n = self.pool[n as usize].right;
+                }
+                Some(Ordering::Equal) => {
+                    // Do what we can to ensure the caller can't mess up the total ordering in
+                    // the tree.  This is more restrictive than it needs to be, but loosening
+                    // it requires finding the largest item below `item` and the smallest one
+                    // above it, which is expensive.
+                    assert!(cmp(item, replacement.clone()) == Some(Ordering::Equal));
+                    self.pool[n as usize].item = replacement.clone();
+                    return true;
+                }
+                None => {
+                    panic!("AVLTree::find_and_replace: unordered elements in search!");
+                }
+            }
+        }
+    }
+
     // Determine whether an item is in the tree.
     // sewardj 2020Mar31: this is not used; I assume all users of the trees
     // do their own custom traversals.  Remove #[cfg(test)] if any real uses

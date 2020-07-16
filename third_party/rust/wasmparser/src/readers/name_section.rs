@@ -14,7 +14,8 @@
  */
 
 use super::{
-    BinaryReader, BinaryReaderError, NameType, Naming, Result, SectionIterator, SectionReader,
+    BinaryReader, BinaryReaderError, NameType, Naming, Range, Result, SectionIterator,
+    SectionReader,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -236,6 +237,9 @@ impl<'a> SectionReader for NameSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         NameSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

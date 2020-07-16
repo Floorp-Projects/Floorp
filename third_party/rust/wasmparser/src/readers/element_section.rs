@@ -14,8 +14,8 @@
  */
 
 use super::{
-    BinaryReader, BinaryReaderError, InitExpr, Result, SectionIteratorLimited, SectionReader,
-    SectionWithLimitedItems, Type,
+    BinaryReader, BinaryReaderError, InitExpr, Range, Result, SectionIteratorLimited,
+    SectionReader, SectionWithLimitedItems, Type,
 };
 use crate::{ExternalKind, Operator};
 
@@ -142,6 +142,7 @@ impl<'a> Iterator for ElementItemsIterator<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct ElementSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -168,14 +169,8 @@ impl<'a> ElementSectionReader<'a> {
     ///
     /// ```no_run
     /// # let data: &[u8] = &[];
-    /// use wasmparser::{ModuleReader, ElementKind};
-    /// use wasmparser::Result;
-    /// let mut reader = ModuleReader::new(data).expect("module reader");
-    /// let section = reader.read().expect("type section");
-    /// let section = reader.read().expect("function section");
-    /// let section = reader.read().expect("table section");
-    /// let section = reader.read().expect("element section");
-    /// let mut element_reader = section.get_element_section_reader().expect("element section reader");
+    /// use wasmparser::{ElementSectionReader, ElementKind};
+    /// let mut element_reader = ElementSectionReader::new(data, 0).unwrap();
     /// for _ in 0..element_reader.get_count() {
     ///     let element = element_reader.read().expect("element");
     ///     if let ElementKind::Active { init_expr, .. } = element.kind {
@@ -273,6 +268,9 @@ impl<'a> SectionReader for ElementSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         ElementSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

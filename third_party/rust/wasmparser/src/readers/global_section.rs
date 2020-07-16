@@ -14,7 +14,7 @@
  */
 
 use super::{
-    BinaryReader, GlobalType, InitExpr, Result, SectionIteratorLimited, SectionReader,
+    BinaryReader, GlobalType, InitExpr, Range, Result, SectionIteratorLimited, SectionReader,
     SectionWithLimitedItems,
 };
 
@@ -24,6 +24,7 @@ pub struct Global<'a> {
     pub init_expr: InitExpr<'a>,
 }
 
+#[derive(Clone)]
 pub struct GlobalSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -48,16 +49,9 @@ impl<'a> GlobalSectionReader<'a> {
     ///
     /// # Examples
     /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x06, 0x8, 0x01, 0x7F, 0x01, 0x41, 0x90, 0x88, 0x04, 0x0B,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::ModuleReader;
-    /// let mut reader = ModuleReader::new(data).expect("module reader");
-    /// let section = reader.read().expect("type section");
-    /// let section = reader.read().expect("function section");
-    /// let section = reader.read().expect("global section");
-    /// let mut global_reader = section.get_global_section_reader().expect("global section reader");
+    /// use wasmparser::GlobalSectionReader;
+    /// # let data: &[u8] = &[0x01, 0x7F, 0x01, 0x41, 0x90, 0x88, 0x04, 0x0B];
+    /// let mut global_reader = GlobalSectionReader::new(data, 0).unwrap();
     /// for _ in 0..global_reader.get_count() {
     ///     let global = global_reader.read().expect("global");
     ///     println!("Global: {:?}", global);
@@ -89,6 +83,9 @@ impl<'a> SectionReader for GlobalSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         GlobalSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

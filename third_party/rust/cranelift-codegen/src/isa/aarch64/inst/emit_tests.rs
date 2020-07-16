@@ -934,6 +934,26 @@ fn test_aarch64_binemit() {
         "280141D3",
         "lsl x8, x9, #63",
     ));
+    insns.push((
+        Inst::AluRRImmShift {
+            alu_op: ALUOp::Lsl32,
+            rd: writable_xreg(10),
+            rn: xreg(11),
+            immshift: ImmShift::maybe_from_u64(0).unwrap(),
+        },
+        "6A7D0053",
+        "lsl w10, w11, #0",
+    ));
+    insns.push((
+        Inst::AluRRImmShift {
+            alu_op: ALUOp::Lsl64,
+            rd: writable_xreg(10),
+            rn: xreg(11),
+            immshift: ImmShift::maybe_from_u64(0).unwrap(),
+        },
+        "6AFD40D3",
+        "lsl x10, x11, #0",
+    ));
 
     insns.push((
         Inst::AluRRImmLogic {
@@ -1788,7 +1808,7 @@ fn test_aarch64_binemit() {
     ));
     insns.push((
         Inst::CCmpImm {
-            size: InstSize::Size64,
+            size: OperandSize::Size64,
             rn: xreg(22),
             imm: UImm5::maybe_from_u8(5).unwrap(),
             nzcv: NZCV::new(false, false, true, true),
@@ -1799,7 +1819,7 @@ fn test_aarch64_binemit() {
     ));
     insns.push((
         Inst::CCmpImm {
-            size: InstSize::Size32,
+            size: OperandSize::Size32,
             rn: xreg(3),
             imm: UImm5::maybe_from_u8(30).unwrap(),
             nzcv: NZCV::new(true, true, true, true),
@@ -1821,7 +1841,7 @@ fn test_aarch64_binemit() {
             rd: writable_xreg(3),
             rn: vreg(27),
             idx: 14,
-            ty: I8,
+            size: VectorSize::Size8x16,
         },
         "633F1D0E",
         "umov w3, v27.b[14]",
@@ -1831,7 +1851,7 @@ fn test_aarch64_binemit() {
             rd: writable_xreg(24),
             rn: vreg(5),
             idx: 3,
-            ty: I16,
+            size: VectorSize::Size16x8,
         },
         "B83C0E0E",
         "umov w24, v5.h[3]",
@@ -1841,7 +1861,7 @@ fn test_aarch64_binemit() {
             rd: writable_xreg(12),
             rn: vreg(17),
             idx: 1,
-            ty: I32,
+            size: VectorSize::Size32x4,
         },
         "2C3E0C0E",
         "mov w12, v17.s[1]",
@@ -1851,7 +1871,7 @@ fn test_aarch64_binemit() {
             rd: writable_xreg(21),
             rn: vreg(20),
             idx: 0,
-            ty: I64,
+            size: VectorSize::Size64x2,
         },
         "953E084E",
         "mov x21, v20.d[0]",
@@ -1880,7 +1900,7 @@ fn test_aarch64_binemit() {
         Inst::VecDup {
             rd: writable_vreg(25),
             rn: xreg(7),
-            ty: I8,
+            size: VectorSize::Size8x16,
         },
         "F90C014E",
         "dup v25.16b, w7",
@@ -1889,7 +1909,7 @@ fn test_aarch64_binemit() {
         Inst::VecDup {
             rd: writable_vreg(2),
             rn: xreg(23),
-            ty: I16,
+            size: VectorSize::Size16x8,
         },
         "E20E024E",
         "dup v2.8h, w23",
@@ -1898,7 +1918,7 @@ fn test_aarch64_binemit() {
         Inst::VecDup {
             rd: writable_vreg(0),
             rn: xreg(28),
-            ty: I32,
+            size: VectorSize::Size32x4,
         },
         "800F044E",
         "dup v0.4s, w28",
@@ -1907,7 +1927,7 @@ fn test_aarch64_binemit() {
         Inst::VecDup {
             rd: writable_vreg(31),
             rn: xreg(5),
-            ty: I64,
+            size: VectorSize::Size64x2,
         },
         "BF0C084E",
         "dup v31.2d, x5",
@@ -1916,7 +1936,7 @@ fn test_aarch64_binemit() {
         Inst::VecDupFromFpu {
             rd: writable_vreg(14),
             rn: vreg(19),
-            ty: F32,
+            size: VectorSize::Size32x4,
         },
         "6E06044E",
         "dup v14.4s, v19.s[0]",
@@ -1925,7 +1945,7 @@ fn test_aarch64_binemit() {
         Inst::VecDupFromFpu {
             rd: writable_vreg(18),
             rn: vreg(10),
-            ty: F64,
+            size: VectorSize::Size64x2,
         },
         "5205084E",
         "dup v18.2d, v10.d[0]",
@@ -1984,49 +2004,197 @@ fn test_aarch64_binemit() {
         "5CA4202F",
         "uxtl v28.2d, v2.2s",
     ));
+
     insns.push((
         Inst::VecRRR {
-            rd: writable_vreg(21),
-            rn: vreg(22),
-            rm: vreg(23),
-            alu_op: VecALUOp::UQAddScalar,
-            ty: I64,
+            alu_op: VecALUOp::Sqadd,
+            rd: writable_vreg(1),
+            rn: vreg(2),
+            rm: vreg(8),
+            size: VectorSize::Size8x16,
         },
-        "D50EF77E",
-        "uqadd d21, d22, d23",
+        "410C284E",
+        "sqadd v1.16b, v2.16b, v8.16b",
     ));
+
     insns.push((
         Inst::VecRRR {
-            rd: writable_vreg(21),
-            rn: vreg(22),
-            rm: vreg(23),
-            alu_op: VecALUOp::SQAddScalar,
-            ty: I64,
+            alu_op: VecALUOp::Sqadd,
+            rd: writable_vreg(1),
+            rn: vreg(12),
+            rm: vreg(28),
+            size: VectorSize::Size16x8,
         },
-        "D50EF75E",
-        "sqadd d21, d22, d23",
+        "810D7C4E",
+        "sqadd v1.8h, v12.8h, v28.8h",
     ));
+
     insns.push((
         Inst::VecRRR {
-            rd: writable_vreg(21),
-            rn: vreg(22),
-            rm: vreg(23),
-            alu_op: VecALUOp::UQSubScalar,
-            ty: I64,
+            alu_op: VecALUOp::Sqadd,
+            rd: writable_vreg(12),
+            rn: vreg(2),
+            rm: vreg(6),
+            size: VectorSize::Size32x4,
         },
-        "D52EF77E",
-        "uqsub d21, d22, d23",
+        "4C0CA64E",
+        "sqadd v12.4s, v2.4s, v6.4s",
     ));
+
     insns.push((
         Inst::VecRRR {
-            rd: writable_vreg(21),
-            rn: vreg(22),
-            rm: vreg(23),
-            alu_op: VecALUOp::SQSubScalar,
-            ty: I64,
+            alu_op: VecALUOp::Sqadd,
+            rd: writable_vreg(20),
+            rn: vreg(7),
+            rm: vreg(13),
+            size: VectorSize::Size64x2,
         },
-        "D52EF75E",
-        "sqsub d21, d22, d23",
+        "F40CED4E",
+        "sqadd v20.2d, v7.2d, v13.2d",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sqsub,
+            rd: writable_vreg(1),
+            rn: vreg(2),
+            rm: vreg(8),
+            size: VectorSize::Size8x16,
+        },
+        "412C284E",
+        "sqsub v1.16b, v2.16b, v8.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sqsub,
+            rd: writable_vreg(1),
+            rn: vreg(12),
+            rm: vreg(28),
+            size: VectorSize::Size16x8,
+        },
+        "812D7C4E",
+        "sqsub v1.8h, v12.8h, v28.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sqsub,
+            rd: writable_vreg(12),
+            rn: vreg(2),
+            rm: vreg(6),
+            size: VectorSize::Size32x4,
+        },
+        "4C2CA64E",
+        "sqsub v12.4s, v2.4s, v6.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sqsub,
+            rd: writable_vreg(20),
+            rn: vreg(7),
+            rm: vreg(13),
+            size: VectorSize::Size64x2,
+        },
+        "F42CED4E",
+        "sqsub v20.2d, v7.2d, v13.2d",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqadd,
+            rd: writable_vreg(1),
+            rn: vreg(2),
+            rm: vreg(8),
+            size: VectorSize::Size8x16,
+        },
+        "410C286E",
+        "uqadd v1.16b, v2.16b, v8.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqadd,
+            rd: writable_vreg(1),
+            rn: vreg(12),
+            rm: vreg(28),
+            size: VectorSize::Size16x8,
+        },
+        "810D7C6E",
+        "uqadd v1.8h, v12.8h, v28.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqadd,
+            rd: writable_vreg(12),
+            rn: vreg(2),
+            rm: vreg(6),
+            size: VectorSize::Size32x4,
+        },
+        "4C0CA66E",
+        "uqadd v12.4s, v2.4s, v6.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqadd,
+            rd: writable_vreg(20),
+            rn: vreg(7),
+            rm: vreg(13),
+            size: VectorSize::Size64x2,
+        },
+        "F40CED6E",
+        "uqadd v20.2d, v7.2d, v13.2d",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqsub,
+            rd: writable_vreg(1),
+            rn: vreg(2),
+            rm: vreg(8),
+            size: VectorSize::Size8x16,
+        },
+        "412C286E",
+        "uqsub v1.16b, v2.16b, v8.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqsub,
+            rd: writable_vreg(1),
+            rn: vreg(12),
+            rm: vreg(28),
+            size: VectorSize::Size16x8,
+        },
+        "812D7C6E",
+        "uqsub v1.8h, v12.8h, v28.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqsub,
+            rd: writable_vreg(12),
+            rn: vreg(2),
+            rm: vreg(6),
+            size: VectorSize::Size32x4,
+        },
+        "4C2CA66E",
+        "uqsub v12.4s, v2.4s, v6.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Uqsub,
+            rd: writable_vreg(20),
+            rn: vreg(7),
+            rm: vreg(13),
+            size: VectorSize::Size64x2,
+        },
+        "F42CED6E",
+        "uqsub v20.2d, v7.2d, v13.2d",
     ));
 
     insns.push((
@@ -2035,7 +2203,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(23),
             rm: vreg(24),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "E38E386E",
         "cmeq v3.16b, v23.16b, v24.16b",
@@ -2047,7 +2215,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(23),
             rm: vreg(24),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "E336384E",
         "cmgt v3.16b, v23.16b, v24.16b",
@@ -2059,7 +2227,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(23),
             rn: vreg(9),
             rm: vreg(12),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "373D2C4E",
         "cmge v23.16b, v9.16b, v12.16b",
@@ -2071,7 +2239,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(5),
             rn: vreg(1),
             rm: vreg(1),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "2534216E",
         "cmhi v5.16b, v1.16b, v1.16b",
@@ -2083,7 +2251,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(2),
             rm: vreg(15),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "483C2F6E",
         "cmhs v8.16b, v2.16b, v15.16b",
@@ -2095,7 +2263,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(23),
             rm: vreg(24),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "E38E786E",
         "cmeq v3.8h, v23.8h, v24.8h",
@@ -2107,7 +2275,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(23),
             rm: vreg(24),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "E336784E",
         "cmgt v3.8h, v23.8h, v24.8h",
@@ -2119,7 +2287,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(23),
             rn: vreg(9),
             rm: vreg(12),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "373D6C4E",
         "cmge v23.8h, v9.8h, v12.8h",
@@ -2131,7 +2299,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(5),
             rn: vreg(1),
             rm: vreg(1),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "2534616E",
         "cmhi v5.8h, v1.8h, v1.8h",
@@ -2143,7 +2311,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(2),
             rm: vreg(15),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "483C6F6E",
         "cmhs v8.8h, v2.8h, v15.8h",
@@ -2155,7 +2323,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(23),
             rm: vreg(24),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "E38EB86E",
         "cmeq v3.4s, v23.4s, v24.4s",
@@ -2167,7 +2335,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(23),
             rm: vreg(24),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "E336B84E",
         "cmgt v3.4s, v23.4s, v24.4s",
@@ -2179,7 +2347,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(23),
             rn: vreg(9),
             rm: vreg(12),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "373DAC4E",
         "cmge v23.4s, v9.4s, v12.4s",
@@ -2191,7 +2359,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(5),
             rn: vreg(1),
             rm: vreg(1),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "2534A16E",
         "cmhi v5.4s, v1.4s, v1.4s",
@@ -2203,7 +2371,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(2),
             rm: vreg(15),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "483CAF6E",
         "cmhs v8.4s, v2.4s, v15.4s",
@@ -2215,7 +2383,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(28),
             rn: vreg(12),
             rm: vreg(4),
-            ty: F32X4,
+            size: VectorSize::Size32x4,
         },
         "9CE5244E",
         "fcmeq v28.4s, v12.4s, v4.4s",
@@ -2227,7 +2395,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(3),
             rn: vreg(16),
             rm: vreg(31),
-            ty: F64X2,
+            size: VectorSize::Size64x2,
         },
         "03E6FF6E",
         "fcmgt v3.2d, v16.2d, v31.2d",
@@ -2239,7 +2407,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(18),
             rn: vreg(23),
             rm: vreg(0),
-            ty: F64X2,
+            size: VectorSize::Size64x2,
         },
         "F2E6606E",
         "fcmge v18.2d, v23.2d, v0.2d",
@@ -2251,7 +2419,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(20),
             rn: vreg(19),
             rm: vreg(18),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "741E324E",
         "and v20.16b, v19.16b, v18.16b",
@@ -2263,7 +2431,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(11),
             rm: vreg(1),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "681D614E",
         "bic v8.16b, v11.16b, v1.16b",
@@ -2275,7 +2443,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(15),
             rn: vreg(2),
             rm: vreg(12),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "4F1CAC4E",
         "orr v15.16b, v2.16b, v12.16b",
@@ -2287,7 +2455,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(18),
             rn: vreg(3),
             rm: vreg(22),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "721C366E",
         "eor v18.16b, v3.16b, v22.16b",
@@ -2299,7 +2467,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(9),
             rm: vreg(1),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "281D616E",
         "bsl v8.16b, v9.16b, v1.16b",
@@ -2311,7 +2479,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(12),
             rm: vreg(1),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "88A5216E",
         "umaxp v8.16b, v12.16b, v1.16b",
@@ -2323,7 +2491,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(1),
             rn: vreg(6),
             rm: vreg(1),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "C1A4616E",
         "umaxp v1.8h, v6.8h, v1.8h",
@@ -2335,10 +2503,238 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(1),
             rn: vreg(20),
             rm: vreg(16),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "81A6B06E",
         "umaxp v1.4s, v20.4s, v16.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Add,
+            rd: writable_vreg(5),
+            rn: vreg(1),
+            rm: vreg(1),
+            size: VectorSize::Size8x16,
+        },
+        "2584214E",
+        "add v5.16b, v1.16b, v1.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Add,
+            rd: writable_vreg(7),
+            rn: vreg(13),
+            rm: vreg(2),
+            size: VectorSize::Size16x8,
+        },
+        "A785624E",
+        "add v7.8h, v13.8h, v2.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Add,
+            rd: writable_vreg(18),
+            rn: vreg(9),
+            rm: vreg(6),
+            size: VectorSize::Size32x4,
+        },
+        "3285A64E",
+        "add v18.4s, v9.4s, v6.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Add,
+            rd: writable_vreg(1),
+            rn: vreg(3),
+            rm: vreg(2),
+            size: VectorSize::Size64x2,
+        },
+        "6184E24E",
+        "add v1.2d, v3.2d, v2.2d",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sub,
+            rd: writable_vreg(5),
+            rn: vreg(1),
+            rm: vreg(1),
+            size: VectorSize::Size8x16,
+        },
+        "2584216E",
+        "sub v5.16b, v1.16b, v1.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sub,
+            rd: writable_vreg(7),
+            rn: vreg(13),
+            rm: vreg(2),
+            size: VectorSize::Size16x8,
+        },
+        "A785626E",
+        "sub v7.8h, v13.8h, v2.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sub,
+            rd: writable_vreg(18),
+            rn: vreg(9),
+            rm: vreg(6),
+            size: VectorSize::Size32x4,
+        },
+        "3285A66E",
+        "sub v18.4s, v9.4s, v6.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sub,
+            rd: writable_vreg(18),
+            rn: vreg(0),
+            rm: vreg(8),
+            size: VectorSize::Size64x2,
+        },
+        "1284E86E",
+        "sub v18.2d, v0.2d, v8.2d",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Mul,
+            rd: writable_vreg(25),
+            rn: vreg(9),
+            rm: vreg(8),
+            size: VectorSize::Size8x16,
+        },
+        "399D284E",
+        "mul v25.16b, v9.16b, v8.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Mul,
+            rd: writable_vreg(30),
+            rn: vreg(30),
+            rm: vreg(12),
+            size: VectorSize::Size16x8,
+        },
+        "DE9F6C4E",
+        "mul v30.8h, v30.8h, v12.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Mul,
+            rd: writable_vreg(18),
+            rn: vreg(18),
+            rm: vreg(18),
+            size: VectorSize::Size32x4,
+        },
+        "529EB24E",
+        "mul v18.4s, v18.4s, v18.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Ushl,
+            rd: writable_vreg(18),
+            rn: vreg(18),
+            rm: vreg(18),
+            size: VectorSize::Size8x16,
+        },
+        "5246326E",
+        "ushl v18.16b, v18.16b, v18.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Ushl,
+            rd: writable_vreg(18),
+            rn: vreg(18),
+            rm: vreg(18),
+            size: VectorSize::Size16x8,
+        },
+        "5246726E",
+        "ushl v18.8h, v18.8h, v18.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Ushl,
+            rd: writable_vreg(18),
+            rn: vreg(1),
+            rm: vreg(21),
+            size: VectorSize::Size32x4,
+        },
+        "3244B56E",
+        "ushl v18.4s, v1.4s, v21.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Ushl,
+            rd: writable_vreg(5),
+            rn: vreg(7),
+            rm: vreg(19),
+            size: VectorSize::Size64x2,
+        },
+        "E544F36E",
+        "ushl v5.2d, v7.2d, v19.2d",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sshl,
+            rd: writable_vreg(18),
+            rn: vreg(18),
+            rm: vreg(18),
+            size: VectorSize::Size8x16,
+        },
+        "5246324E",
+        "sshl v18.16b, v18.16b, v18.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sshl,
+            rd: writable_vreg(30),
+            rn: vreg(1),
+            rm: vreg(29),
+            size: VectorSize::Size16x8,
+        },
+        "3E447D4E",
+        "sshl v30.8h, v1.8h, v29.8h",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sshl,
+            rd: writable_vreg(8),
+            rn: vreg(22),
+            rm: vreg(21),
+            size: VectorSize::Size32x4,
+        },
+        "C846B54E",
+        "sshl v8.4s, v22.4s, v21.4s",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Sshl,
+            rd: writable_vreg(8),
+            rn: vreg(22),
+            rm: vreg(2),
+            size: VectorSize::Size64x2,
+        },
+        "C846E24E",
+        "sshl v8.2d, v22.2d, v2.2d",
     ));
 
     insns.push((
@@ -2346,10 +2742,54 @@ fn test_aarch64_binemit() {
             op: VecMisc2::Not,
             rd: writable_vreg(2),
             rn: vreg(1),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "2258206E",
         "mvn v2.16b, v1.16b",
+    ));
+
+    insns.push((
+        Inst::VecMisc {
+            op: VecMisc2::Neg,
+            rd: writable_vreg(8),
+            rn: vreg(12),
+            size: VectorSize::Size8x16,
+        },
+        "88B9206E",
+        "neg v8.16b, v12.16b",
+    ));
+
+    insns.push((
+        Inst::VecMisc {
+            op: VecMisc2::Neg,
+            rd: writable_vreg(0),
+            rn: vreg(31),
+            size: VectorSize::Size16x8,
+        },
+        "E0BB606E",
+        "neg v0.8h, v31.8h",
+    ));
+
+    insns.push((
+        Inst::VecMisc {
+            op: VecMisc2::Neg,
+            rd: writable_vreg(2),
+            rn: vreg(3),
+            size: VectorSize::Size32x4,
+        },
+        "62B8A06E",
+        "neg v2.4s, v3.4s",
+    ));
+
+    insns.push((
+        Inst::VecMisc {
+            op: VecMisc2::Neg,
+            rd: writable_vreg(10),
+            rn: vreg(8),
+            size: VectorSize::Size64x2,
+        },
+        "0AB9E06E",
+        "neg v10.2d, v8.2d",
     ));
 
     insns.push((
@@ -2357,7 +2797,7 @@ fn test_aarch64_binemit() {
             op: VecLanesOp::Uminv,
             rd: writable_vreg(2),
             rn: vreg(1),
-            ty: I8X16,
+            size: VectorSize::Size8x16,
         },
         "22A8316E",
         "uminv b2, v1.16b",
@@ -2368,7 +2808,7 @@ fn test_aarch64_binemit() {
             op: VecLanesOp::Uminv,
             rd: writable_vreg(3),
             rn: vreg(11),
-            ty: I16X8,
+            size: VectorSize::Size16x8,
         },
         "63A9716E",
         "uminv h3, v11.8h",
@@ -2379,7 +2819,7 @@ fn test_aarch64_binemit() {
             op: VecLanesOp::Uminv,
             rd: writable_vreg(18),
             rn: vreg(4),
-            ty: I32X4,
+            size: VectorSize::Size32x4,
         },
         "92A8B16E",
         "uminv s18, v4.4s",
@@ -2505,149 +2945,148 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Zero(xreg(8)),
-        },
-        "080200B4",
-        "cbz x8, 64",
-    ));
-    insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::NotZero(xreg(8)),
         },
-        "080200B5",
-        "cbnz x8, 64",
+        "480000B40000A0D4",
+        "cbz x8, 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Eq),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Zero(xreg(8)),
         },
-        "00020054",
-        "b.eq 64",
+        "480000B50000A0D4",
+        "cbnz x8, 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Ne),
         },
-        "01020054",
-        "b.ne 64",
+        "400000540000A0D4",
+        "b.eq 8 ; udf",
     ));
-
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Hs),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Eq),
         },
-        "02020054",
-        "b.hs 64",
+        "410000540000A0D4",
+        "b.ne 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Lo),
         },
-        "03020054",
-        "b.lo 64",
+        "420000540000A0D4",
+        "b.hs 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Mi),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Hs),
         },
-        "04020054",
-        "b.mi 64",
+        "430000540000A0D4",
+        "b.lo 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Pl),
         },
-        "05020054",
-        "b.pl 64",
+        "440000540000A0D4",
+        "b.mi 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Vs),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Mi),
         },
-        "06020054",
-        "b.vs 64",
+        "450000540000A0D4",
+        "b.pl 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Vc),
         },
-        "07020054",
-        "b.vc 64",
+        "460000540000A0D4",
+        "b.vs 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Hi),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Vs),
         },
-        "08020054",
-        "b.hi 64",
+        "470000540000A0D4",
+        "b.vc 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Ls),
         },
-        "09020054",
-        "b.ls 64",
+        "480000540000A0D4",
+        "b.hi 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Ge),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Hi),
         },
-        "0A020054",
-        "b.ge 64",
+        "490000540000A0D4",
+        "b.ls 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Lt),
         },
-        "0B020054",
-        "b.lt 64",
+        "4A0000540000A0D4",
+        "b.ge 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Gt),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Ge),
         },
-        "0C020054",
-        "b.gt 64",
+        "4B0000540000A0D4",
+        "b.lt 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Le),
         },
-        "0D020054",
-        "b.le 64",
+        "4C0000540000A0D4",
+        "b.gt 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
-            kind: CondBrKind::Cond(Cond::Al),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Gt),
         },
-        "0E020054",
-        "b.al 64",
+        "4D0000540000A0D4",
+        "b.le 8 ; udf",
     ));
     insns.push((
-        Inst::OneWayCondBr {
-            target: BranchTarget::ResolvedOffset(64),
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
             kind: CondBrKind::Cond(Cond::Nv),
         },
-        "0F020054",
-        "b.nv 64",
+        "4E0000540000A0D4",
+        "b.al 8 ; udf",
+    ));
+    insns.push((
+        Inst::TrapIf {
+            trap_info: (SourceLoc::default(), TrapCode::Interrupt),
+            kind: CondBrKind::Cond(Cond::Al),
+        },
+        "4F0000540000A0D4",
+        "b.nv 8 ; udf",
     ));
 
     insns.push((
@@ -2731,7 +3170,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(1),
             rn: vreg(30),
             idx: 2,
-            ty: F32,
+            size: VectorSize::Size32x4,
         },
         "C107145E",
         "mov s1, v30.s[2]",
@@ -2742,7 +3181,7 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(23),
             rn: vreg(11),
             idx: 0,
-            ty: F64,
+            size: VectorSize::Size64x2,
         },
         "7705085E",
         "mov d23, v11.d[0]",
@@ -2958,6 +3397,50 @@ fn test_aarch64_binemit() {
         },
         "CF5B7F1E",
         "fmin d15, d30, d31",
+    ));
+
+    insns.push((
+        Inst::FpuRRR {
+            fpu_op: FPUOp2::Uqadd64,
+            rd: writable_vreg(21),
+            rn: vreg(22),
+            rm: vreg(23),
+        },
+        "D50EF77E",
+        "uqadd d21, d22, d23",
+    ));
+
+    insns.push((
+        Inst::FpuRRR {
+            fpu_op: FPUOp2::Sqadd64,
+            rd: writable_vreg(21),
+            rn: vreg(22),
+            rm: vreg(23),
+        },
+        "D50EF75E",
+        "sqadd d21, d22, d23",
+    ));
+
+    insns.push((
+        Inst::FpuRRR {
+            fpu_op: FPUOp2::Uqsub64,
+            rd: writable_vreg(21),
+            rn: vreg(22),
+            rm: vreg(23),
+        },
+        "D52EF77E",
+        "uqsub d21, d22, d23",
+    ));
+
+    insns.push((
+        Inst::FpuRRR {
+            fpu_op: FPUOp2::Sqsub64,
+            rd: writable_vreg(21),
+            rn: vreg(22),
+            rm: vreg(23),
+        },
+        "D52EF75E",
+        "sqsub d21, d22, d23",
     ));
 
     insns.push((

@@ -30,6 +30,7 @@ use crate::translation_utils::{
 };
 use crate::translation_utils::{FuncIndex, GlobalIndex, MemoryIndex, SignatureIndex, TableIndex};
 use crate::wasm_unsupported;
+use core::convert::TryInto;
 use core::{i32, u32};
 use cranelift_codegen::ir::condcodes::{FloatCC, IntCC};
 use cranelift_codegen::ir::immediates::Offset32;
@@ -1039,8 +1040,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::F32Le | Operator::F64Le => {
             translate_fcmp(FloatCC::LessThanOrEqual, builder, state)
         }
-        Operator::RefNull { ty } => state.push1(environ.translate_ref_null(builder.cursor(), *ty)?),
-        Operator::RefIsNull { ty: _ } => {
+        Operator::RefNull { ty } => {
+            state.push1(environ.translate_ref_null(builder.cursor(), (*ty).try_into()?)?)
+        }
+        Operator::RefIsNull => {
             let value = state.pop1();
             state.push1(environ.translate_ref_is_null(builder.cursor(), value)?);
         }
@@ -1559,22 +1562,59 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let a = pop1_with_bitcast(state, F32X4, builder);
             state.push1(builder.ins().fcvt_to_sint_sat(I32X4, a))
         }
-        Operator::I32x4TruncSatF32x4U
-        | Operator::I8x16NarrowI16x8S { .. }
-        | Operator::I8x16NarrowI16x8U { .. }
-        | Operator::I16x8NarrowI32x4S { .. }
-        | Operator::I16x8NarrowI32x4U { .. }
-        | Operator::I16x8WidenLowI8x16S { .. }
-        | Operator::I16x8WidenHighI8x16S { .. }
-        | Operator::I16x8WidenLowI8x16U { .. }
-        | Operator::I16x8WidenHighI8x16U { .. }
-        | Operator::I32x4WidenLowI16x8S { .. }
-        | Operator::I32x4WidenHighI16x8S { .. }
-        | Operator::I32x4WidenLowI16x8U { .. }
-        | Operator::I32x4WidenHighI16x8U { .. }
-        | Operator::I8x16Bitmask
-        | Operator::I16x8Bitmask
-        | Operator::I32x4Bitmask => {
+        Operator::I32x4TruncSatF32x4U => {
+            let a = pop1_with_bitcast(state, F32X4, builder);
+            state.push1(builder.ins().fcvt_to_uint_sat(I32X4, a))
+        }
+        Operator::I8x16NarrowI16x8S => {
+            let (a, b) = pop2_with_bitcast(state, I16X8, builder);
+            state.push1(builder.ins().snarrow(a, b))
+        }
+        Operator::I16x8NarrowI32x4S => {
+            let (a, b) = pop2_with_bitcast(state, I32X4, builder);
+            state.push1(builder.ins().snarrow(a, b))
+        }
+        Operator::I8x16NarrowI16x8U => {
+            let (a, b) = pop2_with_bitcast(state, I16X8, builder);
+            state.push1(builder.ins().unarrow(a, b))
+        }
+        Operator::I16x8NarrowI32x4U => {
+            let (a, b) = pop2_with_bitcast(state, I32X4, builder);
+            state.push1(builder.ins().unarrow(a, b))
+        }
+        Operator::I16x8WidenLowI8x16S => {
+            let a = pop1_with_bitcast(state, I8X16, builder);
+            state.push1(builder.ins().swiden_low(a))
+        }
+        Operator::I16x8WidenHighI8x16S => {
+            let a = pop1_with_bitcast(state, I8X16, builder);
+            state.push1(builder.ins().swiden_high(a))
+        }
+        Operator::I16x8WidenLowI8x16U => {
+            let a = pop1_with_bitcast(state, I8X16, builder);
+            state.push1(builder.ins().uwiden_low(a))
+        }
+        Operator::I16x8WidenHighI8x16U => {
+            let a = pop1_with_bitcast(state, I8X16, builder);
+            state.push1(builder.ins().uwiden_high(a))
+        }
+        Operator::I32x4WidenLowI16x8S => {
+            let a = pop1_with_bitcast(state, I16X8, builder);
+            state.push1(builder.ins().swiden_low(a))
+        }
+        Operator::I32x4WidenHighI16x8S => {
+            let a = pop1_with_bitcast(state, I16X8, builder);
+            state.push1(builder.ins().swiden_high(a))
+        }
+        Operator::I32x4WidenLowI16x8U => {
+            let a = pop1_with_bitcast(state, I16X8, builder);
+            state.push1(builder.ins().uwiden_low(a))
+        }
+        Operator::I32x4WidenHighI16x8U => {
+            let a = pop1_with_bitcast(state, I16X8, builder);
+            state.push1(builder.ins().uwiden_high(a))
+        }
+        Operator::I8x16Bitmask | Operator::I16x8Bitmask | Operator::I32x4Bitmask => {
             return Err(wasm_unsupported!("proposed SIMD operator {:?}", op));
         }
 

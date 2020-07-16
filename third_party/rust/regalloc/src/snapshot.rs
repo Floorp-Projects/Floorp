@@ -17,8 +17,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 enum IRInstKind {
-    Spill { vreg: VirtualReg },
-    Reload { vreg: VirtualReg },
+    Spill { vreg: Option<VirtualReg> },
+    Reload { vreg: Option<VirtualReg> },
     Move { vreg: VirtualReg },
     ZeroLenNop,
     UserReturn,
@@ -158,7 +158,12 @@ impl IRSnapshot {
     }
 
     pub fn allocate(&mut self, opts: Options) -> Result<RegAllocResult<IRFunction>, RegAllocError> {
-        allocate_registers_with_opts(&mut self.func, &self.reg_universe, opts)
+        allocate_registers_with_opts(
+            &mut self.func,
+            &self.reg_universe,
+            None, /*no stackmap request*/
+            opts,
+        )
     }
 }
 
@@ -253,7 +258,7 @@ impl Function for IRFunction {
         &self,
         _to_slot: SpillSlot,
         from_reg: RealReg,
-        for_vreg: VirtualReg,
+        for_vreg: Option<VirtualReg>,
     ) -> Self::Inst {
         IRInst {
             reg_uses: vec![from_reg.to_reg()],
@@ -266,7 +271,7 @@ impl Function for IRFunction {
         &self,
         to_reg: Writable<RealReg>,
         _from_slot: SpillSlot,
-        for_vreg: VirtualReg,
+        for_vreg: Option<VirtualReg>,
     ) -> Self::Inst {
         IRInst {
             reg_uses: vec![],

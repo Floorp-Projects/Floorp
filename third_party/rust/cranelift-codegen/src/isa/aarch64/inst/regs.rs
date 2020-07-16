@@ -1,7 +1,8 @@
 //! AArch64 ISA definitions: registers.
 
-use crate::ir::types::*;
-use crate::isa::aarch64::inst::InstSize;
+use crate::isa::aarch64::inst::OperandSize;
+use crate::isa::aarch64::inst::ScalarSize;
+use crate::isa::aarch64::inst::VectorSize;
 use crate::machinst::*;
 use crate::settings;
 
@@ -255,7 +256,7 @@ pub fn create_reg_universe(flags: &settings::Flags) -> RealRegUniverse {
 
 /// If `ireg` denotes an I64-classed reg, make a best-effort attempt to show
 /// its name at the 32-bit size.
-pub fn show_ireg_sized(reg: Reg, mb_rru: Option<&RealRegUniverse>, size: InstSize) -> String {
+pub fn show_ireg_sized(reg: Reg, mb_rru: Option<&RealRegUniverse>, size: OperandSize) -> String {
     let mut s = reg.show_rru(mb_rru);
     if reg.get_class() != RegClass::I64 || !size.is32() {
         // We can't do any better.
@@ -276,23 +277,8 @@ pub fn show_ireg_sized(reg: Reg, mb_rru: Option<&RealRegUniverse>, size: InstSiz
     s
 }
 
-/// Show a vector register.
-pub fn show_freg_sized(reg: Reg, mb_rru: Option<&RealRegUniverse>, size: InstSize) -> String {
-    let mut s = reg.show_rru(mb_rru);
-    if reg.get_class() != RegClass::V128 {
-        return s;
-    }
-    let prefix = match size {
-        InstSize::Size32 => "s",
-        InstSize::Size64 => "d",
-        InstSize::Size128 => "q",
-    };
-    s.replace_range(0..1, prefix);
-    s
-}
-
 /// Show a vector register used in a scalar context.
-pub fn show_vreg_scalar(reg: Reg, mb_rru: Option<&RealRegUniverse>, ty: Type) -> String {
+pub fn show_vreg_scalar(reg: Reg, mb_rru: Option<&RealRegUniverse>, size: ScalarSize) -> String {
     let mut s = reg.show_rru(mb_rru);
     if reg.get_class() != RegClass::V128 {
         // We can't do any better.
@@ -301,13 +287,13 @@ pub fn show_vreg_scalar(reg: Reg, mb_rru: Option<&RealRegUniverse>, ty: Type) ->
 
     if reg.is_real() {
         // Change (eg) "v0" into "d0".
-        if reg.get_class() == RegClass::V128 && s.starts_with("v") {
-            let replacement = match ty {
-                I64 | F64 => "d",
-                I8X16 => "b",
-                I16X8 => "h",
-                I32X4 => "s",
-                _ => unimplemented!(),
+        if s.starts_with("v") {
+            let replacement = match size {
+                ScalarSize::Size8 => "b",
+                ScalarSize::Size16 => "h",
+                ScalarSize::Size32 => "s",
+                ScalarSize::Size64 => "d",
+                ScalarSize::Size128 => "q",
             };
             s.replace_range(0..1, replacement);
         }
@@ -321,40 +307,42 @@ pub fn show_vreg_scalar(reg: Reg, mb_rru: Option<&RealRegUniverse>, ty: Type) ->
 }
 
 /// Show a vector register.
-pub fn show_vreg_vector(reg: Reg, mb_rru: Option<&RealRegUniverse>, ty: Type) -> String {
+pub fn show_vreg_vector(reg: Reg, mb_rru: Option<&RealRegUniverse>, size: VectorSize) -> String {
     assert_eq!(RegClass::V128, reg.get_class());
     let mut s = reg.show_rru(mb_rru);
 
-    match ty {
-        F32X2 => s.push_str(".2s"),
-        F32X4 => s.push_str(".4s"),
-        F64X2 => s.push_str(".2d"),
-        I8X8 => s.push_str(".8b"),
-        I8X16 => s.push_str(".16b"),
-        I16X4 => s.push_str(".4h"),
-        I16X8 => s.push_str(".8h"),
-        I32X2 => s.push_str(".2s"),
-        I32X4 => s.push_str(".4s"),
-        I64X2 => s.push_str(".2d"),
-        _ => unimplemented!(),
-    }
+    let suffix = match size {
+        VectorSize::Size8x8 => ".8b",
+        VectorSize::Size8x16 => ".16b",
+        VectorSize::Size16x4 => ".4h",
+        VectorSize::Size16x8 => ".8h",
+        VectorSize::Size32x2 => ".2s",
+        VectorSize::Size32x4 => ".4s",
+        VectorSize::Size64x2 => ".2d",
+    };
 
+    s.push_str(suffix);
     s
 }
 
 /// Show an indexed vector element.
-pub fn show_vreg_element(reg: Reg, mb_rru: Option<&RealRegUniverse>, idx: u8, ty: Type) -> String {
+pub fn show_vreg_element(
+    reg: Reg,
+    mb_rru: Option<&RealRegUniverse>,
+    idx: u8,
+    size: VectorSize,
+) -> String {
     assert_eq!(RegClass::V128, reg.get_class());
     let mut s = reg.show_rru(mb_rru);
 
-    let suffix = match ty {
-        I8 => "b",
-        I16 => "h",
-        I32 => "s",
-        I64 => "d",
-        F32 => "s",
-        F64 => "d",
-        _ => unimplemented!(),
+    let suffix = match size {
+        VectorSize::Size8x8 => "b",
+        VectorSize::Size8x16 => "b",
+        VectorSize::Size16x4 => "h",
+        VectorSize::Size16x8 => "h",
+        VectorSize::Size32x2 => "s",
+        VectorSize::Size32x4 => "s",
+        VectorSize::Size64x2 => "d",
     };
 
     s.push_str(&format!(".{}[{}]", suffix, idx));

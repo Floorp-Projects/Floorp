@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "wasmparser"
-version = "0.58.0"
+version = "0.59.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
 homepage = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser"

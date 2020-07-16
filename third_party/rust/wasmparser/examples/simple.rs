@@ -1,49 +1,37 @@
-extern crate wasmparser;
-
+use anyhow::Result;
 use std::env;
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
-use std::str;
-use wasmparser::Parser;
-use wasmparser::ParserState;
-use wasmparser::WasmDecoder;
+use wasmparser::{Parser, Payload};
 
-fn main() {
+fn main() -> Result<()> {
     let args = env::args().collect::<Vec<_>>();
     if args.len() != 2 {
         println!("Usage: {} in.wasm", args[0]);
-        return;
+        return Ok(());
     }
 
-    let buf: Vec<u8> = read_wasm(&args[1]).unwrap();
-    let mut parser = Parser::new(&buf);
-    loop {
-        let state = parser.read();
-        match *state {
-            ParserState::BeginWasm { .. } => {
+    let buf: Vec<u8> = std::fs::read(&args[1])?;
+    for payload in Parser::new(0).parse_all(&buf) {
+        match payload? {
+            Payload::Version { .. } => {
                 println!("====== Module");
             }
-            ParserState::ExportSectionEntry {
-                field, ref kind, ..
-            } => {
-                println!("  Export {} {:?}", field, kind);
+            Payload::ExportSection(s) => {
+                for export in s {
+                    let export = export?;
+                    println!("  Export {} {:?}", export.field, export.kind);
+                }
             }
-            ParserState::ImportSectionEntry {
-                module,
-                field: Some(field),
-                ..
-            } => println!("  Import {}::{}", module, field),
-            ParserState::EndWasm => break,
-            ParserState::Error(ref err) => panic!("Error: {:?}", err),
-            _ => ( /* println!(" Other {:?}", state); */ ),
+            Payload::ImportSection(s) => {
+                for import in s {
+                    let import = import?;
+                    println!("  Import {}::{}", import.module, import.field.unwrap());
+                }
+            }
+            _other => {
+                // println!("found payload {:?}", _other);
+            }
         }
     }
-}
 
-fn read_wasm(file: &str) -> io::Result<Vec<u8>> {
-    let mut data = Vec::new();
-    let mut f = File::open(file)?;
-    f.read_to_end(&mut data)?;
-    Ok(data)
+    Ok(())
 }
