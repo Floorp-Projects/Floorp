@@ -20,6 +20,9 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `ThumbnailStorage.saveThumbnail()` now takes an `ImageSaveRequest` instead of an `ImageRequest`.
   * ⚠️ **This is a breaking change**: `ThumbnailStorage.loadThumbnail()` now takes an `ImageLoadRequest` instead of an `ImageRequest`.
 
+* **feature-addons**
+    * AddonManager now receives a `WebExtensionRuntime` instead of an `Engine`. This has no impact to consumers of `feature-addons` as `Engine` already implements `WebExtensionRuntime`.
+
 # 50.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...v50.0.0)
