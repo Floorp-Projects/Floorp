@@ -138,7 +138,7 @@ DebuggerSource* DebuggerSource::check(JSContext* cx, HandleValue thisv) {
 
   DebuggerSource* thisSourceObj = &thisobj->as<DebuggerSource>();
 
-  if (!thisSourceObj->isInstance()) {
+  if (!thisSourceObj->getReferentRawObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Source",
                               "method", "prototype object");
@@ -391,7 +391,7 @@ bool DebuggerSource::CallData::getElement() {
   DebuggerSourceGetElementMatcher matcher(cx);
   if (JSObject* element = referent.match(matcher)) {
     args.rval().setObjectOrNull(element);
-    if (!obj->owner()->wrapDebuggeeValue(cx, args.rval())) {
+    if (!Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval())) {
       return false;
     }
   } else {
@@ -413,7 +413,7 @@ struct DebuggerSourceGetElementPropertyMatcher {
 bool DebuggerSource::CallData::getElementProperty() {
   DebuggerSourceGetElementPropertyMatcher matcher;
   args.rval().set(referent.match(matcher));
-  return obj->owner()->wrapDebuggeeValue(cx, args.rval());
+  return Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval());
 }
 
 class DebuggerSourceGetIntroductionScriptMatcher {
@@ -454,7 +454,7 @@ class DebuggerSourceGetIntroductionScriptMatcher {
 };
 
 bool DebuggerSource::CallData::getIntroductionScript() {
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
   DebuggerSourceGetIntroductionScriptMatcher matcher(cx, dbg, args.rval());
   return referent.match(matcher);
 }
@@ -651,7 +651,7 @@ bool DebuggerSource::CallData::reparse() {
     return false;
   }
 
-  Debugger* dbg = obj->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
   RootedObject scriptDO(cx, dbg->wrapScript(cx, script));
   if (!scriptDO) {
     return false;

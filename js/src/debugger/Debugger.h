@@ -518,7 +518,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   template <typename>
   friend class DebuggerList;
   friend struct JSRuntime::GlobalObjectWatchersLinkAccess<Debugger>;
-  friend struct JSRuntime::GarbageCollectionWatchersLinkAccess<Debugger>;
   friend class SavedStacks;
   friend class ScriptedOnStepHandler;
   friend class ScriptedOnPopHandler;
@@ -707,13 +706,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   mozilla::DoublyLinkedListElement<Debugger> onNewGlobalObjectWatchersLink;
 
   /*
-   * If this Debugger has a onGarbageCollection handler, then
-   * this link is inserted into the list headed by
-   * JSRuntime::onGarbageCollectionWatchers.
-   */
-  mozilla::DoublyLinkedListElement<Debugger> onGarbageCollectionWatchersLink;
-
-  /*
    * Map from stack frames that are currently on the stack to Debugger.Frame
    * instances.
    *
@@ -892,13 +884,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                        Debugger& dbg, Hook which);
   static MOZ_MUST_USE bool setHookImpl(JSContext* cx, const CallArgs& args,
                                        Debugger& dbg, Hook which);
-
-  static MOZ_MUST_USE bool getGarbageCollectionHook(JSContext* cx,
-                                                    const CallArgs& args,
-                                                    Debugger& dbg);
-  static MOZ_MUST_USE bool setGarbageCollectionHook(JSContext* cx,
-                                                    const CallArgs& args,
-                                                    Debugger& dbg);
 
   static bool isCompilableUnit(JSContext* cx, unsigned argc, Value* vp);
   static bool recordReplayProcessKind(JSContext* cx, unsigned argc, Value* vp);
@@ -1125,6 +1110,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 #ifdef DEBUG
   static bool isChildJSObject(JSObject* obj);
 #endif
+  static Debugger* fromChildJSObject(JSObject* obj);
 
   Zone* zone() const { return toJSObject()->zone(); }
 
