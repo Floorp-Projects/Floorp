@@ -1009,6 +1009,20 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPoint& aPointToInsert) const;
 
     /**
+     * GetReplaceRangeDataAtEndOfDeletionRange() and
+     * GetReplaceRangeDataAtStartOfDeletionRange() return delete range if
+     * end or start of deleting range splits invisible trailing/leading
+     * white-spaces and it may become visible, or return replace range if
+     * end or start of deleting range splits visible white-spaces and it
+     * causes some ASCII white-spaces become invisible unless replacing
+     * with an NBSP.
+     */
+    ReplaceRangeData GetReplaceRangeDataAtEndOfDeletionRange(
+        const TextFragmentData& aTextFragmentDataAtStartToDelete);
+    ReplaceRangeData GetReplaceRangeDataAtStartOfDeletionRange(
+        const TextFragmentData& aTextFragmentDataAtEndToDelete);
+
+    /**
      * VisibleWhiteSpacesDataRef() returns reference to visible white-spaces
      * data. That is zero or more white-spaces which are visible.
      * Note that when there is no visible content, it's not initialized.
@@ -1220,18 +1234,6 @@ class WhiteSpaceVisibilityKeeper final {
                                 const EditorDOMPointType& aPoint);
 
  private:
-  /**
-   * GetReplaceRangeDataAtEndOfDeletionRange() and
-   * GetReplaceRangeDataAtStartOfDeletionRange() are helper methods of
-   * MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange().
-   */
-  static ReplaceRangeData GetReplaceRangeDataAtEndOfDeletionRange(
-      HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
-      Element* aEditingHost);
-  static ReplaceRangeData GetReplaceRangeDataAtStartOfDeletionRange(
-      HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
-      Element* aEditingHost);
-
   /**
    * MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() may delete
    * invisible white-spaces for keeping make them invisible and/or may replace
