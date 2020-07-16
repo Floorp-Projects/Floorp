@@ -176,7 +176,7 @@ class DigitalAssetLinksApiTest {
     fun `passes data in get check request URL for android target`() {
         api.checkRelationship(webAsset, USE_AS_ORIGIN, androidAsset)
         verify(client).fetch(baseRequest.copy(
-            url = "https://digitalassetlinks.googleapis.com/v1/assetlinks%3Acheck?" +
+            url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
                 "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.use_as_origin&" +
                 "source.web.site=${Uri.encode("https://mozilla.org")}&" +
                 "target.androidApp.packageName=com.mozilla.fenix&" +
@@ -188,7 +188,7 @@ class DigitalAssetLinksApiTest {
     fun `passes data in get check request URL for web target`() {
         api.checkRelationship(webAsset, HANDLE_ALL_URLS, webAsset)
         verify(client).fetch(baseRequest.copy(
-            url = "https://digitalassetlinks.googleapis.com/v1/assetlinks%3Acheck?" +
+            url = "https://digitalassetlinks.googleapis.com/v1/assetlinks:check?" +
                 "prettyPrint=false&key=X&relation=delegate_permission%2Fcommon.handle_all_urls&" +
                 "source.web.site=${Uri.encode("https://mozilla.org")}&" +
                 "target.web.site=${Uri.encode("https://mozilla.org")}"
@@ -199,7 +199,7 @@ class DigitalAssetLinksApiTest {
     fun `passes data in get list request URL`() {
         api.listStatements(webAsset)
         verify(client).fetch(baseRequest.copy(
-            url = "https://digitalassetlinks.googleapis.com/v1/statements%3Alist?" +
+            url = "https://digitalassetlinks.googleapis.com/v1/statements:list?" +
                 "prettyPrint=false&key=X&source.web.site=${Uri.encode("https://mozilla.org")}"
         ))
     }
