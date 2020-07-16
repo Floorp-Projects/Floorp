@@ -385,7 +385,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
                             FenixSnackbar.make(
-                                view = view,
+                                view = view.browserLayout,
                                 duration = Snackbar.LENGTH_SHORT,
                                 isDisplayedWithBrowserToolbar = true
                             )
@@ -649,7 +649,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
         val onCannotOpenFile = {
             FenixSnackbar.make(
-                view = view,
+                view = view.browserLayout,
                 duration = Snackbar.LENGTH_SHORT,
                 isDisplayedWithBrowserToolbar = true
             )
@@ -932,7 +932,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
                 view?.let { view ->
                     FenixSnackbar.make(
-                        view = view,
+                        view = view.browserLayout,
                         duration = FenixSnackbar.LENGTH_LONG,
                         isDisplayedWithBrowserToolbar = true
                     )
@@ -978,7 +978,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             // Close find in page bar if opened
             findInPageIntegration.onBackPressed()
             FenixSnackbar.make(
-                    view = requireView(),
+                    view = requireView().browserLayout,
                     duration = Snackbar.LENGTH_SHORT,
                     isDisplayedWithBrowserToolbar = false
                 )

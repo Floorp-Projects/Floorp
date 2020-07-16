@@ -2,7 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<merge xmlns:android="http://schemas.android.com/apk/res/android" >
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
         android:id="@+id/previewThumbnail"
         android:layout_width="match_parent"
@@ -23,10 +25,10 @@
             android:id="@+id/toolbar_wrapper"
             android:layout_width="0dp"
             android:layout_height="40dp"
+            android:layout_gravity="center"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="0dp"
             android:layout_weight="1"
-            android:layout_gravity="center"
             android:background="@drawable/home_search_background" />
 
         <org.mozilla.fenix.components.toolbar.TabCounter
@@ -35,10 +37,13 @@
             android:layout_height="48dp"
             android:layout_gravity="center" />
 
-        <mozilla.components.browser.menu.view.MenuButton
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/menuButton"
             android:layout_width="36dp"
             android:layout_height="48dp"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:scaleType="center"
+            app:srcCompat="@drawable/ic_menu"
+            app:tint="?primaryText" />
     </LinearLayout>
 </merge>

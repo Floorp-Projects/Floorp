@@ -8,10 +8,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.updateLayoutParams
+import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import kotlinx.android.synthetic.main.tab_preview.view.*
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.support.images.ext.loadIntoView
@@ -44,12 +45,9 @@ class TabPreview @JvmOverloads constructor(
             )
         }
 
-        menuButton.setColorFilter(
-            ContextCompat.getColor(
-                context,
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
-            )
-        )
+        // Change view properties to avoid confusing the UI tests
+        tab_button.counter_box.id = View.NO_ID
+        tab_button.counter_text.id = View.NO_ID
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
