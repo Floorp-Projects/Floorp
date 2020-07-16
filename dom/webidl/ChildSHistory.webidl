@@ -36,4 +36,12 @@ interface ChildSHistory {
    * process on ChildSHistory.
    */
   readonly attribute nsISHistory legacySHistory;
+
+  /**
+   * asyncHistoryLength can be enabled to test Fission-like asynchronous
+   * history.length handling with non-Fission session history implementation.
+   * Throws if session history is running in the parent process.
+   */
+  [SetterThrows]
+  attribute boolean asyncHistoryLength;
 };
