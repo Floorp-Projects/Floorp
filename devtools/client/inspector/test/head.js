@@ -1049,3 +1049,173 @@ async function simulateColorPickerChange(colorPicker, newRgba) {
   spectrum.updateUI();
   spectrum.onChange();
 }
+
+/**
+ * Assert method to compare the current content of the markupview to a text based tree.
+ *
+ * @param {String} tree
+ *        Multiline string representing the markup view tree, for instance:
+ *        `root
+ *           child1
+ *             subchild1
+ *             subchild2
+ *           child2
+ *             subchild3!slotted`
+ *           child3!ignore-children
+ *        Each sub level should be indented by 2 spaces.
+ *        Each line contains text expected to match with the text of the corresponding
+ *        node in the markup view. Some suffixes are supported:
+ *        - !slotted -> indicates that the line corresponds to the slotted version
+ *        - !ignore-children -> the node might have children but do not assert them
+ * @param {String} selector
+ *        A CSS selector that will uniquely match the "root" element from the tree
+ * @param {Inspector} inspector
+ *        The inspector instance.
+ */
+async function assertMarkupViewAsTree(tree, selector, inspector) {
+  const { markup } = inspector;
+
+  info(`Find and expand the shadow DOM host matching selector ${selector}.`);
+  const rootFront = await getNodeFront(selector, inspector);
+  const rootContainer = markup.getContainer(rootFront);
+
+  const parsedTree = _parseMarkupViewTree(tree);
+  const treeRoot = parsedTree.children[0];
+  await _checkMarkupViewNode(treeRoot, rootContainer, inspector);
+}
+
+async function _checkMarkupViewNode(treeNode, container, inspector) {
+  const { node, children, path } = treeNode;
+  info("Checking [" + path + "]");
+  info("Checking node: " + node);
+
+  const ignoreChildren = node.includes("!ignore-children");
+  const slotted = node.includes("!slotted");
+
+  // Remove optional suffixes.
+  const nodeText = node.replace("!slotted", "").replace("!ignore-children", "");
+
+  assertContainerHasText(container, nodeText);
+
+  if (slotted) {
+    assertContainerSlotted(container);
+  }
+
+  if (ignoreChildren) {
+    return;
+  }
+
+  if (!children.length) {
+    ok(!container.canExpand, "Container for [" + path + "] has no children");
+    return;
+  }
+
+  // Expand the container if not already done.
+  if (!container.expanded) {
+    await expandContainer(inspector, container);
+  }
+
+  const containers = container.getChildContainers();
+  is(
+    containers.length,
+    children.length,
+    "Node [" + path + "] has the expected number of children"
+  );
+  for (let i = 0; i < children.length; i++) {
+    await _checkMarkupViewNode(children[i], containers[i], inspector);
+  }
+}
+
+/**
+ * Helper designed to parse a tree represented as:
+ * root
+ *   child1
+ *     subchild1
+ *     subchild2
+ *   child2
+ *     subchild3!slotted
+ *
+ * Lines represent a simplified view of the markup, where the trimmed line is supposed to
+ * be included in the text content of the actual markupview container.
+ * This method returns an object that can be passed to _checkMarkupViewNode() to verify
+ * the current markup view displays the expected structure.
+ */
+function _parseMarkupViewTree(inputString) {
+  const tree = {
+    level: 0,
+    children: [],
+  };
+  let lines = inputString.split("\n");
+  lines = lines.filter(l => l.trim());
+
+  let currentNode = tree;
+  for (const line of lines) {
+    const nodeString = line.trim();
+    const level = line.split("  ").length;
+
+    let parent;
+    if (level > currentNode.level) {
+      parent = currentNode;
+    } else {
+      parent = currentNode.parent;
+      for (let i = 0; i < currentNode.level - level; i++) {
+        parent = parent.parent;
+      }
+    }
+
+    const node = {
+      node: nodeString,
+      children: [],
+      parent,
+      level,
+      path: parent.path + " " + nodeString,
+    };
+
+    parent.children.push(node);
+    currentNode = node;
+  }
+
+  return tree;
+}
+
+/**
+ * Assert whether the provided container is slotted.
+ */
+function assertContainerSlotted(container) {
+  ok(container.isSlotted(), "Container is a slotted container");
+  ok(
+    container.elt.querySelector(".reveal-link"),
+    "Slotted container has a reveal link element"
+  );
+}
+
+/**
+ * Check if the provided text can be matched anywhere in the text content for the provided
+ * container.
+ */
+function assertContainerHasText(container, expectedText) {
+  const textContent = container.elt.textContent;
+  ok(
+    textContent.includes(expectedText),
+    "Container has expected text: " + expectedText
+  );
+}
+
+function waitForMutation(inspector, type) {
+  return waitForNMutations(inspector, type, 1);
+}
+
+function waitForNMutations(inspector, type, count) {
+  info(`Expecting ${count} markupmutation of type ${type}`);
+  let receivedMutations = 0;
+  return new Promise(resolve => {
+    inspector.on("markupmutation", function onMutation(mutations) {
+      const validMutations = mutations.filter(m => m.type === type).length;
+      receivedMutations = receivedMutations + validMutations;
+      if (receivedMutations == count) {
+        inspector.off("markupmutation", onMutation);
+        resolve();
+      }
+    });
+  });
+}
