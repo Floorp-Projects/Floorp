@@ -57,10 +57,9 @@
 
 use crate::analysis_data_flow::get_san_reg_sets_for_insn;
 use crate::data_structures::{
-    BlockIx, InstIx, InstPoint, Map, Point, RealReg, RealRegUniverse, Reg, RegSets, SpillSlot,
-    VirtualReg, Writable,
+    BlockIx, InstIx, Map, RealReg, RealRegUniverse, Reg, RegSets, SpillSlot, VirtualReg, Writable,
 };
-use crate::inst_stream::InstToInsertAndPoint;
+use crate::inst_stream::{ExtPoint, InstExtPoint, InstToInsertAndExtPoint};
 use crate::{Function, RegUsageMapper};
 
 use std::collections::VecDeque;
@@ -478,10 +477,11 @@ impl Checker {
     }
 }
 
-/// A wrapper around `Checker` that assists its use with `InstsAndPoints` and `Function` together.
+/// A wrapper around `Checker` that assists its use with `InstToInsertAndExtPoint`s and
+/// `Function` together.
 pub(crate) struct CheckerContext {
     checker: Checker,
-    checker_inst_map: Map<InstPoint, Vec<Inst>>,
+    checker_inst_map: Map<InstExtPoint, Vec<Inst>>,
 }
 
 impl CheckerContext {
@@ -490,16 +490,12 @@ impl CheckerContext {
     pub(crate) fn new<F: Function>(
         f: &F,
         ru: &RealRegUniverse,
-        insts_to_add: &Vec<InstToInsertAndPoint>,
+        insts_to_add: &Vec<InstToInsertAndExtPoint>,
     ) -> CheckerContext {
-        let mut checker_inst_map: Map<InstPoint, Vec<Inst>> = Map::default();
-        for &InstToInsertAndPoint {
-            ref inst,
-            ref point,
-        } in insts_to_add
-        {
+        let mut checker_inst_map: Map<InstExtPoint, Vec<Inst>> = Map::default();
+        for &InstToInsertAndExtPoint { ref inst, ref iep } in insts_to_add {
             let checker_insts = checker_inst_map
-                .entry(point.clone())
+                .entry(iep.clone())
                 .or_insert_with(|| vec![]);
             checker_insts.push(inst.to_checker_inst());
         }
@@ -521,8 +517,8 @@ impl CheckerContext {
         mapper: &RUM,
     ) -> Result<(), CheckerErrors> {
         let empty = vec![];
-        let pre_point = InstPoint::new(iix, Point::Reload);
-        let post_point = InstPoint::new(iix, Point::Spill);
+        let pre_point = InstExtPoint::new(iix, ExtPoint::Reload);
+        let post_point = InstExtPoint::new(iix, ExtPoint::Spill);
 
         for checker_inst in self.checker_inst_map.get(&pre_point).unwrap_or(&empty) {
             debug!("at inst {:?}: pre checker_inst: {:?}", iix, checker_inst);

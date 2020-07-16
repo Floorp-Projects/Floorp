@@ -12,18 +12,21 @@ use crate::analysis_data_flow::{add_raw_reg_vecs_for_insn, does_inst_use_def_or_
 use crate::analysis_main::{run_analysis, AnalysisInfo};
 use crate::avl_tree::{AVLTree, AVL_NULL};
 use crate::bt_coalescing_analysis::{do_coalescing_analysis, Hint};
-use crate::bt_commitment_map::{CommitmentMap, RangeFragAndVLRIx};
+use crate::bt_commitment_map::{CommitmentMap, RangeFragAndRangeId};
 use crate::bt_spillslot_allocator::SpillSlotAllocator;
 use crate::bt_vlr_priority_queue::VirtualRangePrioQ;
 use crate::data_structures::{
-    BlockIx, InstIx, InstPoint, Point, RangeFrag, RangeFragIx, RealRange, RealReg, RealRegUniverse,
-    Reg, RegVecBounds, RegVecs, Set, SortedRangeFrags, SpillCost, SpillSlot, TypedIxVec,
-    VirtualRange, VirtualRangeIx, VirtualReg, Writable,
+    BlockIx, InstIx, InstPoint, Map, Point, RangeFrag, RangeFragIx, RangeId, RealRange,
+    RealRangeIx, RealReg, RealRegUniverse, Reg, RegClass, RegVecBounds, RegVecs, RegVecsAndBounds,
+    Set, SortedRangeFrags, SpillCost, SpillSlot, TypedIxVec, VirtualRange, VirtualRangeIx,
+    VirtualReg, Writable,
 };
-use crate::inst_stream::{edit_inst_stream, InstToInsert, InstToInsertAndPoint};
+use crate::inst_stream::{
+    edit_inst_stream, ExtPoint, InstExtPoint, InstToInsert, InstToInsertAndExtPoint,
+};
 use crate::sparse_set::SparseSetU;
 use crate::union_find::UnionFindEquivClasses;
-use crate::{Function, RegAllocError, RegAllocResult};
+use crate::{AlgorithmWithDefaults, Function, RegAllocError, RegAllocResult, StackmapRequestInfo};
 
 #[derive(Clone)]
 pub struct BacktrackingOptions {
@@ -75,12 +78,21 @@ impl PerRealReg {
     }
 
     #[inline(never)]
-    fn add_RealRange(&mut self, to_add: &RealRange, frag_env: &TypedIxVec<RangeFragIx, RangeFrag>) {
-        // Commit this register to `to_add`, irrevocably.  Don't add it to
-        // `vlrixs_assigned` since we will never want to later evict the
-        // assignment.
-        self.committed
-            .add_indirect(&to_add.sorted_frags, None, frag_env);
+    fn add_RealRange(
+        &mut self,
+        to_add_rlrix: RealRangeIx,
+        rlr_env: &TypedIxVec<RealRangeIx, RealRange>,
+        frag_env: &TypedIxVec<RangeFragIx, RangeFrag>,
+    ) {
+        // Commit this register to `to_add`, irrevocably.  Don't add it to `vlrixs_assigned`
+        // since we will never want to later evict the assignment.  (Also, from a types point of
+        // view that would be impossible.)
+        let to_add_rlr = &rlr_env[to_add_rlrix];
+        self.committed.add_indirect(
+            &to_add_rlr.sorted_frags,
+            RangeId::new_real(to_add_rlrix),
+            frag_env,
+        );
     }
 
     #[inline(never)]
@@ -91,7 +103,7 @@ impl PerRealReg {
     ) {
         let to_add_vlr = &vlr_env[to_add_vlrix];
         self.committed
-            .add(&to_add_vlr.sorted_frags, Some(to_add_vlrix));
+            .add(&to_add_vlr.sorted_frags, RangeId::new_virtual(to_add_vlrix));
         assert!(!self.vlrixs_assigned.contains(to_add_vlrix));
         self.vlrixs_assigned.insert(to_add_vlrix);
     }
@@ -103,6 +115,8 @@ impl PerRealReg {
         vlr_env: &TypedIxVec<VirtualRangeIx, VirtualRange>,
     ) {
         // Remove it from `vlrixs_assigned`
+        // FIXME 2020June18: we could do this more efficiently by inspecting
+        // the return value from `delete`.
         if self.vlrixs_assigned.contains(to_del_vlrix) {
             self.vlrixs_assigned.delete(to_del_vlrix);
         } else {
@@ -130,7 +144,7 @@ fn search_commitment_tree<IsAllowedToEvict>(
     running_set: &mut SparseSetU<[VirtualRangeIx; 4]>,
     running_cost: &mut SpillCost,
     // The tree to search.
-    tree: &AVLTree<RangeFragAndVLRIx>,
+    tree: &AVLTree<RangeFragAndRangeId>,
     // The RangeFrag we want to accommodate.
     pair_frag: &RangeFrag,
     spill_cost_budget: &SpillCost,
@@ -156,14 +170,14 @@ where
         // Let's first consider the current node.  If we need it but it's not
         // evictable, we might as well stop now.
         if overlaps_curr {
-            // This frag has no associated VirtualRangeIx, so it is part of a
-            // RealRange, and hence not evictable.
-            if curr_node_item.mb_vlrix.is_none() {
+            // This frag is committed to a real range, not a virtual one, and hence is not
+            // evictable.
+            if curr_node_item.id.is_real() {
                 return false;
             }
             // Maybe this one is a spill range, in which case, it can't be
             // evicted.
-            let vlrix_to_evict = curr_node_item.mb_vlrix.unwrap();
+            let vlrix_to_evict = curr_node_item.id.to_virtual();
             let vlr_to_evict = &vlr_env[vlrix_to_evict];
             if vlr_to_evict.spill_cost.is_infinite() {
                 return false;
@@ -369,6 +383,180 @@ fn print_RA_state(
 }
 
 //=============================================================================
+// Reftype/stackmap support
+
+// This creates the artefacts for a safepoint/stackmap at some insn `iix`: the set of reftyped
+// spill slots, the spills to be placed at `iix.r` (yes, you read that right) and the reloads to
+// be placed at `iix.s`.
+//
+// This consults:
+//
+// * the commitment maps, to figure out which real registers are live and reftyped at `iix.u`.
+//
+// * the spillslot allocator, to figure out which spill slots are live and reftyped at `iix.u`.
+//
+// This may fail, meaning the request is in some way nonsensical; failure is propagated upwards.
+
+fn get_stackmap_artefacts_at(
+    spill_slot_allocator: &mut SpillSlotAllocator,
+    univ: &RealRegUniverse,
+    reftype_class: RegClass,
+    reg_vecs_and_bounds: &RegVecsAndBounds,
+    per_real_reg: &Vec<PerRealReg>,
+    rlr_env: &TypedIxVec<RealRangeIx, RealRange>,
+    vlr_env: &TypedIxVec<VirtualRangeIx, VirtualRange>,
+    iix: InstIx,
+) -> Result<(Vec<InstToInsert>, Vec<InstToInsert>, Vec<SpillSlot>), RegAllocError> {
+    // From a code generation perspective, what we need to compute is:
+    //
+    // * Sbefore: real regs that are live at `iix.u`, that are reftypes
+    //
+    // * Safter:  Sbefore - real regs written by `iix`
+    //
+    // Then:
+    //
+    // * for r in Sbefore . add "spill r" at `iix.r` *after* all the reloads that are already
+    //   there
+    //
+    // * for r in Safter . add "reload r" at `iix.s` *before* all the spills that are already
+    //   there
+    //
+    // Once those spills have been "recorded" by the `spill_slot_allocator`, we can then ask it
+    // to tell us all the reftyped spill slots at `iix.u`, and that's our stackmap! This routine
+    // only computes the stackmap and the vectors of spills and reloads.  It doesn't deal with
+    // interleaving them into the final code sequence.
+    //
+    // Note that this scheme isn't as runtime-inefficient as it sounds, at least in the
+    // SpiderMonkey use case and where `iix` is a call insn.  That's because SM's calling
+    // convention has no callee saved registers.  Hence "real regs written by `iix`" will be
+    // "all real regs" and so Safter will be empty.  And Sbefore is in any case pretty small.
+    //
+    // (/me thinks ..) hmm, if Safter is empty, then what is the point of dumping Sbefore on the
+    // stack before the GC?  For r in Sbefore, either r is the only reference to some object, in
+    // which case there's no point in presenting that ref to the GC since r is dead after call,
+    // or r isn't the only ref to the object, in which case some other ref to it must exist
+    // elsewhere in the stack, and that will keep the object alive.  Maybe this needs a rethink.
+    // Maybe the spills before the call should be only for the set Safter?
+
+    let pt = InstPoint::new_use(iix);
+
+    // Compute Sbefore.
+
+    // FIXME change this to SparseSet
+    let mut s_before = Set::<RealReg>::empty();
+
+    let rci = univ.allocable_by_class[reftype_class.rc_to_usize()];
+    if rci.is_none() {
+        return Err(RegAllocError::Other(
+            "stackmap request: no regs in specified reftype class".to_string(),
+        ));
+    }
+    let rci = rci.unwrap();
+
+    debug!("computing stackmap info at {:?}", pt);
+
+    for rreg_no in rci.first..rci.last + 1 {
+        // Get the RangeId, if any, assigned for `rreg_no` at `iix.u`.  From that we can figure
+        // out if it is reftyped.
+        let mb_range_id = per_real_reg[rreg_no].committed.lookup_inst_point(pt);
+        if let Some(range_id) = mb_range_id {
+            // `rreg_no` is live at `iix.u`.
+            let is_ref = if range_id.is_real() {
+                debug!(
+                    " real reg {:?} is real-range {:?}",
+                    rreg_no,
+                    rlr_env[range_id.to_real()]
+                );
+                rlr_env[range_id.to_real()].is_ref
+            } else {
+                debug!(
+                    " real reg {:?} is virtual-range {:?}",
+                    rreg_no,
+                    vlr_env[range_id.to_virtual()]
+                );
+                vlr_env[range_id.to_virtual()].is_ref
+            };
+            if is_ref {
+                // Finally .. we know that `rreg_no` is reftyped and live at `iix.u`.
+                let rreg = univ.regs[rreg_no].0;
+                s_before.insert(rreg);
+            }
+        }
+    }
+
+    debug!("Sbefore = {:?}", s_before);
+
+    // Compute Safter.
+
+    let mut s_after = s_before.clone();
+    let bounds = &reg_vecs_and_bounds.bounds[iix];
+    if bounds.mods_len != 0 {
+        // Only the GC is allowed to modify reftyped regs at this insn!
+        return Err(RegAllocError::Other(
+            "stackmap request: safepoint insn modifies a reftyped reg".to_string(),
+        ));
+    }
+
+    for i in bounds.defs_start..bounds.defs_start + bounds.defs_len as u32 {
+        let r_defd = reg_vecs_and_bounds.vecs.defs[i as usize];
+        if r_defd.is_real() && r_defd.get_class() == reftype_class {
+            s_after.delete(r_defd.to_real_reg());
+        }
+    }
+
+    debug!("Safter = {:?}", s_before);
+
+    // Create the spill insns, as defined by Sbefore.  This has the side effect of recording the
+    // spill in `spill_slot_allocator`, so we can later ask it to tell us all the reftyped spill
+    // slots.
+
+    let frag = RangeFrag::new(InstPoint::new_reload(iix), InstPoint::new_spill(iix));
+
+    let mut spill_insns = Vec::<InstToInsert>::new();
+    let mut where_reg_got_spilled_to = Map::<RealReg, SpillSlot>::default();
+
+    for from_reg in s_before.iter() {
+        let to_slot = spill_slot_allocator.alloc_reftyped_spillslot_for_frag(frag.clone());
+        let spill = InstToInsert::Spill {
+            to_slot,
+            from_reg: *from_reg,
+            for_vreg: None, // spill isn't associated with any virtual reg
+        };
+        spill_insns.push(spill);
+        // We also need to remember where we stashed it, so we can reload it, if it is in Safter.
+        if s_after.contains(*from_reg) {
+            where_reg_got_spilled_to.insert(*from_reg, to_slot);
+        }
+    }
+
+    // Create the reload insns, as defined by Safter.  Except, we might as well use the map we
+    // just made, since its domain is the same as Safter.
+
+    let mut reload_insns = Vec::<InstToInsert>::new();
+
+    for (to_reg, from_slot) in where_reg_got_spilled_to.iter() {
+        let reload = InstToInsert::Reload {
+            to_reg: Writable::from_reg(*to_reg),
+            from_slot: *from_slot,
+            for_vreg: None, // reload isn't associated with any virtual reg
+        };
+        reload_insns.push(reload);
+    }
+
+    // And finally .. round up all the reftyped spill slots.  That includes both "normal" spill
+    // slots that happen to hold reftyped values, as well as the "extras" we created here, to
+    // hold values of reftyped regs that are live over this instruction.
+
+    let reftyped_spillslots = spill_slot_allocator.get_reftyped_spillslots_at_inst_point(pt);
+
+    debug!("reftyped_spillslots = {:?}", reftyped_spillslots);
+
+    // And we're done!
+
+    Ok((spill_insns, reload_insns, reftyped_spillslots))
+}
+
+//=============================================================================
 // Allocator top level
 
 /* (const) For each virtual live range
@@ -471,9 +659,23 @@ impl fmt::Debug for EditListItem {
 pub fn alloc_main<F: Function>(
     func: &mut F,
     reg_universe: &RealRegUniverse,
+    stackmap_request: Option<&StackmapRequestInfo>,
     use_checker: bool,
     opts: &BacktrackingOptions,
 ) -> Result<RegAllocResult<F>, RegAllocError> {
+    // -------- Initial arrangements for stackmaps --------
+    let empty_vec_vregs = vec![];
+    let empty_vec_iixs = vec![];
+    let (client_wants_stackmaps, reftype_class, reftyped_vregs, safepoint_insns) =
+        match stackmap_request {
+            Some(&StackmapRequestInfo {
+                reftype_class,
+                ref reftyped_vregs,
+                ref safepoint_insns,
+            }) => (true, reftype_class, reftyped_vregs, safepoint_insns),
+            None => (false, RegClass::INVALID, &empty_vec_vregs, &empty_vec_iixs),
+        };
+
     // -------- Perform initial liveness analysis --------
     // Note that the analysis phase can fail; hence we propagate any error.
     let AnalysisInfo {
@@ -484,26 +686,38 @@ pub fn alloc_main<F: Function>(
         range_metrics: frag_metrics_env,
         estimated_frequencies: est_freqs,
         inst_to_block_map,
-        ..
-    } = run_analysis(func, reg_universe).map_err(|err| RegAllocError::Analysis(err))?;
+        reg_to_ranges_maps: mb_reg_to_ranges_maps,
+        move_info: mb_move_info,
+    } = run_analysis(
+        func,
+        reg_universe,
+        AlgorithmWithDefaults::Backtracking,
+        client_wants_stackmaps,
+        reftype_class,
+        reftyped_vregs,
+    )
+    .map_err(|err| RegAllocError::Analysis(err))?;
 
     assert!(reg_vecs_and_bounds.is_sanitized());
     assert!(frag_env.len() == frag_metrics_env.len());
+    assert!(mb_reg_to_ranges_maps.is_some()); // ensured by `run_analysis`
+    assert!(mb_move_info.is_some()); // ensured by `run_analysis`
+    let reg_to_ranges_maps = mb_reg_to_ranges_maps.unwrap();
+    let move_info = mb_move_info.unwrap();
 
-    // Also perform analysis that finds all coalesing opportunities.
+    // Also perform analysis that finds all coalescing opportunities.
     let coalescing_info = do_coalescing_analysis(
         func,
-        &reg_vecs_and_bounds,
+        &reg_universe,
         &rlr_env,
         &mut vlr_env,
         &frag_env,
-        &est_freqs,
-        &reg_universe,
+        &reg_to_ranges_maps,
+        &move_info,
     );
     let mut hints: TypedIxVec<VirtualRangeIx, SmallVec<[Hint; 8]>> = coalescing_info.0;
     let vlrEquivClasses: UnionFindEquivClasses<VirtualRangeIx> = coalescing_info.1;
     let is_vv_boundary_move: TypedIxVec<InstIx, bool> = coalescing_info.2;
-    let vreg_to_vlrs_map: Vec</*vreg index,*/ SmallVec<[VirtualRangeIx; 3]>> = coalescing_info.3;
     assert!(hints.len() == vlr_env.len());
 
     // -------- Alloc main --------
@@ -533,7 +747,8 @@ pub fn alloc_main<F: Function>(
         // PerRealReg
         per_real_reg.push(PerRealReg::new());
     }
-    for rlr in rlr_env.iter() {
+    for (rlrix_no, rlr) in rlr_env.iter().enumerate() {
+        let rlrix = RealRangeIx::new(rlrix_no as u32);
         let rregIndex = rlr.rreg.get_index();
         // Ignore RealRanges for RealRegs that are not part of the allocatable
         // set.  As far as the allocator is concerned, such RealRegs simply
@@ -541,7 +756,7 @@ pub fn alloc_main<F: Function>(
         if rregIndex >= reg_universe.allocable {
             continue;
         }
-        per_real_reg[rregIndex].add_RealRange(&rlr, &frag_env);
+        per_real_reg[rregIndex].add_RealRange(rlrix, &rlr_env, &frag_env);
     }
 
     let mut edit_list_move = Vec::<EditListItem>::new();
@@ -977,6 +1192,7 @@ pub fn alloc_main<F: Function>(
 
         let curr_vlr_vreg = curr_vlr.vreg;
         let curr_vlr_reg = curr_vlr_vreg.to_reg();
+        let curr_vlr_is_ref = curr_vlr.is_ref;
 
         for frag in &curr_vlr.sorted_frags.frags {
             for iix in frag.first.iix().dotdot(frag.last.iix().plus(1)) {
@@ -1060,6 +1276,21 @@ pub fn alloc_main<F: Function>(
         }
         let spill_slot_to_use = vlr_slot_env[curr_vlrix].unwrap();
 
+        // If we're spilling a reffy VLR, we'll need to tell the spillslot allocator that.  The
+        // VLR will already have been allocated to some spill slot, and relevant RangeFrags in
+        // the slot should have already been reserved for it, by the above call to
+        // `alloc_spill_slots` (although possibly relating to a prior VLR in the same
+        // equivalence class, and not this one).  However, those RangeFrags will have all been
+        // marked non-reffy, because we don't know, in general, at spillslot-allocation-time,
+        // whether a VLR will actually be spilled, and we don't want the resulting stack maps to
+        // mention stack entries which are dead at the point of the safepoint insn.  Hence the
+        // need to update those RangeFrags pertaining to just this VLR -- now that we *know*
+        // it's going to be spilled.
+        if curr_vlr.is_ref {
+            spill_slot_allocator
+                .notify_spillage_of_reftyped_vlr(spill_slot_to_use, &curr_vlr.sorted_frags);
+        }
+
         for sri in sri_vec {
             let (new_vlr_first_pt, new_vlr_last_pt) = match sri.kind {
                 BridgeKind::RtoU => (Point::Reload, Point::Use),
@@ -1076,6 +1307,7 @@ pub fn alloc_main<F: Function>(
                 vreg: curr_vlr_vreg,
                 rreg: None,
                 sorted_frags: new_vlr_sfrags,
+                is_ref: curr_vlr_is_ref, // "inherit" refness
                 size: 1,
                 // Effectively infinite.  We'll never look at this again anyway.
                 total_cost: 0xFFFF_FFFFu32,
@@ -1109,7 +1341,7 @@ pub fn alloc_main<F: Function>(
                         // allocated to the same reg as the destination of the
                         // move.  That means we have to find the VLR that owns
                         // the destination vreg.
-                        for vlrix in &vreg_to_vlrs_map[dst_vreg.get_index()] {
+                        for vlrix in &reg_to_ranges_maps.vreg_to_vlrs_map[dst_vreg.get_index()] {
                             if vlr_env[*vlrix].vreg == dst_vreg {
                                 new_vlr_hint.push(Hint::SameAs(*vlrix, bridge_eef));
                                 break;
@@ -1120,7 +1352,7 @@ pub fn alloc_main<F: Function>(
                         // Def-to-Spill bridge.  Hint that we want to be
                         // allocated to the same reg as the source of the
                         // move.
-                        for vlrix in &vreg_to_vlrs_map[src_vreg.get_index()] {
+                        for vlrix in &reg_to_ranges_maps.vreg_to_vlrs_map[src_vreg.get_index()] {
                             if vlr_env[*vlrix].vreg == src_vreg {
                                 new_vlr_hint.push(Hint::SameAs(*vlrix, bridge_eef));
                                 break;
@@ -1315,7 +1547,7 @@ pub fn alloc_main<F: Function>(
     // Reload and spill instructions are missing.  To generate them, go through
     // the "edit list", which contains info on both how to generate the
     // instructions, and where to insert them.
-    let mut spills_n_reloads = Vec::<InstToInsertAndPoint>::new();
+    let mut spills_n_reloads = Vec::<InstToInsertAndExtPoint>::new();
     let mut num_spills = 0; // stats only
     let mut num_reloads = 0; // stats only
     for eli in &edit_list_other {
@@ -1334,10 +1566,10 @@ pub fn alloc_main<F: Function>(
                 let insnR = InstToInsert::Reload {
                     to_reg: Writable::from_reg(rreg),
                     from_slot: eli.slot,
-                    for_vreg: vreg,
+                    for_vreg: Some(vreg),
                 };
-                let whereToR = vlr_frag.first;
-                spills_n_reloads.push(InstToInsertAndPoint::new(insnR, whereToR));
+                let whereToR = InstExtPoint::from_inst_point(vlr_frag.first);
+                spills_n_reloads.push(InstToInsertAndExtPoint::new(insnR, whereToR));
                 num_reloads += 1;
             }
             BridgeKind::RtoS => {
@@ -1347,17 +1579,17 @@ pub fn alloc_main<F: Function>(
                 let insnR = InstToInsert::Reload {
                     to_reg: Writable::from_reg(rreg),
                     from_slot: eli.slot,
-                    for_vreg: vreg,
+                    for_vreg: Some(vreg),
                 };
-                let whereToR = vlr_frag.first;
+                let whereToR = InstExtPoint::from_inst_point(vlr_frag.first);
                 let insnS = InstToInsert::Spill {
                     to_slot: eli.slot,
                     from_reg: rreg,
-                    for_vreg: vreg,
+                    for_vreg: Some(vreg),
                 };
-                let whereToS = vlr_frag.last;
-                spills_n_reloads.push(InstToInsertAndPoint::new(insnR, whereToR));
-                spills_n_reloads.push(InstToInsertAndPoint::new(insnS, whereToS));
+                let whereToS = InstExtPoint::from_inst_point(vlr_frag.last);
+                spills_n_reloads.push(InstToInsertAndExtPoint::new(insnR, whereToR));
+                spills_n_reloads.push(InstToInsertAndExtPoint::new(insnS, whereToS));
                 num_reloads += 1;
                 num_spills += 1;
             }
@@ -1368,10 +1600,10 @@ pub fn alloc_main<F: Function>(
                 let insnS = InstToInsert::Spill {
                     to_slot: eli.slot,
                     from_reg: rreg,
-                    for_vreg: vreg,
+                    for_vreg: Some(vreg),
                 };
-                let whereToS = vlr_frag.last;
-                spills_n_reloads.push(InstToInsertAndPoint::new(insnS, whereToS));
+                let whereToS = InstExtPoint::from_inst_point(vlr_frag.last);
+                spills_n_reloads.push(InstToInsertAndExtPoint::new(insnS, whereToS));
                 num_spills += 1;
             }
         }
@@ -1408,10 +1640,64 @@ pub fn alloc_main<F: Function>(
         }
     }
 
+    // There is one of these for every entry in `safepoint_insns`.
+    let mut stackmaps = Vec::<Vec<SpillSlot>>::new();
+
+    if !safepoint_insns.is_empty() {
+        info!("alloc_main:   create safepoints and stackmaps");
+        for safepoint_iix in safepoint_insns {
+            // Create the stackmap artefacts for `safepoint_iix`.  Save the stackmap (the
+            // reftyped spillslots); we'll have to return it to the client as part of the
+            // overall allocation result.  The extra spill and reload instructions can simply
+            // be added to `spills_n_reloads` though, and `edit_inst_stream` will correctly
+            // merge them in.
+            //
+            // Note: this modifies `spill_slot_allocator`, since at this point we have to
+            // allocate spill slots to hold reftyped real regs across the safepoint insn.
+            //
+            // Because the SB (spill-before) and RA (reload-after) `ExtPoint`s are "closer" to
+            // the "core" of an instruction than the R (reload) and S (spill) `ExtPoint`s, any
+            // "normal" reload or spill ranges that are reftyped will be handled correctly.
+            // From `get_stackmap_artefacts_at`s point of view, such spill/reload ranges are
+            // just like any other real-reg live range that it will have to spill around the
+            // safepoint.  The fact that they are for spills or reloads doesn't make any
+            // difference.
+            //
+            // Note also: this call can fail; failure is propagated upwards.
+            //
+            // FIXME Passing these 3 small vectors around is inefficient.  Use SmallVec or
+            // (better) owned-by-this-function vectors instead.
+            let (spills_before, reloads_after, reftyped_spillslots) = get_stackmap_artefacts_at(
+                &mut spill_slot_allocator,
+                &reg_universe,
+                reftype_class,
+                &reg_vecs_and_bounds,
+                &per_real_reg,
+                &rlr_env,
+                &vlr_env,
+                *safepoint_iix,
+            )?;
+            stackmaps.push(reftyped_spillslots);
+            for spill_before in spills_before {
+                spills_n_reloads.push(InstToInsertAndExtPoint::new(
+                    spill_before,
+                    InstExtPoint::new(*safepoint_iix, ExtPoint::SpillBefore),
+                ));
+            }
+            for reload_after in reloads_after {
+                spills_n_reloads.push(InstToInsertAndExtPoint::new(
+                    reload_after,
+                    InstExtPoint::new(*safepoint_iix, ExtPoint::ReloadAfter),
+                ));
+            }
+        }
+    }
+
     info!("alloc_main:   edit_inst_stream");
 
-    let final_insns_and_targetmap__or_err = edit_inst_stream(
+    let final_insns_and_targetmap_and_new_safepoints__or_err = edit_inst_stream(
         func,
+        &safepoint_insns,
         spills_n_reloads,
         &iixs_to_nop_out,
         frag_map,
@@ -1423,7 +1709,7 @@ pub fn alloc_main<F: Function>(
 
     // ======== BEGIN Create the RegAllocResult ========
 
-    match final_insns_and_targetmap__or_err {
+    match final_insns_and_targetmap_and_new_safepoints__or_err {
         Ok((ref final_insns, ..)) => {
             info!(
                 "alloc_main:   out: VLRs: {} initially, {} processed",
@@ -1450,16 +1736,17 @@ pub fn alloc_main<F: Function>(
         }
     }
 
-    let (final_insns, target_map, orig_insn_map) = match final_insns_and_targetmap__or_err {
-        Err(e) => {
-            info!("alloc_main: fail");
-            return Err(e);
-        }
-        Ok(pair) => {
-            info!("alloc_main:   creating RegAllocResult");
-            pair
-        }
-    };
+    let (final_insns, target_map, new_to_old_insn_map, new_safepoint_insns) =
+        match final_insns_and_targetmap_and_new_safepoints__or_err {
+            Err(e) => {
+                info!("alloc_main: fail");
+                return Err(e);
+            }
+            Ok(quad) => {
+                info!("alloc_main:   creating RegAllocResult");
+                quad
+            }
+        };
 
     // Compute clobbered registers with one final, quick pass.
     //
@@ -1475,7 +1762,7 @@ pub fn alloc_main<F: Function>(
 
     let mut clobbered_registers: Set<RealReg> = Set::empty();
 
-    // We'll dump all the reg uses in here.  We don't care the bounds, so just
+    // We'll dump all the reg uses in here.  We don't care about the bounds, so just
     // pass a dummy one in the loop.
     let mut reg_vecs = RegVecs::new(/*sanitized=*/ false);
     let mut dummy_bounds = RegVecBounds::new();
@@ -1509,13 +1796,17 @@ pub fn alloc_main<F: Function>(
         block_annotations = Some(anns);
     }
 
+    assert!(stackmaps.len() == safepoint_insns.len());
+    assert!(new_safepoint_insns.len() == safepoint_insns.len());
     let ra_res = RegAllocResult {
         insns: final_insns,
         target_map,
-        orig_insn_map,
+        orig_insn_map: new_to_old_insn_map,
         clobbered_registers,
         num_spill_slots: spill_slot_allocator.num_slots_in_use() as u32,
         block_annotations,
+        stackmaps,
+        new_safepoint_insns,
     };
 
     info!("alloc_main: end");

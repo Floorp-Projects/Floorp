@@ -1,5 +1,8 @@
-use super::{BinaryReader, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems};
+use super::{
+    BinaryReader, Range, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems,
+};
 
+#[derive(Clone)]
 pub struct ModuleSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -36,6 +39,9 @@ impl<'a> SectionReader for ModuleSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         ModuleSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

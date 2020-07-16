@@ -5,8 +5,8 @@
 
 use crate::binemit::CodeOffset;
 use crate::ir::types::{
-    B1, B16, B16X8, B32, B32X4, B64, B64X2, B8, B8X16, F32, F32X2, F32X4, F64, F64X2, FFLAGS, I128,
-    I16, I16X4, I16X8, I32, I32X2, I32X4, I64, I64X2, I8, I8X16, I8X8, IFLAGS,
+    B1, B16, B16X8, B32, B32X4, B64, B64X2, B8, B8X16, F32, F32X4, F64, F64X2, FFLAGS, I16, I16X8,
+    I32, I32X4, I64, I64X2, I8, I8X16, IFLAGS, R32, R64,
 };
 use crate::ir::{ExternalName, Opcode, SourceLoc, TrapCode, Type};
 use crate::machinst::*;
@@ -125,6 +125,14 @@ pub enum FPUOp2 {
     Max64,
     Min32,
     Min64,
+    /// Signed saturating add
+    Sqadd64,
+    /// Unsigned saturating add
+    Uqadd64,
+    /// Signed saturating subtract
+    Sqsub64,
+    /// Unsigned saturating subtract
+    Uqsub64,
 }
 
 /// A floating-point unit (FPU) operation with two args, a register and an immediate.
@@ -208,13 +216,13 @@ pub enum VecExtendOp {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum VecALUOp {
     /// Signed saturating add
-    SQAddScalar,
+    Sqadd,
     /// Unsigned saturating add
-    UQAddScalar,
+    Uqadd,
     /// Signed saturating subtract
-    SQSubScalar,
+    Sqsub,
     /// Unsigned saturating subtract
-    UQSubScalar,
+    Uqsub,
     /// Compare bitwise equal
     Cmeq,
     /// Compare signed greater than or equal
@@ -243,13 +251,25 @@ pub enum VecALUOp {
     Bsl,
     /// Unsigned maximum pairwise
     Umaxp,
+    /// Add
+    Add,
+    /// Subtract
+    Sub,
+    /// Multiply
+    Mul,
+    /// Signed shift left
+    Sshl,
+    /// Unsigned shift left
+    Ushl,
 }
 
 /// A Vector miscellaneous operation with two registers.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum VecMisc2 {
-    /// Bitwise NOT.
+    /// Bitwise NOT
     Not,
+    /// Negate
+    Neg,
 }
 
 /// An operation across the lanes of vectors.
@@ -275,10 +295,10 @@ pub enum BitOp {
 
 impl BitOp {
     /// What is the opcode's native width?
-    pub fn inst_size(&self) -> InstSize {
+    pub fn operand_size(&self) -> OperandSize {
         match self {
-            BitOp::RBit32 | BitOp::Clz32 | BitOp::Cls32 => InstSize::Size32,
-            _ => InstSize::Size64,
+            BitOp::RBit32 | BitOp::Clz32 | BitOp::Cls32 => OperandSize::Size32,
+            _ => OperandSize::Size64,
         }
     }
 
@@ -334,6 +354,7 @@ pub struct CallIndInfo {
 #[derive(Clone, Debug)]
 pub struct JTSequenceInfo {
     pub targets: Vec<BranchTarget>,
+    pub default_target: BranchTarget,
     pub targets_for_term: Vec<MachLabel>, // needed for MachTerminator.
 }
 
@@ -548,7 +569,7 @@ pub enum Inst {
 
     /// A conditional comparison with an immediate.
     CCmpImm {
-        size: InstSize,
+        size: OperandSize,
         rn: Reg,
         imm: UImm5,
         nzcv: NZCV,
@@ -573,7 +594,7 @@ pub enum Inst {
         rd: Writable<Reg>,
         rn: Reg,
         idx: u8,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// 1-op FPU instruction.
@@ -717,21 +738,21 @@ pub enum Inst {
         rd: Writable<Reg>,
         rn: Reg,
         idx: u8,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// Duplicate general-purpose register to vector.
     VecDup {
         rd: Writable<Reg>,
         rn: Reg,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// Duplicate scalar to vector.
     VecDupFromFpu {
         rd: Writable<Reg>,
         rn: Reg,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// Vector extend.
@@ -747,7 +768,7 @@ pub enum Inst {
         rd: Writable<Reg>,
         rn: Reg,
         rm: Reg,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// Vector two register miscellaneous instruction.
@@ -755,7 +776,7 @@ pub enum Inst {
         op: VecMisc2,
         rd: Writable<Reg>,
         rn: Reg,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// Vector instruction across lanes.
@@ -763,7 +784,7 @@ pub enum Inst {
         op: VecLanesOp,
         rd: Writable<Reg>,
         rn: Reg,
-        ty: Type,
+        size: VectorSize,
     },
 
     /// Move to the NZCV flags (actually a `MSR NZCV, Xn` insn).
@@ -817,20 +838,17 @@ pub enum Inst {
         kind: CondBrKind,
     },
 
-    /// A one-way conditional branch, invisible to the CFG processing; used *only* as part of
-    /// straight-line sequences in code to be emitted.
+    /// A conditional trap: execute a `udf` if the condition is true. This is
+    /// one VCode instruction because it uses embedded control flow; it is
+    /// logically a single-in, single-out region, but needs to appear as one
+    /// unit to the register allocator.
     ///
-    /// In more detail:
-    /// - This branch is lowered to a branch at the machine-code level, but does not end a basic
-    ///   block, and does not create edges in the CFG seen by regalloc.
-    /// - Thus, it is *only* valid to use as part of a single-in, single-out sequence that is
-    ///   lowered from a single CLIF instruction. For example, certain arithmetic operations may
-    ///   use these branches to handle certain conditions, such as overflows, traps, etc.
-    ///
-    /// See, e.g., the lowering of `trapif` (conditional trap) for an example.
-    OneWayCondBr {
-        target: BranchTarget,
+    /// The `CondBrKind` gives the conditional-branch condition that will
+    /// *execute* the embedded `Inst`. (In the emitted code, we use the inverse
+    /// of this condition in a branch that skips the trap instruction.)
+    TrapIf {
         kind: CondBrKind,
+        trap_info: (SourceLoc, TrapCode),
     },
 
     /// An indirect branch through a register, augmented with set of all
@@ -869,8 +887,7 @@ pub enum Inst {
         data: u64,
     },
 
-    /// Jump-table sequence, as one compound instruction (see note in lower.rs
-    /// for rationale).
+    /// Jump-table sequence, as one compound instruction (see note in lower_inst.rs for rationale).
     JTSequence {
         info: Box<JTSequenceInfo>,
         ridx: Reg,
@@ -1337,16 +1354,16 @@ fn aarch64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
             collector.add_use(rn);
         }
         &Inst::Jump { .. } | &Inst::Ret | &Inst::EpiloguePlaceholder => {}
-        &Inst::Call { ref info } => {
+        &Inst::Call { ref info, .. } => {
             collector.add_uses(&*info.uses);
             collector.add_defs(&*info.defs);
         }
-        &Inst::CallInd { ref info } => {
+        &Inst::CallInd { ref info, .. } => {
             collector.add_uses(&*info.uses);
             collector.add_defs(&*info.defs);
             collector.add_use(info.rn);
         }
-        &Inst::CondBr { ref kind, .. } | &Inst::OneWayCondBr { ref kind, .. } => match kind {
+        &Inst::CondBr { ref kind, .. } => match kind {
             CondBrKind::Zero(rt) | CondBrKind::NotZero(rt) => {
                 collector.add_use(*rt);
             }
@@ -1358,6 +1375,12 @@ fn aarch64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
         &Inst::Nop0 | Inst::Nop4 => {}
         &Inst::Brk => {}
         &Inst::Udf { .. } => {}
+        &Inst::TrapIf { ref kind, .. } => match kind {
+            CondBrKind::Zero(rt) | CondBrKind::NotZero(rt) => {
+                collector.add_use(*rt);
+            }
+            CondBrKind::Cond(_) => {}
+        },
         &Inst::Adr { rd, .. } => {
             collector.add_def(rd);
         }
@@ -1949,13 +1972,16 @@ fn aarch64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             }
             map_use(mapper, &mut info.rn);
         }
-        &mut Inst::CondBr { ref mut kind, .. } | &mut Inst::OneWayCondBr { ref mut kind, .. } => {
+        &mut Inst::CondBr { ref mut kind, .. } => {
             map_br(mapper, kind);
         }
         &mut Inst::IndirectBr { ref mut rn, .. } => {
             map_use(mapper, rn);
         }
         &mut Inst::Nop0 | &mut Inst::Nop4 | &mut Inst::Brk | &mut Inst::Udf { .. } => {}
+        &mut Inst::TrapIf { ref mut kind, .. } => {
+            map_br(mapper, kind);
+        }
         &mut Inst::Adr { ref mut rd, .. } => {
             map_def(mapper, rd);
         }
@@ -2026,10 +2052,6 @@ impl MachInst for Inst {
             &Inst::CondBr {
                 taken, not_taken, ..
             } => MachTerminator::Cond(taken.as_label().unwrap(), not_taken.as_label().unwrap()),
-            &Inst::OneWayCondBr { .. } => {
-                // Explicitly invisible to CFG processing.
-                MachTerminator::None
-            }
             &Inst::IndirectBr { ref targets, .. } => MachTerminator::Indirect(&targets[..]),
             &Inst::JTSequence { ref info, .. } => {
                 MachTerminator::Indirect(&info.targets_for_term[..])
@@ -2067,6 +2089,8 @@ impl MachInst for Inst {
                     || ty == B32
                     || ty == I64
                     || ty == B64
+                    || ty == R32
+                    || ty == R64
             );
             Inst::load_constant(to_reg, value)
         }
@@ -2088,7 +2112,7 @@ impl MachInst for Inst {
 
     fn rc_for_type(ty: Type) -> CodegenResult<RegClass> {
         match ty {
-            I8 | I16 | I32 | I64 | B1 | B8 | B16 | B32 | B64 => Ok(RegClass::I64),
+            I8 | I16 | I32 | I64 | B1 | B8 | B16 | B32 | B64 | R32 | R64 => Ok(RegClass::I64),
             F32 | F64 => Ok(RegClass::V128),
             IFLAGS | FFLAGS => Ok(RegClass::I64),
             B8X16 | I8X16 | B16X8 | I16X8 | B32X4 | I32X4 | B64X2 | I64X2 | F32X4 | F64X2 => {
@@ -2121,13 +2145,21 @@ impl MachInst for Inst {
         // feasible for other reasons).
         44
     }
+
+    fn ref_type_regclass(_: &settings::Flags) -> RegClass {
+        RegClass::I64
+    }
 }
 
 //=============================================================================
 // Pretty-printing of instructions.
 
-fn mem_finalize_for_show(mem: &MemArg, mb_rru: Option<&RealRegUniverse>) -> (String, MemArg) {
-    let (mem_insts, mem) = mem_finalize(0, mem, &mut Default::default());
+fn mem_finalize_for_show(
+    mem: &MemArg,
+    mb_rru: Option<&RealRegUniverse>,
+    state: &EmitState,
+) -> (String, MemArg) {
+    let (mem_insts, mem) = mem_finalize(0, mem, state);
     let mut mem_str = mem_insts
         .into_iter()
         .map(|inst| inst.show_rru(mb_rru))
@@ -2142,45 +2174,51 @@ fn mem_finalize_for_show(mem: &MemArg, mb_rru: Option<&RealRegUniverse>) -> (Str
 
 impl ShowWithRRU for Inst {
     fn show_rru(&self, mb_rru: Option<&RealRegUniverse>) -> String {
-        fn op_name_size(alu_op: ALUOp) -> (&'static str, InstSize) {
+        self.pretty_print(mb_rru, &mut EmitState::default())
+    }
+}
+
+impl Inst {
+    fn print_with_state(&self, mb_rru: Option<&RealRegUniverse>, state: &mut EmitState) -> String {
+        fn op_name_size(alu_op: ALUOp) -> (&'static str, OperandSize) {
             match alu_op {
-                ALUOp::Add32 => ("add", InstSize::Size32),
-                ALUOp::Add64 => ("add", InstSize::Size64),
-                ALUOp::Sub32 => ("sub", InstSize::Size32),
-                ALUOp::Sub64 => ("sub", InstSize::Size64),
-                ALUOp::Orr32 => ("orr", InstSize::Size32),
-                ALUOp::Orr64 => ("orr", InstSize::Size64),
-                ALUOp::And32 => ("and", InstSize::Size32),
-                ALUOp::And64 => ("and", InstSize::Size64),
-                ALUOp::Eor32 => ("eor", InstSize::Size32),
-                ALUOp::Eor64 => ("eor", InstSize::Size64),
-                ALUOp::AddS32 => ("adds", InstSize::Size32),
-                ALUOp::AddS64 => ("adds", InstSize::Size64),
-                ALUOp::SubS32 => ("subs", InstSize::Size32),
-                ALUOp::SubS64 => ("subs", InstSize::Size64),
-                ALUOp::SubS64XR => ("subs", InstSize::Size64),
-                ALUOp::MAdd32 => ("madd", InstSize::Size32),
-                ALUOp::MAdd64 => ("madd", InstSize::Size64),
-                ALUOp::MSub32 => ("msub", InstSize::Size32),
-                ALUOp::MSub64 => ("msub", InstSize::Size64),
-                ALUOp::SMulH => ("smulh", InstSize::Size64),
-                ALUOp::UMulH => ("umulh", InstSize::Size64),
-                ALUOp::SDiv64 => ("sdiv", InstSize::Size64),
-                ALUOp::UDiv64 => ("udiv", InstSize::Size64),
-                ALUOp::AndNot32 => ("bic", InstSize::Size32),
-                ALUOp::AndNot64 => ("bic", InstSize::Size64),
-                ALUOp::OrrNot32 => ("orn", InstSize::Size32),
-                ALUOp::OrrNot64 => ("orn", InstSize::Size64),
-                ALUOp::EorNot32 => ("eon", InstSize::Size32),
-                ALUOp::EorNot64 => ("eon", InstSize::Size64),
-                ALUOp::RotR32 => ("ror", InstSize::Size32),
-                ALUOp::RotR64 => ("ror", InstSize::Size64),
-                ALUOp::Lsr32 => ("lsr", InstSize::Size32),
-                ALUOp::Lsr64 => ("lsr", InstSize::Size64),
-                ALUOp::Asr32 => ("asr", InstSize::Size32),
-                ALUOp::Asr64 => ("asr", InstSize::Size64),
-                ALUOp::Lsl32 => ("lsl", InstSize::Size32),
-                ALUOp::Lsl64 => ("lsl", InstSize::Size64),
+                ALUOp::Add32 => ("add", OperandSize::Size32),
+                ALUOp::Add64 => ("add", OperandSize::Size64),
+                ALUOp::Sub32 => ("sub", OperandSize::Size32),
+                ALUOp::Sub64 => ("sub", OperandSize::Size64),
+                ALUOp::Orr32 => ("orr", OperandSize::Size32),
+                ALUOp::Orr64 => ("orr", OperandSize::Size64),
+                ALUOp::And32 => ("and", OperandSize::Size32),
+                ALUOp::And64 => ("and", OperandSize::Size64),
+                ALUOp::Eor32 => ("eor", OperandSize::Size32),
+                ALUOp::Eor64 => ("eor", OperandSize::Size64),
+                ALUOp::AddS32 => ("adds", OperandSize::Size32),
+                ALUOp::AddS64 => ("adds", OperandSize::Size64),
+                ALUOp::SubS32 => ("subs", OperandSize::Size32),
+                ALUOp::SubS64 => ("subs", OperandSize::Size64),
+                ALUOp::SubS64XR => ("subs", OperandSize::Size64),
+                ALUOp::MAdd32 => ("madd", OperandSize::Size32),
+                ALUOp::MAdd64 => ("madd", OperandSize::Size64),
+                ALUOp::MSub32 => ("msub", OperandSize::Size32),
+                ALUOp::MSub64 => ("msub", OperandSize::Size64),
+                ALUOp::SMulH => ("smulh", OperandSize::Size64),
+                ALUOp::UMulH => ("umulh", OperandSize::Size64),
+                ALUOp::SDiv64 => ("sdiv", OperandSize::Size64),
+                ALUOp::UDiv64 => ("udiv", OperandSize::Size64),
+                ALUOp::AndNot32 => ("bic", OperandSize::Size32),
+                ALUOp::AndNot64 => ("bic", OperandSize::Size64),
+                ALUOp::OrrNot32 => ("orn", OperandSize::Size32),
+                ALUOp::OrrNot64 => ("orn", OperandSize::Size64),
+                ALUOp::EorNot32 => ("eon", OperandSize::Size32),
+                ALUOp::EorNot64 => ("eon", OperandSize::Size64),
+                ALUOp::RotR32 => ("ror", OperandSize::Size32),
+                ALUOp::RotR64 => ("ror", OperandSize::Size64),
+                ALUOp::Lsr32 => ("lsr", OperandSize::Size32),
+                ALUOp::Lsr64 => ("lsr", OperandSize::Size64),
+                ALUOp::Asr32 => ("asr", OperandSize::Size32),
+                ALUOp::Asr64 => ("asr", OperandSize::Size64),
+                ALUOp::Lsl32 => ("lsl", OperandSize::Size32),
+                ALUOp::Lsl64 => ("lsl", OperandSize::Size64),
             }
         }
 
@@ -2286,7 +2324,7 @@ impl ShowWithRRU for Inst {
                 format!("{} {}, {}, {}, {}", op, rd, rn, rm, extendop)
             }
             &Inst::BitRR { op, rd, rn } => {
-                let size = op.inst_size();
+                let size = op.operand_size();
                 let op = op.op_str();
                 let rd = show_ireg_sized(rd.to_reg(), mb_rru, size);
                 let rn = show_ireg_sized(rn, mb_rru, size);
@@ -2328,27 +2366,27 @@ impl ShowWithRRU for Inst {
                 srcloc: _srcloc,
                 ..
             } => {
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
 
                 let is_unscaled = match &mem {
                     &MemArg::Unscaled(..) => true,
                     _ => false,
                 };
                 let (op, size) = match (self, is_unscaled) {
-                    (&Inst::ULoad8 { .. }, false) => ("ldrb", InstSize::Size32),
-                    (&Inst::ULoad8 { .. }, true) => ("ldurb", InstSize::Size32),
-                    (&Inst::SLoad8 { .. }, false) => ("ldrsb", InstSize::Size64),
-                    (&Inst::SLoad8 { .. }, true) => ("ldursb", InstSize::Size64),
-                    (&Inst::ULoad16 { .. }, false) => ("ldrh", InstSize::Size32),
-                    (&Inst::ULoad16 { .. }, true) => ("ldurh", InstSize::Size32),
-                    (&Inst::SLoad16 { .. }, false) => ("ldrsh", InstSize::Size64),
-                    (&Inst::SLoad16 { .. }, true) => ("ldursh", InstSize::Size64),
-                    (&Inst::ULoad32 { .. }, false) => ("ldr", InstSize::Size32),
-                    (&Inst::ULoad32 { .. }, true) => ("ldur", InstSize::Size32),
-                    (&Inst::SLoad32 { .. }, false) => ("ldrsw", InstSize::Size64),
-                    (&Inst::SLoad32 { .. }, true) => ("ldursw", InstSize::Size64),
-                    (&Inst::ULoad64 { .. }, false) => ("ldr", InstSize::Size64),
-                    (&Inst::ULoad64 { .. }, true) => ("ldur", InstSize::Size64),
+                    (&Inst::ULoad8 { .. }, false) => ("ldrb", OperandSize::Size32),
+                    (&Inst::ULoad8 { .. }, true) => ("ldurb", OperandSize::Size32),
+                    (&Inst::SLoad8 { .. }, false) => ("ldrsb", OperandSize::Size64),
+                    (&Inst::SLoad8 { .. }, true) => ("ldursb", OperandSize::Size64),
+                    (&Inst::ULoad16 { .. }, false) => ("ldrh", OperandSize::Size32),
+                    (&Inst::ULoad16 { .. }, true) => ("ldurh", OperandSize::Size32),
+                    (&Inst::SLoad16 { .. }, false) => ("ldrsh", OperandSize::Size64),
+                    (&Inst::SLoad16 { .. }, true) => ("ldursh", OperandSize::Size64),
+                    (&Inst::ULoad32 { .. }, false) => ("ldr", OperandSize::Size32),
+                    (&Inst::ULoad32 { .. }, true) => ("ldur", OperandSize::Size32),
+                    (&Inst::SLoad32 { .. }, false) => ("ldrsw", OperandSize::Size64),
+                    (&Inst::SLoad32 { .. }, true) => ("ldursw", OperandSize::Size64),
+                    (&Inst::ULoad64 { .. }, false) => ("ldr", OperandSize::Size64),
+                    (&Inst::ULoad64 { .. }, true) => ("ldur", OperandSize::Size64),
                     _ => unreachable!(),
                 };
                 let rd = show_ireg_sized(rd.to_reg(), mb_rru, size);
@@ -2376,21 +2414,21 @@ impl ShowWithRRU for Inst {
                 srcloc: _srcloc,
                 ..
             } => {
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
 
                 let is_unscaled = match &mem {
                     &MemArg::Unscaled(..) => true,
                     _ => false,
                 };
                 let (op, size) = match (self, is_unscaled) {
-                    (&Inst::Store8 { .. }, false) => ("strb", InstSize::Size32),
-                    (&Inst::Store8 { .. }, true) => ("sturb", InstSize::Size32),
-                    (&Inst::Store16 { .. }, false) => ("strh", InstSize::Size32),
-                    (&Inst::Store16 { .. }, true) => ("sturh", InstSize::Size32),
-                    (&Inst::Store32 { .. }, false) => ("str", InstSize::Size32),
-                    (&Inst::Store32 { .. }, true) => ("stur", InstSize::Size32),
-                    (&Inst::Store64 { .. }, false) => ("str", InstSize::Size64),
-                    (&Inst::Store64 { .. }, true) => ("stur", InstSize::Size64),
+                    (&Inst::Store8 { .. }, false) => ("strb", OperandSize::Size32),
+                    (&Inst::Store8 { .. }, true) => ("sturb", OperandSize::Size32),
+                    (&Inst::Store16 { .. }, false) => ("strh", OperandSize::Size32),
+                    (&Inst::Store16 { .. }, true) => ("sturh", OperandSize::Size32),
+                    (&Inst::Store32 { .. }, false) => ("str", OperandSize::Size32),
+                    (&Inst::Store32 { .. }, true) => ("stur", OperandSize::Size32),
+                    (&Inst::Store64 { .. }, false) => ("str", OperandSize::Size64),
+                    (&Inst::Store64 { .. }, true) => ("stur", OperandSize::Size64),
                     _ => unreachable!(),
                 };
                 let rd = show_ireg_sized(rd, mb_rru, size);
@@ -2415,8 +2453,8 @@ impl ShowWithRRU for Inst {
                 format!("mov {}, {}", rd, rm)
             }
             &Inst::Mov32 { rd, rm } => {
-                let rd = show_ireg_sized(rd.to_reg(), mb_rru, InstSize::Size32);
-                let rm = show_ireg_sized(rm, mb_rru, InstSize::Size32);
+                let rd = show_ireg_sized(rd.to_reg(), mb_rru, OperandSize::Size32);
+                let rm = show_ireg_sized(rm, mb_rru, OperandSize::Size32);
                 format!("mov {}, {}", rd, rm)
             }
             &Inst::MovZ { rd, ref imm } => {
@@ -2469,44 +2507,48 @@ impl ShowWithRRU for Inst {
                 let rn = rn.show_rru(mb_rru);
                 format!("mov {}.16b, {}.16b", rd, rn)
             }
-            &Inst::FpuMoveFromVec { rd, rn, idx, ty } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::from_ty(ty));
-                let rn = show_vreg_element(rn, mb_rru, idx, ty);
+            &Inst::FpuMoveFromVec { rd, rn, idx, size } => {
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, size.lane_size());
+                let rn = show_vreg_element(rn, mb_rru, idx, size);
                 format!("mov {}, {}", rd, rn)
             }
             &Inst::FpuRR { fpu_op, rd, rn } => {
                 let (op, sizesrc, sizedest) = match fpu_op {
-                    FPUOp1::Abs32 => ("fabs", InstSize::Size32, InstSize::Size32),
-                    FPUOp1::Abs64 => ("fabs", InstSize::Size64, InstSize::Size64),
-                    FPUOp1::Neg32 => ("fneg", InstSize::Size32, InstSize::Size32),
-                    FPUOp1::Neg64 => ("fneg", InstSize::Size64, InstSize::Size64),
-                    FPUOp1::Sqrt32 => ("fsqrt", InstSize::Size32, InstSize::Size32),
-                    FPUOp1::Sqrt64 => ("fsqrt", InstSize::Size64, InstSize::Size64),
-                    FPUOp1::Cvt32To64 => ("fcvt", InstSize::Size32, InstSize::Size64),
-                    FPUOp1::Cvt64To32 => ("fcvt", InstSize::Size64, InstSize::Size32),
+                    FPUOp1::Abs32 => ("fabs", ScalarSize::Size32, ScalarSize::Size32),
+                    FPUOp1::Abs64 => ("fabs", ScalarSize::Size64, ScalarSize::Size64),
+                    FPUOp1::Neg32 => ("fneg", ScalarSize::Size32, ScalarSize::Size32),
+                    FPUOp1::Neg64 => ("fneg", ScalarSize::Size64, ScalarSize::Size64),
+                    FPUOp1::Sqrt32 => ("fsqrt", ScalarSize::Size32, ScalarSize::Size32),
+                    FPUOp1::Sqrt64 => ("fsqrt", ScalarSize::Size64, ScalarSize::Size64),
+                    FPUOp1::Cvt32To64 => ("fcvt", ScalarSize::Size32, ScalarSize::Size64),
+                    FPUOp1::Cvt64To32 => ("fcvt", ScalarSize::Size64, ScalarSize::Size32),
                 };
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, sizedest);
-                let rn = show_freg_sized(rn, mb_rru, sizesrc);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, sizedest);
+                let rn = show_vreg_scalar(rn, mb_rru, sizesrc);
                 format!("{} {}, {}", op, rd, rn)
             }
             &Inst::FpuRRR { fpu_op, rd, rn, rm } => {
                 let (op, size) = match fpu_op {
-                    FPUOp2::Add32 => ("fadd", InstSize::Size32),
-                    FPUOp2::Add64 => ("fadd", InstSize::Size64),
-                    FPUOp2::Sub32 => ("fsub", InstSize::Size32),
-                    FPUOp2::Sub64 => ("fsub", InstSize::Size64),
-                    FPUOp2::Mul32 => ("fmul", InstSize::Size32),
-                    FPUOp2::Mul64 => ("fmul", InstSize::Size64),
-                    FPUOp2::Div32 => ("fdiv", InstSize::Size32),
-                    FPUOp2::Div64 => ("fdiv", InstSize::Size64),
-                    FPUOp2::Max32 => ("fmax", InstSize::Size32),
-                    FPUOp2::Max64 => ("fmax", InstSize::Size64),
-                    FPUOp2::Min32 => ("fmin", InstSize::Size32),
-                    FPUOp2::Min64 => ("fmin", InstSize::Size64),
+                    FPUOp2::Add32 => ("fadd", ScalarSize::Size32),
+                    FPUOp2::Add64 => ("fadd", ScalarSize::Size64),
+                    FPUOp2::Sub32 => ("fsub", ScalarSize::Size32),
+                    FPUOp2::Sub64 => ("fsub", ScalarSize::Size64),
+                    FPUOp2::Mul32 => ("fmul", ScalarSize::Size32),
+                    FPUOp2::Mul64 => ("fmul", ScalarSize::Size64),
+                    FPUOp2::Div32 => ("fdiv", ScalarSize::Size32),
+                    FPUOp2::Div64 => ("fdiv", ScalarSize::Size64),
+                    FPUOp2::Max32 => ("fmax", ScalarSize::Size32),
+                    FPUOp2::Max64 => ("fmax", ScalarSize::Size64),
+                    FPUOp2::Min32 => ("fmin", ScalarSize::Size32),
+                    FPUOp2::Min64 => ("fmin", ScalarSize::Size64),
+                    FPUOp2::Sqadd64 => ("sqadd", ScalarSize::Size64),
+                    FPUOp2::Uqadd64 => ("uqadd", ScalarSize::Size64),
+                    FPUOp2::Sqsub64 => ("sqsub", ScalarSize::Size64),
+                    FPUOp2::Uqsub64 => ("uqsub", ScalarSize::Size64),
                 };
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, size);
-                let rn = show_freg_sized(rn, mb_rru, size);
-                let rm = show_freg_sized(rm, mb_rru, size);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, size);
+                let rn = show_vreg_scalar(rn, mb_rru, size);
+                let rm = show_vreg_scalar(rm, mb_rru, size);
                 format!("{} {}, {}, {}", op, rd, rn, rm)
             }
             &Inst::FpuRRI { fpu_op, rd, rn } => {
@@ -2518,9 +2560,9 @@ impl ShowWithRRU for Inst {
                 };
 
                 let show_vreg_fn: fn(Reg, Option<&RealRegUniverse>) -> String = if vector {
-                    |reg, mb_rru| show_vreg_vector(reg, mb_rru, F32X2)
+                    |reg, mb_rru| show_vreg_vector(reg, mb_rru, VectorSize::Size32x2)
                 } else {
-                    |reg, mb_rru| show_vreg_scalar(reg, mb_rru, F64)
+                    |reg, mb_rru| show_vreg_scalar(reg, mb_rru, ScalarSize::Size64)
                 };
                 let rd = show_vreg_fn(rd.to_reg(), mb_rru);
                 let rn = show_vreg_fn(rn, mb_rru);
@@ -2534,132 +2576,132 @@ impl ShowWithRRU for Inst {
                 ra,
             } => {
                 let (op, size) = match fpu_op {
-                    FPUOp3::MAdd32 => ("fmadd", InstSize::Size32),
-                    FPUOp3::MAdd64 => ("fmadd", InstSize::Size64),
+                    FPUOp3::MAdd32 => ("fmadd", ScalarSize::Size32),
+                    FPUOp3::MAdd64 => ("fmadd", ScalarSize::Size64),
                 };
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, size);
-                let rn = show_freg_sized(rn, mb_rru, size);
-                let rm = show_freg_sized(rm, mb_rru, size);
-                let ra = show_freg_sized(ra, mb_rru, size);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, size);
+                let rn = show_vreg_scalar(rn, mb_rru, size);
+                let rm = show_vreg_scalar(rm, mb_rru, size);
+                let ra = show_vreg_scalar(ra, mb_rru, size);
                 format!("{} {}, {}, {}, {}", op, rd, rn, rm, ra)
             }
             &Inst::FpuCmp32 { rn, rm } => {
-                let rn = show_freg_sized(rn, mb_rru, InstSize::Size32);
-                let rm = show_freg_sized(rm, mb_rru, InstSize::Size32);
+                let rn = show_vreg_scalar(rn, mb_rru, ScalarSize::Size32);
+                let rm = show_vreg_scalar(rm, mb_rru, ScalarSize::Size32);
                 format!("fcmp {}, {}", rn, rm)
             }
             &Inst::FpuCmp64 { rn, rm } => {
-                let rn = show_freg_sized(rn, mb_rru, InstSize::Size64);
-                let rm = show_freg_sized(rm, mb_rru, InstSize::Size64);
+                let rn = show_vreg_scalar(rn, mb_rru, ScalarSize::Size64);
+                let rm = show_vreg_scalar(rm, mb_rru, ScalarSize::Size64);
                 format!("fcmp {}, {}", rn, rm)
             }
             &Inst::FpuLoad32 { rd, ref mem, .. } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size32);
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size32);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
                 let mem = mem.show_rru(mb_rru);
                 format!("{}ldr {}, {}", mem_str, rd, mem)
             }
             &Inst::FpuLoad64 { rd, ref mem, .. } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size64);
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size64);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
                 let mem = mem.show_rru(mb_rru);
                 format!("{}ldr {}, {}", mem_str, rd, mem)
             }
             &Inst::FpuLoad128 { rd, ref mem, .. } => {
                 let rd = rd.to_reg().show_rru(mb_rru);
                 let rd = "q".to_string() + &rd[1..];
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
                 let mem = mem.show_rru(mb_rru);
                 format!("{}ldr {}, {}", mem_str, rd, mem)
             }
             &Inst::FpuStore32 { rd, ref mem, .. } => {
-                let rd = show_freg_sized(rd, mb_rru, InstSize::Size32);
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let rd = show_vreg_scalar(rd, mb_rru, ScalarSize::Size32);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
                 let mem = mem.show_rru(mb_rru);
                 format!("{}str {}, {}", mem_str, rd, mem)
             }
             &Inst::FpuStore64 { rd, ref mem, .. } => {
-                let rd = show_freg_sized(rd, mb_rru, InstSize::Size64);
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let rd = show_vreg_scalar(rd, mb_rru, ScalarSize::Size64);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
                 let mem = mem.show_rru(mb_rru);
                 format!("{}str {}, {}", mem_str, rd, mem)
             }
             &Inst::FpuStore128 { rd, ref mem, .. } => {
                 let rd = rd.show_rru(mb_rru);
                 let rd = "q".to_string() + &rd[1..];
-                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru);
+                let (mem_str, mem) = mem_finalize_for_show(mem, mb_rru, state);
                 let mem = mem.show_rru(mb_rru);
                 format!("{}str {}, {}", mem_str, rd, mem)
             }
             &Inst::LoadFpuConst32 { rd, const_data } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size32);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size32);
                 format!("ldr {}, pc+8 ; b 8 ; data.f32 {}", rd, const_data)
             }
             &Inst::LoadFpuConst64 { rd, const_data } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size64);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size64);
                 format!("ldr {}, pc+8 ; b 12 ; data.f64 {}", rd, const_data)
             }
             &Inst::LoadFpuConst128 { rd, const_data } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size128);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size128);
                 format!("ldr {}, pc+8 ; b 20 ; data.f128 0x{:032x}", rd, const_data)
             }
             &Inst::FpuToInt { op, rd, rn } => {
                 let (op, sizesrc, sizedest) = match op {
-                    FpuToIntOp::F32ToI32 => ("fcvtzs", InstSize::Size32, InstSize::Size32),
-                    FpuToIntOp::F32ToU32 => ("fcvtzu", InstSize::Size32, InstSize::Size32),
-                    FpuToIntOp::F32ToI64 => ("fcvtzs", InstSize::Size32, InstSize::Size64),
-                    FpuToIntOp::F32ToU64 => ("fcvtzu", InstSize::Size32, InstSize::Size64),
-                    FpuToIntOp::F64ToI32 => ("fcvtzs", InstSize::Size64, InstSize::Size32),
-                    FpuToIntOp::F64ToU32 => ("fcvtzu", InstSize::Size64, InstSize::Size32),
-                    FpuToIntOp::F64ToI64 => ("fcvtzs", InstSize::Size64, InstSize::Size64),
-                    FpuToIntOp::F64ToU64 => ("fcvtzu", InstSize::Size64, InstSize::Size64),
+                    FpuToIntOp::F32ToI32 => ("fcvtzs", ScalarSize::Size32, OperandSize::Size32),
+                    FpuToIntOp::F32ToU32 => ("fcvtzu", ScalarSize::Size32, OperandSize::Size32),
+                    FpuToIntOp::F32ToI64 => ("fcvtzs", ScalarSize::Size32, OperandSize::Size64),
+                    FpuToIntOp::F32ToU64 => ("fcvtzu", ScalarSize::Size32, OperandSize::Size64),
+                    FpuToIntOp::F64ToI32 => ("fcvtzs", ScalarSize::Size64, OperandSize::Size32),
+                    FpuToIntOp::F64ToU32 => ("fcvtzu", ScalarSize::Size64, OperandSize::Size32),
+                    FpuToIntOp::F64ToI64 => ("fcvtzs", ScalarSize::Size64, OperandSize::Size64),
+                    FpuToIntOp::F64ToU64 => ("fcvtzu", ScalarSize::Size64, OperandSize::Size64),
                 };
                 let rd = show_ireg_sized(rd.to_reg(), mb_rru, sizedest);
-                let rn = show_freg_sized(rn, mb_rru, sizesrc);
+                let rn = show_vreg_scalar(rn, mb_rru, sizesrc);
                 format!("{} {}, {}", op, rd, rn)
             }
             &Inst::IntToFpu { op, rd, rn } => {
                 let (op, sizesrc, sizedest) = match op {
-                    IntToFpuOp::I32ToF32 => ("scvtf", InstSize::Size32, InstSize::Size32),
-                    IntToFpuOp::U32ToF32 => ("ucvtf", InstSize::Size32, InstSize::Size32),
-                    IntToFpuOp::I64ToF32 => ("scvtf", InstSize::Size64, InstSize::Size32),
-                    IntToFpuOp::U64ToF32 => ("ucvtf", InstSize::Size64, InstSize::Size32),
-                    IntToFpuOp::I32ToF64 => ("scvtf", InstSize::Size32, InstSize::Size64),
-                    IntToFpuOp::U32ToF64 => ("ucvtf", InstSize::Size32, InstSize::Size64),
-                    IntToFpuOp::I64ToF64 => ("scvtf", InstSize::Size64, InstSize::Size64),
-                    IntToFpuOp::U64ToF64 => ("ucvtf", InstSize::Size64, InstSize::Size64),
+                    IntToFpuOp::I32ToF32 => ("scvtf", OperandSize::Size32, ScalarSize::Size32),
+                    IntToFpuOp::U32ToF32 => ("ucvtf", OperandSize::Size32, ScalarSize::Size32),
+                    IntToFpuOp::I64ToF32 => ("scvtf", OperandSize::Size64, ScalarSize::Size32),
+                    IntToFpuOp::U64ToF32 => ("ucvtf", OperandSize::Size64, ScalarSize::Size32),
+                    IntToFpuOp::I32ToF64 => ("scvtf", OperandSize::Size32, ScalarSize::Size64),
+                    IntToFpuOp::U32ToF64 => ("ucvtf", OperandSize::Size32, ScalarSize::Size64),
+                    IntToFpuOp::I64ToF64 => ("scvtf", OperandSize::Size64, ScalarSize::Size64),
+                    IntToFpuOp::U64ToF64 => ("ucvtf", OperandSize::Size64, ScalarSize::Size64),
                 };
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, sizedest);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, sizedest);
                 let rn = show_ireg_sized(rn, mb_rru, sizesrc);
                 format!("{} {}, {}", op, rd, rn)
             }
             &Inst::FpuCSel32 { rd, rn, rm, cond } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size32);
-                let rn = show_freg_sized(rn, mb_rru, InstSize::Size32);
-                let rm = show_freg_sized(rm, mb_rru, InstSize::Size32);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size32);
+                let rn = show_vreg_scalar(rn, mb_rru, ScalarSize::Size32);
+                let rm = show_vreg_scalar(rm, mb_rru, ScalarSize::Size32);
                 let cond = cond.show_rru(mb_rru);
                 format!("fcsel {}, {}, {}, {}", rd, rn, rm, cond)
             }
             &Inst::FpuCSel64 { rd, rn, rm, cond } => {
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, InstSize::Size64);
-                let rn = show_freg_sized(rn, mb_rru, InstSize::Size64);
-                let rm = show_freg_sized(rm, mb_rru, InstSize::Size64);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ScalarSize::Size64);
+                let rn = show_vreg_scalar(rn, mb_rru, ScalarSize::Size64);
+                let rm = show_vreg_scalar(rm, mb_rru, ScalarSize::Size64);
                 let cond = cond.show_rru(mb_rru);
                 format!("fcsel {}, {}, {}, {}", rd, rn, rm, cond)
             }
             &Inst::FpuRound { op, rd, rn } => {
                 let (inst, size) = match op {
-                    FpuRoundMode::Minus32 => ("frintm", InstSize::Size32),
-                    FpuRoundMode::Minus64 => ("frintm", InstSize::Size64),
-                    FpuRoundMode::Plus32 => ("frintp", InstSize::Size32),
-                    FpuRoundMode::Plus64 => ("frintp", InstSize::Size64),
-                    FpuRoundMode::Zero32 => ("frintz", InstSize::Size32),
-                    FpuRoundMode::Zero64 => ("frintz", InstSize::Size64),
-                    FpuRoundMode::Nearest32 => ("frintn", InstSize::Size32),
-                    FpuRoundMode::Nearest64 => ("frintn", InstSize::Size64),
+                    FpuRoundMode::Minus32 => ("frintm", ScalarSize::Size32),
+                    FpuRoundMode::Minus64 => ("frintm", ScalarSize::Size64),
+                    FpuRoundMode::Plus32 => ("frintp", ScalarSize::Size32),
+                    FpuRoundMode::Plus64 => ("frintp", ScalarSize::Size64),
+                    FpuRoundMode::Zero32 => ("frintz", ScalarSize::Size32),
+                    FpuRoundMode::Zero64 => ("frintz", ScalarSize::Size64),
+                    FpuRoundMode::Nearest32 => ("frintn", ScalarSize::Size32),
+                    FpuRoundMode::Nearest64 => ("frintn", ScalarSize::Size64),
                 };
-                let rd = show_freg_sized(rd.to_reg(), mb_rru, size);
-                let rn = show_freg_sized(rn, mb_rru, size);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, size);
+                let rn = show_vreg_scalar(rn, mb_rru, size);
                 format!("{} {}, {}", inst, rd, rn)
             }
             &Inst::MovToVec64 { rd, rn } => {
@@ -2667,45 +2709,36 @@ impl ShowWithRRU for Inst {
                 let rn = rn.show_rru(mb_rru);
                 format!("mov {}.d[0], {}", rd, rn)
             }
-            &Inst::MovFromVec { rd, rn, idx, ty } => {
-                let op = match ty {
-                    I32 | I64 => "mov",
-                    _ => "umov",
+            &Inst::MovFromVec { rd, rn, idx, size } => {
+                let op = match size {
+                    VectorSize::Size8x16 => "umov",
+                    VectorSize::Size16x8 => "umov",
+                    VectorSize::Size32x4 => "mov",
+                    VectorSize::Size64x2 => "mov",
+                    _ => unimplemented!(),
                 };
-                let rd = show_ireg_sized(rd.to_reg(), mb_rru, InstSize::from_ty(ty));
-                let rn = show_vreg_element(rn, mb_rru, idx, ty);
+                let rd = show_ireg_sized(rd.to_reg(), mb_rru, size.operand_size());
+                let rn = show_vreg_element(rn, mb_rru, idx, size);
                 format!("{} {}, {}", op, rd, rn)
             }
-            &Inst::VecDup { rd, rn, ty } => {
-                let vector_type = match ty {
-                    I8 => I8X16,
-                    I16 => I16X8,
-                    I32 => I32X4,
-                    I64 => I64X2,
-                    _ => unimplemented!(),
-                };
-                let rd = show_vreg_vector(rd.to_reg(), mb_rru, vector_type);
-                let rn = show_ireg_sized(rn, mb_rru, InstSize::from_ty(ty));
+            &Inst::VecDup { rd, rn, size } => {
+                let rd = show_vreg_vector(rd.to_reg(), mb_rru, size);
+                let rn = show_ireg_sized(rn, mb_rru, size.operand_size());
                 format!("dup {}, {}", rd, rn)
             }
-            &Inst::VecDupFromFpu { rd, rn, ty } => {
-                let vector_type = match ty {
-                    F32 => F32X4,
-                    F64 => F64X2,
-                    _ => unimplemented!(),
-                };
-                let rd = show_vreg_vector(rd.to_reg(), mb_rru, vector_type);
-                let rn = show_vreg_element(rn, mb_rru, 0, ty);
+            &Inst::VecDupFromFpu { rd, rn, size } => {
+                let rd = show_vreg_vector(rd.to_reg(), mb_rru, size);
+                let rn = show_vreg_element(rn, mb_rru, 0, size);
                 format!("dup {}, {}", rd, rn)
             }
             &Inst::VecExtend { t, rd, rn } => {
                 let (op, dest, src) = match t {
-                    VecExtendOp::Sxtl8 => ("sxtl", I16X8, I8X8),
-                    VecExtendOp::Sxtl16 => ("sxtl", I32X4, I16X4),
-                    VecExtendOp::Sxtl32 => ("sxtl", I64X2, I32X2),
-                    VecExtendOp::Uxtl8 => ("uxtl", I16X8, I8X8),
-                    VecExtendOp::Uxtl16 => ("uxtl", I32X4, I16X4),
-                    VecExtendOp::Uxtl32 => ("uxtl", I64X2, I32X2),
+                    VecExtendOp::Sxtl8 => ("sxtl", VectorSize::Size16x8, VectorSize::Size8x8),
+                    VecExtendOp::Sxtl16 => ("sxtl", VectorSize::Size32x4, VectorSize::Size16x4),
+                    VecExtendOp::Sxtl32 => ("sxtl", VectorSize::Size64x2, VectorSize::Size32x2),
+                    VecExtendOp::Uxtl8 => ("uxtl", VectorSize::Size16x8, VectorSize::Size8x8),
+                    VecExtendOp::Uxtl16 => ("uxtl", VectorSize::Size32x4, VectorSize::Size16x4),
+                    VecExtendOp::Uxtl32 => ("uxtl", VectorSize::Size64x2, VectorSize::Size32x2),
                 };
                 let rd = show_vreg_vector(rd.to_reg(), mb_rru, dest);
                 let rn = show_vreg_vector(rn, mb_rru, src);
@@ -2716,61 +2749,54 @@ impl ShowWithRRU for Inst {
                 rn,
                 rm,
                 alu_op,
-                ty,
+                size,
             } => {
-                let (op, vector, ty) = match alu_op {
-                    VecALUOp::SQAddScalar => ("sqadd", false, ty),
-                    VecALUOp::UQAddScalar => ("uqadd", false, ty),
-                    VecALUOp::SQSubScalar => ("sqsub", false, ty),
-                    VecALUOp::UQSubScalar => ("uqsub", false, ty),
-                    VecALUOp::Cmeq => ("cmeq", true, ty),
-                    VecALUOp::Cmge => ("cmge", true, ty),
-                    VecALUOp::Cmgt => ("cmgt", true, ty),
-                    VecALUOp::Cmhs => ("cmhs", true, ty),
-                    VecALUOp::Cmhi => ("cmhi", true, ty),
-                    VecALUOp::Fcmeq => ("fcmeq", true, ty),
-                    VecALUOp::Fcmgt => ("fcmgt", true, ty),
-                    VecALUOp::Fcmge => ("fcmge", true, ty),
-                    VecALUOp::And => ("and", true, I8X16),
-                    VecALUOp::Bic => ("bic", true, I8X16),
-                    VecALUOp::Orr => ("orr", true, I8X16),
-                    VecALUOp::Eor => ("eor", true, I8X16),
-                    VecALUOp::Bsl => ("bsl", true, I8X16),
-                    VecALUOp::Umaxp => ("umaxp", true, ty),
+                let (op, size) = match alu_op {
+                    VecALUOp::Sqadd => ("sqadd", size),
+                    VecALUOp::Uqadd => ("uqadd", size),
+                    VecALUOp::Sqsub => ("sqsub", size),
+                    VecALUOp::Uqsub => ("uqsub", size),
+                    VecALUOp::Cmeq => ("cmeq", size),
+                    VecALUOp::Cmge => ("cmge", size),
+                    VecALUOp::Cmgt => ("cmgt", size),
+                    VecALUOp::Cmhs => ("cmhs", size),
+                    VecALUOp::Cmhi => ("cmhi", size),
+                    VecALUOp::Fcmeq => ("fcmeq", size),
+                    VecALUOp::Fcmgt => ("fcmgt", size),
+                    VecALUOp::Fcmge => ("fcmge", size),
+                    VecALUOp::And => ("and", VectorSize::Size8x16),
+                    VecALUOp::Bic => ("bic", VectorSize::Size8x16),
+                    VecALUOp::Orr => ("orr", VectorSize::Size8x16),
+                    VecALUOp::Eor => ("eor", VectorSize::Size8x16),
+                    VecALUOp::Bsl => ("bsl", VectorSize::Size8x16),
+                    VecALUOp::Umaxp => ("umaxp", size),
+                    VecALUOp::Add => ("add", size),
+                    VecALUOp::Sub => ("sub", size),
+                    VecALUOp::Mul => ("mul", size),
+                    VecALUOp::Sshl => ("sshl", size),
+                    VecALUOp::Ushl => ("ushl", size),
                 };
-
-                let show_vreg_fn: fn(Reg, Option<&RealRegUniverse>, Type) -> String = if vector {
-                    |reg, mb_rru, ty| show_vreg_vector(reg, mb_rru, ty)
-                } else {
-                    |reg, mb_rru, _ty| show_vreg_scalar(reg, mb_rru, I64)
-                };
-
-                let rd = show_vreg_fn(rd.to_reg(), mb_rru, ty);
-                let rn = show_vreg_fn(rn, mb_rru, ty);
-                let rm = show_vreg_fn(rm, mb_rru, ty);
+                let rd = show_vreg_vector(rd.to_reg(), mb_rru, size);
+                let rn = show_vreg_vector(rn, mb_rru, size);
+                let rm = show_vreg_vector(rm, mb_rru, size);
                 format!("{} {}, {}, {}", op, rd, rn, rm)
             }
-            &Inst::VecMisc {
-                op,
-                rd,
-                rn,
-                ty: _ty,
-            } => {
-                let (op, ty) = match op {
-                    VecMisc2::Not => ("mvn", I8X16),
+            &Inst::VecMisc { op, rd, rn, size } => {
+                let (op, size) = match op {
+                    VecMisc2::Not => ("mvn", VectorSize::Size8x16),
+                    VecMisc2::Neg => ("neg", size),
                 };
 
-                let rd = show_vreg_vector(rd.to_reg(), mb_rru, ty);
-                let rn = show_vreg_vector(rn, mb_rru, ty);
+                let rd = show_vreg_vector(rd.to_reg(), mb_rru, size);
+                let rn = show_vreg_vector(rn, mb_rru, size);
                 format!("{} {}, {}", op, rd, rn)
             }
-            &Inst::VecLanes { op, rd, rn, ty } => {
+            &Inst::VecLanes { op, rd, rn, size } => {
                 let op = match op {
                     VecLanesOp::Uminv => "uminv",
                 };
-
-                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, ty);
-                let rn = show_vreg_vector(rn, mb_rru, ty);
+                let rd = show_vreg_scalar(rd.to_reg(), mb_rru, size.lane_size());
+                let rn = show_vreg_vector(rn, mb_rru, size);
                 format!("{} {}, {}", op, rd, rn)
             }
             &Inst::MovToNZCV { rn } => {
@@ -2798,12 +2824,12 @@ impl ShowWithRRU for Inst {
                 // 32-to-64-bit extension, which is implemented with a "mov" to a
                 // 32-bit (W-reg) dest, because this zeroes the top 32 bits.
                 let dest_size = if !signed && from_bits == 32 && to_bits == 64 {
-                    InstSize::Size32
+                    OperandSize::Size32
                 } else {
-                    InstSize::from_bits(to_bits)
+                    OperandSize::from_bits(to_bits)
                 };
                 let rd = show_ireg_sized(rd.to_reg(), mb_rru, dest_size);
-                let rn = show_ireg_sized(rn, mb_rru, InstSize::from_bits(from_bits));
+                let rn = show_ireg_sized(rn, mb_rru, OperandSize::from_bits(from_bits));
                 let op = match (signed, from_bits, to_bits) {
                     (false, 8, 32) => "uxtb",
                     (true, 8, 32) => "sxtb",
@@ -2826,11 +2852,11 @@ impl ShowWithRRU for Inst {
                 from_bits,
                 to_bits,
             } if from_bits == 1 && signed => {
-                let dest_size = InstSize::from_bits(to_bits);
+                let dest_size = OperandSize::from_bits(to_bits);
                 let zr = if dest_size.is32() { "wzr" } else { "xzr" };
-                let rd32 = show_ireg_sized(rd.to_reg(), mb_rru, InstSize::Size32);
+                let rd32 = show_ireg_sized(rd.to_reg(), mb_rru, OperandSize::Size32);
                 let rd = show_ireg_sized(rd.to_reg(), mb_rru, dest_size);
-                let rn = show_ireg_sized(rn, mb_rru, InstSize::Size32);
+                let rn = show_ireg_sized(rn, mb_rru, OperandSize::Size32);
                 format!("and {}, {}, #1 ; sub {}, {}, {}", rd32, rn, rd, zr, rd)
             }
             &Inst::Extend {
@@ -2840,8 +2866,8 @@ impl ShowWithRRU for Inst {
                 from_bits,
                 ..
             } if from_bits == 1 && !signed => {
-                let rd = show_ireg_sized(rd.to_reg(), mb_rru, InstSize::Size32);
-                let rn = show_ireg_sized(rn, mb_rru, InstSize::Size32);
+                let rd = show_ireg_sized(rd.to_reg(), mb_rru, OperandSize::Size32);
+                let rn = show_ireg_sized(rn, mb_rru, OperandSize::Size32);
                 format!("and {}, {}, #1", rd, rn)
             }
             &Inst::Extend { .. } => {
@@ -2880,32 +2906,26 @@ impl ShowWithRRU for Inst {
                     }
                 }
             }
-            &Inst::OneWayCondBr {
-                ref target,
-                ref kind,
-            } => {
-                let target = target.show_rru(mb_rru);
-                match kind {
-                    &CondBrKind::Zero(reg) => {
-                        let reg = reg.show_rru(mb_rru);
-                        format!("cbz {}, {}", reg, target)
-                    }
-                    &CondBrKind::NotZero(reg) => {
-                        let reg = reg.show_rru(mb_rru);
-                        format!("cbnz {}, {}", reg, target)
-                    }
-                    &CondBrKind::Cond(c) => {
-                        let c = c.show_rru(mb_rru);
-                        format!("b.{} {}", c, target)
-                    }
-                }
-            }
             &Inst::IndirectBr { rn, .. } => {
                 let rn = rn.show_rru(mb_rru);
                 format!("br {}", rn)
             }
             &Inst::Brk => "brk #0".to_string(),
             &Inst::Udf { .. } => "udf".to_string(),
+            &Inst::TrapIf { ref kind, .. } => match kind {
+                &CondBrKind::Zero(reg) => {
+                    let reg = reg.show_rru(mb_rru);
+                    format!("cbnz {}, 8 ; udf", reg)
+                }
+                &CondBrKind::NotZero(reg) => {
+                    let reg = reg.show_rru(mb_rru);
+                    format!("cbz {}, 8 ; udf", reg)
+                }
+                &CondBrKind::Cond(c) => {
+                    let c = c.invert().show_rru(mb_rru);
+                    format!("b.{} 8 ; udf", c)
+                }
+            },
             &Inst::Adr { rd, off } => {
                 let rd = rd.show_rru(mb_rru);
                 format!("adr {}, pc+{}", rd, off)
@@ -2922,15 +2942,26 @@ impl ShowWithRRU for Inst {
                 let ridx = ridx.show_rru(mb_rru);
                 let rtmp1 = rtmp1.show_rru(mb_rru);
                 let rtmp2 = rtmp2.show_rru(mb_rru);
+                let default_target = info.default_target.show_rru(mb_rru);
                 format!(
                     concat!(
+                        "b.hs {} ; ",
                         "adr {}, pc+16 ; ",
                         "ldrsw {}, [{}, {}, LSL 2] ; ",
                         "add {}, {}, {} ; ",
                         "br {} ; ",
                         "jt_entries {:?}"
                     ),
-                    rtmp1, rtmp2, rtmp1, ridx, rtmp1, rtmp1, rtmp2, rtmp1, info.targets
+                    default_target,
+                    rtmp1,
+                    rtmp2,
+                    rtmp1,
+                    ridx,
+                    rtmp1,
+                    rtmp1,
+                    rtmp2,
+                    rtmp1,
+                    info.targets
                 )
             }
             &Inst::LoadConst64 { rd, const_data } => {
@@ -2951,7 +2982,7 @@ impl ShowWithRRU for Inst {
                 // this logic between `emit()` and `show_rru()` -- a separate 1-to-N
                 // expansion stage (i.e., legalization, but without the slow edit-in-place
                 // of the existing legalization framework).
-                let (mem_insts, mem) = mem_finalize(0, mem, &EmitState::default());
+                let (mem_insts, mem) = mem_finalize(0, mem, state);
                 let mut ret = String::new();
                 for inst in mem_insts.into_iter() {
                     ret.push_str(&inst.show_rru(mb_rru));
@@ -2998,7 +3029,10 @@ impl ShowWithRRU for Inst {
                 }
                 ret
             }
-            &Inst::VirtualSPOffsetAdj { offset } => format!("virtual_sp_offset_adjust {}", offset),
+            &Inst::VirtualSPOffsetAdj { offset } => {
+                state.virtual_sp_offset += offset;
+                format!("virtual_sp_offset_adjust {}", offset)
+            }
             &Inst::EmitIsland { needed_space } => format!("emit_island {}", needed_space),
         }
     }

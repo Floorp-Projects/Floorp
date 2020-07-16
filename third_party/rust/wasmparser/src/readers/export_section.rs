@@ -14,7 +14,7 @@
  */
 
 use super::{
-    BinaryReader, ExternalKind, Result, SectionIteratorLimited, SectionReader,
+    BinaryReader, ExternalKind, Range, Result, SectionIteratorLimited, SectionReader,
     SectionWithLimitedItems,
 };
 
@@ -25,6 +25,7 @@ pub struct Export<'a> {
     pub index: u32,
 }
 
+#[derive(Clone)]
 pub struct ExportSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -49,16 +50,10 @@ impl<'a> ExportSectionReader<'a> {
     ///
     /// # Examples
     /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x07, 0x5, 0x01, 0x01, 0x65, 0x00, 0x00,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::ModuleReader;
-    /// let mut reader = ModuleReader::new(data).expect("module reader");
-    /// let section = reader.read().expect("type section");
-    /// let section = reader.read().expect("function section");
-    /// let section = reader.read().expect("export section");
-    /// let mut export_reader = section.get_export_section_reader().expect("export section reader");
+    /// use wasmparser::ExportSectionReader;
+    ///
+    /// # let data: &[u8] = &[0x01, 0x01, 0x65, 0x00, 0x00];
+    /// let mut export_reader = ExportSectionReader::new(data, 0).unwrap();
     /// for _ in 0..export_reader.get_count() {
     ///     let export = export_reader.read().expect("export");
     ///     println!("Export: {:?}", export);
@@ -85,6 +80,9 @@ impl<'a> SectionReader for ExportSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         ExportSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

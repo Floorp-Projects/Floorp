@@ -1,5 +1,5 @@
 use crate::{
-    BinaryReader, BinaryReaderError, ModuleReader, Result, SectionIteratorLimited, SectionReader,
+    BinaryReader, BinaryReaderError, Range, Result, SectionIteratorLimited, SectionReader,
     SectionWithLimitedItems,
 };
 
@@ -65,6 +65,9 @@ impl<'a> SectionReader for ModuleCodeSectionReader<'a> {
     fn original_position(&self) -> usize {
         ModuleCodeSectionReader::original_position(self)
     }
+    fn range(&self) -> Range {
+        self.reader.range()
+    }
 }
 
 impl<'a> SectionWithLimitedItems for ModuleCodeSectionReader<'a> {
@@ -83,8 +86,8 @@ impl<'a> IntoIterator for ModuleCodeSectionReader<'a> {
 }
 
 impl<'a> ModuleCode<'a> {
-    pub fn module(&self) -> Result<ModuleReader<'a>> {
-        ModuleReader::new_with_offset(self.reader.buffer, self.reader.original_position())
+    pub fn raw_bytes(&self) -> (usize, &[u8]) {
+        (self.reader.original_position(), self.reader.buffer)
     }
 
     pub fn original_position(&self) -> usize {

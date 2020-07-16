@@ -163,15 +163,10 @@ impl<'a> CodeSectionReader<'a> {
     ///
     /// # Examples
     /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::ModuleReader;
-    /// let mut reader = ModuleReader::new(data).expect("module reader");
-    /// let section = reader.read().expect("type section");
-    /// let section = reader.read().expect("function section");
-    /// let section = reader.read().expect("code section");
-    /// let mut code_reader = section.get_code_section_reader().expect("code section reader");
+    /// use wasmparser::CodeSectionReader;
+    /// # let data: &[u8] = &[
+    /// #     0x01, 0x03, 0x00, 0x01, 0x0b];
+    /// let mut code_reader = CodeSectionReader::new(data, 0).unwrap();
     /// for _ in 0..code_reader.get_count() {
     ///     let body = code_reader.read().expect("function body");
     ///     let mut binary_reader = body.get_binary_reader();
@@ -207,6 +202,9 @@ impl<'a> SectionReader for CodeSectionReader<'a> {
     fn original_position(&self) -> usize {
         CodeSectionReader::original_position(self)
     }
+    fn range(&self) -> Range {
+        self.reader.range()
+    }
 }
 
 impl<'a> SectionWithLimitedItems for CodeSectionReader<'a> {
@@ -223,15 +221,10 @@ impl<'a> IntoIterator for CodeSectionReader<'a> {
     ///
     /// # Examples
     /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::ModuleReader;
-    /// let mut reader = ModuleReader::new(data).expect("module reader");
-    /// let section = reader.read().expect("type section");
-    /// let section = reader.read().expect("function section");
-    /// let section = reader.read().expect("code section");
-    /// let mut code_reader = section.get_code_section_reader().expect("code section reader");
+    /// use wasmparser::CodeSectionReader;
+    /// # let data: &[u8] = &[
+    /// #     0x01, 0x03, 0x00, 0x01, 0x0b];
+    /// let mut code_reader = CodeSectionReader::new(data, 0).unwrap();
     /// for body in code_reader {
     ///     let mut binary_reader = body.expect("b").get_binary_reader();
     ///     assert!(binary_reader.read_local_count().expect("local count") == 0);

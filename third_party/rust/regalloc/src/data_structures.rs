@@ -1194,7 +1194,7 @@ pub struct RealRegUniverse {
     pub regs: Vec<(RealReg, String)>,
 
     // This is the size of the initial section of `regs` that is available to
-    // the allocator.  It must be < `regs`.len().
+    // the allocator.  It must be <= `regs`.len().
     pub allocable: usize,
 
     // Information about groups of allocable registers. Used to quickly address
@@ -1794,6 +1794,22 @@ impl SortedRangeFragIxs {
         res.check(fenv);
         res
     }
+
+    /// Does this sorted list of range fragments contain the given instruction point?
+    pub fn contains_pt(&self, fenv: &TypedIxVec<RangeFragIx, RangeFrag>, pt: InstPoint) -> bool {
+        self.frag_ixs
+            .binary_search_by(|&ix| {
+                let frag = &fenv[ix];
+                if pt < frag.first {
+                    Ordering::Greater
+                } else if pt >= frag.first && pt <= frag.last {
+                    Ordering::Equal
+                } else {
+                    Ordering::Less
+                }
+            })
+            .is_ok()
+    }
 }
 
 //=============================================================================
@@ -1855,6 +1871,21 @@ impl SortedRangeFrags {
                 }
             }
         }
+    }
+
+    /// Does this sorted list of range fragments contain the given instruction point?
+    pub fn contains_pt(&self, pt: InstPoint) -> bool {
+        self.frags
+            .binary_search_by(|frag| {
+                if pt < frag.first {
+                    Ordering::Greater
+                } else if pt >= frag.first && pt <= frag.last {
+                    Ordering::Equal
+                } else {
+                    Ordering::Less
+                }
+            })
+            .is_ok()
     }
 }
 
@@ -1997,19 +2028,27 @@ impl SpillCost {
 pub struct RealRange {
     pub rreg: RealReg,
     pub sorted_frags: SortedRangeFragIxs,
+    pub is_ref: bool,
 }
 
 impl fmt::Debug for RealRange {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "(RR: {:?}, {:?})", self.rreg, self.sorted_frags)
+        write!(
+            fmt,
+            "(RR: {:?}{}, {:?})",
+            self.rreg,
+            if self.is_ref { " REF" } else { "" },
+            self.sorted_frags
+        )
     }
 }
 
 impl RealRange {
     pub fn show_with_rru(&self, univ: &RealRegUniverse) -> String {
         format!(
-            "(RR: {}, {:?})",
+            "(RR: {}{}, {:?})",
             self.rreg.to_reg().show_with_rru(univ),
+            if self.is_ref { " REF" } else { "" },
             self.sorted_frags
         )
     }
@@ -2026,6 +2065,7 @@ pub struct VirtualRange {
     pub vreg: VirtualReg,
     pub rreg: Option<RealReg>,
     pub sorted_frags: SortedRangeFrags,
+    pub is_ref: bool,
     pub size: u16,
     pub total_cost: u32,
     pub spill_cost: SpillCost, // == total_cost / size
@@ -2039,7 +2079,12 @@ impl VirtualRange {
 
 impl fmt::Debug for VirtualRange {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "(VR: {:?},", self.vreg)?;
+        write!(
+            fmt,
+            "(VR: {:?}{},",
+            self.vreg,
+            if self.is_ref { " REF" } else { "" }
+        )?;
         if self.rreg.is_some() {
             write!(fmt, " -> {:?}", self.rreg.unwrap())?;
         }
@@ -2048,6 +2093,109 @@ impl fmt::Debug for VirtualRange {
             " sz={}, tc={}, sc={:?}, {:?})",
             self.size, self.total_cost, self.spill_cost, self.sorted_frags
         )
+    }
+}
+
+//=============================================================================
+// Some auxiliary/miscellaneous data structures that are useful.
+
+// Mappings from RealRegs and VirtualRegs to the sets of RealRanges and VirtualRanges that
+// belong to them.  These are needed for BT's coalescing analysis and for the dataflow analysis
+// that supports reftype handling.
+
+pub struct RegToRangesMaps {
+    // This maps RealReg indices to the set of RealRangeIxs for that RealReg.  Valid indices are
+    // real register indices for all non-sanitised real regs; that is,
+    // 0 .. RealRegUniverse::allocable, for ".." having the Rust meaning.  The Vecs of
+    // RealRangeIxs are duplicate-free.  They are Vec rather than SmallVec because they are often
+    // large, so SmallVec would just be a disadvantage here.
+    pub rreg_to_rlrs_map: Vec</*real reg ix, */ Vec<RealRangeIx>>,
+
+    // This maps VirtualReg indices to the set of VirtualRangeIxs for that VirtualReg.  Valid
+    // indices are 0 .. Function::get_num_vregs().  For functions mostly translated from SSA,
+    // most VirtualRegs will have just one VirtualRange, and there are a lot of VirtualRegs in
+    // general.  So SmallVec is a definite benefit here.
+    pub vreg_to_vlrs_map: Vec</*virtual reg ix, */ SmallVec<[VirtualRangeIx; 3]>>,
+}
+
+// MoveInfo holds info about registers connected by moves.  For each, we record the source and
+// destination of the move, the insn performing the move, and the estimated execution frequency
+// of the containing block.  The moves are not presented in any particular order, but they are
+// duplicate-free in that each such instruction will be listed only once.
+
+pub struct MoveInfoElem {
+    pub dst: Reg,
+    pub dst_range: RangeId, // possibly RangeId::invalid_value() if not requested
+    pub src: Reg,
+    pub src_range: RangeId, // possibly RangeId::invalid_value() if not requested
+    pub iix: InstIx,
+    pub est_freq: u32,
+}
+
+pub struct MoveInfo {
+    pub moves: Vec<MoveInfoElem>,
+}
+
+// Something that can be either a VirtualRangeIx or a RealRangeIx, whilst still being 32 bits
+// (by stealing one bit from those spaces).  Note that the resulting thing no longer denotes a
+// contiguous index space, and so it has a name that indicates it is an identifier rather than
+// an index.
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct RangeId {
+    // 1 X--(31)--X is a RealRangeIx with value X--(31)--X
+    // 0 X--(31)--X is a VirtualRangeIx with value X--(31)--X
+    bits: u32,
+}
+
+impl RangeId {
+    #[inline(always)]
+    pub fn new_real(rlrix: RealRangeIx) -> Self {
+        let n = rlrix.get();
+        assert!(n <= 0x7FFF_FFFF);
+        Self {
+            bits: n | 0x8000_0000,
+        }
+    }
+    #[inline(always)]
+    pub fn new_virtual(vlrix: VirtualRangeIx) -> Self {
+        let n = vlrix.get();
+        assert!(n <= 0x7FFF_FFFF);
+        Self { bits: n }
+    }
+    #[inline(always)]
+    pub fn is_real(self) -> bool {
+        self.bits & 0x8000_0000 != 0
+    }
+    #[allow(dead_code)]
+    #[inline(always)]
+    pub fn is_virtual(self) -> bool {
+        self.bits & 0x8000_0000 == 0
+    }
+    #[inline(always)]
+    pub fn to_real(self) -> RealRangeIx {
+        assert!(self.bits & 0x8000_0000 != 0);
+        RealRangeIx::new(self.bits & 0x7FFF_FFFF)
+    }
+    #[inline(always)]
+    pub fn to_virtual(self) -> VirtualRangeIx {
+        assert!(self.bits & 0x8000_0000 == 0);
+        VirtualRangeIx::new(self.bits)
+    }
+    #[inline(always)]
+    pub fn invalid_value() -> Self {
+        // Real, and inplausibly huge
+        Self { bits: 0xFFFF_FFFF }
+    }
+}
+
+impl fmt::Debug for RangeId {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if self.is_real() {
+            self.to_real().fmt(fmt)
+        } else {
+            self.to_virtual().fmt(fmt)
+        }
     }
 }
 

@@ -7,10 +7,11 @@ use std::fmt;
 
 use crate::analysis_control_flow::CFGInfo;
 use crate::data_structures::{
-    BlockIx, InstIx, InstPoint, Point, Queue, RangeFrag, RangeFragIx, RangeFragKind,
-    RangeFragMetrics, RealRange, RealRangeIx, RealReg, RealRegUniverse, Reg, RegClass, RegSets,
-    RegUsageCollector, RegVecBounds, RegVecs, RegVecsAndBounds, SortedRangeFragIxs,
-    SortedRangeFrags, SpillCost, TypedIxVec, VirtualRange, VirtualRangeIx,
+    BlockIx, InstIx, InstPoint, MoveInfo, MoveInfoElem, Point, Queue, RangeFrag, RangeFragIx,
+    RangeFragKind, RangeFragMetrics, RangeId, RealRange, RealRangeIx, RealReg, RealRegUniverse,
+    Reg, RegClass, RegSets, RegToRangesMaps, RegUsageCollector, RegVecBounds, RegVecs,
+    RegVecsAndBounds, SortedRangeFragIxs, SortedRangeFrags, SpillCost, TypedIxVec, VirtualRange,
+    VirtualRangeIx, VirtualReg,
 };
 use crate::sparse_set::SparseSet;
 use crate::union_find::{ToFromU32, UnionFind};
@@ -1154,9 +1155,7 @@ pub fn get_range_frags<F: Function>(
     assert!(rvb.is_sanitized());
 
     // In order that we can work with unified-reg-indices (see comments above), we need to know
-    // (1) how many virtual regs there are and (2) the `RegClass` for each.  That info is
-    // collected in a single pass here.  In principle regalloc.rs's user could tell us (1), but
-    // as yet the interface does not make that possible.
+    // the `RegClass` for each virtual register.  That info is collected here.
     let mut vreg_classes = vec![RegClass::INVALID; func.get_num_vregs()];
     for r in rvb
         .vecs
@@ -1458,6 +1457,7 @@ fn create_and_add_range(
             vreg: reg.to_virtual_reg(),
             rreg: None,
             sorted_frags,
+            is_ref: false, // analysis_reftypes.rs may later change this
             size,
             total_cost,
             spill_cost,
@@ -1466,6 +1466,7 @@ fn create_and_add_range(
         result_real.push(RealRange {
             rreg: reg.to_real_reg(),
             sorted_frags: sorted_frag_ixs,
+            is_ref: false, // analysis_reftypes.rs may later change this
         });
     }
 }
@@ -1805,4 +1806,155 @@ pub fn merge_range_frags(
     info!("    merge_range_frags: end");
 
     (result_real, result_virtual)
+}
+
+//=============================================================================
+// Auxiliary activities that mostly fall under the category "dataflow analysis", but are not
+// part of the main dataflow analysis pipeline.
+
+// Dataflow and liveness together create vectors of VirtualRanges and RealRanges.  These define
+// (amongst other things) mappings from VirtualRanges to VirtualRegs and from RealRanges to
+// RealRegs.  However, we often need the inverse mappings: from VirtualRegs to (sets of
+// VirtualRanges) and from RealRegs to (sets of) RealRanges.  This function computes those
+// inverse mappings.  They are used by BT's coalescing analysis, and for the dataflow analysis
+// that supports reftype handling.
+#[inline(never)]
+pub fn compute_reg_to_ranges_maps<F: Function>(
+    func: &F,
+    univ: &RealRegUniverse,
+    rlr_env: &TypedIxVec<RealRangeIx, RealRange>,
+    vlr_env: &TypedIxVec<VirtualRangeIx, VirtualRange>,
+) -> RegToRangesMaps {
+    // We have in hand the virtual live ranges.  Each of these carries its
+    // associated vreg.  So in effect we have a VLR -> VReg mapping.  We now
+    // invert that, so as to generate a mapping from VRegs to their containing
+    // VLRs.
+    //
+    // Note that multiple VLRs may map to the same VReg.  So the inverse mapping
+    // will actually be from VRegs to a set of VLRs.  In most cases, we expect
+    // the virtual-registerised-code given to this allocator to be derived from
+    // SSA, in which case each VReg will have only one VLR.  So in this case,
+    // the cost of first creating the mapping, and then looking up all the VRegs
+    // in moves in it, will have cost linear in the size of the input function.
+    //
+    // NB re the SmallVec.  That has set semantics (no dups).
+    let mut vreg_to_vlrs_map = vec![SmallVec::<[VirtualRangeIx; 3]>::new(); func.get_num_vregs()];
+    for (vlr, n) in vlr_env.iter().zip(0..) {
+        let vlrix = VirtualRangeIx::new(n);
+        let vreg: VirtualReg = vlr.vreg;
+        // Now we know that there's a VLR `vlr` that is for VReg `vreg`.  Update the inverse
+        // mapping accordingly.  We know we are stepping sequentially through the VLR (index)
+        // space, so we'll never see the same VLRIx twice.  Hence there's no need to check for
+        // dups when adding a VLR index to an existing binding for a VReg.
+        //
+        // If this array-indexing fails, it means the client's `.get_num_vregs()` function
+        // claims there are fewer virtual regs than we actually observe in the code it gave us.
+        // So it's a bug in the client.
+        vreg_to_vlrs_map[vreg.get_index()].push(vlrix);
+    }
+
+    // Same for the real live ranges.
+    let mut rreg_to_rlrs_map = vec![Vec::<RealRangeIx>::new(); univ.allocable];
+    for (rlr, n) in rlr_env.iter().zip(0..) {
+        let rlrix = RealRangeIx::new(n);
+        let rreg: RealReg = rlr.rreg;
+        // If this array-indexing fails, it means something has gone wrong with sanitisation of
+        // real registers -- that should ensure that we never see a real register with an index
+        // greater than `univ.allocable`.  So it's a bug in the allocator's analysis phases.
+        rreg_to_rlrs_map[rreg.get_index()].push(rlrix);
+    }
+
+    RegToRangesMaps {
+        rreg_to_rlrs_map,
+        vreg_to_vlrs_map,
+    }
+}
+
+// Collect info about registers (and optionally Virtual/RealRanges) that are
+// connected by moves:
+#[inline(never)]
+pub fn collect_move_info<F: Function>(
+    func: &F,
+    reg_vecs_and_bounds: &RegVecsAndBounds,
+    est_freqs: &TypedIxVec<BlockIx, u32>,
+    reg_to_ranges_maps: &RegToRangesMaps,
+    rlr_env: &TypedIxVec<RealRangeIx, RealRange>,
+    vlr_env: &TypedIxVec<VirtualRangeIx, VirtualRange>,
+    fenv: &TypedIxVec<RangeFragIx, RangeFrag>,
+    want_ranges: bool,
+) -> MoveInfo {
+    // Helper: find the RealRange or VirtualRange for a register at an InstPoint.
+    let find_range_for_reg = |pt: InstPoint, reg: Reg| {
+        if !want_ranges {
+            return RangeId::invalid_value();
+        }
+        if reg.is_real() {
+            for &rlrix in &reg_to_ranges_maps.rreg_to_rlrs_map[reg.get_index() as usize] {
+                if rlr_env[rlrix].sorted_frags.contains_pt(fenv, pt) {
+                    return RangeId::new_real(rlrix);
+                }
+            }
+        } else {
+            for &vlrix in &reg_to_ranges_maps.vreg_to_vlrs_map[reg.get_index() as usize] {
+                if vlr_env[vlrix].sorted_frags.contains_pt(pt) {
+                    return RangeId::new_virtual(vlrix);
+                }
+            }
+        }
+        RangeId::invalid_value()
+    };
+
+    let mut moves = Vec::<MoveInfoElem>::new();
+    for b in func.blocks() {
+        let block_eef = est_freqs[b];
+        for iix in func.block_insns(b) {
+            let insn = &func.get_insn(iix);
+            let im = func.is_move(insn);
+            match im {
+                None => {}
+                Some((wreg, reg)) => {
+                    let iix_bounds = &reg_vecs_and_bounds.bounds[iix];
+                    // It might seem strange to assert that `defs_len` and/or
+                    // `uses_len` is <= 1 rather than == 1.  The reason is
+                    // that either or even both registers might be ones which
+                    // are not available to the allocator.  Hence they will
+                    // have been removed by the sanitisation machinery before
+                    // we get to this point.  If either is missing, we
+                    // unfortunately can't coalesce the move away, and just
+                    // have to live with it.
+                    //
+                    // If any of the following five assertions fail, the
+                    // client's `is_move` is probably lying to us.
+                    assert!(iix_bounds.uses_len <= 1);
+                    assert!(iix_bounds.defs_len <= 1);
+                    assert!(iix_bounds.mods_len == 0);
+                    if iix_bounds.uses_len == 1 && iix_bounds.defs_len == 1 {
+                        let reg_vecs = &reg_vecs_and_bounds.vecs;
+                        assert!(reg_vecs.uses[iix_bounds.uses_start as usize] == reg);
+                        assert!(reg_vecs.defs[iix_bounds.defs_start as usize] == wreg.to_reg());
+                        let dst = wreg.to_reg();
+                        let src = reg;
+                        let est_freq = block_eef;
+
+                        // Find the ranges for source and dest, if requested.
+                        let (src_range, dst_range) = (
+                            find_range_for_reg(InstPoint::new(iix, Point::Use), src),
+                            find_range_for_reg(InstPoint::new(iix, Point::Def), dst),
+                        );
+
+                        moves.push(MoveInfoElem {
+                            dst,
+                            dst_range,
+                            src,
+                            src_range,
+                            iix,
+                            est_freq,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    MoveInfo { moves }
 }

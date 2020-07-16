@@ -29,6 +29,7 @@ pub struct BinaryReaderError {
 pub(crate) struct BinaryReaderErrorInner {
     pub(crate) message: String,
     pub(crate) offset: usize,
+    pub(crate) needed_hint: Option<usize>,
 }
 
 pub type Result<T> = result::Result<T, BinaryReaderError>;
@@ -49,7 +50,21 @@ impl BinaryReaderError {
     pub(crate) fn new(message: impl Into<String>, offset: usize) -> Self {
         let message = message.into();
         BinaryReaderError {
-            inner: Box::new(BinaryReaderErrorInner { message, offset }),
+            inner: Box::new(BinaryReaderErrorInner {
+                message,
+                offset,
+                needed_hint: None,
+            }),
+        }
+    }
+
+    pub(crate) fn eof(offset: usize, needed_hint: usize) -> Self {
+        BinaryReaderError {
+            inner: Box::new(BinaryReaderErrorInner {
+                message: "Unexpected EOF".to_string(),
+                offset,
+                needed_hint: Some(needed_hint),
+            }),
         }
     }
 
@@ -174,19 +189,19 @@ pub struct ExportType<'a> {
     pub ty: ImportSectionEntryType,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct ResizableLimits {
     pub initial: u32,
     pub maximum: Option<u32>,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct TableType {
     pub element_type: Type,
     pub limits: ResizableLimits,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct MemoryType {
     pub limits: ResizableLimits,
     pub shared: bool,
@@ -346,7 +361,7 @@ pub enum Operator<'a> {
     F32Const { value: Ieee32 },
     F64Const { value: Ieee64 },
     RefNull { ty: Type },
-    RefIsNull { ty: Type },
+    RefIsNull,
     RefFunc { function_index: u32 },
     I32Eqz,
     I32Eq,

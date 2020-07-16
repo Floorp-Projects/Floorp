@@ -1,8 +1,9 @@
 use crate::{
-    BinaryReader, ExternalKind, Result, SectionIteratorLimited, SectionReader,
-    SectionWithLimitedItems,
+    BinaryReader, BinaryReaderError, ExternalKind, Range, Result, SectionIteratorLimited,
+    SectionReader, SectionWithLimitedItems,
 };
 
+#[derive(Clone)]
 pub struct InstanceSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -28,6 +29,7 @@ impl<'a> InstanceSectionReader<'a> {
             &self.reader.buffer[self.reader.position..],
             self.original_position(),
         )?;
+        self.reader.skip_bytes(1)?;
         self.reader.skip_var_32()?;
         let count = self.reader.read_var_u32()?;
         for _ in 0..count {
@@ -49,6 +51,9 @@ impl<'a> SectionReader for InstanceSectionReader<'a> {
     }
     fn original_position(&self) -> usize {
         InstanceSectionReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 
@@ -75,6 +80,12 @@ pub struct Instance<'a> {
 impl<'a> Instance<'a> {
     pub fn new(data: &'a [u8], offset: usize) -> Result<Instance<'a>> {
         let mut reader = BinaryReader::new_with_offset(data, offset);
+        if reader.read_u8()? != 0 {
+            return Err(BinaryReaderError::new(
+                "instantiate instruction not found",
+                offset,
+            ));
+        }
         let module = reader.read_var_u32()?;
         Ok(Instance { module, reader })
     }
@@ -98,6 +109,7 @@ impl<'a> Instance<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct InstanceArgsReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
@@ -128,6 +140,9 @@ impl<'a> SectionReader for InstanceArgsReader<'a> {
     }
     fn original_position(&self) -> usize {
         InstanceArgsReader::original_position(self)
+    }
+    fn range(&self) -> Range {
+        self.reader.range()
     }
 }
 

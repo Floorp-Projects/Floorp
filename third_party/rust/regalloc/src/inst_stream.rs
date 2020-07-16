@@ -1,7 +1,7 @@
 use crate::checker::Inst as CheckerInst;
 use crate::checker::{CheckerContext, CheckerErrors};
 use crate::data_structures::{
-    BlockIx, InstIx, InstPoint, RangeFrag, RealReg, RealRegUniverse, SpillSlot, TypedIxVec,
+    BlockIx, InstIx, InstPoint, Point, RangeFrag, RealReg, RealRegUniverse, SpillSlot, TypedIxVec,
     VirtualReg, Writable,
 };
 use crate::{reg_maps::VrangeRegUsageMapper, Function, RegAllocError};
@@ -17,12 +17,12 @@ pub(crate) enum InstToInsert {
     Spill {
         to_slot: SpillSlot,
         from_reg: RealReg,
-        for_vreg: VirtualReg,
+        for_vreg: Option<VirtualReg>,
     },
     Reload {
         to_reg: Writable<RealReg>,
         from_slot: SpillSlot,
-        for_vreg: VirtualReg,
+        for_vreg: Option<VirtualReg>,
     },
     Move {
         to_reg: Writable<RealReg>,
@@ -76,14 +76,112 @@ impl InstToInsert {
     }
 }
 
-pub(crate) struct InstToInsertAndPoint {
-    pub(crate) inst: InstToInsert,
-    pub(crate) point: InstPoint,
+// ExtPoint is an extended version of Point.  It plays no role in dataflow analysis or in the
+// specification of live ranges.  It exists only to describe where to place the "extra"
+// spill/reload instructions required to make stackmap/reftype support work.  If there was no
+// need to support stackmaps/reftypes, ExtPoint would not be needed, and Point would be
+// adequate.
+//
+// Recall that Point can denote 4 places within an instruction, with R < U < D < S:
+//
+// * R(eload): this is where any reload insns for the insn itself are
+//   considered to live.
+//
+// * U(se): this is where the insn is considered to use values from those of
+//   its register operands that appear in a Read or Modify role.
+//
+// * D(ef): this is where the insn is considered to define new values for
+//   those of its register operands that appear in a Write or Modify role.
+//
+// * S(pill): this is where any spill insns for the insn itself are considered
+//   to live.
+//
+// ExtPoint extends that to six places, by adding a new point in between Reload and Use, and one
+// between Def and Spill, giving: R < SB < U < D < RA < S:
+//
+// * (R)eload: unchanged
+//
+// * SB (Spill before): at this point, reftyped regs will be spilled, if this insn is a safepoint
+//
+// * (U)se: unchanged
+//
+// * (D)ef: unchanged
+//
+// * RA (Reload after): at this point, reftyped regs spilled at SB will be reloaded, if needed,
+//   and if this insn is a safepoint
+//
+// * (S)pill: unchanged
+//
+// From this it can be seen that the SB and RA points are closest to the instruction "core" --
+// the U and D points.  SB and RA describe places where reftyped regs must be spilled/reloaded
+// around the core.  Because the SB-RA range falls inside the R-S range, it means the the
+// safepoint spill/reload instructions can be added after "normal" spill/reload instructions
+// have been created, and it doesn't interact with the logic to create those "normal"
+// spill/reload instructions.
+//
+// In the worst case scenario, a value could be reloaded at R, immediately spilled at SB, then
+// possibly modified in memory at the safepoint proper, reloaded at RA, and spilled at S.  That
+// is considered to be an unlikely scenario, though.
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ExtPoint {
+    Reload = 0,
+    SpillBefore = 1,
+    Use = 2,
+    Def = 3,
+    ReloadAfter = 4,
+    Spill = 5,
 }
 
-impl InstToInsertAndPoint {
-    pub(crate) fn new(inst: InstToInsert, point: InstPoint) -> Self {
-        Self { inst, point }
+impl ExtPoint {
+    // Promote a Point to an ExtPoint
+    #[inline(always)]
+    pub fn from_point(pt: Point) -> Self {
+        match pt {
+            Point::Reload => ExtPoint::Reload,
+            Point::Use => ExtPoint::Use,
+            Point::Def => ExtPoint::Def,
+            Point::Spill => ExtPoint::Spill,
+        }
+    }
+}
+
+// As the direct analogy to InstPoint, a InstExtPoint pairs an InstIx with an ExtPoint.  In
+// contrast to InstPoint, these aren't so performance critical, so there's no fancy bit-packed
+// representation as there is for InstPoint.
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InstExtPoint {
+    pub iix: InstIx,
+    pub extpt: ExtPoint,
+}
+
+impl InstExtPoint {
+    #[inline(always)]
+    pub fn new(iix: InstIx, extpt: ExtPoint) -> Self {
+        Self { iix, extpt }
+    }
+    // Promote an InstPoint to an InstExtPoint
+    #[inline(always)]
+    pub fn from_inst_point(inst_pt: InstPoint) -> Self {
+        InstExtPoint {
+            iix: inst_pt.iix(),
+            extpt: ExtPoint::from_point(inst_pt.pt()),
+        }
+    }
+}
+
+// So, finally, we can specify what we want: an instruction to insert, and a place to insert it.
+
+pub(crate) struct InstToInsertAndExtPoint {
+    pub(crate) inst: InstToInsert,
+    pub(crate) iep: InstExtPoint,
+}
+
+impl InstToInsertAndExtPoint {
+    #[inline(always)]
+    pub(crate) fn new(inst: InstToInsert, iep: InstExtPoint) -> Self {
+        Self { inst, iep }
     }
 }
 
@@ -96,7 +194,7 @@ impl InstToInsertAndPoint {
 fn map_vregs_to_rregs<F: Function>(
     func: &mut F,
     frag_map: Vec<(RangeFrag, VirtualReg, RealReg)>,
-    insts_to_add: &Vec<InstToInsertAndPoint>,
+    insts_to_add: &Vec<InstToInsertAndExtPoint>,
     iixs_to_nop_out: &Vec<InstIx>,
     reg_universe: &RealRegUniverse,
     use_checker: bool,
@@ -391,12 +489,14 @@ fn map_vregs_to_rregs<F: Function>(
 #[inline(never)]
 pub(crate) fn add_spills_reloads_and_moves<F: Function>(
     func: &mut F,
-    mut insts_to_add: Vec<InstToInsertAndPoint>,
+    safepoint_insns: &Vec<InstIx>,
+    mut insts_to_add: Vec<InstToInsertAndExtPoint>,
 ) -> Result<
     (
         Vec<F::Inst>,
         TypedIxVec<BlockIx, InstIx>,
         TypedIxVec<InstIx, InstIx>,
+        Vec<InstIx>,
     ),
     String,
 > {
@@ -407,20 +507,31 @@ pub(crate) fn add_spills_reloads_and_moves<F: Function>(
     // We also need to examine and update Func::blocks.  This is assumed to
     // be arranged in ascending order of the Block::start fields.
     //
+    // Also, if the client requested stackmap creation, then `safepoint_insns` will be
+    // non-empty, and we will have to return a vector of the same length, that indicates the
+    // location of each safepoint insn in the final code.  `safepoint_insns` is assumed to be
+    // sorted in ascending order and duplicate-free.
+    //
     // Linear scan relies on the sort being stable here, so make sure to not
     // use an unstable sort. See the comment in `resolve_moves_across blocks`
     // in linear scan's code.
 
-    insts_to_add.sort_by_key(|mem_move| mem_move.point);
+    insts_to_add.sort_by_key(|to_add| to_add.iep.clone());
 
     let mut cur_inst_to_add = 0;
     let mut cur_block = BlockIx::new(0);
 
     let mut insns: Vec<F::Inst> = vec![];
     let mut target_map: TypedIxVec<BlockIx, InstIx> = TypedIxVec::new();
-    let mut orig_insn_map: TypedIxVec<InstIx, InstIx> = TypedIxVec::new();
+
+    let mut new_to_old_insn_map: TypedIxVec<InstIx, InstIx> = TypedIxVec::new();
     target_map.reserve(func.blocks().len());
-    orig_insn_map.reserve(func.insn_indices().len() + insts_to_add.len());
+    new_to_old_insn_map.reserve(func.insn_indices().len() + insts_to_add.len());
+
+    // Index in `safepoint_insns` of the next safepoint insn we will encounter
+    let mut next_safepoint_insn_index = 0;
+    let mut new_safepoint_insns = Vec::<InstIx>::new();
+    new_safepoint_insns.reserve(safepoint_insns.len());
 
     for iix in func.insn_indices() {
         // Is `iix` the first instruction in a block?  Meaning, are we
@@ -431,27 +542,33 @@ pub(crate) fn add_spills_reloads_and_moves<F: Function>(
             target_map.push(InstIx::new(insns.len() as u32));
         }
 
-        // Copy to the output vector, the extra insts that are to be placed at the
-        // reload point of `iix`.
+        // Copy to the output vector, the first the extra insts that are to be placed at the
+        // reload point of `iix`, and then the extras for the spill-before point of `iix`.
         while cur_inst_to_add < insts_to_add.len()
-            && insts_to_add[cur_inst_to_add].point == InstPoint::new_reload(iix)
+            && insts_to_add[cur_inst_to_add].iep <= InstExtPoint::new(iix, ExtPoint::SpillBefore)
         {
             insns.push(insts_to_add[cur_inst_to_add].inst.construct(func));
-            orig_insn_map.push(InstIx::invalid_value());
+            new_to_old_insn_map.push(InstIx::invalid_value());
             cur_inst_to_add += 1;
         }
 
         // Copy the inst at `iix` itself
-        orig_insn_map.push(iix);
+        if next_safepoint_insn_index < safepoint_insns.len()
+            && iix == safepoint_insns[next_safepoint_insn_index]
+        {
+            new_safepoint_insns.push(InstIx::new(insns.len() as u32));
+            next_safepoint_insn_index += 1;
+        }
+        new_to_old_insn_map.push(iix);
         insns.push(func.get_insn(iix).clone());
 
-        // And copy the extra insts that are to be placed at the spill point of
-        // `iix`.
+        // And copy first, the extra insts that are to be placed at the reload-after point
+        // of `iix`, followed by those to be placed at the spill point of `iix`.
         while cur_inst_to_add < insts_to_add.len()
-            && insts_to_add[cur_inst_to_add].point == InstPoint::new_spill(iix)
+            && insts_to_add[cur_inst_to_add].iep <= InstExtPoint::new(iix, ExtPoint::Spill)
         {
             insns.push(insts_to_add[cur_inst_to_add].inst.construct(func));
-            orig_insn_map.push(InstIx::invalid_value());
+            new_to_old_insn_map.push(InstIx::invalid_value());
             cur_inst_to_add += 1;
         }
 
@@ -464,8 +581,10 @@ pub(crate) fn add_spills_reloads_and_moves<F: Function>(
 
     debug_assert!(cur_inst_to_add == insts_to_add.len());
     debug_assert!(cur_block.get() == func.blocks().len() as u32);
+    debug_assert!(next_safepoint_insn_index == safepoint_insns.len());
+    debug_assert!(new_safepoint_insns.len() == safepoint_insns.len());
 
-    Ok((insns, target_map, orig_insn_map))
+    Ok((insns, target_map, new_to_old_insn_map, new_safepoint_insns))
 }
 
 //=============================================================================
@@ -474,7 +593,8 @@ pub(crate) fn add_spills_reloads_and_moves<F: Function>(
 #[inline(never)]
 pub(crate) fn edit_inst_stream<F: Function>(
     func: &mut F,
-    insts_to_add: Vec<InstToInsertAndPoint>,
+    safepoint_insns: &Vec<InstIx>,
+    insts_to_add: Vec<InstToInsertAndExtPoint>,
     iixs_to_nop_out: &Vec<InstIx>,
     frag_map: Vec<(RangeFrag, VirtualReg, RealReg)>,
     reg_universe: &RealRegUniverse,
@@ -484,6 +604,7 @@ pub(crate) fn edit_inst_stream<F: Function>(
         Vec<F::Inst>,
         TypedIxVec<BlockIx, InstIx>,
         TypedIxVec<InstIx, InstIx>,
+        Vec<InstIx>,
     ),
     RegAllocError,
 > {
@@ -496,5 +617,6 @@ pub(crate) fn edit_inst_stream<F: Function>(
         use_checker,
     )
     .map_err(|e| RegAllocError::RegChecker(e))?;
-    add_spills_reloads_and_moves(func, insts_to_add).map_err(|e| RegAllocError::Other(e))
+    add_spills_reloads_and_moves(func, safepoint_insns, insts_to_add)
+        .map_err(|e| RegAllocError::Other(e))
 }
