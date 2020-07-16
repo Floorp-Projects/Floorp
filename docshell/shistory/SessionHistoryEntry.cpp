@@ -160,14 +160,15 @@ SessionHistoryEntry::SetIsSubFrame(bool aIsSubFrame) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::GetHasUserInteraction(bool* aFlag) {
-  MOZ_CRASH("Not needed in the parent process?");
-  return NS_ERROR_FAILURE;
+  NS_WARNING("Not implemented in the parent process!");
+  *aFlag = true;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 SessionHistoryEntry::SetHasUserInteraction(bool aFlag) {
-  MOZ_CRASH("Not needed in the parent process?");
-  return NS_ERROR_FAILURE;
+  NS_WARNING("Not implemented in the parent process!");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
