@@ -167,16 +167,10 @@ exports[`Worker Renders the expected snapshot for a stopped worker 1`] = `
       </span>
        
       <Localized
-        attrs={
-          Object {
-            "title": true,
-          }
-        }
-        id="serviceworker-worker-start2"
+        id="serviceworker-worker-start3"
       >
         <UIButton
           className="js-start-button"
-          disabled={false}
           onClick={[Function]}
           size="micro"
         />

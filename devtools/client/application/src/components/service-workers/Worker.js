@@ -74,11 +74,6 @@ class Worker extends PureComponent {
   }
 
   start() {
-    if (!this.props.isDebugEnabled) {
-      console.log("Service workers cannot be started in multi-e10s");
-      return;
-    }
-
     if (!this.isActive() || this.isRunning()) {
       console.log("Running or inactive service workers cannot be started");
       return;
@@ -156,27 +151,17 @@ class Worker extends PureComponent {
   }
 
   renderStartButton() {
-    const { isDebugEnabled } = this.props;
-
     // avoid rendering the button at all for workers that are either running,
     // or in a state that prevents them from starting (like waiting)
     if (this.isRunning() || !this.isActive()) {
       return null;
     }
 
-    const isDisabled = !isDebugEnabled;
     return Localized(
-      {
-        id: "serviceworker-worker-start2",
-        // The localized title is only displayed if the debug link is disabled.
-        attrs: {
-          title: !isDisabled,
-        },
-      },
+      { id: "serviceworker-worker-start3" },
       UIButton({
         onClick: this.start,
         className: `js-start-button`,
-        disabled: isDisabled,
         size: "micro",
       })
     );
