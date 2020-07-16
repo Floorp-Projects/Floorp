@@ -8,7 +8,7 @@
   <script>
     SimpleTest.waitForExplicitFinish();
 
-    function runTest() {
+    function runTest(testAsyncLength) {
       return new Promise(function(resolve) {
         var initialLength;
         var messageCount = 0;
@@ -25,15 +25,15 @@
             resolve();
           }
         }
-        win = window.open("file_history_length_during_pageload.html");
+        win = window.open("file_history_length_during_pageload.html?testAsyncLength=" + testAsyncLength);
       });
     }
 
     async function runTests() {
       await SpecialPowers.pushPrefEnv({set: [["fission.sessionHistoryInParent", false]]});
-      await runTest();
+      await runTest(true);
       await SpecialPowers.pushPrefEnv({set: [["fission.sessionHistoryInParent", true]]});
-      await runTest();
+      await runTest(false);
       SimpleTest.finish();
     }
   </script>
