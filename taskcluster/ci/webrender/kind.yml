@@ -352,8 +352,8 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'testing/mozharness/scripts/android_wrench.py'
-                - 'testing/mozharness/configs/android/wrench.py'
+                - 'testing/mozharness/scripts/android_*.py'
+                - 'testing/mozharness/configs/android/*.py'
 
     android-emulator-release:
         description: Run release wrench reftests on Android emulator
@@ -394,8 +394,8 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'testing/mozharness/scripts/android_wrench.py'
-                - 'testing/mozharness/configs/android/wrench.py'
+                - 'testing/mozharness/scripts/android_*.py'
+                - 'testing/mozharness/configs/android/*.py'
 
     android-hw-p2-debug:
         description: Run debug wrench reftests on Android Pixel2
@@ -434,8 +434,8 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'testing/mozharness/scripts/android_wrench.py'
-                - 'testing/mozharness/configs/android/wrench.py'
+                - 'testing/mozharness/scripts/android_*.py'
+                - 'testing/mozharness/configs/android/*.py'
 
     android-hw-p2-opt:
         description: Run opt wrench reftests on Android Pixel2
@@ -474,5 +474,5 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'testing/mozharness/scripts/android_wrench.py'
-                - 'testing/mozharness/configs/android/wrench.py'
+                - 'testing/mozharness/scripts/android_*.py'
+                - 'testing/mozharness/configs/android/*.py'
