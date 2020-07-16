@@ -801,6 +801,32 @@ static bool intrinsic_UnsafeGetBooleanFromReservedSlot(JSContext* cx,
   return true;
 }
 
+static bool intrinsic_ThisTimeValue(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isInt32());
+
+  const char* name = nullptr;
+
+  int32_t method = args[0].toInt32();
+  if (method == DATE_METHOD_LOCALE_TIME_STRING) {
+    name = "toLocaleTimeString";
+  } else if (method == DATE_METHOD_LOCALE_DATE_STRING) {
+    name = "toLocaleDateString";
+  } else {
+    MOZ_ASSERT(method == DATE_METHOD_LOCALE_STRING);
+    name = "toLocaleString";
+  }
+
+  auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, name);
+  if (!unwrapped) {
+    return false;
+  }
+
+  args.rval().set(unwrapped->UTCTime());
+  return true;
+}
+
 static bool intrinsic_IsPackedArray(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -2262,6 +2288,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("ThisNumberValueForToLocaleString", ThisNumberValueForToLocaleString,
           0, 0),
+
+    JS_FN("ThisTimeValue", intrinsic_ThisTimeValue, 1, 0),
 
     JS_INLINABLE_FN("IsPackedArray", intrinsic_IsPackedArray, 1, 0,
                     IntrinsicIsPackedArray),
