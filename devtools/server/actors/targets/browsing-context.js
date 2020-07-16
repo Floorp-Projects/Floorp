@@ -569,7 +569,7 @@ const browsingContextTargetPrototype = {
       browsingContextID: this.browsingContextID,
       traits: {
         // FF64+ exposes a new trait to help identify BrowsingContextActor's inherited
-        // actorss from the client side.
+        // actors from the client side.
         isBrowsingContext: true,
       },
     };

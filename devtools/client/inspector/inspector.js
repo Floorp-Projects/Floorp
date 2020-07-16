@@ -1297,11 +1297,15 @@ Inspector.prototype = {
 
   onResourceAvailable: function({ resourceType, targetFront, resource }) {
     if (resourceType === this.toolbox.resourceWatcher.TYPES.ROOT_NODE) {
-      // Note: the resource (ie the root node here) will be fetched from the
-      // walker later on in _getDefaultNodeForSelection.
-      // We should update the inspector to directly use the node front
-      // provided here. Bug 1635461.
-      this.onRootNodeAvailable();
+      if (targetFront.isTopLevel) {
+        // Note: the resource (ie the root node here) will be fetched from the
+        // walker later on in _getDefaultNodeForSelection.
+        // We should update the inspector to directly use the node front
+        // provided here. Bug 1635461.
+        this.onRootNodeAvailable();
+      } else {
+        this.emit("frame-root-available", resource);
+      }
     }
   },
 
