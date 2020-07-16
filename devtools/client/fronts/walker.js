@@ -67,7 +67,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     // correct rootNode. Otherwise they might receive an outdated node.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1633348.
     this._rootNodeWatchers++;
-    if (this.traits.watchRootNode && this._rootNodeWatchers === 1) {
+    if (this._rootNodeWatchers === 1) {
       await super.watchRootNode();
     }
 
@@ -77,7 +77,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     }
 
     this._rootNodeWatchers--;
-    if (this.traits.watchRootNode && this._rootNodeWatchers === 0) {
+    if (this._rootNodeWatchers === 0) {
       super.unwatchRootNode();
     }
 
@@ -352,10 +352,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           }
         }
       } else if (change.type === "documentUnload") {
-        if (!this.traits.watchRootNode && targetFront === this.rootNode) {
-          this.emit("root-destroyed");
-        }
-
         // We try to give fronts instead of actorIDs, but these fronts need
         // to be destroyed now.
         emittedMutation.target = targetFront.actorID;
@@ -573,18 +569,14 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     this.on("root-available", onRootNodeAvailable);
 
     this._rootNodeWatchers++;
-    if (this.traits.watchRootNode && this._rootNodeWatchers === 1) {
+    if (this._rootNodeWatchers === 1) {
       await super.watchRootNode();
     } else if (this.rootNode) {
-      // This else branch is here for 2 reasons:
-      // - subsequent calls to `watchRootNode`:
-      //   When debugging recent servers if we skip `super.watchRootNode`,
-      //   we should call `onRootNodeAvailable`` immediately, because the actor
-      //   will not emit "root-available". And we should not emit it from the
-      //   Front, because it would notify other consumers unnecessarily.
-      // - backward compatibility for FF77 or older:
-      //   we assume that a node will already be available when calling
-      //   `watchRootNode`, so we call `onRootNodeAvailable` immediately.
+      // This else branch is here for subsequent calls to `watchRootNode`:
+      //   If we skip `super.watchRootNode`, we should call
+      //   `onRootNodeAvailable` immediately, because the actor will not emit
+      //   "root-available". And we should not emit it from the Front, because
+      //   it would notify other consumers unnecessarily.
       await onRootNodeAvailable(this.rootNode);
     }
   }
@@ -633,7 +625,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     this.off("root-available", onRootNodeAvailable);
 
     this._rootNodeWatchers--;
-    if (this.traits.watchRootNode && this._rootNodeWatchers === 0) {
+    if (this._rootNodeWatchers === 0) {
       super.unwatchRootNode();
     }
   }
