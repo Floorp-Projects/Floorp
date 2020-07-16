@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1609122 - Empty Style Element with valid style-src hash </title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  
+  <meta http-equiv="Content-Security-Policy" content="style-src 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=';">
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We try to load a stylesheet that is empty with a matching hash
+ * sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' should match ""
+ * thus allow the style to be accessed
+ */
+
+
+var s = document.head.appendChild(document.createElement("style"));
+s.disabled = true;
+
+is(s.disabled, true, "Empty Stylesheet with matching Hash was not blocked");
+SimpleTest.finish();
+
+</script>
+</body>
+</html>
