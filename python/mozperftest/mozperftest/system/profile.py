@@ -3,7 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import shutil
+import tempfile
+from pathlib import Path
 
+from condprof.client import get_profile, ProfileNotFoundError
+from condprof.util import get_current_platform
 from mozperftest.layers import Layer
 from mozprofile import create_profile
 from mozprofile.prefs import Preferences
@@ -18,6 +22,27 @@ class Profile(Layer):
     arguments = {
         "directory": {"type": str, "default": None, "help": "Profile to use"},
         "user-js": {"type": str, "default": None, "help": "Custom user.js"},
+        "conditioned": {
+            "action": "store_true",
+            "default": False,
+            "help": "Use a conditioned profile.",
+        },
+        "conditioned-scenario": {
+            "type": str,
+            "default": "settled",
+            "help": "Conditioned scenario to use",
+        },
+        "conditioned-platform": {
+            "type": str,
+            "default": None,
+            "help": "Conditioned platform to use (use local by default)",
+        },
+        "conditioned-project": {
+            "type": str,
+            "default": "mozilla-central",
+            "help": "Conditioned project",
+            "choices": ["try", "mozilla-central"],
+        },
     }
 
     def __init__(self, env, mach_cmd):
@@ -30,12 +55,42 @@ class Profile(Layer):
     def _cleanup(self):
         pass
 
+    def _get_conditioned_profile(self):
+        platform = self.get_arg("conditioned-platform")
+        if platform is None:
+            platform = get_current_platform()
+        scenario = self.get_arg("conditioned-scenario")
+        project = self.get_arg("conditioned-project")
+        alternate_project = "mozilla-central" if project != "mozilla-central" else "try"
+
+        temp_dir = tempfile.mkdtemp()
+        try:
+            condprof = get_profile(temp_dir, platform, scenario, repo=project)
+        except ProfileNotFoundError:
+            condprof = get_profile(temp_dir, platform, scenario, repo=alternate_project)
+        except Exception:
+            raise
+
+        # now get the full directory path to our fetched conditioned profile
+        condprof = Path(temp_dir, condprof)
+        if not condprof.exists():
+            raise OSError(str(condprof))
+
+        return condprof
+
     def run(self, metadata):
+        # using a conditioned profile
+        if self.get_arg("conditioned"):
+            profile_dir = self._get_conditioned_profile()
+            self.set_arg("profile-directory", str(profile_dir))
+            self._created_dirs.append(str(profile_dir))
+            return metadata
+
         if self.get_arg("directory") is not None:
             # no need to create one or load a conditioned one
             return
 
-        # XXX we'll use conditioned profiles later
+        # fresh profile
         profile = create_profile(app="firefox")
 
         # mozprofile.Profile.__del__ silently deletes the profile
