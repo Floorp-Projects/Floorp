@@ -376,6 +376,17 @@ void ChannelWrapper::GetRequestHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal,
   }
 }
 
+void ChannelWrapper::GetRequestHeader(const nsCString& aHeader,
+                                      nsCString& aResult,
+                                      ErrorResult& aRv) const {
+  aResult.SetIsVoid(true);
+  if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
+    Unused << chan->GetRequestHeader(aHeader, aResult);
+  } else {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+  }
+}
+
 void ChannelWrapper::GetResponseHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal,
                                         ErrorResult& aRv) const {
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {

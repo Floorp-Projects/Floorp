@@ -999,24 +999,45 @@ HttpObserverManager = {
             }
             channel.resume(text);
             channel.redirectTo(Services.io.newURI(result.redirectUrl));
+
             // Web Extensions using the WebRequest API are allowed
             // to redirect a channel to a data: URI, hence we mark
-            // the channel to let the redirect blocker know.
+            // the channel to let the redirect blocker know. Please
+            // note that this marking needs to happen after the
+            // channel.redirectTo is called because the channel's
+            // RedirectTo() implementation explicitly drops the flag
+            // to avoid additional redirects not caused by the
+            // Web Extension.
             channel.loadInfo.allowInsecureRedirectToDataURI = true;
 
-            // Web Extentions using the WebRequest API are also allowed
-            // to redirect a channel before any data has been send.
-            // This means we dont have  "Access-Control-Allow-Origin"
-            // information at that point so CORS checks would fail.
-            // Since we trust the WebExtention, we mark the Channel
-            // to skip the CORS check.
-            channel.loadInfo.bypassCORSChecks = true;
+            // To pass CORS checks, we pretend the current request's
+            // response allows the triggering origin to access.
+            let origin = channel.getRequestHeader("Origin");
+            if (origin) {
+              channel.setResponseHeader("Access-Control-Allow-Origin", origin);
+              channel.setResponseHeader(
+                "Access-Control-Allow-Credentials",
+                "true"
+              );
 
-            // Please note that this marking needs to happen after the
-            // channel.redirectTo is called because the channel's
-            // RedirectTo() implementation explicitly drops the flags
-            // to avoid redirects not caused by the
-            // Web Extension.
+              // Compute an arbitrary 'Access-Control-Allow-Headers'
+              // for the  internal Redirect
+
+              let allowHeaders = channel
+                .getRequestHeaders()
+                .map(header => header.name)
+                .join();
+              channel.setResponseHeader(
+                "Access-Control-Allow-Headers",
+                allowHeaders
+              );
+
+              channel.setResponseHeader(
+                "Access-Control-Allow-Methods",
+                channel.method
+              );
+            }
+
             return;
           } catch (e) {
             Cu.reportError(e);

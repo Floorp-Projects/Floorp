@@ -369,6 +369,14 @@ interface ChannelWrapper : EventTarget {
   sequence<MozHTTPHeader> getRequestHeaders();
 
   /**
+  * For HTTP requests: returns the value of the request header, null if not set.
+  *
+  * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
+  */
+  [Throws]
+  ByteString? getRequestHeader(ByteString header);
+
+  /**
    * For HTTP requests, returns an array of response headers which were
    * received for this request, in the same format as returned by
    * getRequestHeaders.
