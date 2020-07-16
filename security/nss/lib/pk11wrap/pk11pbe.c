@@ -883,7 +883,9 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid, SECItem *mech)
         pbeV2_params->ulPrfDataLen = 0;
         pbeV2_params->saltSource = CKZ_SALT_SPECIFIED;
         pSalt = ((CK_CHAR_PTR)pbeV2_params) + sizeof(CK_PKCS5_PBKD2_PARAMS);
-        PORT_Memcpy(pSalt, salt->data, salt->len);
+        if (salt->data) {
+            PORT_Memcpy(pSalt, salt->data, salt->len);
+        }
         pbeV2_params->pSaltSourceData = pSalt;
         pbeV2_params->ulSaltSourceDataLen = salt->len;
         pbeV2_params->iterations = iterations;
@@ -899,7 +901,9 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid, SECItem *mech)
 
         pSalt = ((CK_CHAR_PTR)pbe_params) + sizeof(CK_PBE_PARAMS);
         pbe_params->pSalt = pSalt;
-        PORT_Memcpy(pSalt, salt->data, salt->len);
+        if (salt->data) {
+            PORT_Memcpy(pSalt, salt->data, salt->len);
+        }
         pbe_params->ulSaltLen = salt->len;
         if (iv_len) {
             pbe_params->pInitVector =

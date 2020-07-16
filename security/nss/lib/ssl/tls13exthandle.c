@@ -1519,7 +1519,8 @@ tls13_ClientSendDelegatedCredentialsXtn(const sslSocket *ss,
     SSLSignatureScheme filtered[MAX_SIGNATURE_SCHEMES] = { 0 };
     unsigned int filteredCount = 0;
     SECStatus rv = ssl3_FilterSigAlgs(ss, ss->vrange.max,
-                                      PR_TRUE,
+                                      PR_TRUE /* disableRsae */,
+                                      PR_FALSE /* forCert */,
                                       MAX_SIGNATURE_SCHEMES,
                                       filtered,
                                       &filteredCount);
