@@ -126,7 +126,6 @@ suspend fun String.toRoundedDrawable(context: Context, client: Client) = bitmapF
 }
 
 suspend fun bitmapForUrl(url: String, client: Client): Bitmap? = withContext(Dispatchers.IO) {
-    // TODO cache this image, see https://github.com/mozilla-mobile/fenix/issues/9531
     // Code below will cache it in Gecko's cache, which ensures that as long as we've fetched it once,
     // we will be able to display this avatar as long as the cache isn't purged (e.g. via 'clear user data').
     val body = try {

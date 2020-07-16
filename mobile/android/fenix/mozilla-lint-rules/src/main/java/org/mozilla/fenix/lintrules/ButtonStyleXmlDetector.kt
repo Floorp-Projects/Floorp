@@ -22,7 +22,6 @@ class ButtonStyleXmlDetector : ResourceXmlDetector() {
     companion object {
         const val SCHEMA = "http://schemas.android.com/apk/res-auto"
 
-        // TODO:
         const val ERROR_MESSAGE =
             "All buttons must have a style, try using NeutralButton or similar."
 
