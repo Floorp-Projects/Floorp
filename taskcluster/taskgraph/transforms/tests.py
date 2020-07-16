@@ -602,6 +602,11 @@ test_description_schema = Schema({
     Optional('fetches'): {
         text_type: optionally_keyed_by('test-platform', [text_type])
     },
+
+    # Adds ability to specify what bootstrap script should be used to
+    # initiate the environment setup. See Bug 1648851 for what prompted this.
+    Optional('job-script'):
+        optionally_keyed_by('test-platform', Any(text_type, None)),
 })
 
 
@@ -667,8 +672,10 @@ def set_defaults(config, tasks):
         task.setdefault('limit-platforms', [])
         if build_platform.startswith('android'):
             task.setdefault('docker-image', {'in-tree': 'android-test'})
+            task.setdefault('job-script', 'test-android.sh')
         else:
             task.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
+            task.setdefault('job-script', 'test-linux.sh')
         task.setdefault('checkout', False)
         task.setdefault('require-signed-extensions', False)
         task.setdefault('variants', [])
