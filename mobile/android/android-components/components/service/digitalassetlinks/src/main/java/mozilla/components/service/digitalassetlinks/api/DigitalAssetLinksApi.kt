@@ -53,7 +53,7 @@ class DigitalAssetLinksApi(
     }
 
     private fun apiUrlBuilder(path: String) = BASE_URL.toUri().buildUpon()
-        .path(path)
+        .encodedPath(path)
         .appendQueryParameter("prettyPrint", false.toString())
         .appendQueryParameter("key", apiKey)
 
