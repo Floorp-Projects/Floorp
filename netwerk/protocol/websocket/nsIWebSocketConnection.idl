@@ -1,0 +1,74 @@
+/* vim:set ts=4 sw=4 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIEventTarget;
+interface nsIWebSocketConnectionListener;
+
+/**
+ * nsIWebSocketConnection
+ *
+ * An internal interface that only uses for WebSocketChannel.
+ * Provides methods for sending and receving data.
+ */
+[uuid(4256eb9e-61eb-4ec9-b8c6-b68aee3ba390)]
+interface nsIWebSocketConnection : nsISupports
+{
+    /**
+     * Initialize a WebSocketConnection.
+     *
+     * @param aListener
+     *        The listener to be notified when data is recevied or
+     *        an error happened.
+     * @param aEventTarget
+     *        The event target where the listener's methods will be called.
+     */
+    void init(in nsIWebSocketConnectionListener aListener, in nsIEventTarget aEventTarget);
+
+    /**
+     * Close the connection.
+     */
+    void close();
+
+    /**
+     * Put the outgoing data into a queue.
+     */
+    void EnqueueOutputData([const, array, size_is(aHdrBufLength)]in uint8_t aHdrBuf,
+                                                              in unsigned long aHdrBufLength,
+                           [const, array, size_is(aPayloadBufLength)]in uint8_t aPayloadBuf,
+                                                              in unsigned long aPayloadBufLength);
+
+    /**
+     * Let the connection start reading the data.
+     */
+    void startReading();
+
+    /**
+     * Keep reading the data until there is nothing to read.
+     */
+    void drainSocketData();
+
+    /**
+     * Transport-level security information (if any)
+     */
+    [must_use] readonly attribute nsISupports securityInfo;
+};
+
+/**
+ * nsIWebSocketConnectionListener
+ *
+ * The listener used to receive the status update or incoming data.
+ */
+[scriptable, uuid(1c6ab15b-8a0c-4d76-81f8-326a6e0bcb90)]
+interface nsIWebSocketConnectionListener : nsISupports
+{
+    void onError(in nsresult aStatus);
+
+    void onTCPClosed();
+
+    void onDataReceived([array, size_is(dataLength)]in uint8_t data,
+                        in unsigned long dataLength);
+};
