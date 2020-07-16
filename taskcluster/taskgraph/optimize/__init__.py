@@ -373,10 +373,10 @@ class All(CompositeStrategy):
 
     @classmethod
     def reduce(cls, results):
-        rvs = list(results)
-        if all(rvs):
-            return rvs[0]
-        return False
+        for rv in results:
+            if !rv:
+                return rv
+        return True
 
 
 class Alias(CompositeStrategy):
