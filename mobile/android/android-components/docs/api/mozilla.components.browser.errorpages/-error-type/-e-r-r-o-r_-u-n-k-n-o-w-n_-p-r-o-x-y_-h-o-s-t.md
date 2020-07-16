@@ -2,7 +2,7 @@
 
 # ERROR_UNKNOWN_PROXY_HOST
 
-`ERROR_UNKNOWN_PROXY_HOST` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L228)
+`ERROR_UNKNOWN_PROXY_HOST` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L232)
 
 ### Inherited Properties
 

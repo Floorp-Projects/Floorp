@@ -2,7 +2,7 @@
 
 # ERROR_FILE_NOT_FOUND
 
-`ERROR_FILE_NOT_FOUND` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L213)
+`ERROR_FILE_NOT_FOUND` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L217)
 
 ### Inherited Properties
 
