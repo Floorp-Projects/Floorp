@@ -115,7 +115,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
   if (!thisobj) {
     return nullptr;
   }
-  if (!thisobj->is<DebuggerObject>()) {
+  if (thisobj->getClass() != &DebuggerObject::class_) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Object",
                               "method", thisobj->getClass()->name);
@@ -123,9 +123,10 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
   }
 
   // Forbid Debugger.Object.prototype, which is of class DebuggerObject::class_
-  // but isn't a real working Debugger.Object.
+  // but isn't a real working Debugger.Object. The prototype object is
+  // distinguished by having no referent.
   DebuggerObject* nthisobj = &thisobj->as<DebuggerObject>();
-  if (!nthisobj->isInstance()) {
+  if (!nthisobj->getPrivate()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Object",
                               "method", "prototype object");
@@ -377,7 +378,7 @@ bool DebuggerObject::CallData::parameterNamesGetter() {
 }
 
 bool DebuggerObject::CallData::scriptGetter() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   if (!referent->is<JSFunction>()) {
     args.rval().setUndefined();
@@ -411,7 +412,7 @@ bool DebuggerObject::CallData::scriptGetter() {
 }
 
 bool DebuggerObject::CallData::environmentGetter() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   // Don't bother switching compartments just to check obj's type and get its
   // env.
@@ -718,7 +719,7 @@ bool DebuggerObject::CallData::promiseIDGetter() {
 }
 
 bool DebuggerObject::CallData::promiseDependentPromisesGetter() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   Rooted<PromiseObject*> promise(cx, EnsurePromise(cx, referent));
   if (!promise) {
@@ -944,7 +945,7 @@ bool DebuggerObject::CallData::callMethod() {
 }
 
 bool DebuggerObject::CallData::getPropertyMethod() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   RootedId id(cx);
   if (!ToPropertyKey(cx, args.get(0), &id)) {
@@ -960,7 +961,7 @@ bool DebuggerObject::CallData::getPropertyMethod() {
 }
 
 bool DebuggerObject::CallData::setPropertyMethod() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   RootedId id(cx);
   if (!ToPropertyKey(cx, args.get(0), &id)) {
@@ -1053,7 +1054,7 @@ static bool RequireGlobalObject(JSContext* cx, HandleValue dbgobj,
 }
 
 bool DebuggerObject::CallData::asEnvironmentMethod() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   if (!RequireGlobalObject(cx, args.thisv(), referent)) {
     return false;
@@ -1503,7 +1504,7 @@ struct DebuggerObject::PromiseReactionRecordBuilder
 };
 
 bool DebuggerObject::CallData::getPromiseReactionsMethod() {
-  Debugger* dbg = object->owner();
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   Rooted<PromiseObject*> unwrappedPromise(cx, EnsurePromise(cx, referent));
   if (!unwrappedPromise) {
@@ -1633,7 +1634,7 @@ DebuggerObject* DebuggerObject::create(JSContext* cx, HandleObject proto,
   }
 
   obj->setPrivateGCThing(referent);
-  obj->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
+  obj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*debugger));
 
   return obj;
 }
