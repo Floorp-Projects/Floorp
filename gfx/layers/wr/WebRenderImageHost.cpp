@@ -159,8 +159,7 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
           img->mProducerID);
       mCurrentAsyncImageManager->AppendImageCompositeNotification(info);
     }
-    mLastFrameID = img->mFrameID;
-    mLastProducerID = img->mProducerID;
+    UpdateCompositedFrame(img);
 
     UpdateBias(imageIndex);
   }
