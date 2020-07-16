@@ -138,5 +138,5 @@ module.exports = async function({
   webConsoleFront.on("serverNetworkEvent", onNetworkEvent);
   webConsoleFront.on("serverNetworkUpdateEvent", onNetworkEventUpdate);
   // Start listening to network events
-  await webConsoleFront.startListeners(["NetworkActivity"]);
+  webConsoleFront.startListeners(["NetworkActivity"]);
 };
