@@ -128,13 +128,13 @@
 
 #ifndef SK_ABORT
 #  define SK_ABORT(message) \
-    do { \
+    do { if (sk_abort_is_enabled()) { \
        SkNO_RETURN_HINT(); \
        SK_DUMP_LINE_FORMAT(message); \
        SK_DUMP_GOOGLE3_STACK(); \
        sk_abort_no_print(); \
        SkUNREACHABLE; \
-    } while (false)
+    } } while (false)
 #endif
 
 // If SK_R32_SHIFT is set, we'll use that to choose RGBA or BGRA.
