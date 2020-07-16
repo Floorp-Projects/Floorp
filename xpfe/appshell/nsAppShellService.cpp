@@ -740,7 +740,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
     isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
   }
 
-  if (nsDocShell* docShell = nsDocShell::Cast(window->GetDocShell())) {
+  if (nsDocShell* docShell = window->GetDocShell()) {
     MOZ_ASSERT(docShell->GetBrowsingContext()->IsChrome());
 
     docShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
