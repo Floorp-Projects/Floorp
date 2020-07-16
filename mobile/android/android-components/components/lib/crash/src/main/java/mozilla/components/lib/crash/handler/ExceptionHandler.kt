@@ -4,11 +4,14 @@
 
 package mozilla.components.lib.crash.handler
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Process
+import android.util.Log
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 
+private const val TAG = "ExceptionHandler"
 /**
  * [Thread.UncaughtExceptionHandler] implementation that forwards crashes to the [CrashReporter] instance.
  */
@@ -18,7 +21,10 @@ class ExceptionHandler(
 ) : Thread.UncaughtExceptionHandler {
     private var crashing = false
 
+    @SuppressLint("LogUsage") // We do not want to use our custom logger while handling the crash
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
+        Log.e(TAG, "Uncaught exception handled: ", throwable)
+
         if (crashing) {
             return
         }
