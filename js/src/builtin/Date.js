@@ -78,8 +78,8 @@ function GetCachedFormat(format, required, defaults) {
  * Spec: ECMAScript Internationalization API Specification, 13.3.1.
  */
 function Date_toLocaleString() {
-    // Steps 1-2.  Note that valueOf enforces "this time value" restrictions.
-    var x = callFunction(std_Date_valueOf, this);
+    // Steps 1-2.
+    var x = callFunction(ThisTimeValue, this, DATE_METHOD_LOCALE_STRING);
     if (Number_isNaN(x))
         return "Invalid Date";
 
@@ -111,8 +111,8 @@ function Date_toLocaleString() {
  * Spec: ECMAScript Internationalization API Specification, 13.3.2.
  */
 function Date_toLocaleDateString() {
-    // Steps 1-2.  Note that valueOf enforces "this time value" restrictions.
-    var x = callFunction(std_Date_valueOf, this);
+    // Steps 1-2.
+    var x = callFunction(ThisTimeValue, this, DATE_METHOD_LOCALE_DATE_STRING);
     if (Number_isNaN(x))
         return "Invalid Date";
 
@@ -144,8 +144,8 @@ function Date_toLocaleDateString() {
  * Spec: ECMAScript Internationalization API Specification, 13.3.3.
  */
 function Date_toLocaleTimeString() {
-    // Steps 1-2.  Note that valueOf enforces "this time value" restrictions.
-    var x = callFunction(std_Date_valueOf, this);
+    // Steps 1-2.
+    var x = callFunction(ThisTimeValue, this, DATE_METHOD_LOCALE_TIME_STRING);
     if (Number_isNaN(x))
         return "Invalid Date";
 
