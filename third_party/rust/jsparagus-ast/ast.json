@@ -289,11 +289,15 @@
     "StaticMemberExpressionTail": {
       "property": "IdentifierName"
     },
+    "PrivateFieldExpressionTail": {
+      "field": "PrivateIdentifier"
+    },
     "CallExpressionTail": {
       "arguments": "Arguments"
     },
     "ComputedMemberExpression": "ComputedMemberExpression",
     "StaticMemberExpression": "StaticMemberExpression",
+    "PrivateFieldExpression": "PrivateFieldExpression",
     "CallExpression": "CallExpression"
   },
   "PropertyName": {
@@ -400,12 +404,18 @@
   "MemberAssignmentTarget": {
     "_type": "enum",
     "ComputedMemberAssignmentTarget": "ComputedMemberAssignmentTarget",
+    "PrivateFieldAssignmentTarget": "PrivateFieldAssignmentTarget",
     "StaticMemberAssignmentTarget": "StaticMemberAssignmentTarget"
   },
   "ComputedMemberAssignmentTarget": {
     "_type": "struct",
     "object": "ExpressionOrSuper",
     "expression": "Box<Expression>"
+  },
+  "PrivateFieldAssignmentTarget": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "field": "PrivateIdentifier"
   },
   "StaticMemberAssignmentTarget": {
     "_type": "struct",
@@ -633,7 +643,7 @@
   },
   "PrivateFieldExpression": {
     "_type": "struct",
-    "object": "Box<Expression>",
+    "object": "ExpressionOrSuper",
     "field": "PrivateIdentifier"
   },
   "TemplateExpressionElement": {

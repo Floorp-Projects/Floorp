@@ -84,6 +84,7 @@ pub enum StackValue<'alloc> {
     ObjectProperty(arena::Box<'alloc, ObjectProperty<'alloc>>),
     OptionalChain(arena::Box<'alloc, OptionalChain<'alloc>>),
     Parameter(arena::Box<'alloc, Parameter<'alloc>>),
+    PrivateFieldAssignmentTarget(arena::Box<'alloc, PrivateFieldAssignmentTarget<'alloc>>),
     PrivateFieldExpression(arena::Box<'alloc, PrivateFieldExpression<'alloc>>),
     PrivateIdentifier(arena::Box<'alloc, PrivateIdentifier>),
     Program(arena::Box<'alloc, Program<'alloc>>),
@@ -797,6 +798,15 @@ impl<'alloc> StackValueItem<'alloc> for Parameter<'alloc> {
         match sv {
             StackValue::Parameter(v) => Ok(v),
             _ => Err(format!("StackValue expected Parameter, got {:?}", sv)),
+        }
+    }
+}
+
+impl<'alloc> StackValueItem<'alloc> for PrivateFieldAssignmentTarget<'alloc> {
+    fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
+        match sv {
+            StackValue::PrivateFieldAssignmentTarget(v) => Ok(v),
+            _ => Err(format!("StackValue expected PrivateFieldAssignmentTarget, got {:?}", sv)),
         }
     }
 }
@@ -1622,6 +1632,13 @@ impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, Parameter<'alloc>> {
     type Error = Infallible;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
         Ok(StackValue::Parameter(self))
+    }
+}
+
+impl<'alloc> TryIntoStack<'alloc> for arena::Box<'alloc, PrivateFieldAssignmentTarget<'alloc>> {
+    type Error = Infallible;
+    fn try_into_stack(self) -> Result<StackValue<'alloc>, Infallible> {
+        Ok(StackValue::PrivateFieldAssignmentTarget(self))
     }
 }
 

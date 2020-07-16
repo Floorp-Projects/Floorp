@@ -345,7 +345,10 @@ struct PossiblyAnnexBFunction {
     name: SourceAtomSetIndex,
     owner_scope_index: ScopeIndex,
     binding_index: BindingIndex,
-    stencil_index: ScriptStencilIndex,
+
+    /// Index of the script in the list of `functions` in the
+    /// `FunctionScriptStencilBuilder`.
+    script_index: ScriptStencilIndex,
 }
 
 #[derive(Debug)]
@@ -365,14 +368,14 @@ impl PossiblyAnnexBFunctionList {
         name: SourceAtomSetIndex,
         owner_scope_index: ScopeIndex,
         binding_index: BindingIndex,
-        stencil_index: ScriptStencilIndex,
+        script_index: ScriptStencilIndex,
     ) {
         if let Some(functions) = self.functions.get_mut(&name) {
             functions.push(PossiblyAnnexBFunction {
                 name,
                 owner_scope_index,
                 binding_index,
-                stencil_index,
+                script_index,
             });
             return;
         }
@@ -382,7 +385,7 @@ impl PossiblyAnnexBFunctionList {
             name,
             owner_scope_index,
             binding_index,
-            stencil_index,
+            script_index,
         });
         self.functions.insert(name, functions);
     }
@@ -406,7 +409,7 @@ impl PossiblyAnnexBFunctionList {
                     _ => panic!("unexpected scope pointed by Annex B function"),
                 }
 
-                function_declaration_properties.mark_annex_b(fun.stencil_index);
+                function_declaration_properties.mark_annex_b(fun.script_index);
             }
         }
     }
@@ -1037,10 +1040,16 @@ struct FunctionParametersScopeBuilder {
     has_parameter_expressions: bool,
 
     scope_index: ScopeIndex,
+
+    /// Index of the script in the list of `functions` in the
+    /// `FunctionScriptStencilBuilder`.
+    script_index: ScriptStencilIndex,
+
+    has_direct_eval: bool,
 }
 
 impl FunctionParametersScopeBuilder {
-    fn new(scope_index: ScopeIndex, is_arrow: bool) -> Self {
+    fn new(scope_index: ScopeIndex, is_arrow: bool, script_index: ScriptStencilIndex) -> Self {
         let mut base = BaseScopeBuilder::new();
 
         if !is_arrow {
@@ -1073,6 +1082,8 @@ impl FunctionParametersScopeBuilder {
             simple_parameter_list: true,
             has_parameter_expressions: false,
             scope_index,
+            script_index,
+            has_direct_eval: false,
         }
     }
 
@@ -1394,6 +1405,7 @@ impl FunctionParametersScopeBuilder {
             self.non_positional_parameter_names.len(),
             function_max_var_names_count,
             enclosing,
+            self.script_index,
         );
 
         // FunctionDeclarationInstantiation ( func, argumentsList )
@@ -1509,6 +1521,10 @@ impl FunctionParametersScopeBuilder {
         else {
             debug_assert!(has_extra_body_var_scope);
 
+            // In non-strict mode code, direct `eval` can extend function's
+            // scope.
+            let function_has_extensible_scope = !self.strict && self.has_direct_eval;
+
             // Step 28.a. NOTE: A separate Environment Record is needed to
             //            ensure that closures created by expressions in the
             //            formal parameter list do not have visibility of
@@ -1520,6 +1536,7 @@ impl FunctionParametersScopeBuilder {
             //            varEnv.
             let mut data = VarScopeData::new(
                 body_scope_builder.var_names.len(),
+                function_has_extensible_scope,
                 /* encloding= */ self.scope_index,
             );
 
@@ -1891,6 +1908,19 @@ impl ScopeBuilderStack {
         panic!("There should be at least one scope on the stack");
     }
 
+    fn maybe_innermost_function_parameters<'a>(
+        &'a mut self,
+    ) -> Option<&'a mut FunctionParametersScopeBuilder> {
+        for builder in self.stack.iter_mut().rev() {
+            match builder {
+                ScopeBuilder::FunctionParameters(builder) => return Some(builder),
+                _ => {}
+            }
+        }
+
+        None
+    }
+
     fn innermost_lexical<'a>(&'a mut self) -> &'a mut ScopeBuilder {
         // FIXME: If there's no other case, merge with innermost.
         self.innermost()
@@ -1907,6 +1937,10 @@ impl ScopeBuilderStack {
             .last()
             .expect("There should be at least one scope on the stack")
             .get_scope_index()
+    }
+
+    fn current_scope_index_or_empty_global(&self) -> ScopeIndex {
+        self.current_scope_index()
     }
 
     fn push_global(&mut self, builder: GlobalScopeBuilder) {
@@ -2060,7 +2094,12 @@ impl FunctionScriptStencilBuilder {
     ///
     /// This creates `ScriptStencil` for the function, and adds it to
     /// enclosing function if exists.
-    fn enter<T>(&mut self, fun: &T, syntax_kind: FunctionSyntaxKind) -> ScriptStencilIndex
+    fn enter<T>(
+        &mut self,
+        fun: &T,
+        syntax_kind: FunctionSyntaxKind,
+        enclosing_scope_index: ScopeIndex,
+    ) -> ScriptStencilIndex
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
@@ -2084,6 +2123,7 @@ impl FunctionScriptStencilBuilder {
             syntax_kind.is_generator(),
             syntax_kind.is_async(),
             FunctionFlags::interpreted(syntax_kind),
+            enclosing_scope_index,
         );
         let index = self.functions.push(function_stencil);
         self.function_stencil_indices.insert(fun, index);
@@ -2112,6 +2152,15 @@ impl FunctionScriptStencilBuilder {
         self.current_mut().set_to_string_end(source_end);
 
         self.function_stack.pop();
+    }
+
+    /// Returns the current function's index.
+    /// Panics if no current function is found.
+    fn current_index(&self) -> ScriptStencilIndex {
+        *self
+            .function_stack
+            .last()
+            .expect("should be inside function")
     }
 
     /// Returns a immutable reference to the innermost function. None otherwise.
@@ -2411,6 +2460,7 @@ impl ScopeDataMapBuilder {
         let fun_index = self.function_stencil_builder.enter(
             fun,
             FunctionSyntaxKind::function_declaration(is_generator, is_async),
+            self.builder_stack.current_scope_index_or_empty_global(),
         );
 
         match self.builder_stack.innermost_lexical() {
@@ -2451,6 +2501,7 @@ impl ScopeDataMapBuilder {
         self.function_stencil_builder.enter(
             fun,
             FunctionSyntaxKind::function_expression(is_generator, is_async),
+            self.builder_stack.current_scope_index_or_empty_global(),
         );
     }
 
@@ -2473,8 +2524,11 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
-        self.function_stencil_builder
-            .enter(fun, FunctionSyntaxKind::method(is_generator, is_async));
+        self.function_stencil_builder.enter(
+            fun,
+            FunctionSyntaxKind::method(is_generator, is_async),
+            self.builder_stack.current_scope_index_or_empty_global(),
+        );
     }
 
     pub fn after_method<T>(&mut self, fun: &T)
@@ -2488,8 +2542,11 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
-        self.function_stencil_builder
-            .enter(fun, FunctionSyntaxKind::getter());
+        self.function_stencil_builder.enter(
+            fun,
+            FunctionSyntaxKind::getter(),
+            self.builder_stack.current_scope_index_or_empty_global(),
+        );
     }
 
     pub fn on_getter_parameter<T>(&mut self, param: &T)
@@ -2511,8 +2568,11 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
-        self.function_stencil_builder
-            .enter(fun, FunctionSyntaxKind::setter());
+        self.function_stencil_builder.enter(
+            fun,
+            FunctionSyntaxKind::setter(),
+            self.builder_stack.current_scope_index_or_empty_global(),
+        );
     }
 
     pub fn before_setter_parameter<T>(&mut self, param: &T)
@@ -2538,8 +2598,11 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
-        self.function_stencil_builder
-            .enter(params, FunctionSyntaxKind::arrow(is_async));
+        self.function_stencil_builder.enter(
+            params,
+            FunctionSyntaxKind::arrow(is_async),
+            self.builder_stack.current_scope_index_or_empty_global(),
+        );
     }
 
     pub fn after_arrow_function<T>(&mut self, body: &T)
@@ -2559,7 +2622,11 @@ impl ScopeDataMapBuilder {
 
         let is_arrow = self.function_stencil_builder.current().is_arrow_function();
 
-        let builder = FunctionParametersScopeBuilder::new(index, is_arrow);
+        let builder = FunctionParametersScopeBuilder::new(
+            index,
+            is_arrow,
+            self.function_stencil_builder.current_index(),
+        );
         self.non_global.insert(params, index);
 
         self.builder_stack.push_function_parameters(builder);
@@ -2776,6 +2843,20 @@ impl ScopeDataMapBuilder {
             .populate(var_scope_index, scope_data_set.extra_body_var);
         self.scopes
             .populate(lexical_scope_index, scope_data_set.lexical);
+    }
+
+    #[allow(dead_code)]
+    pub fn on_direct_eval(&mut self) {
+        if let Some(parameter_scope_builder) =
+            self.builder_stack.maybe_innermost_function_parameters()
+        {
+            parameter_scope_builder.has_direct_eval = true;
+        }
+
+        self.builder_stack
+            .innermost()
+            .base_mut()
+            .bindings_accessed_dynamically = true;
     }
 }
 

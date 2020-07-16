@@ -1233,6 +1233,21 @@ impl<'alloc> AstBuilder<'alloc> {
         })
     }
 
+    // OptionalChain : `?.` PrivateIdentifier
+    pub fn optional_private_field_member_expr_tail(
+        &self,
+        start_token: arena::Box<'alloc, Token>,
+        private_identifier: arena::Box<'alloc, Token>,
+    ) -> arena::Box<'alloc, Expression<'alloc>> {
+        let private_identifier_loc = private_identifier.loc;
+        self.alloc_with(|| {
+            Expression::OptionalChain(OptionalChain::PrivateFieldExpressionTail {
+                field: self.private_identifier(private_identifier),
+                loc: SourceLocation::from_parts(start_token.loc, private_identifier_loc),
+            })
+        })
+    }
+
     // OptionalChain : `?.` Arguments
     pub fn optional_call_expr_tail(
         &self,
@@ -1288,6 +1303,25 @@ impl<'alloc> AstBuilder<'alloc> {
                     object: ExpressionOrSuper::Expression(object),
                     property: self.identifier_name(identifier_token),
                     loc: SourceLocation::from_parts(object_loc, identifier_token_loc),
+                },
+            ))
+        })
+    }
+
+    // OptionalChain : OptionalChain `.` PrivateIdentifier
+    pub fn optional_private_field_member_expr(
+        &self,
+        object: arena::Box<'alloc, Expression<'alloc>>,
+        private_identifier: arena::Box<'alloc, Token>,
+    ) -> arena::Box<'alloc, Expression<'alloc>> {
+        let object_loc = object.get_loc();
+        let private_identifier_loc = private_identifier.loc;
+        self.alloc_with(|| {
+            Expression::OptionalChain(OptionalChain::PrivateFieldExpression(
+                PrivateFieldExpression {
+                    object: ExpressionOrSuper::Expression(object),
+                    field: self.private_identifier(private_identifier),
+                    loc: SourceLocation::from_parts(object_loc, private_identifier_loc),
                 },
             ))
         })
@@ -1388,7 +1422,7 @@ impl<'alloc> AstBuilder<'alloc> {
         self.alloc_with(|| {
             Expression::MemberExpression(MemberExpression::PrivateFieldExpression(
                 PrivateFieldExpression {
-                    object,
+                    object: ExpressionOrSuper::Expression(object),
                     field: self.private_identifier(private_identifier),
                     loc: SourceLocation::from_parts(object_loc, field_loc),
                 },
@@ -2128,6 +2162,13 @@ impl<'alloc> AstBuilder<'alloc> {
                         expression,
                         loc,
                     },
+                ),
+            ),
+            Expression::MemberExpression(MemberExpression::PrivateFieldExpression(
+                PrivateFieldExpression { object, field, loc },
+            )) => SimpleAssignmentTarget::MemberAssignmentTarget(
+                MemberAssignmentTarget::PrivateFieldAssignmentTarget(
+                    PrivateFieldAssignmentTarget { object, field, loc },
                 ),
             ),
 

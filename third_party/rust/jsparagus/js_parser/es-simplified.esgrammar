@@ -307,6 +307,8 @@ OptionalChain[Yield, Await] :
     => optional_computed_member_expr_tail($0, $2, $3)
   `?.` IdentifierName
     => optional_static_member_expr_tail($0, $1)
+  `?.` PrivateIdentifier
+    => optional_private_field_member_expr_tail($0, $1)
   `?.` Arguments[?Yield, ?Await]
     => optional_call_expr_tail($0, $1)
   `?.` TemplateLiteral[?Yield, ?Await, +Tagged]
@@ -315,6 +317,8 @@ OptionalChain[Yield, Await] :
     => optional_computed_member_expr($0, $2, $3)
   OptionalChain[?Yield, ?Await] `.` IdentifierName
     => optional_static_member_expr($0, $2)
+  OptionalChain[?Yield, ?Await] `.` PrivateIdentifier
+    => optional_private_field_member_expr($0, $2)
   OptionalChain[?Yield, ?Await] Arguments[?Yield, ?Await]
     => optional_call_expr($0, $1)
   OptionalChain[?Yield, ?Await] TemplateLiteral[?Yield, ?Await, +Tagged]
