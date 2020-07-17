@@ -18,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_edit_login.*
-import kotlinx.android.synthetic.main.fragment_edit_login.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -32,9 +31,9 @@ import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLogin
+import org.mozilla.fenix.settings.logins.togglePasswordReveal
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 import org.mozilla.fenix.settings.logins.interactor.EditLoginInteractor
-import org.mozilla.fenix.settings.logins.view.EditLoginView
 
 /**
  * Displays the editable saved login information for a single website
@@ -43,12 +42,11 @@ import org.mozilla.fenix.settings.logins.view.EditLoginView
 @Suppress("TooManyFunctions", "NestedBlockDepth", "ForbiddenComment")
 class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
-    fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
+    private fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
 
     private val args by navArgs<EditLoginFragmentArgs>()
     private lateinit var loginsFragmentStore: LoginsFragmentStore
     private lateinit var interactor: EditLoginInteractor
-    private lateinit var editLoginView: EditLoginView
     private lateinit var oldLogin: SavedLogin
 
     private var listOfPossibleDupes: List<SavedLogin>? = null
@@ -56,7 +54,6 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
     private var usernameChanged = false
     private var passwordChanged = false
     private var saveEnabled = false
-    private var showPassword = true
 
     private var validPassword = true
     private var validUsername = true
@@ -65,7 +62,6 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
         oldLogin = args.savedLoginItem
-        editLoginView = EditLoginView(view.editLoginLayout)
 
         loginsFragmentStore = StoreProvider.get(this) {
             LoginsFragmentStore(
@@ -102,7 +98,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         initSaveState()
         setUpClickListeners()
         setUpTextListeners()
-        editLoginView.showPassword()
+        togglePasswordReveal(passwordText, revealPasswordButton)
 
         consumeFrom(loginsFragmentStore) {
             listOfPossibleDupes = loginsFragmentStore.state.duplicateLogins
@@ -146,12 +142,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             it.isEnabled = false
         }
         revealPasswordButton.setOnClickListener {
-            showPassword = !showPassword
-            if (showPassword) {
-                editLoginView.showPassword()
-            } else {
-                editLoginView.hidePassword()
-            }
+            togglePasswordReveal(passwordText, revealPasswordButton)
         }
     }
 
@@ -170,8 +161,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
         usernameText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(u: Editable?) {
-                when {
-                    u.toString() == oldLogin.username -> {
+                when (oldLogin.username) {
+                    u.toString() -> {
                         usernameChanged = false
                         validUsername = true
                         inputLayoutUsername.error = null

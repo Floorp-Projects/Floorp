@@ -171,6 +171,8 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
             accountExists -> updateSyncPreferenceStatus()
             !accountExists -> updateSyncPreferenceNeedsLogin()
         }
+
+        togglePrefsEnabledWhileAuthenticating(enabled = true)
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) =

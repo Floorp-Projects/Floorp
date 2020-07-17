@@ -43,6 +43,7 @@ import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLogin
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 import org.mozilla.fenix.settings.logins.interactor.LoginDetailInteractor
+import org.mozilla.fenix.settings.logins.togglePasswordReveal
 import org.mozilla.fenix.settings.logins.view.LoginDetailView
 
 /**
@@ -59,7 +60,6 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
     private lateinit var interactor: LoginDetailInteractor
     private lateinit var menu: Menu
     private var deleteDialog: AlertDialog? = null
-    private var showPassword = true
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -112,7 +112,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
             )
             setUpPasswordReveal()
         }
-        loginDetailView.togglePasswordReveal(showPassword)
+        togglePasswordReveal(passwordText, revealPasswordButton)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,11 +140,10 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         revealPasswordButton.increaseTapArea(BUTTON_INCREASE_DPS)
         revealPasswordButton.setOnClickListener {
-            showPassword = !showPassword
-            loginDetailView.togglePasswordReveal(!showPassword)
+            togglePasswordReveal(passwordText, revealPasswordButton)
         }
         passwordText.setOnClickListener {
-            loginDetailView.togglePasswordReveal(!showPassword)
+            togglePasswordReveal(passwordText, revealPasswordButton)
         }
     }
 
