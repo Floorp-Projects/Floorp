@@ -13,6 +13,7 @@ from mozperftest.hooks import Hooks
 HERE = Path(__file__).parent
 EXAMPLE_TESTS_DIR = os.path.join(HERE, "data", "samples")
 EXAMPLE_TEST = os.path.join(EXAMPLE_TESTS_DIR, "perftest_example.js")
+EXAMPLE_XPCSHELL_TEST = Path(EXAMPLE_TESTS_DIR, "test_xpcshell.js")
 BT_DATA = Path(HERE, "data", "browsertime-results", "browsertime.json")
 
 
@@ -29,23 +30,19 @@ def temp_file(name="temp", content=None):
         shutil.rmtree(tempdir)
 
 
-@contextlib.contextmanager
-def temp_dir():
-    tempdir = tempfile.mkdtemp()
-    try:
-        yield tempdir
-    finally:
-        shutil.rmtree(tempdir)
-
-
 def get_running_env(**kwargs):
     from mozbuild.base import MozbuildObject
 
     config = MozbuildObject.from_environment()
     mach_cmd = MagicMock()
-    mach_cmd.get_binary_path = lambda: ""
+
+    def get_binary_path(*args):
+        return ""
+
+    mach_cmd.get_binary_path = get_binary_path
     mach_cmd.topsrcdir = config.topsrcdir
     mach_cmd.topobjdir = config.topobjdir
+    mach_cmd.distdir = config.distdir
     mach_cmd._mach_context = MagicMock()
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
     mach_cmd.run_process.return_value = 0

@@ -89,6 +89,10 @@
                     "type": "object",
                     "title": "Options used in the transformer"
                 },
+                "framework": {
+                    "title": "Framework that produced the data",
+                    "type": "object"
+                },
                 "extraOptions": {
                     "type": "array",
                     "title": "Extra options used in the running suite",

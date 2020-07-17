@@ -110,7 +110,8 @@ class Transformer(object):
                     data = [data]
                 for entry in data:
                     for ele in entry["data"]:
-                        ele.update({"file": file})
+                        if "file" not in ele:
+                            ele.update({"file": file})
                 trfmdata.extend(data)
             except Exception as e:
                 self.logger.warning(

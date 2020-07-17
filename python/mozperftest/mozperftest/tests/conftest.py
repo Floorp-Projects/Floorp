@@ -2,9 +2,11 @@ import json
 import os
 import pathlib
 import pytest
+
 from mozperftest.metrics.notebook.perftestetl import PerftestETL
-from mozperftest.tests.support import get_running_env, temp_dir, HERE
+from mozperftest.tests.support import get_running_env, HERE
 from mozperftest.metrics.notebook.perftestnotebook import PerftestNotebook
+from mozperftest.utils import temp_dir
 
 
 @pytest.fixture(scope="session", autouse=True)

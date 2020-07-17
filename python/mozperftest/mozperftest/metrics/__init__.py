@@ -12,6 +12,4 @@ def get_layers():
 
 
 def pick_metrics(env, flavor, mach_cmd):
-    if flavor in ("mobile-browser", "desktop-browser"):
-        return Layers(env, mach_cmd, get_layers())
-    raise NotImplementedError(flavor)
+    return Layers(env, mach_cmd, get_layers())

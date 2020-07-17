@@ -20,7 +20,7 @@ from mozperftest.test import get_layers as test_layers  # noqa
 from mozperftest.metrics import get_layers as metrics_layers  # noqa
 from mozperftest.utils import convert_day  # noqa
 
-FLAVORS = ["desktop-browser", "mobile-browser", "doc"]
+FLAVORS = "desktop-browser", "mobile-browser", "doc", "xpcshell"
 
 
 class Options:

@@ -138,6 +138,7 @@ class Perfherder(Layer):
                 lower_is_better=strtobool(settings.get("lowerIsBetter", True)),
                 unit=settings.get("unit", "ms"),
                 summary=settings.get("value"),
+                framework=settings.get("framework"),
             )
 
             if all_perfherder_data is None:
