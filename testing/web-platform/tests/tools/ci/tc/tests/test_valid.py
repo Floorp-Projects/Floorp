@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from io import open
 
 import jsone
@@ -8,6 +9,7 @@ import pytest
 import requests
 import yaml
 from jsonschema import validate
+from six import PY3
 
 from tools.ci.tc import decision
 
@@ -19,6 +21,8 @@ def data_path(filename):
     return os.path.join(here, "..", "testdata", filename)
 
 
+@pytest.mark.xfail(sys.platform == "win32" and PY3,
+                   reason="https://github.com/web-platform-tests/wpt/issues/24561")
 def test_verify_taskcluster_yml():
     """Verify that the json-e in the .taskcluster.yml is valid"""
     with open(os.path.join(root, ".taskcluster.yml"), encoding="utf8") as f:
@@ -46,11 +50,7 @@ def test_verify_payload():
     r.raise_for_status()
     create_task_schema = r.json()
 
-    # TODO(Hexcles): Change it to https://community-tc.services.mozilla.com/references/schemas/docker-worker/v1/payload.json
-    # after the next Community-TC release (see https://bugzilla.mozilla.org/show_bug.cgi?id=1639732)..
-    r = requests.get(
-        "https://raw.githubusercontent.com/taskcluster/taskcluster/"
-        "3ed511ef9119da54fc093e976b7b5955874c9b54/workers/docker-worker/schemas/v1/payload.json")
+    r = requests.get("https://community-tc.services.mozilla.com/references/schemas/docker-worker/v1/payload.json")
     r.raise_for_status()
     payload_schema = r.json()
 
