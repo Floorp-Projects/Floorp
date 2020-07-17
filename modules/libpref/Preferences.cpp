@@ -3227,9 +3227,8 @@ PreferenceServiceReporter::CollectReports(
     aHandleReport->Callback(
         /* process = */ EmptyCString(), suspectPath, KIND_OTHER, UNITS_COUNT,
         totalReferentCount,
-        nsLiteralCString("A preference with a suspiciously large number "
-                         "referents (symptom of a "
-                         "leak)."),
+        "A preference with a suspiciously large number "
+        "referents (symptom of a leak)."_ns,
         aData);
   }
 
@@ -3313,7 +3312,7 @@ static bool TelemetryPrefValue() {
   // toolkit.telemetry.enabled determines whether we send "extended" data.
   // We only want extended data from pre-release channels due to size.
 
-  constexpr auto channel = nsLiteralCString{MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)};
+  constexpr auto channel = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL) ""_ns;
 
   // Easy cases: Nightly, Aurora, Beta.
   if (channel.EqualsLiteral("nightly") || channel.EqualsLiteral("aurora") ||
@@ -5326,7 +5325,7 @@ static void InitAll() {
   // which prevents automatic int-to-float coercion.
 #define NEVER_PREF(name, cpp_type, value) InitPref_##cpp_type(name, value);
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
-  InitAlwaysPref(nsLiteralCString(name), &sMirror_##full_id, value);
+  InitAlwaysPref(name ""_ns, &sMirror_##full_id, value);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
   InitPref_##cpp_type(name, value);
 #include "mozilla/StaticPrefListAll.h"
@@ -5344,7 +5343,7 @@ static void StartObservingAlwaysPrefs() {
   // since the call to InitAll().
 #define NEVER_PREF(name, cpp_type, value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
-  AddMirror(&sMirror_##full_id, nsLiteralCString(name), sMirror_##full_id);
+  AddMirror(&sMirror_##full_id, name ""_ns, sMirror_##full_id);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value)
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
