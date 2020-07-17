@@ -310,6 +310,9 @@ class MOZ_STACK_CLASS
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
       nsCOMPtr<nsINode>* aOutEndNode);
 
+  static nsresult PostProcessFragmentForPastedHTMLWithoutContext(
+      DocumentFragment& aDocumentFragmentForPastedHTML);
+
   static void RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode);
 
   enum class NodesToRemove {
@@ -3243,6 +3246,29 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   return rv;
 }
 
+// static
+nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
+    PostProcessFragmentForPastedHTMLWithoutContext(
+        DocumentFragment& aDocumentFragmentForPastedHTML) {
+  FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
+      aDocumentFragmentForPastedHTML);
+
+  const nsresult rv = FragmentFromPasteCreator::
+      RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+          aDocumentFragmentForPastedHTML, NodesToRemove::eOnlyListItems);
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
+        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
+        " "
+        "failed");
+    return rv;
+  }
+
+  return rv;
+}
+
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
         const nsAString& aInputString, const nsAString& aContextStr,
@@ -3331,18 +3357,12 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     }
     aDocumentFragmentToInsert = std::move(documentFragmentForContext);
   } else {
-    FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
+    const nsresult rv = PostProcessFragmentForPastedHTMLWithoutContext(
         *documentFragmentForPastedHTML);
-
-    rv = FragmentFromPasteCreator::
-        RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
-            *documentFragmentForPastedHTML, NodesToRemove::eOnlyListItems);
-
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
-          "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
-          " failed");
+          "PostProcessFragmentForPastedHTMLWithoutContext() failed.");
       return rv;
     }
 
