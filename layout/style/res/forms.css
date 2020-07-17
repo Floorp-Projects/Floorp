@@ -220,16 +220,12 @@ textarea:read-write {
 select {
   margin: 0;
   border-color: ThreeDLightShadow;
-  background-color: -moz-Combobox;
-  color: -moz-ComboboxText;
   font: -moz-list;
   white-space: nowrap !important;
   word-wrap: normal !important;
   cursor: default;
   box-sizing: border-box;
   user-select: none;
-  appearance: auto;
-  -moz-default-appearance: menulist;
   border-width: 2px;
   border-style: inset;
   overflow: -moz-hidden-unscrollable;
@@ -237,43 +233,26 @@ select {
   display: inline-block;
   page-break-inside: avoid;
   overflow-clip-box: padding-box !important; /* bug 992447 */
-}
 
-%ifdef MOZ_WIDGET_GTK
-/* Comboboxes use button styles on Gtk so it's safe to
- * use a button style here. */
-select:active:hover {
-  color: -moz-gtk-buttonactivetext;
-}
-%endif
-
-/* Need the "select[size][multiple]" selector to override the settings on
-   'select[size="1"]', eg if one has <select size="1" multiple>, and that it
-   needs to be separate from the other :is() selector because otherwise it'd
-   increase the specificity of it, and override the rule below */
-
-select:is([size], [multiple]),
-select[size][multiple] {
-  /* Different alignment and padding for listbox vs combobox */
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  padding-block: 1px;
-  padding-inline: 0;
-  vertical-align: text-bottom;
-  appearance: auto;
-  -moz-default-appearance: listbox;
-  -moz-button-appearance: disallow;
-}
-
-select:is([size="0"], [size="1"]) {
-  /* Except this is not a listbox */
+  /* Set some styles for drop down selects. These are overridden below for
+   * list box selects. */
   background-color: -moz-Combobox;
   color: -moz-ComboboxText;
   vertical-align: baseline;
-  padding: unset;
+  padding-block: 0;
   appearance: auto;
   -moz-default-appearance: menulist;
   -moz-button-appearance: allow;
+}
+
+select:-moz-select-list-box {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  vertical-align: text-bottom;
+  padding-block: 1px;
+  appearance: auto;
+  -moz-default-appearance: listbox;
+  -moz-button-appearance: disallow;
 }
 
 select > button {
@@ -431,9 +410,7 @@ input:disabled,
 textarea:disabled,
 option:disabled,
 optgroup:disabled,
-select:disabled:disabled /* Need the pseudo-class twice to have the specificity
-                            be at least the same as select[size][multiple] above */
-{
+select:disabled {
   color: GrayText;
   background-color: ThreeDLightShadow;
   cursor: unset;

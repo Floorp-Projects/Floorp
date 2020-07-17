@@ -68,6 +68,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/SVGElement.h"
@@ -772,6 +773,11 @@ bool Gecko_IsBrowserFrame(const Element* aElement) {
   nsIMozBrowserFrame* browserFrame =
       const_cast<Element*>(aElement)->GetAsMozBrowserFrame();
   return browserFrame && browserFrame->GetReallyIsBrowser();
+}
+
+bool Gecko_IsSelectListBox(const Element* aElement) {
+  const auto* select = HTMLSelectElement::FromNode(aElement);
+  return select && !select->IsCombobox();
 }
 
 template <typename Implementor>

@@ -17,6 +17,7 @@ ServoElementSnapshot::ServoElementSnapshot(const Element& aElement)
       mContains(Flags(0)),
       mIsTableBorderNonzero(false),
       mIsMozBrowserFrame(false),
+      mIsSelectListBox(false),
       mClassAttributeChanged(false),
       mIdAttributeChanged(false) {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
@@ -32,6 +33,7 @@ void ServoElementSnapshot::AddOtherPseudoClassState(const Element& aElement) {
 
   mIsTableBorderNonzero = Gecko_IsTableBorderNonzero(&aElement);
   mIsMozBrowserFrame = Gecko_IsBrowserFrame(&aElement);
+  mIsSelectListBox = Gecko_IsSelectListBox(&aElement);
 
   mContains |= Flags::OtherPseudoClassState;
 }
