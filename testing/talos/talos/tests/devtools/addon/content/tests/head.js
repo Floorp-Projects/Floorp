@@ -182,3 +182,5 @@ exports.reloadPageAndLog = async function(name, toolbox, onReload) {
 exports.isFissionEnabled = function() {
   return Services.prefs.getBoolPref("fission.autostart", false);
 };
+
+exports.waitForTick = () => new Promise(res => setTimeout(res, 0));
