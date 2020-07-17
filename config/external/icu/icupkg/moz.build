@@ -4,20 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('icui18n')
-FINAL_LIBRARY = 'icu'
+HostProgram('icupkg')
 
-DEFINES['U_I18N_IMPLEMENTATION'] = True
-
-LOCAL_INCLUDES += ['/intl/icu/source/common']
+LOCAL_INCLUDES += [
+    '/intl/icu/source/common',
+    '/intl/icu/source/i18n',
+    '/intl/icu/source/tools/toolutil',
+]
 
 include('../defs.mozbuild')
 include('sources.mozbuild')
 
-SOURCES += sources
+HOST_SOURCES += sources
+HOST_SOURCES += [
+    '/intl/icu/source/stubdata/stubdata.cpp',
+]
 
-if CONFIG['TARGET_ENDIANNESS'] == 'big':
-    HostLibrary('host_icui18n')
-    HOST_DEFINES['U_I18N_IMPLEMENTATION'] = True
-    HOST_SOURCES += sources
-    HOST_SOURCES += other_sources
+HOST_USE_LIBS += [
+    'host_icui18n',
+    'host_icutoolutil',
+    'host_icuuc',
+]

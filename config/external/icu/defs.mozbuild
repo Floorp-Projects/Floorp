@@ -56,3 +56,7 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
         '-Wno-macro-redefined',
         '-Wno-microsoft-include',
     ]
+
+for k, v in DEFINES.items():
+    if k != 'UCONFIG_NO_LEGACY_CONVERSION':
+        HOST_DEFINES[k] = v
