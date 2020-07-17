@@ -274,7 +274,7 @@ void ProxyObject::nuke() {
   // still present.
   JSObject* delegate = UncheckedUnwrapWithoutExpose(this);
   if (delegate != this) {
-    delegate->zone()->delegatePreWriteBarrier(this, delegate);
+    delegate->zone()->beforeClearDelegate(this, delegate);
   }
 
   // Clear the target reference and replaced it with a value that encodes

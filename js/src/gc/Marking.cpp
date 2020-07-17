@@ -799,9 +799,27 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
       if (markable.key != key) {
         return false;
       }
-      markable.weakmap->postSeverDelegate(this, key, key->compartment());
+      markable.weakmap->postSeverDelegate(this, key);
       return true;
     });
+  }
+}
+
+// 'delegate' is now the delegate of 'key'. Update weakmap marking state.
+void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
+  auto p = key->zone()->gcWeakKeys(key).get(key);
+  if (p) {
+    p->value.eraseIf(
+        [this, key, delegate](const WeakMarkable& markable) -> bool {
+          if (markable.key != key) {
+            return false;
+          }
+          if (markable.weakmap->zone()->needsIncrementalBarrier() &&
+              delegate->zone()->needsIncrementalBarrier()) {
+            markable.weakmap->postRestoreDelegate(this, key, delegate);
+          }
+          return true;
+        });
   }
 }
 
