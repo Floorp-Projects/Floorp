@@ -517,9 +517,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetBypassCORSChecks(),
       aLoadInfo->GetSkipContentPolicyCheckForWebRequest(),
       aLoadInfo->GetForceInheritPrincipalDropped(),
-      aLoadInfo->GetInnerWindowID(), aLoadInfo->GetOuterWindowID(),
-      aLoadInfo->GetParentOuterWindowID(), aLoadInfo->GetTopOuterWindowID(),
-      aLoadInfo->GetFrameOuterWindowID(), aLoadInfo->GetBrowsingContextID(),
+      aLoadInfo->GetInnerWindowID(), aLoadInfo->GetBrowsingContextID(),
       aLoadInfo->GetFrameBrowsingContextID(),
       aLoadInfo->GetInitialSecurityCheckDone(),
       aLoadInfo->GetIsInThirdPartyContext(),
@@ -669,7 +667,7 @@ nsresult LoadInfoArgsToLoadInfo(
       (nsContentUtils::InternalContentPolicyTypeToExternal(
            loadInfoArgs.contentPolicyType()) !=
        nsIContentPolicy::TYPE_DOCUMENT)) {
-    // Only fill out ancestor principals and outer window IDs when we
+    // Only fill out ancestor principals and browsing context IDs when we
     // are deserializing LoadInfoArgs to be LoadInfo for a subresource
     RefPtr<BrowsingContext> parentBC =
         BrowsingContext::Get(loadInfoArgs.browsingContextID());
@@ -748,8 +746,6 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.bypassCORSChecks(),
       loadInfoArgs.skipContentPolicyCheckForWebRequest(),
       loadInfoArgs.forceInheritPrincipalDropped(), loadInfoArgs.innerWindowID(),
-      loadInfoArgs.outerWindowID(), loadInfoArgs.parentOuterWindowID(),
-      loadInfoArgs.topOuterWindowID(), loadInfoArgs.frameOuterWindowID(),
       loadInfoArgs.browsingContextID(), loadInfoArgs.frameBrowsingContextID(),
       loadInfoArgs.initialSecurityCheckDone(),
       loadInfoArgs.isInThirdPartyContext(),
