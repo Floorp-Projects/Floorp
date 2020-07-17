@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "SpecialMessageActions",
@@ -15,18 +11,15 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "Ajv",
-  "resource://testing-common/ajv-4.1.1.js"
+  "JsonSchemaValidator",
+  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
-  const response = await fetch(
-    "resource://testing-common/SpecialMessageActionSchemas.json"
-  );
-  const schema = await response.json();
-  ok(schema, "Schema loaded succesfully");
-  return schema.definitions.SpecialMessageActionSchemas;
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "SpecialMessageActionSchemas",
+  "resource://testing-common/SpecialMessageActionSchemas.js"
+);
 
 const EXAMPLE_URL = "https://example.com/";
 
@@ -36,13 +29,15 @@ const SMATestUtils = {
    * @param {SpecialMessageAction} action
    */
   async validateAction(action) {
-    const schema = await fetchSMASchema;
-    const ajv = new Ajv({ async: "co*" });
-    const validator = ajv.compile(schema);
-    if (!validator(action)) {
-      throw new Error(`Action with type ${action.type} was not valid.`);
+    const schema = SpecialMessageActionSchemas[action.type];
+    ok(schema, `should have a schema for ${action.type}`);
+    const { valid, error } = JsonSchemaValidator.validate(action, schema);
+    if (!valid) {
+      throw new Error(
+        `Action with type ${action.type} was not valid: ${error.message}`
+      );
     }
-    ok(!validator.errors, `should be a valid action of type ${action.type}`);
+    ok(valid, `should be a valid action of type ${action.type}`);
   },
 
   /**
