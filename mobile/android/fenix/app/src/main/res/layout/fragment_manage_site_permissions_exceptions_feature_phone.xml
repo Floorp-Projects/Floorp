@@ -3,10 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
+    android:layout_height="fill_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -48,8 +47,8 @@
                 android:paddingBottom="@dimen/radio_button_preference_vertical" />
         </RadioGroup>
 
-    <include layout="@layout/layout_clear_permission_button" />
-    <include layout="@layout/component_permissions_blocked_by_android" />
+        <include layout="@layout/layout_clear_permission_button"/>
+        <include layout="@layout/component_permissions_blocked_by_android"/>
 
     </LinearLayout>
 </ScrollView>

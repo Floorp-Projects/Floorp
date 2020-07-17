@@ -12,7 +12,8 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
-import android.view.View
+import android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+import android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
 import android.view.Window
 import androidx.annotation.StyleRes
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -77,7 +78,7 @@ abstract class ThemeManager {
                 window.statusBarColor = context.getColorFromAttr(android.R.attr.statusBarColor)
 
                 window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    window.decorView.systemUiVisibility or SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             } else {
                 window.statusBarColor = Color.BLACK
             }
@@ -85,7 +86,7 @@ abstract class ThemeManager {
             if (SDK_INT >= Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
                 window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    window.decorView.systemUiVisibility or SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 updateNavigationBar(window, context)
             }
         }
@@ -93,8 +94,13 @@ abstract class ThemeManager {
         private fun clearLightSystemBars(window: Window) {
             if (SDK_INT >= Build.VERSION_CODES.M) {
                 window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
-                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
-                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                    SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+            }
+
+            if (SDK_INT >= Build.VERSION_CODES.O) {
+                // API level can display handle light navigation bar color
+                window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
+                    SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
             }
         }
 
