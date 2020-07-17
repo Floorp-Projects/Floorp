@@ -4,16 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'utils',
-]
-
 DevToolsModules(
-    'console-messages.js',
-    'error-messages.js',
-    'index.js',
-    'platform-messages.js',
+    'nsi-console-listener-watcher.js',
 )
 
-with Files('*-messages.js'):
+with Files('nsi-console-listener-watcher.js'):
     BUG_COMPONENT = ('DevTools', 'Console')
