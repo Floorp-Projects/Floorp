@@ -5258,6 +5258,11 @@ void nsContentUtils::TriggerLink(nsIContent* aContent, nsIURI* aLinkURI,
     nsCOMPtr<nsIPrincipal> triggeringPrincipal = aContent->NodePrincipal();
     nsCOMPtr<nsIContentSecurityPolicy> csp = aContent->GetCsp();
 
+    // Sanitize fileNames containing null characters by replacing them with
+    // underscores.
+    if (!fileName.IsVoid()) {
+      fileName.ReplaceChar(char16_t(0), '_');
+    }
     nsDocShell::Cast(docShell)->OnLinkClick(
         aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : EmptyString(),
         fileName, nullptr, nullptr, UserActivation::IsHandlingUserInput(),

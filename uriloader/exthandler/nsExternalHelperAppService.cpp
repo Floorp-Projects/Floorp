@@ -1229,6 +1229,7 @@ nsExternalAppHandler::nsExternalAppHandler(
   // code sanitization in DownloadPaths.jsm
   mSuggestedFileName.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
   mSuggestedFileName.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
+  mSuggestedFileName.ReplaceChar(char16_t(0), '_');
   mTempFileExtension.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
   mTempFileExtension.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
 
@@ -2512,6 +2513,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     nsIMIMEInfo** _retval) {
   MOZ_ASSERT(!aMIMEType.IsEmpty() || !aFileExt.IsEmpty(),
              "Give me something to work with");
+  MOZ_DIAGNOSTIC_ASSERT(aFileExt.FindChar('\0') == kNotFound,
+                        "The extension should never contain null characters");
   LOG(("Getting mimeinfo from type '%s' ext '%s'\n",
        PromiseFlatCString(aMIMEType).get(),
        PromiseFlatCString(aFileExt).get()));
