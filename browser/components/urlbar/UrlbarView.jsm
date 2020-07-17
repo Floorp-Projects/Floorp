@@ -523,7 +523,9 @@ class UrlbarView {
       // character.
       let trimmedValue = queryContext.searchString.trim();
       this._enableOrDisableOneOffSearches(
-        trimmedValue &&
+        ((UrlbarPrefs.get("update2") &&
+          UrlbarPrefs.get("update2.oneOffsRefresh")) ||
+          trimmedValue) &&
           trimmedValue[0] != "@" &&
           (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
             trimmedValue.length != 1)
