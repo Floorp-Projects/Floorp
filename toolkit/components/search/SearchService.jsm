@@ -914,7 +914,8 @@ SearchService.prototype = {
     }
 
     logConsole.debug("_loadEngines: start");
-    let engines = await this._findEngineSelectorEngines();
+    let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
+    this._setDefaultAndOrdersFromSelector(engines, privateDefault);
 
     let enginesCorrupted = false;
 
@@ -1185,16 +1186,7 @@ SearchService.prototype = {
   ) {
     logConsole.debug("ensureBuiltinExtension: ", id);
     try {
-      let policy = WebExtensionPolicy.getByID(id);
-      if (!policy) {
-        logConsole.debug("ensureBuiltinExtension: Installing ", id);
-        let path = EXT_SEARCH_PREFIX + id.split("@")[0] + "/";
-        await AddonManager.installBuiltinAddon(path);
-        policy = WebExtensionPolicy.getByID(id);
-      }
-      // On startup the extension may have not finished parsing the
-      // manifest, wait for that here.
-      await policy.readyPromise;
+      let policy = await this._getExtensionPolicy(id);
       await this._installExtensionEngine(
         policy.extension,
         locales,
@@ -1288,17 +1280,128 @@ SearchService.prototype = {
       return;
     }
 
+    // Handle the legacy code (this returns at the end).
+    if (!gModernConfig) {
+      // Capture the current engine state, in case we need to notify below.
+      const prevCurrentEngine = this._currentEngine;
+      const prevPrivateEngine = this._currentPrivateEngine;
+      // Clear cached objects as they may get replaced.
+      this._currentEngine = null;
+      this._currentPrivateEngine = null;
+      // Ensure we generate a new __sortedEngines list instead
+      // of appending new engines to the end and fixing the
+      // engine order.
+      this.__sortedEngines = null;
+      await this._loadEngines(await this._cache.get(), true);
+
+      // If the defaultEngine has changed between the previous load and this one,
+      // dispatch the appropriate notifications.
+      if (prevCurrentEngine && this.defaultEngine !== prevCurrentEngine) {
+        SearchUtils.notifyAction(
+          this._currentEngine,
+          SearchUtils.MODIFIED_TYPE.DEFAULT
+        );
+        // If we've not got a separate private active, notify update of the
+        // private so that the UI updates correctly.
+        if (!this._separatePrivateDefault) {
+          SearchUtils.notifyAction(
+            this._currentEngine,
+            SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+          );
+        }
+      }
+      if (
+        this._separatePrivateDefault &&
+        prevPrivateEngine &&
+        this.defaultPrivateEngine !== prevPrivateEngine
+      ) {
+        SearchUtils.notifyAction(
+          this._currentPrivateEngine,
+          SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+        );
+      }
+      Services.obs.notifyObservers(
+        null,
+        SearchUtils.TOPIC_SEARCH_SERVICE,
+        "engines-reloaded"
+      );
+      return;
+    }
+
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
-    // Clear cached objects as they may get replaced.
-    this._currentEngine = null;
-    this._currentPrivateEngine = null;
     // Ensure we generate a new __sortedEngines list instead
     // of appending new engines to the end and fixing the
     // engine order.
     this.__sortedEngines = null;
-    await this._loadEngines(await this._cache.get(), true);
+
+    let {
+      engines: originalConfigEngines,
+      privateDefault,
+    } = await this._fetchEngineSelectorEngines();
+
+    let enginesToRemove = [];
+    let configEngines = [...originalConfigEngines];
+    for (let engine of this._engines.values()) {
+      if (!engine.isAppProvided) {
+        continue;
+      }
+
+      let index = configEngines.findIndex(
+        e =>
+          e.webExtension.id == engine._extensionID &&
+          e.webExtension.locale == engine._locale
+      );
+      if (index == -1) {
+        enginesToRemove.push(engine);
+      } else {
+        // This is an existing engine that we should update (we don't know if
+        // the configuration for this engine has changed or not).
+        let policy = await this._getExtensionPolicy(engine._extensionID);
+
+        let manifest = policy.extension.manifest;
+        let locale = engine._locale || SearchUtils.DEFAULT_TAG;
+        if (locale != SearchUtils.DEFAULT_TAG) {
+          manifest = await policy.extension.getLocalizedManifest(locale);
+        }
+        engine._updateFromManifest(
+          policy.extension.id,
+          policy.extension.baseURI,
+          manifest,
+          locale,
+          configEngines[index]
+        );
+
+        configEngines.splice(index, 1);
+      }
+    }
+
+    // Any remaining configuration engines are ones we need to add.
+    for (let engine of configEngines) {
+      try {
+        let newEngine = await this.makeEngineFromConfig(engine, true);
+        this._addEngineToStore(newEngine);
+      } catch (ex) {
+        console.warn(
+          `Could not load engine ${
+            "webExtension" in engine ? engine.webExtension.id : "unknown"
+          }: ${ex}`
+        );
+      }
+    }
+
+    // Now let's sort out any new default engines. We do this after adding the
+    // new ones to make sure they exist, and before removing the old ones to
+    // avoid the old ones potentially changing the defaults themselves as well.
+
+    this._currentEngine = null;
+    this._currentPrivateEngine = null;
+
+    this._setDefaultAndOrdersFromSelector(
+      originalConfigEngines,
+      privateDefault
+    );
 
     // If the defaultEngine has changed between the previous load and this one,
     // dispatch the appropriate notifications.
@@ -1326,6 +1429,29 @@ SearchService.prototype = {
         SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
       );
     }
+
+    // Finally, remove any engines that need removing.
+    for (let engine of enginesToRemove) {
+      // Check - do we have more than one engine with this ID?
+      if (
+        [...this._engines.values()].filter(
+          e => e._extensionID == engine._extensionID
+        ).length > 1
+      ) {
+        // More than one using this, so we don't want to remove the add-on.
+        this._internalRemoveEngine(engine);
+      } else {
+        let addon = await AddonManager.getAddonByID(engine._extensionID);
+        if (addon) {
+          // Pretend this engine is no longer app-provided, so that when
+          // the add-on uninstall calls removeEngine, we properly remove it,
+          // rather than trying to hide it.
+          engine._isAppProvided = false;
+          await addon.uninstall();
+        }
+      }
+    }
+
     Services.obs.notifyObservers(
       null,
       SearchUtils.TOPIC_SEARCH_SERVICE,
@@ -1661,11 +1787,7 @@ SearchService.prototype = {
     return { engines, privateDefault };
   },
 
-  async _findEngineSelectorEngines() {
-    logConsole.debug("Finding engine configuration from the selector");
-
-    let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
-
+  _setDefaultAndOrdersFromSelector(engines, privateDefault) {
     const defaultEngine = engines[0];
     this._searchDefault = {
       id: defaultEngine.webExtension.id,
@@ -1683,7 +1805,6 @@ SearchService.prototype = {
         locale: privateDefault.webExtension.locale,
       };
     }
-    return engines;
   },
 
   /**
@@ -2508,18 +2629,7 @@ SearchService.prototype = {
    */
   async makeEngineFromConfig(config, isReload = false) {
     logConsole.debug("makeEngineFromConfig:", config);
-    let id = config.webExtension.id;
-    let policy = WebExtensionPolicy.getByID(id);
-    if (!policy) {
-      let idPrefix = id.split("@")[0];
-      let path = `resource://search-extensions/${idPrefix}/`;
-      await AddonManager.installBuiltinAddon(path);
-      policy = WebExtensionPolicy.getByID(id);
-    }
-    // On startup the extension may have not finished parsing the
-    // manifest, wait for that here.
-    await policy.readyPromise;
-
+    let policy = await this._getExtensionPolicy(config.webExtension.id);
     let locale =
       "locale" in config.webExtension
         ? config.webExtension.locale
@@ -2720,9 +2830,18 @@ SearchService.prototype = {
         }
         engineToRemove._filePath = null;
       }
+      this._internalRemoveEngine(engineToRemove);
 
-      // Remove the engine from _sortedEngines
-      var index = this._sortedEngines.indexOf(engineToRemove);
+      // Since we removed an engine, we need to update the preferences.
+      this._saveSortedEngineList();
+    }
+    SearchUtils.notifyAction(engineToRemove, SearchUtils.MODIFIED_TYPE.REMOVED);
+  },
+
+  _internalRemoveEngine(engine) {
+    // Remove the engine from _sortedEngines
+    if (this.__sortedEngines) {
+      var index = this.__sortedEngines.indexOf(engine);
       if (index == -1) {
         throw Components.Exception(
           "Can't find engine to remove in _sortedEngines!",
@@ -2730,14 +2849,10 @@ SearchService.prototype = {
         );
       }
       this.__sortedEngines.splice(index, 1);
-
-      // Remove the engine from the internal store
-      this._engines.delete(engineToRemove.name);
-
-      // Since we removed an engine, we need to update the preferences.
-      this._saveSortedEngineList();
     }
-    SearchUtils.notifyAction(engineToRemove, SearchUtils.MODIFIED_TYPE.REMOVED);
+
+    // Remove the engine from the internal store
+    this._engines.delete(engine.name);
   },
 
   async moveEngine(engine, newIndex) {
@@ -3333,6 +3448,27 @@ SearchService.prototype = {
       length
     );
     return submission;
+  },
+
+  /**
+   * Gets the WebExtensionPolicy for an add-on.
+   *
+   * @param {string} id
+   *   The WebExtension id.
+   * @returns {WebExtensionPolicy}
+   */
+  async _getExtensionPolicy(id) {
+    let policy = WebExtensionPolicy.getByID(id);
+    if (!policy) {
+      let idPrefix = id.split("@")[0];
+      let path = `resource://search-extensions/${idPrefix}/`;
+      await AddonManager.installBuiltinAddon(path);
+      policy = WebExtensionPolicy.getByID(id);
+    }
+    // On startup the extension may have not finished parsing the
+    // manifest, wait for that here.
+    await policy.readyPromise;
+    return policy;
   },
 
   // nsIObserver

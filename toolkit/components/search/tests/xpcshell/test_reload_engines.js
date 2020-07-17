@@ -15,41 +15,16 @@ const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
 const CONFIG = [
   {
+    // Engine initially default, but the defaults will be changed to engine-pref.
     webExtension: {
       id: "engine@search.mozilla.org",
     },
-    orderHint: 30,
     appliesTo: [
       {
         included: { everywhere: true },
-        excluded: { regions: ["FR"] },
         default: "yes",
         defaultPrivate: "yes",
       },
-    ],
-  },
-  {
-    webExtension: {
-      id: "engine-pref@search.mozilla.org",
-    },
-    orderHint: 20,
-    appliesTo: [
-      {
-        included: { regions: ["FR"] },
-        default: "yes",
-        defaultPrivate: "yes",
-      },
-    ],
-  },
-];
-
-const ALTERNATE_CONFIG = [
-  {
-    webExtension: {
-      id: "engine-pref@search.mozilla.org",
-    },
-    orderHint: 20,
-    appliesTo: [
       {
         included: { regions: ["FR"] },
         default: "no",
@@ -58,15 +33,32 @@ const ALTERNATE_CONFIG = [
     ],
   },
   {
+    // This will become defaults when region is changed to FR.
     webExtension: {
-      id: "engine-chromeicon@search.mozilla.org",
+      id: "engine-pref@search.mozilla.org",
     },
-    orderHint: 20,
     appliesTo: [
+      {
+        included: { everywhere: true },
+      },
       {
         included: { regions: ["FR"] },
         default: "yes",
-        defaultPrivate: "no",
+        defaultPrivate: "yes",
+      },
+    ],
+  },
+  {
+    // This engine will get an update when region is changed to FR.
+    webExtension: {
+      id: "engine-chromeicon@search.mozilla.org",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+      },
+      {
+        included: { regions: ["FR"] },
         extraParams: [
           { name: "c", value: "my-test" },
           { name: "q1", value: "{searchTerms}" },
@@ -75,24 +67,48 @@ const ALTERNATE_CONFIG = [
     ],
   },
   {
+    // This engine will be removed when the region is changed to FR.
     webExtension: {
-      id: "engine-resourceicon@search.mozilla.org",
+      id: "engine-rel-searchform-purpose@search.mozilla.org",
     },
-    orderHint: 20,
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        excluded: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    // This engine will be added when the region is changed to FR.
+    webExtension: {
+      id: "engine-reordered@search.mozilla.org",
+    },
     appliesTo: [
       {
         included: { regions: ["FR"] },
-        default: "no",
-        defaultPrivate: "yes",
+      },
+    ],
+  },
+  {
+    // This engine will be re-ordered and have a changed name, when moved to FR.
+    webExtension: {
+      id: "engine-resourceicon@search.mozilla.org",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        excluded: { regions: ["FR"] },
+      },
+      {
+        included: { regions: ["FR"] },
+        webExtension: {
+          locales: ["gd"],
+        },
+        orderHint: 30,
       },
     ],
   },
 ];
-
-// Default engine with no region defined.
-const DEFAULT = "Test search engine";
-// Default engine with region set to FR.
-const FR_DEFAULT = "engine-pref";
 
 function listenFor(name, key) {
   let notifyObserved = false;
@@ -111,7 +127,6 @@ function listenFor(name, key) {
 
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
-  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
     true
@@ -120,13 +135,39 @@ add_task(async function setup() {
   SearchTestUtils.useMockIdleService(registerCleanupFunction);
   await useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
+});
 
+// This is to verify that the loaded configuration matches what we expect for
+// the test.
+add_task(async function test_initial_config_correct() {
   Region._setHomeRegion("", false);
 
   await Services.search.init();
-  // Prime the default engines, so the SearchService properties are primed.
-  await Services.search.getDefaultPrivate();
-  await Services.search.getDefault();
+
+  const installedEngines = await Services.search.getDefaultEngines();
+  Assert.deepEqual(
+    installedEngines.map(e => e.identifier),
+    [
+      "engine",
+      "engine-chromeicon",
+      "engine-pref",
+      "engine-rel-searchform-purpose",
+      "engine-resourceicon",
+    ],
+    "Should have the correct list of engines installed."
+  );
+
+  Assert.equal(
+    (await Services.search.getDefault()).identifier,
+    "engine",
+    "Should have loaded the expected default engine"
+  );
+
+  Assert.equal(
+    (await Services.search.getDefaultPrivate()).identifier,
+    "engine",
+    "Should have loaded the expected private default engine"
+  );
 });
 
 add_task(async function test_config_updated_engine_changes() {
@@ -144,59 +185,72 @@ add_task(async function test_config_updated_engine_changes() {
   );
 
   const enginesAdded = [];
+  const enginesModified = [];
+  const enginesRemoved = [];
 
-  function enginesAddedObs(subject, topic, data) {
-    if (data != SearchUtils.MODIFIED_TYPE.ADDED) {
-      return;
+  function enginesObs(subject, topic, data) {
+    if (data == SearchUtils.MODIFIED_TYPE.ADDED) {
+      enginesAdded.push(subject.QueryInterface(Ci.nsISearchEngine).identifier);
+    } else if (data == SearchUtils.MODIFIED_TYPE.CHANGED) {
+      enginesModified.push(
+        subject.QueryInterface(Ci.nsISearchEngine).identifier
+      );
+    } else if (data == SearchUtils.MODIFIED_TYPE.REMOVED) {
+      enginesRemoved.push(subject.QueryInterface(Ci.nsISearchEngine).name);
     }
-
-    enginesAdded.push(subject.QueryInterface(Ci.nsISearchEngine).identifier);
   }
-  Services.obs.addObserver(enginesAddedObs, SearchUtils.TOPIC_ENGINE_MODIFIED);
+  Services.obs.addObserver(enginesObs, SearchUtils.TOPIC_ENGINE_MODIFIED);
 
   Region._setHomeRegion("FR", false);
 
-  await RemoteSettings(SearchUtils.SETTINGS_KEY).emit("sync", {
-    data: {
-      current: ALTERNATE_CONFIG,
-    },
-  });
-
-  SearchTestUtils.idleService._fireObservers("idle");
+  await Services.search.wrappedJSObject._maybeReloadEngines();
 
   await reloadObserved;
-  Services.obs.removeObserver(
-    enginesAddedObs,
-    SearchUtils.TOPIC_ENGINE_MODIFIED
+  Services.obs.removeObserver(enginesObs, SearchUtils.TOPIC_ENGINE_MODIFIED);
+
+  Assert.deepEqual(
+    enginesAdded,
+    ["engine-resourceicon-gd", "engine-reordered"],
+    "Should have added the correct engines"
   );
 
   Assert.deepEqual(
-    enginesAdded.sort(),
-    ["engine-chromeicon", "engine-pref", "engine-resourceicon"],
-    "Should have installed the correct engines"
+    enginesModified.sort(),
+    ["engine", "engine-chromeicon", "engine-pref"],
+    "Should have modified the expected engines"
+  );
+
+  Assert.deepEqual(
+    enginesRemoved,
+    ["engine-rel-searchform-purpose"],
+    "Should have removed the expected engine"
   );
 
   const installedEngines = await Services.search.getDefaultEngines();
 
   Assert.deepEqual(
     installedEngines.map(e => e.identifier),
-    // TODO: engine shouldn't be in this list, since it is not in the new
-    // configuration.
-    ["engine-chromeicon", "engine-resourceicon", "engine", "engine-pref"],
-    "Should have the correct list of engines installed."
+    [
+      "engine-pref",
+      "engine-resourceicon-gd",
+      "engine-chromeicon",
+      "engine",
+      "engine-reordered",
+    ],
+    "Should have the correct list of engines installed in the expected order."
   );
 
   const newDefault = await defaultEngineChanged;
   Assert.equal(
-    newDefault.identifier,
-    "engine-chromeicon",
+    newDefault.QueryInterface(Ci.nsISearchEngine).name,
+    "engine-pref",
     "Should have correctly notified the new default engine"
   );
 
   const newDefaultPrivate = await defaultPrivateEngineChanged;
   Assert.equal(
-    newDefaultPrivate.identifier,
-    "engine-resourceicon",
+    newDefaultPrivate.QueryInterface(Ci.nsISearchEngine).name,
+    "engine-pref",
     "Should have correctly notified the new default private engine"
   );
 

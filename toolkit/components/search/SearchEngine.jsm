@@ -797,9 +797,7 @@ class SearchEngine {
       case "data":
         if (!this._hasPreferredIcon || isPreferred) {
           this._iconURI = uri;
-          if (this._engineAddedToStore) {
-            SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
-          }
+
           this._hasPreferredIcon = isPreferred;
         }
 
