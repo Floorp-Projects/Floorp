@@ -9,13 +9,12 @@ from mozperftest.metrics.exceptions import PerfherderValidDataError
 from mozperftest.tests.support import (
     get_running_env,
     temp_file,
-    temp_dir,
     EXAMPLE_TEST,
     BT_DATA,
     HERE,
 )
 from mozperftest.environment import METRICS
-from mozperftest.utils import silence
+from mozperftest.utils import silence, temp_dir
 from mozperftest.metrics.utils import metric_fields
 
 
