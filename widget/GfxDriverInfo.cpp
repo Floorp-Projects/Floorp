@@ -745,6 +745,8 @@ const nsAString& GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment id) {
     DECLARE_DESKTOP_ENVIRONMENT_ID(Pantheon, "pantheon");
     DECLARE_DESKTOP_ENVIRONMENT_ID(LXQT, "lxqt");
     DECLARE_DESKTOP_ENVIRONMENT_ID(Deepin, "deepin");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(Dwm, "dwm");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(Budgie, "budgie");
     DECLARE_DESKTOP_ENVIRONMENT_ID(Unknown, "unknown");
     case DesktopEnvironment::Max:  // Suppress a warning.
       DECLARE_DESKTOP_ENVIRONMENT_ID(All, "");
@@ -774,9 +776,11 @@ const nsAString& GfxDriverInfo::GetWindowProtocol(WindowProtocol id) {
 
   switch (id) {
     DECLARE_WINDOW_PROTOCOL_ID(X11, "x11");
+    DECLARE_WINDOW_PROTOCOL_ID(XWayland, "xwayland");
     DECLARE_WINDOW_PROTOCOL_ID(Wayland, "wayland");
     DECLARE_WINDOW_PROTOCOL_ID(WaylandDRM, "wayland/drm");
     DECLARE_WINDOW_PROTOCOL_ID(WaylandAll, "wayland/all");
+    DECLARE_WINDOW_PROTOCOL_ID(X11All, "x11/all");
     case WindowProtocol::Max:  // Suppress a warning.
       DECLARE_WINDOW_PROTOCOL_ID(All, "");
   }
