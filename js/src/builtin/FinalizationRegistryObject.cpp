@@ -307,8 +307,14 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  Rooted<GlobalObject*> incumbentGlobal(cx,
-                                        cx->runtime()->getIncumbentGlobal(cx));
+  // It's problematic storing a CCW to a global in another compartment because
+  // you don't know how far to unwrap it to get the original object
+  // back. Instead store a CCW to a plain object in the same compartment as the
+  // global (this uses Object.prototype).
+  RootedObject incumbentObject(cx);
+  if (!GetObjectFromIncumbentGlobal(cx, &incumbentObject)) {
+    return false;
+  }
 
   Rooted<UniquePtr<ObjectWeakMap>> registrations(
       cx, cx->make_unique<ObjectWeakMap>(cx));
@@ -344,8 +350,8 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
 
   registry->initReservedSlot(CleanupCallbackSlot,
                              ObjectValue(*cleanupCallback));
-  registry->initReservedSlot(IncumbentGlobalSlot,
-                             ObjectValue(*incumbentGlobal));
+  registry->initReservedSlot(IncumbentObjectSlot,
+                             ObjectValue(*incumbentObject));
   InitReservedSlot(registry, RegistrationsSlot, registrations.release(),
                    MemoryUse::FinalizationRegistryRegistrations);
   InitReservedSlot(registry, ActiveRecords, activeRecords.release(),
@@ -444,12 +450,12 @@ JSObject* FinalizationRegistryObject::cleanupCallback() const {
   return &value.toObject();
 }
 
-GlobalObject* FinalizationRegistryObject::incumbentGlobal() const {
-  Value value = getReservedSlot(IncumbentGlobalSlot);
+JSObject* FinalizationRegistryObject::incumbentObject() const {
+  Value value = getReservedSlot(IncumbentObjectSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
-  return &value.toObject().as<GlobalObject>();
+  return &value.toObject();
 }
 
 ObjectWeakMap* FinalizationRegistryObject::registrations() const {
