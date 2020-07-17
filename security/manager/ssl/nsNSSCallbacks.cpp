@@ -569,11 +569,11 @@ void PK11PasswordPromptRunnable::RunOnTargetThread() {
 
   nsAutoString promptString;
   if (PK11_IsInternal(mSlot)) {
-    rv = GetPIPNSSBundleString("CertPassPromptDefault", promptString);
+    rv = GetPIPNSSBundleString("CertPasswordPromptDefault", promptString);
   } else {
     AutoTArray<nsString, 1> formatStrings = {
         NS_ConvertUTF8toUTF16(PK11_GetTokenName(mSlot))};
-    rv = PIPBundleFormatStringFromName("CertPassPrompt", formatStrings,
+    rv = PIPBundleFormatStringFromName("CertPasswordPrompt", formatStrings,
                                        promptString);
   }
   if (NS_FAILED(rv)) {
