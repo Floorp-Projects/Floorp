@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.103';
-const pdfjsBuild = '72d71ba6a';
+const pdfjsVersion = '2.6.123';
+const pdfjsBuild = 'a604973cc';
 
 /***/ }),
 /* 1 */
@@ -229,7 +229,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.103';
+    const workerVersion = '2.6.123';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1507,7 +1507,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.isNodeJS = void 0;
-const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !process.versions.electron;
+const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 exports.isNodeJS = isNodeJS;
 
 /***/ }),
@@ -2841,6 +2841,7 @@ class Page {
     pageIndex,
     pageDict,
     ref,
+    globalIdFactory,
     fontCache,
     builtInCMapCache,
     globalImageCache
@@ -2858,13 +2859,9 @@ class Page {
     const idCounters = {
       obj: 0
     };
-    this.idFactory = {
-      createObjId() {
+    this._localIdFactory = class extends globalIdFactory {
+      static createObjId() {
         return `p${pageIndex}_${++idCounters.obj}`;
-      },
-
-      getDocId() {
-        return `g_${pdfManager.docId}`;
       }
 
     };
@@ -3011,7 +3008,7 @@ class Page {
       xref: this.xref,
       handler,
       pageIndex: this.pageIndex,
-      idFactory: this.idFactory,
+      idFactory: this._localIdFactory,
       fontCache: this.fontCache,
       builtInCMapCache: this.builtInCMapCache,
       globalImageCache: this.globalImageCache,
@@ -3084,7 +3081,7 @@ class Page {
         xref: this.xref,
         handler,
         pageIndex: this.pageIndex,
-        idFactory: this.idFactory,
+        idFactory: this._localIdFactory,
         fontCache: this.fontCache,
         builtInCMapCache: this.builtInCMapCache,
         globalImageCache: this.globalImageCache,
@@ -3124,7 +3121,7 @@ class Page {
       const annotationPromises = [];
 
       for (const annotationRef of this.annotations) {
-        annotationPromises.push(_annotation.AnnotationFactory.create(this.xref, annotationRef, this.pdfManager, this.idFactory).catch(function (reason) {
+        annotationPromises.push(_annotation.AnnotationFactory.create(this.xref, annotationRef, this.pdfManager, this._localIdFactory).catch(function (reason) {
           (0, _util.warn)(`_parsedAnnotations: "${reason}".`);
           return null;
         }));
@@ -3216,6 +3213,23 @@ class PDFDocument {
     this.stream = stream;
     this.xref = new _obj.XRef(stream, pdfManager);
     this._pagePromises = [];
+    const idCounters = {
+      font: 0
+    };
+    this._globalIdFactory = class {
+      static getDocId() {
+        return `g_${pdfManager.docId}`;
+      }
+
+      static createFontId() {
+        return `f${++idCounters.font}`;
+      }
+
+      static createObjId() {
+        (0, _util.unreachable)("Abstract method `createObjId` called.");
+      }
+
+    };
   }
 
   parse(recoveryMode) {
@@ -3504,6 +3518,7 @@ class PDFDocument {
         pageIndex,
         pageDict,
         ref,
+        globalIdFactory: this._globalIdFactory,
         fontCache: catalog.fontCache,
         builtInCMapCache: catalog.builtInCMapCache,
         globalImageCache: catalog.globalImageCache
@@ -12102,9 +12117,9 @@ var JpegImage = function JpegImageClosure() {
             }
           } else if (nextByte === 0xd9) {
             if (parseDNLMarker) {
-              const maybeScanLines = blockRow * 8;
+              const maybeScanLines = blockRow * (frame.precision === 8 ? 8 : 0);
 
-              if (maybeScanLines > 0 && maybeScanLines < frame.scanLines / 10) {
+              if (maybeScanLines > 0 && Math.round(frame.scanLines / maybeScanLines) >= 10) {
                 throw new DNLMarkerError("Found EOI marker (0xFFD9) while parsing scan data, " + "possibly caused by incorrect `scanLines` parameter", maybeScanLines);
               }
             }
@@ -17435,8 +17450,7 @@ class ColorSpace {
     pdfFunctionFactory,
     localColorSpaceCache
   }) {
-    const IR = this.parseToIR(cs, xref, resources, pdfFunctionFactory);
-    const parsedColorSpace = this.fromIR(IR);
+    const parsedColorSpace = this._parse(cs, xref, resources, pdfFunctionFactory);
 
     this._cache(cs, xref, localColorSpaceCache, parsedColorSpace);
 
@@ -17456,92 +17470,32 @@ class ColorSpace {
       return cachedColorSpace;
     }
 
-    const IR = this.parseToIR(cs, xref, resources, pdfFunctionFactory);
-    const parsedColorSpace = this.fromIR(IR);
+    const parsedColorSpace = this._parse(cs, xref, resources, pdfFunctionFactory);
 
     this._cache(cs, xref, localColorSpaceCache, parsedColorSpace);
 
     return parsedColorSpace;
   }
 
-  static fromIR(IR) {
-    const name = Array.isArray(IR) ? IR[0] : IR;
-    let whitePoint, blackPoint, gamma;
-
-    switch (name) {
-      case "DeviceGrayCS":
-        return this.singletons.gray;
-
-      case "DeviceRgbCS":
-        return this.singletons.rgb;
-
-      case "DeviceCmykCS":
-        return this.singletons.cmyk;
-
-      case "CalGrayCS":
-        whitePoint = IR[1];
-        blackPoint = IR[2];
-        gamma = IR[3];
-        return new CalGrayCS(whitePoint, blackPoint, gamma);
-
-      case "CalRGBCS":
-        whitePoint = IR[1];
-        blackPoint = IR[2];
-        gamma = IR[3];
-        const matrix = IR[4];
-        return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
-
-      case "PatternCS":
-        let basePatternCS = IR[1];
-
-        if (basePatternCS) {
-          basePatternCS = this.fromIR(basePatternCS);
-        }
-
-        return new PatternCS(basePatternCS);
-
-      case "IndexedCS":
-        const baseIndexedCS = IR[1];
-        const hiVal = IR[2];
-        const lookup = IR[3];
-        return new IndexedCS(this.fromIR(baseIndexedCS), hiVal, lookup);
-
-      case "AlternateCS":
-        const numComps = IR[1];
-        const alt = IR[2];
-        const tintFn = IR[3];
-        return new AlternateCS(numComps, this.fromIR(alt), tintFn);
-
-      case "LabCS":
-        whitePoint = IR[1];
-        blackPoint = IR[2];
-        const range = IR[3];
-        return new LabCS(whitePoint, blackPoint, range);
-
-      default:
-        throw new _util.FormatError(`Unknown colorspace name: ${name}`);
-    }
-  }
-
-  static parseToIR(cs, xref, resources = null, pdfFunctionFactory) {
+  static _parse(cs, xref, resources = null, pdfFunctionFactory) {
     cs = xref.fetchIfRef(cs);
 
     if ((0, _primitives.isName)(cs)) {
       switch (cs.name) {
         case "DeviceGray":
         case "G":
-          return "DeviceGrayCS";
+          return this.singletons.gray;
 
         case "DeviceRGB":
         case "RGB":
-          return "DeviceRgbCS";
+          return this.singletons.rgb;
 
         case "DeviceCMYK":
         case "CMYK":
-          return "DeviceCmykCS";
+          return this.singletons.cmyk;
 
         case "Pattern":
-          return ["PatternCS", null];
+          return new PatternCS(null);
 
         default:
           if ((0, _primitives.isDict)(resources)) {
@@ -17552,7 +17506,7 @@ class ColorSpace {
 
               if (resourcesCS) {
                 if ((0, _primitives.isName)(resourcesCS)) {
-                  return this.parseToIR(resourcesCS, xref, resources, pdfFunctionFactory);
+                  return this._parse(resourcesCS, xref, resources, pdfFunctionFactory);
                 }
 
                 cs = resourcesCS;
@@ -17561,33 +17515,33 @@ class ColorSpace {
             }
           }
 
-          throw new _util.FormatError(`unrecognized colorspace ${cs.name}`);
+          throw new _util.FormatError(`Unrecognized ColorSpace: ${cs.name}`);
       }
     }
 
     if (Array.isArray(cs)) {
       const mode = xref.fetchIfRef(cs[0]).name;
-      let numComps, params, alt, whitePoint, blackPoint, gamma;
+      let params, numComps, baseCS, whitePoint, blackPoint, gamma;
 
       switch (mode) {
         case "DeviceGray":
         case "G":
-          return "DeviceGrayCS";
+          return this.singletons.gray;
 
         case "DeviceRGB":
         case "RGB":
-          return "DeviceRgbCS";
+          return this.singletons.rgb;
 
         case "DeviceCMYK":
         case "CMYK":
-          return "DeviceCmykCS";
+          return this.singletons.cmyk;
 
         case "CalGray":
           params = xref.fetchIfRef(cs[1]);
           whitePoint = params.getArray("WhitePoint");
           blackPoint = params.getArray("BlackPoint");
           gamma = params.get("Gamma");
-          return ["CalGrayCS", whitePoint, blackPoint, gamma];
+          return new CalGrayCS(whitePoint, blackPoint, gamma);
 
         case "CalRGB":
           params = xref.fetchIfRef(cs[1]);
@@ -17595,77 +17549,71 @@ class ColorSpace {
           blackPoint = params.getArray("BlackPoint");
           gamma = params.getArray("Gamma");
           const matrix = params.getArray("Matrix");
-          return ["CalRGBCS", whitePoint, blackPoint, gamma, matrix];
+          return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
 
         case "ICCBased":
           const stream = xref.fetchIfRef(cs[1]);
           const dict = stream.dict;
           numComps = dict.get("N");
-          alt = dict.get("Alternate");
+          const alt = dict.get("Alternate");
 
           if (alt) {
-            const altIR = this.parseToIR(alt, xref, resources, pdfFunctionFactory);
-            const altCS = this.fromIR(altIR);
+            const altCS = this._parse(alt, xref, resources, pdfFunctionFactory);
 
             if (altCS.numComps === numComps) {
-              return altIR;
+              return altCS;
             }
 
             (0, _util.warn)("ICCBased color space: Ignoring incorrect /Alternate entry.");
           }
 
           if (numComps === 1) {
-            return "DeviceGrayCS";
+            return this.singletons.gray;
           } else if (numComps === 3) {
-            return "DeviceRgbCS";
+            return this.singletons.rgb;
           } else if (numComps === 4) {
-            return "DeviceCmykCS";
+            return this.singletons.cmyk;
           }
 
           break;
 
         case "Pattern":
-          let basePatternCS = cs[1] || null;
+          baseCS = cs[1] || null;
 
-          if (basePatternCS) {
-            basePatternCS = this.parseToIR(basePatternCS, xref, resources, pdfFunctionFactory);
+          if (baseCS) {
+            baseCS = this._parse(baseCS, xref, resources, pdfFunctionFactory);
           }
 
-          return ["PatternCS", basePatternCS];
+          return new PatternCS(baseCS);
 
         case "Indexed":
         case "I":
-          const baseIndexedCS = this.parseToIR(cs[1], xref, resources, pdfFunctionFactory);
+          baseCS = this._parse(cs[1], xref, resources, pdfFunctionFactory);
           const hiVal = xref.fetchIfRef(cs[2]) + 1;
-          let lookup = xref.fetchIfRef(cs[3]);
-
-          if ((0, _primitives.isStream)(lookup)) {
-            lookup = lookup.getBytes();
-          }
-
-          return ["IndexedCS", baseIndexedCS, hiVal, lookup];
+          const lookup = xref.fetchIfRef(cs[3]);
+          return new IndexedCS(baseCS, hiVal, lookup);
 
         case "Separation":
         case "DeviceN":
           const name = xref.fetchIfRef(cs[1]);
           numComps = Array.isArray(name) ? name.length : 1;
-          alt = this.parseToIR(cs[2], xref, resources, pdfFunctionFactory);
+          baseCS = this._parse(cs[2], xref, resources, pdfFunctionFactory);
           const tintFn = pdfFunctionFactory.create(cs[3]);
-          return ["AlternateCS", numComps, alt, tintFn];
+          return new AlternateCS(numComps, baseCS, tintFn);
 
         case "Lab":
           params = xref.fetchIfRef(cs[1]);
           whitePoint = params.getArray("WhitePoint");
           blackPoint = params.getArray("BlackPoint");
           const range = params.getArray("Range");
-          return ["LabCS", whitePoint, blackPoint, range];
+          return new LabCS(whitePoint, blackPoint, range);
 
         default:
-          throw new _util.FormatError(`unimplemented color space object "${mode}"`);
+          throw new _util.FormatError(`Unimplemented ColorSpace object: ${mode}`);
       }
     }
 
-    throw new _util.FormatError(`unrecognized color space object: "${cs}"`);
+    throw new _util.FormatError(`Unrecognized ColorSpace object: ${cs}`);
   }
 
   static isDefaultDecode(decode, numComps) {
@@ -17781,23 +17729,18 @@ class IndexedCS extends ColorSpace {
     super("Indexed", 1);
     this.base = base;
     this.highVal = highVal;
-    const baseNumComps = base.numComps;
-    const length = baseNumComps * highVal;
+    const length = base.numComps * highVal;
+    this.lookup = new Uint8Array(length);
 
     if ((0, _primitives.isStream)(lookup)) {
-      this.lookup = new Uint8Array(length);
       const bytes = lookup.getBytes(length);
       this.lookup.set(bytes);
-    } else if ((0, _util.isString)(lookup)) {
-      this.lookup = new Uint8Array(length);
-
+    } else if (typeof lookup === "string") {
       for (let i = 0; i < length; ++i) {
-        this.lookup[i] = lookup.charCodeAt(i);
+        this.lookup[i] = lookup.charCodeAt(i) & 0xff;
       }
-    } else if (lookup instanceof Uint8Array) {
-      this.lookup = lookup;
     } else {
-      throw new _util.FormatError(`Unrecognized lookup table: ${lookup}`);
+      throw new _util.FormatError(`IndexedCS - unrecognized lookup table: ${lookup}`);
     }
   }
 
@@ -20552,10 +20495,10 @@ class PartialEvaluator {
       return false;
     }
 
-    var processed = Object.create(null);
+    const processed = new _primitives.RefSet();
 
     if (resources.objId) {
-      processed[resources.objId] = true;
+      processed.put(resources.objId);
     }
 
     var nodes = [resources],
@@ -20566,14 +20509,11 @@ class PartialEvaluator {
       var graphicStates = node.get("ExtGState");
 
       if (graphicStates instanceof _primitives.Dict) {
-        var graphicStatesKeys = graphicStates.getKeys();
-
-        for (let i = 0, ii = graphicStatesKeys.length; i < ii; i++) {
-          const key = graphicStatesKeys[i];
+        for (const key of graphicStates.getKeys()) {
           let graphicState = graphicStates.getRaw(key);
 
           if (graphicState instanceof _primitives.Ref) {
-            if (processed[graphicState.toString()]) {
+            if (processed.has(graphicState)) {
               continue;
             }
 
@@ -20584,19 +20524,9 @@ class PartialEvaluator {
                 throw ex;
               }
 
-              if (this.options.ignoreErrors) {
-                if (graphicState instanceof _primitives.Ref) {
-                  processed[graphicState.toString()] = true;
-                }
-
-                this.handler.send("UnsupportedFeature", {
-                  featureId: _util.UNSUPPORTED_FEATURES.errorExtGState
-                });
-                (0, _util.warn)(`hasBlendModes - ignoring ExtGState: "${ex}".`);
-                continue;
-              }
-
-              throw ex;
+              processed.put(graphicState);
+              (0, _util.info)(`hasBlendModes - ignoring ExtGState: "${ex}".`);
+              continue;
             }
           }
 
@@ -20605,7 +20535,7 @@ class PartialEvaluator {
           }
 
           if (graphicState.objId) {
-            processed[graphicState.objId] = true;
+            processed.put(graphicState.objId);
           }
 
           const bm = graphicState.get("BM");
@@ -20619,8 +20549,8 @@ class PartialEvaluator {
           }
 
           if (bm !== undefined && Array.isArray(bm)) {
-            for (let j = 0, jj = bm.length; j < jj; j++) {
-              if (bm[j] instanceof _primitives.Name && bm[j].name !== "Normal") {
+            for (const element of bm) {
+              if (element instanceof _primitives.Name && element.name !== "Normal") {
                 return true;
               }
             }
@@ -20634,14 +20564,11 @@ class PartialEvaluator {
         continue;
       }
 
-      var xObjectsKeys = xObjects.getKeys();
-
-      for (let i = 0, ii = xObjectsKeys.length; i < ii; i++) {
-        const key = xObjectsKeys[i];
+      for (const key of xObjects.getKeys()) {
         var xObject = xObjects.getRaw(key);
 
         if (xObject instanceof _primitives.Ref) {
-          if (processed[xObject.toString()]) {
+          if (processed.has(xObject)) {
             continue;
           }
 
@@ -20652,19 +20579,9 @@ class PartialEvaluator {
               throw ex;
             }
 
-            if (this.options.ignoreErrors) {
-              if (xObject instanceof _primitives.Ref) {
-                processed[xObject.toString()] = true;
-              }
-
-              this.handler.send("UnsupportedFeature", {
-                featureId: _util.UNSUPPORTED_FEATURES.errorXObject
-              });
-              (0, _util.warn)(`hasBlendModes - ignoring XObject: "${ex}".`);
-              continue;
-            }
-
-            throw ex;
+            processed.put(xObject);
+            (0, _util.info)(`hasBlendModes - ignoring XObject: "${ex}".`);
+            continue;
           }
         }
 
@@ -20673,21 +20590,23 @@ class PartialEvaluator {
         }
 
         if (xObject.dict.objId) {
-          if (processed[xObject.dict.objId]) {
-            continue;
-          }
-
-          processed[xObject.dict.objId] = true;
+          processed.put(xObject.dict.objId);
         }
 
         var xResources = xObject.dict.get("Resources");
 
-        if (xResources instanceof _primitives.Dict && (!xResources.objId || !processed[xResources.objId])) {
-          nodes.push(xResources);
+        if (!(xResources instanceof _primitives.Dict)) {
+          continue;
+        }
 
-          if (xResources.objId) {
-            processed[xResources.objId] = true;
-          }
+        if (xResources.objId && processed.has(xResources.objId)) {
+          continue;
+        }
+
+        nodes.push(xResources);
+
+        if (xResources.objId) {
+          processed.put(xResources.objId);
         }
       }
     }
@@ -20892,7 +20811,7 @@ class PartialEvaluator {
         cacheGlobally = false;
 
     if (this.parsingType3Font) {
-      objId = `${this.idFactory.getDocId()}_type3res_${objId}`;
+      objId = `${this.idFactory.getDocId()}_type3_${objId}`;
     } else if (imageRef) {
       cacheGlobally = this.globalImageCache.shouldCache(imageRef, this.pageIndex);
 
@@ -21227,7 +21146,7 @@ class PartialEvaluator {
         fontID;
 
     if (fontRefIsRef) {
-      fontID = fontRef.toString();
+      fontID = `f${fontRef.toString()}`;
     }
 
     if (hash && (0, _primitives.isDict)(descriptor)) {
@@ -21246,7 +21165,7 @@ class PartialEvaluator {
         }
       } else {
         fontAliases[hash] = {
-          fontID: _fonts.Font.getFontID()
+          fontID: this.idFactory.createFontId()
         };
       }
 
@@ -21261,14 +21180,14 @@ class PartialEvaluator {
       this.fontCache.put(fontRef, fontCapability.promise);
     } else {
       if (!fontID) {
-        fontID = this.idFactory.createObjId();
+        fontID = this.idFactory.createFontId();
       }
 
       this.fontCache.put(`id_${fontID}`, fontCapability.promise);
     }
 
-    (0, _util.assert)(fontID, 'The "fontID" must be defined.');
-    font.loadedName = `${this.idFactory.getDocId()}_f${fontID}`;
+    (0, _util.assert)(fontID && fontID.startsWith("f"), 'The "fontID" must be (correctly) defined.');
+    font.loadedName = `${this.idFactory.getDocId()}_${fontID}`;
     font.translated = fontCapability.promise;
     var translatedPromise;
 
@@ -21494,12 +21413,6 @@ class PartialEvaluator {
                 }
 
                 xobj = xref.fetch(xobj);
-              }
-
-              if (!xobj) {
-                operatorList.addOp(fn, args);
-                resolveXObject();
-                return;
               }
 
               if (!(0, _primitives.isStream)(xobj)) {
@@ -22345,11 +22258,6 @@ class PartialEvaluator {
                 }
 
                 xobj = xref.fetch(xobj);
-              }
-
-              if (!xobj) {
-                resolveXObject();
-                return;
               }
 
               if (!(0, _primitives.isStream)(xobj)) {
@@ -25409,13 +25317,6 @@ var Font = function FontClosure() {
     this.toUnicode = properties.toUnicode;
     this.seacMap = properties.seacMap;
   }
-
-  Font.getFontID = function () {
-    var ID = 1;
-    return function Font_getFontID() {
-      return String(ID++);
-    };
-  }();
 
   function int16(b0, b1) {
     return (b0 << 8) + b1;
