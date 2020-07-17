@@ -297,9 +297,10 @@ var gSync = {
       title = PluralForm.get(tabCount, string).replace("#1", tabCount);
     }
 
-    document
-      .getElementById("PanelUI-fxa-menu-sendtab-button")
-      .setAttribute("label", title);
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-sendtab-button"
+    ).setAttribute("label", title);
   },
 
   showSendToDeviceView(anchor) {
@@ -448,29 +449,38 @@ var gSync = {
     // custom profile image or a filled avatar.
     let stateValue = "not_configured";
 
-    const menuHeaderTitleEl = document.getElementById("fxa-menu-header-title");
-    const menuHeaderDescriptionEl = document.getElementById(
+    const menuHeaderTitleEl = PanelMultiView.getViewNode(
+      document,
+      "fxa-menu-header-title"
+    );
+    const menuHeaderDescriptionEl = PanelMultiView.getViewNode(
+      document,
       "fxa-menu-header-description"
     );
 
-    const cadButtonEl = document.getElementById(
+    const cadButtonEl = PanelMultiView.getViewNode(
+      document,
       "PanelUI-fxa-menu-connect-device-button"
     );
 
-    const syncPrefsButtonEl = document.getElementById(
-      "PanelUI-fxa-menu-sync-prefs-button"
-    );
-
-    const syncSetupButtonEl = document.getElementById(
+    const syncSetupButtonEl = PanelMultiView.getViewNode(
+      document,
       "PanelUI-fxa-menu-setup-sync-button"
     );
 
-    const syncNowButtonEl = document.getElementById(
+    const syncPrefsButtonEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-sync-prefs-button"
+    );
+
+    const syncNowButtonEl = PanelMultiView.getViewNode(
+      document,
       "PanelUI-fxa-menu-syncnow-button"
     );
-    const fxaMenuPanel = document.getElementById("PanelUI-fxa");
+    const fxaMenuPanel = PanelMultiView.getViewNode(document, "PanelUI-fxa");
 
-    const fxaMenuAccountButtonEl = document.getElementById(
+    const fxaMenuAccountButtonEl = PanelMultiView.getViewNode(
+      document,
       "fxa-manage-account-button"
     );
 
@@ -560,13 +570,15 @@ var gSync = {
     );
 
     if (canSendAllURIs) {
-      document
-        .getElementById("PanelUI-fxa-menu-sendtab-button")
-        .removeAttribute("disabled");
+      PanelMultiView.getViewNode(
+        document,
+        "PanelUI-fxa-menu-sendtab-button"
+      ).removeAttribute("disabled");
     } else {
-      document
-        .getElementById("PanelUI-fxa-menu-sendtab-button")
-        .setAttribute("disabled", true);
+      PanelMultiView.getViewNode(
+        document,
+        "PanelUI-fxa-menu-sendtab-button"
+      ).setAttribute("disabled", true);
     }
   },
 
@@ -683,7 +695,11 @@ var gSync = {
   },
 
   updateSyncStatus(state) {
-    let syncNow = document.querySelector(".syncNowBtn");
+    let viewCacheTemplate = document.getElementById("appMenu-viewCache");
+
+    let syncNow =
+      viewCacheTemplate.content.querySelector(".syncNowBtn") ||
+      document.querySelector(".syncNowBtn");
     const syncingUI = syncNow.getAttribute("syncstatus") == "active";
     if (state.syncing != syncingUI) {
       // Do we need to update the UI?
