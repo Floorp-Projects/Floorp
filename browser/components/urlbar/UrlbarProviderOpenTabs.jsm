@@ -158,12 +158,6 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
       }
     );
   }
-
-  /**
-   * Cancels a running query.
-   * @param {object} queryContext The query context object
-   */
-  cancelQuery(queryContext) {}
 }
 
 /**

@@ -643,7 +643,6 @@ class TestProvider extends UrlbarProvider {
       this._onCancel();
     }
   }
-  pickResult(result) {}
 }
 
 UrlbarTestUtils.TestProvider = TestProvider;
