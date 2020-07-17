@@ -405,10 +405,10 @@ mozilla::ipc::IPCResult GPUParent::RecvSimulateDeviceReset(
   DeviceManagerDx::Get()->ForceDeviceReset(
       ForcedDeviceResetReason::COMPOSITOR_UPDATED);
   DeviceManagerDx::Get()->MaybeResetAndReacquireDevices();
+#endif
   if (gfxVars::UseWebRender()) {
     wr::RenderThread::Get()->SimulateDeviceReset();
   }
-#endif
   RecvGetDeviceStatus(aOut);
   return IPC_OK();
 }
