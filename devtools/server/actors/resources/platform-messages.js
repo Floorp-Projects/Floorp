@@ -4,118 +4,49 @@
 
 "use strict";
 
+const nsIConsoleListenerWatcher = require("devtools/server/actors/resources/utils/nsi-console-listener-watcher");
 const { Ci } = require("chrome");
-const Services = require("Services");
-const ChromeUtils = require("ChromeUtils");
 
 const {
   TYPES: { PLATFORM_MESSAGE },
 } = require("devtools/server/actors/resources/index");
 
-const { stringIsLong } = require("devtools/server/actors/object/utils");
-const { LongStringActor } = require("devtools/server/actors/string");
+const { createStringGrip } = require("devtools/server/actors/object/utils");
 
-class PlatformMessageWatcher {
-  /**
-   * Start watching for all platform messages related to a given Target Actor.
-   * This will notify about existing console messages, but also the one created in future.
-   *
-   * @param TargetActor targetActor
-   *        The target actor from which we should observe console messages
-   * @param Object options
-   *        Dictionary object with following attributes:
-   *        - onAvailable: mandatory function
-   *          This will be called for each resource.
-   */
-  constructor(targetActor, { onAvailable }) {
-    // Platform messages can only be listened on process actors
-    if (!targetActor.isRootActor) {
-      return;
-    }
-
-    // Create the consoleListener.
-    const listener = {
-      QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
-      observe(message) {
-        if (!shouldHandleMessage(message)) {
-          return;
-        }
-
-        onAvailable([buildResourceFromMessage(targetActor, message)]);
-      },
-    };
-
-    // Retrieve the cached messages just before registering the listener, so we don't get
-    // duplicated messages.
-    const cachedMessages = Services.console.getMessageArray();
-    Services.console.registerListener(listener);
-    this.listener = listener;
-
-    // Remove unwanted cache messages and send an array of resources.
-    const messages = [];
-    for (const message of cachedMessages) {
-      if (!shouldHandleMessage(message)) {
-        continue;
-      }
-
-      messages.push(buildResourceFromMessage(targetActor, message));
-    }
-    onAvailable(messages);
+class PlatformMessageWatcher extends nsIConsoleListenerWatcher {
+  shouldHandleTarget(targetActor) {
+    return this.isProcessTarget(targetActor);
   }
 
   /**
-   * Stop watching for console messages.
+   * Returns true if the message is considered a platform message, and as a result, should
+   * be sent to the client.
+   *
+   * @param {nsIConsoleMessage} message
    */
-  destroy() {
-    if (this.listener) {
-      Services.console.unregisterListener(this.listener);
+  shouldHandleMessage(message) {
+    // The listener we use can be called either with a nsIConsoleMessage or as nsIScriptError.
+    // In this file, we want to ignore nsIScriptError, which are handled by the
+    // error-messages resource handler (See Bug 1644186).
+    if (message instanceof Ci.nsIScriptError) {
+      return false;
     }
+
+    return true;
+  }
+
+  /**
+   * Returns an object from the nsIConsoleMessage.
+   *
+   * @param {Actor} targetActor
+   * @param {nsIConsoleMessage} message
+   */
+  buildResource(targetActor, message) {
+    return {
+      message: createStringGrip(targetActor, message.message),
+      timeStamp: message.timeStamp,
+      resourceType: PLATFORM_MESSAGE,
+    };
   }
 }
 module.exports = PlatformMessageWatcher;
-
-/**
- * Returns true if the message is considered a platform message, and as a result, should
- * be sent to the client.
- *
- * @param {nsIConsoleMessage} message
- */
-function shouldHandleMessage(message) {
-  // The listener we use can be called either with a nsIConsoleMessage or as nsIScriptError.
-  // In this file, we want to ignore nsIScriptError, which are handled by the
-  // error-messages resource handler (See Bug 1644186).
-  if (message instanceof Ci.nsIScriptError) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Returns an object from the nsIConsoleMessage.
- *
- * @param {Actor} targetActor
- * @param {nsIConsoleMessage} message
- */
-function buildResourceFromMessage(targetActor, message) {
-  return {
-    message: createStringGrip(targetActor, message.message),
-    timeStamp: message.timeStamp,
-    resourceType: PLATFORM_MESSAGE,
-  };
-}
-
-/**
- * Create a grip for the given string.
- *
- * @param TargetActor targetActor
- *        The Target Actor from which this object originates.
- */
-function createStringGrip(targetActor, string) {
-  if (string && stringIsLong(string)) {
-    const actor = new LongStringActor(targetActor.conn, string);
-    targetActor.manage(actor);
-    return actor.form();
-  }
-  return string;
-}

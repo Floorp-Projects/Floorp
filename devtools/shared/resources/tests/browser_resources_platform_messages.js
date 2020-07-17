@@ -16,6 +16,7 @@ add_task(async function() {
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
   info("Test platform messages legacy listener");
+  await pushPref("devtools.testing.enableServerWatcherSupport", false);
   await testPlatformMessagesResources();
   await testPlatformMessagesResourcesWithIgnoreExistingResources();
 
@@ -23,7 +24,6 @@ add_task(async function() {
   await pushPref("devtools.testing.enableServerWatcherSupport", true);
   await testPlatformMessagesResources();
   await testPlatformMessagesResourcesWithIgnoreExistingResources();
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
 });
 
 async function testPlatformMessagesResources() {
