@@ -452,6 +452,31 @@ void MacroAssembler::storeToTypedBigIntArray(Scalar::Type arrayType,
   StoreToTypedBigIntArray(*this, arrayType, value, dest);
 }
 
+void MacroAssembler::boxUint32(Register source, ValueOperand dest,
+                               bool allowDouble, Label* fail) {
+  if (allowDouble) {
+    // If the value fits in an int32, store an int32 type tag.
+    // Else, convert the value to double and box it.
+    Label done, isDouble;
+    branchTest32(Assembler::Signed, source, source, &isDouble);
+    {
+      tagValue(JSVAL_TYPE_INT32, source, dest);
+      jump(&done);
+    }
+    bind(&isDouble);
+    {
+      ScratchDoubleScope fpscratch(*this);
+      convertUInt32ToDouble(source, fpscratch);
+      boxDouble(fpscratch, dest, fpscratch);
+    }
+    bind(&done);
+  } else {
+    // Fail if the value does not fit in an int32.
+    branchTest32(Assembler::Signed, source, source, fail);
+    tagValue(JSVAL_TYPE_INT32, source, dest);
+  }
+}
+
 template <typename T>
 void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
                                         AnyRegister dest, Register temp,
@@ -529,27 +554,7 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
     case Scalar::Uint32:
       // Don't clobber dest when we could fail, instead use temp.
       load32(src, temp);
-      if (allowDouble) {
-        // If the value fits in an int32, store an int32 type tag.
-        // Else, convert the value to double and box it.
-        Label done, isDouble;
-        branchTest32(Assembler::Signed, temp, temp, &isDouble);
-        {
-          tagValue(JSVAL_TYPE_INT32, temp, dest);
-          jump(&done);
-        }
-        bind(&isDouble);
-        {
-          ScratchDoubleScope fpscratch(*this);
-          convertUInt32ToDouble(temp, fpscratch);
-          boxDouble(fpscratch, dest, fpscratch);
-        }
-        bind(&done);
-      } else {
-        // Bailout if the value does not fit in an int32.
-        branchTest32(Assembler::Signed, temp, temp, fail);
-        tagValue(JSVAL_TYPE_INT32, temp, dest);
-      }
+      boxUint32(temp, dest, allowDouble, fail);
       break;
     case Scalar::Float32: {
       ScratchDoubleScope dscratch(*this);
