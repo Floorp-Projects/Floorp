@@ -45,6 +45,7 @@ extensions = [
     "sphinxcontrib.mermaid",
     "recommonmark",
     "sphinx_copybutton",
+    "sphinx_markdown_tables",
 ]
 
 # JSDoc must run successfully for dirs specified, so running
