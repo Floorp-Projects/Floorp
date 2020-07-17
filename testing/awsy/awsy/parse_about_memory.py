@@ -97,7 +97,7 @@ def path_total(data, path):
 
 
 def calculate_memory_report_values(memory_report_path, data_point_path,
-                                   process_name=None):
+                                   process_names=None):
     """
     Opens the given memory report file and calculates the value for the given
     data point.
@@ -105,7 +105,7 @@ def calculate_memory_report_values(memory_report_path, data_point_path,
     :param memory_report_path: Path to the memory report file to parse.
     :param data_point_path: Path of the data point to calculate in the memory
      report, ie: 'explicit/heap-unclassified'.
-    :param process_name: Name of process to limit reports to. ie 'Main'
+    :param process_name: Name of processes to limit reports to. ie 'Main'
     """
     try:
         with open(memory_report_path) as f:
@@ -119,9 +119,9 @@ def calculate_memory_report_values(memory_report_path, data_point_path,
 
     # If a process name is provided, restricted output to processes matching
     # that name.
-    if process_name:
+    if process_names is not None:
         for k in totals.keys():
-            if process_name not in k:
+            if not any([process_name in k for process_name in process_names]):
                 del totals[k]
 
     return totals
@@ -136,7 +136,8 @@ if __name__ == "__main__":
                         help='Prefix of data point to measure. '
                         'If the prefix does not end in a \'/\' '
                         'then an exact match is made.')
-    parser.add_argument('--proc-filter', action='store', default=None,
+    parser.add_argument('--proc-filter', action='store',
+                        nargs='*', default=None,
                         help='Process name filter. '
                              'If not provided all processes will be included.')
     parser.add_argument('--mebi', action='store_true',

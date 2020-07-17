@@ -143,7 +143,7 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS,
             # for simplicity (it's nice to be able to compare RSS of non-e10s
             # with RSS + USS of e10s).
             totals_rss = parse_about_memory.calculate_memory_report_values(
-                                            memory_report_path, node, 'Main')
+                                            memory_report_path, node, ['Main'])
             totals_uss = parse_about_memory.calculate_memory_report_values(
                                             memory_report_path, 'resident-unique')
             value = totals_rss.values()[0] + \
