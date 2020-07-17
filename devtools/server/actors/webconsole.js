@@ -1477,7 +1477,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     // cached messages for that window (and not the content messages for example).
     if (this.parentActor.isRootActor) {
       Services.console.reset();
-    } else {
+    } else if (this.consoleServiceListener) {
+      // If error and css messages are handled by the ResourceWatcher, the
+      // consoleServiceListener is never instantiated.
       this.consoleServiceListener.clearCachedMessages();
     }
   },
@@ -1707,9 +1709,11 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       columnNumber = stack[0].columnNumber;
     }
 
+    const isCSSMessage = pageError.category === "CSS Parser";
+
     const result = {
       errorMessage: this._createStringGrip(pageError.errorMessage),
-      errorMessageName: pageError.errorMessageName,
+      errorMessageName: isCSSMessage ? undefined : pageError.errorMessageName,
       exceptionDocURL: ErrorDocs.GetURL(pageError),
       sourceName,
       sourceId: this.getActorIdForInternalSourceId(sourceId),
@@ -1726,13 +1730,12 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       stacktrace: stack,
       notes: notesArray,
       chromeContext: pageError.isFromChromeContext,
-      isPromiseRejection: pageError.isPromiseRejection,
+      isPromiseRejection: isCSSMessage
+        ? undefined
+        : pageError.isPromiseRejection,
       isForwardedFromContentProcess: pageError.isForwardedFromContentProcess,
+      cssSelectors: isCSSMessage ? pageError.cssSelectors : undefined,
     };
-
-    if (pageError.category === "CSS Parser") {
-      result.cssSelectors = pageError.cssSelectors;
-    }
 
     // If the pageError does have an exception object, we want to return the grip for it,
     // but only if we do manage to get the grip, as we're checking the property on the
