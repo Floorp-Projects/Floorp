@@ -97,6 +97,7 @@ either Raptor or browsertime."""
         device_name=None,
         disable_perf_tuning=False,
         conditioned_profile_scenario='settled',
+        chimera=False,
         extra_prefs={},
         project="mozilla-central",
         verbose=False,
@@ -135,6 +136,7 @@ either Raptor or browsertime."""
             "enable_fission": extra_prefs.get("fission.autostart", False),
             "disable_perf_tuning": disable_perf_tuning,
             "conditioned_profile_scenario": conditioned_profile_scenario,
+            "chimera": chimera,
             "extra_prefs": extra_prefs,
             "project": project,
             "verbose": verbose

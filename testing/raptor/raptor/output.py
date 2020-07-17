@@ -1428,25 +1428,32 @@ class BrowsertimeOutput(PerftestOutput):
         suites = {}
 
         for test in self.results:
-            if test["name"] not in suites:
-                suite = {
+            test_name = test["name"]
+            extra_options = test["extra_options"]
+
+            # If a test with the same name has different extra options, handle it
+            # by appending the difference in options to the key used in `suites`
+            if test_name in suites and suites[test_name]["extraOptions"] != extra_options:
+                missing = set(extra_options) - set(suites[test_name]["extraOptions"])
+                test_name = test_name + "-".join(list(missing))
+
+            suite = suites.setdefault(
+                test_name,
+                {
                     "name": test["name"],
                     "type": test["type"],
-                    "extraOptions": test["extra_options"],
+                    "extraOptions": extra_options,
                     "lowerIsBetter": test["lower_is_better"],
                     "unit": test["unit"],
                     "alertThreshold": float(test["alert_threshold"]),
                     # like suites, subtests are identified by names
                     "subtests": {},
                 }
+            )
 
-                # Check if the test has set optional properties
-                if "alert_change_type" in test:
-                    suite["alertChangeType"] = test["alert_change_type"]
-
-                suites[test["name"]] = suite
-            else:
-                suite = suites[test["name"]]
+            # Check if the test has set optional properties
+            if "alert_change_type" in test and "alertChangeType" not in suite:
+                suite["alertChangeType"] = test["alert_change_type"]
 
             if ("pageload" or "scenario") in test["type"]:
                 for measurement_name, replicates in test["measurements"].items():
