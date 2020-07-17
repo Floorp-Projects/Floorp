@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "audio_thread_priority"
-version = "0.22.1"
+version = "0.23.4"
 authors = ["Paul Adenot <paul@paul.cx>"]
 description = "Bump a thread to real-time priority, for audio work, on Linux, Windows and macOS"
 license = "MPL-2.0"
@@ -36,8 +36,10 @@ version = "0.15.0"
 
 [features]
 terminal-logging = ["simple_logger"]
+with_dbus = ["dbus"]
 [target."cfg(target_os = \"linux\")".dependencies.dbus]
 version = "0.6.4"
+optional = true
 
 [target."cfg(target_os = \"linux\")".dependencies.libc]
 version = "0.2"
