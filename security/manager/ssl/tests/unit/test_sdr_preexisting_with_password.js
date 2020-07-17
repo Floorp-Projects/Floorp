@@ -29,7 +29,7 @@ var gMockPrompter = {
     }
     equal(
       text,
-      "Please enter your master password.",
+      "Please enter your Primary Password.",
       "password prompt text should be as expected"
     );
     equal(checkMsg, null, "checkMsg should be null");
