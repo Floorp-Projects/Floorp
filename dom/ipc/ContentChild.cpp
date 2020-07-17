@@ -1348,8 +1348,13 @@ mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(
     const bool& aMinimizeMemoryUsage,
     const Maybe<mozilla::ipc::FileDescriptor>& aDMDFile) {
   nsCString process;
-  GetProcessName(process);
+  if (aAnonymize || mRemoteType.IsEmpty()) {
+    GetProcessName(process);
+  } else {
+    process = mRemoteType;
+  }
   AppendProcessId(process);
+  MOZ_ASSERT(!process.IsEmpty());
 
   MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, process,
