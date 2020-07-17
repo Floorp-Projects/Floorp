@@ -7,7 +7,7 @@
 Feature for displaying a context menu after long-pressing web content.
 
 This feature will subscribe to the currently selected [Session](../../mozilla.components.browser.session/-session/index.md) and display the context menu based on
-[Session.Observer.onLongPress](../../mozilla.components.browser.session/-session/-observer/on-long-press.md) events. Once the context menu is closed or the user selects an item from the context
+[Session.Observer.onLongPress](#) events. Once the context menu is closed or the user selects an item from the context
 menu the related [HitResult](../../mozilla.components.concept.engine/-hit-result/index.md) will be consumed.
 
 ### Constructors

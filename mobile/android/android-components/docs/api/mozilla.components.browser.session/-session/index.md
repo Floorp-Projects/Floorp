@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L57)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L49)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -10,7 +10,6 @@ Value type that represents the state of a browser session. Changes can be observ
 
 | Name | Summary |
 |---|---|
-| [FindResult](-find-result/index.md) | `data class FindResult`<br>A value type representing a result of a "find in page" operation. |
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe a session. |
 | [SecurityInfo](-security-info/index.md) | `data class SecurityInfo`<br>A value type holding security information for a Session. |
 | [Source](-source/index.md) | `enum class Source`<br>Represents the origin of a session to describe how and why it was created. |
@@ -33,14 +32,10 @@ Value type that represents the state of a browser session. Changes can be observ
 | [crashed](crashed.md) | `var crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether this [Session](./index.md) has crashed. |
 | [customTabConfig](custom-tab-config.md) | `var customTabConfig: `[`CustomTabConfig`](../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?`<br>Configuration data in case this session is used for a Custom Tab. |
 | [desktopMode](desktop-mode.md) | `var desktopMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Desktop Mode state, true if the desktop mode is requested, otherwise false. |
-| [findResults](find-results.md) | `var findResults: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`FindResult`](-find-result/index.md)`>`<br>List of results of that latest "find in page" operation. |
-| [fullScreenMode](full-screen-mode.md) | `var fullScreenMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Exits fullscreen mode if it's in that state. |
 | [hasParentSession](has-parent-session.md) | `val hasParentSession: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this [Session](./index.md) has a parent [Session](./index.md). |
-| [hitResult](hit-result.md) | `var hitResult: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`>`<br>The target of the latest long click operation. |
 | [icon](icon.md) | `val icon: <ERROR CLASS>?`<br>An icon for the currently visible page. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [launchIntentMetadata](launch-intent-metadata.md) | `var launchIntentMetadata: `[`LaunchIntentMetadata`](../../mozilla.components.browser.session.engine.request/-launch-intent-metadata/index.md)<br>Set when a launch intent is received. |
-| [layoutInDisplayCutoutMode](layout-in-display-cutout-mode.md) | `var layoutInDisplayCutoutMode: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Display cutout mode state. |
 | [loadRequestMetadata](load-request-metadata.md) | `var loadRequestMetadata: `[`LoadRequestMetadata`](../../mozilla.components.browser.session.engine.request/-load-request-metadata/index.md)<br>Set when a load request is received, indicating if the request came from web content, or via a redirect. |
 | [loading](loading.md) | `var loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Loading state, true if this session's url is currently loading, otherwise false. |
 | [private](private.md) | `val private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |

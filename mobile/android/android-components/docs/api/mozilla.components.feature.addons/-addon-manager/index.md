@@ -2,7 +2,7 @@
 
 # AddonManager
 
-`class AddonManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L36)
+`class AddonManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L34)
 
 Provides access to installed and recommended [Addon](../-addon/index.md)s and manages their states.
 
@@ -10,7 +10,7 @@ Provides access to installed and recommended [Addon](../-addon/index.md)s and ma
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AddonManager(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, addonsProvider: `[`AddonsProvider`](../-addons-provider/index.md)`, addonUpdater: `[`AddonUpdater`](../../mozilla.components.feature.addons.update/-addon-updater/index.md)`)`<br>Provides access to installed and recommended [Addon](../-addon/index.md)s and manages their states. |
+| [&lt;init&gt;](-init-.md) | `AddonManager(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, runtime: `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`, addonsProvider: `[`AddonsProvider`](../-addons-provider/index.md)`, addonUpdater: `[`AddonUpdater`](../../mozilla.components.feature.addons.update/-addon-updater/index.md)`)`<br>Provides access to installed and recommended [Addon](../-addon/index.md)s and manages their states. |
 
 ### Functions
 
