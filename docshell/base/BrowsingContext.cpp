@@ -2448,12 +2448,6 @@ void BrowsingContext::InitSessionHistory() {
 
   if (!GetHasSessionHistory()) {
     SetHasSessionHistory(true);
-
-    // If the top browsing context (this one) is loaded in this process then we
-    // also create the session history implementation for the child process.
-    // This can be removed once session history is stored exclusively in the
-    // parent process.
-    mChildSessionHistory->SetIsInProcess(IsInProcess());
   }
 }
 
@@ -2482,6 +2476,11 @@ void BrowsingContext::CreateChildSHistory() {
   // history. That is why we create the ChildSHistory object in every process
   // where we have access to this browsing context (which is the top one).
   mChildSessionHistory = new ChildSHistory(this);
+
+  // If the top browsing context (this one) is loaded in this process then we
+  // also create the session history implementation for the child process.
+  // This can be removed once session history is stored exclusively in the
+  // parent process.
   mChildSessionHistory->SetIsInProcess(IsInProcess());
 }
 
