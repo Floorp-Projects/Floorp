@@ -216,12 +216,16 @@ void DCLayerTree::CompositorEndFrame() {
     // removal of tiles no longer needs to rebuild the main visual tree
     // here, since they are added as children of the surface visual.
     mRootVisual->RemoveAllVisuals();
+  }
 
-    // Add surfaces in z-order they were added to the scene.
-    for (auto it = mCurrentLayers.begin(); it != mCurrentLayers.end(); ++it) {
-      auto surface_it = mDCSurfaces.find(*it);
-      MOZ_RELEASE_ASSERT(surface_it != mDCSurfaces.end());
-      const auto surface = surface_it->second.get();
+  for (auto it = mCurrentLayers.begin(); it != mCurrentLayers.end(); ++it) {
+    auto surface_it = mDCSurfaces.find(*it);
+    MOZ_RELEASE_ASSERT(surface_it != mDCSurfaces.end());
+    const auto surface = surface_it->second.get();
+    // Ensure surface is trimmed to updated tile valid rects
+    surface->UpdateAllocatedRect();
+    if (!same) {
+      // Add surfaces in z-order they were added to the scene.
       const auto visual = surface->GetVisual();
       mRootVisual->AddVisual(visual, FALSE, nullptr);
     }
@@ -320,8 +324,6 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
   MOZ_RELEASE_ASSERT(it != mDCSurfaces.end());
   const auto surface = it->second.get();
   const auto visual = surface->GetVisual();
-
-  surface->UpdateAllocatedRect();
 
   wr::DeviceIntPoint virtualOffset = surface->GetVirtualOffset();
   aPosition.x -= virtualOffset.x;
