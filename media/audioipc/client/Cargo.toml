@@ -9,7 +9,7 @@ description = "Cubeb Backend for talking to remote cubeb server."
 edition = "2018"
 
 [dependencies]
-audio_thread_priority = "0.22"
+audio_thread_priority = "0.23.4"
 audioipc = { path="../audioipc" }
 cubeb-backend = "0.7"
 futures = { version="0.1.18", default-features=false, features=["use_std"] }

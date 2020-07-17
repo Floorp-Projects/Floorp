@@ -34,6 +34,7 @@ remote_agent = ["gkrust-shared/remote"]
 glean = ["gkrust-shared/glean"]
 glean_with_gecko = ["gkrust-shared/glean_with_gecko"]
 rust_fxa_client = ["gkrust-shared/rust_fxa_client"]
+with_dbus = ["gkrust-shared/with_dbus"]
 
 [dependencies]
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }
