@@ -37,9 +37,12 @@ function checkDetails(details) {
   if (filename == "file_contains_img.html") {
     is(details.frameAncestors[0].frameId, details.parentFrameId,
     "frameAncestors[0] should match parentFrameId");
+    expected["file_image_good.png"].frameId = details.frameId;
   } else if (filename == "file_image_good.png") {
     is(details.frameAncestors[0].frameId, details.parentFrameId,
        "frameAncestors[0] should match parentFrameId");
+    is(details.frameId, expect.frameId,
+       "frameId for image and iframe should match");
   }
 }
 
