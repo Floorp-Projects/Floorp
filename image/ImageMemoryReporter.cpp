@@ -110,18 +110,24 @@ void ImageMemoryReporter::ReportSharedSurface(
   path.AppendInt(aEntry.mConsumers);
   path.AppendLiteral(", creator_ref:");
   path.AppendInt(aEntry.mCreatorRef);
-  path.AppendLiteral(")/decoded-nonheap");
+  path.AppendLiteral(")/decoded-");
 
   size_t surfaceSize = mozilla::ipc::SharedMemory::PageAlignedSize(
       aEntry.mSize.height * aEntry.mStride);
 
   // If this memory has already been reported elsewhere (e.g. as part of our
   // explicit section in the surface cache), we don't want report it again as
-  // KIND_NONHEAP and have it counted again.
+  // KIND_NONHEAP and have it counted again. The paths must be different if the
+  // kinds are different to avoid problems when diffing memory reports.
   bool sameProcess = aEntry.mCreatorPid == base::GetCurrentProcId();
-  int32_t kind = aIsForCompositor && !sameProcess
-                     ? nsIMemoryReporter::KIND_NONHEAP
-                     : nsIMemoryReporter::KIND_OTHER;
+  int32_t kind;
+  if (aIsForCompositor && !sameProcess) {
+    path.AppendLiteral("nonheap");
+    kind = nsIMemoryReporter::KIND_NONHEAP;
+  } else {
+    path.AppendLiteral("other");
+    kind = nsIMemoryReporter::KIND_OTHER;
+  }
 
   constexpr auto desc = "Decoded image data stored in shared memory."_ns;
   aHandleReport->Callback(EmptyCString(), path, kind,
