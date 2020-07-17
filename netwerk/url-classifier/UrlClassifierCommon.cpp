@@ -39,6 +39,7 @@ const nsCString::size_type UrlClassifierCommon::sMaxSpecLength = 128;
 
 // MOZ_LOG=nsChannelClassifier:5
 LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
+LazyLogModule UrlClassifierCommon::sLogLeak("nsChannelClassifierLeak");
 
 /* static */
 bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI) {
@@ -71,8 +72,7 @@ bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
 
   nsCOMPtr<nsIURI> topWinURI;
   nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
-  if (!channel) {
-    UC_LOG(("nsChannelClassifier: Not an HTTP channel"));
+  if (NS_WARN_IF(!channel)) {
     return false;
   }
 
@@ -81,30 +81,16 @@ bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
 
   auto policyType = loadInfo->GetExternalContentPolicyType();
   if (policyType == nsIContentPolicy::TYPE_DOCUMENT) {
-    UC_LOG(("nsChannelClassifier: Skipping top-level load"));
+    UC_LOG(
+        ("UrlClassifierCommon::ShouldEnableProtectionForChannel - "
+         "skipping top-level load for channel %p",
+         aChannel));
     return false;
   }
 
   // Tracking protection will be enabled so return without updating
   // the security state. If any channels are subsequently cancelled
   // (page elements blocked) the state will be then updated.
-  if (UC_LOG_ENABLED()) {
-    nsCOMPtr<nsIURI> topWinURI;
-    Unused << UrlClassifierCommon::GetTopWindowURI(aChannel,
-                                                   getter_AddRefs(topWinURI));
-
-    nsCString chanSpec = chanURI->GetSpecOrDefault();
-    chanSpec.Truncate(
-        std::min(chanSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
-    nsCString topWinSpec =
-        topWinURI ? topWinURI->GetSpecOrDefault() : "(null)"_ns;
-    topWinSpec.Truncate(
-        std::min(topWinSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
-    UC_LOG(
-        ("nsChannelClassifier: Enabling url classifier checks on "
-         "channel[%p] with uri %s for toplevel window uri %s",
-         aChannel, chanSpec.get(), topWinSpec.get()));
-  }
 
   return true;
 }
@@ -331,8 +317,10 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
       if ((clientInfo->Type() == dom::ClientType::Sharedworker) ||
           (clientInfo->Type() == dom::ClientType::Serviceworker)) {
         UC_LOG(
-            ("CreatePairwiseWhiteListURI: Channel initiated by worker, get URI "
-             "from client"));
+            ("UrlClassifierCommon::CreatePairwiseEntityListURI - "
+             "channel %p initiated by worker, get uri from client",
+             aChannel));
+
         auto clientPrincipalOrErr = clientInfo->GetPrincipal();
         if (clientPrincipalOrErr.isOk()) {
           nsCOMPtr<nsIPrincipal> principal = clientPrincipalOrErr.unwrap();
@@ -347,8 +335,11 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
 
     if (!topWinURI) {
       UC_LOG(
-          ("CreatePairwiseWhiteListURI: No top-level window associated with "
-           "channel, get URI from loading principal instead"));
+          ("UrlClassifierCommon::CreatePairwiseEntityListURI - "
+           "no top-level window associated with channel %p, "
+           "get uri from loading principal",
+           aChannel));
+
       nsCOMPtr<nsIPrincipal> principal = loadInfo->GetLoadingPrincipal();
       if (principal) {
         auto* basePrin = BasePrincipal::Cast(principal);
@@ -359,19 +350,10 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
   }
 
   if (!topWinURI) {
-    if (UC_LOG_ENABLED()) {
-      nsresult rv;
-      nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(aChannel, &rv);
-      nsCOMPtr<nsIURI> uri;
-      rv = httpChan->GetURI(getter_AddRefs(uri));
-      nsAutoCString spec;
-      uri->GetAsciiSpec(spec);
-      spec.Truncate(
-          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(
-          ("CreatePairwiseEntityListURI: No top-level URI associated with %s",
-           spec.get()));
-    }
+    UC_LOG(
+        ("UrlClassifierCommon::CreatePairwiseEntityListURI - "
+         "fail to get top-level window uri for channel %p",
+         aChannel));
 
     // Return success because we want to continue to look up even without
     // whitelist.
@@ -393,10 +375,16 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
     // When the top-level page doesn't support GetHost, for example, about:home,
     // we don't return an error here; instead, we return success to make sure
     // that the lookup process calling this API continues to run.
-    UC_LOG(
-        ("CreatePairwiseEntityListURI: Cannot get host from the top-level "
-         "(channel=%p)",
-         aChannel));
+    if (UC_LOG_ENABLED()) {
+      nsCString topWinSpec =
+          topWinURI ? topWinURI->GetSpecOrDefault() : "(null)"_ns;
+      topWinSpec.Truncate(
+          std::min(topWinSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
+      UC_LOG(
+          ("UrlClassifierCommon::CreatePairwiseEntityListURI - "
+           "cannot get host from the top-level uri %s of channel %p",
+           topWinSpec.get(), aChannel));
+    }
     return NS_OK;
   }
 
@@ -405,8 +393,8 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
   nsAutoCString entitylistEntry =
       "http://"_ns + pageHostname + "/?resource="_ns + resourceDomain;
   UC_LOG(
-      ("CreatePairwiseEntityListURI: Looking for %s in the entitylist "
-       "(channel=%p)",
+      ("UrlClassifierCommon::CreatePairwiseEntityListURI - looking for %s in "
+       "the entitylist on channel %p",
        entitylistEntry.get(), aChannel));
 
   nsCOMPtr<nsIURI> entitylistURI;
@@ -450,16 +438,10 @@ void LowerPriorityHelper(nsIChannel* aChannel) {
   if (!isBlockingResource) {
     nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(aChannel);
     if (p) {
-      if (UC_LOG_ENABLED()) {
-        nsCOMPtr<nsIURI> uri;
-        aChannel->GetURI(getter_AddRefs(uri));
-        nsAutoCString spec;
-        uri->GetAsciiSpec(spec);
-        spec.Truncate(
-            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-        UC_LOG(("Setting PRIORITY_LOWEST for channel[%p] (%s)", aChannel,
-                spec.get()));
-      }
+      UC_LOG(
+          ("UrlClassifierCommon::LowerPriorityHelper - "
+           "setting PRIORITY_LOWEST for channel %p",
+           aChannel));
       p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
     }
   }
@@ -502,17 +484,11 @@ void UrlClassifierCommon::AnnotateChannel(nsIChannel* aChannel,
   nsCOMPtr<nsIURI> chanURI;
   nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    UC_LOG(
-        ("UrlClassifierCommon::AnnotateChannel nsIChannel::GetURI(%p) failed",
-         (void*)aChannel));
     return;
   }
 
   bool isThirdPartyWithTopLevelWinURI =
       AntiTrackingUtils::IsThirdPartyChannel(aChannel);
-
-  UC_LOG(("UrlClassifierCommon::AnnotateChannel, annotating channel[%p]",
-          aChannel));
 
   SetClassificationFlagsHelper(aChannel, aClassificationFlags,
                                isThirdPartyWithTopLevelWinURI);
@@ -536,8 +512,7 @@ void UrlClassifierCommon::AnnotateChannel(nsIChannel* aChannel,
 // static
 bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
   nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
-  if (!channel) {
-    UC_LOG(("nsChannelClassifier: Not an HTTP channel"));
+  if (NS_WARN_IF(!channel)) {
     return false;
   }
 
@@ -545,7 +520,10 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
 
   bool isAllowListed = false;
   if (StaticPrefs::channelclassifier_allowlist_example()) {
-    UC_LOG(("nsChannelClassifier: Allowlisting test domain"));
+    UC_LOG(
+        ("UrlClassifierCommon::IsAllowListed - "
+         "check allowlisting test domain on channel %p",
+         aChannel));
 
     nsCOMPtr<nsIIOService> ios = services::GetIOService();
     if (NS_WARN_IF(!ios)) {
@@ -575,19 +553,8 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
   }
 
   if (isAllowListed) {
-    if (UC_LOG_ENABLED()) {
-      nsCOMPtr<nsIURI> chanURI;
-      nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return isAllowListed;
-      }
-
-      nsCString chanSpec = chanURI->GetSpecOrDefault();
-      chanSpec.Truncate(
-          std::min(chanSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(("nsChannelClassifier: User override on channel[%p] (%s)",
-              aChannel, chanSpec.get()));
-    }
+    UC_LOG(("UrlClassifierCommon::IsAllowListed - user override on channel %p",
+            aChannel));
   }
 
   return isAllowListed;
