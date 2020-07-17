@@ -710,29 +710,13 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean forceInheritPrincipalDropped;
 
   /**
-   * These are the window IDs of the window in which the element being
-   * loaded lives. parentOuterWindowID is the window ID of this window's
-   * parent. topOuterWindowID is the ID of the top-level window of the same
-   * docShell type.
+   * This is the inner window ID of the window in which the element being
+   * loaded lives.
    *
-   * Note that these window IDs can be 0 if the window is not
-   * available. parentOuterWindowID and topOuterWindowID will be the same as
-   * outerWindowID if the window has no parent.
+   * Note that this window ID can be 0 if the window is not
+   * available.
    */
   [infallible] readonly attribute unsigned long long innerWindowID;
-  [infallible] readonly attribute unsigned long long outerWindowID;
-  [infallible] readonly attribute unsigned long long parentOuterWindowID;
-  [infallible] readonly attribute unsigned long long topOuterWindowID;
-
-  /**
-   * Only when the element being loaded is <frame src="foo.html">
-   * (or, more generally, if the element QIs to nsFrameLoaderOwner),
-   * the frameOuterWindowID is the outer window containing the
-   * foo.html document.
-   *
-   * Note: For other cases, frameOuterWindowID is 0.
-   */
-  [infallible] readonly attribute unsigned long long frameOuterWindowID;
 
   /**
    * The BrowsingContext performing the load for this nsILoadInfo object.
@@ -741,8 +725,12 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute BrowsingContext browsingContext;
 
   /**
-   * Like `frameOuterWindowID`, however returning the BrowsingContextID
-   * instead.
+   * Only when the element being loaded is <frame src="foo.html">
+   * (or, more generally, if the element QIs to nsFrameLoaderOwner),
+   * the frameBrowsingContext is the browsing context containing the
+   * foo.html document.
+   *
+   * Note: For other cases, frameBrowsingContextID is 0.
    */
   [infallible] readonly attribute unsigned long long frameBrowsingContextID;
   [infallible] readonly attribute BrowsingContext frameBrowsingContext;
