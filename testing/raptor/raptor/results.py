@@ -33,6 +33,7 @@ class PerftestResultsHandler(object):
         no_conditioned_profile=False,
         cold=False,
         enable_webrender=False,
+        chimera=False,
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -53,6 +54,7 @@ class PerftestResultsHandler(object):
         self.browser_name = None
         self.no_conditioned_profile = no_conditioned_profile
         self.cold = cold
+        self.chimera = chimera
 
     @abstractmethod
     def add(self, new_result_json):
@@ -530,7 +532,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         return results
 
-    def _extract_vmetrics(self, test_name, browsertime_json):
+    def _extract_vmetrics(
+        self, test_name, browsertime_json, json_name="browsertime.json", extra_options=[]
+    ):
         # The visual metrics task expects posix paths.
         def _normalized_join(*args):
             path = os.path.join(*args)
@@ -540,8 +544,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         reldir = _normalized_join("browsertime-results", name)
 
         return {
-            "browsertime_json_path": _normalized_join(reldir, "browsertime.json"),
+            "browsertime_json_path": _normalized_join(reldir, json_name),
             "test_name": test_name,
+            "extra_options": extra_options
         }
 
     def summarize_and_output(self, test_config, tests, test_names):
@@ -595,8 +600,55 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 LOG.error("Exception: %s %s" % (type(e).__name__, str(e)))
                 raise
 
+            # Split the chimera videos here for local testing
+            cold_path = None
+            warm_path = None
+            if self.chimera:
+                # First result is cold, second is warm
+                cold_data = raw_btresults[0]
+                warm_data = raw_btresults[1]
+
+                dirpath = os.path.dirname(os.path.abspath(bt_res_json))
+                cold_path = os.path.join(dirpath, "cold-browsertime.json")
+                warm_path = os.path.join(dirpath, "warm-browsertime.json")
+
+                with open(cold_path, "w") as f:
+                    json.dump([cold_data], f)
+                with open(warm_path, "w") as f:
+                    json.dump([warm_data], f)
+
             if not run_local:
-                video_jobs.append(self._extract_vmetrics(test_name, bt_res_json))
+                extra_options = self.build_extra_options()
+
+                if self.chimera:
+                    if cold_path is None or warm_path is None:
+                        raise Exception("Cold and warm paths were not created")
+
+                    video_jobs.append(
+                        self._extract_vmetrics(
+                            test_name,
+                            cold_path,
+                            json_name="cold-browsertime.json",
+                            extra_options=list(extra_options)
+                        )
+                    )
+
+                    extra_options.remove("cold")
+                    extra_options.append("warm")
+                    video_jobs.append(
+                        self._extract_vmetrics(
+                            test_name,
+                            warm_path,
+                            json_name="warm-browsertime.json",
+                            extra_options=list(extra_options)
+                        )
+                    )
+                else:
+                    video_jobs.append(self._extract_vmetrics(
+                        test_name,
+                        bt_res_json,
+                        extra_options=list(extra_options)
+                    ))
 
             for new_result in self.parse_browsertime_json(
                 raw_btresults,
@@ -627,6 +679,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     LOG.info("parsed new result: %s" % str(new_result))
 
                     new_result["extra_options"] = self.build_extra_options()
+
+                    # Split the chimera
+                    if self.chimera and "run=2" in new_result["url"][0]:
+                        new_result["extra_options"].remove("cold")
+                        new_result["extra_options"].append("warm")
 
                     return new_result
 

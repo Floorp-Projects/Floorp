@@ -444,7 +444,10 @@ def get_raptor_test_list(args, oskey):
             # want 1 single page-load for every browser-cycle
             next_test['cold'] = True
             next_test['expected_browser_cycles'] = int(next_test['browser_cycles'])
-            next_test['page_cycles'] = 1
+            if args.chimera:
+                next_test['page_cycles'] = 2
+            else:
+                next_test['page_cycles'] = 1
             # also ensure '-cold' is in test name so perfherder results indicate warm cold-load
             # Bug 1644344 we can remove this condition once we're migrated away from WebExtension
             if "-cold" not in next_test['name'] and not args.browsertime:
