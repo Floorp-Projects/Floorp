@@ -115,12 +115,6 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     }
   }
 
-  /**
-   * Cancels a running query.
-   * @param {object} queryContext The query context object
-   */
-  cancelQuery(queryContext) {}
-
   // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
   // scheme isn't specificed.
   _matchUnknownUrl(queryContext) {

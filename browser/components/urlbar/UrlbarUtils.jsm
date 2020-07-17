@@ -1276,7 +1276,7 @@ class UrlbarProvider {
    * @abstract
    */
   cancelQuery(queryContext) {
-    throw new Error("Trying to access the base class, must be overridden");
+    // Override this with your clean-up on cancel code.
   }
 
   /**

@@ -168,8 +168,6 @@ add_task(async function test_filter_isActive() {
         add(this, match);
       }
     }
-    cancelQuery(context) {}
-    pickResult(result) {}
   }
   UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
 
@@ -212,8 +210,6 @@ add_task(async function test_filter_queryContext() {
     async startQuery(context, add) {
       Assert.ok(false, "Provider should no be invoked");
     }
-    cancelQuery(context) {}
-    pickResult(result) {}
   }
   UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
 
@@ -317,8 +313,6 @@ add_task(async function test_nofilter_restrict() {
         add(this, match);
       }
     }
-    cancelQuery(context) {}
-    pickResult(result) {}
   }
   let provider = new TestProvider();
   UrlbarProvidersManager.registerProvider(provider);

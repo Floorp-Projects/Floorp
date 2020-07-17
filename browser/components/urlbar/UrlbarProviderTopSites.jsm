@@ -231,13 +231,6 @@ class ProviderTopSites extends UrlbarProvider {
       }
     }
   }
-
-  /**
-   * Cancels a running query,
-   * @param {UrlbarQueryContext} queryContext the query context object to cancel
-   *        query for.
-   */
-  cancelQuery(queryContext) {}
 }
 
 var UrlbarProviderTopSites = new ProviderTopSites();

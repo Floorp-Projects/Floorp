@@ -173,15 +173,6 @@ class ProviderOmnibox extends UrlbarProvider {
       Cu.reportError
     );
   }
-
-  /**
-   * This method is called by the providers manager when an ongoing query is
-   * canceled.  It fires the queryCanceled event.
-   *
-   * @param {UrlbarQueryContext} queryContext
-   *   The query context object.
-   */
-  cancelQuery(queryContext) {}
 }
 
 var UrlbarProviderOmnibox = new ProviderOmnibox();
