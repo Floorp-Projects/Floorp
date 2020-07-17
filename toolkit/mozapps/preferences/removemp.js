@@ -44,11 +44,11 @@ var gRemovePasswordDialog = {
   removePassword() {
     if (this._token.checkPassword(this._password.value)) {
       this._token.changePassword(this._password.value, "");
-      this.createAlert("pw-change-success-title", "pw-erased-ok");
+      this.createAlert("pw-change-success-title", "pp-erased-ok");
     } else {
       this._password.value = "";
       this._password.focus();
-      this.createAlert("pw-change-failed-title", "incorrect-pw");
+      this.createAlert("pw-change-failed-title", "incorrect-pp");
     }
   },
 };

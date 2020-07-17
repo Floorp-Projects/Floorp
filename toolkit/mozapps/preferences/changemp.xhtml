@@ -10,7 +10,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         style="width: 40em;"
         onload="init()"
-        data-l10n-id="set-password">
+        data-l10n-id="primary-password-dialog">
 <dialog id="changemp">
 
   <script src="chrome://mozapps/content/preferences/changemp.js"/>
@@ -20,8 +20,8 @@
     <html:link rel="localization" href="toolkit/preferences/preferences.ftl"/>
   </linkset>
 
-  <description id="admin" class="header" data-l10n-id="master-password-admin" hidden="true"></description>
-  <description control="pw1" data-l10n-id="master-password-description"></description>
+  <description id="admin" class="header" data-l10n-id="primary-password-admin" hidden="true"></description>
+  <description control="pw1" data-l10n-id="primary-password-description"></description>
 
   <vbox>
     <hbox>
@@ -50,7 +50,7 @@
   <html:label for="pwmeter" style="display: -moz-box;" data-l10n-id="set-password-meter"></html:label>
   <html:progress id="pwmeter" value="0" max="100"/>
 
-  <description control="pw2" class="header" data-l10n-id="master-password-warning"></description>
+  <description control="pw2" class="header" data-l10n-id="primary-password-warning"></description>
 
 </dialog>
 </window>
