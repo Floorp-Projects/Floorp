@@ -16,7 +16,7 @@ from contextlib import closing
 
 from six.moves.urllib_request import urlopen
 
-from mozdevice import ADBDeviceFactory, ADBTimeoutError
+from mozdevice import ADBDevice, ADBTimeoutError
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
 from output import OutputHandler
@@ -164,16 +164,13 @@ class RemoteReftest(RefTest):
         self.localLogName = options.localLogName
 
         verbose = False
-        if options.log_mach_verbose or options.log_tbpl_level == 'debug' or \
-           options.log_mach_level == 'debug' or options.log_raw_level == 'debug':
+        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
             print("set verbose!")
-        expected = options.app.split('/')[-1]
-        self.device = ADBDeviceFactory(adb=options.adb_path or 'adb',
-                                       device=options.deviceSerial,
-                                       test_root=options.remoteTestRoot,
-                                       verbose=verbose,
-                                       run_as_package=expected)
+        self.device = ADBDevice(adb=options.adb_path or 'adb',
+                                device=options.deviceSerial,
+                                test_root=options.remoteTestRoot,
+                                verbose=verbose)
         if options.remoteTestRoot is None:
             options.remoteTestRoot = posixpath.join(self.device.test_root, "reftest")
         options.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
@@ -213,10 +210,10 @@ class RemoteReftest(RefTest):
         expected = options.app.split('/')[-1]
         if not self.device.is_app_installed(expected):
             raise Exception("%s is not installed on this device" % expected)
-        self.device.run_as_package = expected
+
         self.device.clear_logcat()
 
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
 
         procName = options.app.split('/')[-1]
         self.device.stop_application(procName)
@@ -330,7 +327,7 @@ class RemoteReftest(RefTest):
             # make sure the parent directories of the profile which
             # may have been created by the push, also have their
             # permissions set to allow access.
-            self.device.chmod(options.remoteTestRoot, recursive=True)
+            self.device.chmod(options.remoteTestRoot, recursive=True, root=True)
         except Exception:
             print("Automation Error: Failed to copy profiledir to device")
             raise
@@ -401,9 +398,9 @@ class RemoteReftest(RefTest):
         return status
 
     def cleanup(self, profileDir):
-        self.device.rm(self.remoteTestRoot,  force=True, recursive=True)
-        self.device.rm(self.remoteProfile, force=True, recursive=True)
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteTestRoot,  force=True, recursive=True, root=True)
+        self.device.rm(self.remoteProfile, force=True, recursive=True, root=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
         RefTest.cleanup(self, profileDir)
 
 

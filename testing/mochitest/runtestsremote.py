@@ -16,7 +16,7 @@ sys.path.insert(
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import MochitestDesktop, MessageLogger
 from mochitest_options import MochitestArgumentParser, build_obj
-from mozdevice import ADBDeviceFactory, ADBTimeoutError
+from mozdevice import ADBDevice, ADBTimeoutError
 from mozscreenshot import dump_screen, dump_device_screen
 import mozinfo
 
@@ -31,8 +31,7 @@ class MochiRemote(MochitestDesktop):
         MochitestDesktop.__init__(self, options.flavor, vars(options))
 
         verbose = False
-        if options.log_mach_verbose or options.log_tbpl_level == 'debug' or \
-           options.log_mach_level == 'debug' or options.log_raw_level == 'debug':
+        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
         if hasattr(options, 'log'):
             delattr(options, 'log')
@@ -40,12 +39,10 @@ class MochiRemote(MochitestDesktop):
         self.certdbNew = True
         self.chromePushed = False
 
-        expected = options.app.split('/')[-1]
-        self.device = ADBDeviceFactory(adb=options.adbPath or 'adb',
-                                       device=options.deviceSerial,
-                                       test_root=options.remoteTestRoot,
-                                       verbose=verbose,
-                                       run_as_package=expected)
+        self.device = ADBDevice(adb=options.adbPath or 'adb',
+                                device=options.deviceSerial,
+                                test_root=options.remoteTestRoot,
+                                verbose=verbose)
 
         if options.remoteTestRoot is None:
             options.remoteTestRoot = self.device.test_root
@@ -53,10 +50,10 @@ class MochiRemote(MochitestDesktop):
         self.remoteLogFile = posixpath.join(options.remoteTestRoot, "logs", "mochitest.log")
         logParent = posixpath.dirname(self.remoteLogFile)
         self.device.rm(logParent, force=True, recursive=True)
-        self.device.mkdir(logParent, parents=True)
+        self.device.mkdir(logParent)
 
-        self.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
-        self.device.rm(self.remoteProfile, force=True, recursive=True)
+        self.remoteProfile = posixpath.join(options.remoteTestRoot, "profile/")
+        self.device.rm(self.remoteProfile, force=True, recursive=True, root=True)
 
         self.counts = dict()
         self.message_logger = MessageLogger(logger=None)
@@ -76,20 +73,20 @@ class MochiRemote(MochitestDesktop):
         self.remoteModulesDir = posixpath.join(options.remoteTestRoot, "modules/")
 
         self.remoteCache = posixpath.join(options.remoteTestRoot, "cache/")
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
 
         # move necko cache to a location that can be cleaned up
         options.extraPrefs += ["browser.cache.disk.parent_directory=%s" % self.remoteCache]
 
         self.remoteMozLog = posixpath.join(options.remoteTestRoot, "mozlog")
-        self.device.rm(self.remoteMozLog, force=True, recursive=True)
-        self.device.mkdir(self.remoteMozLog, parents=True)
+        self.device.rm(self.remoteMozLog, force=True, recursive=True, root=True)
+        self.device.mkdir(self.remoteMozLog)
 
         self.remoteChromeTestDir = posixpath.join(
             options.remoteTestRoot,
             "chrome")
-        self.device.rm(self.remoteChromeTestDir, force=True, recursive=True)
-        self.device.mkdir(self.remoteChromeTestDir, parents=True)
+        self.device.rm(self.remoteChromeTestDir, force=True, recursive=True, root=True)
+        self.device.mkdir(self.remoteChromeTestDir)
 
         procName = options.app.split('/')[-1]
         self.device.stop_application(procName)
@@ -107,14 +104,14 @@ class MochiRemote(MochitestDesktop):
 
     def cleanup(self, options, final=False):
         if final:
-            self.device.rm(self.remoteChromeTestDir, force=True, recursive=True)
+            self.device.rm(self.remoteChromeTestDir, force=True, recursive=True, root=True)
             self.chromePushed = False
             uploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
             if uploadDir and self.device.is_dir(self.remoteMozLog):
                 self.device.pull(self.remoteMozLog, uploadDir)
-        self.device.rm(self.remoteLogFile, force=True)
-        self.device.rm(self.remoteProfile, force=True, recursive=True)
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteLogFile, force=True, root=True)
+        self.device.rm(self.remoteProfile, force=True, recursive=True, root=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
         MochitestDesktop.cleanup(self, options, final)
         self.localProfile = None
 
@@ -211,7 +208,7 @@ class MochiRemote(MochitestDesktop):
         if options.testingModulesDir:
             try:
                 self.device.push(options.testingModulesDir, self.remoteModulesDir)
-                self.device.chmod(self.remoteModulesDir, recursive=True)
+                self.device.chmod(self.remoteModulesDir, recursive=True, root=True)
             except Exception:
                 self.log.error(
                     "Automation Error: Unable to copy test modules to device.")
@@ -239,7 +236,7 @@ class MochiRemote(MochitestDesktop):
         # we really need testConfig.js (for browser chrome)
         try:
             self.device.push(options.profilePath, self.remoteProfile)
-            self.device.chmod(self.remoteProfile, recursive=True)
+            self.device.chmod(self.remoteProfile, recursive=True, root=True)
         except Exception:
             self.log.error("Automation Error: Unable to copy profile to device.")
             raise

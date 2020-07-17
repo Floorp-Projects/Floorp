@@ -930,7 +930,7 @@ class AndroidArguments(ArgumentContainer):
          {"dest": "remoteTestRoot",
           "default": None,
           "help": "Remote directory to use as test root "
-                  "(eg. /data/local/tmp/test_root).",
+                  "(eg. /mnt/sdcard/tests or /data/local/tests).",
           "suppress": True,
           }],
         [["--enable-coverage"],

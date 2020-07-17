@@ -577,8 +577,8 @@ class PerftestAndroid(Perftest):
             # We absolutely need to determine the chrome
             # version here so that we can select the correct
             # chromedriver for browsertime
-            from mozdevice import ADBDeviceFactory
-            device = ADBDeviceFactory(verbose=True)
+            from mozdevice import ADBDevice
+            device = ADBDevice(verbose=True)
             binary = "com.android.chrome"
 
             pkg_info = device.shell_output("dumpsys package %s" % binary)
@@ -656,9 +656,12 @@ class PerftestAndroid(Perftest):
 
         try:
             LOG.info("copying profile to device: %s" % self.remote_profile)
-            self.device.rm(self.remote_profile, force=True, recursive=True)
+            # We must use root=True since the remote profile has been
+            # modified by gecko and has content which is only
+            # accessible to the gecko user.
+            self.device.rm(self.remote_profile, force=True, recursive=True, root=True)
             self.device.push(self.profile.profile, self.remote_profile)
-            self.device.chmod(self.remote_profile, recursive=True)
+            self.device.chmod(self.remote_profile, recursive=True, root=True)
 
         except Exception:
             LOG.error("Unable to copy profile to device.")
