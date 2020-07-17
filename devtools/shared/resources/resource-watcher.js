@@ -487,6 +487,7 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   ROOT_NODE: "root-node",
   STYLESHEET: "stylesheet",
   NETWORK_EVENT: "network-event",
+  WEBSOCKET: "websocket",
 };
 module.exports = { ResourceWatcher };
 
@@ -527,6 +528,8 @@ const LegacyListeners = {
     .STYLESHEET]: require("devtools/shared/resources/legacy-listeners/stylesheet"),
   [ResourceWatcher.TYPES
     .NETWORK_EVENT]: require("devtools/shared/resources/legacy-listeners/network-events"),
+  [ResourceWatcher.TYPES
+    .WEBSOCKET]: require("devtools/shared/resources/legacy-listeners/websocket"),
 };
 
 // Optional transformers for each type of resource.
