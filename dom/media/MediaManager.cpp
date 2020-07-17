@@ -1911,7 +1911,6 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mUseAecMobile = false;
   mPrefs.mAgcOn = false;
   mPrefs.mHPFOn = false;
-  mPrefs.mExperimentalInputProcessing = false;
   mPrefs.mNoiseOn = false;
   mPrefs.mExtendedFilter = true;
   mPrefs.mDelayAgnostic = true;
@@ -1939,17 +1938,15 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
     }
   }
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
-      "agc: %s, hpf: %s, experimental_input_processing: %s, noise: %s, aec "
-      "level: %d, agc level: %d, noise level: "
+      "agc: %s, hpf: %s, noise: %s, aec level: %d, agc level: %d, noise level: "
       "%d, aec mobile routing mode: %d,"
       "extended aec %s, delay_agnostic %s "
       "channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
-      mPrefs.mHPFOn ? "on" : "off",
-      mPrefs.mExperimentalInputProcessing ? "on" : "off",
-      mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAec, mPrefs.mAgc, mPrefs.mNoise,
-      mPrefs.mRoutingMode, mPrefs.mExtendedFilter ? "on" : "off",
+      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAec,
+      mPrefs.mAgc, mPrefs.mNoise, mPrefs.mRoutingMode,
+      mPrefs.mExtendedFilter ? "on" : "off",
       mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
 }
 
@@ -2022,8 +2019,6 @@ MediaManager* MediaManager::Get() {
       prefs->AddObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled",
                          sSingleton, false);
       prefs->AddObserver("media.getusermedia.channels", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.experimental_input_processing",
-                         sSingleton, false);
 #endif
     }
 
@@ -3480,8 +3475,6 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPrefBool(aBranch, "media.getusermedia.aec_enabled", aData, &mPrefs.mAecOn);
   GetPrefBool(aBranch, "media.getusermedia.agc_enabled", aData, &mPrefs.mAgcOn);
   GetPrefBool(aBranch, "media.getusermedia.hpf_enabled", aData, &mPrefs.mHPFOn);
-  GetPrefBool(aBranch, "media.getusermedia.experimental_input_processing",
-              aData, &mPrefs.mExperimentalInputProcessing);
   GetPrefBool(aBranch, "media.getusermedia.noise_enabled", aData,
               &mPrefs.mNoiseOn);
   GetPref(aBranch, "media.getusermedia.aec", aData, &mPrefs.mAec);
@@ -3539,8 +3532,6 @@ void MediaManager::Shutdown() {
     prefs->RemoveObserver("media.getusermedia.aec", this);
     prefs->RemoveObserver("media.getusermedia.agc_enabled", this);
     prefs->RemoveObserver("media.getusermedia.hpf_enabled", this);
-    prefs->RemoveObserver("media.getusermedia.experimental_input_processing",
-                          this);
     prefs->RemoveObserver("media.getusermedia.agc", this);
     prefs->RemoveObserver("media.getusermedia.noise_enabled", this);
     prefs->RemoveObserver("media.getusermedia.noise", this);

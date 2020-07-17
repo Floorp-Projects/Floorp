@@ -515,7 +515,6 @@ pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
   pref("media.getusermedia.agc", 1); // kAdaptiveDigital
   pref("media.getusermedia.hpf_enabled", true);
   pref("media.getusermedia.aecm_output_routing", 3); // kSpeakerphone
-  pref("media.getusermedia.experimental_input_processing", false);
 #endif // MOZ_WEBRTC
 
 #if !defined(ANDROID)
