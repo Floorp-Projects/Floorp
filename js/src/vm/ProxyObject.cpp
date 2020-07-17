@@ -297,6 +297,9 @@ void ProxyObject::nuke() {
   // various information about the original target.
   setSameCompartmentPrivate(DeadProxyTargetValue(this));
 
+  // Clear out the expando
+  setExpando(nullptr);
+
   // Update the handler to make this a DeadObjectProxy.
   setHandler(&DeadObjectProxy::singleton);
 
