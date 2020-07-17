@@ -124,6 +124,10 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
 
+  if (aURI->SchemeIs("chrome") || aURI->SchemeIs("about")) {
+    return;
+  }
+
   nsAutoString sourceLine;
   uint32_t lineNumber = 0, columnNumber = 0;
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
