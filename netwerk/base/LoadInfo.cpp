@@ -439,8 +439,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
 LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
                    nsIPrincipal* aTriggeringPrincipal,
                    const OriginAttributes& aOriginAttributes,
-                   uint64_t aOuterWindowID, nsSecurityFlags aSecurityFlags,
-                   uint32_t aSandboxFlags)
+                   nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : mLoadingPrincipal(nullptr),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(nullptr),
@@ -516,7 +515,6 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
 
 LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
                    nsIPrincipal* aTriggeringPrincipal,
-                   uint64_t aFrameOuterWindowID,
                    nsContentPolicyType aContentPolicyType,
                    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : mLoadingPrincipal(nullptr),
@@ -665,10 +663,8 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
 
 LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
                    nsIPrincipal* aTriggeringPrincipal,
-                   uint64_t aFrameOuterWindowID, nsSecurityFlags aSecurityFlags,
-                   uint32_t aSandboxFlags)
+                   nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : LoadInfo(aBrowsingContext->GetParentWindowContext(), aTriggeringPrincipal,
-               aFrameOuterWindowID,
                InternalContentPolicyTypeForFrame(aBrowsingContext),
                aSecurityFlags, aSandboxFlags) {
   mFrameBrowsingContextID = aBrowsingContext->Id();
