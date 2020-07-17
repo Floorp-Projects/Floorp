@@ -11,4 +11,5 @@ DevToolsModules(
     'platform-messages.js',
     'root-node.js',
     'stylesheet.js',
+    'websocket.js',
 )
