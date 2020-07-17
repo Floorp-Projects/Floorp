@@ -251,6 +251,8 @@ enum class DesktopEnvironment : uint8_t {
   Pantheon,
   LXQT,
   Deepin,
+  Dwm,
+  Budgie,
   Unknown,
   Max
 };
@@ -258,10 +260,13 @@ enum class DesktopEnvironment : uint8_t {
 enum class WindowProtocol : uint8_t {
   All,  // There is an assumption that this is the first enum
   X11,
+  XWayland,
   Wayland,
   WaylandDRM,
-  // Wildcard for all Wayland variants.
+  // Wildcard for all Wayland variants, excluding XWayland.
   WaylandAll,
+  // Wildcard for all X11 variants, including XWayland.
+  X11All,
   Max
 };
 
