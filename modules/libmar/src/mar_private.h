@@ -7,8 +7,8 @@
 #ifndef MAR_PRIVATE_H__
 #define MAR_PRIVATE_H__
 
+#include <assert.h>  // for C11 static_assert
 #include "limits.h"
-#include "mozilla/Assertions.h"
 #include <stdint.h>
 
 #define BLOCKSIZE 4096
@@ -27,14 +27,13 @@
 
 /* Existing code makes assumptions that the file size is
    smaller than LONG_MAX. */
-MOZ_STATIC_ASSERT(MAX_SIZE_OF_MAR_FILE < ((int64_t)LONG_MAX),
-                  "max mar file size is too big");
+static_assert(MAX_SIZE_OF_MAR_FILE < ((int64_t)LONG_MAX),
+              "max mar file size is too big");
 
 /* We store at most the size up to the signature block + 4
    bytes per BLOCKSIZE bytes */
-MOZ_STATIC_ASSERT(sizeof(BLOCKSIZE) <
-                      (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
-                  "BLOCKSIZE is too big");
+static_assert(sizeof(BLOCKSIZE) < (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
+              "BLOCKSIZE is too big");
 
 /* The maximum size of any signature supported by current and future
    implementations of the signmar program. */
