@@ -900,7 +900,7 @@ def main(**kwargs_str):
 
 
 def lint(repo_root, paths, output_format, ignore_glob=None):
-    # type: (Text, List[Text], Text, Optional[List]) -> int
+    # type: (Text, List[Text], Text, Optional[List[Text]]) -> int
     error_count = defaultdict(int)  # type: Dict[Text, int]
     last = None
 
