@@ -292,8 +292,8 @@ class MOZ_STACK_CLASS
   static nsAtom* DetermineContextLocalNameForParsingPastedHTML(
       const nsIContent* aParentContentOfPastedHTMLInContext);
 
-  static bool FindTargetNodeOfContextForPastedHTML(nsINode& aStart,
-                                                   nsCOMPtr<nsINode>& aResult);
+  static bool FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(
+      nsINode& aStart, nsCOMPtr<nsINode>& aResult);
 
   /**
    * @param aDocumentFragmentForContext contains the merged result.
@@ -3098,8 +3098,8 @@ void HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
  * firstChild of the firstChild (until we reach a leaf).
  */
 bool HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
-    FindTargetNodeOfContextForPastedHTML(nsINode& aStart,
-                                         nsCOMPtr<nsINode>& aResult) {
+    FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(
+        nsINode& aStart, nsCOMPtr<nsINode>& aResult) {
   nsIContent* firstChild = aStart.GetFirstChild();
   if (!firstChild) {
     // If the current result is nullptr, then aStart is a leaf, and is the
@@ -3128,7 +3128,8 @@ bool HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
       }
     }
 
-    if (FindTargetNodeOfContextForPastedHTML(*child, aResult)) {
+    if (FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(*child,
+                                                                     aResult)) {
       return true;
     }
   }
@@ -3334,8 +3335,9 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
       return rv;
     }
 
-    FragmentFromPasteCreator::FindTargetNodeOfContextForPastedHTML(
-        *documentFragmentForContext, aParentNodeOfPastedHTMLInContext);
+    FragmentFromPasteCreator::
+        FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(
+            *documentFragmentForContext, aParentNodeOfPastedHTMLInContext);
   }
 
   nsCOMPtr<nsIContent> parentContentOfPastedHTMLInContext =
