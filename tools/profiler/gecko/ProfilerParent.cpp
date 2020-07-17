@@ -28,19 +28,15 @@ class ProfilerParentTracker;
 // the given memory limit is reached.
 class ProfileBufferGlobalController final {
  public:
-  ProfileBufferGlobalController(ProfilerParentTracker& aTracker,
-                                size_t aMaximumBytes);
+  explicit ProfileBufferGlobalController(size_t aMaximumBytes);
 
   ~ProfileBufferGlobalController();
-
-  void Clear();
 
   void HandleChunkManagerUpdate(
       base::ProcessId aProcessId,
       ProfileBufferControlledChunkManager::Update&& aUpdate);
 
  private:
-  ProfilerParentTracker& mTracker;
   const size_t mMaximumBytes;
 
   const base::ProcessId mParentProcessId = base::GetCurrentProcId();
@@ -144,8 +140,8 @@ class ProfilerParentTracker final {
 };
 
 ProfileBufferGlobalController::ProfileBufferGlobalController(
-    ProfilerParentTracker& aTracker, size_t aMaximumBytes)
-    : mTracker(aTracker), mMaximumBytes(aMaximumBytes) {
+    size_t aMaximumBytes)
+    : mMaximumBytes(aMaximumBytes) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   // This is the local chunk manager for this parent process, so updates can be
   // handled here.
@@ -337,8 +333,7 @@ void ProfilerParentTracker::StartTracking(ProfilerParent* aProfilerParent) {
     // (And this helps delay the Controller startup, because the parent profiler
     // can start *very* early in the process, when some resources like threads
     // are not ready yet.)
-    sInstance->mMaybeController.emplace(*sInstance,
-                                        size_t(sInstance->mEntries) * 8u);
+    sInstance->mMaybeController.emplace(size_t(sInstance->mEntries) * 8u);
   }
 
   sInstance->mProfilerParents.AppendElement(aProfilerParent);
@@ -365,8 +360,7 @@ void ProfilerParentTracker::ProfilerStarted(uint32_t aEntries) {
       !sInstance->mProfilerParents.IsEmpty()) {
     // We are already tracking child processes, so it's a good time to start
     // controlling the global memory usage of the profiler.
-    sInstance->mMaybeController.emplace(*sInstance,
-                                        size_t(sInstance->mEntries) * 8u);
+    sInstance->mMaybeController.emplace(size_t(sInstance->mEntries) * 8u);
   }
 }
 
