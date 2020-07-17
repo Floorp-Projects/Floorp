@@ -11,7 +11,7 @@ def test_no_browsing_context(session, create_window):
 
     new_handle = create_window()
     session.window_handle = new_handle
-    session.close()
+    session.window.close()
 
     response = get_window_handles(session)
     assert_success(response, window_handles)
