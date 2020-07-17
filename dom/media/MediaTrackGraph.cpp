@@ -2067,6 +2067,9 @@ void MediaTrack::AddAudioOutput(void* aKey) {
     void Run() override { mTrack->AddAudioOutputImpl(mKey); }
     void* mKey;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aKey));
 }
 
@@ -2095,6 +2098,9 @@ void MediaTrack::SetAudioOutputVolume(void* aKey, float aVolume) {
     void* mKey;
     float mVolume;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aKey, aVolume));
 }
 
@@ -2116,6 +2122,9 @@ void MediaTrack::RemoveAudioOutput(void* aKey) {
     void Run() override { mTrack->RemoveAudioOutputImpl(mKey); }
     void* mKey;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aKey));
 }
 
@@ -2174,6 +2183,9 @@ void MediaTrack::AddListener(MediaTrackListener* aListener) {
     RefPtr<MediaTrackListener> mListener;
   };
   MOZ_ASSERT(mSegment, "Segment-less tracks do not support listeners");
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
@@ -2208,6 +2220,10 @@ RefPtr<GenericPromise> MediaTrack::RemoveListener(
 
   UniquePtr<Message> message = MakeUnique<Message>(this, aListener);
   RefPtr<GenericPromise> p = message->mRemovedPromise.Ensure(__func__);
+  if (mMainThreadDestroyed) {
+    message->mRemovedPromise.Reject(NS_ERROR_FAILURE, __func__);
+    return p;
+  }
   GraphImpl()->AppendMessage(move(message));
   return p;
 }
@@ -2228,6 +2244,9 @@ void MediaTrack::AddDirectListener(DirectMediaTrackListener* aListener) {
     void Run() override { mTrack->AddDirectListenerImpl(mListener.forget()); }
     RefPtr<DirectMediaTrackListener> mListener;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
@@ -2249,6 +2268,9 @@ void MediaTrack::RemoveDirectListener(DirectMediaTrackListener* aListener) {
     }
     RefPtr<DirectMediaTrackListener> mListener;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
@@ -2276,6 +2298,9 @@ void MediaTrack::RunAfterPendingUpdates(
     nsCOMPtr<nsIRunnable> mRunnable;
   };
 
+  if (mMainThreadDestroyed) {
+    return;
+  }
   graph->AppendMessage(MakeUnique<Message>(this, runnable.forget()));
 }
 
@@ -2306,6 +2331,9 @@ void MediaTrack::SetEnabled(DisabledTrackMode aMode) {
     void Run() override { mTrack->SetEnabledImpl(mMode); }
     DisabledTrackMode mMode;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aMode));
 }
 
@@ -2953,6 +2981,9 @@ void ProcessedMediaTrack::QueueSetAutoend(bool aAutoend) {
     }
     bool mAutoend;
   };
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aAutoend));
 }
 
