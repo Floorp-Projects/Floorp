@@ -266,6 +266,10 @@ class FakeXRAnchorController {
     return this.dirty_;
   }
 
+  get paused() {
+    return this.paused_;
+  }
+
   markProcessed() {
     this.dirty_ = false;
   }
@@ -980,7 +984,7 @@ class MockRuntime {
         const anchorData = new device.mojom.XRAnchorData();
         anchorData.id = id;
         if(!controller.paused) {
-          anchorData.pose = XRMathHelper.decomposeRigidTransform(
+          anchorData.mojoFromAnchor = XRMathHelper.decomposeRigidTransform(
             controller.getAnchorOrigin());
         }
 
