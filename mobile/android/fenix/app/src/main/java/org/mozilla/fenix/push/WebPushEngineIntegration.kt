@@ -6,7 +6,7 @@ package org.mozilla.fenix.push
 
 import android.util.Base64
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webpush.WebPushDelegate
@@ -22,7 +22,8 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class WebPushEngineIntegration(
     private val engine: Engine,
-    private val pushFeature: AutoPushFeature
+    private val pushFeature: AutoPushFeature,
+    private val coroutineScope: CoroutineScope = MainScope()
 ) : AutoPushFeature.Observer {
 
     private var handler: WebPushHandler? = null
@@ -39,13 +40,13 @@ class WebPushEngineIntegration(
     }
 
     override fun onMessageReceived(scope: PushScope, message: ByteArray?) {
-        CoroutineScope(Dispatchers.Main).launch {
+        coroutineScope.launch {
             handler?.onPushMessage(scope, message)
         }
     }
 
     override fun onSubscriptionChanged(scope: PushScope) {
-        CoroutineScope(Dispatchers.Main).launch {
+        coroutineScope.launch {
             handler?.onSubscriptionChanged(scope)
         }
     }
