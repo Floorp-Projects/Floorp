@@ -484,14 +484,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   // Set a new maximum channel count. Graph thread only.
   void SetMaxOutputChannelCount(uint32_t aMaxChannelCount);
 
-  // Main thread only, query and update the cached latency figure.
-  double CachedAudioOutputLatency();
-  double CachedAudioInputLatency();
-  void UpdateAudioLatencies();
-
-  // Graph thread only, get the cached latency figure.
-  double AudioOutputLatencyGraphThread();
-  double AudioInputLatencyGraphThread();
+  double AudioOutputLatency();
 
   /**
    * The audio input channel count for a MediaTrackGraph is the max of all the
@@ -1037,26 +1030,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   GraphTime mNextMainThreadGraphTime = 0;
 
   /**
-   * Cached audio output latency, in seconds. This is reset
+   * Cached audio output latency, in seconds. Main thread only. This is reset
    * whenever the audio device running this MediaTrackGraph changes.
    */
-  std::atomic<double> mAudioOutputLatency;
-  /**
-   * Cached audio input latency, in seconds. This is reset
-   * whenever the audio device running this MediaTrackGraph changes.
-   */
-  std::atomic<double> mAudioInputLatency;
-
-  /**
-   * Only query the latency once every LATENCY_QUERYING_INTERVAL stable state.
-   */
-  const uint32_t LATENCY_QUERYING_INTERVAL = 100;
-
-  /**
-   * Counter to only query the audio latencies every N iterations. Main thread
-   * only.
-   */
-  uint32_t mLatencyQueryCounter = 0;
+  double mAudioOutputLatency;
 
   /**
    * The max audio output channel count the default audio output device
