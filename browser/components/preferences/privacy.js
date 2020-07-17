@@ -2048,7 +2048,7 @@ var gPrivacyPane = {
       OSKeyStore.canReauth()
     ) {
       let messageId =
-        "master-password-os-auth-dialog-message-" + AppConstants.platform;
+        "primary-password-os-auth-dialog-message-" + AppConstants.platform;
       let [messageText, captionText] = await L10n.formatMessages([
         {
           id: messageId,
