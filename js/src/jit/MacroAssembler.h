@@ -3496,6 +3496,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
     bind(&done);
   }
 
+  void boxUint32(Register source, ValueOperand dest, bool allowDouble,
+                 Label* fail);
+
   template <typename T>
   void loadFromTypedArray(Scalar::Type arrayType, const T& src,
                           AnyRegister dest, Register temp, Label* fail);
