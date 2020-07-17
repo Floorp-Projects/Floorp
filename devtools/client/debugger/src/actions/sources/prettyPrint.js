@@ -39,6 +39,10 @@ import type {
   SourceLocation,
 } from "../../types";
 
+function getPrettyOriginalSourceURL(generatedSource: Source) {
+  return getPrettySourceURL(generatedSource.url || generatedSource.id);
+}
+
 export async function prettyPrintSource(
   sourceMaps: typeof SourceMaps,
   generatedSource: Source,
@@ -49,7 +53,7 @@ export async function prettyPrintSource(
     throw new Error("Can't prettify non-javascript files.");
   }
 
-  const url = getPrettySourceURL(generatedSource.url);
+  const url = getPrettyOriginalSourceURL(generatedSource);
   const { code, mappings } = await prettyPrint({
     text: content.value,
     url,
@@ -70,7 +74,7 @@ export async function prettyPrintSource(
 export function createPrettySource(cx: Context, sourceId: SourceId) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
-    const url = getPrettySourceURL(source.url || source.id);
+    const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(sourceId, url);
 
     const prettySource = {
