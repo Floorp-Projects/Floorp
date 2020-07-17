@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
@@ -558,7 +559,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             cursor.moveToFirst()
             fileName = cursor.getString(nameIndex)
         }
-        return fileName
+        return fileName.sanitizeFileName()
     }
 }
 

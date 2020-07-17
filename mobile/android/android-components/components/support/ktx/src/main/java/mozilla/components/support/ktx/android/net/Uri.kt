@@ -4,7 +4,12 @@
 
 package mozilla.components.support.ktx.android.net
 
+import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
+import android.os.Build
+import java.io.File
+import java.io.IOException
 
 private val commonPrefixes = listOf("www.", "mobile.", "m.")
 
@@ -53,3 +58,30 @@ fun Uri.sameSchemeAndHostAs(other: Uri) = scheme == other.scheme && host == othe
  * https://html.spec.whatwg.org/multipage/origin.html#same-origin
  */
 fun Uri.sameOriginAs(other: Uri) = sameSchemeAndHostAs(other) && port == other.port
+
+/**
+ * Indicate if the [this] uri is under the application private directory.
+ */
+fun Uri.isUnderPrivateAppDirectory(context: Context): Boolean {
+    return when (this.scheme) {
+        ContentResolver.SCHEME_FILE -> {
+            try {
+                val uriPath = path ?: return true
+                val uriCanonicalPath = File(uriPath).canonicalPath
+                val dataDirCanonicalPath = File(context.applicationInfo.dataDir).canonicalPath
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                    uriCanonicalPath.startsWith(dataDirCanonicalPath)
+                } else {
+                    // We have to do this manual check on early builds of Android 11
+                    // as symlink didn't resolve from /data/user/ to data/data
+                    // we have to revise this again once Android 11 is out
+                    // https://github.com/mozilla-mobile/android-components/issues/7750
+                    uriCanonicalPath.startsWith("/data/data") || uriCanonicalPath.startsWith("/data/user")
+                }
+            } catch (e: IOException) {
+                true
+            }
+        }
+        else -> false
+    }
+}

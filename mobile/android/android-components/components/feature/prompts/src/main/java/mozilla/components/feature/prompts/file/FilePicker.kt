@@ -6,6 +6,7 @@ package mozilla.components.feature.prompts.file
 
 import android.app.Activity
 import android.app.Activity.RESULT_OK
+import android.content.Context
 import android.content.Intent
 import android.content.Intent.EXTRA_INITIAL_INTENTS
 import android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -22,6 +23,7 @@ import mozilla.components.feature.prompts.consumePromptFrom
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import mozilla.components.support.ktx.android.net.isUnderPrivateAppDirectory
 
 /**
  * @property container The [Activity] or [Fragment] which hosts the file picker.
@@ -159,13 +161,24 @@ internal class FilePicker(
         if (intent?.clipData != null && request.isMultipleFilesSelection) {
             intent.clipData?.run {
                 val uris = Array<Uri>(itemCount) { index -> getItemAt(index).uri }
-                request.onMultipleFilesSelected(container.context, uris)
+                // We want to verify that we are not exposing any private data
+                val sanitizedUris = uris.removeUrisUnderPrivateAppDir(container.context)
+                if (sanitizedUris.isEmpty()) {
+                    request.onDismiss()
+                } else {
+                    request.onMultipleFilesSelected(container.context, sanitizedUris)
+                }
             }
         } else {
             val uri = intent?.data ?: captureUri
             uri?.let {
-                request.onSingleFileSelected(container.context, it)
-            } ?: request.onDismiss
+                // We want to verify that we are not exposing any private data
+                if (!it.isUnderPrivateAppDirectory(container.context)) {
+                    request.onSingleFileSelected(container.context, it)
+                } else {
+                    request.onDismiss()
+                }
+            } ?: request.onDismiss()
         }
     }
 
@@ -175,4 +188,8 @@ internal class FilePicker(
     companion object {
         const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 7113
     }
+}
+
+internal fun Array<Uri>.removeUrisUnderPrivateAppDir(context: Context): Array<Uri> {
+    return this.filter { !it.isUnderPrivateAppDirectory(context) }.toTypedArray()
 }

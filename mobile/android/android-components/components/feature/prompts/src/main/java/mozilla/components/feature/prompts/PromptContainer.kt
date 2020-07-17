@@ -7,6 +7,7 @@ package mozilla.components.feature.prompts
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 
 /**
  * Wrapper to hold shared functionality between activities and fragments for [PromptFeature].
@@ -50,5 +51,11 @@ internal sealed class PromptContainer {
             fragment.startActivityForResult(intent, code)
 
         override fun getString(res: Int) = fragment.getString(res)
+    }
+
+    @VisibleForTesting
+    internal class TestPromptContainer(override val context: Context) : PromptContainer() {
+        override fun startActivityForResult(intent: Intent, code: Int) = Unit
+        override fun getString(res: Int) = context.getString(res)
     }
 }
