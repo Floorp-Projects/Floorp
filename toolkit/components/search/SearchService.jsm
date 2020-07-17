@@ -392,6 +392,12 @@ SearchService.prototype = {
   __sortedEngines: null,
 
   /**
+   * A flag to prevent setting of useDBForOrder when there's non-user
+   * activity happening.
+   */
+  _dontSetUseDBForOrder: false,
+
+  /**
    * This holds the current list of visible engines from the configuration,
    * and is used to update the cache. If the cache value is different to those
    * in the configuration, then the configuration has changed. The engines
@@ -1279,6 +1285,7 @@ SearchService.prototype = {
       logConsole.debug("Ignoring maybeReloadEngines() as inside init()");
       return;
     }
+    logConsole.debug("Running maybeReloadEngines");
 
     // Handle the legacy code (this returns at the end).
     if (!gModernConfig) {
@@ -1288,6 +1295,7 @@ SearchService.prototype = {
       // Clear cached objects as they may get replaced.
       this._currentEngine = null;
       this._currentPrivateEngine = null;
+      this._dontSetUseDBForOrder = true;
       // Ensure we generate a new __sortedEngines list instead
       // of appending new engines to the end and fixing the
       // engine order.
@@ -1325,16 +1333,26 @@ SearchService.prototype = {
         SearchUtils.TOPIC_SEARCH_SERVICE,
         "engines-reloaded"
       );
+      logConsole.debug("maybeReloadEngines complete");
       return;
     }
 
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
-    // Ensure we generate a new __sortedEngines list instead
-    // of appending new engines to the end and fixing the
-    // engine order.
-    this.__sortedEngines = null;
+
+    // Ensure that we don't set the UseDBForOrder flag whilst we're doing this.
+    // This isn't a user action, so we shouldn't be switching it.
+    this._dontSetUseDBForOrder = true;
+
+    // The order of work here is designed to avoid potential issues when updating
+    // the default engines, so that we're not removing active defaults or trying
+    // to set a default to something that hasn't been added yet. The order is:
+    //
+    // 1) Update exising engines that are in both the old and new configuration.
+    // 2) Add any new engines from the new configuration.
+    // 3) Update the default engines.
+    // 4) Remove any old engines.
 
     let {
       engines: originalConfigEngines,
@@ -1343,7 +1361,9 @@ SearchService.prototype = {
 
     let enginesToRemove = [];
     let configEngines = [...originalConfigEngines];
-    for (let engine of this._engines.values()) {
+    let oldEngineList = [...this._engines.values()];
+
+    for (let engine of oldEngineList) {
       if (!engine.isAppProvided) {
         continue;
       }
@@ -1377,13 +1397,13 @@ SearchService.prototype = {
       }
     }
 
-    // Any remaining configuration engines are ones we need to add.
+    // Any remaining configuration engines are ones that we need to add.
     for (let engine of configEngines) {
       try {
-        let newEngine = await this.makeEngineFromConfig(engine, true);
-        this._addEngineToStore(newEngine);
+        let newEngine = await this.makeEngineFromConfig(engine, false);
+        this._addEngineToStore(newEngine, true);
       } catch (ex) {
-        console.warn(
+        logConsole.warn(
           `Could not load engine ${
             "webExtension" in engine ? engine.webExtension.id : "unknown"
           }: ${ex}`
@@ -1391,10 +1411,7 @@ SearchService.prototype = {
       }
     }
 
-    // Now let's sort out any new default engines. We do this after adding the
-    // new ones to make sure they exist, and before removing the old ones to
-    // avoid the old ones potentially changing the defaults themselves as well.
-
+    // Now set the sort out the default engines and notify as appropriate.
     this._currentEngine = null;
     this._currentPrivateEngine = null;
 
@@ -1431,16 +1448,31 @@ SearchService.prototype = {
     }
 
     // Finally, remove any engines that need removing.
+
     for (let engine of enginesToRemove) {
-      // Check - do we have more than one engine with this ID?
-      if (
-        [...this._engines.values()].filter(
-          e => e._extensionID == engine._extensionID
-        ).length > 1
-      ) {
-        // More than one using this, so we don't want to remove the add-on.
+      // If we have other engines that use the same extension ID, then
+      // we do not want to remove the add-on - only remove the engine itself.
+      let inUseEngines = [...this._engines.values()].filter(
+        e => e._extensionID == engine._extensionID
+      );
+
+      if (inUseEngines?.length == 1 && inUseEngines?.[0] != engine) {
+        // As `this._engines` is indexed by name, we can sometimes have the
+        // situation that we have added an engine earlier in this function,
+        // but we need to remove the sister engine here, e.g. eBay has the
+        // same name for both US and GB, but has a different domain.
+        // The result of this is the earlier addition has already replaced
+        // the engine in `this._engines`, so all we need to do here is to
+        // pretend the old engine was removed.
+        SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
+        continue;
+      } else if (inUseEngines?.length > 1) {
+        // More than one engine is using this extension ID, so we don't want to
+        // remove the add-on.
         this._internalRemoveEngine(engine);
+        SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
       } else {
+        // No other engines are using this, so we can just remove the add-on.
         let addon = await AddonManager.getAddonByID(engine._extensionID);
         if (addon) {
           // Pretend this engine is no longer app-provided, so that when
@@ -1452,11 +1484,15 @@ SearchService.prototype = {
       }
     }
 
+    this._dontSetUseDBForOrder = false;
+    // Clear out the sorted engines cache, so that we re-sort it if necessary.
+    this.__sortedEngines = null;
     Services.obs.notifyObservers(
       null,
       SearchUtils.TOPIC_SEARCH_SERVICE,
       "engines-reloaded"
     );
+    logConsole.debug("maybeReloadEngines complete");
   },
 
   _reInit(origin) {
@@ -1566,7 +1602,7 @@ SearchService.prototype = {
     this._startupExtensions = new Set();
   },
 
-  _addEngineToStore(engine) {
+  _addEngineToStore(engine, skipDuplicateCheck = false) {
     if (this._engineMatchesIgnoreLists(engine)) {
       logConsole.debug("_addEngineToStore: Ignoring engine");
       return;
@@ -1578,7 +1614,11 @@ SearchService.prototype = {
     // engine is updating another engine, it's allowed to have the same name.
     var hasSameNameAsUpdate =
       engine._engineToUpdate && engine.name == engine._engineToUpdate.name;
-    if (this._engines.has(engine.name) && !hasSameNameAsUpdate) {
+    if (
+      !skipDuplicateCheck &&
+      this._engines.has(engine.name) &&
+      !hasSameNameAsUpdate
+    ) {
       logConsole.debug("_addEngineToStore: Duplicate engine found, aborting!");
       return;
     }
@@ -1613,7 +1653,7 @@ SearchService.prototype = {
       // has already been built (i.e. if this.__sortedEngines is non-null). If
       // it hasn't, we're loading engines from disk and the sorted engine list
       // will be built once we need it.
-      if (this.__sortedEngines) {
+      if (this.__sortedEngines && !this._dontSetUseDBForOrder) {
         this.__sortedEngines.push(engine);
         this._saveSortedEngineList();
       }
@@ -2832,8 +2872,10 @@ SearchService.prototype = {
       }
       this._internalRemoveEngine(engineToRemove);
 
-      // Since we removed an engine, we need to update the preferences.
-      this._saveSortedEngineList();
+      // Since we removed an engine, we may need to update the preferences.
+      if (!this._dontSetUseDBForOrder) {
+        this._saveSortedEngineList();
+      }
     }
     SearchUtils.notifyAction(engineToRemove, SearchUtils.MODIFIED_TYPE.REMOVED);
   },
