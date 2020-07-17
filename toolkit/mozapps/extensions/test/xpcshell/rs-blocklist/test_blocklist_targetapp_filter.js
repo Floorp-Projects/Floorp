@@ -40,6 +40,23 @@ function run_test() {
   run_next_test();
 }
 
+add_task(async function test_supports_filter_expressions() {
+  await createRecords([
+    {
+      matchName: "Adobe Flex",
+      filter_expression: 'env.appinfo.ID == "xpcshell@tests.mozilla.org"',
+    },
+    {
+      matchName: "Adobe Flex",
+      filter_expression: "1 == 2",
+    },
+  ]);
+
+  const list = await client.get();
+  equal(list.length, 1);
+});
+add_task(clear_state);
+
 add_task(async function test_returns_all_without_target() {
   await createRecords([
     {
