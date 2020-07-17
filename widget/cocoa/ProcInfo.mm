@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ProcInfo.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "nsNetCID.h"
@@ -19,11 +20,9 @@
 
 namespace mozilla {
 
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const ProcType& type,
-                                    const nsACString& origin, mach_port_t aChildTask) {
+RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
-
   nsresult rv = NS_OK;
   nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
@@ -32,93 +31,115 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
     return promise;
   }
 
-  // Ensure that the string is still alive when `ResolveGetProcInfo` is called.
-  nsCString originCopy(origin);
-  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type,
-                             originCopy = std::move(originCopy), childId, aChildTask]() {
-    ProcInfo info;
-    info.pid = pid;
-    info.childId = childId;
-    info.type = type;
-    info.origin = originCopy;
-    struct proc_bsdinfo proc;
-    if ((unsigned long)proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE) <
-        PROC_PIDTBSDINFO_SIZE) {
-      holder->Reject(NS_ERROR_FAILURE, __func__);
-      return;
-    }
+  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      __func__, [holder = std::move(holder), requests = std::move(aRequests)]() {
+        HashMap<base::ProcessId, ProcInfo> gathered;
+        if (!gathered.reserve(requests.Length())) {
+          holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
+          return;
+        }
+        for (const auto& request : requests) {
+          ProcInfo info;
+          info.pid = request.pid;
+          info.childId = request.childId;
+          info.type = request.processType;
+          info.origin = std::move(request.origin);
+          struct proc_bsdinfo proc;
+          if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTBSDINFO, 0, &proc,
+                                          PROC_PIDTBSDINFO_SIZE) < PROC_PIDTBSDINFO_SIZE) {
+            // Can't read data for this proc.
+            // Probably either a sandboxing issue or a race condition, e.g.
+            // the process has been just been killed. Regardless, skip process.
+            continue;
+          }
 
-    struct proc_taskinfo pti;
-    if ((unsigned long)proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, PROC_PIDTASKINFO_SIZE) <
-        PROC_PIDTASKINFO_SIZE) {
-      holder->Reject(NS_ERROR_FAILURE, __func__);
-      return;
-    }
+          struct proc_taskinfo pti;
+          if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTASKINFO, 0, &pti,
+                                          PROC_PIDTASKINFO_SIZE) < PROC_PIDTASKINFO_SIZE) {
+            continue;
+          }
 
-    // copying all the info to the ProcInfo struct
-    info.filename.AssignASCII(proc.pbi_name);
-    info.virtualMemorySize = pti.pti_virtual_size;
-    info.residentSetSize = pti.pti_resident_size;
-    info.cpuUser = pti.pti_total_user;
-    info.cpuKernel = pti.pti_total_system;
+          // copying all the info to the ProcInfo struct
+          info.filename.AssignASCII(proc.pbi_name);
+          info.virtualMemorySize = pti.pti_virtual_size;
+          info.residentSetSize = pti.pti_resident_size;
+          info.cpuUser = pti.pti_total_user;
+          info.cpuKernel = pti.pti_total_system;
 
-    // Now getting threads info
-    mach_port_t selectedTask;
-    // If we did not get a task from a child process, we use mach_task_self()
-    if (aChildTask == MACH_PORT_NULL) {
-      selectedTask = mach_task_self();
-    } else {
-      selectedTask = aChildTask;
-    }
-    // task_threads() gives us a snapshot of the process threads
-    // but those threads can go away. All the code below makes
-    // the assumption that thread_info() calls may fail, and
-    // these errors will be ignored.
-    thread_act_port_array_t threadList;
-    mach_msg_type_number_t threadCount;
-    kern_return_t kret = task_threads(selectedTask, &threadList, &threadCount);
-    if (kret != KERN_SUCCESS) {
-      holder->Resolve(info, __func__);
-      return;
-    }
+          // Now getting threads info
+          mach_port_t selectedTask;
+          // If we did not get a task from a child process, we use mach_task_self()
+          if (request.childTask == MACH_PORT_NULL) {
+            selectedTask = mach_task_self();
+          } else {
+            selectedTask = request.childTask;
+          }
+          // task_threads() gives us a snapshot of the process threads
+          // but those threads can go away. All the code below makes
+          // the assumption that thread_info() calls may fail, and
+          // these errors will be ignored.
+          thread_act_port_array_t threadList;
+          mach_msg_type_number_t threadCount;
+          kern_return_t kret = task_threads(selectedTask, &threadList, &threadCount);
+          if (kret != KERN_SUCCESS) {
+            // For some reason, we have no data on the threads for this process.
+            // Most likely reason is that we have just lost a race condition and
+            // the process is dead.
+            // Let's stop here and ignore the entire process.
+            continue;
+          }
 
-    mach_msg_type_number_t count;
+          auto guardThreadCount = MakeScopeExit([&] {
+            vm_deallocate(selectedTask, (vm_address_t)threadList, sizeof(thread_t) * threadCount);
+          });
 
-    for (mach_msg_type_number_t i = 0; i < threadCount; i++) {
-      // Basic thread info.
-      thread_extended_info_data_t threadInfoData;
-      count = THREAD_EXTENDED_INFO_COUNT;
-      kret =
-          thread_info(threadList[i], THREAD_EXTENDED_INFO, (thread_info_t)&threadInfoData, &count);
-      if (kret != KERN_SUCCESS) {
-        continue;
-      }
+          mach_msg_type_number_t count;
 
-      // Getting the thread id.
-      thread_identifier_info identifierInfo;
-      count = THREAD_IDENTIFIER_INFO_COUNT;
-      kret = thread_info(threadList[i], THREAD_IDENTIFIER_INFO, (thread_info_t)&identifierInfo,
-                         &count);
-      if (kret != KERN_SUCCESS) {
-        continue;
-      }
+          for (mach_msg_type_number_t i = 0; i < threadCount; i++) {
+            // Basic thread info.
+            thread_extended_info_data_t threadInfoData;
+            count = THREAD_EXTENDED_INFO_COUNT;
+            kret = thread_info(threadList[i], THREAD_EXTENDED_INFO, (thread_info_t)&threadInfoData,
+                               &count);
+            if (kret != KERN_SUCCESS) {
+              continue;
+            }
 
-      // The two system calls were successful, let's add that thread
-      ThreadInfo thread;
-      thread.cpuUser = threadInfoData.pth_user_time;
-      thread.cpuKernel = threadInfoData.pth_system_time;
-      thread.name.AssignASCII(threadInfoData.pth_name);
-      thread.tid = identifierInfo.thread_id;
-      info.threads.AppendElement(thread);
-    }
-    holder->Resolve(info, __func__);
-  };
+            // Getting the thread id.
+            thread_identifier_info identifierInfo;
+            count = THREAD_IDENTIFIER_INFO_COUNT;
+            kret = thread_info(threadList[i], THREAD_IDENTIFIER_INFO,
+                               (thread_info_t)&identifierInfo, &count);
+            if (kret != KERN_SUCCESS) {
+              continue;
+            }
 
-  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__, std::move(ResolveGetProcinfo));
+            // The two system calls were successful, let's add that thread
+            ThreadInfo* thread = info.threads.AppendElement(fallible);
+            if (!thread) {
+              holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
+              return;
+            }
+            thread->cpuUser = threadInfoData.pth_user_time;
+            thread->cpuKernel = threadInfoData.pth_system_time;
+            thread->name.AssignASCII(threadInfoData.pth_name);
+            thread->tid = identifierInfo.thread_id;
+          }
+
+          if (!gathered.put(request.pid, std::move(info))) {
+            holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
+            return;
+          }
+        }
+        // ... and we're done!
+        holder->Resolve(std::move(gathered), __func__);
+      });
+
   rv = target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the LoadDataRunnable.");
   }
   return promise;
 }
-}
+
+}  // namespace mozilla

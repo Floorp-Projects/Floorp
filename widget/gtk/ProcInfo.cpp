@@ -209,9 +209,7 @@ class ThreadInfoReader final : public StatReader {
   base::ProcessId mTid;
 };
 
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type,
-                                    const nsACString& origin) {
+RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
   nsresult rv = NS_OK;
@@ -223,56 +221,72 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
     return promise;
   }
 
-  // Ensure that the string is still alive when the runnable is called.
-  nsCString originCopy(origin);
   RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [holder = std::move(holder), pid, type,
-                 originCopy = std::move(originCopy), childId]() {
-        // opening the stat file and reading its content
-        StatReader reader(pid);
-        ProcInfo info;
-        nsresult rv = reader.ParseProc(info);
-        if (NS_FAILED(rv)) {
-          holder->Reject(rv, __func__);
+      __func__,
+      [holder = std::move(holder), requests = std::move(aRequests)]() {
+        HashMap<base::ProcessId, ProcInfo> gathered;
+        if (!gathered.reserve(requests.Length())) {
+          holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
           return;
         }
-        // Extra info
-        info.pid = pid;
-        info.childId = childId;
-        info.type = type;
-        info.origin = originCopy;
+        for (const auto& request : requests) {
+          // opening the stat file and reading its content
+          StatReader reader(request.pid);
+          ProcInfo info;
+          nsresult rv = reader.ParseProc(info);
+          if (NS_FAILED(rv)) {
+            // Can't read data for this proc.
+            // Probably either a sandboxing issue or a race condition, e.g.
+            // the process has been just been killed. Regardless, skip process.
+            continue;
+          }
+          // Extra info
+          info.pid = request.pid;
+          info.childId = request.childId;
+          info.type = request.processType;
+          info.origin = request.origin;
 
-        // Let's look at the threads
-        nsCString taskPath;
-        taskPath.AppendPrintf("/proc/%u/task", pid);
-        nsAutoRef<DIR> dirHandle(opendir(taskPath.get()));
-        if (!dirHandle) {
-          // No threads ? Let's stop here and ignore the problem.
-          holder->Resolve(info, __func__);
-          return;
+          // Let's look at the threads
+          nsCString taskPath;
+          taskPath.AppendPrintf("/proc/%u/task", request.pid);
+          nsAutoRef<DIR> dirHandle(opendir(taskPath.get()));
+          if (!dirHandle) {
+            // For some reason, we have no data on the threads for this process.
+            // Most likely reason is that we have just lost a race condition and
+            // the process is dead.
+            // Let's stop here and ignore the entire process.
+            continue;
+          }
+
+          // If we can't read some thread info, we ignore that thread.
+          dirent* entry;
+          while ((entry = readdir(dirHandle)) != nullptr) {
+            if (entry->d_name[0] == '.') {
+              continue;
+            }
+            // Threads have a stat file, like processes.
+            nsAutoCString entryName(entry->d_name);
+            int32_t tid = entryName.ToInteger(&rv);
+            if (NS_FAILED(rv)) {
+              continue;
+            }
+            ThreadInfoReader reader(request.pid, tid);
+            ThreadInfo threadInfo;
+            rv = reader.ParseThread(threadInfo);
+            if (NS_FAILED(rv)) {
+              continue;
+            }
+            info.threads.AppendElement(threadInfo);
+          }
+
+          if (!gathered.put(request.pid, std::move(info))) {
+            holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
+            return;
+          }
         }
 
-        // If we can't read some thread info, we ignore that thread.
-        dirent* entry;
-        while ((entry = readdir(dirHandle)) != nullptr) {
-          if (entry->d_name[0] == '.') {
-            continue;
-          }
-          // Threads have a stat file, like processes.
-          nsAutoCString entryName(entry->d_name);
-          int32_t tid = entryName.ToInteger(&rv);
-          if (NS_FAILED(rv)) {
-            continue;
-          }
-          ThreadInfoReader reader(pid, tid);
-          ThreadInfo threadInfo;
-          rv = reader.ParseThread(threadInfo);
-          if (NS_FAILED(rv)) {
-            continue;
-          }
-          info.threads.AppendElement(threadInfo);
-        }
-        holder->Resolve(info, __func__);
+        // ... and we're done!
+        holder->Resolve(std::move(gathered), __func__);
       });
 
   rv = target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);

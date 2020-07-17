@@ -9,9 +9,7 @@
 
 namespace mozilla {
 
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type,
-                                    const nsACString& origin) {
+RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   // Not implemented on Android.
   return ProcInfoPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
