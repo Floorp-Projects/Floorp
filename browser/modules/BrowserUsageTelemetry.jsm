@@ -156,18 +156,6 @@ const BROWSER_UI_CONTAINER_IDS = {
   "nav-bar": "nav-bar",
 };
 
-// A list of the expected panes in about:preferences
-const PREFERENCES_PANES = [
-  "paneHome",
-  "paneGeneral",
-  "panePrivacy",
-  "paneSearch",
-  "paneSearchResults",
-  "paneSync",
-  "paneContainers",
-  "paneExperimental",
-];
-
 const IGNORABLE_EVENTS = new WeakMap();
 
 const KNOWN_ADDONS = [];
@@ -974,13 +962,7 @@ let BrowserUsageTelemetry = {
         return null;
       }
 
-      let pane = container.getAttribute("data-category");
-
-      if (!PREFERENCES_PANES.includes(pane)) {
-        pane = "paneUnknown";
-      }
-
-      return `preferences_${pane}`;
+      return `preferences_${container.getAttribute("data-category")}`;
     }
 
     return null;
