@@ -645,10 +645,6 @@
       }
     },
 
-    "MasterPassword": {
-      "type": "boolean"
-    },
-
     "NetworkPrediction": {
       "type": "boolean"
     },
@@ -1027,6 +1023,10 @@
           "type": "string"
         }
       }
+    },
+
+    "PrimaryPassword": {
+      "type": "boolean"
     },
 
     "PromptForDownloadLocation": {
