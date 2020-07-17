@@ -159,6 +159,7 @@ class HistoryTest {
         }.openHistory {
         }.openThreeDotMenu {
         }.clickDelete {
+            verifyDeleteSnackbarText("Deleted")
             verifyEmptyHistoryView()
         }
     }
@@ -175,6 +176,7 @@ class HistoryTest {
             clickDeleteHistoryButton()
             verifyDeleteConfirmationMessage()
             confirmDeleteAllHistory()
+            verifyDeleteSnackbarText("Browsing data deleted")
             verifyEmptyHistoryView()
         }
     }

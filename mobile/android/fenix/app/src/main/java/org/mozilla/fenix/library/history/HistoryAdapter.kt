@@ -33,6 +33,8 @@ class HistoryAdapter(
 
     private var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
     override val selectedItems get() = mode.selectedItems
+    var pendingDeletionIds = emptySet<Long>()
+    private val itemsWithHeaders: MutableMap<HistoryItemTimeGroup, Int> = mutableMapOf()
 
     override fun getItemViewType(position: Int): Int = HistoryListItemViewHolder.LAYOUT_ID
 
@@ -48,13 +50,33 @@ class HistoryAdapter(
     }
 
     override fun onBindViewHolder(holder: HistoryListItemViewHolder, position: Int) {
-        val previous = if (position == 0) null else getItem(position - 1)
         val current = getItem(position) ?: return
+        val headerForCurrentItem = timeGroupForHistoryItem(current)
+        val isPendingDeletion = pendingDeletionIds.contains(current.visitedAt)
+        var timeGroup: HistoryItemTimeGroup? = null
 
-        val previousHeader = previous?.let(::timeGroupForHistoryItem)
-        val currentHeader = timeGroupForHistoryItem(current)
-        val timeGroup = if (currentHeader != previousHeader) currentHeader else null
-        holder.bind(current, timeGroup, position == 0, mode)
+        // Add or remove the header and position to the map depending on it's deletion status
+        if (itemsWithHeaders.containsKey(headerForCurrentItem)) {
+            if (isPendingDeletion && itemsWithHeaders[headerForCurrentItem] == position) {
+                itemsWithHeaders.remove(headerForCurrentItem)
+            } else if (isPendingDeletion && itemsWithHeaders[headerForCurrentItem] != position) {
+                // do nothing
+            } else {
+                if (position <= itemsWithHeaders[headerForCurrentItem] as Int) {
+                    itemsWithHeaders[headerForCurrentItem] = position
+                    timeGroup = headerForCurrentItem
+                }
+            }
+        } else if (!isPendingDeletion) {
+            itemsWithHeaders[headerForCurrentItem] = position
+            timeGroup = headerForCurrentItem
+        }
+
+        holder.bind(current, timeGroup, position == 0, mode, isPendingDeletion)
+    }
+
+    fun updatePendingDeletionIds(pendingDeletionIds: Set<Long>) {
+        this.pendingDeletionIds = pendingDeletionIds
     }
 
     companion object {

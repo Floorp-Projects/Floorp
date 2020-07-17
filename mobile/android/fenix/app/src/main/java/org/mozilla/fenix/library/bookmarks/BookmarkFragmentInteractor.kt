@@ -88,7 +88,7 @@ class BookmarkFragmentInteractor(
             null -> Event.RemoveBookmarks
         }
         if (eventType == Event.RemoveBookmarkFolder) {
-            bookmarksController.handleBookmarkFolderDeletion(nodes.first())
+            bookmarksController.handleBookmarkFolderDeletion(nodes)
         } else {
             bookmarksController.handleBookmarkDeletion(nodes, eventType)
         }

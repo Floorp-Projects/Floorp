@@ -180,7 +180,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onDelete(setOf(subfolder))
 
         verify {
-            bookmarkController.handleBookmarkFolderDeletion(subfolder)
+            bookmarkController.handleBookmarkFolderDeletion(setOf(subfolder))
         }
     }
 

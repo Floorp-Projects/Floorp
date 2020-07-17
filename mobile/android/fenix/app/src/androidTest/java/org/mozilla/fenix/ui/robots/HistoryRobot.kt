@@ -82,6 +82,8 @@ class HistoryRobot {
             .click()
     }
 
+    fun verifyDeleteSnackbarText(text: String) = assertSnackBarText(text)
+
     class Transition {
         fun closeMenu(interact: HistoryRobot.() -> Unit): Transition {
             closeButton().click()
@@ -158,3 +160,6 @@ private fun assertDeleteConfirmationMessage() =
         .check(matches(isDisplayed()))
 
 private fun assertCopySnackBarText() = snackBarText().check(matches(withText("URL copied")))
+
+private fun assertSnackBarText(text: String) =
+    snackBarText().check(matches(withText(Matchers.containsString(text))))

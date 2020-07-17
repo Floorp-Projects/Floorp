@@ -55,7 +55,7 @@ class BookmarkControllerTest {
     private val loadBookmarkNode: suspend (String) -> BookmarkNode? = mockk(relaxed = true)
     private val showSnackbar: (String) -> Unit = mockk(relaxed = true)
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
-    private val deleteBookmarkFolder: (BookmarkNode) -> Unit = mockk(relaxed = true)
+    private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit = mockk(relaxed = true)
     private val invokePendingDeletion: () -> Unit = mockk(relaxed = true)
 
     private val homeActivity: HomeActivity = mockk(relaxed = true)
@@ -304,10 +304,10 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleBookmarkDeletion for a folder should properly call the delete folder delegate`() {
-        controller.handleBookmarkFolderDeletion(subfolder)
+        controller.handleBookmarkFolderDeletion(setOf(subfolder))
 
         verify {
-            deleteBookmarkFolder(subfolder)
+            deleteBookmarkFolder(setOf(subfolder))
         }
     }
 
