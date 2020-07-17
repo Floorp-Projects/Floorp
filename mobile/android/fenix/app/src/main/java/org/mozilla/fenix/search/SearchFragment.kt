@@ -316,9 +316,18 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             updateSearchWithLabel(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
             updateSearchSuggestionsHintVisibility(it)
+            updateToolbarContentDescription(it)
         }
 
         startPostponedEnterTransition()
+    }
+
+    private fun updateToolbarContentDescription(searchState: SearchFragmentState) {
+        val urlView = toolbarView.view
+            .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
+        toolbarView.view.contentDescription =
+            searchState.searchEngineSource.searchEngine.name + ", " + urlView.hint
+        urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     override fun onResume() {
