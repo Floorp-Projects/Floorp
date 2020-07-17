@@ -49,6 +49,7 @@ class AppLinksUseCasesTest {
     private val dataUrl = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
     private val aboutUrl = "about:config"
     private val javascriptUrl = "javascript:'hello, world'"
+    private val blobUrl = "blob://example.com"
     private val fileType = "audio/mpeg"
     private val layerUrl = "https://exmaple.com"
     private val layerPackage = "com.example.app"
@@ -165,6 +166,15 @@ class AppLinksUseCasesTest {
     @Test
     fun `An about url is not an app link`() {
         val context = createContext(Triple(aboutUrl, appPackage, ""))
+        val subject = AppLinksUseCases(context, { true })
+
+        val redirect = subject.interceptedAppLinkRedirect(aboutUrl)
+        assertFalse(redirect.isRedirect())
+    }
+
+    @Test
+    fun `A blob url is not an app link`() {
+        val context = createContext(Triple(blobUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(aboutUrl)
