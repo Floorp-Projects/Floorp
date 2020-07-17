@@ -86,6 +86,9 @@ bool Proxy::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy,
   if (!policy.allowed()) {
     return policy.returnValue();
   }
+
+  // Private names shouldn't take this path
+  MOZ_ASSERT_IF(JSID_IS_SYMBOL(id), !JSID_TO_SYMBOL(id)->isPrivateName());
   return handler->getOwnPropertyDescriptor(cx, proxy, id, desc);
 }
 
@@ -103,6 +106,17 @@ bool Proxy::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
     }
     return result.succeed();
   }
+
+  // Private field accesses have different semantics depending on the kind
+  // of proxy involved, and so take a different path compared to regular
+  // [[Get]] operations. For example, scripted handlers don't fire traps
+  // when accessing private fields (because of the WeakMap semantics)
+  bool isPrivate = JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName();
+  if (isPrivate) {
+    return proxy->as<ProxyObject>().handler()->definePrivateField(cx, proxy, id,
+                                                                  desc, result);
+  }
+
   return proxy->as<ProxyObject>().handler()->defineProperty(cx, proxy, id, desc,
                                                             result);
 }
@@ -135,6 +149,11 @@ bool Proxy::delete_(JSContext* cx, HandleObject proxy, HandleId id,
     }
     return ok;
   }
+
+  // Private names shouldn't take this path, as deleting a private name
+  // should be a syntax error.
+  MOZ_ASSERT_IF(JSID_IS_SYMBOL(id), !JSID_TO_SYMBOL(id)->isPrivateName());
+
   return proxy->as<ProxyObject>().handler()->delete_(cx, proxy, id, result);
 }
 
@@ -233,6 +252,9 @@ bool Proxy::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
     return policy.returnValue();
   }
 
+  // Private names shouldn't take this path, but only hasOwn;
+  MOZ_ASSERT_IF(JSID_IS_SYMBOL(id), !JSID_TO_SYMBOL(id)->isPrivateName());
+
   if (handler->hasPrototype()) {
     if (!handler->hasOwn(cx, proxy, id, bp)) {
       return false;
@@ -275,6 +297,16 @@ bool Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
   if (!policy.allowed()) {
     return policy.returnValue();
   }
+
+  // Private field accesses have different semantics depending on the kind
+  // of proxy involved, and so take a different path compared to regular
+  // [[Get]] operations. For example, scripted handlers don't fire traps
+  // when accessing private fields (because of the WeakMap semantics)
+  bool isPrivate = JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName();
+  if (isPrivate) {
+    return handler->hasPrivate(cx, proxy, id, bp);
+  }
+
   return handler->hasOwn(cx, proxy, id, bp);
 }
 
@@ -309,6 +341,15 @@ MOZ_ALWAYS_INLINE bool Proxy::getInternal(JSContext* cx, HandleObject proxy,
   AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
   if (!policy.allowed()) {
     return policy.returnValue();
+  }
+
+  // Private field accesses have different semantics depending on the kind
+  // of proxy involved, and so take a different path compared to regular
+  // [[Get]] operations. For example, scripted handlers don't fire traps
+  // when accessing private fields (because of the WeakMap semantics)
+  bool isPrivate = JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName();
+  if (isPrivate) {
+    return handler->getPrivate(cx, proxy, receiver, id, vp);
   }
 
   if (handler->hasPrototype()) {
@@ -365,6 +406,7 @@ MOZ_ALWAYS_INLINE bool Proxy::setInternal(JSContext* cx, HandleObject proxy,
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
+
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
   AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
   if (!policy.allowed()) {
@@ -372,6 +414,17 @@ MOZ_ALWAYS_INLINE bool Proxy::setInternal(JSContext* cx, HandleObject proxy,
       return false;
     }
     return result.succeed();
+  }
+
+  // Private field accesses have different semantics depending on the kind
+  // of proxy involved, and so take a different path compared to regular
+  // [[Set]] operations.
+  //
+  // This doesn't interact with hasPrototype, as PrivateFields are always
+  // own propertiers, and so we never deal with prototype traversals.
+  bool isPrivate = JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName();
+  if (isPrivate) {
+    return handler->setPrivate(cx, proxy, id, v, receiver, result);
   }
 
   // Special case. See the comment on BaseProxyHandler::mHasPrototype.
@@ -664,6 +717,7 @@ void ProxyObject::trace(JSTracer* trc, JSObject* obj) {
   ProxyObject* proxy = &obj->as<ProxyObject>();
 
   TraceEdge(trc, proxy->shapePtr(), "ProxyObject_shape");
+  TraceNullableEdge(trc, proxy->slotOfExpando(), "expando");
 
 #ifdef DEBUG
   if (TlsContext.get()->isStrictProxyCheckingEnabled() &&
