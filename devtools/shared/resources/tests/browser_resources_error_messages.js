@@ -25,6 +25,7 @@ add_task(async function() {
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
   info("Test error messages legacy listener");
+  await pushPref("devtools.testing.enableServerWatcherSupport", false);
   await testErrorMessagesResources();
   await testErrorMessagesResourcesWithIgnoreExistingResources();
 
@@ -32,7 +33,6 @@ add_task(async function() {
   await pushPref("devtools.testing.enableServerWatcherSupport", true);
   await testErrorMessagesResources();
   await testErrorMessagesResourcesWithIgnoreExistingResources();
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
 });
 
 async function testErrorMessagesResources() {
