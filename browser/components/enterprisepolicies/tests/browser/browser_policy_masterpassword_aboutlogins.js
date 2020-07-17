@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(
 add_task(async function test_policy_admin() {
   await setupPolicyEngineWithJson({
     policies: {
-      PrimaryPassword: true,
+      MasterPassword: true,
     },
   });
 
