@@ -72,26 +72,25 @@ const TEST_CASES = [
     expectUsernameDropmarker: true,
     expectedValues: ["new_username"],
   },
-  // TODO uncomment in bug 1641413
-  // {
-  //   description: "saved logins should be displayed in popup",
-  //   modifiedFields: [
-  //     { [PASSWORD_SELECTOR]: "myPassword" },
-  //     { [USERNAME_SELECTOR]: "new_username" },
-  //   ],
-  //   savedLogins: [
-  //     {
-  //       username: "savedUn1",
-  //       password: "somePass",
-  //     },
-  //     {
-  //       username: "savedUn2",
-  //       password: "otherPass",
-  //     },
-  //   ],
-  //   expectUsernameDropmarker: true,
-  //   expectedValues: ["new_username", "savedUn1", "savedUn2"],
-  // },
+  {
+    description: "saved logins should be displayed in popup",
+    modifiedFields: [
+      { [USERNAME_SELECTOR]: "new_username" },
+      { [PASSWORD_SELECTOR]: "myPassword" },
+    ],
+    savedLogins: [
+      {
+        username: "savedUn1",
+        password: "somePass",
+      },
+      {
+        username: "savedUn2",
+        password: "otherPass",
+      },
+    ],
+    expectUsernameDropmarker: true,
+    expectedValues: ["new_username", "savedUn1", "savedUn2"],
+  },
   {
     description: "duplicated page usernames should only be displayed once",
     modifiedFields: [
@@ -163,7 +162,6 @@ add_task(async function test_edit_password() {
     Services.logins.removeAllLogins();
 
     // Create the pre-existing logins when needed.
-    // TODO will not be used until bug 1641413
     info("Adding any saved logins");
     if (testCase.savedLogins) {
       for (let login of testCase.savedLogins) {

@@ -43,6 +43,7 @@ this.LoginHelper = {
   showAutoCompleteImport: null,
   testOnlyUserHasInteractedWithDocument: null,
   userInputRequiredToCapture: null,
+  captureInputChanges: null,
 
   init() {
     // Watch for pref changes to update cached pref values.
@@ -56,6 +57,9 @@ this.LoginHelper = {
     this.autofillForms = Services.prefs.getBoolPref("signon.autofillForms");
     this.autofillAutocompleteOff = Services.prefs.getBoolPref(
       "signon.autofillForms.autocompleteOff"
+    );
+    this.captureInputChanges = Services.prefs.getBoolPref(
+      "signon.capture.inputChanges.enabled"
     );
     this.debug = Services.prefs.getBoolPref("signon.debug");
     this.enabled = Services.prefs.getBoolPref("signon.rememberSignons");
