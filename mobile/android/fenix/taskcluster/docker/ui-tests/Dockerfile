@@ -1,8 +1,7 @@
-# %ARG DOCKER_IMAGE_PARENT
 FROM $DOCKER_IMAGE_PARENT
 
 LABEL authors="Richard Pappalardo <rpappalax@gmail.com>, Aaron Train <atrain@mozilla.com>"
-LABEL maintainer="Richard Pappalardo <rpappalax@gmail.com>
+LABEL maintainer="Richard Pappalardo <rpappalax@gmail.com>"
 
 #----------------------------------------------------------------------------------------------------------------------
 #-- Test tools --------------------------------------------------------------------------------------------------------

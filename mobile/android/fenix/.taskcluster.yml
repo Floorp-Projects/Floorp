@@ -8,7 +8,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: cab4565345d0d0effa66f18fe91335dd6d744031
+              revision: 12992b0f984884ec2b0a7bdedc3b3ba467363eb4
           trustDomain: mobile
       in:
           $let:
@@ -295,6 +295,14 @@ tasks:
                                       type: 'directory'
                                       path: '/builds/worker/artifacts'
                                       expires: {$fromNow: '1 year'}
+                                  'public/docker-contexts':
+                                      type: 'directory'
+                                      path: '/builds/worker/checkouts/src/docker-contexts'
+                                      # This needs to be at least the deadline of the
+                                      # decision task + the docker-image task deadlines.
+                                      # It is set to a week to allow for some time for
+                                      # debugging, but they are not useful long-term.
+                                      expires: {$fromNow: '7 day'}
 
                           extra:
                               $merge:
