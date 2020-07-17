@@ -11,10 +11,10 @@ job-defaults:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.reference-browser.v3.raptor.latest
+                index: mobile.v2.reference-browser.raptor.latest.arm64-v8a
                 name: target.arm64-v8a.apk
             default:
-                index: project.mobile.reference-browser.v3.raptor.latest
+                index: mobile.v2.reference-browser.raptor.latest.armeabi-v7a
                 name: target.armeabi-v7a.apk
     virtualization: hardware
     mozharness:
