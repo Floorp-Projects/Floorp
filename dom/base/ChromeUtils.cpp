@@ -781,7 +781,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  // Prepare the JS promise that will hold our response.
+  // Creating a JS promise
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
   RefPtr<Promise> domPromise = Promise::Create(global, aRv);
@@ -790,204 +790,213 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
   }
   MOZ_ASSERT(domPromise);
 
-  // Get a list of processes to examine and pre-fill them with available info.
-  // Note that this is subject to race conditions: just because we have a
-  // process in the list doesn't mean that the process will still be alive when
-  // we attempt to get its information. Followup code MUST be able to fail
-  // gracefully on some processes and still return whichever information is
-  // available.
-
-  // Get all the content parents.
-  // Note that this array includes even the long dead content parents, so we
-  // might have some garbage, especially with Fission.
-  // SAFETY NOTE: `contentParents` is only valid if used synchronously.
-  // Anything else and you may end up dealing with dangling pointers.
-  nsTArray<ContentParent*> contentParents;
-  ContentParent::GetAll(contentParents);
-
-  // Prepare our background request.
-  // We reserve one more slot for the browser process itself.
-  nsTArray<ProcInfoRequest> requests(contentParents.Length() + 1);
-  // Requesting process info for the browser process itself.
-  requests.EmplaceBack(
-      /* aPid = */ base::GetCurrentProcId(),
-      /* aProcessType = */ ProcType::Browser,
-      /* aOrigin = */ ""_ns);
-
-  mozilla::ipc::GeckoChildProcessHost::GetAll(
-      [&requests,
-       &contentParents](mozilla::ipc::GeckoChildProcessHost* aGeckoProcess) {
-        auto handle = aGeckoProcess->GetChildProcessHandle();
-        if (!handle) {
-          // Something went wrong with this process, it may be dead already,
-          // fail gracefully.
-          return;
-        }
-        nsAutoCString origin;
-        base::ProcessId childPid = base::GetProcId(handle);
-        int32_t childId = 0;
-        mozilla::ProcType type = mozilla::ProcType::Unknown;
-        switch (aGeckoProcess->GetProcessType()) {
-          case GeckoProcessType::GeckoProcessType_Content: {
-            ContentParent* contentParent = nullptr;
-            // This loop can become slow as we get more processes in
-            // Fission, so might need some refactoring in the future.
-            for (ContentParent* parent : contentParents) {
-              // find the match
-              if (parent->Process() == aGeckoProcess) {
-                contentParent = parent;
-                break;
-              }
-            }
-            if (!contentParent) {
-              // FIXME: When can this happen?
-              return;
-            }
-            // Converting the remoteType into a ProcType.
-            // Ideally, the remoteType should be strongly typed
-            // upstream, this would make the conversion less brittle.
-            nsAutoCString remoteType(contentParent->GetRemoteType());
-            if (StringBeginsWith(remoteType, FISSION_WEB_REMOTE_TYPE)) {
-              // WARNING: Do not change the order, as
-              // `DEFAULT_REMOTE_TYPE` is a prefix of
-              // `FISSION_WEB_REMOTE_TYPE`.
-              type = mozilla::ProcType::WebIsolated;
-            } else if (StringBeginsWith(remoteType, DEFAULT_REMOTE_TYPE)) {
-              type = mozilla::ProcType::Web;
-            } else if (remoteType == FILE_REMOTE_TYPE) {
-              type = mozilla::ProcType::File;
-            } else if (remoteType == EXTENSION_REMOTE_TYPE) {
-              type = mozilla::ProcType::Extension;
-            } else if (remoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
-              type = mozilla::ProcType::PrivilegedAbout;
-            } else if (remoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE) {
-              type = mozilla::ProcType::PrivilegedMozilla;
-            } else if (StringBeginsWith(remoteType,
-                                        WITH_COOP_COEP_REMOTE_TYPE_PREFIX)) {
-              type = mozilla::ProcType::WebCOOPCOEP;
-            } else if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
-              type = mozilla::ProcType::WebLargeAllocation;
-            } else if (remoteType == PREALLOC_REMOTE_TYPE) {
-              type = mozilla::ProcType::Preallocated;
-            } else {
-              MOZ_CRASH_UNSAFE_PRINTF("Unknown remoteType '%s'",
-                                      remoteType.get());
-            }
-
-            // By convention, everything after '=' is the origin.
-            nsACString::const_iterator cursor;
-            nsACString::const_iterator end;
-            remoteType.BeginReading(cursor);
-            remoteType.EndReading(end);
-            if (FindCharInReadable('=', cursor, end)) {
-              origin = Substring(++cursor, end);
-            }
-            childId = contentParent->ChildID();
-            break;
-          }
-          case GeckoProcessType::GeckoProcessType_Default:
-            type = mozilla::ProcType::Browser;
-            break;
-          case GeckoProcessType::GeckoProcessType_Plugin:
-            type = mozilla::ProcType::Plugin;
-            break;
-          case GeckoProcessType::GeckoProcessType_GMPlugin:
-            type = mozilla::ProcType::GMPlugin;
-            break;
-          case GeckoProcessType::GeckoProcessType_GPU:
-            type = mozilla::ProcType::GPU;
-            break;
-          case GeckoProcessType::GeckoProcessType_VR:
-            type = mozilla::ProcType::VR;
-            break;
-          case GeckoProcessType::GeckoProcessType_RDD:
-            type = mozilla::ProcType::RDD;
-            break;
-          case GeckoProcessType::GeckoProcessType_Socket:
-            type = mozilla::ProcType::Socket;
-            break;
-          case GeckoProcessType::GeckoProcessType_RemoteSandboxBroker:
-            type = mozilla::ProcType::RemoteSandboxBroker;
-            break;
-#ifdef MOZ_ENABLE_FORKSERVER
-          case GeckoProcessType::GeckoProcessType_ForkServer:
-            type = mozilla::ProcType::ForkServer;
-            break;
-#endif
-          default:
-            // Leave the default Unknown value in |type|.
-            break;
-        }
-
-        requests.EmplaceBack(
-            /* aPid = */ childPid,
-            /* aProcessType = */ type,
-            /* aOrigin = */ origin,
-            /* aChild = */ childId
-#ifdef XP_MACOSX
-            ,
-            /* aChildTask = */ aGeckoProcess->GetChildTask()
-#endif  // XP_MACOSX
-        );
-      });
-
-  // Now place background request.
+  base::ProcessId parentPid = base::GetCurrentProcId();
   RefPtr<nsISerialEventTarget> target =
       global->EventTargetFor(TaskCategory::Performance);
-  mozilla::GetProcInfo(std::move(requests))
+
+  // Getting the parent proc info
+  mozilla::GetProcInfo(parentPid, 0, mozilla::ProcType::Browser, ""_ns)
       ->Then(
           target, __func__,
-          [target,
-           domPromise](const HashMap<base::ProcessId, ProcInfo>& aSysProcInfo) {
-            ParentProcInfoDictionary parentInfo;
-            if (aSysProcInfo.count() == 0) {
-              // For some reason, we couldn't get *any* info.
-              // Maybe a sandboxing issue?
-              domPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
-            nsTArray<ChildProcInfoDictionary> childrenInfo(
-                aSysProcInfo.count() - 1);
-            for (auto iter = aSysProcInfo.iter(); !iter.done(); iter.next()) {
-              const auto& sysProcInfo = iter.get().value();
-              nsresult rv;
-              if (sysProcInfo.type == ProcType::Browser) {
-                rv = mozilla::CopySysProcInfoToDOM(sysProcInfo, &parentInfo);
-                if (NS_FAILED(rv)) {
-                  // Failing to copy? That's probably not something from we can
-                  // (or should) try to recover gracefully.
-                  domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-                  return;
-                }
-                MOZ_ASSERT(sysProcInfo.childId == 0);
-                MOZ_ASSERT(sysProcInfo.origin.IsEmpty());
-              } else {
-                mozilla::dom::ChildProcInfoDictionary* childInfo =
-                    childrenInfo.AppendElement(fallible);
-                if (!childInfo) {
-                  domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-                  return;
-                }
-                rv = mozilla::CopySysProcInfoToDOM(sysProcInfo, childInfo);
-                if (NS_FAILED(rv)) {
-                  domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-                  return;
-                }
-                // Copy Firefox info.
-                childInfo->mChildID = sysProcInfo.childId;
-                childInfo->mOrigin = sysProcInfo.origin;
-                childInfo->mType = ProcTypeToWebIDL(sysProcInfo.type);
-              }
-            }
+          [target, domPromise, parentPid](ProcInfo aParentInfo) {
+            // Get a list of ContentParent
+            nsTArray<ContentParent*> contentParents;
+            ContentParent::GetAll(contentParents);
+            nsTArray<RefPtr<ProcInfoPromise>> promises;
+            mozilla::ipc::GeckoChildProcessHost::GetAll(
+                [&promises, &contentParents](
+                    mozilla::ipc::GeckoChildProcessHost* aGeckoProcess) {
+                  if (!aGeckoProcess->GetChildProcessHandle()) {
+                    return;
+                  }
+                  nsAutoCString origin;
+                  base::ProcessId childPid =
+                      base::GetProcId(aGeckoProcess->GetChildProcessHandle());
+                  int32_t childId = 0;
+                  mozilla::ProcType type = mozilla::ProcType::Unknown;
+                  switch (aGeckoProcess->GetProcessType()) {
+                    case GeckoProcessType::GeckoProcessType_Content: {
+                      ContentParent* contentParent = nullptr;
+                      // This loop can become slow as we get more processes in
+                      // Fission, so might need some refactoring in the future.
+                      for (ContentParent* parent : contentParents) {
+                        // find the match
+                        if (parent->Process() == aGeckoProcess) {
+                          contentParent = parent;
+                          break;
+                        }
+                      }
+                      if (!contentParent) {
+                        return;
+                      }
+                      // Converting the remoteType into a ProcType.
+                      // Ideally, the remoteType should be strongly typed
+                      // upstream, this would make the conversion less brittle.
+                      nsAutoCString remoteType(contentParent->GetRemoteType());
+                      if (StringBeginsWith(remoteType,
+                                           FISSION_WEB_REMOTE_TYPE)) {
+                        // WARNING: Do not change the order, as
+                        // `DEFAULT_REMOTE_TYPE` is a prefix of
+                        // `FISSION_WEB_REMOTE_TYPE`.
+                        type = mozilla::ProcType::WebIsolated;
+                      } else if (StringBeginsWith(remoteType,
+                                                  DEFAULT_REMOTE_TYPE)) {
+                        type = mozilla::ProcType::Web;
+                      } else if (remoteType == FILE_REMOTE_TYPE) {
+                        type = mozilla::ProcType::File;
+                      } else if (remoteType == EXTENSION_REMOTE_TYPE) {
+                        type = mozilla::ProcType::Extension;
+                      } else if (remoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
+                        type = mozilla::ProcType::PrivilegedAbout;
+                      } else if (remoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE) {
+                        type = mozilla::ProcType::PrivilegedMozilla;
+                      } else if (StringBeginsWith(
+                                     remoteType,
+                                     WITH_COOP_COEP_REMOTE_TYPE_PREFIX)) {
+                        type = mozilla::ProcType::WebCOOPCOEP;
+                      } else if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
+                        type = mozilla::ProcType::WebLargeAllocation;
+                      } else if (remoteType == PREALLOC_REMOTE_TYPE) {
+                        type = mozilla::ProcType::Preallocated;
+                      } else {
+                        MOZ_CRASH("Unknown remoteType");
+                      }
 
-            // Attach the children to the parent.
-            mozilla::dom::Sequence<mozilla::dom::ChildProcInfoDictionary>
-                children(std::move(childrenInfo));
-            parentInfo.mChildren = std::move(children);
-            domPromise->MaybeResolve(parentInfo);
+                      // By convention, everything after '=' is the origin.
+                      nsACString::const_iterator cursor;
+                      nsACString::const_iterator end;
+                      remoteType.BeginReading(cursor);
+                      remoteType.EndReading(end);
+                      if (FindCharInReadable('=', cursor, end)) {
+                        origin = Substring(++cursor, end);
+                      }
+                      childId = contentParent->ChildID();
+                      break;
+                    }
+                    case GeckoProcessType::GeckoProcessType_Default:
+                      type = mozilla::ProcType::Browser;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_Plugin:
+                      type = mozilla::ProcType::Plugin;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_GMPlugin:
+                      type = mozilla::ProcType::GMPlugin;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_GPU:
+                      type = mozilla::ProcType::GPU;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_VR:
+                      type = mozilla::ProcType::VR;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_RDD:
+                      type = mozilla::ProcType::RDD;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_Socket:
+                      type = mozilla::ProcType::Socket;
+                      break;
+                    case GeckoProcessType::GeckoProcessType_RemoteSandboxBroker:
+                      type = mozilla::ProcType::RemoteSandboxBroker;
+                      break;
+#ifdef MOZ_ENABLE_FORKSERVER
+                    case GeckoProcessType::GeckoProcessType_ForkServer:
+                      type = mozilla::ProcType::ForkServer;
+                      break;
+#endif
+                    default:
+                      // Leave the default Unknown value in |type|.
+                      break;
+                  }
+
+                  promises.AppendElement(
+#ifdef XP_MACOSX
+                      mozilla::GetProcInfo(childPid, childId, type, origin,
+                                           aGeckoProcess->GetChildTask())
+#else
+                      mozilla::GetProcInfo(childPid, childId, type, origin)
+#endif
+                  );
+                });
+
+            auto ProcInfoResolver =
+                [domPromise, parentPid, parentInfo = aParentInfo](
+                    const nsTArray<ProcInfo>& aChildrenInfo) {
+                  mozilla::dom::ParentProcInfoDictionary procInfo;
+                  // parent, basic info.
+                  procInfo.mPid = parentPid;
+                  procInfo.mFilename.Assign(parentInfo.filename);
+                  procInfo.mType = mozilla::dom::WebIDLProcType::Browser;
+                  procInfo.mVirtualMemorySize = parentInfo.virtualMemorySize;
+                  procInfo.mResidentSetSize = parentInfo.residentSetSize;
+                  procInfo.mCpuUser = parentInfo.cpuUser;
+                  procInfo.mCpuKernel = parentInfo.cpuKernel;
+
+                  // parent, threads info.
+                  mozilla::dom::Sequence<mozilla::dom::ThreadInfoDictionary>
+                      threads;
+                  for (const ThreadInfo& entry : parentInfo.threads) {
+                    ThreadInfoDictionary* thread =
+                        threads.AppendElement(fallible);
+                    if (NS_WARN_IF(!thread)) {
+                      domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                      return;
+                    }
+                    thread->mCpuUser = entry.cpuUser;
+                    thread->mCpuKernel = entry.cpuKernel;
+                    thread->mTid = entry.tid;
+                    thread->mName.Assign(entry.name);
+                  }
+                  procInfo.mThreads = std::move(threads);
+
+                  mozilla::dom::Sequence<mozilla::dom::ChildProcInfoDictionary>
+                      children;
+                  for (const ProcInfo& info : aChildrenInfo) {
+                    ChildProcInfoDictionary* childProcInfo =
+                        children.AppendElement(fallible);
+                    if (NS_WARN_IF(!childProcInfo)) {
+                      domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                      return;
+                    }
+                    // Basic info.
+                    childProcInfo->mChildID = info.childId;
+                    childProcInfo->mType = ProcTypeToWebIDL(info.type);
+                    childProcInfo->mOrigin = info.origin;
+                    childProcInfo->mPid = info.pid;
+                    childProcInfo->mFilename.Assign(info.filename);
+                    childProcInfo->mVirtualMemorySize = info.virtualMemorySize;
+                    childProcInfo->mResidentSetSize = info.residentSetSize;
+                    childProcInfo->mCpuUser = info.cpuUser;
+                    childProcInfo->mCpuKernel = info.cpuKernel;
+
+                    // Threads info.
+                    mozilla::dom::Sequence<mozilla::dom::ThreadInfoDictionary>
+                        threads;
+                    for (const ThreadInfo& entry : info.threads) {
+                      ThreadInfoDictionary* thread =
+                          threads.AppendElement(fallible);
+                      if (NS_WARN_IF(!thread)) {
+                        domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                        return;
+                      }
+                      thread->mCpuUser = entry.cpuUser;
+                      thread->mCpuKernel = entry.cpuKernel;
+                      thread->mTid = entry.tid;
+                      thread->mName.Assign(entry.name);
+                    }
+                    childProcInfo->mThreads = std::move(threads);
+                  }
+                  procInfo.mChildren = std::move(children);
+                  domPromise->MaybeResolve(procInfo);
+                };  // end of ProcInfoResolver
+
+            ProcInfoPromise::All(target, promises)
+                ->Then(target, __func__, std::move(ProcInfoResolver),
+                       [domPromise](const nsresult aResult) {
+                         domPromise->MaybeReject(aResult);
+                       });  // end of ProcInfoPromise::All
           },
-          [domPromise](nsresult aRv) { domPromise->MaybeReject(aRv); });
-  MOZ_ASSERT(domPromise);
+          [domPromise](nsresult aRv) {
+            domPromise->MaybeReject(aRv);
+          });  // end of mozilla::GetProcInfo
 
   // sending back the promise instance
   return domPromise.forget();
