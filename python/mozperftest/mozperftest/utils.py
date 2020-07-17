@@ -18,7 +18,9 @@ import importlib
 
 
 RETRY_SLEEP = 10
-MULTI_TASK_ROOT = "https://firefox-ci-tc.services.mozilla.com/api/index/v1/tasks/"
+API_ROOT = "https://firefox-ci-tc.services.mozilla.com/api/index/v1"
+MULTI_REVISION_ROOT = f"{API_ROOT}/namespaces"
+MULTI_TASK_ROOT = f"{API_ROOT}/tasks"
 
 
 @contextlib.contextmanager
@@ -238,14 +240,21 @@ def convert_day(day):
     return day
 
 
-def get_multi_tasks_url(route, day="yesterday"):
+def get_revision_namespace_url(route, day="yesterday"):
+    """Builds a URL to obtain all the namespaces of a given build route for a single day.
+    """
+    day = convert_day(day)
+    return f"""{MULTI_REVISION_ROOT}/{route}.{day}.revision"""
+
+
+def get_multi_tasks_url(route, revision, day="yesterday"):
     """Builds a URL to obtain all the tasks of a given build route for a single day.
 
     If previous is true, then we get builds from the previous day,
     otherwise, we look at the current day.
     """
     day = convert_day(day)
-    return f"""{MULTI_TASK_ROOT}{route}.{day}.revision"""
+    return f"""{MULTI_TASK_ROOT}/{route}.{day}.revision.{revision}"""
 
 
 def strtobool(val):
