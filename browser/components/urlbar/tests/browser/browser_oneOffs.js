@@ -21,24 +21,121 @@ add_task(async function init() {
     await UrlbarTestUtils.formHistory.clear();
   });
 
+  // Initialize history with enough visits to fill up the view.
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
-
-  let visits = [];
   for (let i = 0; i < gMaxResults; i++) {
-    visits.push({
-      uri: makeURI("http://example.com/browser_urlbarOneOffs.js/?" + i),
-      // TYPED so that the visit shows up when the urlbar's drop-down arrow is
-      // pressed.
-      transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
-    });
+    await PlacesTestUtils.addVisits(
+      "http://example.com/browser_urlbarOneOffs.js/?" + i
+    );
   }
-  await PlacesTestUtils.addVisits(visits);
+
+  // Add some more visits to the last URL added above so that the top-sites view
+  // will be non-empty.
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits(
+      "http://example.com/browser_urlbarOneOffs.js/?" + (gMaxResults - 1)
+    );
+  }
+  await updateTopSites(sites => {
+    return sites && sites[0] && sites[0].url.startsWith("http://example.com/");
+  });
 });
 
-// Keys up and down through the non-history panel, i.e., the panel that's shown
-// when you type something in the textbox.
-add_task(async function() {
+// Opens the top-sites view, i.e., the view that's shown when the input hasn't
+// been edited.  The one-offs should be hidden.
+add_task(async function topSitesView() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+    fireInputEvent: true,
+  });
+  Assert.equal(
+    UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    false,
+    "One-offs should be hidden"
+  );
+  await hidePopup();
+});
+
+// Opens the top-sites view with update2 enabled.  The one-offs should be shown.
+add_task(async function topSitesViewUpdate2() {
+  // Set the update2 prefs.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  // Do a search.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+    fireInputEvent: true,
+  });
+  await TestUtils.waitForCondition(
+    () => !oneOffSearchButtons._rebuilding,
+    "Waiting for one-offs to finish rebuilding"
+  );
+
+  // There's one top sites result, the page with a lot of visits from init.
+  let resultURL = "example.com/browser_urlbarOneOffs.js/?" + (gMaxResults - 1);
+  Assert.equal(UrlbarTestUtils.getResultCount(window), 1, "Result count");
+
+  Assert.equal(
+    UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    true,
+    "One-offs are visible"
+  );
+
+  assertState(-1, -1, "");
+
+  // Key down into the result.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(0, -1, resultURL);
+
+  // Key down through each one-off.
+  let numButtons = oneOffSearchButtons.getSelectableButtons(true).length;
+  for (let i = 0; i < numButtons; i++) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    assertState(-1, i, "");
+  }
+
+  // Key down again.  The selection should go away.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(-1, -1, "");
+
+  // Key down again.  The result should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(0, -1, resultURL);
+
+  // Key back up.  The selection should go away.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(-1, -1, "");
+
+  // Key up again.  The selection should wrap back around to the one-offs.  Key
+  // up through all the one-offs.
+  for (let i = numButtons - 1; i >= 0; i--) {
+    EventUtils.synthesizeKey("KEY_ArrowUp");
+    assertState(-1, i, "");
+  }
+
+  // Key up.  The result should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(0, -1, resultURL);
+
+  // Key up again.  The selection should go away.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(-1, -1, "");
+
+  await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Keys up and down through the non-top-sites view, i.e., the view that's shown
+// when the input has been edited.
+add_task(async function editedView() {
   // Use a typed value that returns the visits added above but that doesn't
   // trigger autofill since that would complicate the test.
   let typedValue = "browser_urlbarOneOffs";
