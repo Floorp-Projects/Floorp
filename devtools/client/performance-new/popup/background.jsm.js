@@ -117,7 +117,7 @@ const presets = {
     description: "Recommended preset for diagnosing audio and video problems.",
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["js", "leaf", "stackwalk"],
+    features: ["js", "leaf", "stackwalk", "audiocallbacktracing"],
     threads: [
       "AsyncCubebTask",
       "AudioIPC",
