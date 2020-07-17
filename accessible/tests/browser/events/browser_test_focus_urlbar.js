@@ -82,8 +82,6 @@ class TipTestProvider extends UrlbarProvider {
       addCallback(this, match);
     }
   }
-  cancelQuery(context) {}
-  pickResult(result, details) {}
 }
 
 // Check that the URL bar manages accessibility focus appropriately.

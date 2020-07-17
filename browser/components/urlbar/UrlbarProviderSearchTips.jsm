@@ -216,13 +216,6 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 
   /**
-   * Cancels a running query,
-   * @param {UrlbarQueryContext} queryContext the query context object to cancel
-   *        query for.
-   */
-  cancelQuery(queryContext) {}
-
-  /**
    * Called when the tip is selected.
    * @param {UrlbarResult} result
    *   The result that was picked.

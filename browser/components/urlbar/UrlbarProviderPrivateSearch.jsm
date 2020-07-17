@@ -139,12 +139,6 @@ class ProviderPrivateSearch extends UrlbarProvider {
     result.suggestedIndex = 1;
     addCallback(this, result);
   }
-
-  /**
-   * Cancels a running query.
-   * @param {object} queryContext The query context object
-   */
-  cancelQuery(queryContext) {}
 }
 
 var UrlbarProviderPrivateSearch = new ProviderPrivateSearch();
