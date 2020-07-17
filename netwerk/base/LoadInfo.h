@@ -69,8 +69,8 @@ class LoadInfo final : public nsILoadInfo {
            uint32_t aSandboxFlags = 0);
   // Used for TYPE_SUBDOCUMENT load.
   LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
-           nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
-           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
+           nsIPrincipal* aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
+           uint32_t aSandboxFlags);
 
   // Constructor used for TYPE_DOCUMENT loads which have a different
   // loadingContext than other loads. This ContextForTopLevelLoad is
@@ -80,12 +80,12 @@ class LoadInfo final : public nsILoadInfo {
            uint32_t aSandboxFlags);
   LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
            nsIPrincipal* aTriggeringPrincipal,
-           const OriginAttributes& aOriginAttributes, uint64_t aOuterWindowID,
+           const OriginAttributes& aOriginAttributes,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
   // Used for loads initiated by DocumentLoadListener.
   LoadInfo(dom::WindowGlobalParent* aParentWGP,
-           nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
+           nsIPrincipal* aTriggeringPrincipal,
            nsContentPolicyType aContentPolicyType,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
