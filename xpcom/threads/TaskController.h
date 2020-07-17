@@ -217,6 +217,11 @@ class Task {
   uint32_t mPriority;
   // Modifier currently being applied to this task by its taskmanager.
   int32_t mPriorityModifier = 0;
+#ifdef MOZ_GECKO_PROFILER
+  // Time this task was inserted into the task graph, this is used by the
+  // profiler.
+  mozilla::TimeStamp mInsertionTime;
+#endif
 };
 
 // A task manager implementation for priority levels that should only
