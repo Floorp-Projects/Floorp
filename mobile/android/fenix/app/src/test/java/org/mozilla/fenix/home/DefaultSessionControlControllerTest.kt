@@ -292,9 +292,10 @@ class DefaultSessionControlControllerTest {
     @Test
     fun handleWhatsNewGetAnswersClicked() {
         controller.handleWhatsNewGetAnswersClicked()
+        val whatsNewUrl = SupportUtils.getWhatsNewUrl(activity)
         verify {
             activity.openToBrowserAndLoad(
-                searchTermOrURL = SupportUtils.getWhatsNewUrl(activity),
+                searchTermOrURL = whatsNewUrl,
                 newTab = true,
                 from = BrowserDirection.FromHome
             )
