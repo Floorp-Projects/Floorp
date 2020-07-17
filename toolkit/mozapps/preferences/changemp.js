@@ -109,7 +109,7 @@ function setPassword() {
               // empty passwords are not allowed in FIPS mode
               createAlert(
                 "pw-change-failed-title",
-                "pw-change2empty-in-fips-mode"
+                "pp-change2empty-in-fips-mode"
               );
               passok = 0;
             }
@@ -117,25 +117,25 @@ function setPassword() {
           if (passok) {
             token.changePassword(oldpw, pw1.value);
             if (pw1.value == "") {
-              createAlert("pw-change-success-title", "pw-erased-ok");
+              createAlert("pw-change-success-title", "pp-erased-ok");
             } else {
-              createAlert("pw-change-success-title", "pw-change-ok");
+              createAlert("pw-change-success-title", "pp-change-ok");
             }
           }
         }
       } else {
         oldpwbox.focus();
         oldpwbox.setAttribute("value", "");
-        createAlert("pw-change-failed-title", "incorrect-pw");
+        createAlert("pw-change-failed-title", "incorrect-pp");
       }
     } catch (e) {
       Cu.reportError(e);
-      createAlert("pw-change-failed-title", "failed-pw-change");
+      createAlert("pw-change-failed-title", "failed-pp-change");
     }
   } else {
     token.initPassword(pw1.value);
     if (pw1.value == "") {
-      createAlert("pw-change-success-title", "pw-not-wanted");
+      createAlert("pw-change-success-title", "pp-not-wanted");
     }
   }
 }
