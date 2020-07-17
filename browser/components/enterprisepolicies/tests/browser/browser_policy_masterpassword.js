@@ -11,7 +11,7 @@ let { LoginTestUtils } = ChromeUtils.import(
 add_task(async function test_policy_masterpassword_set() {
   await setupPolicyEngineWithJson({
     policies: {
-      MasterPassword: true,
+      PrimaryPassword: true,
     },
   });
 
@@ -35,7 +35,7 @@ add_task(async function test_policy_masterpassword_set() {
 add_task(async function test_policy_nochangemp() {
   await setupPolicyEngineWithJson({
     policies: {
-      MasterPassword: true,
+      PrimaryPassword: true,
     },
   });
 
@@ -73,7 +73,7 @@ add_task(async function test_policy_nochangemp() {
 add_task(async function test_policy_admin() {
   await setupPolicyEngineWithJson({
     policies: {
-      MasterPassword: true,
+      PrimaryPassword: true,
     },
   });
 
