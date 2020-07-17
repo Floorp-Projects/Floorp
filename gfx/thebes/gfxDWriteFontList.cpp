@@ -913,13 +913,14 @@ gfxFontEntry* gfxDWriteFontList::MakePlatformFont(
       aFontData, aLength, getter_AddRefs(fontFile),
       getter_AddRefs(fontFileStream));
   free((void*)aFontData);
+  NS_ASSERTION(SUCCEEDED(hr), "Failed to create font file reference");
   if (FAILED(hr)) {
-    NS_WARNING("Failed to create custom font file reference.");
     return nullptr;
   }
 
   nsAutoString uniqueName;
   nsresult rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to make unique user font name");
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -928,18 +929,26 @@ gfxFontEntry* gfxDWriteFontList::MakePlatformFont(
   DWRITE_FONT_FILE_TYPE fileType;
   UINT32 numFaces;
 
-  gfxDWriteFontEntry* entry = new gfxDWriteFontEntry(
+  auto entry = MakeUnique<gfxDWriteFontEntry>(
       NS_ConvertUTF16toUTF8(uniqueName), fontFile, fontFileStream,
       aWeightForEntry, aStretchForEntry, aStyleForEntry);
 
-  fontFile->Analyze(&isSupported, &fileType, &entry->mFaceType, &numFaces);
-  if (!isSupported || numFaces > 1) {
+  hr = fontFile->Analyze(&isSupported, &fileType, &entry->mFaceType, &numFaces);
+  NS_ASSERTION(SUCCEEDED(hr), "IDWriteFontFile::Analyze failed");
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+  NS_ASSERTION(isSupported, "Unsupported font file");
+  if (!isSupported) {
+    return nullptr;
+  }
+  NS_ASSERTION(numFaces == 1, "Font file does not contain exactly 1 face");
+  if (numFaces != 1) {
     // We don't know how to deal with 0 faces either.
-    delete entry;
     return nullptr;
   }
 
-  return entry;
+  return entry.release();
 }
 
 gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
