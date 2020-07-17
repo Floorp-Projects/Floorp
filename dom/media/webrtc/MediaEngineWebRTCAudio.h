@@ -94,8 +94,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
    */
   void UpdateAECSettings(bool aEnable, bool aUseAecMobile,
                          webrtc::EchoCancellation::SuppressionLevel aLevel,
-                         webrtc::EchoControlMobile::RoutingMode aRoutingMode,
-                         bool aExperimentalInputProcessing);
+                         webrtc::EchoControlMobile::RoutingMode aRoutingMode);
   void UpdateAGCSettings(bool aEnable, webrtc::GainControl::Mode aMode);
   void UpdateHPFSettings(bool aEnable);
   void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
@@ -193,8 +192,7 @@ class AudioInputProcessing : public AudioDataListener {
   // steps.
   void UpdateAECSettings(bool aEnable, bool aUseAecMobile,
                          webrtc::EchoCancellation::SuppressionLevel aLevel,
-                         webrtc::EchoControlMobile::RoutingMode aRoutingMode,
-                         bool aExperimentalInputProcessing);
+                         webrtc::EchoControlMobile::RoutingMode aRoutingMode);
   void UpdateAGCSettings(bool aEnable, webrtc::GainControl::Mode aMode);
   void UpdateHPFSettings(bool aEnable);
   void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
@@ -253,9 +251,6 @@ class AudioInputProcessing : public AudioDataListener {
   bool mEnabled;
   // Whether or not we've ended and removed the track in the SourceMediaTrack
   bool mEnded;
-  // Flag that diables extended filter and delay-agnostic AEC, and passes
-  // roundtrip time to the AEC.
-  bool mExperimentalInputProcessing;
 };
 
 // This class is created on the media thread, as part of Start(), then entirely
