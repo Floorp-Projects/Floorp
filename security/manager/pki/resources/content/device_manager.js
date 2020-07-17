@@ -414,7 +414,7 @@ function toggleFIPS() {
     var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
     if (!internal_token.hasPassword) {
       // Token has either no or an empty password.
-      doPrompt("fips-nonempty-password-required");
+      doPrompt("fips-nonempty-primary-password-required");
       return;
     }
   }
