@@ -15,6 +15,7 @@ export function addException({ resource }: Object) {
       return;
     }
     const { columnNumber, lineNumber, sourceId, errorMessage } = pageError;
+    const stacktrace = pageError.stacktrace || [];
 
     if (!hasException(getState(), lineNumber, columnNumber)) {
       dispatch({
@@ -24,6 +25,7 @@ export function addException({ resource }: Object) {
           lineNumber,
           sourceActorId: sourceId,
           errorMessage,
+          stacktrace,
         },
       });
     }
