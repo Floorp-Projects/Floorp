@@ -56,7 +56,8 @@ UrlClassifierFeatureFingerprintingProtection::
 
 /* static */
 void UrlClassifierFeatureFingerprintingProtection::MaybeInitialize() {
-  UC_LOG(("UrlClassifierFeatureFingerprintingProtection: MaybeInitialize"));
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureFingerprintingProtection::MaybeInitialize"));
 
   if (!gFeatureFingerprintingProtection) {
     gFeatureFingerprintingProtection =
@@ -67,7 +68,7 @@ void UrlClassifierFeatureFingerprintingProtection::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureFingerprintingProtection::MaybeShutdown() {
-  UC_LOG(("UrlClassifierFeatureFingerprintingProtection: MaybeShutdown"));
+  UC_LOG_LEAK(("UrlClassifierFeatureFingerprintingProtection::MaybeShutdown"));
 
   if (gFeatureFingerprintingProtection) {
     gFeatureFingerprintingProtection->ShutdownPreferences();
@@ -81,9 +82,8 @@ UrlClassifierFeatureFingerprintingProtection::MaybeCreate(
     nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG(
-      ("UrlClassifierFeatureFingerprintingProtection: MaybeCreate for channel "
-       "%p",
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureFingerprintingProtection::MaybeCreate - channel %p",
        aChannel));
 
   if (!StaticPrefs::privacy_trackingprotection_fingerprinting_enabled()) {
@@ -92,21 +92,10 @@ UrlClassifierFeatureFingerprintingProtection::MaybeCreate(
 
   bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
   if (!isThirdParty) {
-    if (UC_LOG_ENABLED()) {
-      nsCOMPtr<nsIURI> chanURI;
-      Unused << aChannel->GetURI(getter_AddRefs(chanURI));
-      if (chanURI) {
-        nsCString spec = chanURI->GetSpecOrDefault();
-        spec.Truncate(
-            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-        UC_LOG(
-            ("UrlClassifierFeatureFingerprintingProtection: Skipping "
-             "fingerprinting checks "
-             "for first party or top-level load channel[%p] "
-             "with uri %s",
-             aChannel, spec.get()));
-      }
-    }
+    UC_LOG(
+        ("UrlClassifierFeatureFingerprintingProtection::MaybeCreate - "
+         "skipping first party or top-level load for channel %p",
+         aChannel));
     return nullptr;
   }
 
@@ -170,12 +159,11 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
                                          list, EmptyCString(), EmptyCString());
 
   UC_LOG(
-      ("UrlClassifierFeatureFingerprintingProtection::ProcessChannel, "
-       "cancelling "
-       "channel[%p]",
+      ("UrlClassifierFeatureFingerprintingProtection::ProcessChannel - "
+       "cancelling channel %p",
        aChannel));
-  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     Unused << httpChannel->CancelByURLClassifier(NS_ERROR_FINGERPRINTING_URI);
   } else {
