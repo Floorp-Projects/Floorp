@@ -3263,16 +3263,17 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   nsAtom* contextLocalNameAtom =
       FragmentFromPasteCreator::DetermineContextLocalNameForParsingPastedHTML(
           parentContentOfPastedHTMLInContext);
-  nsresult rv =
-      fragmentParser.ParsePastedHTML(aInputString, contextLocalNameAtom,
-                                     getter_AddRefs(aDocumentFragmentToInsert));
+  RefPtr<DocumentFragment> documentFragmentForPastedHTML;
+  nsresult rv = fragmentParser.ParsePastedHTML(
+      aInputString, contextLocalNameAtom,
+      getter_AddRefs(documentFragmentForPastedHTML));
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML()"
         " failed");
     return rv;
   }
-  if (!aDocumentFragmentToInsert) {
+  if (!documentFragmentForPastedHTML) {
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::FragmentParser::ParsePastedHTML()"
         " returned nullptr");
@@ -3280,27 +3281,43 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   }
 
   FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
-      *aDocumentFragmentToInsert);
+      *documentFragmentForPastedHTML);
 
   if (aParentNodeOfPastedHTMLInContext) {
     // unite the two trees
     IgnoredErrorResult ignoredError;
-    parentContentOfPastedHTMLInContext->AppendChild(*aDocumentFragmentToInsert,
-                                                    ignoredError);
+    parentContentOfPastedHTMLInContext->AppendChild(
+        *documentFragmentForPastedHTML, ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
                          "nsINode::AppendChild() failed, but ignored");
-    aDocumentFragmentToInsert = documentFragmentForContext;
+    rv = FragmentFromPasteCreator::
+        RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+            *documentFragmentForContext, NodesToRemove::eOnlyListItems);
+
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
+          "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
+          " failed");
+      return rv;
+    }
+
+    aDocumentFragmentToInsert = std::move(documentFragmentForContext);
+  } else {
+    rv = FragmentFromPasteCreator::
+        RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+            *documentFragmentForPastedHTML, NodesToRemove::eOnlyListItems);
+
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
+          "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
+          " failed");
+      return rv;
+    }
+
+    aDocumentFragmentToInsert = std::move(documentFragmentForPastedHTML);
   }
-
-  rv = FragmentFromPasteCreator::
-      RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
-          *aDocumentFragmentToInsert, NodesToRemove::eOnlyListItems);
-
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
-      "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces() "
-      "failed");
 
   return rv;
 }
