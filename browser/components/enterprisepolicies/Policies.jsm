@@ -1248,6 +1248,16 @@ var Policies = {
     },
   },
 
+  MasterPassword: {
+    onAllWindowsRestored(manager, param) {
+      if (param) {
+        manager.disallowFeature("removeMasterPassword");
+      } else {
+        manager.disallowFeature("createMasterPassword");
+      }
+    },
+  },
+
   NetworkPrediction: {
     onBeforeAddons(manager, param) {
       setAndLockPref("network.dns.disablePrefetch", !param);
@@ -1425,16 +1435,6 @@ var Policies = {
     onBeforeAddons(manager, param) {
       for (let preference in param) {
         setAndLockPref(preference, param[preference]);
-      }
-    },
-  },
-
-  PrimaryPassword: {
-    onAllWindowsRestored(manager, param) {
-      if (param) {
-        manager.disallowFeature("removeMasterPassword");
-      } else {
-        manager.disallowFeature("createMasterPassword");
       }
     },
   },
