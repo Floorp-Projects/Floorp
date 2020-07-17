@@ -128,6 +128,9 @@ components:
         - affected_tests
 
 tasks:
+  # The scheduling order of tasks is NOT determined by the order in which they
+  # are defined, but by their dependencies (depends-on).
+
   # Run full suites on push
   - $map:
       for:
@@ -488,10 +491,13 @@ tasks:
         run-job:
           - wptrunner_infrastructure
 
+  # Note: even though sink-task does not have `depends-on`, it depends on all
+  # other tasks (dynamically added by tools/ci/tc/decision.py).
   - sink-task:
       description: >-
         Sink task for all other tasks; indicates success
       use:
         - wpt-base
+        - trigger-pr
       command: "./wpt tc-sink-task"
       requires: all-resolved

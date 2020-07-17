@@ -47,7 +47,7 @@ def fetch_event_data(queue):
 
 def filter_triggers(event, all_tasks):
     is_pr, branch = get_triggers(event)
-    triggered = {}
+    triggered = OrderedDict()
     for name, task in iteritems(all_tasks):
         if "trigger" in task:
             if is_pr and "pull-request" in task["trigger"]:
@@ -102,7 +102,7 @@ def get_extra_jobs(event):
 
 
 def filter_schedule_if(event, tasks):
-    scheduled = {}
+    scheduled = OrderedDict()
     run_jobs = None
     for name, task in iteritems(tasks):
         if "schedule-if" in task:
@@ -283,17 +283,26 @@ def build_task_graph(event, all_tasks, tasks):
         task_id_map[task_name] = (task_id, task_data)
 
     for task_name, task in iteritems(tasks):
+        if task_name == "sink-task":
+            # sink-task will be created below at the end of the ordered dict,
+            # so that it can depend on all other tasks.
+            continue
         add_task(task_name, task)
 
-    # GitHub branch protection needs us to name explicit required tasks - which
-    # doesn't suffice when using a dynamic task graph. To work around this we
-    # declare a sink task that depends on all the other tasks completing, and
-    # checks if they have succeeded. We can then make the sink task the sole
-    # required task for GitHub.
-    depends_on_ids = [x[0] for x in task_id_map.values()]
-    sink_task = all_tasks['sink-task']
-    sink_task['command'] += ' {0}'.format(' '.join(depends_on_ids))
-    task_id_map['sink-task'] = create_tc_task(event, sink_task, taskgroup_id, depends_on_ids)
+    # GitHub branch protection for pull requests needs us to name explicit
+    # required tasks - which doesn't suffice when using a dynamic task graph.
+    # To work around this we declare a sink task that depends on all the other
+    # tasks completing, and checks if they have succeeded. We can then
+    # make the sink task the sole required task for pull requests.
+    sink_task = tasks.get("sink-task")
+    if sink_task:
+        logger.info("Scheduling sink-task")
+        depends_on_ids = [x[0] for x in task_id_map.values()]
+        sink_task["command"] += " {0}".format(" ".join(depends_on_ids))
+        task_id_map["sink-task"] = create_tc_task(
+            event, sink_task, taskgroup_id, depends_on_ids)
+    else:
+        logger.info("sink-task is not scheduled")
 
     return task_id_map
 
