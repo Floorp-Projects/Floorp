@@ -19,7 +19,7 @@ serde = "1"
 serde_derive = "1"
 tokio = "0.1"
 tokio-io = "0.1"
-audio_thread_priority = "0.22"
+audio_thread_priority = "0.23.4"
 
 [target.'cfg(unix)'.dependencies]
 iovec = "0.1"

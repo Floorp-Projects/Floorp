@@ -9,7 +9,7 @@ description = "Remote cubeb server"
 edition = "2018"
 
 [dependencies]
-audio_thread_priority = "0.22"
+audio_thread_priority = "0.23.4"
 audioipc = { path = "../audioipc" }
 cubeb-core = "0.7.0"
 futures = "0.1.29"
