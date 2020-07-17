@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/open-blank-host.js"></script>
@@ -14,11 +15,13 @@ promise_test(async t => {
     await new Promise(resolve => portal.onload = resolve);
     let activated = new Promise(resolve => bc.onmessage = e => resolve(e.data));
     portal.click();
-    assert_equals(await activated, 'portalactivate');
+    let {event, data} = await activated;
+    assert_equals(event, 'portalactivate');
+    assert_equals(data, undefined);
   } finally {
     w.close();
   }
-}, "Clicking should activate.");
+}, "Clicking should activate with undefined data.");
 
 promise_test(async t => {
   assert_implements("HTMLPortalElement" in self);
@@ -30,13 +33,26 @@ promise_test(async t => {
     portal.onclick = e => e.preventDefault();
     w.document.body.appendChild(portal);
     await new Promise(resolve => portal.onload = resolve);
-    let timedOut = new Promise(resolve => t.step_timeout(() => resolve('timeout'), 3000));
-    let activated = new Promise(resolve => bc.onmessage = e => resolve(e.data));
+    bc.onmessage = t.unreached_func('activation should not occur');
     portal.click();
-    let result = await Promise.race([activated, timedOut]);
-    assert_equals(result, 'timeout');
+    await new Promise(resolve => t.step_timeout(resolve, 3000));
   } finally {
     w.close();
   }
 }, "Clicking shouldn't activate if prevented.");
+
+// Script didn't create the promise so it shouldn't observe one.
+// This forecloses a naive implementation of this behavior that simply calls the WebIDL operation.
+promise_test(async t => {
+  assert_implements("HTMLPortalElement" in self);
+  const w = await openBlankPortalHost();
+  try {
+    const portal = w.document.createElement('portal');
+    w.onunhandledrejection = t.unreached_func('unhandledrejection event should not fire');
+    portal.click();
+    await new Promise(resolve => t.step_timeout(resolve, 3000));
+  } finally {
+    w.close();
+  }
+}, "Failed activation should not surface as an unhandled promise rejection.");
 </script>
