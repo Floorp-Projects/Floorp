@@ -459,21 +459,22 @@
   </vbox>
   <hbox id="masterPasswordRow">
     <checkbox id="useMasterPassword"
-              data-l10n-id="forms-master-pw-use"
+              data-l10n-id="forms-primary-pw-use"
               flex="1"/>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="changeMasterPassword"
               is="highlightable-button"
               class="accessory-button"
-              data-l10n-id="forms-master-pw-change"/>
+              search-l10n-ids="forms-master-pw-change.label"
+              data-l10n-id="forms-primary-pw-change"/>
     </hbox>
   </hbox>
   <!--
     Those two strings are meant to be invisible and will be used exclusively to provide
     localization for an alert window.
   -->
-  <label id="fips-title" hidden="true" data-l10n-id="forms-master-pw-fips-title"></label>
+  <label id="fips-title" hidden="true" data-l10n-id="forms-primary-pw-fips-title"></label>
   <label id="fips-desc" hidden="true" data-l10n-id="forms-master-pw-fips-desc"></label>
 </groupbox>
 

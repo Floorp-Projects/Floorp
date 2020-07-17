@@ -286,11 +286,11 @@ function generateDocumentation() {
   // map specific policies to a different string ID, to allow updates to
   // existing descriptions
   let string_mapping = {
+    DisableMasterPasswordCreation: "DisablePrimaryPasswordCreation",
     DisableSetDesktopBackground: "DisableSetAsDesktopBackground",
     Certificates: "CertificatesDescription",
     SanitizeOnShutdown: "SanitizeOnShutdown2",
     Permissions: "Permissions2",
-    PrimaryPassword: "MasterPassword",
   };
 
   for (let policyName in schema.properties) {

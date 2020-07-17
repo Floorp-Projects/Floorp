@@ -755,7 +755,7 @@ var AboutLogins = {
       id: MASTER_PASSWORD_NOTIFICATION_ID,
       priority: "PRIORITY_WARNING_MEDIUM",
       iconURL: "chrome://browser/skin/login.svg",
-      messageId: "master-password-notification-message",
+      messageId: "about-logins-primary-password-notification-message",
       buttonIds: ["master-password-reload-button"],
       onClicks: [
         function onReloadClick(browser) {
