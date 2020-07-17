@@ -22,7 +22,7 @@ class PerformanceTuner:
     def tune_performance(self):
         self.log.info("tuning android device performance")
         self.set_svc_power_stayon()
-        if self.device._have_su or self.device._have_android_su:
+        if self.device.is_rooted:
             device_name = self.device.shell_output(
                 "getprop ro.product.model", timeout=self.timeout
             )
@@ -36,12 +36,10 @@ class PerformanceTuner:
         self.device.clear_logcat(timeout=self.timeout)
         self.log.info("android device performance tuning complete")
 
-    def _set_value_and_check_exitcode(self, file_name, value, root=False):
+    def _set_value_and_check_exitcode(self, file_name, value):
         self.log.info("setting {} to {}".format(file_name, value))
         if self.device.shell_bool(
-            " ".join(["echo", str(value), ">", str(file_name)]),
-            root=root,
-            timeout=self.timeout,
+            " ".join(["echo", str(value), ">", str(file_name)]), timeout=self.timeout,
         ):
             self.log.info("successfully set {} to {}".format(file_name, value))
         else:
@@ -65,9 +63,7 @@ class PerformanceTuner:
         ]
         for service in services:
             self.log.info(" ".join(["turning off service:", service]))
-            self.device.shell_bool(
-                " ".join(["stop", service]), root=True, timeout=self.timeout
-            )
+            self.device.shell_bool(" ".join(["stop", service]), timeout=self.timeout)
 
         services_list_output = self.device.shell_output(
             "service list", timeout=self.timeout
@@ -113,7 +109,7 @@ class PerformanceTuner:
         }
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
 
     def set_cpu_performance_parameters(self, device_name=None):
         self.log.info("setting cpu performance parameters")
@@ -158,7 +154,7 @@ class PerformanceTuner:
             )
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
 
     def set_gpu_performance_parameters(self, device_name=None):
         self.log.info("setting gpu performance parameters")
@@ -208,7 +204,7 @@ class PerformanceTuner:
             )
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
 
     def set_kernel_performance_parameters(self):
         self.log.info("setting kernel performance parameters")
@@ -219,4 +215,4 @@ class PerformanceTuner:
             "/sys/kernel/debug/msm-bus-dbg/shell-client/slv": "512",
         }
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
+            self._set_value_and_check_exitcode(key, value)
