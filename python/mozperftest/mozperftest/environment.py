@@ -10,6 +10,7 @@ from mozperftest.metrics import pick_metrics
 from mozperftest.layers import Layers, StopRunError
 from mozperftest.utils import MachLogger
 from mozperftest.hooks import Hooks
+from mozperftest.argparser import FLAVORS
 
 
 SYSTEM, TEST, METRICS = 0, 1, 2
@@ -23,7 +24,7 @@ class MachEnvironment(MachLogger):
             [(self._normalize(key), value) for key, value in kwargs.items()]
         )
         self.layers = []
-        if flavor not in ("mobile-browser", "desktop-browser"):
+        if flavor not in FLAVORS:
             raise NotImplementedError(flavor)
         for layer in (pick_system, pick_test, pick_metrics):
             self.add_layer(layer(self, flavor, mach_cmd))
