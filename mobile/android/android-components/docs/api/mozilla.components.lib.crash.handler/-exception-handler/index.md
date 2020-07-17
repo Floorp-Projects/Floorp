@@ -2,7 +2,7 @@
 
 # ExceptionHandler
 
-`class ExceptionHandler : `[`UncaughtExceptionHandler`](http://docs.oracle.com/javase/7/docs/api/java/lang/Thread/UncaughtExceptionHandler.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/handler/ExceptionHandler.kt#L15)
+`class ExceptionHandler : `[`UncaughtExceptionHandler`](http://docs.oracle.com/javase/7/docs/api/java/lang/Thread/UncaughtExceptionHandler.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/handler/ExceptionHandler.kt#L18)
 
 [Thread.UncaughtExceptionHandler](http://docs.oracle.com/javase/7/docs/api/java/lang/Thread/UncaughtExceptionHandler.html) implementation that forwards crashes to the [CrashReporter](../../mozilla.components.lib.crash/-crash-reporter/index.md) instance.
 

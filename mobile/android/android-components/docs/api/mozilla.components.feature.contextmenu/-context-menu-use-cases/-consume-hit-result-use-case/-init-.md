@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`ConsumeHitResultUseCase(sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`)`
+`ConsumeHitResultUseCase(store: `[`BrowserStore`](../../../mozilla.components.browser.state.store/-browser-store/index.md)`)`
