@@ -54,8 +54,8 @@ class ChannelMap {
     if (!key) {
       return null;
     }
-    const { value } = this.weakMap.get(key);
-    return value;
+    const channelInfo = this.weakMap.get(key);
+    return channelInfo ? channelInfo.value : null;
   }
 
   delete(channel) {
