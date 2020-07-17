@@ -135,9 +135,9 @@ about-logins-export-password-os-auth-dialog-message-win = To export your logins,
 # On MacOS, only provide the reason that account verification is needed. Do not put a complete sentence here.
 about-logins-export-password-os-auth-dialog-message-macosx = export saved logins and passwords
 
-## Master Password notification
+## Primary Password notification
 
-master-password-notification-message = Please enter your master password to view saved logins & passwords
+about-logins-primary-password-notification-message = Please enter your Primary Password to view saved logins & passwords
 master-password-reload-button =
   .label = Log in
   .accesskey = L
