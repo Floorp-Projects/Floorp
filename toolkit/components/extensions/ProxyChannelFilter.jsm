@@ -300,8 +300,8 @@ class ProxyChannelFilter {
       originUrl: channel.originURL || undefined,
       documentUrl: channel.documentURL || undefined,
 
-      frameId: channel.windowId,
-      parentFrameId: channel.parentWindowId,
+      frameId: channel.frameId,
+      parentFrameId: channel.parentFrameId,
 
       frameAncestors: channel.frameAncestors || undefined,
 
