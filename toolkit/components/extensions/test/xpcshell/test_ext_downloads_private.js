@@ -9,7 +9,7 @@ const BASE = `http://localhost:${server.identity.primaryPort}/data`;
 const TXT_FILE = "file_download.txt";
 const TXT_URL = BASE + "/" + TXT_FILE;
 
-function setup() {
+add_task(function setup() {
   let downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(
     Ci.nsIFile.DIRECTORY_TYPE,
@@ -39,11 +39,9 @@ function setup() {
 
     downloadDir.remove(false);
   });
-}
+});
 
 add_task(async function test_private_download() {
-  setup();
-
   let pb_extension = ExtensionTestUtils.loadExtension({
     background: async function() {
       function promiseEvent(eventTarget, accept) {
@@ -241,4 +239,70 @@ add_task(async function test_private_download() {
   await pb_extension.awaitFinish("private download test done");
   await pb_extension.unload();
   await extension.unload();
+});
+
+// Regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1649463
+add_task(async function download_blob_in_perma_private_browsing() {
+  Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
+
+  // This script creates a blob:-URL and checks that the URL can be downloaded.
+  async function testScript() {
+    const blobUrl = URL.createObjectURL(new Blob(["data here"]));
+    const downloadId = await new Promise(resolve => {
+      browser.downloads.onChanged.addListener(delta => {
+        browser.test.log(`downloads.onChanged = ${JSON.stringify(delta)}`);
+        if (delta.state && delta.state.current !== "in_progress") {
+          resolve(delta.id);
+        }
+      });
+      browser.downloads.download({
+        url: blobUrl,
+        filename: "some-blob-download.txt",
+      });
+    });
+
+    let [downloadItem] = await browser.downloads.search({ id: downloadId });
+    browser.test.log(`Downloaded ${JSON.stringify(downloadItem)}`);
+    browser.test.assertEq(downloadItem.url, blobUrl, "expected blob URL");
+    // TODO bug 1653636: should be true because of perma-private browsing.
+    // browser.test.assertTrue(downloadItem.incognito, "download is private");
+    browser.test.assertFalse(
+      downloadItem.incognito,
+      "download is private [skipped - to be fixed in bug 1653636]"
+    );
+    browser.test.assertTrue(downloadItem.exists, "download exists");
+    await browser.downloads.removeFile(downloadId);
+
+    browser.test.sendMessage("downloadDone");
+  }
+  let pb_extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: "@private-download-ext" } },
+      permissions: ["downloads"],
+    },
+    background: testScript,
+    incognitoOverride: "spanning",
+    files: {
+      "test_part2.html": `
+        <!DOCTYPE html><meta charset="utf-8">
+        <script src="test_part2.js"></script>
+      `,
+      "test_part2.js": testScript,
+    },
+  });
+  await pb_extension.startup();
+
+  info("Testing download of blob:-URL from extension's background page");
+  await pb_extension.awaitMessage("downloadDone");
+
+  info("Testing download of blob:-URL with different userContextId");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `moz-extension://${pb_extension.uuid}/test_part2.html`,
+    { extension: pb_extension, userContextId: 2 }
+  );
+  await pb_extension.awaitMessage("downloadDone");
+  await contentPage.close();
+
+  await pb_extension.unload();
+  Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
 });

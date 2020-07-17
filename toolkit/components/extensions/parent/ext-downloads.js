@@ -823,8 +823,23 @@ this.downloads = class extends ExtensionAPI {
               const source = {
                 url: options.url,
                 isPrivate: options.incognito,
+                // Use the extension's principal to allow extensions to observe
+                // their own downloads via the webRequest API.
                 loadingPrincipal: context.principal,
               };
+
+              // blob:-URLs can only be loaded by the principal with which they
+              // are associated. This principal may have origin attributes.
+              // `context.principal` does sometimes not have these attributes
+              // due to bug 1653681. If `context.principal` were to be passed,
+              // the download request would be rejected because of mismatching
+              // principals (origin attributes).
+              // TODO bug 1653681: fix context.principal and remove this.
+              if (options.url.startsWith("blob:")) {
+                // To make sure that the blob:-URL can be loaded, fall back to
+                // the default (system) principal instead.
+                delete source.loadingPrincipal;
+              }
 
               // Unless the API user explicitly wants errors ignored,
               // set the allowHttpStatus callback, which will instruct
