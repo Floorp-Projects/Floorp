@@ -17,7 +17,7 @@ def fixture_session(capabilities, session, create_window):
         pass
 
     try:
-        session.close()
+        session.window.close()
     except NoSuchWindowException:
         pass
 
