@@ -144,12 +144,11 @@ module.exports = [
     description:
       "Measure time for a bunch of sync console.log statements to appear",
   },
-  // Bug 1480201 - disable test due to frequent failures
-  //  {
-  //    name: "console.autocomplete",
-  //    path: "webconsole/autocomplete.js",
-  //    description: "Measure time for autocomplete popup to appear",
-  //  },
+  {
+    name: "console.autocomplete",
+    path: "webconsole/autocomplete.js",
+    description: "Measure time for autocomplete popup to appear",
+  },
   {
     name: "console.streamlog",
     path: "webconsole/streamlog.js",
