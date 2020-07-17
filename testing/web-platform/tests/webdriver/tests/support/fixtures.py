@@ -230,7 +230,7 @@ def closed_window(session, create_window):
     new_handle = create_window()
     session.window_handle = new_handle
 
-    session.close()
+    session.window.close()
     assert new_handle not in session.handles, "Unable to close window {}".format(new_handle)
 
     yield new_handle

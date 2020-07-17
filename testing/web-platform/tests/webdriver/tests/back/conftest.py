@@ -12,7 +12,7 @@ def fixture_session(capabilities, session, create_window):
     yield session
 
     try:
-        session.close()
+        session.window.close()
     except NoSuchWindowException:
         pass
 
