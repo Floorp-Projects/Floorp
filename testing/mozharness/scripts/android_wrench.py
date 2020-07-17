@@ -48,7 +48,14 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
     @property
     def is_emulator(self):
         """Overrides the is_emulator property on AndroidMixin."""
+        if self._is_emulator is None:
+            self._is_emulator = self.device_serial is None
         return self._is_emulator
+
+    def activate_virtualenv(self):
+        """Overrides the method on AndroidMixin to be a no-op, because the
+           setup for wrench doesn't require a special virtualenv."""
+        pass
 
     def query_abs_dirs(self):
         if self.abs_dirs:
