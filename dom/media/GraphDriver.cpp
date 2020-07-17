@@ -1207,17 +1207,6 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
                                    mSampleRate);
 }
 
-TimeDuration AudioCallbackDriver::AudioInputLatency() {
-  uint32_t latencyFrames;
-  int rv = cubeb_stream_get_input_latency(mAudioStream, &latencyFrames);
-  if (rv || mSampleRate == 0) {
-    return TimeDuration::FromSeconds(0.0);
-  }
-
-  return TimeDuration::FromSeconds(static_cast<double>(latencyFrames) /
-                                   mSampleRate);
-}
-
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
   MOZ_ASSERT(!ThreadRunning());
   MOZ_ASSERT(mAudioStreamState == AudioStreamState::None ||
