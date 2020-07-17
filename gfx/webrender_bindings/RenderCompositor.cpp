@@ -155,9 +155,25 @@ RenderCompositor::~RenderCompositor() = default;
 bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
 
 bool RenderCompositor::IsContextLost() {
-  // XXX Add glGetGraphicsResetStatus handling for checking rendering context
-  // has not been lost
-  return false;
+  auto resetStatus = gl()->fGetGraphicsResetStatus();
+  switch (resetStatus) {
+    case LOCAL_GL_NO_ERROR:
+      return false;
+    case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
+    case LOCAL_GL_PURGED_CONTEXT_RESET_NV:
+      break;
+    case LOCAL_GL_GUILTY_CONTEXT_RESET_ARB:
+      gfxCriticalError() << "Device reset due to WR context";
+      break;
+    case LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB:
+      gfxCriticalNote << "Device reset may be due to WR context";
+      break;
+    default:
+      gfxCriticalError() << "Device reset with WR context unexpected status: "
+                         << gfx::hexa(resetStatus);
+      break;
+  }
+  return true;
 }
 
 }  // namespace wr
