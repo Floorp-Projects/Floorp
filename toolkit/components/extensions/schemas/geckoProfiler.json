@@ -41,7 +41,8 @@
           "ipcmessages",
           "fileio",
           "fileioall",
-          "noiostacks"
+          "noiostacks",
+          "audiocallbacktracing"
         ]
       },
       {
