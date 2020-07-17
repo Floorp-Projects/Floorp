@@ -406,6 +406,11 @@ const featureDescriptions = [
     value: "nativeallocations",
     title: "Track native allocations",
   },
+  {
+    name: "Audio Callback Tracing",
+    value: "audiocallbacktracing",
+    title: "Trace real-time audio callbacks.",
+  },
 ];
 
 module.exports = {
