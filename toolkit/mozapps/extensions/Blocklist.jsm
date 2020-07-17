@@ -388,7 +388,7 @@ const Utils = {
  * @param {Object} environment the JEXL environment object.
  * @returns {Object} The entry if it matches, `null` otherwise.
  */
-async function targetAppFilter(entry, environment = {}) {
+async function targetAppFilter(entry, environment) {
   // If the entry has a JEXL filter expression, it should prevail.
   // The legacy target app mechanism will be kept in place for old entries.
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463377
@@ -703,8 +703,8 @@ this.PluginBlocklistRS = {
     BlocklistTelemetry.recordRSBlocklistLastModified("plugins", this._client);
   },
 
-  async _filterItem(entry) {
-    if (!(await targetAppFilter(entry))) {
+  async _filterItem(entry, environment) {
+    if (!(await targetAppFilter(entry, environment))) {
       return null;
     }
     if (!Utils.matchesOSABI(entry)) {
@@ -1128,8 +1128,8 @@ this.ExtensionBlocklistRS = {
     BlocklistTelemetry.recordRSBlocklistLastModified("addons", this._client);
   },
 
-  async _filterItem(entry) {
-    if (!(await targetAppFilter(entry))) {
+  async _filterItem(entry, environment) {
+    if (!(await targetAppFilter(entry, environment))) {
       return null;
     }
     if (!Utils.matchesOSABI(entry)) {
