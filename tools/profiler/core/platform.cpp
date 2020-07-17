@@ -34,6 +34,7 @@
 #include "ProfileBuffer.h"
 #include "ProfiledThreadData.h"
 #include "ProfilerBacktrace.h"
+#include "ProfilerChild.h"
 #include "ProfilerCodeAddressService.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "ProfilerMarkerPayload.h"
@@ -3571,6 +3572,8 @@ void SamplerThread::Run() {
     // Invoke end-of-sampling callbacks outside of the locked scope.
     InvokePostSamplingCallbacks(std::move(postSamplingCallbacks),
                                 samplingState);
+
+    ProfilerChild::ProcessPendingUpdate();
 
     // Calculate how long a sleep to request.  After the sleep, measure how
     // long we actually slept and take the difference into account when

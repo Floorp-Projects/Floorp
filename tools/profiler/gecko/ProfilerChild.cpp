@@ -14,6 +14,10 @@
 
 namespace mozilla {
 
+/* static */ StaticDataMutex<ProfilerChild::ProfilerChildAndUpdate>
+    ProfilerChild::sPendingChunkManagerUpdate{
+        "ProfilerChild::sPendingChunkManagerUpdate"};
+
 ProfilerChild::ProfilerChild()
     : mThread(NS_GetCurrentThread()), mDestroyed(false) {
   MOZ_COUNT_CTOR(ProfilerChild);
@@ -66,7 +70,7 @@ void ProfilerChild::ResolveChunkUpdate(
   aResolve = nullptr;
 }
 
-void ProfilerChild::ChunkManagerUpdateCallback(
+void ProfilerChild::ProcessChunkManagerUpdate(
     ProfileBufferControlledChunkManager::Update&& aUpdate) {
   if (mDestroyed) {
     return;
@@ -79,63 +83,68 @@ void ProfilerChild::ChunkManagerUpdateCallback(
   }
 }
 
+/* static */ void ProfilerChild::ProcessPendingUpdate() {
+  auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+  if (!lockedUpdate->mProfilerChild || lockedUpdate->mUpdate.IsNotUpdate()) {
+    return;
+  }
+  lockedUpdate->mProfilerChild->mThread->Dispatch(NS_NewRunnableFunction(
+      "ProfilerChild::ProcessPendingUpdate", []() mutable {
+        auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+        if (!lockedUpdate->mProfilerChild ||
+            lockedUpdate->mUpdate.IsNotUpdate()) {
+          return;
+        }
+        lockedUpdate->mProfilerChild->ProcessChunkManagerUpdate(
+            std::move(lockedUpdate->mUpdate));
+        lockedUpdate->mUpdate.Clear();
+      }));
+}
+
 void ProfilerChild::SetupChunkManager() {
   mChunkManager = profiler_get_controlled_chunk_manager();
   if (NS_WARN_IF(!mChunkManager)) {
     return;
   }
 
-  // The update may be in any state from a previous profiling session.
-  // In case there is already a task in-flight with an update from that previous
-  // session, we need to dispatch a task to clear the update afterwards, but
-  // before the first update which will be dispatched from SetUpdateCallback()
-  // below.
-  mThread->Dispatch(NS_NewRunnableFunction(
-      "ChunkManagerUpdate Callback", [profilerChild = RefPtr(this)]() mutable {
-        profilerChild->mChunkManagerUpdate.Clear();
-      }));
+  // Make sure there are no updates (from a previous run).
+  mChunkManagerUpdate.Clear();
+  {
+    auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+    lockedUpdate->mProfilerChild = this;
+    lockedUpdate->mUpdate.Clear();
+  }
 
-  // `ProfilerChild` should only be used on its `mThread`.
-  // But the chunk manager update callback may happen on any thread, so we need
-  // to manually keep the `ProfilerChild` alive until after the final update has
-  // been handled on `mThread`.
-  // Using manual AddRef/Release, because ref-counting is single-threaded, so we
-  // cannot have a RefPtr stored in the callback which will be destroyed in
-  // another thread. The callback (where `Release()` happens) is guaranteed to
-  // always be called, at the latest when the calback is reset during shutdown.
-  AddRef();
   mChunkManager->SetUpdateCallback(
-      // Cast to `void*` to evade refcounted security!
-      [profilerChildPtr = static_cast<void*>(this)](
-          ProfileBufferControlledChunkManager::Update&& aUpdate) {
-        // Always dispatch, even if we're already on the `mThread`, to avoid
-        // reentrancy issues.
-        ProfilerChild* profilerChild =
-            static_cast<ProfilerChild*>(profilerChildPtr);
-        profilerChild->mThread->Dispatch(NS_NewRunnableFunction(
-            "ChunkManagerUpdate Callback",
-            [profilerChildPtr, update = std::move(aUpdate)]() mutable {
-              ProfilerChild* profilerChild =
-                  static_cast<ProfilerChild*>(profilerChildPtr);
-              const bool isFinal = update.IsFinal();
-              profilerChild->ChunkManagerUpdateCallback(std::move(update));
-              if (isFinal) {
-                profilerChild->Release();
-              }
-            }));
+      [](ProfileBufferControlledChunkManager::Update&& aUpdate) {
+        // Updates from the chunk manager are stored for later processing.
+        // We avoid dispatching a task, as this could deadlock (if the queueing
+        // mutex is held elsewhere).
+        auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+        if (!lockedUpdate->mProfilerChild) {
+          return;
+        }
+        lockedUpdate->mUpdate.Fold(std::move(aUpdate));
       });
 }
 
 void ProfilerChild::ResetChunkManager() {
-  if (mChunkManager) {
-    // We have a chunk manager, reset the callback, which will send a final
-    // update.
-    mChunkManager->SetUpdateCallback({});
-  } else if (!mChunkManagerUpdate.IsFinal()) {
-    // No chunk manager, just make sure the update as final now.
-    mChunkManagerUpdate.Fold(
-        ProfileBufferControlledChunkManager::Update(nullptr));
+  if (!mChunkManager) {
+    return;
   }
+
+  // We have a chunk manager, reset the callback, which will add a final
+  // pending update.
+  mChunkManager->SetUpdateCallback({});
+
+  // Clear the pending update.
+  auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+  lockedUpdate->mProfilerChild = nullptr;
+  lockedUpdate->mUpdate.Clear();
+  // And process a final update right now.
+  ProcessChunkManagerUpdate(
+      ProfileBufferControlledChunkManager::Update(nullptr));
+
   mChunkManager = nullptr;
   mAwaitNextChunkManagerUpdateResolver = nullptr;
 }
@@ -222,6 +231,14 @@ mozilla::ipc::IPCResult ProfilerChild::RecvAwaitNextChunkManagerUpdate(
     AwaitNextChunkManagerUpdateResolver&& aResolve) {
   MOZ_ASSERT(!mDestroyed,
              "Recv... should not be called if the actor was destroyed");
+  // Pick up pending updates if any.
+  {
+    auto lockedUpdate = sPendingChunkManagerUpdate.Lock();
+    if (lockedUpdate->mProfilerChild && !lockedUpdate->mUpdate.IsNotUpdate()) {
+      mChunkManagerUpdate.Fold(std::move(lockedUpdate->mUpdate));
+      lockedUpdate->mUpdate.Clear();
+    }
+  }
   if (mChunkManagerUpdate.IsNotUpdate()) {
     // No data yet, store the resolver for later.
     mAwaitNextChunkManagerUpdateResolver = std::move(aResolve);
