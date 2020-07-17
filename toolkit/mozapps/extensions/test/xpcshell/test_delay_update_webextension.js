@@ -35,6 +35,7 @@ var testserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+BootstrapMonitor.init();
 
 const ADDONS = {
   test_delay_update_complete_webextension_v2: {
@@ -110,6 +111,7 @@ add_task(async function delay_updates_ignore() {
   );
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  BootstrapMonitor.checkInstalled(IGNORE_ID, "1.0");
 
   let addon = await promiseAddonByID(IGNORE_ID);
   Assert.notEqual(addon, null);
@@ -126,6 +128,7 @@ add_task(async function delay_updates_ignore() {
   await promiseCompleteAllInstalls([install]);
 
   Assert.equal(install.state, AddonManager.STATE_POSTPONED);
+  BootstrapMonitor.checkInstalled(IGNORE_ID, "1.0");
 
   // addon upgrade has been delayed
   let addon_postponed = await promiseAddonByID(IGNORE_ID);
@@ -144,6 +147,7 @@ add_task(async function delay_updates_ignore() {
 
   let addon_upgraded = await promiseAddonByID(IGNORE_ID);
   await extension.awaitStartup();
+  BootstrapMonitor.checkUpdated(IGNORE_ID, "2.0");
 
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");

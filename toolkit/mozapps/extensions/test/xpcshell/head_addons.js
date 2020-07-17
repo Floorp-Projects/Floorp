@@ -292,7 +292,7 @@ var BootstrapMonitor = {
         break;
       case "update":
         this.checkMatches("update", "install", params, this.installed.get(id));
-        this.installed.set(id, { reason, params });
+        this.installed.set(id, { reason, params, method });
         break;
     }
   },
@@ -358,6 +358,17 @@ var BootstrapMonitor = {
   checkInstalled(id, version = undefined) {
     const installed = this.installed.get(id);
     ok(installed, `Should have seen install call for ${id}`);
+
+    if (version !== undefined) {
+      equal(installed.params.version, version, "Expected version number");
+    }
+
+    return installed;
+  },
+
+  checkUpdated(id, version = undefined) {
+    const installed = this.installed.get(id);
+    equal(installed.method, "update", `Should have seen update call for ${id}`);
 
     if (version !== undefined) {
       equal(installed.params.version, version, "Expected version number");
