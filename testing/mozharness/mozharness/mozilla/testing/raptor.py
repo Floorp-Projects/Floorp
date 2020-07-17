@@ -272,6 +272,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
             "default": False,
             "help": "Run tests using live sites instead of recorded sites.",
         }],
+        [["--chimera"], {
+            "dest": "chimera",
+            "action": "store_true",
+            "default": False,
+            "help": "Run tests in chimera mode. Each browser cycle will run a cold and warm test.",
+        }],
         [["--debug-mode"], {
             "dest": "debug_mode",
             "action": "store_true",
@@ -402,6 +408,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
         self.memory_test = self.config.get('memory_test')
         self.cpu_test = self.config.get('cpu_test')
         self.live_sites = self.config.get('live_sites')
+        self.chimera = self.config.get('chimera')
         self.disable_perf_tuning = self.config.get('disable_perf_tuning')
         self.conditioned_profile_scenario = self.config.get('conditioned_profile_scenario',
                                                             'settled')
@@ -633,6 +640,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
             options.extend(['--cpu-test'])
         if self.config.get('live_sites', False):
             options.extend(['--live-sites'])
+        if self.config.get('chimera', False):
+            options.extend(['--chimera'])
         if self.config.get('disable_perf_tuning', False):
             options.extend(['--disable-perf-tuning'])
         if self.config.get('cold', False):

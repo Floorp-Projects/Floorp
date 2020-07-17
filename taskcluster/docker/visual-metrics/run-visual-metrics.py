@@ -34,6 +34,9 @@ class Job:
     #: The name of the test.
     test_name = attr.ib(type=str)
 
+    #: The extra options for this job.
+    extra_options = attr.ib(type=str)
+
     #: json_path: The path to the ``browsertime.json`` file on disk.
     json_path = attr.ib(type=Path)
 
@@ -45,7 +48,11 @@ class Job:
 JOB_SCHEMA = Schema(
     {
         Required("jobs"): [
-            {Required("test_name"): str, Required("browsertime_json_path"): str}
+            {
+                Required("test_name"): str,
+                Required("browsertime_json_path"): str,
+                Required("extra_options"): [str],
+            }
         ],
         Required("application"): {Required("name"): str, "version": str},
         Required("extra_options"): [str],
@@ -81,7 +88,7 @@ def run_command(log, cmd):
         return e.returncode, e.output
 
 
-def append_result(log, suites, test_name, name, result):
+def append_result(log, suites, test_name, name, result, extra_options):
     """Appends a ``name`` metrics result in the ``test_name`` suite.
 
     Args:
@@ -99,10 +106,16 @@ def append_result(log, suites, test_name, name, result):
         log.error("Could not convert value", name=name)
         log.error("%s" % result)
         result = 0
-    if test_name not in suites:
-        suites[test_name] = {"name": test_name, "subtests": {}}
 
-    subtests = suites[test_name]["subtests"]
+    if test_name in suites and suites[test_name]["extraOptions"] != extra_options:
+        missing = set(extra_options) - set(suites[test_name]["extraOptions"])
+        test_name = test_name + "-".join(list(missing))
+
+    subtests = suites.setdefault(
+        test_name,
+        {"name": test_name, "subtests": {}, "extraOptions": extra_options}
+    )["subtests"]
+
     if name not in subtests:
         subtests[name] = {
             "name": name,
@@ -242,6 +255,8 @@ def main(log, args):
                 jobs.append(
                     Job(
                         test_name=job["test_name"],
+                        extra_options=len(job["extra_options"]) > 0 and
+                        job["extra_options"] or jobs_json["extra_options"],
                         json_path=browsertime_json_path,
                         video_path=browsertime_json_path.parent / video,
                     )
@@ -274,7 +289,7 @@ def main(log, args):
                 # Python 3.5 requires a str object (not 3.6+)
                 res = json.loads(res.decode("utf8"))
                 for name, value in res.items():
-                    append_result(log, suites, job.test_name, name, value)
+                    append_result(log, suites, job.test_name, name, value, job.extra_options)
 
     suites = [get_suite(suite) for suite in suites.values()]
 
@@ -284,8 +299,6 @@ def main(log, args):
         "type": "pageload",
         "suites": suites,
     }
-    for entry in suites:
-        entry["extraOptions"] = jobs_json["extra_options"]
 
     # Try to get the similarity for all possible tests, this means that we
     # will also get a comparison of recorded vs. live sites to check
