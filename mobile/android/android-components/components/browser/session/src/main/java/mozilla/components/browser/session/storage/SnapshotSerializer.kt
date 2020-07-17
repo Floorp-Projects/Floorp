@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
@@ -125,7 +126,7 @@ internal fun deserializeSession(
         json.getString(Keys.SESSION_URL_KEY),
         // Currently, snapshot cannot contain private sessions.
         false,
-        Session.Source.RESTORED,
+        SessionState.Source.RESTORED,
         if (restoreId) {
             json.getString(Keys.SESSION_UUID_KEY)
         } else {

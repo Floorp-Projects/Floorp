@@ -9,6 +9,7 @@ import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -42,16 +43,25 @@ class SessionManagerMigrationTest {
 
         sessionManager.add(Session("https://www.mozilla.org", private = true))
         sessionManager.add(Session("https://www.firefox.com", contextId = "1"))
+        sessionManager.add(Session("https://getpocket.com", source = SessionState.Source.ACTION_VIEW))
 
-        assertEquals(2, sessionManager.sessions.size)
-        assertEquals(2, store.state.tabs.size)
+        assertEquals(3, sessionManager.sessions.size)
+        assertEquals(3, store.state.tabs.size)
 
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
-        assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
         assertTrue(store.state.tabs[0].content.private)
-        assertFalse(store.state.tabs[1].content.private)
         assertNull(store.state.tabs[0].contextId)
+        assertEquals(SessionState.Source.NONE, store.state.tabs[0].source)
+
+        assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
+        assertFalse(store.state.tabs[1].content.private)
         assertEquals("1", store.state.tabs[1].contextId)
+        assertEquals(SessionState.Source.NONE, store.state.tabs[1].source)
+
+        assertEquals("https://getpocket.com", store.state.tabs[2].content.url)
+        assertFalse(store.state.tabs[2].content.private)
+        assertNull(store.state.tabs[2].contextId)
+        assertEquals(SessionState.Source.ACTION_VIEW, store.state.tabs[2].source)
     }
 
     @Test
@@ -104,6 +114,7 @@ class SessionManagerMigrationTest {
 
         val tab = store.state.customTabs[0]
         assertEquals("https://www.mozilla.org", tab.content.url)
+        assertEquals(SessionState.Source.CUSTOM_TAB, tab.source)
     }
 
     @Test

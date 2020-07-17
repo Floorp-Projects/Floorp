@@ -6,6 +6,7 @@ package mozilla.components.browser.state.action
 
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -30,6 +31,7 @@ class CustomTabListActionTest {
 
         assertEquals(0, store.state.tabs.size)
         assertEquals(1, store.state.customTabs.size)
+        assertEquals(SessionState.Source.CUSTOM_TAB, store.state.customTabs[0].source)
         assertEquals(customTab, store.state.customTabs[0])
         assertSame(config, store.state.customTabs[0].config)
     }

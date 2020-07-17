@@ -9,6 +9,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 
 /**
  * Contains use cases related to the search feature.
@@ -91,7 +92,7 @@ class SearchUseCases(
         ) {
             invoke(
                 searchTerms,
-                source = Session.Source.NONE,
+                source = SessionState.Source.NONE,
                 selected = true,
                 private = isPrivate,
                 searchEngine = searchEngine,
@@ -112,7 +113,7 @@ class SearchUseCases(
         @Suppress("LongParameterList")
         operator fun invoke(
             searchTerms: String,
-            source: Session.Source,
+            source: SessionState.Source,
             selected: Boolean = true,
             private: Boolean = false,
             searchEngine: SearchEngine? = null,

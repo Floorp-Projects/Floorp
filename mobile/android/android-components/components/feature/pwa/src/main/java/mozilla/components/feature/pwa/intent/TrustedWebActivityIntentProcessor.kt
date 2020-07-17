@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.ExternalAppType
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import mozilla.components.feature.customtabs.feature.OriginVerifierFeature
@@ -56,7 +57,7 @@ class TrustedWebActivityIntentProcessor(
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val session = Session(url, private = false, source = Session.Source.HOME_SCREEN)
+            val session = Session(url, private = false, source = SessionState.Source.HOME_SCREEN)
             val customTabConfig = createCustomTabConfigFromIntent(intent, null)
             session.customTabConfig = customTabConfig.copy(externalAppType = ExternalAppType.TRUSTED_WEB_ACTIVITY)
 

@@ -9,6 +9,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -69,7 +70,7 @@ class SearchUseCasesTest {
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
-        useCases.newTabSearch(searchTerms, Session.Source.NEW_TAB)
+        useCases.newTabSearch(searchTerms, SessionState.Source.NEW_TAB)
         verify(engineSession).loadUrl(searchUrl)
     }
 

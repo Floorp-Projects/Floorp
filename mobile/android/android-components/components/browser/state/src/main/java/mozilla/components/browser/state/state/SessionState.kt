@@ -16,6 +16,7 @@ package mozilla.components.browser.state.state
  * @property contextId the session context ID of the session. The session context ID specifies the
  * contextual identity to use for the session's cookie store.
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Work_with_contextual_identities
+ * @property source the [Source] of this session to describe how and why it was created.
  */
 interface SessionState {
     val id: String
@@ -24,6 +25,7 @@ interface SessionState {
     val engineState: EngineState
     val extensionState: Map<String, WebExtensionState>
     val contextId: String?
+    val source: Source
 
     /**
      * Copy the class and override some parameters.
@@ -37,4 +39,64 @@ interface SessionState {
         extensionState: Map<String, WebExtensionState> = this.extensionState,
         contextId: String? = this.contextId
     ): SessionState
+
+    /**
+     * Represents the origin of a session to describe how and why it was created.
+     */
+    enum class Source {
+        /**
+         * Created to handle an ACTION_SEND (share) intent
+         */
+        ACTION_SEND,
+
+        /**
+         * Created to handle an ACTION_SEARCH and ACTION_WEB_SEARCH intent
+         */
+        ACTION_SEARCH,
+
+        /**
+         * Created to handle an ACTION_VIEW intent
+         */
+        ACTION_VIEW,
+
+        /**
+         * Created to handle a CustomTabs intent
+         */
+        CUSTOM_TAB,
+
+        /**
+         * User interacted with the home screen
+         */
+        HOME_SCREEN,
+
+        /**
+         * User interacted with a menu
+         */
+        MENU,
+
+        /**
+         * User opened a new tab
+         */
+        NEW_TAB,
+
+        /**
+         * Default value and for testing purposes
+         */
+        NONE,
+
+        /**
+         * Default value and for testing purposes
+         */
+        TEXT_SELECTION,
+
+        /**
+         * User entered a URL or search term
+         */
+        USER_ENTERED,
+
+        /**
+         * This session was restored
+         */
+        RESTORED
+    }
 }
