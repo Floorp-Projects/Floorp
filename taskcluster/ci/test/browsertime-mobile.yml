@@ -22,10 +22,10 @@ job-defaults:
             fenix:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
-                        index: project.mobile.fenix.v2.nightly.latest
+                        index: mobile.v2.fenix.nightly.latest.arm64-v8a
                         name: build/arm64-v8a/geckoNightly/target.apk
                     default:
-                        index: project.mobile.fenix.v2.nightly.latest
+                        index: mobile.v2.fenix.nightly.latest.armeabi-v7a
                         name: build/armeabi-v7a/geckoNightly/target.apk
             fennec:
                 by-test-platform:
@@ -38,10 +38,10 @@ job-defaults:
             refbrow:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
-                        index: project.mobile.reference-browser.v3.raptor.latest
+                        index: mobile.v2.reference-browser.raptor.latest.arm64-v8a
                         name: target.arm64-v8a.apk
                     default:
-                        index: project.mobile.reference-browser.v3.raptor.latest
+                        index: mobile.v2.reference-browser.raptor.latest.armeabi-v7a
                         name: target.armeabi-v7a.apk
             default: geckoview_example.apk
     e10s: true

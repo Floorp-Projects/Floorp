@@ -173,7 +173,7 @@ jobs:
         run:
             run-as-root: true
             command: >-
-                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk &&
+                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.armeabi-v7a/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
                 virtualenv/virtualenv.py -p python3 . &&
@@ -240,7 +240,7 @@ jobs:
         run:
             run-as-root: true
             command: >-
-                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
+                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.arm64-v8a/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
                 virtualenv/virtualenv.py -p python3 . &&

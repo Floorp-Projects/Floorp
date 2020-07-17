@@ -7,7 +7,7 @@ import pathlib
 
 from mozperftest.test.browsertime import add_options
 from mozperftest.system.android import _ROOT_URL
-from mozperftest.utils import download_file, get_multi_tasks_url
+from mozperftest.utils import download_file, get_multi_tasks_url, get_revision_namespace_url
 
 URL = "'https://www.example.com'"
 
@@ -18,9 +18,8 @@ COMMON_OPTIONS = [("processStartTime", "true"),
                   ("firefox.android.intentArgument", "'-d'"),
                   ("firefox.android.intentArgument", URL)]
 
-NIGHTLY_SIM_ROUTE = "project.mobile.fenix.v2.nightly-simulation"
-G5_SUFFIX = "artifacts/public/build/armeabi-v7a/geckoNightly/target.apk"
-P2_SUFFIX = "artifacts/public/build/arm64-v8a/geckoNightly/target.apk"
+NIGHTLY_SIM_ROUTE = "mobile.v2.fenix.nightly-simulation"
+ROUTE_SUFFIX = "artifacts/public/build/{architecture}/geckoNightly/target.apk"
 
 build_generator = None
 
@@ -32,31 +31,46 @@ def before_iterations(kw):
         return
 
     # Get the builds to test
-    build_url = get_multi_tasks_url(NIGHTLY_SIM_ROUTE, day=kw["test_date"])
-    tmpfile = pathlib.Path(tempfile.mkdtemp(), "alltasks.json")
+    architecture = "arm64-v8a" if "arm64_v8a" in kw.get("android_install_apk") else "armeabi-v7a"
+    json_ = _fetch_json(get_revision_namespace_url, NIGHTLY_SIM_ROUTE, day=kw["test_date"])
+    namespaces = json_["namespaces"]
+    revisions = [namespace["name"] for namespace in namespaces]
+
+    tasks = []
+    for revision in revisions:
+        json_ = _fetch_json(get_multi_tasks_url, NIGHTLY_SIM_ROUTE, revision, day=kw["test_date"])
+        for task in json_["tasks"]:
+            route = task["namespace"]
+            task_architecture = route.split(".")[-1]
+            if task_architecture == architecture:
+                tasks.append({
+                    "revision": revision,
+                    "route": route,
+                    "route_suffix": ROUTE_SUFFIX.format(architecture=task_architecture),
+                })
+
+    kw["test_iterations"] = len(tasks)
+
+    def _build_iterator():
+        for task in tasks:
+            revision = task["revision"]
+            print(f"Testing revision {revision}")
+            download_url = f'{_ROOT_URL}{task["route"]}/{task["route_suffix"]}'
+            yield revision, [download_url]
+
+    build_generator = _build_iterator()
+
+    return kw
+
+
+def _fetch_json(get_url_function, *args, **kwargs):
+    build_url = get_url_function(*args, **kwargs)
+    tmpfile = pathlib.Path(tempfile.mkdtemp(), "temp.json")
     download_file(build_url, tmpfile)
 
     # Set the number of test-iterations to the number of builds
     with tmpfile.open() as f:
-        tasks = json.load(f)["tasks"]
-    kw["test_iterations"] = len(tasks)
-
-    # Finally, make an iterator for the builds (used in `before_runs`)
-    route_suffix = G5_SUFFIX
-    if "arm64_v8a" in kw.get("android_install_apk"):
-        route_suffix = P2_SUFFIX
-
-    def _build_iterator(route_suffix):
-        for task in tasks:
-            route = task["namespace"]
-            revision = route.split(".")[-1]
-            print("Testing revision %s" % revision)
-            download_url = "%s%s/%s" % (_ROOT_URL, route, route_suffix)
-            yield revision, [download_url]
-
-    build_generator = _build_iterator(route_suffix)
-
-    return kw
+        return json.load(f)
 
 
 def before_runs(env, **kw):

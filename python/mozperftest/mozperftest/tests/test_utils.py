@@ -17,6 +17,7 @@ from mozperftest.utils import (
     install_package,
     build_test_list,
     get_multi_tasks_url,
+    get_revision_namespace_url,
     convert_day,
     load_class,
 )
@@ -119,22 +120,31 @@ def test_convert_day():
     assert convert_day("yesterday") == yesterday.strftime("%Y.%m.%d")
 
 
+def test_revision_namespace_url():
+    route = "FakeBuildRoute"
+    day = "2020.06.08"
+    buildurl = get_revision_namespace_url(route, day=day)
+    assert day in buildurl and route in buildurl
+    assert buildurl.endswith(".revision")
+
+
 def test_multibuild_url():
     route = "FakeBuildRoute"
     day = "2020.06.08"
-    buildurl = get_multi_tasks_url(route, day=day)
-    assert day in buildurl and route in buildurl
+    revision = "deadbeef"
+    buildurl = get_multi_tasks_url(route, revision, day=day)
+    assert all(item in buildurl for item in (route, day, revision))
 
     with mock.patch("mozperftest.utils.date") as mockeddate:
         mockeddate.today.return_value = mockeddate
         mockeddate.strftime.return_value = "2020.07.09"
-        buildurl = get_multi_tasks_url(route, day="today")
+        buildurl = get_multi_tasks_url(route, revision, day="today")
         assert "2020.07.09" in buildurl and route in buildurl
 
         with mock.patch("mozperftest.utils.timedelta"):
             mockeddate.__sub__.return_value = mockeddate
             mockeddate.strftime.return_value = "2020.08.09"
-            buildurl = get_multi_tasks_url(route)
+            buildurl = get_multi_tasks_url(route, revision)
             assert "2020.08.09" in buildurl and route in buildurl
 
 
