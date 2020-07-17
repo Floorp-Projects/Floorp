@@ -1,0 +1,14 @@
+/**
+ * teletrader.com - content is shifted down and right
+ * Bug #1651917 - https://bugzilla.mozilla.org/show_bug.cgi?id=1651917
+ * WebCompat issue #55217 - https://webcompat.com/issues/55217
+ *
+ * The content is shifted down and right, because they use webkit prefixes
+ * for scaling and redefining the origin. Firefox doesn't support
+ *     -webkit-transform-origin-x/y
+ * This is the object of https://bugzilla.mozilla.org/show_bug.cgi?id=1584881
+ * Adding transform-origin: 0 0; to body fixes the issue
+ */
+body {
+  transform-origin: 0 0;
+}

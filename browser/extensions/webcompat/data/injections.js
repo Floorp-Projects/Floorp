@@ -132,6 +132,7 @@ const AVAILABLE_INJECTIONS = [
           "https://help.doordash.com/*",
           "https://community.snowflake.com/*",
           "https://tivoidp.tivo.com/*",
+          "https://cloudreadykb.neverware.com/*",
         ],
         InterventionHelpers.matchPatternsForTLDs(
           "*://support.ancestry.",
@@ -368,36 +369,6 @@ const AVAILABLE_INJECTIONS = [
     customFunc: "detectSwipeFix",
   },
   {
-    id: "bug1625224",
-    platform: "all",
-    domain: "sixt-neuwagen.de",
-    bug: "1625224",
-    contentScripts: {
-      matches: ["*://*.sixt-neuwagen.de/*"],
-      js: [
-        {
-          file:
-            "injections/js/bug1625224-sixt-neuwagen.de-window-netscape-shim.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1631960",
-    platform: "all",
-    domain: "websube.ckbogazici.com.tr",
-    bug: "1631960",
-    contentScripts: {
-      matches: ["https://websube.ckbogazici.com.tr/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1631960-websube.ckbogazici.com.tr-table-row-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1632019",
     platform: "all",
     domain: "everyman.co",
@@ -452,6 +423,21 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/js/bug1641998-embedded-twitter-videos-etp-indexeddb.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1651917",
+    platform: "android",
+    domain: "teletrader.com",
+    bug: "1651917",
+    contentScripts: {
+      matches: ["*://*.teletrader.com/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1651917-teletrader.com.body-transform-origin.css",
         },
       ],
     },
