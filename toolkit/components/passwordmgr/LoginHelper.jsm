@@ -43,7 +43,6 @@ this.LoginHelper = {
   showAutoCompleteImport: null,
   testOnlyUserHasInteractedWithDocument: null,
   userInputRequiredToCapture: null,
-  captureInputChanges: null,
 
   init() {
     // Watch for pref changes to update cached pref values.
@@ -128,10 +127,6 @@ this.LoginHelper = {
 
     this.userInputRequiredToCapture = Services.prefs.getBoolPref(
       "signon.userInputRequiredToCapture.enabled"
-    );
-
-    this.captureInputChanges = Services.prefs.getBoolPref(
-      "signon.capture.inputChanges.enabled"
     );
   },
 
