@@ -554,13 +554,20 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     weakCaches().insertBack(cachep);
   }
 
-  void delegatePreWriteBarrier(JSObject* obj, JSObject* delegate) {
+  void beforeClearDelegate(JSObject* wrapper, JSObject* delegate) {
     if (needsIncrementalBarrier()) {
-      delegatePreWriteBarrierInternal(obj, delegate);
+      beforeClearDelegateInternal(wrapper, delegate);
     }
   }
 
-  void delegatePreWriteBarrierInternal(JSObject* obj, JSObject* delegate);
+  void afterAddDelegate(JSObject* wrapper) {
+    if (needsIncrementalBarrier()) {
+      afterAddDelegateInternal(wrapper);
+    }
+  }
+
+  void beforeClearDelegateInternal(JSObject* wrapper, JSObject* delegate);
+  void afterAddDelegateInternal(JSObject* wrapper);
   js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
   js::gc::WeakKeyTable& gcNurseryWeakKeys() { return gcNurseryWeakKeys_.ref(); }
 

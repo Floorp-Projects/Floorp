@@ -484,11 +484,19 @@ void Zone::discardJitCode(JSFreeOp* fop,
   }
 }
 
-void JS::Zone::delegatePreWriteBarrierInternal(JSObject* obj,
+void JS::Zone::beforeClearDelegateInternal(JSObject* wrapper,
                                                JSObject* delegate) {
-  MOZ_ASSERT(js::gc::detail::GetDelegate(obj) == delegate);
+  MOZ_ASSERT(js::gc::detail::GetDelegate(wrapper) == delegate);
   MOZ_ASSERT(needsIncrementalBarrier());
-  GCMarker::fromTracer(barrierTracer())->severWeakDelegate(obj, delegate);
+  GCMarker::fromTracer(barrierTracer())->severWeakDelegate(wrapper, delegate);
+}
+
+void JS::Zone::afterAddDelegateInternal(JSObject* wrapper) {
+  JSObject* delegate = js::gc::detail::GetDelegate(wrapper);
+  if (delegate) {
+    GCMarker::fromTracer(barrierTracer())
+        ->restoreWeakDelegate(wrapper, delegate);
+  }
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
