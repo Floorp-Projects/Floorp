@@ -3838,22 +3838,10 @@ var XPIInstall = {
 
     logger.debug(`Processing install of ${id} in ${location.name}`);
     let existingAddon = XPIStates.findAddon(id);
-    if (existingAddon) {
-      try {
-        var file = existingAddon.file;
-        if (file.exists()) {
-          let newVersion = existingAddon.version;
-          let reason = newVersionReason(existingAddon.version, newVersion);
-
-          XPIInternal.BootstrapScope.get(existingAddon).uninstall(reason, {
-            newVersion,
-          });
-        }
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-
+    // This part of the startup file changes is called from
+    // processPendingFileChanges, no addons are started yet.
+    // Here we handle copying the xpi into its proper place, later
+    // processFileChanges will call update.
     try {
       addon.sourceBundle = location.installer.installAddon({
         id,

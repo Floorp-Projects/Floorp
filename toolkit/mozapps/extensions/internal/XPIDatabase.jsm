@@ -3402,30 +3402,9 @@ this.XPIDatabaseReconcile = {
           id
         );
 
-        if (
-          previousAddon.location &&
-          (!previousAddon._sourceBundle ||
-            (previousAddon._sourceBundle.exists() &&
-              !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)))
-        ) {
-          promise = XPIInternal.BootstrapScope.get(previousAddon).update(
-            currentAddon
-          );
-        } else if (
-          this.isSystemAddonLocation(currentAddon.location) &&
-          previousAddon.version == currentAddon.version &&
-          previousAddon.userDisabled != currentAddon.userDisabled
-        ) {
-          // A system addon change, no need for install or update events.
-        } else {
-          let reason = XPIInstall.newVersionReason(
-            previousAddon.version,
-            currentAddon.version
-          );
-          XPIInternal.BootstrapScope.get(currentAddon).install(reason, false, {
-            oldVersion: previousAddon.version,
-          });
-        }
+        promise = XPIInternal.BootstrapScope.get(previousAddon).update(
+          currentAddon
+        );
       }
 
       if (isActive != wasActive) {
