@@ -98,7 +98,7 @@ function add_message_event_handlers(receiver, target, target_origin) {
           const parent_directory =
             await self.getOriginPrivateDirectory();
           const directory_handle =
-            await parent_directory.getDirectory('temp-directory',
+            await parent_directory.getDirectoryHandle('temp-directory',
               { create: true });
           message_source.postMessage(
             { type: 'receive-directory', directory_handle },
