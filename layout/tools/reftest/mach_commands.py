@@ -238,7 +238,12 @@ class MachCommands(MachCommandBase):
         if conditions.is_android(self):
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
             install = InstallIntent.NO if kwargs.get('no_install') else InstallIntent.YES
+            verbose = False
+            if kwargs.get('log_mach_verbose') or kwargs.get('log_tbpl_level') == 'debug' or \
+               kwargs.get('log_mach_level') == 'debug' or kwargs.get('log_raw_level') == 'debug':
+                verbose = True
             verify_android_device(self, install=install, xre=True, network=True,
-                                  app=kwargs["app"], device_serial=kwargs["deviceSerial"])
+                                  app=kwargs["app"], device_serial=kwargs["deviceSerial"],
+                                  verbose=verbose)
             return reftest.run_android_test(**kwargs)
         return reftest.run_desktop_test(**kwargs)
