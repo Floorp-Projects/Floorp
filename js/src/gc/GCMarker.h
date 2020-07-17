@@ -336,6 +336,9 @@ class GCMarker : public JSTracer {
   // 'delegate' is no longer the delegate of 'key'.
   void severWeakDelegate(JSObject* key, JSObject* delegate);
 
+  // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
+  void restoreWeakDelegate(JSObject* key, JSObject* delegate);
+
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
   // The mark queue is a testing-only feature for controlling mark ordering and

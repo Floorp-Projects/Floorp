@@ -308,13 +308,22 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
 }
 
 template <class K, class V>
-void WeakMap<K, V>::postSeverDelegate(GCMarker* marker, JSObject* key,
-                                      Compartment* comp) {
+void WeakMap<K, V>::postSeverDelegate(GCMarker* marker, JSObject* key) {
   if (mapColor) {
     // We only stored the delegate, not the key, and we're severing the
     // delegate from the key. So store the key.
     gc::WeakMarkable markable(this, key);
     addWeakEntry(marker, key, markable);
+  }
+}
+
+template <class K, class V>
+void WeakMap<K, V>::postRestoreDelegate(GCMarker* marker, JSObject* key,
+                                        JSObject* delegate) {
+  if (mapColor) {
+    // We had the key stored, but are removing it. Store the delegate instead.
+    gc::WeakMarkable markable(this, key);
+    addWeakEntry(marker, delegate, markable);
   }
 }
 

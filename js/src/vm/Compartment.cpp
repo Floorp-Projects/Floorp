@@ -90,7 +90,7 @@ void Compartment::removeWrapper(js::ObjectWrapperMap::Ptr p) {
   JSObject* key = p->key();
   JSObject* value = p->value().unbarrieredGet();
   if (js::gc::detail::GetDelegate(value) == key) {
-    key->zone()->delegatePreWriteBarrier(value, key);
+    key->zone()->beforeClearDelegate(value, key);
   }
 
   crossCompartmentObjectWrappers.remove(p);
