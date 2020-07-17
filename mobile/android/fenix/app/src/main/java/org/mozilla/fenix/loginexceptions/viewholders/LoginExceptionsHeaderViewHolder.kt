@@ -12,12 +12,13 @@ import org.mozilla.fenix.R
 class LoginExceptionsHeaderViewHolder(
     view: View
 ) : RecyclerView.ViewHolder(view) {
-    companion object {
-        const val LAYOUT_ID = R.layout.exceptions_description
-    }
 
     init {
         view.exceptions_description.text =
             view.context.getString(R.string.preferences_passwords_exceptions_description)
+    }
+
+    companion object {
+        const val LAYOUT_ID = R.layout.exceptions_description
     }
 }

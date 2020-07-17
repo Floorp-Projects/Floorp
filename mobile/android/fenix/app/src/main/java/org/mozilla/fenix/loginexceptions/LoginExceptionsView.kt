@@ -10,7 +10,7 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_exceptions.view.*
+import kotlinx.android.synthetic.main.component_exceptions.*
 import mozilla.components.feature.logins.exceptions.LoginException
 import org.mozilla.fenix.R
 
@@ -34,29 +34,29 @@ interface ExceptionsViewInteractor {
  * View that contains and configures the Exceptions List
  */
 class LoginExceptionsView(
-    override val containerView: ViewGroup,
+    container: ViewGroup,
     val interactor: LoginExceptionsInteractor
 ) : LayoutContainer {
 
-    val view: FrameLayout = LayoutInflater.from(containerView.context)
-        .inflate(R.layout.component_exceptions, containerView, true)
+    override val containerView: FrameLayout = LayoutInflater.from(container.context)
+        .inflate(R.layout.component_exceptions, container, true)
         .findViewById(R.id.exceptions_wrapper)
 
     private val exceptionsAdapter = LoginExceptionsAdapter(interactor)
 
     init {
-        view.exceptions_learn_more.isVisible = false
-        view.exceptions_empty_message.text =
-            view.context.getString(R.string.preferences_passwords_exceptions_description_empty)
-        view.exceptions_list.apply {
+        exceptions_learn_more.isVisible = false
+        exceptions_empty_message.text =
+            containerView.context.getString(R.string.preferences_passwords_exceptions_description_empty)
+        exceptions_list.apply {
             adapter = exceptionsAdapter
             layoutManager = LinearLayoutManager(containerView.context)
         }
     }
 
     fun update(state: ExceptionsFragmentState) {
-        view.exceptions_empty_view.isVisible = state.items.isEmpty()
-        view.exceptions_list.isVisible = state.items.isNotEmpty()
+        exceptions_empty_view.isVisible = state.items.isEmpty()
+        exceptions_list.isVisible = state.items.isNotEmpty()
         exceptionsAdapter.updateData(state.items)
     }
 }

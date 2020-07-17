@@ -14,29 +14,22 @@ import org.mozilla.fenix.loginexceptions.viewholders.LoginExceptionsDeleteButton
 import org.mozilla.fenix.loginexceptions.viewholders.LoginExceptionsHeaderViewHolder
 import org.mozilla.fenix.loginexceptions.viewholders.LoginExceptionsListItemViewHolder
 
-sealed class AdapterItem {
-    object DeleteButton : AdapterItem()
-    object Header : AdapterItem()
-    data class Item(val item: LoginException) : AdapterItem()
-}
-
 /**
  * Adapter for a list of sites that are exempted from saving logins,
  * along with controls to remove the exception.
  */
 class LoginExceptionsAdapter(
     private val interactor: LoginExceptionsInteractor
-) : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(DiffCallback) {
+) : ListAdapter<LoginExceptionsAdapter.AdapterItem, RecyclerView.ViewHolder>(DiffCallback) {
 
     /**
      * Change the list of items that are displayed.
      * Header and footer items are added to the list as well.
      */
     fun updateData(exceptions: List<LoginException>) {
-        val adapterItems: List<AdapterItem> =
-            listOf(AdapterItem.Header) + exceptions.map { AdapterItem.Item(it) } + listOf(
-                AdapterItem.DeleteButton
-            )
+        val adapterItems: List<AdapterItem> = listOf(AdapterItem.Header) +
+            exceptions.map { AdapterItem.Item(it) } +
+            listOf(AdapterItem.DeleteButton)
         submitList(adapterItems)
     }
 
@@ -70,9 +63,18 @@ class LoginExceptionsAdapter(
         }
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
+    sealed class AdapterItem {
+        object DeleteButton : AdapterItem()
+        object Header : AdapterItem()
+        data class Item(val item: LoginException) : AdapterItem()
+    }
+
+    internal object DiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
         override fun areItemsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =
-            areContentsTheSame(oldItem, newItem)
+            when (oldItem) {
+                AdapterItem.DeleteButton, AdapterItem.Header -> oldItem === newItem
+                is AdapterItem.Item -> newItem is AdapterItem.Item && oldItem.item.id == newItem.item.id
+            }
 
         @Suppress("DiffUtilEquals")
         override fun areContentsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =

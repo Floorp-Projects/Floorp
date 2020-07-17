@@ -9,9 +9,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.observe
 import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -57,18 +57,15 @@ class LoginExceptionsFragment : Fragment() {
         return view
     }
 
-    private fun subscribeToLoginExceptions(): Observer<List<LoginException>> {
-        return Observer<List<LoginException>> { exceptions ->
-            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(exceptions))
-        }.also { observer ->
-            requireComponents.core.loginExceptionStorage.getLoginExceptions().asLiveData()
-                .observe(viewLifecycleOwner, observer)
-        }
+    private fun subscribeToLoginExceptions() {
+        requireComponents.core.loginExceptionStorage.getLoginExceptions().asLiveData()
+            .observe(viewLifecycleOwner) { exceptions ->
+                exceptionsStore.dispatch(ExceptionsFragmentAction.Change(exceptions))
+            }
     }
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         consumeFrom(exceptionsStore) {
             exceptionsView.update(it)
         }
