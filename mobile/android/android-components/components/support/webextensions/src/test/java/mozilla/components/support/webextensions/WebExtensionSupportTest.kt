@@ -13,7 +13,9 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -695,5 +697,51 @@ class WebExtensionSupportTest {
         delegateCaptor.value.onExtensionListUpdated()
         store.waitUntilIdle()
         assertTrue(WebExtensionSupport.installedExtensions.isEmpty())
+    }
+
+    @Test
+    fun `closes unsupported extension`() {
+        val store = spy(BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.RESTORED),
+                createTab(id = "2", url = "moz-extension://1234-5678/test", source = SessionState.Source.RESTORED),
+                createTab(id = "3", url = "moz-extension://1234-5678-9/", source = SessionState.Source.RESTORED)
+            )
+        )))
+
+        val ext1: WebExtension = mock()
+        val ext1Meta: Metadata = mock()
+        whenever(ext1Meta.baseUrl).thenReturn("moz-extension://1234-5678/")
+        whenever(ext1.id).thenReturn("1")
+        whenever(ext1.url).thenReturn("url1")
+        whenever(ext1.getMetadata()).thenReturn(ext1Meta)
+        whenever(ext1.isEnabled()).thenReturn(true)
+        whenever(ext1.isAllowedInPrivateBrowsing()).thenReturn(true)
+
+        val ext2: WebExtension = mock()
+        whenever(ext2.id).thenReturn("2")
+        whenever(ext2.url).thenReturn("url2")
+        whenever(ext2.isEnabled()).thenReturn(true)
+        whenever(ext2.isAllowedInPrivateBrowsing()).thenReturn(false)
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(listOf(ext1, ext2))
+        }
+
+        WebExtensionSupport.initialize(engine, store)
+
+        store.waitUntilIdle()
+        assertNotNull(store.state.findTab("1"))
+        assertNotNull(store.state.findTab("2"))
+        assertNull(store.state.findTab("3"))
+
+        // Make sure we're running a single cleanup and stop the scope after
+        store.dispatch(TabListAction.AddTabAction(createTab(id = "4", url = "moz-extension://1234-5678-90/")))
+                .joinBlocking()
+
+        store.waitUntilIdle()
+        assertNotNull(store.state.findTab("4"))
     }
 }
