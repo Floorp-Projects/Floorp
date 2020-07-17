@@ -158,6 +158,43 @@ class FirefoxConnector {
 
     if (resourceType === TYPES.NETWORK_EVENT) {
       this.dataProvider.onNetworkResourceAvailable(resource);
+      return;
+    }
+
+    if (resourceType === TYPES.WEBSOCKET) {
+      const { wsMessageType } = resource;
+
+      switch (wsMessageType) {
+        case "webSocketOpened": {
+          this.dataProvider.onWebSocketOpened(
+            resource.httpChannelId,
+            resource.effectiveURI,
+            resource.protocols,
+            resource.extensions
+          );
+          break;
+        }
+        case "webSocketClosed": {
+          this.dataProvider.onWebSocketClosed(
+            resource.httpChannelId,
+            resource.wasClean,
+            resource.code,
+            resource.reason
+          );
+          break;
+        }
+        case "frameReceived": {
+          this.dataProvider.onFrameReceived(
+            resource.httpChannelId,
+            resource.data
+          );
+          break;
+        }
+        case "frameSent": {
+          this.dataProvider.onFrameSent(resource.httpChannelId, resource.data);
+          break;
+        }
+      }
     }
   }
 
@@ -168,35 +205,16 @@ class FirefoxConnector {
   }
 
   async addListeners(ignoreExistingResources = false) {
-    await this.toolbox.resourceWatcher.watchResources(
-      [this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT],
-      {
-        onAvailable: this.onResourceAvailable,
-        onUpdated: this.onResourceUpdated,
-        ignoreExistingResources,
-      }
-    );
-    // Support for WebSocket monitoring is currently hidden behind this pref.
+    const targetResources = [this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT];
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
-      try {
-        // Initialize WebSocket front to intercept websocket traffic.
-        const webSocketFront = await this.currentTarget.getFront("webSocket");
-        webSocketFront.startListening();
-
-        webSocketFront.on(
-          "webSocketOpened",
-          this.dataProvider.onWebSocketOpened
-        );
-        webSocketFront.on(
-          "webSocketClosed",
-          this.dataProvider.onWebSocketClosed
-        );
-        webSocketFront.on("frameReceived", this.dataProvider.onFrameReceived);
-        webSocketFront.on("frameSent", this.dataProvider.onFrameSent);
-      } catch (e) {
-        // Support for FF68 or older
-      }
+      targetResources.push(this.toolbox.resourceWatcher.TYPES.WEBSOCKET);
     }
+
+    await this.toolbox.resourceWatcher.watchResources(targetResources, {
+      onAvailable: this.onResourceAvailable,
+      onUpdated: this.onResourceUpdated,
+      ignoreExistingResources,
+    });
 
     // Support for EventSource monitoring is currently hidden behind this pref.
     if (
@@ -217,25 +235,15 @@ class FirefoxConnector {
 
   removeListeners() {
     this.toolbox.resourceWatcher.unwatchResources(
-      [this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT],
+      [
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
+        this.toolbox.resourceWatcher.TYPES.WEBSOCKET,
+      ],
       {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,
       }
     );
-    const webSocketFront = this.currentTarget.getCachedFront("webSocket");
-    if (webSocketFront) {
-      webSocketFront.off(
-        "webSocketOpened",
-        this.dataProvider.onWebSocketOpened
-      );
-      webSocketFront.off(
-        "webSocketClosed",
-        this.dataProvider.onWebSocketClosed
-      );
-      webSocketFront.off("frameReceived", this.dataProvider.onFrameReceived);
-      webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
-    }
 
     const eventSourceFront = this.currentTarget.getCachedFront("eventSource");
     if (eventSourceFront) {
