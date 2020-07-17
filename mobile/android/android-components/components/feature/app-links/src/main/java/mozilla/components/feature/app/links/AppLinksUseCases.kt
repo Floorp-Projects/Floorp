@@ -252,7 +252,7 @@ class AppLinksUseCases(
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
         internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf("about", "data", "file", "ftp", "http",
-            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss")
+            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob")
 
         internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("file", "javascript", "data", "about")
     }
