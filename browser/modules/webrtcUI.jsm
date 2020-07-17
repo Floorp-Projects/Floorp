@@ -31,6 +31,11 @@ ChromeUtils.defineModuleGetter(
   "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "SitePermissions",
+  "resource:///modules/SitePermissions.jsm"
+);
 
 var webrtcUI = {
   initialized: false,
@@ -482,6 +487,140 @@ var webrtcUI = {
     this.updateGlobalIndicator();
   },
 
+  /**
+   * Given some set of streams, stops device access for those streams.
+   * Optionally, it's possible to stop a subset of the devices on those
+   * streams by passing in optional arguments.
+   *
+   * Once the streams have been stopped, this method will also find the
+   * newest stream's <xul:browser> and window, focus the window, and
+   * select the browser.
+   *
+   * @param {Array<Object>} activeStreams - An array of streams obtained via webrtcUI.getActiveStreams.
+   * @param {boolean} stopCameras - True to stop the camera streams (defaults to true)
+   * @param {boolean} stopMics - True to stop the microphone streams (defaults to true)
+   * @param {boolean} stopScreens - True to stop the screen streams (defaults to true)
+   * @param {boolean} stopWindows - True to stop the window streams (defaults to true)
+   */
+  stopSharingStreams(
+    activeStreams,
+    stopCameras = true,
+    stopMics = true,
+    stopScreens = true,
+    stopWindows = true
+  ) {
+    if (!activeStreams.length) {
+      return;
+    }
+
+    let mostRecentStream = activeStreams[activeStreams.length - 1];
+    let { browser: browserToSelect } = mostRecentStream;
+
+    for (let stream of activeStreams) {
+      let { browser } = stream;
+
+      let gBrowser = browser.getTabBrowser();
+      if (!gBrowser) {
+        Cu.reportError("Can't stop sharing stream - cannot find gBrowser.");
+        continue;
+      }
+
+      let tab = gBrowser.getTabForBrowser(browser);
+      if (!tab) {
+        Cu.reportError("Can't stop sharing stream - cannot find tab.");
+        continue;
+      }
+
+      let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
+        browser
+      );
+
+      let webrtcState = tab._sharingState.webRTC;
+      let clearRequested = {
+        camera: stopCameras,
+        microphone: stopMics,
+        screen: stopScreens || stopWindows,
+      };
+
+      for (let id of ["camera", "microphone", "screen"]) {
+        if (webrtcState[id] && clearRequested[id]) {
+          let found = false;
+          for (let permission of permissions) {
+            if (permission.id != id) {
+              continue;
+            }
+            found = true;
+            permission.sharingState = webrtcState[id];
+            break;
+          }
+          if (!found) {
+            // If the permission item we were looking for doesn't exist,
+            // the user has temporarily allowed sharing and we need to add
+            // an item in the permissions array to reflect this.
+            permissions.push({
+              id,
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_REQUEST,
+              sharingState: webrtcState[id],
+            });
+          }
+        }
+      }
+
+      for (let permission of permissions) {
+        let windowId = tab._sharingState.webRTC.windowId;
+
+        if (permission.id == "screen") {
+          windowId = `screen:${webrtcState.windowId}`;
+        } else if (permission.id == "camera" || permission.id == "microphone") {
+          // If we set persistent permissions or the sharing has
+          // started due to existing persistent permissions, we need
+          // to handle removing these even for frames with different hostnames.
+          let origins = browser.getDevicePermissionOrigins("webrtc");
+          for (let origin of origins) {
+            // It's not possible to stop sharing one of camera/microphone
+            // without the other.
+            let principal;
+            for (let id of ["camera", "microphone"]) {
+              if (webrtcState[id]) {
+                if (!principal) {
+                  principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                    origin
+                  );
+                }
+                let perm = SitePermissions.getForPrincipal(principal, id);
+                if (
+                  perm.state == SitePermissions.ALLOW &&
+                  perm.scope == SitePermissions.SCOPE_PERSISTENT
+                ) {
+                  SitePermissions.removeFromPrincipal(principal, id);
+                }
+              }
+            }
+          }
+        }
+
+        let bc = webrtcState.browsingContext;
+        bc.currentWindowGlobal
+          .getActor("WebRTC")
+          .sendAsyncMessage("webrtc:StopSharing", windowId);
+        webrtcUI.forgetActivePermissionsFromBrowser(browser);
+
+        SitePermissions.removeFromPrincipal(
+          browser.contentPrincipal,
+          permission.id,
+          browser
+        );
+      }
+    }
+
+    let window = browserToSelect.ownerGlobal;
+    let gBrowser = browserToSelect.getTabBrowser();
+    let tab = gBrowser.getTabForBrowser(browserToSelect);
+    window.focus();
+    gBrowser.selectedTab = tab;
+  },
+
   updateIndicators(aTopBrowsingContext) {
     let tabState = this.getCombinedStateForBrowser(aTopBrowsingContext);
 
@@ -644,6 +783,17 @@ var webrtcUI = {
         }
       }
     } else if (gIndicatorWindow) {
+      if (
+        !webrtcUI.useLegacyGlobalIndicator &&
+        gIndicatorWindow.closingInternally
+      ) {
+        // Before calling .close(), we call .closingInternally() to allow us to
+        // differentiate between situations where the indicator closes because
+        // we no longer want to show the indicator (this case), and cases where
+        // the user has found a way to close the indicator via OS window control
+        // mechanisms.
+        gIndicatorWindow.closingInternally();
+      }
       gIndicatorWindow.close();
       gIndicatorWindow = null;
     }
