@@ -127,6 +127,32 @@ RegExpShared* DeadObjectProxy::regexp_toShared(JSContext* cx,
   return nullptr;
 }
 
+bool DeadObjectProxy::hasPrivate(JSContext* cx, HandleObject proxy, HandleId id,
+                                 bool* bp) const {
+  ReportDead(cx);
+  return false;
+}
+bool DeadObjectProxy::getPrivate(JSContext* cx, HandleObject proxy,
+                                 HandleValue receiver, HandleId id,
+                                 MutableHandleValue vp) const {
+  ReportDead(cx);
+  return false;
+}
+bool DeadObjectProxy::setPrivate(JSContext* cx, HandleObject proxy, HandleId id,
+                                 HandleValue v, HandleValue receiver,
+                                 ObjectOpResult& result) const {
+  ReportDead(cx);
+  return false;
+}
+
+bool DeadObjectProxy::definePrivateField(JSContext* cx, HandleObject proxy,
+                                         HandleId id,
+                                         Handle<PropertyDescriptor> desc,
+                                         ObjectOpResult& result) const {
+  ReportDead(cx);
+  return false;
+}
+
 bool js::IsDeadProxyObject(JSObject* obj) {
   return IsDerivedProxyObject(obj, &DeadObjectProxy::singleton);
 }
