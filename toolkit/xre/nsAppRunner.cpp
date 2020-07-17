@@ -4726,6 +4726,31 @@ nsresult XREMain::XRE_mainRun() {
   return rv;
 }
 
+#if defined(MOZ_WIDGET_ANDROID)
+static already_AddRefed<nsIFile> GreOmniPath() {
+  nsresult rv;
+
+  const char* path = nullptr;
+  ArgResult ar = CheckArg("greomni", &path);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR,
+               "Error: argument --greomni requires a path argument\n");
+    return nullptr;
+  }
+
+  if (!path) return nullptr;
+
+  nsCOMPtr<nsIFile> greOmni;
+  rv = XRE_GetFileFromPath(path, getter_AddRefs(greOmni));
+  if (NS_FAILED(rv)) {
+    PR_fprintf(PR_STDERR, "Error: argument --greomni requires a valid path\n");
+    return nullptr;
+  }
+
+  return greOmni.forget();
+}
+#endif
+
 /*
  * XRE_main - A class based main entry point used by most platforms.
  *            Note that on OSX, aAppData->xreDirectory will point to
@@ -4787,8 +4812,16 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   if (!mAppData->xreDirectory) {
     nsCOMPtr<nsIFile> greDir;
+
+#if defined(MOZ_WIDGET_ANDROID)
+    greDir = GreOmniPath();
+    if (!greDir) {
+      return 2;
+    }
+#else
     rv = binFile->GetParent(getter_AddRefs(greDir));
     if (NS_FAILED(rv)) return 2;
+#endif
 
 #ifdef XP_MACOSX
     nsCOMPtr<nsIFile> parent;
@@ -4800,10 +4833,18 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     mAppData->xreDirectory = greDir;
   }
 
+#if defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIFile> dataDir;
+  rv = binFile->GetParent(getter_AddRefs(dataDir));
+  if (NS_FAILED(rv)) return 2;
+
+  mAppData->directory = dataDir;
+#else
   if (aConfig.appData && aConfig.appDataPath) {
     mAppData->xreDirectory->Clone(getter_AddRefs(mAppData->directory));
     mAppData->directory->AppendNative(nsDependentCString(aConfig.appDataPath));
   }
+#endif
 
   if (!mAppData->directory) {
     mAppData->directory = mAppData->xreDirectory;
@@ -4959,24 +5000,10 @@ nsresult XRE_InitCommandLine(int aArgc, char* aArgv[]) {
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-  const char* path = nullptr;
-  ArgResult ar = CheckArg("greomni", &path);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --greomni requires a path argument\n");
+  nsCOMPtr<nsIFile> greOmni = gAppData ? gAppData->xreDirectory : GreOmniPath();
+  if (!greOmni) {
     return NS_ERROR_FAILURE;
   }
-
-  if (!path) return rv;
-
-  nsCOMPtr<nsIFile> greOmni;
-  rv = XRE_GetFileFromPath(path, getter_AddRefs(greOmni));
-  if (NS_FAILED(rv)) {
-    PR_fprintf(PR_STDERR, "Error: argument --greomni requires a valid path\n");
-    return rv;
-  }
-
-
   mozilla::Omnijar::Init(greOmni, greOmni);
 #endif
 
