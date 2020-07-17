@@ -16,6 +16,7 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 
+#include "builtin/DataViewObject.h"
 #include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
@@ -1834,6 +1835,9 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   switch (kind) {
     case GuardClassKind::Array:
       clasp = &ArrayObject::class_;
+      break;
+    case GuardClassKind::DataView:
+      clasp = &DataViewObject::class_;
       break;
     case GuardClassKind::MappedArguments:
       clasp = &MappedArgumentsObject::class_;

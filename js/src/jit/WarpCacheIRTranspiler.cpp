@@ -8,6 +8,7 @@
 
 #include "jsmath.h"
 
+#include "builtin/DataViewObject.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIROpsGenerated.h"
@@ -207,6 +208,9 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
   switch (kind) {
     case GuardClassKind::Array:
       classp = &ArrayObject::class_;
+      break;
+    case GuardClassKind::DataView:
+      classp = &DataViewObject::class_;
       break;
     default:
       MOZ_CRASH("not yet supported");
