@@ -645,6 +645,10 @@
       }
     },
 
+    "MasterPassword": {
+      "type": "boolean"
+    },
+
     "NetworkPrediction": {
       "type": "boolean"
     },
@@ -850,10 +854,6 @@
           "type": "boolean"
         }
       }
-    },
-
-    "PrimaryPassword": {
-      "type": "boolean"
     },
 
     "PopupBlocking": {

@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
 add_task(async function test_policy_masterpassword_doorhanger() {
   await setupPolicyEngineWithJson({
     policies: {
-      PrimaryPassword: true,
+      MasterPassword: true,
     },
   });
 
