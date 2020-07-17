@@ -294,6 +294,10 @@ if toolkit == 'gtk':
     XPIDL_SOURCES += [
         'nsIApplicationChooser.idl',
     ]
+if toolkit in ('gtk', 'cocoa'):
+    UNIFIED_SOURCES += [
+        'nsCUPSShim.cpp'
+    ]
 
 DEFINES['MOZ_CROSS_PROCESS_IME'] = True
 
