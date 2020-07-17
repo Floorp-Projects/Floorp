@@ -244,10 +244,11 @@ HttpChannelChild::~HttpChannelChild() {
         (mEverHadBgChildAtConnectParent ? 1 << 18 : 0) |
         (mCreateBackgroundChannelFailed ? 1 << 19 : 0) |
         (mBgInitFailCallbackTriggered ? 1 << 20 : 0) |
-        (mCanSendAtCancel ? 1 << 21 : 0);
+        (mCanSendAtCancel ? 1 << 21 : 0) | (!!mSuspendCount ? 1 << 22 : 0) |
+        (!!mCallOnResume ? 1 << 23 : 0);
     MOZ_CRASH_UNSAFE_PRINTF(
         "~HttpChannelChild, mOnStopRequestCalled=false, mStatus=0x%08x, "
-        "mActorDestroyReason=%d, 20200709 flags=%u",
+        "mActorDestroyReason=%d, 20200717 flags=%u",
         static_cast<uint32_t>(nsresult(mStatus)),
         static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1),
         flags);
