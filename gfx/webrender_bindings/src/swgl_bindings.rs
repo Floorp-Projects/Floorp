@@ -488,9 +488,9 @@ impl SwCompositor {
             }
             if let Some(surface) = self.surfaces.get(id) {
                 for tile in &surface.tiles {
-                    // If there is an invalid tile that might overlap the destination rectangle,
+                    // If there is a deferred tile that might overlap the destination rectangle,
                     // record the overlap.
-                    if tile.invalid.get() &&
+                    if tile.overlaps.get() > 0 &&
                        tile.may_overlap(surface, position, clip_rect, overlap_rect) {
                         overlaps += 1;
                     }
@@ -563,11 +563,13 @@ impl SwCompositor {
                 if tile.invalid.get() {
                     tile.overlaps.set(tile.overlaps.get() - 1);
                 }
-                // If it doesn't have any other remaining dependencies, composite it.
-                if tile.overlaps.get() == 0 {
-                    self.queue_composite(surface, position, clip_rect, tile);
+                // If the tile still has overlaps, keep deferring it till later.
+                if tile.overlaps.get() > 0 {
+                    return;
                 }
-                // Get the tile's overlap rect used for tracking dependencies
+                // Otherwise, the tile's dependencies are all resolved, so composite it.
+                self.queue_composite(surface, position, clip_rect, tile);
+                // Finally, get the tile's overlap rect used for tracking dependencies
                 match tile.overlap_rect(surface, position, clip_rect) {
                     Some(overlap_rect) => overlap_rect,
                     None => return,
@@ -576,23 +578,49 @@ impl SwCompositor {
             None => return,
         };
 
+        // Accumulate rects whose dependencies have been satisfied from this update.
+        // Store the union of all these bounds to quickly reject unaffected tiles.
+        let mut flushed_bounds = overlap_rect;
+        let mut flushed_rects = vec![overlap_rect];
+
         // Check surfaces following the update in the frame list and see if they would overlap it.
         for &(ref id, ref position, ref clip_rect) in frame_surfaces {
-            // If the clip rect doesn't overlap the update rect, we can skip the whole surface.
-            if !overlap_rect.intersects(clip_rect) {
+            // If the clip rect doesn't overlap the conservative bounds, we can skip the whole surface.
+            if !flushed_bounds.intersects(clip_rect) {
                 continue;
             }
             if let Some(surface) = self.surfaces.get(&id) {
-                // Search through the surface's tiles for any block on this update and queue jobs for them.
+                // Search through the surface's tiles for any blocked on this update and queue jobs for them.
                 for tile in &surface.tiles {
-                    let overlaps = tile.overlaps.get();
-                    if overlaps > 0 &&
-                       tile.may_overlap(surface, position, clip_rect, &overlap_rect) {
-                        // This tile overlaps the update rect, so decrement its overlap count to remove
-                        // the dependency. If the count would hit zero, it is ready to composite.
-                        tile.overlaps.set(overlaps - 1);
-                        if overlaps == 1 {
+                    let mut overlaps = tile.overlaps.get();
+                    // Only check tiles that have existing unresolved dependencies
+                    if overlaps == 0 {
+                        continue;
+                    }
+                    // Get this tile's overlap rect for tracking dependencies
+                    let overlap_rect = match tile.overlap_rect(surface, position, clip_rect) {
+                        Some(overlap_rect) => overlap_rect,
+                        None => continue,
+                    };
+                    // Do a quick check to see if the tile overlaps the conservative bounds.
+                    if !overlap_rect.intersects(&flushed_bounds) {
+                        continue;
+                    }
+                    // Decrement the overlap count if this tile is dependent on any flushed rects.
+                    for flushed_rect in &flushed_rects {
+                        if overlap_rect.intersects(flushed_rect) {
+                            overlaps -= 1;
+                        }
+                    }
+                    if overlaps != tile.overlaps.get() {
+                        // If the overlap count changed, this tile had a dependency on some flush rects.
+                        // If the count hit zero, it is ready to composite.
+                        tile.overlaps.set(overlaps);
+                        if overlaps == 0 {
                             self.queue_composite(surface, position, clip_rect, tile);
+                            // Record that the tile got flushed to update any downwind dependencies.
+                            flushed_bounds = flushed_bounds.union(&overlap_rect);
+                            flushed_rects.push(overlap_rect);
                         }
                     }
                 }
