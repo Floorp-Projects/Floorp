@@ -684,8 +684,9 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, kPrefNetworkProxySOCKS)) {
-    nsAutoCString socks;
-    if (NS_SUCCEEDED(Preferences::GetCString(kPrefNetworkProxySOCKS, socks))) {
+    if (NS_SUCCEEDED(Preferences::GetUint(kPrefNetworkProxySOCKS, &tmpint))) {
+      nsAutoCString socks;
+      Preferences::GetCString(kPrefNetworkProxySOCKS, socks);
       mHasSocksProxy = !socks.IsEmpty();
     }
   }
