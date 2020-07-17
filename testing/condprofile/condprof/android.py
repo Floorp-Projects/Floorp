@@ -12,7 +12,7 @@ import logging
 
 import attr
 from arsenic.services import Geckodriver, free_port, subprocess_based_service
-from mozdevice import ADBDevice, ADBError
+from mozdevice import ADBDeviceFactory, ADBError
 
 from condprof.util import write_yml_file, logger, DEFAULT_PREFS, BaseEnv
 
@@ -77,10 +77,10 @@ class AndroidDevice:
         self._set_adb_logger(logfile)
         try:
             # See android_emulator_pgo.py run_tests for more
-            # details on why test_root must be /sdcard/tests
+            # details on why test_root must be /sdcard/test_root
             # for android pgo due to Android 4.3.
-            self.device = ADBDevice(
-                verbose=self.verbose, logger_name="adb", test_root="/sdcard/tests"
+            self.device = ADBDeviceFactory(
+                verbose=self.verbose, logger_name="adb", test_root="/sdcard/test_root"
             )
         except Exception:
             logger.error("Cannot initialize device")
@@ -106,12 +106,11 @@ class AndroidDevice:
         logger.info("The profile on the phone will be at %s" % remote_profile)
         device.rm(remote_test_root, force=True, recursive=True)
         device.mkdir(remote_test_root)
-        device.chmod(remote_test_root, recursive=True, root=True)
 
         device.rm(remote_profile, force=True, recursive=True)
         logger.info("Pushing %s on the phone" % self.profile)
         device.push(profile, remote_profile)
-        device.chmod(remote_profile, recursive=True, root=True)
+        device.chmod(remote_profile, recursive=True)
         self.profile = profile
         self.remote_profile = remote_profile
 
@@ -132,7 +131,7 @@ class AndroidDevice:
         try:
             device.rm(yml_on_device, force=True, recursive=True)
             device.push(yml_on_host, yml_on_device)
-            device.chmod(yml_on_device, recursive=True, root=True)
+            device.chmod(yml_on_device, recursive=True)
         except Exception:
             logger.info("could not create the yaml file on device. Permission issue?")
             raise
@@ -184,7 +183,7 @@ class AndroidDevice:
     def stop_browser(self):
         logger.info("Stopping %s" % self.app_name)
         try:
-            self.device.stop_application(self.app_name, root=True)
+            self.device.stop_application(self.app_name)
         except ADBError:
             logger.info("Could not stop the application using force-stop")
 
@@ -194,7 +193,7 @@ class AndroidDevice:
             num_tries = 0
             while self.device.process_exist(self.app_name) and num_tries < 5:
                 try:
-                    self.device.pkill(self.app_name, root=True)
+                    self.device.pkill(self.app_name)
                 except ADBError:
                     pass
                 num_tries += 1
