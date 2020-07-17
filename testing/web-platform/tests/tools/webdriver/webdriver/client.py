@@ -557,6 +557,13 @@ class Session(object):
     def source(self):
         return self.send_session_command("GET", "source")
 
+    @command
+    def new_window(self, type_hint=None):
+        body = {"type": type_hint}
+        value = self.send_session_command("POST", "window/new", body)
+
+        return value["handle"]
+
     @property
     @command
     def window_handle(self):
