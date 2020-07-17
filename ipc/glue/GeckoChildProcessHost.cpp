@@ -1202,11 +1202,6 @@ bool PosixProcessLauncher::DoSetup() {
         mChildArgv.push_back("-greomni");
         mChildArgv.push_back(path.get());
       }
-      file = Omnijar::GetPath(Omnijar::APP);
-      if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-        mChildArgv.push_back("-appomni");
-        mChildArgv.push_back(path.get());
-      }
     }
 #  endif
     // Add the application directory path (-appdir path)

@@ -1185,17 +1185,8 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     if (argc > 1 && !strcmp(argv[1], "--greomni")) {
       nsCOMPtr<nsIFile> greOmni;
-      nsCOMPtr<nsIFile> appOmni;
       XRE_GetFileFromPath(argv[2], getter_AddRefs(greOmni));
-      if (argc > 3 && !strcmp(argv[3], "--appomni")) {
-        XRE_GetFileFromPath(argv[4], getter_AddRefs(appOmni));
-        argc -= 2;
-        argv += 2;
-      } else {
-        appOmni = greOmni;
-      }
-
-      XRE_InitOmnijar(greOmni, appOmni);
+      XRE_InitOmnijar(greOmni, greOmni);
       argc -= 2;
       argv += 2;
     }
