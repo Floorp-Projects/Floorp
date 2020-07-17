@@ -194,7 +194,10 @@ class Vector;
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
     MACRO(17, "ipcmessages", IPCMessages,                                      \
-          "Have the IPC layer track cross-process messages")
+          "Have the IPC layer track cross-process messages")                   \
+                                                                               \
+    MACRO(18, "audiocallbacktracing", AudioCallbackTracing,                    \
+          "Audio callback tracing")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \

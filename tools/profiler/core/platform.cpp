@@ -4543,7 +4543,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   }
 #endif
 
-  StartAudioCallbackTracing();
+  if (ProfilerFeature::HasAudioCallbackTracing(aFeatures)) {
+    StartAudioCallbackTracing();
+  }
 
   // At the very end, set up RacyFeatures.
   RacyFeatures::SetActive(ActivePS::Features(aLock));
@@ -4652,7 +4654,9 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   // At the very start, clear RacyFeatures.
   RacyFeatures::SetInactive();
 
-  StopAudioCallbackTracing();
+  if (ActivePS::FeatureAudioCallbackTracing(aLock)) {
+    StopAudioCallbackTracing();
+  }
 
 #if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
