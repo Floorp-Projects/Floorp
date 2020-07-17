@@ -14,4 +14,9 @@ else:
         'data',
         'i18n',
     ]
+    if CONFIG['TARGET_ENDIANNESS'] == 'big':
+        DIRS += [
+            'toolutil',
+            'icupkg',
+        ]
     USE_LIBS += ['icudata']
