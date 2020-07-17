@@ -610,6 +610,8 @@ void nsDocShellLoadState::SetTypeHint(const nsCString& aTypeHint) {
 const nsString& nsDocShellLoadState::FileName() const { return mFileName; }
 
 void nsDocShellLoadState::SetFileName(const nsAString& aFileName) {
+  MOZ_DIAGNOSTIC_ASSERT(aFileName.FindChar(char16_t(0)) == kNotFound,
+                        "The filename should never contain null characters");
   mFileName = aFileName;
 }
 
