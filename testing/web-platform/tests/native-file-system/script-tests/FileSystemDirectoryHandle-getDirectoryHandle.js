@@ -8,8 +8,7 @@ directory_test(async (t, root) => {
       await root.getDirectoryHandle('non-existing-dir', {create: true});
   t.add_cleanup(() => root.removeEntry('non-existing-dir', {recursive: true}));
 
-  assert_false(handle.isFile);
-  assert_true(handle.isDirectory);
+  assert_equals(handle.kind, 'directory');
   assert_equals(handle.name, 'non-existing-dir');
   assert_equals(await getDirectoryEntryCount(handle), 0);
   assert_array_equals(
@@ -25,8 +24,7 @@ directory_test(async (t, root) => {
   const handle =
       await root.getDirectoryHandle('dir-with-contents', {create: false});
 
-  assert_false(handle.isFile);
-  assert_true(handle.isDirectory);
+  assert_equals(handle.kind, 'directory');
   assert_equals(handle.name, 'dir-with-contents');
   assert_array_equals(await getSortedDirectoryEntries(handle), ['test-file']);
 }, 'getDirectoryHandle(create=false) returns existing directories');
@@ -41,8 +39,7 @@ directory_test(async (t, root) => {
   const handle =
       await root.getDirectoryHandle('dir-with-contents', {create: true});
 
-  assert_false(handle.isFile);
-  assert_true(handle.isDirectory);
+  assert_equals(handle.kind, 'directory');
   assert_equals(handle.name, 'dir-with-contents');
   assert_array_equals(await getSortedDirectoryEntries(handle), ['test-file']);
 }, 'getDirectoryHandle(create=true) returns existing directories without erasing');

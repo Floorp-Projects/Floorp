@@ -7,8 +7,7 @@ directory_test(async (t, dir) => {
   const handle = await dir.getFileHandle('non-existing-file', {create: true});
   t.add_cleanup(() => dir.removeEntry('non-existing-file'));
 
-  assert_true(handle.isFile);
-  assert_false(handle.isDirectory);
+  assert_equals(handle.kind, 'file');
   assert_equals(handle.name, 'non-existing-file');
   assert_equals(await getFileSize(handle), 0);
   assert_equals(await getFileContents(handle), '');
@@ -19,8 +18,7 @@ directory_test(async (t, dir) => {
       t, 'existing-file', '1234567890', /*parent=*/ dir);
   const handle = await dir.getFileHandle('existing-file');
 
-  assert_true(handle.isFile);
-  assert_false(handle.isDirectory);
+  assert_equals(handle.kind, 'file');
   assert_equals(handle.name, 'existing-file');
   assert_equals(await getFileSize(handle), 10);
   assert_equals(await getFileContents(handle), '1234567890');
@@ -31,8 +29,7 @@ directory_test(async (t, dir) => {
       t, 'file-with-contents', '1234567890', /*parent=*/ dir);
   const handle = await dir.getFileHandle('file-with-contents', {create: true});
 
-  assert_true(handle.isFile);
-  assert_false(handle.isDirectory);
+  assert_equals(handle.kind, 'file');
   assert_equals(handle.name, 'file-with-contents');
   assert_equals(await getFileSize(handle), 10);
   assert_equals(await getFileContents(handle), '1234567890');
