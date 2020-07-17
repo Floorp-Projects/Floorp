@@ -1591,11 +1591,11 @@ void GCRuntime::setHostCleanupFinalizationRegistryCallback(
 }
 
 void GCRuntime::callHostCleanupFinalizationRegistryCallback(
-    FinalizationRegistryObject* registry) {
+    JSFunction* doCleanup, GlobalObject* incumbentGlobal) {
   JS::AutoSuppressGCAnalysis nogc;
   const auto& callback = hostCleanupFinalizationRegistryCallback.ref();
   if (callback.op) {
-    callback.op(registry, callback.data);
+    callback.op(doCleanup, incumbentGlobal, callback.data);
   }
 }
 

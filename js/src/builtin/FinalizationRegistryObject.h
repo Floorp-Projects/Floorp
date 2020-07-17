@@ -175,11 +175,17 @@ using FinalizationRecordSet =
 class FinalizationRegistryObject : public NativeObject {
   enum {
     CleanupCallbackSlot = 0,
+    IncumbentGlobalSlot,
     RegistrationsSlot,
     ActiveRecords,
     RecordsToBeCleanedUpSlot,
     IsQueuedForCleanupSlot,
+    DoCleanupFunctionSlot,
     SlotCount
+  };
+
+  enum DoCleanupFunctionSlots {
+    DoCleanupFunction_RegistrySlot = 0,
   };
 
  public:
@@ -187,10 +193,12 @@ class FinalizationRegistryObject : public NativeObject {
   static const JSClass protoClass_;
 
   JSObject* cleanupCallback() const;
+  GlobalObject* incumbentGlobal() const;
   ObjectWeakMap* registrations() const;
   FinalizationRecordSet* activeRecords() const;
   FinalizationRecordVector* recordsToBeCleanedUp() const;
   bool isQueuedForCleanup() const;
+  JSFunction* doCleanupFunction() const;
 
   void queueRecordToBeCleanedUp(FinalizationRecordObject* record);
   void setQueuedForCleanup(bool value);
@@ -223,6 +231,8 @@ class FinalizationRegistryObject : public NativeObject {
       HandleFinalizationRecordObject record);
 
   static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
+
+  static bool doCleanup(JSContext* cx, unsigned argc, Value* vp);
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
