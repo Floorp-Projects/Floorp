@@ -13,7 +13,7 @@ if [ -f /etc/lsb-release ]; then
     # shellcheck disable=SC1091
     . /etc/lsb-release
 
-    if [ "${DISTRIB_ID}" = "Ubuntu" ] && [[ "${DISTRIB_RELEASE}" = "16.04" || "${DISTRIB_RELEASE}" = "17.10" || "${DISTRIB_RELEASE}" = "18.04" ]]
+    if [ "${DISTRIB_ID}" = "Ubuntu" ] && [[ "${DISTRIB_RELEASE}" = "16.04" || "${DISTRIB_RELEASE}" = "17.10" || "${DISTRIB_RELEASE}" = "18.04" || "${DISTRIB_RELEASE}" = "20.04" ]]
     then
         HG_DEB=1
         HG_DIGEST=54a215232a340139707a968b58943c2903a8297f0da32f96622d1acab47de6013a5b96d2ca4ba241b1fee142b4098a6cdd236b308a1657c31f42807d7385d327
