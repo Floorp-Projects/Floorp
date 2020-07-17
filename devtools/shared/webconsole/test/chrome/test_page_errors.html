@@ -31,7 +31,6 @@ function doPageErrors() {
   expectedPageErrors = {
     "document.body.style.color = 'fooColor';": {
       errorMessage: /fooColor/,
-      errorMessageName: undefined,
       sourceName: /test_page_errors/,
       category: "CSS Parser",
       timeStamp: /^\d+$/,

@@ -24,7 +24,19 @@ httpServer.registerPathHandler(`/test_css_messages.html`, (req, res) => {
 
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/test_css_messages.html`;
 
-add_task(async function testWatchingCssMessages() {
+add_task(async function() {
+  info("Test css messages legacy listener");
+  await pushPref("devtools.testing.enableServerWatcherSupport", false);
+  await testWatchingCssMessages();
+  await testWatchingCachedCssMessages();
+
+  info("Test css messages server listener");
+  await pushPref("devtools.testing.enableServerWatcherSupport", true);
+  await testWatchingCssMessages();
+  await testWatchingCachedCssMessages();
+});
+
+async function testWatchingCssMessages() {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
@@ -66,9 +78,9 @@ add_task(async function testWatchingCssMessages() {
   Services.console.reset();
   targetList.stopListening();
   await client.close();
-});
+}
 
-add_task(async function testWatchingCachedCssMessages() {
+async function testWatchingCachedCssMessages() {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
@@ -115,7 +127,7 @@ add_task(async function testWatchingCachedCssMessages() {
   Services.console.reset();
   targetList.stopListening();
   await client.close();
-});
+}
 
 function setupOnAvailableFunction(targetList, receivedMessages) {
   // The expected messages are the CSS warnings:
