@@ -5,13 +5,13 @@
 package org.mozilla.fenix.home
 
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
@@ -23,12 +23,11 @@ import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
@@ -42,77 +41,138 @@ class DefaultSessionControlControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val fragmentStore: HomeFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val getListOfTabs: () -> List<Tab> = { emptyList() }
+    private val metrics: MetricController = mockk(relaxed = true)
+    private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val engine: Engine = mockk(relaxed = true)
+    private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
+    private val topSiteStorage: TopSiteStorage = mockk(relaxed = true)
+    private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
+
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
-    private val openSettingsScreen: () -> Unit = mockk(relaxed = true)
-    private val openWhatsNewLink: () -> Unit = mockk(relaxed = true)
-    private val openPrivacyNotice: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val showTabTray: () -> Unit = mockk(relaxed = true)
     private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit =
         mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
-    private val state: HomeFragmentState = mockk(relaxed = true)
-    private val sessionManager: SessionManager = mockk(relaxed = true)
-    private val engine: Engine = mockk(relaxed = true)
-    private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
-    private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
 
     private lateinit var controller: DefaultSessionControlController
 
     @Before
     fun setup() {
-        mockkStatic("org.mozilla.fenix.ext.ContextKt")
-        every { activity.components.core.engine } returns engine
-        every { activity.components.core.sessionManager } returns sessionManager
-        every { activity.components.core.tabCollectionStorage } returns tabCollectionStorage
-        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
-
-        every { fragmentStore.state } returns state
-        every { state.collections } returns emptyList()
-        every { state.expandedCollections } returns emptySet()
-        every { state.mode } returns Mode.Normal
-        every { activity.components.analytics.metrics } returns metrics
+        every { fragmentStore.state } returns HomeFragmentState(
+            collections = emptyList(),
+            expandedCollections = emptySet(),
+            mode = Mode.Normal,
+            topSites = emptyList()
+        )
+        every { sessionManager.sessions } returns emptyList()
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.homeFragment
+        }
 
         controller = DefaultSessionControlController(
             activity = activity,
+            engine = engine,
+            metrics = metrics,
+            sessionManager = sessionManager,
+            tabCollectionStorage = tabCollectionStorage,
+            topSiteStorage = topSiteStorage,
+            addTabUseCase = tabsUseCases.addTab,
             fragmentStore = fragmentStore,
             navController = navController,
-            viewLifecycleScope = MainScope(),
-            getListOfTabs = getListOfTabs,
+            viewLifecycleScope = TestCoroutineScope(),
             hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             showDeleteCollectionPrompt = showDeleteCollectionPrompt,
-            openSettingsScreen = openSettingsScreen,
-            openWhatsNewLink = openWhatsNewLink,
-            openPrivacyNotice = openPrivacyNotice,
             showTabTray = showTabTray
         )
     }
 
     @Test
     fun handleCollectionAddTabTapped() {
-        val collection: TabCollection = mockk(relaxed = true)
+        val collection = mockk<TabCollection> {
+            every { id } returns 12L
+        }
         controller.handleCollectionAddTabTapped(collection)
+
         verify { metrics.track(Event.CollectionAddTabPressed) }
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_collectionCreationFragment },
+                null
+            )
+        }
     }
 
     @Test
-    fun handleCollectionOpenTabClicked() {
-        val tab: ComponentTab = mockk(relaxed = true)
+    fun `handleCollectionOpenTabClicked onFailure`() {
+        val tab = mockk<ComponentTab> {
+            every { url } returns "https://mozilla.org"
+            every { restore(activity, engine, restoreSessionId = false) } returns null
+        }
         controller.handleCollectionOpenTabClicked(tab)
+
         verify { metrics.track(Event.CollectionTabRestored) }
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = "https://mozilla.org",
+                newTab = true,
+                from = BrowserDirection.FromHome
+            )
+        }
+    }
+
+    @Test
+    fun `handleCollectionOpenTabClicked onTabRestored`() {
+        val tab = mockk<ComponentTab> {
+            every { restore(activity, engine, restoreSessionId = false) } returns mockk {
+                every { session } returns mockk()
+                every { engineSessionState } returns mockk()
+            }
+        }
+        controller.handleCollectionOpenTabClicked(tab)
+
+        verify { metrics.track(Event.CollectionTabRestored) }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
     }
 
     @Test
     fun handleCollectionOpenTabsTapped() {
-        val collection: TabCollection = mockk(relaxed = true)
+        val collection = mockk<TabCollection> {
+            every { tabs } returns emptyList()
+        }
         controller.handleCollectionOpenTabsTapped(collection)
+
         verify { metrics.track(Event.CollectionAllTabsRestored) }
     }
 
     @Test
-    fun handleCollectionRemoveTab() {
+    fun `handleCollectionRemoveTab one tab`() {
+        val collection = mockk<TabCollection> {
+            every { tabs } returns listOf(mockk())
+            every { title } returns "Collection"
+        }
+        val tab = mockk<ComponentTab>()
+        every {
+            activity.resources.getString(R.string.delete_tab_and_collection_dialog_title, "Collection")
+        } returns "Delete Collection?"
+        every {
+            activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
+        } returns "Deleting this tab will delete everything."
+
+        controller.handleCollectionRemoveTab(collection, tab)
+
+        verify { metrics.track(Event.CollectionTabRemoved) }
+        verify {
+            showDeleteCollectionPrompt(
+                collection,
+                "Delete Collection?",
+                "Deleting this tab will delete everything."
+            )
+        }
+    }
+
+    @Test
+    fun `handleCollectionRemoveTab multiple tabs`() {
         val collection: TabCollection = mockk(relaxed = true)
         val tab: ComponentTab = mockk(relaxed = true)
         controller.handleCollectionRemoveTab(collection, tab)
@@ -121,9 +181,18 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleCollectionShareTabsClicked() {
-        val collection: TabCollection = mockk(relaxed = true)
+        val collection = mockk<TabCollection> {
+            every { tabs } returns emptyList()
+        }
         controller.handleCollectionShareTabsClicked(collection)
+
         verify { metrics.track(Event.CollectionShared) }
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_shareFragment },
+                null
+            )
+        }
     }
 
     @Test
@@ -160,9 +229,18 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleRenameCollectionTapped() {
-        val collection: TabCollection = mockk(relaxed = true)
+        val collection = mockk<TabCollection> {
+            every { id } returns 3L
+        }
         controller.handleRenameCollectionTapped(collection)
+
         verify { metrics.track(Event.CollectionRenamePressed) }
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_collectionCreationFragment },
+                null
+            )
+        }
     }
 
     @Test
@@ -203,20 +281,61 @@ class DefaultSessionControlControllerTest {
     @Test
     fun handleOpenSettingsClicked() {
         controller.handleOpenSettingsClicked()
-        verify { openSettingsScreen() }
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_privateBrowsingFragment },
+                null
+            )
+        }
+    }
+
+    @Test
+    fun handleWhatsNewGetAnswersClicked() {
+        controller.handleWhatsNewGetAnswersClicked()
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = SupportUtils.getWhatsNewUrl(activity),
+                newTab = true,
+                from = BrowserDirection.FromHome
+            )
+        }
+    }
+
+    @Test
+    fun handleReadPrivacyNoticeClicked() {
+        controller.handleReadPrivacyNoticeClicked()
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+                newTab = true,
+                from = BrowserDirection.FromHome
+            )
+        }
     }
 
     @Test
     fun handleToggleCollectionExpanded() {
-        val collection: TabCollection = mockk(relaxed = true)
+        val collection = mockk<TabCollection>()
         controller.handleToggleCollectionExpanded(collection, true)
         verify { fragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, true)) }
     }
 
     @Test
+    fun handleCloseTip() {
+        val tip = mockk<Tip>()
+        controller.handleCloseTip(tip)
+        verify { fragmentStore.dispatch(HomeFragmentAction.RemoveTip(tip)) }
+    }
+
+    @Test
     fun handleCreateCollection() {
         controller.handleCreateCollection()
-        val directions = HomeFragmentDirections.actionGlobalCollectionCreationFragment(saveCollectionStep = SaveCollectionStep.SelectTabs)
-        verify { navController.nav(R.id.homeFragment, directions) }
+
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_collectionCreationFragment },
+                null
+            )
+        }
     }
 }

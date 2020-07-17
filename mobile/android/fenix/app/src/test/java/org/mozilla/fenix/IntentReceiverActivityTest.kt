@@ -12,9 +12,11 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.intent.processing.IntentProcessor
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,6 +41,7 @@ class IntentReceiverActivityTest {
 
     @Before
     fun setup() {
+        mockkStatic("org.mozilla.fenix.ext.ContextKt")
         settings = mockk()
         intentProcessors = mockk()
 
@@ -52,6 +55,11 @@ class IntentReceiverActivityTest {
         every { intentProcessors.migrationIntentProcessor } returns mockIntentProcessor()
 
         coEvery { intentProcessors.intentProcessor.process(any()) } returns true
+    }
+
+    @After
+    fun teardown() {
+        unmockkStatic("org.mozilla.fenix.ext.ContextKt")
     }
 
     @Test
@@ -185,7 +193,6 @@ class IntentReceiverActivityTest {
     }
 
     private fun attachMocks(activity: Activity) {
-        mockkStatic("org.mozilla.fenix.ext.ContextKt")
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns mockk(relaxed = true)
         every { activity.components.intentProcessors } returns intentProcessors

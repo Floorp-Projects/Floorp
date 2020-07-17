@@ -9,9 +9,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.ext.restore
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -23,13 +25,12 @@ import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
-import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -130,26 +131,20 @@ interface SessionControlController {
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class DefaultSessionControlController(
     private val activity: HomeActivity,
+    private val engine: Engine,
+    private val metrics: MetricController,
+    private val sessionManager: SessionManager,
+    private val tabCollectionStorage: TabCollectionStorage,
+    private val topSiteStorage: TopSiteStorage,
+    private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val fragmentStore: HomeFragmentStore,
     private val navController: NavController,
     private val viewLifecycleScope: CoroutineScope,
-    private val getListOfTabs: () -> List<Tab>,
     private val hideOnboarding: () -> Unit,
     private val registerCollectionStorageObserver: () -> Unit,
     private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit,
-    private val openSettingsScreen: () -> Unit,
-    private val openWhatsNewLink: () -> Unit,
-    private val openPrivacyNotice: () -> Unit,
     private val showTabTray: () -> Unit
 ) : SessionControlController {
-    private val metrics: MetricController
-        get() = activity.components.analytics.metrics
-    private val sessionManager: SessionManager
-        get() = activity.components.core.sessionManager
-    private val tabCollectionStorage: TabCollectionStorage
-        get() = activity.components.core.tabCollectionStorage
-    private val topSiteStorage: TopSiteStorage
-        get() = activity.components.core.topSiteStorage
 
     override fun handleCollectionAddTabTapped(collection: TabCollection) {
         metrics.track(Event.CollectionAddTabPressed)
@@ -162,7 +157,7 @@ class DefaultSessionControlController(
     override fun handleCollectionOpenTabClicked(tab: ComponentTab) {
         sessionManager.restore(
             activity,
-            activity.components.core.engine,
+            engine,
             tab,
             onTabRestored = {
                 activity.openToBrowser(BrowserDirection.FromHome)
@@ -182,10 +177,10 @@ class DefaultSessionControlController(
     override fun handleCollectionOpenTabsTapped(collection: TabCollection) {
         sessionManager.restore(
             activity,
-            activity.components.core.engine,
+            engine,
             collection,
             onFailure = { url ->
-                activity.components.useCases.tabsUseCases.addTab.invoke(url)
+                addTabUseCase.invoke(url)
             }
         )
 
@@ -261,7 +256,7 @@ class DefaultSessionControlController(
         metrics.track(Event.TopSiteOpenInNewTab)
         if (isDefault) { metrics.track(Event.TopSiteOpenDefault) }
         if (url == SupportUtils.POCKET_TRENDING_URL) { metrics.track(Event.PocketTopSiteClicked) }
-        activity.components.useCases.tabsUseCases.addTab.invoke(
+        addTabUseCase.invoke(
             url = url,
             selectTab = true,
             startLoading = true
@@ -274,15 +269,24 @@ class DefaultSessionControlController(
     }
 
     override fun handleOpenSettingsClicked() {
-        openSettingsScreen()
+        val directions = HomeFragmentDirections.actionGlobalPrivateBrowsingFragment()
+        navController.nav(R.id.homeFragment, directions)
     }
 
     override fun handleWhatsNewGetAnswersClicked() {
-        openWhatsNewLink()
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = SupportUtils.getWhatsNewUrl(activity),
+            newTab = true,
+            from = BrowserDirection.FromHome
+        )
     }
 
     override fun handleReadPrivacyNoticeClicked() {
-        openPrivacyNotice()
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+            newTab = true,
+            from = BrowserDirection.FromHome
+        )
     }
 
     override fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {
@@ -303,7 +307,11 @@ class DefaultSessionControlController(
         // Only register the observer right before moving to collection creation
         registerCollectionStorageObserver()
 
-        val tabIds = getListOfTabs().map { it.sessionId }.toTypedArray()
+        val tabIds = sessionManager
+            .sessionsOfType(private = activity.browsingModeManager.mode.isPrivate)
+            .map { session -> session.id }
+            .toList()
+            .toTypedArray()
         val directions = HomeFragmentDirections.actionGlobalCollectionCreationFragment(
             tabIds = tabIds,
             saveCollectionStep = step,

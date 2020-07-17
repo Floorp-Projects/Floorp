@@ -98,7 +98,6 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.SupportUtils.MozillaPage.PRIVATE_NOTICE
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
@@ -175,6 +174,7 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val activity = activity as HomeActivity
+        val components = requireComponents
 
         currentMode = CurrentMode(
             view.context,
@@ -186,11 +186,11 @@ class HomeFragment : Fragment() {
         homeFragmentStore = StoreProvider.get(this) {
             HomeFragmentStore(
                 HomeFragmentState(
-                    collections = requireComponents.core.tabCollectionStorage.cachedTabCollections,
+                    collections = components.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
                     topSites = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
-                        requireComponents.core.topSiteStorage.cachedTopSites
+                        components.core.topSiteStorage.cachedTopSites
                     },
                     tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
                 )
@@ -200,16 +200,18 @@ class HomeFragment : Fragment() {
         _sessionControlInteractor = SessionControlInteractor(
             DefaultSessionControlController(
                 activity = activity,
+                engine = components.core.engine,
+                metrics = components.analytics.metrics,
+                sessionManager = sessionManager,
+                tabCollectionStorage = components.core.tabCollectionStorage,
+                topSiteStorage = components.core.topSiteStorage,
+                addTabUseCase = components.useCases.tabsUseCases.addTab,
                 fragmentStore = homeFragmentStore,
                 navController = findNavController(),
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
-                getListOfTabs = ::getListOfTabs,
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
-                openSettingsScreen = ::openSettingsScreen,
-                openWhatsNewLink = { openInNormalTab(SupportUtils.getWhatsNewUrl(activity)) },
-                openPrivacyNotice = { openInNormalTab(SupportUtils.getMozillaPageUrl(PRIVATE_NOTICE)) },
                 showTabTray = ::openTabTray
             )
         )
@@ -611,11 +613,6 @@ class HomeFragment : Fragment() {
         nav(R.id.homeFragment, directions, getToolbarNavOptions(requireContext()))
     }
 
-    private fun openSettingsScreen() {
-        val directions = HomeFragmentDirections.actionGlobalPrivateBrowsingFragment()
-        nav(R.id.homeFragment, directions)
-    }
-
     private fun openInNormalTab(url: String) {
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = url,
@@ -767,13 +764,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getListOfSessions(private: Boolean = browsingModeManager.mode.isPrivate): List<Session> {
-        return sessionManager.sessionsOfType(private = private)
-            .toList()
-    }
-
-    private fun getListOfTabs(): List<Tab> {
-        return getListOfSessions().toTabs()
+    private fun getNumberOfSessions(private: Boolean = browsingModeManager.mode.isPrivate): Int {
+        return sessionManager.sessionsOfType(private = private).count()
     }
 
     private fun registerCollectionStorageObserver() {
@@ -787,7 +779,7 @@ class HomeFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val recyclerView = sessionControlView!!.view
                 delay(ANIM_SCROLL_DELAY)
-                val tabsSize = getListOfSessions().size
+                val tabsSize = getNumberOfSessions()
 
                 var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
                 changedCollection?.let { changedCollection ->

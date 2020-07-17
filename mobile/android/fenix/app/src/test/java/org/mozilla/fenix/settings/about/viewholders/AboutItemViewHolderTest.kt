@@ -44,7 +44,7 @@ class AboutItemViewHolderTest {
     fun `call listener on click`() {
         val holder = AboutItemViewHolder(view, listener)
         holder.bind(item)
-        view.performClick()
+        holder.itemView.performClick()
 
         verify { listener.onAboutItemClicked(AboutItem.Libraries) }
     }
