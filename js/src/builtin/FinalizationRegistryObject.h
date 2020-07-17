@@ -175,7 +175,7 @@ using FinalizationRecordSet =
 class FinalizationRegistryObject : public NativeObject {
   enum {
     CleanupCallbackSlot = 0,
-    IncumbentGlobalSlot,
+    IncumbentObjectSlot,
     RegistrationsSlot,
     ActiveRecords,
     RecordsToBeCleanedUpSlot,
@@ -193,7 +193,7 @@ class FinalizationRegistryObject : public NativeObject {
   static const JSClass protoClass_;
 
   JSObject* cleanupCallback() const;
-  GlobalObject* incumbentGlobal() const;
+  JSObject* incumbentObject() const;
   ObjectWeakMap* registrations() const;
   FinalizationRecordSet* activeRecords() const;
   FinalizationRecordVector* recordsToBeCleanedUp() const;
