@@ -262,6 +262,9 @@ bool PathContainsInvalidLinks(wchar_t* const fullPath) {
 bool IsProgramFilesPath(NS_tchar* fullPath) {
   // Make sure we don't try to compare against a short path.
   DWORD longInstallPathChars = GetLongPathNameW(fullPath, nullptr, 0);
+  if (longInstallPathChars == 0) {
+    return false;
+  }
   mozilla::UniquePtr<wchar_t[]> longInstallPath =
       mozilla::MakeUnique<wchar_t[]>(longInstallPathChars);
   if (!longInstallPath || !GetLongPathNameW(fullPath, longInstallPath.get(),
@@ -290,7 +293,7 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
       return false;
     }
     if (programFiles32Path.get()[length - 1] == L'\\') {
-      if (wcsncmp(longInstallPath.get(), programFiles32Path.get(), length) ==
+      if (wcsnicmp(longInstallPath.get(), programFiles32Path.get(), length) ==
           0) {
         return true;
       }
@@ -307,8 +310,8 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
       NS_tsnprintf(programFiles32PathWithSlash.get(), length + 1, NS_T("%s\\"),
                    programFiles32Path.get());
 
-      if (wcsncmp(longInstallPath.get(), programFiles32PathWithSlash.get(),
-                  length) == 0) {
+      if (wcsnicmp(longInstallPath.get(), programFiles32PathWithSlash.get(),
+                   length) == 0) {
         return true;
       }
     }
@@ -329,15 +332,14 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
                      nullptr, nullptr, &length) != ERROR_SUCCESS) {
       return false;
     }
-    // RegGetValue returns the length including the terminator in bytes, so
-    // convert that to characters and then add one more in case we have to
-    // append a trailing slash.
+    // RegGetValue returns the length including the terminator, but it's in
+    // bytes, so convert that to characters.
     DWORD lengthChars = (length / sizeof(wchar_t));
     if (lengthChars <= 1) {
       return false;
     }
     mozilla::UniquePtr<wchar_t[]> programFilesNativePath =
-        mozilla::MakeUnique<wchar_t[]>(lengthChars + 1);
+        mozilla::MakeUnique<wchar_t[]>(lengthChars);
     if (!programFilesNativePath) {
       return false;
     }
@@ -349,22 +351,35 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
             programFilesNativePath.get(), &length) != ERROR_SUCCESS) {
       return false;
     }
-    if (wcslen(programFilesNativePath.get()) != lengthChars - 1) {
-      // Something is very wrong if we didn't read all the characters that the
-      // registry told us to expect.
+    size_t nativePathStrLen =
+        wcsnlen_s(programFilesNativePath.get(), lengthChars);
+    if (nativePathStrLen == 0) {
       return false;
     }
 
-    // As before, append a backslash if there isn't one already, and also add
-    // that character to number we need to compare.
-    if (programFilesNativePath[lengthChars - 2] != L'\\') {
-      wcsncat_s(programFilesNativePath.get(), lengthChars, L"\\", 1);
-      lengthChars++;
-    }
+    // As before, append a backslash if there isn't one already.
+    if (programFilesNativePath.get()[nativePathStrLen - 1] == L'\\') {
+      if (wcsnicmp(longInstallPath.get(), programFilesNativePath.get(),
+                   nativePathStrLen) == 0) {
+        return true;
+      }
+    } else {
+      // Allocate space for a copy of the string along with a terminator and one
+      // extra character for the trailing backslash.
+      nativePathStrLen += 1;
+      mozilla::UniquePtr<wchar_t[]> programFilesNativePathWithSlash =
+          mozilla::MakeUnique<wchar_t[]>(nativePathStrLen + 1);
+      if (!programFilesNativePathWithSlash) {
+        return false;
+      }
 
-    if (wcsncmp(longInstallPath.get(), programFilesNativePath.get(),
-                lengthChars - 1) == 0) {
-      return true;
+      NS_tsnprintf(programFilesNativePathWithSlash.get(), nativePathStrLen + 1,
+                   NS_T("%s\\"), programFilesNativePath.get());
+
+      if (wcsnicmp(longInstallPath.get(), programFilesNativePathWithSlash.get(),
+                   nativePathStrLen) == 0) {
+        return true;
+      }
     }
   }
 
