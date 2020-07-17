@@ -7,76 +7,77 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:layout_marginTop="@dimen/radio_button_preference_vertical">
 
-    <RadioGroup
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/radio_button_preference_vertical">
 
-        <RadioButton
-            android:id="@+id/ask_to_allow_radio"
+        <RadioGroup
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:button="@null"
-            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
-            android:paddingStart="@dimen/radio_button_preference_horizontal"
-            android:paddingTop="@dimen/radio_button_preference_vertical"
-            android:paddingEnd="@dimen/radio_button_preference_horizontal"
-            android:paddingBottom="@dimen/radio_button_preference_vertical"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
-            tools:text="@string/preference_option_phone_feature_ask_to_allow" />
+            android:layout_height="wrap_content">
 
-        <RadioButton
-            android:id="@+id/block_radio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:button="@null"
-            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
-            android:paddingStart="@dimen/radio_button_preference_horizontal"
-            android:paddingTop="@dimen/radio_button_preference_vertical"
-            android:paddingEnd="@dimen/radio_button_preference_horizontal"
-            android:paddingBottom="@dimen/radio_button_preference_vertical"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
-            tools:text="@string/preference_option_phone_feature_blocked" />
+            <RadioButton
+                android:id="@+id/ask_to_allow_radio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                android:drawablePadding="@dimen/preference_seek_bar_padding"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+                tools:text="@string/preference_option_phone_feature_ask_to_allow" />
 
-        <RadioButton
-            android:id="@+id/third_radio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:button="@null"
-            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
-            android:paddingStart="@dimen/radio_button_preference_horizontal"
-            android:paddingTop="@dimen/radio_button_preference_vertical"
-            android:paddingEnd="@dimen/radio_button_preference_horizontal"
-            android:paddingBottom="@dimen/radio_button_preference_vertical"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle" />
+            <RadioButton
+                android:id="@+id/block_radio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                android:drawablePadding="@dimen/preference_seek_bar_padding"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+                tools:text="@string/preference_option_phone_feature_blocked" />
 
-        <RadioButton
-            android:id="@+id/fourth_radio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:button="@null"
-            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
-            android:paddingStart="@dimen/radio_button_preference_horizontal"
-            android:paddingTop="@dimen/radio_button_preference_vertical"
-            android:paddingEnd="@dimen/radio_button_preference_horizontal"
-            android:paddingBottom="@dimen/radio_button_preference_vertical"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle" />
-    </RadioGroup>
+            <RadioButton
+                android:id="@+id/third_radio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                android:drawablePadding="@dimen/preference_seek_bar_padding"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle" />
 
-    <include layout="@layout/component_permissions_blocked_by_android"/>
+            <RadioButton
+                android:id="@+id/fourth_radio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                android:drawablePadding="@dimen/preference_seek_bar_padding"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle" />
+        </RadioGroup>
 
-</LinearLayout>
+        <include layout="@layout/component_permissions_blocked_by_android"/>
+
+    </LinearLayout>
 </ScrollView>

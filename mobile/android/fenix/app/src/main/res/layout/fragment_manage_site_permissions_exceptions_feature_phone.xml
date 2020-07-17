@@ -6,18 +6,18 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="@dimen/radio_button_preference_vertical">
 
-    <RadioGroup
+        <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-        <RadioButton
+            <RadioButton
                 android:id="@+id/ask_to_allow_radio"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -26,13 +26,13 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:button="@null"
                 app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
-                android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+                android:drawablePadding="@dimen/preference_seek_bar_padding"
                 android:paddingTop="@dimen/radio_button_preference_vertical"
                 android:paddingStart="@dimen/radio_button_preference_horizontal"
                 android:paddingEnd="@dimen/radio_button_preference_horizontal"
-                android:paddingBottom="@dimen/radio_button_preference_vertical"/>
+                android:paddingBottom="@dimen/radio_button_preference_vertical" />
 
-        <RadioButton
+            <RadioButton
                 android:id="@+id/block_radio"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/radio_button_preference_height"
@@ -41,15 +41,15 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:button="@null"
                 app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
-                android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+                android:drawablePadding="@dimen/preference_seek_bar_padding"
                 android:paddingTop="@dimen/radio_button_preference_vertical"
                 android:paddingStart="@dimen/radio_button_preference_horizontal"
                 android:paddingEnd="@dimen/radio_button_preference_horizontal"
-                android:paddingBottom="@dimen/radio_button_preference_vertical"/>
-    </RadioGroup>
+                android:paddingBottom="@dimen/radio_button_preference_vertical" />
+        </RadioGroup>
 
-    <include layout="@layout/layout_clear_permission_button"/>
-    <include layout="@layout/component_permissions_blocked_by_android"/>
+    <include layout="@layout/layout_clear_permission_button" />
+    <include layout="@layout/component_permissions_blocked_by_android" />
 
-</LinearLayout>
+    </LinearLayout>
 </ScrollView>
