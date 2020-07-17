@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "engine-same-name"
+  },
+  "searchUrl": {
+    "message": "https://www.google.com/search?q={searchTerms}"
+  }
+}

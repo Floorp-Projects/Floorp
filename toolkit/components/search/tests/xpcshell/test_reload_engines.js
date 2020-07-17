@@ -108,6 +108,24 @@ const CONFIG = [
       },
     ],
   },
+  {
+    // This engine has the same name, but still should be replaced correctly.
+    webExtension: {
+      id: "engine-same-name@search.mozilla.org",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        excluded: { regions: ["FR"] },
+      },
+      {
+        included: { regions: ["FR"] },
+        webExtension: {
+          locales: ["gd"],
+        },
+      },
+    ],
+  },
 ];
 
 function listenFor(name, key) {
@@ -153,6 +171,7 @@ add_task(async function test_initial_config_correct() {
       "engine-pref",
       "engine-rel-searchform-purpose",
       "engine-resourceicon",
+      "engine-same-name",
     ],
     "Should have the correct list of engines installed."
   );
@@ -210,7 +229,7 @@ add_task(async function test_config_updated_engine_changes() {
 
   Assert.deepEqual(
     enginesAdded,
-    ["engine-resourceicon-gd", "engine-reordered"],
+    ["engine-resourceicon-gd", "engine-reordered", "engine-same-name-gd"],
     "Should have added the correct engines"
   );
 
@@ -222,7 +241,11 @@ add_task(async function test_config_updated_engine_changes() {
 
   Assert.deepEqual(
     enginesRemoved,
-    ["engine-rel-searchform-purpose"],
+    [
+      "engine-rel-searchform-purpose",
+      "engine-resourceicon",
+      "engine-same-name",
+    ],
     "Should have removed the expected engine"
   );
 
@@ -234,6 +257,7 @@ add_task(async function test_config_updated_engine_changes() {
       "engine-pref",
       "engine-resourceicon-gd",
       "engine-chromeicon",
+      "engine-same-name-gd",
       "engine",
       "engine-reordered",
     ],
@@ -261,5 +285,20 @@ add_task(async function test_config_updated_engine_changes() {
     engineWithParams.getSubmission("test").uri.spec,
     "https://www.google.com/search?c=my-test&q1=test",
     "Should have updated the parameters"
+  );
+
+  const engineWithSameName = await Services.search.getEngineByName(
+    "engine-same-name"
+  );
+  Assert.equal(
+    engineWithSameName.getSubmission("test").uri.spec,
+    "https://www.example.com/search?q=test",
+    "Should have correctly switched to the engine of the same name"
+  );
+
+  Assert.equal(
+    Services.prefs.getBoolPref("browser.search.useDBForOrder", false),
+    false,
+    "Should not have set the useDBForOrder preference"
   );
 });
