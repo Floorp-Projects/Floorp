@@ -63,7 +63,7 @@ class UseCases(
 
     val downloadUseCases by lazy { DownloadsUseCases(store) }
 
-    val contextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
+    val contextMenuUseCases by lazy { ContextMenuUseCases(store) }
 
     val engineSessionUseCases by lazy { EngineSessionUseCases(sessionManager) }
 
