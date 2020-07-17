@@ -529,4 +529,13 @@ export type Exception = {
   fileName: URL,
   lineNumber: number,
   sourceActorId: SourceActorId,
+  stacktrace: Array<StacktraceFrame>,
+};
+
+export type StacktraceFrame = {
+  columnNumber: number,
+  filename: URL,
+  functionName: string,
+  lineNumber: number,
+  sourceId: SourceActorId,
 };

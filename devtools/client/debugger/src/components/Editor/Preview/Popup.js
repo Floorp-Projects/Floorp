@@ -9,7 +9,7 @@ import { connect } from "../../../utils/connect";
 
 import Reps from "devtools-reps";
 const {
-  REPS: { Rep, StringRep },
+  REPS: { Rep },
   MODE,
   objectInspector,
 } = Reps;
@@ -19,6 +19,8 @@ const { ObjectInspector, utils } = objectInspector;
 const {
   node: { nodeIsPrimitive, nodeIsFunction, nodeIsObject },
 } = utils;
+
+import ExceptionPopup from "./ExceptionPopup";
 
 import actions from "../../../actions";
 import { getThreadContext } from "../../../selectors";
@@ -53,6 +55,7 @@ export class Popup extends Component<Props> {
   marker: any;
   pos: any;
   popover: ?React$ElementRef<typeof Popover>;
+  isExceptionStactraceOpen: ?boolean;
 
   constructor(props: Props) {
     super(props);
@@ -179,16 +182,11 @@ export class Popup extends Component<Props> {
   }
 
   renderExceptionPreview(exception: Exception) {
-    const errorMessage = exception.errorMessage;
-
     return (
-      <div className="preview-popup exception-popup">
-        {StringRep.rep({
-          object: errorMessage,
-          useQuotes: false,
-          className: "exception-text",
-        })}
-      </div>
+      <ExceptionPopup
+        exception={exception}
+        mouseout={this.onMouseOutException}
+      />
     );
   }
 
@@ -239,6 +237,27 @@ export class Popup extends Component<Props> {
     clearPreview(cx);
   };
 
+  onMouseOutException = (
+    shouldClearOnMouseout: ?boolean,
+    isExceptionStactraceOpen: ?boolean
+  ) => {
+    // onMouseOutException can be called:
+    // a. when the mouse leaves Popover element
+    // b. when the mouse leaves ExceptionPopup element
+    // We want to prevent closing the popup when the stacktrace
+    // is expanded and the mouse leaves either the Popover element
+    // or the ExceptionPopup element.
+    const { clearPreview, cx } = this.props;
+
+    if (shouldClearOnMouseout) {
+      this.isExceptionStactraceOpen = isExceptionStactraceOpen;
+    }
+
+    if (!this.isExceptionStactraceOpen) {
+      clearPreview(cx);
+    }
+  };
+
   render() {
     const {
       preview: { cursorPos, resultGrip, exception },
@@ -259,7 +278,7 @@ export class Popup extends Component<Props> {
         type={type}
         editorRef={editorRef}
         target={this.props.preview.target}
-        mouseout={this.onMouseOut}
+        mouseout={exception ? this.onMouseOutException : this.onMouseOut}
       >
         {this.renderPreview()}
       </Popover>
