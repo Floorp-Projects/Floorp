@@ -14,7 +14,16 @@ prefix = ''
 if (CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86') or CONFIG['OS_ARCH'] == 'Darwin':
     prefix = '_'
 
-DEFINES['ICU_DATA_FILE'] = '"%s/icudt%sl.dat"' % (SRCDIR, CONFIG['MOZ_ICU_VERSION'])
+data_file = {
+    'little': 'icudt%sl.dat' % CONFIG['MOZ_ICU_VERSION'],
+    'big': 'icudt%sb.dat' % CONFIG['MOZ_ICU_VERSION'],
+}
+data_dir = {
+    'little': SRCDIR,
+    'big': OBJDIR,
+}
+DEFINES['ICU_DATA_FILE'] = '"%s/%s"' % (data_dir[CONFIG['TARGET_ENDIANNESS']],
+                                        data_file[CONFIG['TARGET_ENDIANNESS']])
 DEFINES['ICU_DATA_SYMBOL'] = '%sicudt%s_dat' % (prefix, CONFIG['MOZ_ICU_VERSION'])
 SOURCES += [
     'icu_data.S',
@@ -22,3 +31,8 @@ SOURCES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] == 'clang-cl':
     USE_INTEGRATED_CLANGCL_AS = True
+
+if CONFIG['TARGET_ENDIANNESS'] == 'big':
+    GeneratedFile(data_file['big'],
+                  script='convert_icudata.py',
+                  inputs=[data_file['little']])

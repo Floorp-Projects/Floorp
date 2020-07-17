@@ -23,3 +23,11 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 include('../defs.mozbuild')
 include('sources.mozbuild')
+
+SOURCES += sources
+
+if CONFIG['TARGET_ENDIANNESS'] == 'big':
+    HostLibrary('host_icuuc')
+    HOST_DEFINES['U_COMMON_IMPLEMENTATION'] = True
+    HOST_SOURCES += sources
+    HOST_SOURCES += other_sources
