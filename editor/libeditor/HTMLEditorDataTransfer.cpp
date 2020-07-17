@@ -313,6 +313,9 @@ class MOZ_STACK_CLASS
   static nsresult PostProcessFragmentForPastedHTMLWithoutContext(
       DocumentFragment& aDocumentFragmentForPastedHTML);
 
+  static nsresult PreProcessContextDocumentFragmentForMerging(
+      DocumentFragment& aDocumentFragmentForContext);
+
   static void RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode);
 
   enum class NodesToRemove {
@@ -3269,6 +3272,29 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   return rv;
 }
 
+// static
+nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
+    PreProcessContextDocumentFragmentForMerging(
+        DocumentFragment& aDocumentFragmentForContext) {
+  // The context is expected to contain text nodes only in block level
+  // elements. Hence, if they contain only whitespace, they're invisible.
+  const nsresult rv = FragmentFromPasteCreator::
+      RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
+          aDocumentFragmentForContext, NodesToRemove::eAll);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
+        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
+        " failed");
+    return rv;
+  }
+
+  FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
+      aDocumentFragmentForContext);
+
+  return rv;
+}
+
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
         const nsAString& aInputString, const nsAString& aContextStr,
@@ -3299,21 +3325,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
       return NS_ERROR_FAILURE;
     }
 
-    // The context is expected to contain text nodes only in block level
-    // elements. Hence, if they contain only whitespace, they're invisible.
-    rv = FragmentFromPasteCreator::
-        RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
-            *documentFragmentForContext, NodesToRemove::eAll);
+    rv = FragmentFromPasteCreator::PreProcessContextDocumentFragmentForMerging(
+        *documentFragmentForContext);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
-          "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
-          " failed");
+          "PreProcessContextDocumentFragmentForMerging() failed.");
       return rv;
     }
-
-    FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
-        *documentFragmentForContext);
 
     FragmentFromPasteCreator::FindTargetNodeOfContextForPastedHTML(
         *documentFragmentForContext, aParentNodeOfPastedHTMLInContext);
