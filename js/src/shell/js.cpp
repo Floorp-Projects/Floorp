@@ -658,7 +658,7 @@ ShellContext::ShellContext(JSContext* cx)
       errFilePtr(nullptr),
       outFilePtr(nullptr),
       offThreadMonitor(mutexid::ShellOffThreadState),
-      finalizationRegistriesToCleanUp(cx) {}
+      finalizationRegistryCleanupCallbacks(cx) {}
 
 ShellContext::~ShellContext() { MOZ_ASSERT(offThreadJobs.empty()); }
 
@@ -980,13 +980,16 @@ static MOZ_MUST_USE bool RunModule(JSContext* cx, const char* filename,
   return sc->moduleLoader->loadRootModule(cx, path);
 }
 
-static void ShellCleanupFinalizationRegistryCallback(JSObject* registry,
+static void ShellCleanupFinalizationRegistryCallback(JSFunction* doCleanup,
+                                                     JSObject* incumbentGlobal,
                                                      void* data) {
   // In the browser this queues a task. Shell jobs correspond to microtasks so
-  // we arrange for cleanup to happen after all jobs/microtasks have run.
+  // we arrange for cleanup to happen after all jobs/microtasks have run. The
+  // incumbent global is ignored in the shell.
+
   auto sc = static_cast<ShellContext*>(data);
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!sc->finalizationRegistriesToCleanUp.append(registry)) {
+  if (!sc->finalizationRegistryCleanupCallbacks.append(doCleanup)) {
     oomUnsafe.crash("ShellCleanupFinalizationRegistryCallback");
   }
 }
@@ -996,20 +999,22 @@ static bool MaybeRunFinalizationRegistryCleanupTasks(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   MOZ_ASSERT(!sc->quitting);
 
-  Rooted<ShellContext::ObjectVector> registries(cx);
-  std::swap(registries.get(), sc->finalizationRegistriesToCleanUp.get());
+  Rooted<ShellContext::FunctionVector> callbacks(cx);
+  std::swap(callbacks.get(), sc->finalizationRegistryCleanupCallbacks.get());
 
   bool ranTasks = false;
 
-  RootedObject registry(cx);
-  for (const auto& r : registries) {
-    registry = r;
+  RootedFunction callback(cx);
+  for (JSFunction* f : callbacks) {
+    callback = f;
 
-    AutoRealm ar(cx, registry);
+    AutoRealm ar(cx, f);
 
     {
       AutoReportException are(cx);
-      mozilla::Unused << JS::CleanupQueuedFinalizationRegistry(cx, registry);
+      RootedValue unused(cx);
+      mozilla::Unused << JS_CallFunction(cx, nullptr, callback,
+                                         HandleValueArray::empty(), &unused);
     }
 
     ranTasks = true;
