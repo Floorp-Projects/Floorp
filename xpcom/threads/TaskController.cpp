@@ -119,6 +119,10 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
     task->mPriorityModifier = manager->mCurrentPriorityModifier;
   }
 
+#ifdef MOZ_GECKO_PROFILER
+  task->mInsertionTime = TimeStamp::Now();
+#endif
+
 #ifdef DEBUG
   task->mIsInGraph = true;
 
@@ -166,10 +170,6 @@ void TaskController::ProcessPendingMTTask(bool aMayWait) {
     if (mMTTaskRunnableProcessedTask || !aMayWait) {
       break;
     }
-    nsCOMPtr<nsIThread> mainIThread;
-    NS_GetMainThread(getter_AddRefs(mainIThread));
-    nsThread* mainThread = static_cast<nsThread*>(mainIThread.get());
-    mainThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
 
     BackgroundHangMonitor().NotifyWait();
 
@@ -181,8 +181,6 @@ void TaskController::ProcessPendingMTTask(bool aMayWait) {
       mMainThreadCV.Wait();
     }
 
-    // See bug 1651842
-    mainThread->SetRunningEventDelay(TimeDuration(), TimeStamp::Now());
     BackgroundHangMonitor().NotifyActivity();
   }
 
@@ -417,6 +415,11 @@ bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
 
 bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
+  nsCOMPtr<nsIThread> mainIThread;
+  NS_GetMainThread(getter_AddRefs(mainIThread));
+  nsThread* mainThread = static_cast<nsThread*>(mainIThread.get());
+  mainThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
+
   uint32_t totalSuspended = 0;
   for (TaskManager* manager : mTaskManagers) {
     bool modifierChanged =
@@ -489,9 +492,19 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
           mIdleTaskManager->State().ClearCachedIdleDeadline();
         }
 
+        TimeStamp now = TimeStamp::Now();
+
+#ifdef MOZ_GECKO_PROFILER
+        if (task->GetPriority() < uint32_t(EventQueuePriority::InputHigh)) {
+          mainThread->SetRunningEventDelay(TimeDuration(), now);
+        } else {
+          mainThread->SetRunningEventDelay(now - task->mInsertionTime, now);
+        }
+#endif
+
         PerformanceCounterState::Snapshot snapshot =
             mPerformanceCounterState->RunnableWillRun(
-                task->GetPerformanceCounter(), TimeStamp::Now(),
+                task->GetPerformanceCounter(), now,
                 manager == mIdleTaskManager);
 
         {
