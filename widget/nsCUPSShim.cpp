@@ -19,8 +19,19 @@ static const char gSymName[][sizeof("cupsPrintFile")] = {
 };
 static const int gSymNameCt = mozilla::ArrayLength(gSymName);
 
+#ifdef XP_MACOSX
+// TODO: On OS X we are guaranteed to have CUPS, so it would be nice to just
+// assign the members from the header directly instead of dlopen'ing.
+// Alternatively, we could just do some #define's on OS X, but we don't use
+// CUPS all that much, so there really isn't too much overhead in storing this
+// table of functions even on OS X.
+static const char gCUPSLibraryName[] = "libcups.2.dylib";
+#else
+static const char gCUPSLibraryName[] = "libcups.so.2";
+#endif
+
 bool nsCUPSShim::Init() {
-  mCupsLib = PR_LoadLibrary("libcups.so.2");
+  mCupsLib = PR_LoadLibrary(gCUPSLibraryName);
   if (!mCupsLib) return false;
 
   // List of symbol pointers. Must match gSymName[] defined above.

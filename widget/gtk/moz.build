@@ -76,7 +76,6 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
-        'nsCUPSShim.cpp',
         'nsDeviceContextSpecG.cpp',
         'nsPrintDialogGTK.cpp',
         'nsPrintSettingsGTK.cpp',
