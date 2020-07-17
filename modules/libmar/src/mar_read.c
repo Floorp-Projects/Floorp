@@ -26,7 +26,7 @@ static uint32_t mar_hash_name(const char* name) {
   return CityHash64(name, strlen(name)) % TABLESIZE;
 }
 
-static int mar_insert_item(MarFile* mar, const char* name, int namelen,
+static int mar_insert_item(MarFile* mar, const char* name, uint32_t namelen,
                            uint32_t offset, uint32_t length, uint32_t flags) {
   MarItem *item, *root;
   uint32_t hash;
