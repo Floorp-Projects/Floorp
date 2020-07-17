@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix.migration
 
@@ -15,7 +15,8 @@ import org.mozilla.fenix.components.metrics.MetricController
 
 class MigrationTelemetryListener(
     private val metrics: MetricController,
-    private val store: MigrationStore
+    private val store: MigrationStore,
+    private val logger: Logger = Logger("MigrationTelemetryListener")
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -23,7 +24,7 @@ class MigrationTelemetryListener(
         // Observe for migration completed.
         store.flowScoped { flow ->
             flow.collect { state ->
-                Logger("MigrationTelemetryListener").debug("Migration state: ${state.progress}")
+                logger.debug("Migration state: ${state.progress}")
                 if (state.progress == MigrationProgress.COMPLETED) {
                     metrics.track(Event.FennecToFenixMigrated)
                 }
