@@ -140,7 +140,6 @@ enum class ZealMode {
   _(RealmInstrumentation)                  \
   _(ICUObject)                             \
   _(FinalizationRegistryRecordVector)      \
-  _(FinalizationRegistryRecordSet)         \
   _(FinalizationRegistryRegistrations)     \
   _(FinalizationRecordVector)              \
   _(ZoneAllocPolicy)                       \
