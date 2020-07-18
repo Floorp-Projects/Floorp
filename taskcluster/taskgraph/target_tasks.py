@@ -127,7 +127,7 @@ def filter_on_platforms(task, platforms):
 
 
 def filter_by_uncommon_try_tasks(task, optional_filters=None):
-    """Filters tasks based on blacklist rules.
+    """Filters tasks that should not be commonly run on try.
 
     Args:
         task (str): String representing the task name.
