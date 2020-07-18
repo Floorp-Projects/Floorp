@@ -8790,6 +8790,11 @@
   value: false
   mirror: always
 
+- name: security.bad_cert_domain_error.url_fix_enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: security.csp.enable
   type: bool
   value: true
