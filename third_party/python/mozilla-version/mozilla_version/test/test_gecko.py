@@ -7,8 +7,10 @@ import mozilla_version.gecko
 
 from mozilla_version.errors import PatternNotMatchedError, TooManyTypesError, NoVersionTypeError
 from mozilla_version.gecko import (
-    FirefoxVersion, DeveditionVersion, ThunderbirdVersion, FennecVersion, GeckoSnapVersion
+    GeckoVersion, FirefoxVersion, DeveditionVersion,
+    ThunderbirdVersion, FennecVersion, GeckoSnapVersion,
 )
+from mozilla_version.test import does_not_raise
 
 
 VALID_VERSIONS = {
@@ -329,6 +331,44 @@ def test_fennec_version_supports_released_edge_cases(version_string):
             Class.parse(version_string)
 
 
+@pytest.mark.parametrize('version_string, expectation', (
+    ('68.0a1', does_not_raise()),
+    ('68.0b3', does_not_raise()),
+    ('68.0b17', does_not_raise()),
+    ('68.0', does_not_raise()),
+    ('68.0.1', does_not_raise()),
+    ('68.1a1', does_not_raise()),
+    ('68.1b2', does_not_raise()),
+    ('68.1.0', does_not_raise()),
+    ('68.1', does_not_raise()),
+    ('68.1b3', does_not_raise()),
+    ('68.1.1', does_not_raise()),
+    ('68.2a1', does_not_raise()),
+    ('68.2b1', does_not_raise()),
+    ('68.2', does_not_raise()),
+
+    ('67.1', pytest.raises(PatternNotMatchedError)),
+    ('68.0.1a1', pytest.raises(PatternNotMatchedError)),
+    ('68.1a1b1', pytest.raises(PatternNotMatchedError)),
+    ('68.0.1b1', pytest.raises(PatternNotMatchedError)),
+    ('68.1.0a1', pytest.raises(PatternNotMatchedError)),
+    ('68.1.0b1', pytest.raises(PatternNotMatchedError)),
+    ('68.1.1a1', pytest.raises(PatternNotMatchedError)),
+    ('68.1.1b2', pytest.raises(PatternNotMatchedError)),
+
+    ('69.0a1', pytest.raises(PatternNotMatchedError)),
+    ('69.0b3', pytest.raises(PatternNotMatchedError)),
+    ('69.0', pytest.raises(PatternNotMatchedError)),
+    ('69.0.1', pytest.raises(PatternNotMatchedError)),
+    ('69.1', pytest.raises(PatternNotMatchedError)),
+
+    ('70.0', pytest.raises(PatternNotMatchedError)),
+))
+def test_fennec_version_ends_at_68(version_string, expectation):
+    with expectation:
+        FennecVersion.parse(version_string)
+
+
 @pytest.mark.parametrize('version_string', (
     '45.1b1', '45.1b1build1',
     '45.2', '45.2build1', '45.2build2',
@@ -361,4 +401,11 @@ def test_gecko_snap_version_bails_on_wrong_version(version_string):
 
 
 def test_gecko_snap_version_implements_its_own_string():
-    str(GeckoSnapVersion.parse('63.0b7-1')) == '63.0b7-1'
+    assert str(GeckoSnapVersion.parse('63.0b7-1')) == '63.0b7-1'
+
+
+def test_gecko_version_hashable():
+    """
+    It is possible to hash `GeckoVersion`.
+    """
+    hash(GeckoVersion.parse('63.0'))
