@@ -126,6 +126,11 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     const nsAString& aSrcset, const nsAString& aSizes,
     const nsAString& aIntegrity, const nsAString& aCORS,
     const nsAString& aReferrerPolicy) {
+  if (!aURI) {
+    MOZ_ASSERT_UNREACHABLE("Should not pass null nsIURI");
+    return {nullptr, false};
+  }
+
   bool isImgSet = false;
   PreloadHashKey preloadKey;
   nsCOMPtr<nsIURI> uri = aURI;
