@@ -494,6 +494,24 @@ ParentLayerPoint PanGestureInput::UserMultipliedLocalPanDisplacement() const {
                           mLocalPanDisplacement.y * mUserDeltaMultiplierY);
 }
 
+static int32_t TakeLargestInt(gfx::Float* aFloat) {
+  int32_t result(*aFloat);  // truncate towards zero
+  *aFloat -= result;
+  return result;
+}
+
+/* static */ gfx::IntPoint PanGestureInput::GetIntegerDeltaForEvent(
+    bool aIsStart, float x, float y) {
+  static gfx::Point sAccumulator(0.0f, 0.0f);
+  if (aIsStart) {
+    sAccumulator = gfx::Point(0.0f, 0.0f);
+  }
+  sAccumulator.x += x;
+  sAccumulator.y += y;
+  return gfx::IntPoint(TakeLargestInt(&sAccumulator.x),
+                       TakeLargestInt(&sAccumulator.y));
+}
+
 PinchGestureInput::PinchGestureInput()
     : InputData(PINCHGESTURE_INPUT),
       mType(PINCHGESTURE_START),
