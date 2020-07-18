@@ -542,8 +542,10 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       CookieCommons::GetCookieJarSettings(aChannel);
 
+  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
+
   CookieStatus cookieStatus = CookieService::CheckPrefs(
-      cookieJarSettings, aHostURI,
+      crc, cookieJarSettings, aHostURI,
       result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
@@ -574,8 +576,6 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
                                          &isForeignAndNotAddon);
   }
 
-  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
-
   bool moreCookies;
   do {
     CookieStruct cookieData;
@@ -591,6 +591,12 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
     if (!CookieCommons::CheckCookiePermission(aChannel, cookieData)) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieString,
                         "cookie rejected by permission manager");
+      CookieLogging::LogMessageToConsole(
+          crc, aHostURI, nsIScriptError::warningFlag,
+          CONSOLE_REJECTION_CATEGORY, "CookieRejectedByPermissionManager"_ns,
+          AutoTArray<nsString, 1>{
+              NS_ConvertUTF8toUTF16(cookieData.name()),
+          });
       CookieCommons::NotifyRejected(
           aHostURI, aChannel,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
