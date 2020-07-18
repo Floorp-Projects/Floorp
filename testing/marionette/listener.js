@@ -595,7 +595,6 @@ function startListeners() {
     "Marionette:getElementValueOfCssProperty",
     getElementValueOfCssPropertyFn
   );
-  addMessageListener("Marionette:get", get);
   addMessageListener("Marionette:getPageSource", getPageSourceFn);
   addMessageListener("Marionette:getScreenshotRect", getScreenshotRectFn);
   addMessageListener("Marionette:goBack", goBack);
@@ -604,6 +603,7 @@ function startListeners() {
   addMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
   addMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListener("Marionette:multiAction", multiActionFn);
+  addMessageListener("Marionette:navigateTo", navigateTo);
   addMessageListener("Marionette:performActions", performActionsFn);
   addMessageListener("Marionette:refresh", refresh);
   addMessageListener("Marionette:reftestWait", reftestWaitFn);
@@ -647,7 +647,6 @@ function deregister() {
     "Marionette:getElementValueOfCssProperty",
     getElementValueOfCssPropertyFn
   );
-  removeMessageListener("Marionette:get", get);
   removeMessageListener("Marionette:getPageSource", getPageSourceFn);
   removeMessageListener("Marionette:getScreenshotRect", getScreenshotRectFn);
   removeMessageListener("Marionette:goBack", goBack);
@@ -656,6 +655,7 @@ function deregister() {
   removeMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
   removeMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   removeMessageListener("Marionette:multiAction", multiActionFn);
+  removeMessageListener("Marionette:navigateTo", navigateTo);
   removeMessageListener("Marionette:performActions", performActionsFn);
   removeMessageListener("Marionette:refresh", refresh);
   removeMessageListener("Marionette:releaseActions", releaseActionsFn);
@@ -1124,7 +1124,7 @@ function waitForPageLoaded(msg) {
  * navigate within an iframe.  All other navigation is handled by the driver
  * (in chrome space).
  */
-function get(msg) {
+function navigateTo(msg) {
   let { commandID, pageTimeout, url, loadEventExpected = null } = msg.json;
 
   try {
