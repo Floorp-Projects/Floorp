@@ -6,6 +6,7 @@
 
 #include "ImageComposite.h"
 
+#include "GeckoProfiler.h"
 #include "gfxPlatform.h"
 
 namespace mozilla {
@@ -206,6 +207,9 @@ uint32_t ImageComposite::ScanForLastFrameIndex(
 }
 
 void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
+  if (!aNewImages.IsEmpty()) {
+    DetectTimeStampJitter(&aNewImages[0]);
+  }
   mLastChosenImageIndex = ScanForLastFrameIndex(aNewImages);
   mImages = std::move(aNewImages);
 }
@@ -228,6 +232,35 @@ bool ImageComposite::IsImagesUpdateRateFasterThanCompositedRate(
   const double compositedInterval = 1.0 / compositedRate;
   return aNewImage.mTimeStamp - aOldImage.mTimeStamp <
          TimeDuration::FromSeconds(compositedInterval);
+}
+
+void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
+#if MOZ_GECKO_PROFILER
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
+  // Find aNewImage in mImages and compute its timestamp delta, if found.
+  // Ideally, a given video frame should never change its timestamp (jitter
+  // should be zero). However, we re-adjust video frame timestamps based on the
+  // audio clock. If the audio clock drifts compared to the system clock, or if
+  // there are bugs or inaccuracies in the computation of these timestamps,
+  // jitter will be non-zero.
+  Maybe<TimeDuration> jitter;
+  for (const auto& img : mImages) {
+    if (img.mProducerID == aNewImage->mProducerID &&
+        img.mFrameID == aNewImage->mFrameID) {
+      jitter = Some(aNewImage->mTimeStamp - img.mTimeStamp);
+      break;
+    }
+  }
+  if (jitter) {
+    TimeStamp now = TimeStamp::Now();
+    nsPrintfCString text("%.2lfms", jitter->ToMilliseconds());
+    profiler_add_text_marker("VideoFrameTimeStampJitter", text,
+                             JS::ProfilingCategoryPair::GRAPHICS, now, now);
+  }
+#endif
 }
 
 }  // namespace layers

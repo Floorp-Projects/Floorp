@@ -100,6 +100,9 @@ class ImageComposite {
   bool IsImagesUpdateRateFasterThanCompositedRate(
       const TimedImage& aNewImage, const TimedImage& aOldImage) const;
 
+  // Emit a profiler marker about video frame timestamp jitter.
+  void DetectTimeStampJitter(const TimedImage* aNewImage);
+
   /**
    * Bias to apply to the next frame.
    */
