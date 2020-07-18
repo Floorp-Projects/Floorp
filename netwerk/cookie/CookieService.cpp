@@ -57,6 +57,7 @@ static StaticRefPtr<CookieService> gCookieService;
 
 constexpr auto CONSOLE_SAMESITE_CATEGORY = "cookieSameSite"_ns;
 constexpr auto CONSOLE_OVERSIZE_CATEGORY = "cookiesOversize"_ns;
+constexpr auto CONSOLE_REJECTION_CATEGORY = "cookiesRejection"_ns;
 constexpr auto SAMESITE_MDN_URL =
     "https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/"
     u"SameSite"_ns;
@@ -485,9 +486,13 @@ CookieService::SetCookieStringFromDocument(Document* aDocument,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIConsoleReportCollector> crc =
+      do_QueryInterface(aDocument->GetChannel());
+
   // add the cookie to the list. AddCookie() takes care of logging.
-  PickStorage(attrs)->AddCookie(baseDomain, attrs, cookie, currentTimeInUsec,
-                                documentURI, aCookieString, false);
+  PickStorage(attrs)->AddCookie(crc, baseDomain, attrs, cookie,
+                                currentTimeInUsec, documentURI, aCookieString,
+                                false);
   return NS_OK;
 }
 
@@ -548,8 +553,10 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
   uint32_t priorCookieCount = storage->CountCookiesFromHost(
       baseDomainFromURI, attrs.mPrivateBrowsingId);
 
+  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
+
   CookieStatus cookieStatus = CheckPrefs(
-      cookieJarSettings, aHostURI,
+      crc, cookieJarSettings, aHostURI,
       result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
@@ -592,8 +599,6 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
 
   nsCString cookieHeader(aCookieHeader);
 
-  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
-
   bool moreCookieToRead = true;
 
   // process each cookie in the header
@@ -617,6 +622,12 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
           aHostURI, aChannel,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
           OPERATION_WRITE);
+      CookieLogging::LogMessageToConsole(
+          crc, aHostURI, nsIScriptError::warningFlag,
+          CONSOLE_REJECTION_CATEGORY, "CookieRejectedByPermissionManager"_ns,
+          AutoTArray<nsString, 1>{
+              NS_ConvertUTF8toUTF16(cookieData.name()),
+          });
       continue;
     }
 
@@ -630,8 +641,8 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
     // add the cookie to the list. AddCookie() takes care of logging.
-    storage->AddCookie(baseDomain, attrs, cookie, currentTimeInUsec, aHostURI,
-                       aCookieHeader, true);
+    storage->AddCookie(crc, baseDomain, attrs, cookie, currentTimeInUsec,
+                       aHostURI, aCookieHeader, true);
   }
 
   return NS_OK;
@@ -758,8 +769,8 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
   MOZ_ASSERT(cookie);
 
   CookieStorage* storage = PickStorage(*aOriginAttributes);
-  storage->AddCookie(baseDomain, *aOriginAttributes, cookie, currentTimeInUsec,
-                     nullptr, VoidCString(), true);
+  storage->AddCookie(nullptr, baseDomain, *aOriginAttributes, cookie,
+                     currentTimeInUsec, nullptr, VoidCString(), true);
   return NS_OK;
 }
 
@@ -879,10 +890,12 @@ void CookieService::GetCookiesForURI(
   uint32_t priorCookieCount = storage->CountCookiesFromHost(
       baseDomainFromURI, aOriginAttrs.mPrivateBrowsingId);
 
+  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
   CookieStatus cookieStatus = CheckPrefs(
-      cookieJarSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
-      aIsThirdPartySocialTrackingResource, aStorageAccessPermissionGranted,
-      VoidCString(), priorCookieCount, aOriginAttrs, &rejectedReason);
+      crc, cookieJarSettings, aHostURI, aIsForeign,
+      aIsThirdPartyTrackingResource, aIsThirdPartySocialTrackingResource,
+      aStorageAccessPermissionGranted, VoidCString(), priorCookieCount,
+      aOriginAttrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
 
@@ -925,8 +938,6 @@ void CookieService::GetCookiesForURI(
       StaticPrefs::network_cookie_sameSite_laxByDefault() &&
       !nsContentUtils::IsURIInPrefList(
           aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
-
-  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
 
   // iterate the cookies!
   for (Cookie* cookie : *cookies) {
@@ -1070,6 +1081,12 @@ bool CookieService::CanSetCookie(
   if (!CookieCommons::CheckName(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "invalid name character");
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedInvalidCharName"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
     return newCookie;
   }
 
@@ -1077,6 +1094,12 @@ bool CookieService::CanSetCookie(
   if (!CheckDomain(aCookieData, aHostURI, aBaseDomain, aRequireHostMatch)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "failed the domain tests");
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedInvalidDomain"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
     return newCookie;
   }
 
@@ -1090,12 +1113,24 @@ bool CookieService::CanSetCookie(
   if (!CheckPrefixes(aCookieData, potentiallyTurstworthy)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "failed the prefix tests");
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedInvalidPrefix"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
     return newCookie;
   }
 
   if (aFromHttp && !CookieCommons::CheckHttpValue(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "invalid value character");
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedInvalidCharValue"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
     return newCookie;
   }
 
@@ -1103,6 +1138,12 @@ bool CookieService::CanSetCookie(
   if (!aFromHttp && aCookieData.isHttpOnly()) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "cookie is httponly; coming from script");
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedHttpOnlyButFromScript"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
     return newCookie;
   }
 
@@ -1112,6 +1153,12 @@ bool CookieService::CanSetCookie(
   if (aCookieData.isSecure() && !potentiallyTurstworthy) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "non-https cookie can't set secure flag");
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedSecureButNonHttps"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
     return newCookie;
   }
 
@@ -1478,15 +1525,13 @@ static inline bool IsSubdomainOf(const nsACString& a, const nsACString& b) {
   return false;
 }
 
-CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
-                                       nsIURI* aHostURI, bool aIsForeign,
-                                       bool aIsThirdPartyTrackingResource,
-                                       bool aIsThirdPartySocialTrackingResource,
-                                       bool aStorageAccessPermissionGranted,
-                                       const nsACString& aCookieHeader,
-                                       const int aNumOfCookies,
-                                       const OriginAttributes& aOriginAttrs,
-                                       uint32_t* aRejectedReason) {
+CookieStatus CookieService::CheckPrefs(
+    nsIConsoleReportCollector* aCRC, nsICookieJarSettings* aCookieJarSettings,
+    nsIURI* aHostURI, bool aIsForeign, bool aIsThirdPartyTrackingResource,
+    bool aIsThirdPartySocialTrackingResource,
+    bool aStorageAccessPermissionGranted, const nsACString& aCookieHeader,
+    const int aNumOfCookies, const OriginAttributes& aOriginAttrs,
+    uint32_t* aRejectedReason) {
   nsresult rv;
 
   MOZ_ASSERT(aRejectedReason);
@@ -1522,6 +1567,13 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
         COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                           aHostURI, aCookieHeader,
                           "cookies are blocked for this site");
+        CookieLogging::LogMessageToConsole(
+            aCRC, aHostURI, nsIScriptError::warningFlag,
+            CONSOLE_REJECTION_CATEGORY, "CookieRejectedByPermissionManager"_ns,
+            AutoTArray<nsString, 1>{
+                NS_ConvertUTF8toUTF16(aCookieHeader),
+            });
+
         *aRejectedReason =
             nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
         return STATUS_REJECTED;
@@ -1587,6 +1639,12 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
         !aStorageAccessPermissionGranted) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                         aHostURI, aCookieHeader, "context is third party");
+      CookieLogging::LogMessageToConsole(
+          aCRC, aHostURI, nsIScriptError::warningFlag,
+          CONSOLE_REJECTION_CATEGORY, "CookieRejectedThirdParty"_ns,
+          AutoTArray<nsString, 1>{
+              NS_ConvertUTF8toUTF16(aCookieHeader),
+          });
       *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
       return STATUS_REJECTED;
     }
@@ -1595,6 +1653,12 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
         !aStorageAccessPermissionGranted && aNumOfCookies == 0) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                         aHostURI, aCookieHeader, "context is third party");
+      CookieLogging::LogMessageToConsole(
+          aCRC, aHostURI, nsIScriptError::warningFlag,
+          CONSOLE_REJECTION_CATEGORY, "CookieRejectedThirdParty"_ns,
+          AutoTArray<nsString, 1>{
+              NS_ConvertUTF8toUTF16(aCookieHeader),
+          });
       *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
       return STATUS_REJECTED;
     }
@@ -2281,8 +2345,8 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
     cookie->SetCreationTime(
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
-    storage->AddCookie(aBaseDomain, aAttrs, cookie, currentTimeInUsec, aHostURI,
-                       EmptyCString(), aFromHttp);
+    storage->AddCookie(nullptr, aBaseDomain, aAttrs, cookie, currentTimeInUsec,
+                       aHostURI, EmptyCString(), aFromHttp);
   }
 
   return true;
