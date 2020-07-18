@@ -4,10 +4,7 @@
 "use strict";
 
 add_task(async function test_OPEN_URL() {
-  const action = {
-    type: "OPEN_URL",
-    data: { args: EXAMPLE_URL, where: "current" },
-  };
+  const action = { type: "OPEN_URL", data: { args: EXAMPLE_URL } };
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     const loaded = BrowserTestUtils.browserLoaded(browser);
     await SMATestUtils.executeAndValidateAction(action);
