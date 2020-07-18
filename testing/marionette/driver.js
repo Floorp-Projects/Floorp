@@ -64,6 +64,9 @@ const { legacyaction } = ChromeUtils.import(
 );
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
+const { navigate } = ChromeUtils.import(
+  "chrome://marionette/content/navigate.js"
+);
 const { MarionettePrefs } = ChromeUtils.import(
   "chrome://marionette/content/prefs.js",
   null
@@ -1143,10 +1146,15 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let url = cmd.parameters.url;
+  let validURL;
+  try {
+    validURL = Services.io.newURI(cmd.parameters.url);
+  } catch (e) {
+    throw new InvalidArgumentError(`Malformed URL: ${e.message}`);
+  }
 
   const navigated = this.listener.navigateTo({
-    url,
+    url: validURL.spec,
     pageTimeout: this.timeouts.pageLoad,
   });
 
