@@ -72,7 +72,7 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid, parameter
         'expires': task.task['deadline'],
         'metadata': {
             'name': label,
-            'description': '{} for {}'.format(purpose, task.task['metadata']['description']),
+            'description': '{} for {}'.format(purpose, task.description),
             'owner': task.task['metadata']['owner'],
             'source': task.task['metadata']['source'],
         },
