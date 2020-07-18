@@ -63,7 +63,7 @@ def _products_must_be_identical(method):
     return checker
 
 
-@attr.s(frozen=True, cmp=False)
+@attr.s(frozen=True, cmp=False, hash=True)
 class BalrogReleaseName(object):
     """Class that validates and handles Balrog release names.
 
