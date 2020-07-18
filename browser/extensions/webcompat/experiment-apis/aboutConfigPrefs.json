@@ -24,6 +24,19 @@
     ],
     "functions": [
       {
+        "name": "getBranch",
+        "type": "function",
+        "description": "Get all child prefs for a branch",
+        "parameters": [
+          {
+            "name": "branchName",
+            "type": "string",
+            "description": "The branch name"
+          }
+        ],
+        "async": true
+      },
+      {
         "name": "getPref",
         "type": "function",
         "description": "Get a preference's value",
