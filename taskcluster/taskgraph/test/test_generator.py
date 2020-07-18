@@ -32,6 +32,7 @@ def fake_loader(kind, path, config, parameters, loaded_tasks):
         task = {
             'kind': kind,
             'label': '{}-t-{}'.format(kind, i),
+            'description': '{} task {}'.format(kind, i),
             'attributes': {'_tasknum': six.text_type(i)},
             'task': {'i': i, "metadata": {"name": "t-{}".format(i)}},
             'dependencies': dependencies,

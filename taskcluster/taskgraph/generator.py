@@ -71,6 +71,7 @@ class Kind(object):
                                        write_artifacts=write_artifacts)
         tasks = [Task(self.name,
                       label=task_dict['label'],
+                      description=task_dict['description'],
                       attributes=task_dict['attributes'],
                       task=task_dict['task'],
                       optimization=task_dict.get('optimization'),
