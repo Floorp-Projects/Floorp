@@ -25,20 +25,27 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['about-compat'] += [
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['data'] += [
   'data/injections.js',
   'data/picture_in_picture_overrides.js',
+  'data/shims.js',
   'data/ua_overrides.js',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['experiment-apis'] += [
   'experiment-apis/aboutConfigPrefs.js',
   'experiment-apis/aboutConfigPrefs.json',
+  'experiment-apis/appConstants.js',
+  'experiment-apis/appConstants.json',
   'experiment-apis/experiments.js',
   'experiment-apis/experiments.json',
+  'experiment-apis/matchPatterns.js',
+  'experiment-apis/matchPatterns.json',
   'experiment-apis/pictureInPicture.js',
   'experiment-apis/pictureInPicture.json',
   'experiment-apis/sharedPreferences.js',
   'experiment-apis/sharedPreferences.json',
   'experiment-apis/systemManufacturer.js',
   'experiment-apis/systemManufacturer.json',
+  'experiment-apis/trackingProtection.js',
+  'experiment-apis/trackingProtection.json',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
@@ -73,6 +80,24 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1641998-embedded-twitter-videos-etp-indexeddb.js',
 ]
 
+FINAL_TARGET_FILES.features['webcompat@mozilla.org']['shims'] += [
+  'shims/adsafeprotected-ima.js',
+  'shims/bmauth.js',
+  'shims/eluminate.js',
+  'shims/empty-script.js',
+  'shims/facebook-sdk.js',
+  'shims/google-analytics-ecommerce-plugin.js',
+  'shims/google-analytics-legacy.js',
+  'shims/google-analytics.js',
+  'shims/google-publisher-tags.js',
+  'shims/live-test-shim.js',
+  'shims/mochitest-shim-1.js',
+  'shims/mochitest-shim-2.js',
+  'shims/mochitest-shim-3.js',
+  'shims/rambler-authenticator.js',
+  'shims/rich-relevance.js',
+]
+
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
   'lib/about_compat_broker.js',
   'lib/custom_functions.js',
@@ -80,12 +105,16 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
   'lib/intervention_helpers.js',
   'lib/module_shim.js',
   'lib/picture_in_picture_overrides.js',
+  'lib/shim_messaging_helper.js',
+  'lib/shims.js',
   'lib/ua_overrides.js',
 ]
 
 XPCOM_MANIFESTS += [
     'components.conf',
 ]
+
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 with Files('**'):
   BUG_COMPONENT = ('Web Compatibility', 'Tooling & Investigations')
