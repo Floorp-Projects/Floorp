@@ -296,6 +296,13 @@ https://bad.include-subdomains.pinning-dynamic.example.com:443    privileged,cer
 https://badchain.include-subdomains.pinning.example.com:443       privileged,cert=staticPinningBad
 https://fail-handshake.example.com:443                            privileged,failHandshake
 
+# Host for bad cert domain fixup test
+https://badcertdomain.example.com:443                             privileged,cert=badCertDomain
+https://www.badcertdomain.example.com:443                         privileged,cert=badCertDomain
+https://127.0.0.3:433                                             privileged,cert=badCertDomain
+https://badcertdomain.example.com:82                              privileged,cert=badCertDomain
+https://mismatch.badcertdomain.example.com:443                    privileged,cert=badCertDomain
+
 # Hosts for sha1 console warning tests
 https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity
 https://sha256ee.example.com:443                                  privileged,cert=sha256_end_entity
