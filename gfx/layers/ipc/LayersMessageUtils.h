@@ -61,11 +61,13 @@ struct ParamTraits<mozilla::VsyncEvent> {
   static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.mId);
     WriteParam(msg, param.mTime);
+    WriteParam(msg, param.mOutputTime);
   }
   static bool Read(const Message* msg, PickleIterator* iter,
                    paramType* result) {
     return ReadParam(msg, iter, &result->mId) &&
-           ReadParam(msg, iter, &result->mTime);
+           ReadParam(msg, iter, &result->mTime) &&
+           ReadParam(msg, iter, &result->mOutputTime);
   }
 };
 

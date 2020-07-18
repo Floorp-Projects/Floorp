@@ -47,7 +47,9 @@ void SoftwareDisplay::EnableVsync() {
   }
 
   MOZ_ASSERT(IsInSoftwareVsyncThread());
-  NotifyVsync(mozilla::TimeStamp::Now());
+  TimeStamp vsyncTime = TimeStamp::Now();
+  TimeStamp outputTime = vsyncTime + mVsyncRate;
+  NotifyVsync(vsyncTime, outputTime);
 }
 
 void SoftwareDisplay::DisableVsync() {
@@ -79,7 +81,8 @@ bool SoftwareDisplay::IsInSoftwareVsyncThread() {
   return mVsyncThread->thread_id() == PlatformThread::CurrentId();
 }
 
-void SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) {
+void SoftwareDisplay::NotifyVsync(const mozilla::TimeStamp& aVsyncTimestamp,
+                                  const mozilla::TimeStamp& aOutputTimestamp) {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
 
   mozilla::TimeStamp displayVsyncTime = aVsyncTimestamp;
@@ -93,7 +96,7 @@ void SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) {
     displayVsyncTime = now;
   }
 
-  Display::NotifyVsync(displayVsyncTime);
+  Display::NotifyVsync(displayVsyncTime, aOutputTimestamp);
 
   // Prevent skew by still scheduling based on the original
   // vsync timestamp
@@ -111,9 +114,12 @@ void SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp) {
     nextVsync = mozilla::TimeStamp::Now();
   }
 
-  mCurrentVsyncTask = NewCancelableRunnableMethod<mozilla::TimeStamp>(
-      "SoftwareDisplay::NotifyVsync", this, &SoftwareDisplay::NotifyVsync,
-      nextVsync);
+  TimeStamp outputTime = nextVsync + mVsyncRate;
+
+  mCurrentVsyncTask =
+      NewCancelableRunnableMethod<mozilla::TimeStamp, mozilla::TimeStamp>(
+          "SoftwareDisplay::NotifyVsync", this, &SoftwareDisplay::NotifyVsync,
+          nextVsync, outputTime);
 
   RefPtr<Runnable> addrefedTask = mCurrentVsyncTask;
   mVsyncThread->message_loop()->PostDelayedTask(addrefedTask.forget(),

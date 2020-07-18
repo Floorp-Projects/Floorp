@@ -88,7 +88,8 @@ VsyncSource::Display::~Display() {
   MOZ_ASSERT(mEnabledCompositorVsyncDispatchers.Length() == 0);
 }
 
-void VsyncSource::Display::NotifyVsync(TimeStamp aVsyncTimestamp) {
+void VsyncSource::Display::NotifyVsync(const TimeStamp& aVsyncTimestamp,
+                                       const TimeStamp& aOutputTimestamp) {
   // Called on the vsync thread
   MutexAutoLock lock(mDispatcherLock);
 
@@ -107,7 +108,7 @@ void VsyncSource::Display::NotifyVsync(TimeStamp aVsyncTimestamp) {
       (mLastVsyncIdSentToMainThread == mLastMainThreadProcessedVsyncId);
 
   mVsyncId = mVsyncId.Next();
-  const VsyncEvent event(mVsyncId, aVsyncTimestamp);
+  const VsyncEvent event(mVsyncId, aVsyncTimestamp, aOutputTimestamp);
 
   for (size_t i = 0; i < mEnabledCompositorVsyncDispatchers.Length(); i++) {
     mEnabledCompositorVsyncDispatchers[i]->NotifyVsync(event);
