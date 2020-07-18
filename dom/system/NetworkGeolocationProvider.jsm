@@ -272,13 +272,6 @@ function NetworkGeolocationProvider() {
 
   XPCOMUtils.defineLazyPreferenceGetter(
     this,
-    "_wifiScanningEnabledCountry",
-    "geo.provider-country.network.scan",
-    true
-  );
-
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
     "_wifiCompareURL",
     "geo.provider.network.compare.url",
     null
