@@ -39,16 +39,23 @@ class VsyncSource {
    public:
     Display();
 
-    // Notified when this display's vsync occurs, on the vsync thread
-    // The aVsyncTimestamp should normalize to the Vsync time that just occured
-    // However, different platforms give different vsync notification times.
-    // OSX - The vsync timestamp of the upcoming frame, in the future
+    // Notified when this display's vsync callback occurs, on the vsync thread
+    // Different platforms give different aVsyncTimestamp values.
+    // macOS: TimeStamp::Now() or the output time of the previous vsync
+    //        callback, whichever is older.
     // Windows: It's messy, see gfxWindowsPlatform.
     // Android: TODO
-    // All platforms should normalize to the vsync that just occured.
-    // Large parts of Gecko assume TimeStamps should not be in the future such
-    // as animations
-    virtual void NotifyVsync(TimeStamp aVsyncTimestamp);
+    //
+    // @param aVsyncTimestamp  The time of the Vsync that just occured. Needs to
+    //     be at or before the time of the NotifyVsync call.
+    // @param aOutputTimestamp  The estimated timestamp at which drawing will
+    //     appear on the screen, if the drawing happens within a certain
+    //     (unknown) budget. Useful for Audio/Video sync. On platforms where
+    //     this timestamp is provided by the system (macOS), it is a much more
+    //     stable and consistent timing source than the time at which the vsync
+    //     callback is called.
+    virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp,
+                             const TimeStamp& aOutputTimestamp);
     void NotifyGenericObservers(VsyncEvent aEvent);
 
     RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
@@ -126,9 +133,11 @@ class VsyncSource {
 struct VsyncEvent {
   VsyncId mId;
   TimeStamp mTime;
+  TimeStamp mOutputTime;  // estimate
 
-  VsyncEvent(const VsyncId& aId, const TimeStamp& aTime)
-      : mId(aId), mTime(aTime) {}
+  VsyncEvent(const VsyncId& aId, const TimeStamp& aVsyncTime,
+             const TimeStamp& aOutputTime)
+      : mId(aId), mTime(aVsyncTime), mOutputTime(aOutputTime) {}
   VsyncEvent() = default;
 };
 

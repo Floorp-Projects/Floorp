@@ -666,7 +666,8 @@ class GtkVsyncSource final : public VsyncSource {
         }
 
         lastVsync = TimeStamp::Now();
-        NotifyVsync(lastVsync);
+        TimeStamp outputTime = lastVsync + GetVsyncRate();
+        NotifyVsync(lastVsync, outputTime);
       }
     }
 

@@ -21,7 +21,8 @@ class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display {
   void DisableVsync() override;
   bool IsVsyncEnabled() override;
   bool IsInSoftwareVsyncThread();
-  void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) override;
+  void NotifyVsync(const mozilla::TimeStamp& aVsyncTimestamp,
+                   const mozilla::TimeStamp& aOutputTimestamp) override;
   mozilla::TimeDuration GetVsyncRate() override;
   void ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp);
   void Shutdown() override;

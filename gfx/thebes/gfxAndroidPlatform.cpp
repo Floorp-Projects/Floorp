@@ -297,7 +297,10 @@ class AndroidVsyncSource final : public VsyncSource {
     using Base::DisposeNative;
 
     static void NotifyVsync() {
-      GetDisplayInstance().NotifyVsync(TimeStamp::Now());
+      Display& display = GetDisplayInstance();
+      TimeStamp vsyncTime = TimeStamp::Now();
+      TimeStamp outputTime = vsyncTime + display.GetVsyncRate();
+      display.NotifyVsync(vsyncTime, outputTime);
     }
   };
 
