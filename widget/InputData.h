@@ -358,6 +358,8 @@ class PanGestureInput : public InputData {
   ScreenPoint UserMultipliedPanDisplacement() const;
   ParentLayerPoint UserMultipliedLocalPanDisplacement() const;
 
+  static gfx::IntPoint GetIntegerDeltaForEvent(bool aIsStart, float x, float y);
+
   // Warning, this class is serialized and sent over IPC. Any change to its
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   PanGestureType mType;
