@@ -99,7 +99,7 @@ int ImageComposite::ChooseImageIndex() {
         return i;
       }
     }
-    return -1;
+    return 0;
   }
 
   uint32_t result = mLastChosenImageIndex;
