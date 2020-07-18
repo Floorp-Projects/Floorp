@@ -115,6 +115,8 @@ class ImageHost : public CompositableHost, public ImageComposite {
  protected:
   // ImageComposite
   TimeStamp GetCompositionTime() const override;
+  void AppendImageCompositeNotification(
+      const ImageCompositeNotificationInfo& aInfo) const override;
 
   // Use a simple RefPtr because the same texture is already held by a
   // a CompositableTextureHostRef in the array of TimedImage.

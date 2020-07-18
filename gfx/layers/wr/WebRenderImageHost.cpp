@@ -124,6 +124,13 @@ TimeStamp WebRenderImageHost::GetCompositionTime() const {
   return time;
 }
 
+void WebRenderImageHost::AppendImageCompositeNotification(
+    const ImageCompositeNotificationInfo& aInfo) const {
+  if (mCurrentAsyncImageManager) {
+    mCurrentAsyncImageManager->AppendImageCompositeNotification(aInfo);
+  }
+}
+
 TextureHost* WebRenderImageHost::GetAsTextureHost(IntRect* aPictureRect) {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   return nullptr;
@@ -148,22 +155,10 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
   }
 
   const TimedImage* img = GetImage(imageIndex);
-
-  if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
-    if (mAsyncRef) {
-      ImageCompositeNotificationInfo info;
-      info.mImageBridgeProcessId = mAsyncRef.mProcessId;
-      info.mNotification = ImageCompositeNotification(
-          mAsyncRef.mHandle, img->mTimeStamp,
-          mCurrentAsyncImageManager->GetCompositionTime(), img->mFrameID,
-          img->mProducerID);
-      mCurrentAsyncImageManager->AppendImageCompositeNotification(info);
-    }
-    UpdateCompositedFrame(img);
-
-    UpdateBias(imageIndex);
-  }
   SetCurrentTextureHost(img->mTextureHost);
+
+  UpdateCompositedFrame(imageIndex, img, mAsyncRef.mProcessId,
+                        mAsyncRef.mHandle);
 
   return mCurrentTextureHost;
 }
