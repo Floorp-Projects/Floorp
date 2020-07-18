@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "SpecialMessageActions",
@@ -11,15 +15,20 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "JsonSchemaValidator",
-  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
+  "Ajv",
+  "resource://testing-common/ajv-4.1.1.js"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SpecialMessageActionSchemas",
-  "resource://testing-common/SpecialMessageActionSchemas.js"
-);
+XPCOMUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
+  const response = await fetch(
+    "resource://testing-common/SpecialMessageActionSchemas.json"
+  );
+  const schema = await response.json();
+  if (!schema) {
+    throw new Error("Failed to load SpecialMessageActionSchemas");
+  }
+  return schema.definitions.SpecialMessageActionSchemas;
+});
 
 const EXAMPLE_URL = "https://example.com/";
 
@@ -29,15 +38,13 @@ const SMATestUtils = {
    * @param {SpecialMessageAction} action
    */
   async validateAction(action) {
-    const schema = SpecialMessageActionSchemas[action.type];
-    ok(schema, `should have a schema for ${action.type}`);
-    const { valid, error } = JsonSchemaValidator.validate(action, schema);
-    if (!valid) {
-      throw new Error(
-        `Action with type ${action.type} was not valid: ${error.message}`
-      );
+    const schema = await fetchSMASchema;
+    const ajv = new Ajv({ async: "co*" });
+    const validator = ajv.compile(schema);
+    if (!validator(action)) {
+      throw new Error(`Action with type ${action.type} was not valid.`);
     }
-    ok(valid, `should be a valid action of type ${action.type}`);
+    ok(!validator.errors, `should be a valid action of type ${action.type}`);
   },
 
   /**
@@ -46,7 +53,7 @@ const SMATestUtils = {
    * @param {Browser} browser
    */
   async executeAndValidateAction(action, browser = gBrowser) {
-    SMATestUtils.validateAction(action);
+    await SMATestUtils.validateAction(action);
     await SpecialMessageActions.handleAction(action, browser);
   },
 };
