@@ -124,6 +124,17 @@ TimeStamp WebRenderImageHost::GetCompositionTime() const {
   return time;
 }
 
+CompositionOpportunityId WebRenderImageHost::GetCompositionOpportunityId()
+    const {
+  CompositionOpportunityId id;
+
+  MOZ_ASSERT(mCurrentAsyncImageManager);
+  if (mCurrentAsyncImageManager) {
+    id = mCurrentAsyncImageManager->GetCompositionOpportunityId();
+  }
+  return id;
+}
+
 void WebRenderImageHost::AppendImageCompositeNotification(
     const ImageCompositeNotificationInfo& aInfo) const {
   if (mCurrentAsyncImageManager) {

@@ -170,6 +170,10 @@ class HostLayerManager : public LayerManager {
   void RecordPaintTimes(const PaintTiming& aTiming);
   void RecordUpdateTime(float aValue);
 
+  CompositionOpportunityId GetCompositionOpportunityId() const {
+    return mCompositionOpportunityId;
+  }
+
   TimeStamp GetCompositionTime() const { return mCompositionTime; }
   void SetCompositionTime(TimeStamp aTimeStamp) {
     mCompositionTime = aTimeStamp;

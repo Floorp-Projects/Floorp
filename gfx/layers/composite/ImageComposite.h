@@ -56,6 +56,7 @@ class ImageComposite {
   void UpdateBias(size_t aImageIndex);
 
   virtual TimeStamp GetCompositionTime() const = 0;
+  virtual CompositionOpportunityId GetCompositionOpportunityId() const = 0;
   virtual void AppendImageCompositeNotification(
       const ImageCompositeNotificationInfo& aInfo) const = 0;
 

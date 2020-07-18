@@ -115,6 +115,7 @@ class ImageHost : public CompositableHost, public ImageComposite {
  protected:
   // ImageComposite
   TimeStamp GetCompositionTime() const override;
+  CompositionOpportunityId GetCompositionOpportunityId() const override;
   void AppendImageCompositeNotification(
       const ImageCompositeNotificationInfo& aInfo) const override;
 
