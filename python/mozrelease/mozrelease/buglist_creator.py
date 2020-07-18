@@ -169,7 +169,7 @@ def get_previous_tag_version(
     tags = sorted(tags, key=lambda tag: tag[0])
 
     # Find where the current version is and go back one to get the previous version
-    next_version_index = (map(itemgetter(0), tags).index(current_version) - 1)
+    next_version_index = list(map(itemgetter(0), tags)).index(current_version) - 1
 
     return tags[next_version_index][1]
 

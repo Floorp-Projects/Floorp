@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import, print_function
 
-from md5 import md5
 import os
 from tempfile import mkstemp
 import unittest
@@ -25,7 +24,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
     def setUp(self):
         self.uvc = UpdateVerifyConfig()
         fd, self.tmpfilename = mkstemp()
-        self.tmpfile = os.fdopen(fd, "w")
+        self.tmpfile = os.fdopen(fd, "wb")
 
     def tearDown(self):
         self.tmpfile.close()
@@ -192,8 +191,8 @@ class TestUpdateVerifyConfig(unittest.TestCase):
 
         self.uvc.write(self.tmpfile)
         self.tmpfile.close()
-        self.assertEquals(md5(open(self.config).read()).hexdigest(),
-                          md5(open(self.tmpfilename).read()).hexdigest())
+        self.assertEquals(open(self.config).read(),
+                          open(self.tmpfilename).read())
 
     def testReadInvalidKey(self):
         invalidLine = 'foo="bar"'
