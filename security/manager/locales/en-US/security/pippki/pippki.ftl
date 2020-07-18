@@ -16,6 +16,16 @@ change-password-old = Current password:
 change-password-new = New password:
 change-password-reenter = New password (again):
 
+pippki-failed-pw-change = Unable to change password.
+pippki-incorrect-pw = You did not enter the correct current password. Please try again.
+pippki-pw-change-ok = Password successfully changed.
+
+pippki-pw-empty-warning = Your stored passwords and private keys will not be protected.
+pippki-pw-erased-ok = You have deleted your password. { pippki-pw-empty-warning }
+pippki-pw-not-wanted = Warning! You have decided not to use a password. { pippki-pw-empty-warning }
+
+pippki-pw-change2empty-in-fips-mode = You are currently in FIPS mode. FIPS requires a non-empty password.
+
 ## Reset Primary Password dialog
 
 reset-primary-password-window =
@@ -24,6 +34,9 @@ reset-primary-password-window =
 reset-password-button-label =
   .label = Reset
 reset-primary-password-text = If you reset your Primary Password, all your stored web and e-mail passwords, personal certificates, and private keys will be forgotten. Are you sure you want to reset your Primary Password?
+
+pippki-reset-password-confirmation-title = Reset Primary Password
+pippki-reset-password-confirmation-message = Your Primary Password has been reset.
 
 ## Downloading cert dialog
 

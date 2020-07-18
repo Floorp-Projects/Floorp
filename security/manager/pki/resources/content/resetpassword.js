@@ -17,16 +17,16 @@ function resetPassword() {
     Services.logins.removeAllLogins();
   } catch (e) {}
 
-  var bundle = document.getElementById("pippki_bundle");
+  let l10n = new Localization(["security/pippki/pippki.ftl"], true);
   var promptService = Cc[
     "@mozilla.org/embedcomp/prompt-service;1"
   ].getService();
   promptService = promptService.QueryInterface(Ci.nsIPromptService);
-  if (promptService && bundle) {
+  if (promptService && l10n) {
     promptService.alert(
       window,
-      bundle.getString("resetPasswordConfirmationTitle"),
-      bundle.getString("resetPasswordConfirmationMessage")
+      l10n.formatValueSync("pippki-reset-password-confirmation-title"),
+      l10n.formatValueSync("pippki-reset-password-confirmation-message")
     );
   }
 }
