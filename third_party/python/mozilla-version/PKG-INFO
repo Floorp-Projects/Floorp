@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: mozilla-version
-Version: 0.3.0
+Version: 0.3.4
 Summary: Process Firefox versions numbers. Tells whether they are valid or not, whether they are nightlies or regular releases, whether this version precedes that other.
     
 Home-page: https://github.com/mozilla-releng/mozilla-version
