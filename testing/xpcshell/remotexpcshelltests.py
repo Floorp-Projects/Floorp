@@ -17,7 +17,7 @@ import tempfile
 from zipfile import ZipFile
 
 import mozcrash
-from mozdevice import ADBDevice, ADBTimeoutError
+from mozdevice import ADBDevice, ADBDeviceFactory, ADBTimeoutError
 import mozfile
 import mozinfo
 from mozlog import commandline
@@ -37,12 +37,11 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         for key in mobileArgs:
             setattr(self, key, mobileArgs[key])
 
-    def initDir(self, path, mask="777", timeout=None, root=True):
+    def initDir(self, path, mask="777", timeout=None):
         """Initialize a directory by removing it if it exists, creating it
         and changing the permissions."""
-        self.device.rm(path, recursive=True, force=True, timeout=timeout, root=root)
-        self.device.mkdir(path, parents=True, timeout=timeout, root=root)
-        self.device.chmod(path, recursive=True, mask=mask, timeout=timeout, root=root)
+        self.device.rm(path, recursive=True, force=True, timeout=timeout)
+        self.device.mkdir(path, parents=True, timeout=timeout)
 
     def updateTestPrefsFile(self):
         testPrefsFile = xpcshell.XPCShellTestThread.updateTestPrefsFile(self)
@@ -54,7 +53,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         # Push the per-test prefs file in the remote temp dir.
         remoteTestPrefsFile = posixpath.join(self.remoteTmpDir, 'user.js')
         self.device.push(testPrefsFile, remoteTestPrefsFile)
-        self.device.chmod(remoteTestPrefsFile, root=True)
+        self.device.chmod(remoteTestPrefsFile)
         os.remove(testPrefsFile)
         return remoteTestPrefsFile
 
@@ -88,7 +87,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 
         pluginsDir = posixpath.join(self.remoteTmpDir, "plugins")
         self.device.push(self.pluginsPath, pluginsDir)
-        self.device.chmod(pluginsDir, root=True)
+        self.device.chmod(pluginsDir)
         if self.interactive:
             self.log.info("plugins dir is %s" % pluginsDir)
         return pluginsDir
@@ -104,7 +103,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         mozinfo.output_to_file(local)
         mozInfoJSPath = posixpath.join(self.profileDir, "mozinfo.json")
         self.device.push(local, mozInfoJSPath)
-        self.device.chmod(mozInfoJSPath, root=True)
+        self.device.chmod(mozInfoJSPath)
         os.remove(local)
         return mozInfoJSPath
 
@@ -169,7 +168,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         try:
             # env is ignored here since the environment has already been
             # set for the command via the pushWrapper method.
-            adb_process = self.device.shell(cmd, timeout=timeout+10, root=True)
+            adb_process = self.device.shell(cmd, timeout=timeout+10)
             output_file = adb_process.stdout_file
             self.shellReturnCode = adb_process.exitcode
         except ADBTimeoutError:
@@ -186,7 +185,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         # Guard against an accumulation of hung processes by killing
         # them here. Note also that IPC tests may spawn new instances
         # of xpcshell.
-        self.device.pkill("xpcshell", root=True)
+        self.device.pkill("xpcshell")
         return output_file
 
     def checkForCrashes(self,
@@ -215,7 +214,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         return None
 
     def kill(self, proc):
-        return self.device.pkill("xpcshell", root=True)
+        return self.device.pkill("xpcshell")
 
     def getReturnCode(self, proc):
         if self.shellReturnCode is not None:
@@ -225,7 +224,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 
     def removeDir(self, dirname):
         try:
-            self.device.rm(dirname, recursive=True, root=True)
+            self.device.rm(dirname, recursive=True)
         except ADBTimeoutError:
             raise
         except Exception as e:
@@ -247,10 +246,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         verbose = False
         if options['log_tbpl_level'] == 'debug' or options['log_mach_level'] == 'debug':
             verbose = True
-        self.device = ADBDevice(adb=options['adbPath'] or 'adb',
-                                device=options['deviceSerial'],
-                                test_root=options['remoteTestRoot'],
-                                verbose=verbose)
+        self.device = ADBDeviceFactory(adb=options['adbPath'] or 'adb',
+                                       device=options['deviceSerial'],
+                                       test_root=options['remoteTestRoot'],
+                                       verbose=verbose)
         self.remoteTestRoot = posixpath.join(self.device.test_root, "xpc")
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
@@ -263,7 +262,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # be executable. Since +x permissions cannot usually be set on /mnt/sdcard,
         # and the test root may be on /mnt/sdcard, remoteBinDir is set to be on
         # /data/local, always.
-        self.remoteBinDir = posixpath.join("/data", "local", "xpcb")
+        self.remoteBinDir = posixpath.join(self.device.test_root, "xpcb")
         # Terse directory names are used here ("c" for the components directory)
         # to minimize the length of the command line used to execute
         # xpcshell on the remote device. adb has a limit to the number
@@ -320,12 +319,11 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if self.remoteAPK:
             self.mobileArgs['remoteAPK'] = self.remoteAPK
 
-    def initDir(self, path, mask="777", timeout=None, root=True):
+    def initDir(self, path, mask="777", timeout=None):
         """Initialize a directory by removing it if it exists, creating it
         and changing the permissions."""
-        self.device.rm(path, recursive=True, force=True, timeout=timeout, root=root)
-        self.device.mkdir(path, parents=True, timeout=timeout, root=root)
-        self.device.chmod(path, recursive=True, mask=mask, timeout=timeout, root=root)
+        self.device.rm(path, recursive=True, force=True, timeout=timeout)
+        self.device.mkdir(path, parents=True, timeout=timeout)
 
     def setLD_LIBRARY_PATH(self):
         self.env["LD_LIBRARY_PATH"] = self.remoteBinDir
@@ -349,7 +347,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 "%s/xpcshell \"$@\"\n" % self.remoteBinDir])
         remoteWrapper = posixpath.join(self.remoteBinDir, "xpcw")
         self.device.push(localWrapper, remoteWrapper)
-        self.device.chmod(remoteWrapper, root=True)
+        self.device.chmod(remoteWrapper)
         os.remove(localWrapper)
 
     def buildPrefsFile(self, extraPrefs):
@@ -357,7 +355,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
         remotePrefsFile = posixpath.join(self.remoteTestRoot, 'user.js')
         self.device.push(self.prefsFile, remotePrefsFile)
-        self.device.chmod(remotePrefsFile, root=True)
+        self.device.chmod(remotePrefsFile)
         os.remove(self.prefsFile)
         self.prefsFile = remotePrefsFile
         return prefs
@@ -420,7 +418,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         local = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'head.js')
         remoteFile = posixpath.join(self.remoteScriptsDir, "head.js")
         self.device.push(local, remoteFile)
-        self.device.chmod(remoteFile, root=True)
+        self.device.chmod(remoteFile)
 
         # The xpcshell binary is required for all tests. Additional binaries
         # are required for some tests. This list should be similar to
@@ -440,7 +438,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 print("Pushing %s.." % fname, file=sys.stderr)
                 remoteFile = posixpath.join(self.remoteBinDir, fname)
                 self.device.push(local, remoteFile)
-                self.device.chmod(remoteFile, root=True)
+                self.device.chmod(remoteFile)
             else:
                 print("*** Expected binary %s not found in %s!" %
                       (fname, self.localBin), file=sys.stderr)
@@ -448,25 +446,25 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.js")
         self.device.push(local, remoteFile)
-        self.device.chmod(remoteFile, root=True)
+        self.device.chmod(remoteFile)
 
         local = os.path.join(self.localBin, "components/httpd.manifest")
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.manifest")
         self.device.push(local, remoteFile)
-        self.device.chmod(remoteFile, root=True)
+        self.device.chmod(remoteFile)
 
         if self.options['localAPK']:
             remoteFile = posixpath.join(self.remoteBinDir,
                                         os.path.basename(self.options['localAPK']))
             self.device.push(self.options['localAPK'], remoteFile)
-            self.device.chmod(remoteFile, root=True)
+            self.device.chmod(remoteFile)
 
             self.pushLibs()
         else:
             localB2G = os.path.join(self.options['objdir'], "dist", "b2g")
             if os.path.exists(localB2G):
                 self.device.push(localB2G, self.remoteBinDir)
-                self.device.chmod(self.remoteBinDir, root=True)
+                self.device.chmod(self.remoteBinDir)
             else:
                 raise Exception("unable to install gre: no APK and not b2g")
 
@@ -483,7 +481,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                     localFile = os.path.join(dir, info.filename)
                     self.device.push(localFile, remoteFile)
                     pushed_libs_count += 1
-                    self.device.chmod(remoteFile, root=True)
+                    self.device.chmod(remoteFile)
         finally:
             shutil.rmtree(dir)
         return pushed_libs_count
@@ -491,26 +489,26 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
     def setupModules(self):
         if self.testingModulesDir:
             self.device.push(self.testingModulesDir, self.remoteModulesDir)
-            self.device.chmod(self.remoteModulesDir, root=True)
+            self.device.chmod(self.remoteModulesDir)
 
     def setupTestDir(self):
         print('pushing %s' % self.xpcDir)
         # The tests directory can be quite large: 5000 files and growing!
         # Sometimes - like on a low-end aws instance running an emulator - the push
         # may exceed the default 5 minute timeout, so we increase it here to 10 minutes.
-        self.device.rm(self.remoteScriptsDir, recursive=True, force=True, timeout=None, root=True)
+        self.device.rm(self.remoteScriptsDir, recursive=True, force=True, timeout=None)
         self.device.push(self.xpcDir, self.remoteScriptsDir, timeout=600)
-        self.device.chmod(self.remoteScriptsDir, recursive=True, root=True)
+        self.device.chmod(self.remoteScriptsDir, recursive=True)
 
     def setupSocketConnections(self):
         # make node host ports visible to device
         if "MOZHTTP2_PORT" in self.env:
             port = "tcp:{}".format(self.env["MOZHTTP2_PORT"])
-            self.device.create_socket_connection(ADBDevice.SOCKET_DIRECTON_REVERSE, port, port)
+            self.device.create_socket_connection(ADBDevice.SOCKET_DIRECTION_REVERSE, port, port)
             self.log.info("reversed MOZHTTP2_PORT connection for port " + port)
         if "MOZNODE_EXEC_PORT" in self.env:
             port = "tcp:{}".format(self.env["MOZNODE_EXEC_PORT"])
-            self.device.create_socket_connection(ADBDevice.SOCKET_DIRECTON_REVERSE, port, port)
+            self.device.create_socket_connection(ADBDevice.SOCKET_DIRECTION_REVERSE, port, port)
             self.log.info("reversed MOZNODE_EXEC_PORT connection for port " + port)
 
     def buildTestList(self, test_tags=None, test_paths=None, verify=False):
