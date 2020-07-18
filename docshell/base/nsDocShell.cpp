@@ -81,6 +81,7 @@
 #include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/ParentChannelWrapper.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "mozilla/dom/RTCCertificate.h"
 #include "ReferrerInfo.h"
 
 #include "nsIApplicationCacheChannel.h"
@@ -160,6 +161,7 @@
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWritablePropertyBag2.h"
+#include "nsIX509Cert.h"
 
 #include "nsCommandManager.h"
 #include "nsPIDOMWindow.h"
@@ -208,6 +210,7 @@
 #include "nsStructuredCloneContainer.h"
 #include "nsSubDocumentFrame.h"
 #include "nsURILoader.h"
+#include "nsURLHelper.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsViewSourceHandler.h"
@@ -216,11 +219,14 @@
 #include "nsWidgetsCID.h"
 #include "nsXULAppAPI.h"
 
+#include "BRNameMatchingPolicy.h"
 #include "GeckoProfiler.h"
 #include "mozilla/NullPrincipal.h"
 #include "Navigator.h"
 #include "prenv.h"
 #include "URIUtils.h"
+#include "sslerr.h"
+#include "mozpkix/pkix.h"
 
 #include "timeline/JavascriptTimelineMarker.h"
 #include "nsDocShellTelemetryUtils.h"
@@ -5670,13 +5676,146 @@ already_AddRefed<nsIURIFixupInfo> nsDocShell::KeywordToURI(
 }
 
 /* static */
+already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
+    nsIChannel* aChannel, nsIURI* aUrl) {
+  if (!aChannel) {
+    return nullptr;
+  }
+
+  nsresult rv = NS_OK;
+  nsAutoCString host;
+  rv = aUrl->GetAsciiHost(host);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  // No point in going further if "www." is included in the hostname
+  // already. That is the only hueristic we're applying in this function.
+  if (StringBeginsWith(host, "www."_ns)) {
+    return nullptr;
+  }
+
+  // Return if fixup enable pref is turned off.
+  if (!mozilla::StaticPrefs::security_bad_cert_domain_error_url_fix_enabled()) {
+    return nullptr;
+  }
+
+  // Return if scheme is not HTTPS.
+  if (!SchemeIsHTTPS(aUrl)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
+  if (!info) {
+    return nullptr;
+  }
+
+  // Skip doing the fixup if our channel was redirected, because we
+  // shouldn't be guessing things about the post-redirect URI.
+  if (!info->RedirectChain().IsEmpty()) {
+    return nullptr;
+  }
+
+  int32_t port = 0;
+  rv = aUrl->GetPort(&port);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  // Don't fix up hosts with ports.
+  if (port != -1) {
+    return nullptr;
+  }
+
+  // Don't fix up localhost url.
+  if (host == "localhost") {
+    return nullptr;
+  }
+
+  // Don't fix up hostnames with IP address.
+  if (net_IsValidIPv4Addr(host) || net_IsValidIPv6Addr(host)) {
+    return nullptr;
+  }
+
+  nsAutoCString userPass;
+  rv = aUrl->GetUserPass(userPass);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  // Security - URLs with user / password info should NOT be modified.
+  if (!userPass.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> securityInfo;
+  rv = aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo);
+  if (NS_WARN_IF(!tsi)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIX509Cert> cert;
+  rv = tsi->GetServerCert(getter_AddRefs(cert));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsTArray<uint8_t> certBytes;
+  rv = cert->GetRawDER(certBytes);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  mozilla::pkix::Input serverCertInput;
+  mozilla::pkix::Result rv1 =
+      serverCertInput.Init(certBytes.Elements(), certBytes.Length());
+  if (rv1 != mozilla::pkix::Success) {
+    return nullptr;
+  }
+
+  nsAutoCString newHost("www."_ns);
+  newHost.Append(host);
+
+  mozilla::pkix::Input newHostInput;
+  rv1 = newHostInput.Init(
+      BitwiseCast<const uint8_t*, const char*>(newHost.BeginReading()),
+      newHost.Length());
+  if (rv1 != mozilla::pkix::Success) {
+    return nullptr;
+  }
+
+  // Check if adding a "www." prefix to the request's hostname will
+  // cause the response's certificate to match.
+  mozilla::psm::BRNameMatchingPolicy nameMatchingPolicy(
+      mozilla::psm::BRNameMatchingPolicy::Mode::Enforce);
+  rv1 = mozilla::pkix::CheckCertHostname(serverCertInput, newHostInput,
+                                         nameMatchingPolicy);
+  if (rv1 != mozilla::pkix::Success) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> newURI;
+  Unused << NS_MutateURI(aUrl).SetHost(newHost).Finalize(
+      getter_AddRefs(newURI));
+
+  return newURI.forget();
+}
+
+/* static */
 already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
     nsIChannel* aChannel, nsresult aStatus,
     const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,
     bool aIsTopFrame, bool aAllowKeywordFixup, bool aUsePrivateBrowsing,
     bool aNotifyKeywordSearchLoading, nsIInputStream** aNewPostData) {
   if (aStatus != NS_ERROR_UNKNOWN_HOST && aStatus != NS_ERROR_NET_RESET &&
-      aStatus != NS_ERROR_CONNECTION_REFUSED) {
+      aStatus != NS_ERROR_CONNECTION_REFUSED &&
+      aStatus !=
+          mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN)) {
     return nullptr;
   }
 
@@ -5839,6 +5978,15 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
                       .Finalize(getter_AddRefs(newURI));
       }
     }
+  }
+
+  // If we have a SSL_ERROR_BAD_CERT_DOMAIN error, try prefixing the domain name
+  // with www. to see if we can avoid showing the cert error page. For example,
+  // https://example.com -> https://www.example.com.
+  if (aStatus ==
+      mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN)) {
+    newPostData = nullptr;
+    newURI = MaybeFixBadCertDomainErrorURI(aChannel, url);
   }
 
   // Did we make a new URI that is different to the old one? If so
