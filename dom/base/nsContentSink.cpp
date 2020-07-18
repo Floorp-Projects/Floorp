@@ -819,6 +819,11 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
 
+  if (!uri) {
+    // URL parsing failed.
+    return;
+  }
+
   auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mDocument);
   referrerInfo = referrerInfo->CloneWithNewOriginalReferrer(mDocumentURI);
 
