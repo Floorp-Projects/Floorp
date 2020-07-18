@@ -231,8 +231,13 @@ class nsDriveEnumerator : public nsSimpleEnumerator,
 // static helper functions
 //-----------------------------------------------------------------------------
 
-// certainly not all the error that can be
-// encountered, but many of them common ones
+/**
+ * While not comprehensive, this will map many common Windows error codes to a
+ * corresponding nsresult. If an unmapped error is encountered, the hex error
+ * code will be logged to stderr. Error codes, names, and descriptions can be
+ * found at the following MSDN page:
+ * https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
+ */
 static nsresult ConvertWinError(DWORD aWinErr) {
   nsresult rv;
 
@@ -257,6 +262,7 @@ static nsresult ConvertWinError(DWORD aWinErr) {
     case ERROR_ARENA_TRASHED:
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
+    case ERROR_DIR_NOT_EMPTY:
     case ERROR_CURRENT_DIRECTORY:
       rv = NS_ERROR_FILE_DIR_NOT_EMPTY;
       break;
@@ -281,6 +287,9 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       rv = NS_OK;
       break;
     default:
+      printf_stderr(
+          "ConvertWinError received an unrecognized WinError: 0x%" PRIx32 "\n",
+          static_cast<uint32_t>(aWinErr));
       rv = NS_ERROR_FAILURE;
       break;
   }

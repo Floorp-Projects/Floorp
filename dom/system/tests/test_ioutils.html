@@ -39,6 +39,71 @@
       );
     });
 
+    add_task(async function test_create_and_remove() {
+      info("Test creating and removing a single file");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp");
+      await window.IOUtils.writeAtomic(tmpFileName, new Uint8Array(0));
+      ok(await fileExists(tmpFileName), `Expected file ${tmpFileName} to exist`);
+
+      await window.IOUtils.remove(tmpFileName);
+      ok(!await fileExists(tmpFileName), "IOUtils::remove can remove files");
+
+      info("Test creating and removing an empty directory");
+      const tmpDirName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
+      await OS.File.makeDir(tmpDirName);
+      ok(await OS.File.exists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
+
+      await window.IOUtils.remove(tmpDirName);
+      ok(!await OS.File.exists(tmpDirName), "IOUtils::remove can remove empty directories");
+    });
+
+    add_task(async function test_remove_non_existing() {
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutil_remove_non_existing.tmp");
+      ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
+
+      await window.IOUtils.remove(tmpFileName, { ignoreAbsent: true });
+      ok(!await fileExists(tmpFileName), "IOUtils::remove can ignore missing files without error");
+
+      await Assert.rejects(
+        window.IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
+        /Target file does not exist/,
+        "IOUtils::remove can throw an error when target file is missing"
+      );
+      ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
+    });
+
+    add_task(async function test_remove_recursive() {
+      const tmpParentDir = OS.Path.join(tmpDir, "test_ioutils_remove.tmp.d");
+      const tmpChildDir = OS.Path.join(tmpParentDir, "child.tmp.d");
+      const tmpTopLevelFileName = OS.Path.join(tmpParentDir, "top.tmp");
+      const tmpNestedFileName = OS.Path.join(tmpChildDir, "nested.tmp");
+      await OS.File.makeDir(tmpParentDir);
+      await OS.File.makeDir(tmpChildDir);
+      await createFile(tmpTopLevelFileName, "");
+      await createFile(tmpNestedFileName, "");
+
+      ok(
+        await fileExists(tmpTopLevelFileName),
+        `Expected file ${tmpTopLevelFileName} to exist`
+      );
+      ok(
+        await fileExists(tmpNestedFileName),
+        `Expected file  ${tmpNestedFileName} to exist`
+      );
+
+      await Assert.rejects(
+        window.IOUtils.remove(tmpParentDir, { recursive: false }),
+        /Could not remove non-empty directory.*/,
+        "IOUtils::remove fails if non-recursively removing directory with contents"
+      );
+
+      await window.IOUtils.remove(tmpParentDir, { recursive: true });
+      ok(
+        !await OS.File.exists(tmpParentDir),
+        "IOUtils::remove can recursively remove a directory"
+      );
+    });
+
     add_task(async function test_write_no_overwrite() {
       // Make a new file, and try to write to it with overwrites disabled.
       const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_overwrite.tmp");
@@ -292,7 +357,7 @@
         "IOUtils::move doesn't change source file when move fails"
       );
 
-      cleanup(tmpFileName);
+      await cleanup(tmpFileName);
     });
 
     add_task(async function test_move_rename() {
@@ -378,7 +443,7 @@
       );
 
       // Clean up.
-      await OS.File.removeDir(destDir);
+      await cleanup(destDir);
     });
 
     add_task(async function test_move_dir() {
@@ -410,7 +475,7 @@
       )
 
       // Clean up.
-      await OS.File.removeDir(destDir);
+      await cleanup(destDir);
     });
 
     add_task(async function test_move_failures() {
@@ -435,8 +500,8 @@
       const srcDir = OS.Path.join(tmpDir, "test_move_failure_src.tmp.d");
       await createFile(destFile);
       await OS.File.makeDir(srcDir);
-      ok(await OS.File.exists(srcDir), "Expected directory to exist");
-      ok(await OS.File.exists(destFile), "Expected file to exist");
+      ok(await OS.File.exists(srcDir), `Expected directory ${srcDir} to exist`);
+      ok(await OS.File.exists(destFile), `Expected file ${destFile} to exist`);
       // Test.
       await Assert.rejects(
         window.IOUtils.move(srcDir, destFile),
@@ -445,8 +510,7 @@
       );
 
       // Clean up.
-      await cleanup(destFile);
-      await OS.File.removeDir(srcDir);
+      await cleanup(destFile, srcDir);
     });
 
 
@@ -496,7 +560,7 @@
 
     async function cleanup(...files) {
       for (const file of files) {
-        await OS.File.remove(file);
+        await window.IOUtils.remove(file, { ignoreAbsent: true, recursive: true });
         const exists = await fileExists(file);
         ok(!exists, `Removed temporary file: ${file}`);
       }
