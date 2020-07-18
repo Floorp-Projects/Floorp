@@ -17,12 +17,7 @@ namespace layers {
 
 /* static */ const float ImageComposite::BIAS_TIME_MS = 1.0f;
 
-ImageComposite::ImageComposite()
-    : mLastFrameID(-1),
-      mLastProducerID(-1),
-      mBias(BIAS_NONE),
-      mDroppedFrames(0),
-      mLastChosenImageIndex(0) {}
+ImageComposite::ImageComposite() = default;
 
 ImageComposite::~ImageComposite() = default;
 
@@ -212,6 +207,11 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
   }
   mLastChosenImageIndex = ScanForLastFrameIndex(aNewImages);
   mImages = std::move(aNewImages);
+}
+
+void ImageComposite::UpdateCompositedFrame(const TimedImage* aImage) {
+  mLastFrameID = aImage->mFrameID;
+  mLastProducerID = aImage->mProducerID;
 }
 
 const ImageComposite::TimedImage* ImageComposite::GetImage(

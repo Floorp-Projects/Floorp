@@ -334,8 +334,7 @@ void ImageHost::FinishRendering(const RenderInfo& aInfo) {
           img->mFrameID, img->mProducerID);
       lm->AppendImageCompositeNotification(info);
     }
-    mLastFrameID = img->mFrameID;
-    mLastProducerID = img->mProducerID;
+    UpdateCompositedFrame(img);
   }
 
   // Update mBias last. This can change which frame ChooseImage(Index) would
