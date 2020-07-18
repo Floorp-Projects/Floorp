@@ -6128,7 +6128,6 @@ bool GCRuntime::initSweepActions() {
           Call(&GCRuntime::endMarkingSweepGroup),
           Call(&GCRuntime::beginSweepingSweepGroup),
           MaybeYield(ZealMode::IncrementalMultipleSlices),
-          Call(&GCRuntime::markDuringSweeping),
           MaybeYield(ZealMode::YieldBeforeSweepingAtoms),
           Call(&GCRuntime::sweepAtomsTable),
           MaybeYield(ZealMode::YieldBeforeSweepingCaches),
