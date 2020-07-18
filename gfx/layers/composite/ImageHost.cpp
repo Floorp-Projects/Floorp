@@ -143,6 +143,14 @@ TimeStamp ImageHost::GetCompositionTime() const {
   return time;
 }
 
+CompositionOpportunityId ImageHost::GetCompositionOpportunityId() const {
+  CompositionOpportunityId id;
+  if (HostLayerManager* lm = GetLayerManager()) {
+    id = lm->GetCompositionOpportunityId();
+  }
+  return id;
+}
+
 void ImageHost::AppendImageCompositeNotification(
     const ImageCompositeNotificationInfo& aInfo) const {
   if (HostLayerManager* lm = GetLayerManager()) {

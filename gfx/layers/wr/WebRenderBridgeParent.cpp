@@ -2030,9 +2030,10 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   wr::TransactionBuilder sceneBuilderTxn;
   wr::AutoTransactionSender sender(mApi, &sceneBuilderTxn);
 
-  mAsyncImageManager->SetCompositionTime(start);
+  mAsyncImageManager->SetCompositionInfo(start, mCompositionOpportunityId);
   mAsyncImageManager->ApplyAsyncImagesOfImageBridge(sceneBuilderTxn, fastTxn);
-  mAsyncImageManager->SetCompositionTime(TimeStamp());
+  mAsyncImageManager->SetCompositionInfo(TimeStamp(),
+                                         CompositionOpportunityId{});
 
   if (!mAsyncImageManager->GetCompositeUntilTime().IsNull()) {
     // Trigger another CompositeToTarget() call because there might be another
