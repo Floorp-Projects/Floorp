@@ -97,6 +97,7 @@ class CompositorVsyncScheduler {
    * vsync event. Must be called on the compositor thread.
    */
   const TimeStamp& GetLastVsyncTime() const;
+  const TimeStamp& GetLastVsyncOutputTime() const;
   const VsyncId& GetLastVsyncId() const;
 
   /**
@@ -111,7 +112,7 @@ class CompositorVsyncScheduler {
 
   // Post a task to run Composite() on the compositor thread, if there isn't
   // such a task already queued. Can be called from any thread.
-  void PostCompositeTask(VsyncId aId, TimeStamp aCompositeTimestamp);
+  void PostCompositeTask(const VsyncEvent& aVsyncEvent);
 
   // Post a task to run DispatchVREvents() on the VR thread, if there isn't
   // such a task already queued. Can be called from any thread.
@@ -124,7 +125,7 @@ class CompositorVsyncScheduler {
 
   // This gets run at vsync time and "does" a composite (which really means
   // update internal state and call the owner to do the composite).
-  void Composite(VsyncId aId, TimeStamp aVsyncTimestamp);
+  void Composite(const VsyncEvent& aVsyncEvent);
 
   void ObserveVsync();
   void UnobserveVsync();
@@ -146,8 +147,9 @@ class CompositorVsyncScheduler {
   };
 
   CompositorVsyncSchedulerOwner* mVsyncSchedulerOwner;
-  TimeStamp mLastCompose;
-  TimeStamp mLastVsync;
+  TimeStamp mLastComposeTime;
+  TimeStamp mLastVsyncTime;
+  TimeStamp mLastVsyncOutputTime;
   VsyncId mLastVsyncId;
 
   bool mAsapScheduling;
