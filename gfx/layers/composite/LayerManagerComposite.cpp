@@ -538,6 +538,7 @@ void LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
                "Shouldn't get END_NO_COMPOSITE here");
   mInTransaction = false;
   mRenderStartTime = TimeStamp::Now();
+  mCompositionOpportunityId = mCompositionOpportunityId.Next();
 
   if (!mIsCompositorReady) {
     return;

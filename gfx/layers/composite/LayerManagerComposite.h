@@ -225,6 +225,9 @@ class HostLayerManager : public LayerManager {
   // Render time for the current composition.
   TimeStamp mCompositionTime;
 
+  // CompositionOpportunityId of the current composition.
+  CompositionOpportunityId mCompositionOpportunityId;
+
   // When nonnull, during rendering, some compositable indicated that it will
   // change its rendering at this time. In order not to miss it, we composite
   // on every vsync until this time occurs (this is the latest such time).
