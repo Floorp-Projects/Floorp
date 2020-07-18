@@ -133,8 +133,7 @@ def make_task_description(config, jobs):
 
         task = {
             'label': label,
-            'description': "{} Partials".format(
-                dep_job.task["metadata"]["description"]),
+            'description': "{} Partials".format(dep_job.description),
             'worker-type': 'b-linux',
             'dependencies': dependencies,
             'scopes': [],
