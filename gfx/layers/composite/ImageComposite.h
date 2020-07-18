@@ -56,6 +56,8 @@ class ImageComposite {
   void UpdateBias(size_t aImageIndex);
 
   virtual TimeStamp GetCompositionTime() const = 0;
+  virtual void AppendImageCompositeNotification(
+      const ImageCompositeNotificationInfo& aInfo) const = 0;
 
   struct TimedImage {
     CompositableTextureHostRef mTextureHost;
@@ -82,7 +84,9 @@ class ImageComposite {
   void SetImages(nsTArray<TimedImage>&& aNewImages);
 
  protected:
-  void UpdateCompositedFrame(const TimedImage* aImage);
+  void UpdateCompositedFrame(int aImageIndex, const TimedImage* aImage,
+                             base::ProcessId aProcessId,
+                             const CompositableHandle& aHandle);
 
   int32_t mLastFrameID = -1;
   int32_t mLastProducerID = -1;
