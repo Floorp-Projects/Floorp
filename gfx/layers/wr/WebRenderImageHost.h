@@ -82,6 +82,8 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
  protected:
   // ImageComposite
   TimeStamp GetCompositionTime() const override;
+  void AppendImageCompositeNotification(
+      const ImageCompositeNotificationInfo& aInfo) const override;
 
   void SetCurrentTextureHost(TextureHost* aTexture);
 
