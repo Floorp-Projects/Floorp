@@ -9,11 +9,12 @@ add_task(async function test_SHOW_FIREFOX_ACCOUNTS() {
     let loaded = BrowserTestUtils.browserLoaded(browser);
     await SMATestUtils.executeAndValidateAction({
       type: "SHOW_FIREFOX_ACCOUNTS",
+      data: { entrypoint: "snippets" },
     });
     Assert.equal(
       await loaded,
       "https://example.com/?context=fx_desktop_v3&entrypoint=snippets&action=email&service=sync",
-      "should load fxa with endpoint=snippets by default"
+      "should load fxa with endpoint=snippets"
     );
 
     // Open a URL
