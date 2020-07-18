@@ -884,6 +884,10 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
 #ifdef DEBUG
     mResponseAvailableCalled = true;
 #endif
+  }
+
+  // mObserver could be null after OnResponseAvailable().
+  if (mObserver) {
     mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking);
     mObserver = nullptr;
   }
@@ -1402,7 +1406,9 @@ void FetchDriver::FinishOnStopRequest(
       mResponseAvailableCalled = true;
 #endif
     }
+  }
 
+  if (mObserver) {
     mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking);
     mObserver = nullptr;
   }
