@@ -151,6 +151,20 @@ struct LayersObserverEpoch {
   }
 };
 
+// CompositionOpportunityId is a counter that goes up every time we have an
+// opportunity to composite. It increments even on no-op composites (if nothing
+// has changed) and while compositing is paused. It does not skip values if a
+// composite is delayed. It is meaningful per window.
+// This counter is used to differentiate intentionally-skipped video frames from
+// unintentionally-skipped video frames: If CompositionOpportunityIds are
+// observed by the video in +1 increments, then the video was onscreen the
+// entire time and compositing was not paused. But if gaps in
+// CompositionOpportunityIds are observed, that must mean that the video was not
+// considered during some composition opportunities, because compositing was
+// paused or because the video was not part of the on-screen scene.
+class CompositionOpportunityType {};
+typedef BaseTransactionId<CompositionOpportunityType> CompositionOpportunityId;
+
 enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_BASIC,

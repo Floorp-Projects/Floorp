@@ -506,6 +506,7 @@ class WebRenderBridgeParent final
   std::queue<CompositorAnimationIdsForEpoch> mCompositorAnimationsToDelete;
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
+  CompositionOpportunityId mCompositionOpportunityId;
 
   VsyncId mSkippedCompositeId;
   TimeStamp mMostRecentComposite;
