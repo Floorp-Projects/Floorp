@@ -85,12 +85,15 @@ namespace js {
 
 class FinalizationRegistryObject;
 class FinalizationRecordObject;
+class FinalizationQueueObject;
 class ObjectWeakMap;
 
 using HandleFinalizationRegistryObject = Handle<FinalizationRegistryObject*>;
 using HandleFinalizationRecordObject = Handle<FinalizationRecordObject*>;
+using HandleFinalizationQueueObject = Handle<FinalizationQueueObject*>;
 using RootedFinalizationRegistryObject = Rooted<FinalizationRegistryObject*>;
 using RootedFinalizationRecordObject = Rooted<FinalizationRecordObject*>;
+using RootedFinalizationQueueObject = Rooted<FinalizationQueueObject*>;
 
 // A finalization record: a pair of finalization registry and held value.
 //
@@ -108,7 +111,6 @@ class FinalizationRecordObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  // The registry can be a CCW to a FinalizationRegistryObject.
   static FinalizationRecordObject* create(
       JSContext* cx, HandleFinalizationRegistryObject registry,
       HandleValue heldValue);
@@ -171,37 +173,17 @@ using FinalizationRecordVector =
 using FinalizationRecordSet =
     GCHashSet<HeapPtrObject, MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
 
-// The FinalizationRegistry object itself.
+// The JS FinalizationRegistry object itself.
 class FinalizationRegistryObject : public NativeObject {
-  enum {
-    CleanupCallbackSlot = 0,
-    IncumbentObjectSlot,
-    RegistrationsSlot,
-    ActiveRecords,
-    RecordsToBeCleanedUpSlot,
-    IsQueuedForCleanupSlot,
-    DoCleanupFunctionSlot,
-    SlotCount
-  };
-
-  enum DoCleanupFunctionSlots {
-    DoCleanupFunction_RegistrySlot = 0,
-  };
+  enum { QueueSlot = 0, RegistrationsSlot, ActiveRecords, SlotCount };
 
  public:
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  JSObject* cleanupCallback() const;
-  JSObject* incumbentObject() const;
+  FinalizationQueueObject* queue() const;
   ObjectWeakMap* registrations() const;
   FinalizationRecordSet* activeRecords() const;
-  FinalizationRecordVector* recordsToBeCleanedUp() const;
-  bool isQueuedForCleanup() const;
-  JSFunction* doCleanupFunction() const;
-
-  void queueRecordToBeCleanedUp(FinalizationRecordObject* record);
-  void setQueuedForCleanup(bool value);
 
   void sweep();
 
@@ -210,7 +192,6 @@ class FinalizationRegistryObject : public NativeObject {
   static bool cleanupQueuedRecords(JSContext* cx,
                                    HandleFinalizationRegistryObject registry,
                                    HandleObject callback = nullptr);
-
  private:
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
@@ -231,6 +212,51 @@ class FinalizationRegistryObject : public NativeObject {
       HandleFinalizationRecordObject record);
 
   static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
+
+  static void trace(JSTracer* trc, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
+};
+
+// Contains information about the cleanup callback and the records queued to
+// be cleaned up. This is not exposed to content JS.
+class FinalizationQueueObject : public NativeObject {
+  enum {
+    RegistrySlot = 0,
+    CleanupCallbackSlot,
+    IncumbentObjectSlot,
+    RecordsToBeCleanedUpSlot,
+    IsQueuedForCleanupSlot,
+    DoCleanupFunctionSlot,
+    SlotCount
+  };
+
+  enum DoCleanupFunctionSlots {
+    DoCleanupFunction_QueueSlot = 0,
+  };
+
+ public:
+  static const JSClass class_;
+
+  FinalizationRegistryObject* registry() const;
+  JSObject* cleanupCallback() const;
+  JSObject* incumbentObject() const;
+  FinalizationRecordVector* recordsToBeCleanedUp() const;
+  bool isQueuedForCleanup() const;
+  JSFunction* doCleanupFunction() const;
+
+  void queueRecordToBeCleanedUp(FinalizationRecordObject* record);
+  void setQueuedForCleanup(bool value);
+
+  static FinalizationQueueObject* create(
+      JSContext* cx, HandleFinalizationRegistryObject registry,
+      HandleObject cleanupCallback);
+
+  static bool cleanupQueuedRecords(JSContext* cx,
+                                   HandleFinalizationQueueObject registry,
+                                   HandleObject callback = nullptr);
+
+ private:
+  static const JSClassOps classOps_;
 
   static bool doCleanup(JSContext* cx, unsigned argc, Value* vp);
 

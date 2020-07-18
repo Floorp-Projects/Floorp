@@ -31,6 +31,7 @@ class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
 class FinalizationRegistryObject;
+class FinalizationQueueObject;
 class VerifyPreTracer;
 class WeakRefObject;
 class ZoneAllocator;
@@ -738,8 +739,7 @@ class GCRuntime {
   void sweepJitDataOnMainThread(JSFreeOp* fop);
   void sweepFinalizationRegistriesOnMainThread();
   void sweepFinalizationRegistries(Zone* zone);
-  void queueFinalizationRegistryForCleanup(
-      FinalizationRegistryObject* registry);
+  void queueFinalizationRegistryForCleanup(FinalizationQueueObject* queue);
   void sweepWeakRefs();
   IncrementalProgress endSweepingSweepGroup(JSFreeOp* fop, SliceBudget& budget);
   IncrementalProgress performSweepActions(SliceBudget& sliceBudget);
