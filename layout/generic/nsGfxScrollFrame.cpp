@@ -5302,16 +5302,22 @@ void ScrollFrameHelper::UpdateScrollbarPosition() {
   mFrameIsUpdatingScrollbar = true;
 
   nsPoint pt = GetScrollPosition();
+  nsRect scrolledRect = GetScrolledRect();
+
+  if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+    pt = GetVisualViewportOffset();
+  }
+
   if (mVScrollbarBox) {
     SetCoordAttribute(mVScrollbarBox->GetContent()->AsElement(),
-                      nsGkAtoms::curpos, pt.y - GetScrolledRect().y);
+                      nsGkAtoms::curpos, pt.y - scrolledRect.y);
     if (!weakFrame.IsAlive()) {
       return;
     }
   }
   if (mHScrollbarBox) {
     SetCoordAttribute(mHScrollbarBox->GetContent()->AsElement(),
-                      nsGkAtoms::curpos, pt.x - GetScrolledRect().x);
+                      nsGkAtoms::curpos, pt.x - scrolledRect.x);
     if (!weakFrame.IsAlive()) {
       return;
     }
@@ -5342,6 +5348,11 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
   nsRect scrolledRect = GetScrolledRect();
 
   nsPoint current = GetScrollPosition() - scrolledRect.TopLeft();
+
+  if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+    current = GetVisualViewportOffset() - scrolledRect.TopLeft();
+  }
+
   nsPoint dest;
   nsRect allowedRange;
   dest.x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos, current.x,
@@ -6175,10 +6186,15 @@ bool ScrollFrameHelper::ReflowFinished() {
   if (vScroll || hScroll) {
     nsSize visualViewportSize = GetVisualViewportSize();
     nsRect scrollRange = GetVisualScrollRange();
-
-    AutoWeakFrame weakFrame(mOuter);
     nsPoint scrollPos = GetScrollPosition();
     nsSize lineScrollAmount = GetLineScrollAmount();
+
+    if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+      scrollRange = GetScrollRangeForUserInputEvents();
+      scrollPos = GetVisualViewportOffset();
+    }
+
+    AutoWeakFrame weakFrame(mOuter);
     if (vScroll) {
       const double kScrollMultiplier =
           Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
