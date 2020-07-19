@@ -467,21 +467,34 @@ class RegionDetector {
   async _geoCode(location) {
     let plainMap = await this._getPlainMap();
     let polygons = this._getPolygonsContainingPoint(location, plainMap);
-    // The plain map doesnt have overlapping regions so return
-    // region straight away.
-    if (polygons.length) {
-      return polygons[0].region;
+    if (polygons.length == 1) {
+      log.info("Found in single exact region");
+      return polygons[0].properties.alpha2;
     }
+    if (polygons.length) {
+      log.info("Found in ", polygons.length, "overlapping exact regions");
+      return this._findFurthest(location, polygons);
+    }
+
+    // We haven't found a match in the exact map, use the buffered map
+    // to see if the point is close to a region.
     let bufferedMap = await this._getBufferedMap();
     polygons = this._getPolygonsContainingPoint(location, bufferedMap);
-    // Only found one matching region, return.
+
     if (polygons.length === 1) {
-      return polygons[0].region;
+      log.info("Found in single buffered region");
+      return polygons[0].properties.alpha2;
     }
-    // Matched more than one region, find the longest distance
-    // from a border and return that region.
-    if (polygons.length > 1) {
-      return this._findLargestDistance(location, polygons);
+
+    // Matched more than one region, which one of those regions
+    // is it closest to without the buffer.
+    if (polygons.length) {
+      log.info("Found in ", polygons.length, "overlapping buffered regions");
+      let regions = polygons.map(polygon => polygon.properties.alpha2);
+      let unBufferedRegions = plainMap.features.filter(feature =>
+        regions.includes(feature.properties.alpha2)
+      );
+      return this._findClosest(location, unBufferedRegions);
     }
     return null;
   }
@@ -507,18 +520,12 @@ class RegionDetector {
       let coords = feature.geometry.coordinates;
       if (feature.geometry.type === "Polygon") {
         if (this._polygonInPoint(point, coords[0])) {
-          polygons.push({
-            coords: coords[0],
-            region: feature.properties.alpha2,
-          });
+          polygons.push(feature);
         }
       } else if (feature.geometry.type === "MultiPolygon") {
         for (const innerCoords of coords) {
           if (this._polygonInPoint(point, innerCoords[0])) {
-            polygons.push({
-              coords: innerCoords[0],
-              region: feature.properties.alpha2,
-            });
+            polygons.push(feature);
           }
         }
       }
@@ -527,28 +534,74 @@ class RegionDetector {
   }
 
   /**
-   * Find the largest distance between a point and and a border
-   * that contains it.
+   * Find the largest distance between a point and any of the points that
+   * make up an array of regions.
    *
    * @param {Object} location
    *   A lat + lng coordinate.
-   * @param {Object} polygons
-   *   Array of polygons that define a border.
+   * @param {Array} regions
+   *   An array of GeoJSON region definitions.
    *
    * @returns {String}
    *   A 2 character string representing a region.
    */
-  _findLargestDistance(location, polygons) {
-    let maxDistance = { distance: 0, region: null };
-    for (const polygon of polygons) {
-      for (const [lng, lat] of polygon.coords) {
-        let distance = this._distanceBetween(location, { lng, lat });
-        if (distance > maxDistance.distance) {
-          maxDistance = { distance, region: polygon.region };
+  _findFurthest(location, regions) {
+    let max = { distance: 0, region: null };
+    this._traverse(regions, ({ lat, lng, region }) => {
+      let distance = this._distanceBetween(location, { lng, lat });
+      if (distance > max.distance) {
+        max = { distance, region };
+      }
+    });
+    return max.region;
+  }
+
+  /**
+   * Find the smallest distance between a point and any of the points that
+   * make up an array of regions.
+   *
+   * @param {Object} location
+   *   A lat + lng coordinate.
+   * @param {Array} regions
+   *   An array of GeoJSON region definitions.
+   *
+   * @returns {String}
+   *   A 2 character string representing a region.
+   */
+  _findClosest(location, regions) {
+    let min = { distance: Infinity, region: null };
+    this._traverse(regions, ({ lat, lng, region }) => {
+      let distance = this._distanceBetween(location, { lng, lat });
+      if (distance < min.distance) {
+        min = { distance, region };
+      }
+    });
+    return min.region;
+  }
+
+  /**
+   * Utility function to loop over all the coordinate points in an
+   * array of polygons and call a function on them.
+   *
+   * @param {Array} regions
+   *   An array of GeoJSON region definitions.
+   * @param {Function} fun
+   *   Function to call on individual coordinates.
+   */
+  _traverse(regions, fun) {
+    for (const region of regions) {
+      if (region.geometry.type === "Polygon") {
+        for (const [lng, lat] of region.geometry.coordinates[0]) {
+          fun({ lat, lng, region: region.properties.alpha2 });
+        }
+      } else if (region.geometry.type === "MultiPolygon") {
+        for (const innerCoords of region.geometry.coordinates) {
+          for (const [lng, lat] of innerCoords[0]) {
+            fun({ lat, lng, region: region.properties.alpha2 });
+          }
         }
       }
     }
-    return maxDistance.region;
   }
 
   /**

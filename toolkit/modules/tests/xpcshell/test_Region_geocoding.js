@@ -23,6 +23,7 @@ async function stubMap(path, fun) {
 }
 
 add_task(async function test_setup() {
+  Services.prefs.setBoolPref("browser.region.log", true);
   await stubMap("regions/world.geojson", "_getPlainMap");
   await stubMap("regions/world-buffered.geojson", "_getBufferedMap");
 });
@@ -39,7 +40,14 @@ const LOCATIONS = [
   { lat: 35.4411368, lng: -41.5372973, expectedRegion: null },
 ];
 
-add_task(async function test_basic() {
+add_task(async function test_mls_results() {
+  setLocation({ lat: -5.066019, lng: 39.1026251 });
+  let expectedRegion = "TZ";
+  let region = await Region._getRegionLocally();
+  Assert.equal(region, expectedRegion);
+});
+
+/*add_task(async function test_basic() {
   for (const { lat, lng, expectedRegion } of LOCATIONS) {
     setLocation({ lat, lng });
     let region = await Region._getRegionLocally();
@@ -47,6 +55,20 @@ add_task(async function test_basic() {
       region,
       expectedRegion,
       `Got the expected region at ${lat},${lng}`
+    );
+  }
+});*/
+
+add_task(async function test_mls_results() {
+  let data = await readFile(do_get_file("regions/mls-lookup-results.csv"));
+  for (const row of data.split("\n")) {
+    let [lat, lng, expectedRegion] = row.split(",");
+    setLocation({ lng: parseFloat(lng), lat: parseFloat(lat) });
+    let region = await Region._getRegionLocally();
+    Assert.equal(
+      region,
+      expectedRegion,
+      `Expected ${expectedRegion} at ${lat},${lng} got ${region}`
     );
   }
 });
