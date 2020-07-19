@@ -1,5 +1,5 @@
 [css-masonry]
-title = "experimental-features-css-masonry2"
+title = "experimental-features-css-masonry"
 description = "experimental-features-css-masonry-description"
 description-links = {explainer = "https://github.com/w3c/csswg-drafts/blob/master/css-grid-2/MASONRY-EXPLAINER.md", w3c-issue = "https://github.com/w3c/csswg-drafts/issues/4650", bug = "https://bugzilla.mozilla.org/show_bug.cgi?id=1607439"}
 restart-required = false
@@ -7,116 +7,27 @@ preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
 bug-numbers = [1607954]
 is-public = true
+default-value = false
 
-[web-api-webgpu]
-title = "experimental-features-web-gpu2"
-description = "experimental-features-web-gpu-description2"
-description-links = {wikipedia = "https://en.wikipedia.org/wiki/Graphics%20Processing%20Unit", spec = "https://gpuweb.github.io/gpuweb/", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1602129"}
+[web-gpu]
+title = "experimental-features-web-gpu"
+description = "experimental-features-web-gpu-description"
 restart-required = true
 preference = "dom.webgpu.enabled"
 type = "boolean"
 bug-numbers = [1602129]
 is-public = {default = false, nightly = true}
+default-value = false
 
-[media-avif]
-title = "experimental-features-media-avif"
-description = "experimental-features-media-avif-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1443863"}
+[avif]
+title = "experimental-features-avif"
+description = "experimental-features-avif-description"
 restart-required = false
 preference = "image.avif.enabled"
 type = "boolean"
 bug-numbers = [1443863]
 is-public = {default = false, nightly = true}
-
-[web-api-inputmode]
-title = "experimental-features-web-api-inputmode"
-description = "experimental-features-web-api-inputmode-description"
-description-links = {mdn-inputmode = "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inputmode", whatwg = "https://bugzilla.mozilla.org/show_bug.cgi?id=1509527", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1205133"}
-restart-required = false
-preference = "dom.forms.inputmode"
-type = "boolean"
-bug-numbers = [1205133]
-is-public = {default = false, nightly = true}
-
-[web-api-link-preload]
-title = "experimental-features-web-api-link-preload"
-description = "experimental-features-web-api-link-preload-description"
-description-links = {link = "https://developer.mozilla.org/docs/Web/HTML/Element/link", rel = "https://developer.mozilla.org/docs/Web/HTML/Element/link#attr-rel", readmore = "https://developer.mozilla.org/docs/Web/HTML/Preloading_content", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1583604"}
-restart-required = false
-preference = "network.preload"
-type = "boolean"
-bug-numbers = [1583604]
-is-public = {default = false, nightly = true}
-
-[css-focus-visible]
-title = "experimental-features-css-focus-visible"
-description = "experimental-features-css-focus-visible-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1617600"}
-restart-required = false
-preference = "layout.css.focus-visible.enabled"
-type = "boolean"
-bug-numbers = [1617600]
-is-public = {default = false, nightly = true}
-
-[web-api-beforeinput]
-title = "experimental-features-web-api-beforeinput"
-description = "experimental-features-web-api-beforeinput-description"
-description-links = {mdn-beforeinput = "https://developer.mozilla.org/docs/Web/API/HTMLElement/beforeinput_event", mdn-input = "https://developer.mozilla.org/docs/Web/HTML/Element/input", mdn-textarea = "https://developer.mozilla.org/docs/Web/HTML/Element/textarea", mdn-contenteditable = "https://developer.mozilla.org/docs/Web/HTML/Global_attributes#attr-contenteditable"}
-restart-required = false
-preference = "dom.input_events.beforeinput.enabled"
-type = "boolean"
-bug-numbers = [1609291]
-is-public = {default = false, nightly = true}
-
-[css-constructable-stylesheets]
-title = "experimental-features-css-constructable-stylesheets"
-description = "experimental-features-css-constructable-stylesheets-description"
-description-links = {mdn-cssstylesheet = "https://developer.mozilla.org/docs/Web/API/CSSStyleSheet", mdn-shadowdom = "https://developer.mozilla.org/docs/Web/Web_Components/Using_shadow_DOM", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1520690"}
-restart-required = false
-preference = "layout.css.constructable-stylesheets.enabled"
-type = "boolean"
-bug-numbers = [1520690]
-is-public = {default = false, nightly = true}
-
-[media-session-api]
-title = "experimental-features-media-session-api"
-description = "experimental-features-media-session-api-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1112032"}
-restart-required = false
-preference = "dom.media.mediasession.enabled"
-type = "boolean"
-bug-numbers = [1112032]
-is-public = {default = false, nightly = true}
-
-[devtools-color-scheme-simulation]
-title = "experimental-features-devtools-color-scheme-simulation"
-description = "experimental-features-devtools-color-scheme-simulation-description"
-description-links = {mdn-preferscolorscheme = "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-color-scheme", bugzilla1 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1550804", bugzilla2 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1137699"}
-restart-required = false
-preference = "devtools.inspector.color-scheme-simulation.enabled"
-type = "boolean"
-bug-numbers = [1550804, 1137699]
-is-public = {default = false, nightly = true}
-
-[devtools-execution-context-selector]
-title = "experimental-features-devtools-execution-context-selector"
-description = "experimental-features-devtools-execution-context-selector-description"
-description-links = {bugzilla1 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605154", bugzilla2 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605153"}
-restart-required = false
-preference = "devtools.webconsole.input.context"
-type = "boolean"
-bug-numbers = [1605154, 1605153]
-is-public = {default = false, nightly = true}
-
-[devtools-compatibility-panel]
-title = "experimental-features-devtools-compatibility-panel"
-description = "experimental-features-devtools-compatibility-panel-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1584464"}
-restart-required = false
-preference = "devtools.inspector.compatibility.enabled"
-type = "boolean"
-bug-numbers = [1605154, 1605153]
-is-public = true
+default-value = false
 
 [cookie-samesite-lax-by-default]
 title = "experimental-features-cookie-samesite-lax-by-default2"
@@ -158,9 +69,9 @@ bug-numbers = [1651119]
 is-public = true
 default-value = {default = false, nightly = true}
 
-[devtools-serviceworker-debugger-support]
-title = "experimental-features-devtools-serviceworker-debugger-support"
-description = "experimental-features-devtools-serviceworker-debugger-support-description"
+[serviceworker-debugger-support]
+title = "experimental-features-serviceworker-debugger-support"
+description = "experimental-features-serviceworker-debugger-support-description"
 restart-required = true
 preference = "devtools.debugger.features.windowless-service-workers"
 type = "boolean"
