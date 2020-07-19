@@ -10,7 +10,7 @@ Value type that represents the state of a Custom Tab.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CustomTabSessionState(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), content: `[`ContentState`](../-content-state/index.md)`, trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)` = TrackingProtectionState(), config: `[`CustomTabConfig`](../-custom-tab-config/index.md)`, engineState: `[`EngineState`](../-engine-state/index.md)` = EngineState(), extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`> = emptyMap(), contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Value type that represents the state of a Custom Tab. |
+| [&lt;init&gt;](-init-.md) | `CustomTabSessionState(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), content: `[`ContentState`](../-content-state/index.md)`, trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)` = TrackingProtectionState(), config: `[`CustomTabConfig`](../-custom-tab-config/index.md)`, engineState: `[`EngineState`](../-engine-state/index.md)` = EngineState(), extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`> = emptyMap(), contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, source: `[`Source`](../-session-state/-source/index.md)` = SessionState.Source.CUSTOM_TAB)`<br>Value type that represents the state of a Custom Tab. |
 
 ### Properties
 
@@ -22,6 +22,7 @@ Value type that represents the state of a Custom Tab.
 | [engineState](engine-state.md) | `val engineState: `[`EngineState`](../-engine-state/index.md)<br>the [EngineState](../-engine-state/index.md) of this session. |
 | [extensionState](extension-state.md) | `val extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`>`<br>a map of web extension ids and extensions, that contains the overridden values for this tab. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the ID of this custom tab and session. |
+| [source](source.md) | `val source: `[`Source`](../-session-state/-source/index.md)<br>the [Source](../-session-state/-source/index.md) of this session to describe how and why it was created. |
 | [trackingProtection](tracking-protection.md) | `val trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)<br>the [TrackingProtectionState](../-tracking-protection-state/index.md) of this custom tab. |
 
 ### Functions

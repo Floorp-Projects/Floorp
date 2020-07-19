@@ -1,8 +1,8 @@
-[android-components](../../../index.md) / [mozilla.components.browser.session](../../index.md) / [Session](../index.md) / [Source](./index.md)
+[android-components](../../../index.md) / [mozilla.components.browser.state.state](../../index.md) / [SessionState](../index.md) / [Source](./index.md)
 
 # Source
 
-`enum class Source` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L117)
+`enum class Source` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L46)
 
 Represents the origin of a session to describe how and why it was created.
 
