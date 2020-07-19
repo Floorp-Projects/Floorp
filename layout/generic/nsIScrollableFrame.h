@@ -452,6 +452,10 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void ResetScrollInfoIfGeneration(uint32_t aGeneration) = 0;
   /**
+   * Relative scrolling offset to be requested of apz.
+   */
+  virtual Maybe<nsPoint> GetRelativeOffset() const = 0;
+  /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.
    */

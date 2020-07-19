@@ -4551,6 +4551,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       aLayerMetrics.GetDoSmoothScroll() &&
       (aLayerMetrics.GetScrollGeneration() != Metrics().GetScrollGeneration());
 
+  bool pureRelativeSmoothScrollRequested =
+      aLayerMetrics.IsPureRelative() &&
+      (aLayerMetrics.GetScrollGeneration() != Metrics().GetScrollGeneration());
+
   // If `isDefault` is true, this APZC is a "new" one (this is the first time
   // it's getting a NotifyLayersUpdated call). In this case we want to apply the
   // visual scroll offset from the main thread to our scroll offset.
@@ -4569,7 +4573,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   if ((aLayerMetrics.GetScrollUpdateType() == FrameMetrics::eMainThread &&
        aLayerMetrics.GetVisualScrollUpdateType() !=
            FrameMetrics::eMainThread) ||
-      smoothScrollRequested) {
+      smoothScrollRequested || pureRelativeSmoothScrollRequested) {
     visualScrollOffsetUpdated = false;
   }
 
@@ -4724,6 +4728,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
                  ToString(aLayerMetrics.GetScrollOffset()).c_str());
         Metrics().ApplyScrollUpdateFrom(aLayerMetrics);
       }
+
       Metrics().RecalculateLayoutViewportOffset();
 
       for (auto& sampledState : mSampledState) {
@@ -4763,7 +4768,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     }
   }
 
-  if (smoothScrollRequested) {
+  if (smoothScrollRequested || pureRelativeSmoothScrollRequested) {
     // A smooth scroll has been requested for animation on the compositor
     // thread.  This flag will be reset by the main thread when it receives
     // the scroll update acknowledgement.
@@ -4772,14 +4777,24 @@ void AsyncPanZoomController::NotifyLayersUpdated(
              Stringify(Metrics().GetScrollOffset()).c_str(),
              Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str(), mState);
 
-    // See comment on the similar code in the |if (scrollOffsetUpdated)| block
-    // above.
-    if (StaticPrefs::apz_relative_update_enabled() &&
-        aLayerMetrics.IsRelative()) {
-      Metrics().ApplyRelativeSmoothScrollUpdateFrom(aLayerMetrics);
-    } else {
-      Metrics().ApplySmoothScrollUpdateFrom(aLayerMetrics);
+    if (smoothScrollRequested) {
+      // See comment on the similar code in the |if (scrollOffsetUpdated)| block
+      // above.
+      if (StaticPrefs::apz_relative_update_enabled() &&
+          aLayerMetrics.IsRelative()) {
+        Metrics().ApplyRelativeSmoothScrollUpdateFrom(aLayerMetrics);
+      } else {
+        Metrics().ApplySmoothScrollUpdateFrom(aLayerMetrics);
+      }
     }
+
+    if (pureRelativeSmoothScrollRequested) {
+      MOZ_ASSERT(aLayerMetrics.IsPureRelative());
+      MOZ_ASSERT(gfxPlatform::UseDesktopZoomingScrollbars());
+      Metrics().ApplyPureRelativeSmoothScrollUpdateFrom(aLayerMetrics,
+                                                        smoothScrollRequested);
+    }
+
     needContentRepaint = true;
     mExpectedGeckoMetrics.UpdateFrom(aLayerMetrics);
 

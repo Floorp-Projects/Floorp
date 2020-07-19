@@ -147,7 +147,8 @@ struct FrameMetrics {
            mIsRelative == aOther.mIsRelative &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer &&
-           mFixedLayerMargins == aOther.mFixedLayerMargins;
+           mFixedLayerMargins == aOther.mFixedLayerMargins &&
+           mPureRelativeOffset == aOther.mPureRelativeOffset;
   }
 
   bool operator!=(const FrameMetrics& aOther) const {
@@ -308,6 +309,16 @@ struct FrameMetrics {
     mDoSmoothScroll = aOther.mDoSmoothScroll;
   }
 
+  void ApplyPureRelativeSmoothScrollUpdateFrom(const FrameMetrics& aOther,
+                                               bool aApplyToSmoothScroll) {
+    MOZ_ASSERT(aOther.IsPureRelative() && aOther.mPureRelativeOffset.isSome());
+    ClampAndSetSmoothScrollOffset(
+        (aApplyToSmoothScroll ? mSmoothScrollOffset : mScrollOffset) +
+        *aOther.mPureRelativeOffset);
+    mScrollGeneration = aOther.mScrollGeneration;
+    mDoSmoothScroll = true;
+  }
+
   void UpdatePendingScrollInfo(const ScrollUpdateInfo& aInfo) {
     mScrollOffset = aInfo.mScrollOffset;
     mBaseScrollOffset = aInfo.mBaseScrollOffset;
@@ -422,6 +433,8 @@ struct FrameMetrics {
 
   bool IsRelative() const { return mIsRelative; }
 
+  bool IsPureRelative() const { return mPureRelativeOffset.isSome(); }
+
   bool GetDoSmoothScroll() const { return mDoSmoothScroll; }
 
   uint32_t GetScrollGeneration() const { return mScrollGeneration; }
@@ -517,6 +530,10 @@ struct FrameMetrics {
   }
   const ScreenMargin& GetFixedLayerMargins() const {
     return mFixedLayerMargins;
+  }
+
+  void SetPureRelativeOffset(const Maybe<CSSPoint>& aPureRelativeOffset) {
+    mPureRelativeOffset = aPureRelativeOffset;
   }
 
   // Helper function for RecalculateViewportOffset(). Exposed so that
@@ -693,6 +710,10 @@ struct FrameMetrics {
   // 'fixed layer margins' on the main-thread. This is only used for the
   // root-content scroll frame.
   ScreenMargin mFixedLayerMargins;
+
+  // When this is Some it means a smooth scroll is requested with the
+  // destination being the current scroll offset plus this relative offset.
+  Maybe<CSSPoint> mPureRelativeOffset;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;

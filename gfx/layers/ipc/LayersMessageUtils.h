@@ -213,6 +213,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mVisualViewportOffset);
     WriteParam(aMsg, aParam.mVisualScrollUpdateType);
     WriteParam(aMsg, aParam.mFixedLayerMargins);
+    WriteParam(aMsg, aParam.mPureRelativeOffset);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mIsRelative);
     WriteParam(aMsg, aParam.mDoSmoothScroll);
@@ -245,6 +246,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
         ReadParam(aMsg, aIter, &aResult->mVisualViewportOffset) &&
         ReadParam(aMsg, aIter, &aResult->mVisualScrollUpdateType) &&
         ReadParam(aMsg, aIter, &aResult->mFixedLayerMargins) &&
+        ReadParam(aMsg, aIter, &aResult->mPureRelativeOffset) &&
         ReadBoolForBitfield(aMsg, aIter, aResult,
                             &paramType::SetIsRootContent) &&
         ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRelative) &&
