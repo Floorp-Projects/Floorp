@@ -43,6 +43,7 @@
             android:id="@+id/history_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:scrollbars="vertical"
             tools:listitem="@layout/history_list_item"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
