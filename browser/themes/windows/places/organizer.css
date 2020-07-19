@@ -151,18 +151,6 @@
     margin-inline-start: -3px;
     position: relative;
   }
-
-  @media (-moz-os-version: windows-win7) {
-    #detailsDeck {
-      border-top-color: #A9B7C9;
-    }
-  }
-}
-
-@media (-moz-windows-glass) {
-  #placesToolbox {
-    border-top: none;
-  }
 }
 
 @media (prefers-color-scheme: dark) {
