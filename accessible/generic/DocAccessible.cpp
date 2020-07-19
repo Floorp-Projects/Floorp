@@ -568,7 +568,10 @@ void DocAccessible::HandleScroll(nsINode* aTarget) {
   // kScrollEventInterval milliseconds, dispatch one now.
   if (!mLastScrollingDispatch.Get(aTarget, &lastDispatch) ||
       (now - lastDispatch).ToMilliseconds() >= kScrollEventInterval) {
-    DispatchScrollingEvent(aTarget, nsIAccessibleEvent::EVENT_SCROLLING);
+    // We can't fire events on a document whose tree isn't constructed yet.
+    if (HasLoadState(eTreeConstructed)) {
+      DispatchScrollingEvent(aTarget, nsIAccessibleEvent::EVENT_SCROLLING);
+    }
     mLastScrollingDispatch.Put(aTarget, now);
   }
 
@@ -1590,7 +1593,9 @@ void DocAccessible::NotifyOfLoading(bool aIsReloading) {
 
   if (!IsLoadEventTarget()) return;
 
-  if (aIsReloading && !mLoadEventType) {
+  if (aIsReloading && !mLoadEventType &&
+      // We can't fire events on a document whose tree isn't constructed yet.
+      HasLoadState(eTreeConstructed)) {
     // Fire reload and state busy events on existing document accessible while
     // event from user input flag can be calculated properly and accessible
     // is alive. When new document gets loaded then this one is destroyed.
