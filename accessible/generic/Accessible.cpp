@@ -791,6 +791,11 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
 
   if (IPCAccessibilityActive() && Document()) {
     DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
+    // If ipcDoc is null, we can't fire the event to the client. We shouldn't
+    // have fired the event in the first place, since this makes events
+    // inconsistent for local and remote documents. To avoid this, don't call
+    // nsEventShell::FireEvent on a DocAccessible for which
+    // HasLoadState(eTreeConstructed) is false.
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
       uint64_t id = aEvent->GetAccessible()->IsDoc()
