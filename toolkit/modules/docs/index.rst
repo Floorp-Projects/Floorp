@@ -9,4 +9,3 @@ The ``/toolkit/modules`` directory contains a number of self-contained toolkit m
 
   AsyncShutdown
   FirstStartup
-  Region
