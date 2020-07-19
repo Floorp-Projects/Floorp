@@ -1148,7 +1148,7 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
 
   let validURL;
   try {
-    validURL = Services.io.newURI(cmd.parameters.url);
+    validURL = new URL(cmd.parameters.url);
   } catch (e) {
     throw new InvalidArgumentError(`Malformed URL: ${e.message}`);
   }
@@ -1156,8 +1156,14 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   // We need to move to the top frame before navigating
   await this.listener.switchToFrame();
 
+  const loadEventExpected = navigate.isLoadEventExpected(
+    this.currentURL,
+    validURL
+  );
+
   const navigated = this.listener.navigateTo({
-    url: validURL.spec,
+    url: validURL,
+    loadEventExpected,
     pageTimeout: this.timeouts.pageLoad,
   });
 
