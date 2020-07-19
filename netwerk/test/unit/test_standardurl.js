@@ -1104,70 +1104,9 @@ registerCleanupFunction(function() {
 
 add_test(function test_idna_host() {
   // See bug 945240 - this test makes sure that URLs return a punycode hostname
-  // when the pref is set, or unicode otherwise.
-
-  // First we test that the old behaviour still works properly for all methods
-  // that return strings containing the hostname
-
-  gPrefs.setBoolPref("network.standard-url.punycode-host", false);
   let url = stringToURL(
     "http://user:password@ält.example.org:8080/path?query#etc"
   );
-
-  equal(url.host, "ält.example.org");
-  equal(url.hostPort, "ält.example.org:8080");
-  equal(url.prePath, "http://user:password@ält.example.org:8080");
-  equal(url.spec, "http://user:password@ält.example.org:8080/path?query#etc");
-  equal(
-    url.specIgnoringRef,
-    "http://user:password@ält.example.org:8080/path?query"
-  );
-  equal(
-    url
-      .QueryInterface(Ci.nsISensitiveInfoHiddenURI)
-      .getSensitiveInfoHiddenSpec(),
-    "http://user:****@ält.example.org:8080/path?query#etc"
-  );
-
-  equal(url.displayHost, "ält.example.org");
-  equal(url.displayHostPort, "ält.example.org:8080");
-  equal(
-    url.displaySpec,
-    "http://user:password@ält.example.org:8080/path?query#etc"
-  );
-
-  equal(url.asciiHost, "xn--lt-uia.example.org");
-  equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
-  equal(
-    url.asciiSpec,
-    "http://user:password@xn--lt-uia.example.org:8080/path?query#etc"
-  );
-
-  url = url
-    .mutate()
-    .setRef("")
-    .finalize(); // SetRef calls InvalidateCache()
-  equal(url.spec, "http://user:password@ält.example.org:8080/path?query");
-  equal(
-    url.displaySpec,
-    "http://user:password@ält.example.org:8080/path?query"
-  );
-  equal(
-    url.asciiSpec,
-    "http://user:password@xn--lt-uia.example.org:8080/path?query"
-  );
-
-  url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
-  url = url
-    .mutate()
-    .setRef("")
-    .finalize();
-  equal(url.spec, "http://user:password@www.ält.com:8080/path?query");
-
-  // We also check that the default behaviour changes once we filp the pref
-  gPrefs.setBoolPref("network.standard-url.punycode-host", true);
-
-  url = stringToURL("http://user:password@ält.example.org:8080/path?query#etc");
   equal(url.host, "xn--lt-uia.example.org");
   equal(url.hostPort, "xn--lt-uia.example.org:8080");
   equal(url.prePath, "http://user:password@xn--lt-uia.example.org:8080");

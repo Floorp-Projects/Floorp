@@ -304,7 +304,6 @@ class nsStandardURL : public nsIFileURL,
   static StaticRefPtr<nsIIDNService> gIDN;
   static const char gHostLimitDigits[];
   static bool gInitialized;
-  static bool gPunycodeHost;
 
  public:
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN

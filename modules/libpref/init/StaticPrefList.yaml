@@ -8158,14 +8158,6 @@
   value: 2048
   mirror: always
 
-# Whether nsIURI.host/.hostname/.spec should return a punycode string.
-# If set to false we will revert to previous behaviour and return a unicode
-# string.
-- name: network.standard-url.punycode-host
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # The maximum allowed length for a URL - 1MB default.
 - name: network.standard-url.max-length
   type: RelaxedAtomicUint32
