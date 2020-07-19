@@ -427,7 +427,7 @@ const loadListener = {
    * @param {string=} url
    *     Optional URL, which is used to check if a page load is expected.
    */
-  navigate(
+  async navigate(
     trigger,
     commandID,
     timeout,
@@ -444,34 +444,32 @@ const loadListener = {
       this.start(commandID, timeout, startTime, true);
     }
 
-    return (async () => {
-      await trigger();
-    })()
-      .then(() => {
-        if (!loadEventExpected) {
-          sendOk(commandID);
-          return;
-        }
+    await trigger();
 
-        // If requested setup a timer to detect a possible page load
-        if (useUnloadTimer) {
-          this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(
-            Ci.nsITimer
-          );
-          this.timerPageUnload.initWithCallback(
-            this,
-            200,
-            Ci.nsITimer.TYPE_ONE_SHOT
-          );
-        }
-      })
-      .catch(err => {
-        if (loadEventExpected) {
-          this.stop();
-        }
+    try {
+      if (!loadEventExpected) {
+        sendOk(commandID);
+        return;
+      }
 
-        sendError(err, commandID);
-      });
+      // If requested setup a timer to detect a possible page load
+      if (useUnloadTimer) {
+        this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(
+          Ci.nsITimer
+        );
+        this.timerPageUnload.initWithCallback(
+          this,
+          200,
+          Ci.nsITimer.TYPE_ONE_SHOT
+        );
+      }
+    } catch (e) {
+      if (loadEventExpected) {
+        this.stop();
+      }
+
+      sendError(e, commandID);
+    }
   },
 };
 
@@ -1124,11 +1122,11 @@ function waitForPageLoaded(msg) {
  * navigate within an iframe.  All other navigation is handled by the driver
  * (in chrome space).
  */
-function navigateTo(msg) {
+async function navigateTo(msg) {
   let { commandID, pageTimeout, url, loadEventExpected } = msg.json;
 
   try {
-    loadListener.navigate(
+    await loadListener.navigate(
       () => {
         curContainer.frame.location = url;
       },
@@ -1152,11 +1150,11 @@ function navigateTo(msg) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-function goBack(msg) {
+async function goBack(msg) {
   let { commandID, pageTimeout } = msg.json;
 
   try {
-    loadListener.navigate(
+    await loadListener.navigate(
       () => {
         curContainer.frame.history.back();
       },
@@ -1179,11 +1177,11 @@ function goBack(msg) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-function goForward(msg) {
+async function goForward(msg) {
   let { commandID, pageTimeout } = msg.json;
 
   try {
-    loadListener.navigate(
+    await loadListener.navigate(
       () => {
         curContainer.frame.history.forward();
       },
@@ -1206,7 +1204,7 @@ function goForward(msg) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-function refresh(msg) {
+async function refresh(msg) {
   let { commandID, pageTimeout } = msg.json;
 
   try {
@@ -1214,7 +1212,7 @@ function refresh(msg) {
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
 
-    loadListener.navigate(
+    await loadListener.navigate(
       () => {
         curContainer.frame.location.reload(true);
       },
@@ -1303,7 +1301,7 @@ function getBrowsingContextId(topContext = false) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-function clickElement(msg) {
+async function clickElement(msg) {
   let { commandID, webElRef, pageTimeout } = msg.json;
 
   try {
@@ -1317,7 +1315,7 @@ function clickElement(msg) {
       loadEventExpected = false;
     }
 
-    loadListener.navigate(
+    await loadListener.navigate(
       () => {
         return interaction.clickElement(
           el,
