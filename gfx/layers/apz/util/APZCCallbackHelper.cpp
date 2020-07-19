@@ -836,7 +836,8 @@ void APZCCallbackHelper::NotifyFlushComplete(PresShell* aPresShell) {
 bool APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame) {
   return aFrame->IsProcessingAsyncScroll() ||
          nsLayoutUtils::CanScrollOriginClobberApz(aFrame->LastScrollOrigin()) ||
-         aFrame->LastSmoothScrollOrigin() != ScrollOrigin::None;
+         aFrame->LastSmoothScrollOrigin() != ScrollOrigin::None ||
+         aFrame->GetRelativeOffset().isSome();
 }
 
 /* static */
