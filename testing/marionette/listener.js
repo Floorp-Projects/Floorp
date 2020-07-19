@@ -427,7 +427,7 @@ const loadListener = {
    * @param {string=} url
    *     Optional URL, which is used to check if a page load is expected.
    */
-  async navigate(
+  navigate(
     trigger,
     commandID,
     timeout,
@@ -444,32 +444,34 @@ const loadListener = {
       this.start(commandID, timeout, startTime, true);
     }
 
-    await trigger();
+    return (async () => {
+      await trigger();
+    })()
+      .then(() => {
+        if (!loadEventExpected) {
+          sendOk(commandID);
+          return;
+        }
 
-    try {
-      if (!loadEventExpected) {
-        sendOk(commandID);
-        return;
-      }
+        // If requested setup a timer to detect a possible page load
+        if (useUnloadTimer) {
+          this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(
+            Ci.nsITimer
+          );
+          this.timerPageUnload.initWithCallback(
+            this,
+            200,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
+        }
+      })
+      .catch(err => {
+        if (loadEventExpected) {
+          this.stop();
+        }
 
-      // If requested setup a timer to detect a possible page load
-      if (useUnloadTimer) {
-        this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(
-          Ci.nsITimer
-        );
-        this.timerPageUnload.initWithCallback(
-          this,
-          200,
-          Ci.nsITimer.TYPE_ONE_SHOT
-        );
-      }
-    } catch (e) {
-      if (loadEventExpected) {
-        this.stop();
-      }
-
-      sendError(e, commandID);
-    }
+        sendError(err, commandID);
+      });
   },
 };
 
@@ -593,6 +595,7 @@ function startListeners() {
     "Marionette:getElementValueOfCssProperty",
     getElementValueOfCssPropertyFn
   );
+  addMessageListener("Marionette:get", get);
   addMessageListener("Marionette:getPageSource", getPageSourceFn);
   addMessageListener("Marionette:getScreenshotRect", getScreenshotRectFn);
   addMessageListener("Marionette:goBack", goBack);
@@ -601,7 +604,6 @@ function startListeners() {
   addMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
   addMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListener("Marionette:multiAction", multiActionFn);
-  addMessageListener("Marionette:navigateTo", navigateTo);
   addMessageListener("Marionette:performActions", performActionsFn);
   addMessageListener("Marionette:refresh", refresh);
   addMessageListener("Marionette:reftestWait", reftestWaitFn);
@@ -645,6 +647,7 @@ function deregister() {
     "Marionette:getElementValueOfCssProperty",
     getElementValueOfCssPropertyFn
   );
+  removeMessageListener("Marionette:get", get);
   removeMessageListener("Marionette:getPageSource", getPageSourceFn);
   removeMessageListener("Marionette:getScreenshotRect", getScreenshotRectFn);
   removeMessageListener("Marionette:goBack", goBack);
@@ -653,7 +656,6 @@ function deregister() {
   removeMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
   removeMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   removeMessageListener("Marionette:multiAction", multiActionFn);
-  removeMessageListener("Marionette:navigateTo", navigateTo);
   removeMessageListener("Marionette:performActions", performActionsFn);
   removeMessageListener("Marionette:refresh", refresh);
   removeMessageListener("Marionette:releaseActions", releaseActionsFn);
@@ -1122,11 +1124,30 @@ function waitForPageLoaded(msg) {
  * navigate within an iframe.  All other navigation is handled by the driver
  * (in chrome space).
  */
-async function navigateTo(msg) {
-  let { commandID, pageTimeout, url, loadEventExpected } = msg.json;
+function get(msg) {
+  let { commandID, pageTimeout, url, loadEventExpected = null } = msg.json;
 
   try {
-    await loadListener.navigate(
+    if (typeof url == "string") {
+      try {
+        if (loadEventExpected === null) {
+          loadEventExpected = navigate.isLoadEventExpected(
+            curContainer.frame.location,
+            url
+          );
+        }
+      } catch (e) {
+        let err = new InvalidArgumentError("Malformed URL: " + e.message);
+        sendError(err, commandID);
+        return;
+      }
+    }
+
+    // We need to move to the top frame before navigating
+    sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
+    curContainer.frame = content;
+
+    loadListener.navigate(
       () => {
         curContainer.frame.location = url;
       },
@@ -1150,11 +1171,11 @@ async function navigateTo(msg) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-async function goBack(msg) {
+function goBack(msg) {
   let { commandID, pageTimeout } = msg.json;
 
   try {
-    await loadListener.navigate(
+    loadListener.navigate(
       () => {
         curContainer.frame.history.back();
       },
@@ -1177,11 +1198,11 @@ async function goBack(msg) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-async function goForward(msg) {
+function goForward(msg) {
   let { commandID, pageTimeout } = msg.json;
 
   try {
-    await loadListener.navigate(
+    loadListener.navigate(
       () => {
         curContainer.frame.history.forward();
       },
@@ -1204,7 +1225,7 @@ async function goForward(msg) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-async function refresh(msg) {
+function refresh(msg) {
   let { commandID, pageTimeout } = msg.json;
 
   try {
@@ -1212,7 +1233,7 @@ async function refresh(msg) {
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
 
-    await loadListener.navigate(
+    loadListener.navigate(
       () => {
         curContainer.frame.location.reload(true);
       },
@@ -1301,7 +1322,7 @@ function getBrowsingContextId(topContext = false) {
  *     Timeout in milliseconds the method has to wait for the page being
  *     finished loading.
  */
-async function clickElement(msg) {
+function clickElement(msg) {
   let { commandID, webElRef, pageTimeout } = msg.json;
 
   try {
@@ -1315,7 +1336,7 @@ async function clickElement(msg) {
       loadEventExpected = false;
     }
 
-    await loadListener.navigate(
+    loadListener.navigate(
       () => {
         return interaction.clickElement(
           el,

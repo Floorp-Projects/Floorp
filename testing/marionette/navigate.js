@@ -8,6 +8,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 this.EXPORTED_SYMBOLS = ["navigate"];
 
 /** @namespace */
@@ -17,9 +19,9 @@ this.navigate = {};
  * Determines if we expect to get a DOM load event (DOMContentLoaded)
  * on navigating to the <code>future</code> URL.
  *
- * @param {nsIURI} current
+ * @param {string} current
  *     URL the browser is currently visiting.
- * @param {nsIURI=} future
+ * @param {string=} future
  *     Destination URL, if known.
  *
  * @return {boolean}
@@ -40,18 +42,21 @@ navigate.isLoadEventExpected = function(current, future = undefined) {
     return true;
   }
 
+  let cur = new URL(current);
+  let fut = new URL(future);
+
   // Assume javascript:<whatever> will modify the current document
   // but this is not an entirely safe assumption to make,
   // considering it could be used to set window.location
-  if (future.protocol == "javascript:") {
+  if (fut.protocol == "javascript:") {
     return false;
   }
 
   // If hashes are present and identical
   if (
-    current.href.includes("#") &&
-    future.href.includes("#") &&
-    current.hash === future.hash
+    cur.href.includes("#") &&
+    fut.href.includes("#") &&
+    cur.hash === fut.hash
   ) {
     return false;
   }
