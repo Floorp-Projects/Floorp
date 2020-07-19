@@ -396,16 +396,6 @@ class Alias(CompositeStrategy):
         return next(results)
 
 
-def split_bugbug_arg(arg):
-    """
-    The bugbug optimization strageies require passing an dict as
-    scratch space for communicating with downstream stratgies.
-    This function pass the provided argument to the first strategy,
-    and a fresh dictionary to the second stratgey.
-    """
-    return (arg, {})
-
-
 # Trigger registration in sibling modules.
 import_sibling_modules()
 
@@ -413,15 +403,16 @@ import_sibling_modules()
 # Register composite strategies.
 register_strategy('build', args=('skip-unless-schedules',))(Alias)
 register_strategy('build-optimized', args=(
-    Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
+    Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=tuple),
     'backstop',
 ))(All)
 register_strategy('build-fuzzing', args=('push-interval-10',))(Alias)
 register_strategy('test', args=(
-    Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
+    Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=tuple),
     'backstop',
 ))(All)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
+register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
 
 
 # Strategy overrides used by |mach try| and/or shadow-scheduler tasks.
@@ -436,12 +427,12 @@ class experimental(object):
     """
 
     bugbug_tasks_medium = {
-        'test': Any('skip-unless-schedules', 'bugbug-tasks-medium', split_args=split_bugbug_arg),
+        'test': Any('skip-unless-schedules', 'bugbug-tasks-medium', split_args=tuple),
     }
     """Doesn't limit platforms, medium confidence threshold."""
 
     bugbug_tasks_high = {
-        'test': Any('skip-unless-schedules', 'bugbug-tasks-high', split_args=split_bugbug_arg),
+        'test': Any('skip-unless-schedules', 'bugbug-tasks-high', split_args=tuple),
     }
     """Doesn't limit platforms, high confidence threshold."""
 
@@ -449,7 +440,7 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-low', 'platform-debug', 'platform-disperse'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Restricts tests to debug platforms."""
@@ -458,7 +449,7 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-low', 'platform-disperse'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Disperse tests across platforms, low confidence threshold."""
@@ -467,7 +458,7 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-medium', 'platform-disperse'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Disperse tests across platforms, medium confidence threshold."""
@@ -476,7 +467,7 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-reduced-manifests', 'platform-disperse'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Disperse tests across platforms, medium confidence threshold with reduced tasks."""
@@ -485,7 +476,7 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-medium', 'platform-disperse-no-unseen'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Disperse tests across platforms (no modified for unseen configurations), medium confidence
@@ -495,7 +486,7 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-medium', 'platform-disperse-only-one'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Disperse tests across platforms (one platform per group), medium confidence threshold."""
@@ -504,29 +495,29 @@ class experimental(object):
         'test': Any(
             'skip-unless-schedules',
             Any('bugbug-high', 'platform-disperse'),
-            split_args=split_bugbug_arg
+            split_args=tuple
         ),
     }
     """Disperse tests across platforms, high confidence threshold."""
 
     bugbug_reduced = {
-        'test': Any('skip-unless-schedules', 'bugbug-reduced', split_args=split_bugbug_arg),
+        'test': Any('skip-unless-schedules', 'bugbug-reduced', split_args=tuple),
     }
     """Use the reduced set of tasks (and no groups) chosen by bugbug."""
 
     bugbug_reduced_high = {
-        'test': Any('skip-unless-schedules', 'bugbug-reduced-high', split_args=split_bugbug_arg),
+        'test': Any('skip-unless-schedules', 'bugbug-reduced-high', split_args=tuple),
     }
     """Use the reduced set of tasks (and no groups) chosen by bugbug, high
     confidence threshold."""
 
     relevant_tests = {
-        'test': Any('skip-unless-schedules', 'skip-unless-has-relevant-tests'),
+        'test': Any('skip-unless-schedules', 'skip-unless-has-relevant-tests', split_args=tuple),
     }
     """Runs task containing tests in the same directories as modified files."""
 
     seta = {
-        'test': Any('skip-unless-schedules', 'seta'),
+        'test': Any('skip-unless-schedules', 'seta', split_args=tuple),
     }
     """Provides a stable history of SETA's performance in the event we make it
     non-default in the future. Only useful as a benchmark."""
@@ -554,6 +545,6 @@ class ExperimentalOverride(object):
 
 
 tryselect = ExperimentalOverride(experimental, {
-    'build': Any('skip-unless-schedules', 'bugbug-reduced', split_args=split_bugbug_arg),
+    'build': Any('skip-unless-schedules', 'bugbug-reduced', split_args=tuple),
     'build-fuzzing': Alias('bugbug-reduced'),
 })
