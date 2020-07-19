@@ -93,30 +93,6 @@ from mozrunner.utils import get_stack_fixer_function
 _cleanup_encoding_re = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\\\\]')
 
 
-def dict_keys_str(dictionary):
-    """
-      Dictionary is a dict type object which might contain keys
-      of type bytes. This function decodes those keys to str
-      using UTF-8 decoding and updates the dictionary by deleting
-      the bytes type keys and replacing them with str type keys.
-    """
-    deleteKeys = []
-    for key in dictionary:
-        if isinstance(dictionary[key], dict):
-            dictionary[key] = dict_keys_str(dictionary[key])
-        elif isinstance(dictionary[key], bytes):
-            dictionary[key] = six.ensure_str(dictionary[key])
-
-        if isinstance(key, bytes):
-            deleteKeys.append(key)
-
-    for delete in deleteKeys:
-        dictionary[delete.decode('utf-8')] = dictionary[delete]
-        del dictionary[delete]
-
-    return dictionary
-
-
 def _cleanup_encoding_repl(m):
     c = m.group(0)
     return '\\\\' if c == '\\' else '\\x{0:02X}'.format(ord(c))
@@ -142,6 +118,34 @@ def cleanup_encoding(s):
         s = s.decode('utf-8', 'replace')
     # Replace all C0 and C1 control characters with \xNN escapes.
     return _cleanup_encoding_re.sub(_cleanup_encoding_repl, s)
+
+
+def ensure_bytes(value, encoding='utf-8'):
+    if isinstance(value, six.text_type):
+        return value.encode(encoding)
+    return value
+
+
+def ensure_unicode(value, encoding='utf-8'):
+    if isinstance(value, six.binary_type):
+        return value.decode(encoding)
+    return value
+
+
+def ensure_subprocess_env(env, encoding='utf-8'):
+    """Ensure the environment is in the correct format for the `subprocess`
+    module.
+
+    This will convert all keys and values to bytes on Python 2, and text on
+    Python 3.
+
+    Args:
+        env (dict): Environment to ensure.
+        encoding (str): Encoding to use when converting to/from bytes/text
+                        (default: utf-8).
+    """
+    ensure = ensure_bytes if sys.version_info[0] < 3 else ensure_unicode
+    return {ensure(k, encoding): ensure(v, encoding) for k, v in six.iteritems(env)}
 
 
 """ Control-C handling """
@@ -301,11 +305,11 @@ class XPCShellTestThread(Thread):
         # timeout is needed by remote xpcshell to extend the
         # remote device timeout. It is not used in this function.
         if six.PY3:
-            env = dict_keys_str(env)
             cwd = six.ensure_str(cwd)
             for i in range(len(cmd)):
                 cmd[i] = six.ensure_str(cmd[i])
 
+        env = ensure_subprocess_env(env)
         if HAVE_PSUTIL:
             popen_func = psutil.Popen
         else:
@@ -1236,8 +1240,7 @@ class XPCShellTests(object):
             try:
                 # We pipe stdin to node because the server will exit when its
                 # stdin reaches EOF
-                if six.PY3:
-                    self.env = dict_keys_str(self.env)
+                self.env = ensure_subprocess_env(self.env)
                 process = Popen([nodeBin, serverJs], stdin=PIPE, stdout=PIPE,
                                 stderr=PIPE, env=self.env, cwd=os.getcwd(),
                                 universal_newlines=True)
@@ -1310,8 +1313,7 @@ class XPCShellTests(object):
             self.log.info('Using %s' % (dbPath))
             # We pipe stdin to the server because it will exit when its stdin
             # reaches EOF
-            if six.PY3:
-                self.env = dict_keys_str(self.env)
+            self.env = ensure_subprocess_env(self.env)
             process = Popen([http3ServerPath, dbPath], stdin=PIPE, stdout=PIPE,
                             stderr=PIPE, env=self.env, cwd=os.getcwd(),
                             universal_newlines=True)
