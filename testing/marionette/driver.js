@@ -64,9 +64,6 @@ const { legacyaction } = ChromeUtils.import(
 );
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
-const { navigate } = ChromeUtils.import(
-  "chrome://marionette/content/navigate.js"
-);
 const { MarionettePrefs } = ChromeUtils.import(
   "chrome://marionette/content/prefs.js",
   null
@@ -1141,31 +1138,14 @@ GeckoDriver.prototype.execute_ = async function(
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.navigateTo = async function(cmd) {
+GeckoDriver.prototype.get = async function(cmd) {
   assert.content(this.context);
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let validURL;
-  try {
-    validURL = new URL(cmd.parameters.url);
-  } catch (e) {
-    throw new InvalidArgumentError(`Malformed URL: ${e.message}`);
-  }
+  let url = cmd.parameters.url;
 
-  // We need to move to the top frame before navigating
-  await this.listener.switchToFrame();
-
-  const loadEventExpected = navigate.isLoadEventExpected(
-    this.currentURL,
-    validURL
-  );
-
-  const navigated = this.listener.navigateTo({
-    url: validURL,
-    loadEventExpected,
-    pageTimeout: this.timeouts.pageLoad,
-  });
+  let get = this.listener.get({ url, pageTimeout: this.timeouts.pageLoad });
 
   // If a process change of the frame script interrupts our page load, this
   // will never return. We need to re-issue this request to correctly poll for
@@ -1183,7 +1163,7 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
     );
   });
 
-  await navigated;
+  await get;
 
   this.curBrowser.contentBrowser.focus();
 };
@@ -3835,7 +3815,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:IsElementSelected": GeckoDriver.prototype.isElementSelected,
   "WebDriver:MinimizeWindow": GeckoDriver.prototype.minimizeWindow,
   "WebDriver:MaximizeWindow": GeckoDriver.prototype.maximizeWindow,
-  "WebDriver:Navigate": GeckoDriver.prototype.navigateTo,
+  "WebDriver:Navigate": GeckoDriver.prototype.get,
   "WebDriver:NewSession": GeckoDriver.prototype.newSession,
   "WebDriver:NewWindow": GeckoDriver.prototype.newWindow,
   "WebDriver:PerformActions": GeckoDriver.prototype.performActions,
