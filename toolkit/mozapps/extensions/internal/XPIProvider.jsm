@@ -2772,9 +2772,7 @@ var XPIProvider = {
         continue;
       }
 
-      // Collect any install errors for specific removal from the staged directory
-      // during cleanStagingDir.  Successful installs remove the files.
-      let stagedFailureNames = [];
+      let cleanNames = [];
       let promises = [];
       for (let [id, metadata] of loc.getStagedAddons()) {
         loc.unstageAddon(id);
@@ -2787,7 +2785,7 @@ var XPIProvider = {
             },
             error => {
               delete aManifests[loc.name][id];
-              stagedFailureNames.push(`${id}.xpi`);
+              cleanNames.push(`${id}.xpi`);
 
               logger.error(
                 `Failed to install staged add-on ${id} in ${loc.name}`,
@@ -2804,7 +2802,9 @@ var XPIProvider = {
       }
 
       try {
-        loc.installer.cleanStagingDir(stagedFailureNames);
+        if (cleanNames.length) {
+          loc.installer.cleanStagingDir(cleanNames);
+        }
       } catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
         logger.debug("Error cleaning staging dir", e);
