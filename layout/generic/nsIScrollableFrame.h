@@ -476,6 +476,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void MarkScrollbarsDirtyForReflow() const = 0;
 
+  virtual void UpdateScrollbarPosition() = 0;
+
   virtual void SetTransformingByAPZ(bool aTransforming) = 0;
   virtual bool IsTransformingByAPZ() const = 0;
 

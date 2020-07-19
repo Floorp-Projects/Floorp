@@ -11173,6 +11173,13 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
     }
   }
 
+  if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+    if (nsIScrollableFrame* rootScrollFrame =
+            GetRootScrollFrameAsScrollable()) {
+      rootScrollFrame->UpdateScrollbarPosition();
+    }
+  }
+
   return true;
 }
 
