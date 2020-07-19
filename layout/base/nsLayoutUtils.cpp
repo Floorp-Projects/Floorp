@@ -9257,6 +9257,13 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
+    Maybe<nsPoint> relativeOffset = scrollableFrame->GetRelativeOffset();
+    if (relativeOffset.isSome()) {
+      metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
+      metrics.SetPureRelativeOffset(
+          Some(CSSPoint::FromAppUnits(*relativeOffset)));
+    }
+
     CSSRect viewport = metrics.GetLayoutViewport();
     viewport.MoveTo(scrollPosition);
     metrics.SetLayoutViewport(viewport);
