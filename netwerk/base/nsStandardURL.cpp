@@ -1285,13 +1285,8 @@ NS_IMETHODIMP
 nsStandardURL::GetSpec(nsACString& result) {
   MOZ_ASSERT(mSpec.Length() <= StaticPrefs::network_standard_url_max_length(),
              "The spec should never be this long, we missed a check.");
-  nsresult rv = NS_OK;
-  if (StaticPrefs::network_standard_url_punycode_host()) {
-    result = mSpec;
-  } else {  // XXX: This code path may be slow
-    rv = GetDisplaySpec(result);
-  }
-  return rv;
+  result = mSpec;
+  return NS_OK;
 }
 
 // result may contain unescaped UTF-8 characters
@@ -1317,13 +1312,7 @@ nsStandardURL::GetSpecIgnoringRef(nsACString& result) {
 
   URLSegment noRef(0, mRef.mPos - 1);
   result = Segment(noRef);
-
   MOZ_ASSERT(mCheckedIfHostA);
-  if (!StaticPrefs::network_standard_url_punycode_host() &&
-      !mDisplayHost.IsEmpty()) {
-    result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
-  }
-
   return NS_OK;
 }
 
@@ -1407,10 +1396,6 @@ NS_IMETHODIMP
 nsStandardURL::GetPrePath(nsACString& result) {
   result = Prepath();
   MOZ_ASSERT(mCheckedIfHostA);
-  if (!StaticPrefs::network_standard_url_punycode_host() &&
-      !mDisplayHost.IsEmpty()) {
-    result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
-  }
   return NS_OK;
 }
 
@@ -1455,25 +1440,11 @@ nsStandardURL::GetPassword(nsACString& result) {
 
 NS_IMETHODIMP
 nsStandardURL::GetHostPort(nsACString& result) {
-  nsresult rv;
-  if (StaticPrefs::network_standard_url_punycode_host()) {
-    rv = GetAsciiHostPort(result);
-  } else {
-    rv = GetDisplayHostPort(result);
-  }
-  return rv;
+  return GetAsciiHostPort(result);
 }
 
 NS_IMETHODIMP
-nsStandardURL::GetHost(nsACString& result) {
-  nsresult rv;
-  if (StaticPrefs::network_standard_url_punycode_host()) {
-    rv = GetAsciiHost(result);
-  } else {
-    rv = GetDisplayHost(result);
-  }
-  return rv;
-}
+nsStandardURL::GetHost(nsACString& result) { return GetAsciiHost(result); }
 
 NS_IMETHODIMP
 nsStandardURL::GetPort(int32_t* result) {
