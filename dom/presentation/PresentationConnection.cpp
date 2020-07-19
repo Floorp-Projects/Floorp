@@ -24,8 +24,8 @@
 #include "PresentationConnectionList.h"
 #include "PresentationLog.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationConnection)
 
@@ -430,7 +430,7 @@ nsresult PresentationConnection::ProcessStateChanged(nsresult aReason) {
         // If aReason is not a DOM error, use error name as message.
         if (NS_FAILED(
                 NS_GetNameAndMessageForDOMNSResult(aReason, name, message))) {
-          mozilla::GetErrorName(aReason, message);
+          GetErrorName(aReason, message);
           message.InsertLiteral("Internal error: ", 0);
         }
         CopyUTF8toUTF16(message, errorMsg);
@@ -750,3 +750,6 @@ void PresentationConnection::AsyncCloseConnectionWithErrorMsg(
 
   Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(r)));
 }
+
+}  // namespace dom
+}  // namespace mozilla
