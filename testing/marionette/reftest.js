@@ -132,7 +132,7 @@ reftest.Runner = class {
     if (Services.appinfo.OS == "Android") {
       logger.debug("Using current window");
       reftestWin = this.parentWindow;
-      await this.driver.listener.get({
+      await this.driver.listener.navigateTo({
         commandID: this.driver.listener.activeMessageId,
         pageTimeout: timeout,
         url: "about:blank",
@@ -637,12 +637,11 @@ max-width: ${width}px; max-height: ${height}px`;
 
       navigateOpts.url = url;
       navigateOpts.loadEventExpected = false;
-      await this.driver.listener.get(navigateOpts);
+      await this.driver.listener.navigateTo(navigateOpts);
       this.lastURL = url;
     }
 
     this.ensureFocus(win);
-
     await this.driver.listener.reftestWait(url, this.useRemoteTabs);
   }
 
