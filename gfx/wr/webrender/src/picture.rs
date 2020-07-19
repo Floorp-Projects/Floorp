@@ -5205,7 +5205,7 @@ impl PicturePrimitive {
                                     Some(device_draw_rect) => {
                                         // Only check for occlusion on visible tiles that are fixed position.
                                         if tile_cache.spatial_node_index == ROOT_SPATIAL_NODE_INDEX &&
-                                           frame_state.composite_state.is_tile_occluded(tile.z_id, device_draw_rect) {
+                                           frame_state.composite_state.occluders.is_tile_occluded(tile.z_id, device_draw_rect) {
                                             // If this tile has an allocated native surface, free it, since it's completely
                                             // occluded. We will need to re-allocate this surface if it becomes visible,
                                             // but that's likely to be rare (e.g. when there is no content display list
