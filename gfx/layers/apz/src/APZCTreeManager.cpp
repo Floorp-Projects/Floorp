@@ -3772,7 +3772,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
   // so that it reflects what the user is actually seeing now.
   AsyncTransformComponentMatrix scrollbarTransform;
   if (*aScrollbarData.mDirection == ScrollDirection::eVertical) {
-    const ParentLayerCoord asyncScrollY = asyncTransform._42;
+    ParentLayerCoord asyncScrollY = asyncTransform._42;
     const float asyncZoomY = asyncTransform._22;
 
     // The scroll thumb needs to be scaled in the direction of scrolling by the
@@ -3783,6 +3783,26 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     // Note: |metrics.GetZoom()| doesn't yet include the async zoom.
     const CSSToParentLayerScale effectiveZoom(aMetrics.GetZoom().yScale *
                                               asyncZoomY);
+
+    if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+      // As computed by GetCurrentAsyncTransform, asyncScrollY is
+      //   asyncScrollY = -(GetEffectiveScrollOffset -
+      //   mLastContentPaintMetrics.GetLayoutViewport().TopLeft()) *
+      //   effectiveZoom
+      // where GetEffectiveScrollOffset includes the visual viewport offset that
+      // the main thread knows about plus any async scrolling to the visual
+      // viewport offset that the main thread does not (yet) know about. We want
+      // asyncScrollY to be
+      //   asyncScrollY = -(GetEffectiveScrollOffset -
+      //   mLastContentPaintMetrics.GetVisualViewportOffset()) * effectiveZoom
+      // because the main thread positions the scrollbars at the visual viewport
+      // offset that it knows about. (aMetrics is mLastContentPaintMetrics)
+
+      asyncScrollY -= ((aMetrics.GetLayoutViewport().TopLeft() -
+                        aMetrics.GetVisualViewportOffset()) *
+                       effectiveZoom)
+                          .y;
+    }
 
     // Here we convert the scrollbar thumb ratio into a true unitless ratio by
     // dividing out the conversion factor from the scrollframe's parent's space
@@ -3818,13 +3838,20 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
   if (*aScrollbarData.mDirection == ScrollDirection::eHorizontal) {
     // See detailed comments under the eVertical case.
 
-    const ParentLayerCoord asyncScrollX = asyncTransform._41;
+    ParentLayerCoord asyncScrollX = asyncTransform._41;
     const float asyncZoomX = asyncTransform._11;
 
     const float xScale = 1.f / asyncZoomX;
 
     const CSSToParentLayerScale effectiveZoom(aMetrics.GetZoom().xScale *
                                               asyncZoomX);
+
+    if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+      asyncScrollX -= ((aMetrics.GetLayoutViewport().TopLeft() -
+                        aMetrics.GetVisualViewportOffset()) *
+                       effectiveZoom)
+                          .x;
+    }
 
     const float ratio = aScrollbarData.mThumbRatio /
                         (aMetrics.GetPresShellResolution() * asyncZoomX);
