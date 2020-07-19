@@ -32,13 +32,6 @@ this.aboutConfigPrefs = class extends ExtensionAPI {
             };
           },
         }).api(),
-        async getBranch(branchName) {
-          const branch = `${extensionPrefNameBase}${branchName}.`;
-          return Services.prefs.getChildList(branch).map(pref => {
-            const name = pref.replace(branch, "");
-            return { name, value: Services.prefs.getBoolPref(pref) };
-          });
-        },
         async getPref(name) {
           try {
             return Services.prefs.getBoolPref(
