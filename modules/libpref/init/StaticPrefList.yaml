@@ -452,6 +452,12 @@
   value: 1.0f
   mirror: always
 
+# new scrollbar code for desktop zooming
+- name: apz.force_disable_desktop_zooming_scrollbars
+  type: RelaxedAtomicBool
+  value: @IS_ANDROID@
+  mirror: always
+
 #ifdef MOZ_WIDGET_GTK
 -   name: apz.gtk.kinetic_scroll.enabled
     type: RelaxedAtomicBool
