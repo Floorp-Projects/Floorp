@@ -41,10 +41,10 @@ html,body {
   columns: 3;
 }
 .unbalanced { column-fill:auto; }
-.vbreak { height:65px; width:41px; }
+.vbreak { height:66px; width:41px; }
 .h { width:30px;height:30px; background:grey; }
 .m { margin-left:15px; }
-.col3 .vbreak { height:115px; }
+.col3 .vbreak { height:116px; }
 .clone { box-decoration-break:clone; }
 .slice { box-decoration-break:slice; }
 x { display:inline-block; width:31px; height:18px; line-height:1; }
@@ -64,8 +64,7 @@ pos4 { position:absolute; top:510px; width:700px; }
 </pos1>
 
 <pos2>
-<span class="b slice" style="border-style:dashed;"><x></x><div class="h"></div><y></y></span>
-<span class="b slice m" style="border-style:dashed;"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
+<span class="b slice" style="border-style:dashed;"><x></x><div class="h"></div><y></y></span><span class="b slice m" style="border-style:dashed;"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
 
 <pre>box-decoration-break:clone</pre>
 </pos2>

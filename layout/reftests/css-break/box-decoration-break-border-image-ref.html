@@ -49,11 +49,11 @@ b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,.b.clone {
   columns: 3;
 }
 .unbalanced { column-fill:auto; }
-.vbreak { height:65px; width:41px; }
+.vbreak { height:66px; width:41px; }
 .unbalanced .vbreak { height:40px; }
 .h { width:30px;height:30px; background:grey; }
 .m { margin-left:15px; }
-.col3 .vbreak { height:115px; }
+.col3 .vbreak { height:116px; }
 .unbalanced.col3 .vbreak { height:40px; }
 x { display:inline-block; width:31px; height:18px; line-height:1; }
 y { display:inline-block; width:47px; height:18px; line-height:1; }
@@ -66,16 +66,16 @@ b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,m1,m2,m3,m4,m5,m6,
 c1,c2,c3,c4,c5,c6,c7,c8,c9,c10 {position:absolute; overflow:hidden; z-index:1;}
 
 
-b1 { top:50px; left:20px; height:65px; width:41px; }
+b1 { top:50px; left:20px; height:66px; width:41px; }
 c1 { top:0; left:0; height:88px; width:200px; }
 
 b2 { top:-38px; left:128px; height:66px; width:41px; }
 c2 { top:50px; left:0; height:61px; width:200px; }
 
-b3 { top:50px; left:240px; height:115px; width:41px; }
+b3 { top:50px; left:240px; height:116px; width:41px; }
 c3 { top:0; left:0; height:92px; width:600px; }
 
-b4 { top:-42px; left:312px; height:115px; width:41px; }
+b4 { top:-42px; left:312px; height:116px; width:41px; }
 c4 { top:50px; left:0; height:42px; width:600px; }
 
 b5 { top:-84px; left:384px; height:116px; width:41px; }
@@ -87,8 +87,8 @@ m6 { top:135px; left:56px; height:55px; width:100px; background:white; z-index:2
 b7 { top:30px; left:-36px; width:78px; height:19px; }
 c7 { top:170px; left:20px; height:300px; width:200px; }
 
-b8 { top:30px; left:77px; width:125px; height:19px; }
-m8 { top:15px; left:113px; width:125px; height:55px; background:white; }
+b8 { top:30px; left:67px; width:125px; height:19px; }
+m8 { top:15px; left:103px; width:125px; height:55px; background:white; }
 c8 { top:170px; left:20px; height:300px; width:600px; }
 
 b9 { top:30px; left:-36px; width:125px; height:19px; }
@@ -118,15 +118,14 @@ c10 { top:274px; left:20px; height:300px; width:156px; }
 </pos1>
 
 <pos2>
-<span class="b slice"><x></x><div class="h"></div><y></y></span>
-<span class="b slice m"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
+<span class="b slice"><x></x><div class="h"></div><y></y></span><span class="b slice m"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
 
 <pre>box-decoration-break:clone</pre>
 </pos2>
 
 <pos3>
-<div class="unbalanced columns"><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:25px"></div></div>
-<div class="unbalanced columns col3"><div class="b vbreak clone"></div><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:35px"></div></div>
+<div class="unbalanced columns"><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:26px"></div></div>
+<div class="unbalanced columns col3"><div class="b vbreak clone"></div><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:36px"></div></div>
 </pos3>
 
 <pos4>
