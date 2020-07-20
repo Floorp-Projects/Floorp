@@ -530,6 +530,15 @@ bool WarpCacheIRTranspiler::emitGuardToInt32ModUint32(ValOperandId valId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToUint8Clamped(ValOperandId valId,
+                                                    Int32OperandId resultId) {
+  MDefinition* input = getOperand(valId);
+  auto* ins = MClampToUint8::New(alloc(), input);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitToString(OperandId inputId,
                                          StringOperandId resultId) {
   MDefinition* input = getOperand(inputId);
