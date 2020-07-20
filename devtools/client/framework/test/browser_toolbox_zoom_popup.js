@@ -149,10 +149,10 @@ async function getButtonAndMenuInfo(toolbox, menuButton) {
     await waitUntil(() => menuPopup.classList.contains("tooltip-visible"));
   } else {
     menuType = "native";
+    const popupset = topDoc.querySelector("popupset");
     await waitUntil(() => {
-      const popupset = topDoc.querySelector("popupset");
-      menuPopup = popupset?.querySelector('menupopup[menu-api="true"]');
-      return menuPopup?.state === "open";
+      menuPopup = popupset.querySelector('menupopup[menu-api="true"]');
+      return !!menuPopup && menuPopup.state === "open";
     });
   }
   ok(menuPopup, "Menu popup is displayed.");

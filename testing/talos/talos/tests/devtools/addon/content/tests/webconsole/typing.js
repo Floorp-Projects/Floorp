@@ -10,14 +10,13 @@ const {
   runTest,
   testSetup,
   testTeardown,
-  waitForTick,
 } = require("../head");
 
 const TEST_NAME = "console.typing";
 const LOGS_NUMBER = 500;
 
 module.exports = async function() {
-  const input = "abcdefghijklmnopqrst";
+  const input = "z".repeat(20);
   await testSetup(`data:text/html,<meta charset=utf8><script>
     for (let i = 0; i < ${LOGS_NUMBER}; i++) {
       const key = "item" + i;
@@ -43,22 +42,16 @@ module.exports = async function() {
 
   // Simulate typing in the input.
   for (const char of Array.from(input)) {
-    const onPopupOpened = jsterm.autocompletePopup.isOpen
-      ? null
-      : jsterm.autocompletePopup.once("popup-opened");
     const onAutocompleteUpdated = jsterm.once("autocomplete-updated");
     jsterm.insertStringAtCursor(char);
     // We need to trigger autocompletion update to show the popup.
     jsterm.props.autocompleteUpdate();
     await onAutocompleteUpdated;
-    await onPopupOpened;
-    await waitForTick();
   }
 
   test.done();
-  const onPopupClosed = jsterm.autocompletePopup.isOpen
-    ? jsterm.autocompletePopup.once("popup-closed")
-    : null;
+
+  const onPopupClosed = jsterm.autocompletePopup.once("popup-closed");
   jsterm.clearCompletion();
   await onPopupClosed;
 
