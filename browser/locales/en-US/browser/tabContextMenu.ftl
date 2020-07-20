@@ -56,9 +56,6 @@ move-to-new-window =
 tab-context-close-multiple-tabs =
     .label = Close Multiple Tabs
     .accesskey = M
-
-## Variables:
-##  $tabCount (Number): the number of tabs that are affected by the action.
 tab-context-undo-close-tabs =
     .label =
         { $tabCount ->
@@ -66,17 +63,15 @@ tab-context-undo-close-tabs =
            *[other] Undo Close Tabs
         }
     .accesskey = U
-tab-context-close-tabs =
-    .label =
-        { $tabCount ->
-            [1] Close Tab
-           *[other] Close Tabs
-        }
-    .accesskey = C
-tab-context-move-tabs =
-    .label =
-        { $tabCount ->
-            [1] Move Tab
-           *[other] Move Tabs
-        }
+close-tab =
+    .label = Close Tab
+    .accesskey = c
+close-tabs =
+    .label = Close Tabs
+    .accesskey = S
+move-tabs =
+    .label = Move Tabs
+    .accesskey = v
+move-tab =
+    .label = Move Tab
     .accesskey = v
