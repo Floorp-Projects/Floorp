@@ -616,7 +616,7 @@ bool IToplevelProtocol::IsOnCxxStack() const {
 }
 
 int32_t IToplevelProtocol::NextId() {
-  // Genreate the next ID to use for a shared memory or protocol. Parent and
+  // Generate the next ID to use for a shared memory or protocol. Parent and
   // Child sides of the protocol use different pools.
   int32_t tag = 0;
   if (GetSide() == ParentSide) {
