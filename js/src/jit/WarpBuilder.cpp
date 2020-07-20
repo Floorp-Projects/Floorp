@@ -1578,7 +1578,10 @@ bool WarpBuilder::build_MutateProto(BytecodeLocation loc) {
 }
 
 MDefinition* WarpBuilder::getCallee() {
-  // TODO: handle inlined callees when we implement inlining.
+  if (inlineCallInfo()) {
+    return inlineCallInfo()->callee();
+  }
+
   MInstruction* callee = MCallee::New(alloc());
   current->add(callee);
   return callee;
@@ -2416,7 +2419,14 @@ bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
     return true;
   }
 
-  // TODO: handle newTarget in inlined functions when we can inline.
+  if (inlineCallInfo()) {
+    if (inlineCallInfo()->constructing()) {
+      current->push(inlineCallInfo()->getNewTarget());
+    } else {
+      pushConstant(UndefinedValue());
+    }
+    return true;
+  }
 
   MNewTarget* ins = MNewTarget::New(alloc());
   current->add(ins);
@@ -2767,10 +2777,72 @@ bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_Rest(BytecodeLocation loc) {
-  // TODO: handle inlined functions once we support inlining.
-
   auto* snapshot = getOpSnapshot<WarpRest>(loc);
   ArrayObject* templateObject = snapshot->templateObject();
+
+  if (inlineCallInfo()) {
+    // If we are inlining, we know the actual arguments.
+    unsigned numActuals = inlineCallInfo()->argc();
+    unsigned numFormals = info().nargs() - 1;
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
+
+    // TODO: support pre-tenuring.
+    gc::InitialHeap heap = gc::DefaultHeap;
+
+    // Allocate an array of the correct size.
+    MConstant* templateConst = constant(ObjectValue(*templateObject));
+    MNewArray* newArray;
+    if (numRest > snapshot->maxInlineElements()) {
+      newArray = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, numRest,
+                                  templateConst, heap, loc.toRawBytecode());
+    } else {
+      newArray = MNewArray::New(alloc(), /* constraints = */ nullptr, numRest,
+                                templateConst, heap, loc.toRawBytecode());
+    }
+    current->add(newArray);
+    current->push(newArray);
+
+    if (numRest == 0) {
+      // No more updating to do. (Note that in this one case the length from
+      // the template object is already correct.)
+      return true;
+    }
+
+    MElements* elements = MElements::New(alloc(), newArray);
+    current->add(elements);
+
+    // Unroll the argument copy loop. We don't need to do any bounds or hole
+    // checking here.
+    MConstant* index = nullptr;
+    for (uint32_t i = numFormals; i < numActuals; i++) {
+      if (!alloc().ensureBallast()) {
+        return false;
+      }
+
+      index = MConstant::New(alloc(), Int32Value(i - numFormals));
+      current->add(index);
+
+      MDefinition* arg = inlineCallInfo()->argv()[i];
+      MStoreElement* store = MStoreElement::New(alloc(), elements, index, arg,
+                                                /* needsHoleCheck = */ false);
+      current->add(store);
+      current->add(MPostWriteBarrier::New(alloc(), newArray, arg));
+    }
+
+    // The array's length is incorrectly 0 now, from the template object created
+    // by BaselineCompiler::emit_Rest() before the actual argument count was
+    // known. Set the correct length now that we know that count.
+    MSetArrayLength* length = MSetArrayLength::New(alloc(), elements, index);
+    current->add(length);
+
+    // Update the initialized length for all the (necessarily non-hole)
+    // elements added.
+    MSetInitializedLength* initLength =
+        MSetInitializedLength::New(alloc(), elements, index);
+    current->add(initLength);
+
+    return true;
+  }
 
   MArgumentsLength* numActuals = MArgumentsLength::New(alloc());
   current->add(numActuals);
@@ -2788,9 +2860,6 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
 bool WarpBuilder::build_Try(BytecodeLocation loc) {
   // Note: WarpOracle aborts compilation for try-statements with a 'finally'
   // block.
-
-  // TODO: IonBuilder doesn't support try-catch in inlined functions. This is
-  // most likely not a hard limitation. Re-evaluate this when we can inline.
 
   graph().setHasTryBlock();
 
