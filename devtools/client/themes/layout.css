@@ -58,6 +58,10 @@
   margin-inline-start: -3px;
 }
 
+.layout-content .open-inspector {
+  vertical-align: middle;
+}
+
 .layout-color-swatch {
   width: 12px;
   height: 12px;
@@ -84,8 +88,7 @@
 .layout-properties-expander {
   vertical-align: middle;
   display: inline-block;
-  margin-inline-start: 2px;
-  margin-inline-end: 1px;
+  margin-inline: 2px 1px;
 }
 
 .layout-properties-wrapper {
@@ -190,8 +193,7 @@ html[dir="rtl"] .flex-header-button-prev::before {
 .flex-item-list {
   font-size: 12px;
   margin: 0;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-block: 5px;
   overflow: hidden;
 }
 
@@ -211,8 +213,7 @@ html[dir="rtl"] .flex-header-button-prev::before {
   text-align: start;
   height: 24px;
   margin: 0;
-  padding-inline-start: 28px;
-  padding-inline-end: 16px;
+  padding-inline: 28px 16px;
   position: relative;
 }
 
@@ -379,7 +380,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 
 .flex-outline.shrinking .flex-outline-delta {
   background-color: var(--flex-shrinking-delta-outline-background-color);
-  margin: 5px 5px 5px 0px;
+  margin: 5px 5px 5px 0;
 }
 
 .flex-outline-delta::before {
