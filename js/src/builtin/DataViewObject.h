@@ -34,10 +34,7 @@ class DataViewObject : public ArrayBufferViewObject {
   }
 
   template <typename NativeType>
-  static SharedMem<uint8_t*> getDataPointer(JSContext* cx,
-                                            Handle<DataViewObject*> obj,
-                                            uint64_t offset,
-                                            bool* isSharedMemory);
+  SharedMem<uint8_t*> getDataPointer(uint64_t offset, bool* isSharedMemory);
 
   static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
   static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -80,6 +77,15 @@ class DataViewObject : public ArrayBufferViewObject {
   uint32_t byteOffset() const { return byteOffsetValue(this).toInt32(); }
 
   uint32_t byteLength() const { return byteLengthValue(this).toInt32(); }
+
+  template <typename NativeType>
+  bool offsetIsInBounds(uint64_t offset) const {
+    return offsetIsInBounds(sizeof(NativeType), offset);
+  }
+  bool offsetIsInBounds(uint32_t byteSize, uint64_t offset) const {
+    MOZ_ASSERT(byteSize <= 8);
+    return offset <= UINT32_MAX - byteSize && offset + byteSize <= byteLength();
+  }
 
   static bool isOriginalByteOffsetGetter(Native native) {
     return native == byteOffsetGetter;
@@ -150,6 +156,9 @@ class DataViewObject : public ArrayBufferViewObject {
 
   static bool setFloat64Impl(JSContext* cx, const CallArgs& args);
   static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
+
+  template <typename NativeType>
+  NativeType read(uint64_t offset, bool isLittleEndian);
 
   template <typename NativeType>
   static bool read(JSContext* cx, Handle<DataViewObject*> obj,
