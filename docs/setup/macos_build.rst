@@ -28,7 +28,7 @@ prerequisites. (You can verify that you have these permissions in System
 Preferences -> Users & Groups.)
 
 See `1.1 Install Xcode and Xcode command line tools <#xcode>`_ and `1.2
-Get the local macOS SDK <#macOSSDK>`_ for more information on how to
+Get the local macOS SDK <#macossdk>`_ for more information on how to
 install these prerequisites.
 
 .. rubric:: Getting the source
@@ -46,18 +46,20 @@ that will do the rest:
     # download the bootstrap script
     curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -o bootstrap.py
 
+If you don't have Python 3.6 or later installed, see `2.1a Install dependencies
+via Homebrew <#install-via-homebrew>`_ for more information on how to do so.
 Then in your terminal from above start the bootstrapper like this:
 
 .. code-block:: shell
 
-    python bootstrap.py
+    python3 bootstrap.py
 
 ... and follow the prompts. This will use mercurial to checkout the
 source code. If you prefer to work with git, use this command instead:
 
 .. code-block:: shell
 
-    python bootstrap.py --vcs=git
+    python3 bootstrap.py --vcs=git
 
 If you don't have `Homebrew <https://brew.sh/>`_ or
 `Ports <https://www.macports.org/>`_ installed - software package
@@ -118,6 +120,9 @@ Building on macOS is divided into the following steps:
 #. Configure the Mozilla source tree to suit your needs
 #. Build Firefox
 
+
+.. _xcode:
+
 1.1 Install Xcode and Xcode command line tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -139,6 +144,8 @@ setup stuff.
 
 Install the Xcode command line tools by
 running \ ``xcode-select --install`` in your terminal.
+
+.. _macossdk:
 
 1.2 Get the local macOS SDK
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,6 +181,8 @@ using a package manager is recommended. The following sections describe
 how to install the packages using existing package managers. Choose
 whatever package manager you prefer.
 
+.. _install-via-homebrew:
+
 2.1a Install dependencies via Homebrew
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -204,6 +213,15 @@ Autoconf installed and used as default. To use Autoconf 2.13, run:
 
     brew link --overwrite autoconf@2.13
 
+Python 2 is never necessary solely to build Firefox, but it is still required
+for some development tasks (including testing and pushing to ``try``). If your
+system does not already have a Python 2 installed, you can use ``brew`` to
+install one:
+
+.. code-block:: shell
+
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
+
 2.1b Install Dependencies via MacPorts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -233,7 +251,7 @@ Use MacPorts to install the packages needed for building Firefox:
 
 .. code:: eval
 
-    sudo port install libidl autoconf213 yasm
+    sudo port install libidl autoconf213 yasm python27 py27-gnureadline
 
 You'll then see lots of output as MacPorts builds and installs these
 packages and their dependencies -- it takes a while, so go grab a cup of
