@@ -33,7 +33,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -1431,12 +1430,6 @@ DownloadSource.fromSerializable = function(aSerializable) {
     source.url = aSerializable.toString();
   } else if (aSerializable instanceof Ci.nsIURI) {
     source.url = aSerializable.spec;
-  } else if (aSerializable instanceof Ci.nsIDOMWindow) {
-    source.url = aSerializable.location.href;
-    source.isPrivate = PrivateBrowsingUtils.isContentWindowPrivate(
-      aSerializable
-    );
-    source.windowRef = Cu.getWeakReference(aSerializable);
   } else {
     // Convert String objects to primitive strings at this point.
     source.url = aSerializable.url.toString();
