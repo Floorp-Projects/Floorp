@@ -61,7 +61,11 @@ ifndef MOZ_DEBUG_RUST
 # Enable link-time optimization for release builds, but not when linking
 # gkrust_gtest.
 ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
+# Pass -Clto for older versions of rust, and CARGO_PROFILE_RELEASE_LTO=true
+# for newer ones that support it. Combining the latter with -Clto works, so
+# set both everywhere.
 cargo_rustc_flags += -Clto
+export CARGO_PROFILE_RELEASE_LTO=true
 endif
 endif
 endif
