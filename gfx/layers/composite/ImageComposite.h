@@ -85,13 +85,15 @@ class ImageComposite {
   void SetImages(nsTArray<TimedImage>&& aNewImages);
 
  protected:
-  void UpdateCompositedFrame(int aImageIndex, const TimedImage* aImage,
-                             base::ProcessId aProcessId,
-                             const CompositableHandle& aHandle);
+  // Send ImageComposite notifications and update the ChooseImage bias.
+  void OnFinishRendering(int aImageIndex, const TimedImage* aImage,
+                         base::ProcessId aProcessId,
+                         const CompositableHandle& aHandle);
 
   int32_t mLastFrameID = -1;
   int32_t mLastProducerID = -1;
-  CompositionOpportunityId mLastCompositionOpportunityId;
+  CompositionOpportunityId mLastChooseImageIndexComposition;
+  CompositionOpportunityId mLastFrameUpdateComposition;
 
  private:
   nsTArray<TimedImage> mImages;
@@ -102,6 +104,10 @@ class ImageComposite {
   // Counts frames in mImages that were skipped, and adds the skipped count to
   // mSkippedFramesSinceLastComposite.
   void CountSkippedFrames(const TimedImage* aImage);
+
+  // Update mLastFrameID and mLastProducerID, and report dropped frames.
+  void UpdateCompositedFrame(const TimedImage* aImage,
+                             bool aWasVisibleAtPreviousComposition);
 
   // Emit a profiler marker about video frame timestamp jitter.
   void DetectTimeStampJitter(const TimedImage* aNewImage);
