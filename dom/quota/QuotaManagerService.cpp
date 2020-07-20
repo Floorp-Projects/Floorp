@@ -17,7 +17,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "nsIIdleService.h"
+#include "nsIUserIdleService.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "QuotaManager.h"
@@ -33,7 +33,7 @@ using namespace mozilla::ipc;
 
 namespace {
 
-const char kIdleServiceContractId[] = "@mozilla.org/widget/idleservice;1";
+const char kIdleServiceContractId[] = "@mozilla.org/widget/useridleservice;1";
 
 // The number of seconds we will wait after receiving the idle-daily
 // notification before beginning maintenance.
@@ -349,7 +349,7 @@ void QuotaManagerService::PerformIdleMaintenance() {
     // We don't want user activity to impact this code if we're running tests.
     Unused << Observe(nullptr, OBSERVER_TOPIC_IDLE, nullptr);
   } else if (!mIdleObserverRegistered) {
-    nsCOMPtr<nsIIdleService> idleService =
+    nsCOMPtr<nsIUserIdleService> idleService =
         do_GetService(kIdleServiceContractId);
     MOZ_ASSERT(idleService);
 
@@ -365,7 +365,7 @@ void QuotaManagerService::RemoveIdleObserver() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mIdleObserverRegistered) {
-    nsCOMPtr<nsIIdleService> idleService =
+    nsCOMPtr<nsIUserIdleService> idleService =
         do_GetService(kIdleServiceContractId);
     MOZ_ASSERT(idleService);
 

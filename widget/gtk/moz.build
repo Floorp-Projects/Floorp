@@ -65,7 +65,7 @@ if CONFIG['MOZ_X11']:
         'CompositorWidgetParent.cpp',
         'GtkCompositorWidget.cpp',
         'InProcessGtkCompositorWidget.cpp',
-        'nsIdleServiceGTK.cpp',
+        'nsUserIdleServiceGTK.cpp',
     ]
     EXPORTS.mozilla.widget += [
         'CompositorWidgetChild.h',

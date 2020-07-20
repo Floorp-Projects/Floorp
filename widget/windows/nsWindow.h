@@ -15,7 +15,7 @@
 #include "CompositorWidget.h"
 #include "nsWindowBase.h"
 #include "nsdefs.h"
-#include "nsIdleService.h"
+#include "nsUserIdleService.h"
 #include "nsToolkit.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -46,7 +46,7 @@
 #endif
 
 #include "nsUXThemeData.h"
-#include "nsIIdleServiceInternal.h"
+#include "nsIUserIdleServiceInternal.h"
 
 #include "IMMHandler.h"
 
@@ -657,7 +657,7 @@ class nsWindow final : public nsWindowBase {
 
   float mAspectRatio;
 
-  nsCOMPtr<nsIIdleServiceInternal> mIdleService;
+  nsCOMPtr<nsIUserIdleServiceInternal> mIdleService;
 
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
   LayoutDeviceIntRegion mDraggableRegion;

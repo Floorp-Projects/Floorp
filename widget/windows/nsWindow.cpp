@@ -6922,7 +6922,7 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
 void nsWindow::UserActivity() {
   // Check if we have the idle service, if not we try to get it.
   if (!mIdleService) {
-    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+    mIdleService = do_GetService("@mozilla.org/widget/useridleservice;1");
   }
 
   // Check that we now have the idle service.

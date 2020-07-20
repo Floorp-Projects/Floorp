@@ -5,15 +5,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIdleService_h__
-#define nsIdleService_h__
+#ifndef nsUserIdleService_h__
+#define nsUserIdleService_h__
 
-#include "nsIIdleServiceInternal.h"
+#include "nsIUserIdleServiceInternal.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsIObserver.h"
-#include "nsIIdleService.h"
+#include "nsIUserIdleService.h"
 #include "nsCategoryCache.h"
 #include "nsWeakReference.h"
 #include "mozilla/TimeStamp.h"
@@ -34,17 +34,18 @@ class IdleListener {
 };
 
 // This one will be declared later.
-class nsIdleService;
+class nsUserIdleService;
 
 /**
  * Class to handle the daily idle timer.
  */
-class nsIdleServiceDaily : public nsIObserver, public nsSupportsWeakReference {
+class nsUserIdleServiceDaily : public nsIObserver,
+                               public nsSupportsWeakReference {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  explicit nsIdleServiceDaily(nsIIdleService* aIdleService);
+  explicit nsUserIdleServiceDaily(nsIUserIdleService* aIdleService);
 
   /**
    * Initializes the daily idle observer.
@@ -54,7 +55,7 @@ class nsIdleServiceDaily : public nsIObserver, public nsSupportsWeakReference {
   void Init();
 
  private:
-  virtual ~nsIdleServiceDaily();
+  virtual ~nsUserIdleServiceDaily();
 
   /**
    * StageIdleDaily is the interim call made when an idle-daily event is due.
@@ -62,9 +63,9 @@ class nsIdleServiceDaily : public nsIObserver, public nsSupportsWeakReference {
    * session, so this sets up a short wait for an idle event which triggers
    * the actual idle-daily event.
    *
-   * @param aHasBeenLongWait Pass true indicating nsIdleServiceDaily is having
-   * trouble getting the idle-daily event fired. If true StageIdleDaily will
-   * use a shorter idle wait time before firing idle-daily.
+   * @param aHasBeenLongWait Pass true indicating nsUserIdleServiceDaily is
+   * having trouble getting the idle-daily event fired. If true StageIdleDaily
+   * will use a shorter idle wait time before firing idle-daily.
    */
   void StageIdleDaily(bool aHasBeenLongWait);
 
@@ -73,7 +74,7 @@ class nsIdleServiceDaily : public nsIObserver, public nsSupportsWeakReference {
    * idle service, part to avoid potential pointer corruption due to this class
    * being instantiated in the constructor of the service itself.
    */
-  nsIIdleService* mIdleService;
+  nsIUserIdleService* mIdleService;
 
   /**
    * Place to hold the timer used by this class to determine when a day has
@@ -110,17 +111,16 @@ class nsIdleServiceDaily : public nsIObserver, public nsSupportsWeakReference {
   int32_t mIdleDailyTriggerWait;
 };
 
-class nsIdleService : public nsIIdleServiceInternal {
+class nsUserIdleService : public nsIUserIdleServiceInternal {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDLESERVICE
-  NS_DECL_NSIIDLESERVICEINTERNAL
+  NS_DECL_NSIUSERIDLESERVICE NS_DECL_NSIUSERIDLESERVICEINTERNAL
 
- protected:
-  static already_AddRefed<nsIdleService> GetInstance();
+      protected : static already_AddRefed<nsUserIdleService>
+                  GetInstance();
 
-  nsIdleService();
-  virtual ~nsIdleService();
+  nsUserIdleService();
+  virtual ~nsUserIdleService();
 
   /**
    * If there is a platform specific function to poll the system idel time
@@ -177,7 +177,7 @@ class nsIdleService : public nsIIdleServiceInternal {
   /**
    * Object keeping track of the daily idle thingy.
    */
-  RefPtr<nsIdleServiceDaily> mDailyIdle;
+  RefPtr<nsUserIdleServiceDaily> mDailyIdle;
 
   /**
    * Number of observers currently in idle mode.
@@ -224,4 +224,4 @@ class nsIdleService : public nsIIdleServiceInternal {
   void IdleTimerCallback(void);
 };
 
-#endif  // nsIdleService_h__
+#endif  // nsUserIdleService_h__

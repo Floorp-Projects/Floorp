@@ -74,7 +74,7 @@
 #include "nsGfxCIID.h"
 #include "nsGtkUtils.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "nsIIdleServiceInternal.h"
+#include "nsIUserIdleServiceInternal.h"
 #include "GLContext.h"
 #include "gfx2DGlue.h"
 
@@ -367,8 +367,8 @@ static inline bool TimestampIsNewerThan(guint32 a, guint32 b) {
 }
 
 static void UpdateLastInputEventTime(void* aGdkEvent) {
-  nsCOMPtr<nsIIdleServiceInternal> idleService =
-      do_GetService("@mozilla.org/widget/idleservice;1");
+  nsCOMPtr<nsIUserIdleServiceInternal> idleService =
+      do_GetService("@mozilla.org/widget/useridleservice;1");
   if (idleService) {
     idleService->ResetIdleTimeOut(0);
   }

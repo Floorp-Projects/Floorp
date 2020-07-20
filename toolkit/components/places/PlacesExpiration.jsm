@@ -470,8 +470,8 @@ function nsPlacesExpiration() {
   XPCOMUtils.defineLazyServiceGetter(
     this,
     "_idle",
-    "@mozilla.org/widget/idleservice;1",
-    "nsIIdleService"
+    "@mozilla.org/widget/useridleservice;1",
+    "nsIUserIdleService"
   );
 
   this._prefBranch = Services.prefs.getBranch(PREF_BRANCH);

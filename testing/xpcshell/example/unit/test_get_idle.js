@@ -4,8 +4,8 @@
 
 function run_test() {
   print("Init the fake idle service and check its identity.");
-  let fakeIdleService = Cc["@mozilla.org/widget/idleservice;1"].getService(
-    Ci.nsIIdleService
+  let fakeIdleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(
+    Ci.nsIUserIdleService
   );
   try {
     fakeIdleService.QueryInterface(Ci.nsIFactory);

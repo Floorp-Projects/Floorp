@@ -39,7 +39,7 @@
 #define VK_OEM_102 0xE2
 #define VK_OEM_CLEAR 0xFE
 
-class nsIIdleServiceInternal;
+class nsIUserIdleServiceInternal;
 
 namespace mozilla {
 namespace widget {
@@ -955,7 +955,7 @@ class KeyboardLayout {
   ~KeyboardLayout();
 
   static KeyboardLayout* sInstance;
-  static nsIIdleServiceInternal* sIdleService;
+  static nsIUserIdleServiceInternal* sIdleService;
 
   struct DeadKeyTableListEntry {
     DeadKeyTableListEntry* next;

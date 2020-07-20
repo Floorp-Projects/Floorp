@@ -44,7 +44,7 @@ add_task(async function testWithRealIdleService() {
 
   let chromeScript = loadChromeScript(() => {
     const {sendAsyncMessage} = this;
-    const idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
+    const idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(Ci.nsIUserIdleService);
     let idleTime = idleService.idleTime;
     sendAsyncMessage("detectionInterval", Math.max(Math.ceil(idleTime / 1000) + 10, 15));
   });
