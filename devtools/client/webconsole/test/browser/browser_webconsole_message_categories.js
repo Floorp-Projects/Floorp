@@ -4,6 +4,7 @@
 "use strict";
 
 // Check that messages are logged and observed with the correct category. See Bug 595934.
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 const TEST_URI =
   "data:text/html;charset=utf-8,Web Console test for " +
@@ -56,7 +57,7 @@ const TESTS = [
   {
     // #6
     file: "test-message-categories-css-parser.html",
-    category: "CSS Parser",
+    category: MESSAGE_CATEGORY.CSS_PARSER,
     matchString: "foobarCssParser",
   },
   {
@@ -74,7 +75,7 @@ const TESTS = [
   {
     // #9
     file: "test-message-categories-canvas-css.html",
-    category: "CSS Parser",
+    category: MESSAGE_CATEGORY.CSS_PARSER,
     matchString: "foobarCanvasCssParser",
   },
   {

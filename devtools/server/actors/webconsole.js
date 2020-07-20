@@ -103,6 +103,12 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
+  "MESSAGE_CATEGORY",
+  "devtools/shared/constants",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "stringToCauseType",
   "devtools/server/actors/network-monitor/network-observer",
   true
@@ -1709,7 +1715,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       columnNumber = stack[0].columnNumber;
     }
 
-    const isCSSMessage = pageError.category === "CSS Parser";
+    const isCSSMessage = pageError.category === MESSAGE_CATEGORY.CSS_PARSER;
 
     const result = {
       errorMessage: this._createStringGrip(pageError.errorMessage),

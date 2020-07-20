@@ -9,6 +9,7 @@
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 // Create a simple server so we have a nice sourceName in the resources packets.
 const httpServer = createTestHTTPServer();
@@ -138,7 +139,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
       pageError: {
         errorMessage: /Expected color but found ‘bloup’/,
         sourceName: /test_css_messages/,
-        category: "CSS Parser",
+        category: MESSAGE_CATEGORY.CSS_PARSER,
         timeStamp: /^\d+$/,
         error: false,
         warning: true,
@@ -149,7 +150,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
       pageError: {
         errorMessage: /Error in parsing value for ‘width’/,
         sourceName: /test_css_messages/,
-        category: "CSS Parser",
+        category: MESSAGE_CATEGORY.CSS_PARSER,
         timeStamp: /^\d+$/,
         error: false,
         warning: true,
@@ -159,7 +160,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
       pageError: {
         errorMessage: /Error in parsing value for ‘height’/,
         sourceName: /test_css_messages/,
-        category: "CSS Parser",
+        category: MESSAGE_CATEGORY.CSS_PARSER,
         timeStamp: /^\d+$/,
         error: false,
         warning: true,
