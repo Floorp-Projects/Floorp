@@ -14,6 +14,8 @@
 <script class="testbody" type="application/javascript">
 "use strict";
 
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
+
 const previousEnabled = window.docShell.cssErrorReportingEnabled;
 window.docShell.cssErrorReportingEnabled = true;
 
@@ -33,7 +35,7 @@ function doPageErrors() {
     {
       errorMessage: /fooColor/,
       sourceName: /.+/,
-      category: "CSS Parser",
+      category: MESSAGE_CATEGORY.CSS_PARSER,
       timeStamp: /^\d+$/,
       error: false,
       warning: true,
