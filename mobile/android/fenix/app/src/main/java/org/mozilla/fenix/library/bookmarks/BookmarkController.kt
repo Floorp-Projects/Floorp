@@ -47,7 +47,7 @@ interface BookmarkController {
     fun handleBackPressed()
 }
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LongParameterList")
 class DefaultBookmarkController(
     private val activity: HomeActivity,
     private val navController: NavController,

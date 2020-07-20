@@ -128,7 +128,7 @@ interface SessionControlController {
     fun handleCreateCollection()
 }
 
-@SuppressWarnings("TooManyFunctions", "LargeClass")
+@SuppressWarnings("TooManyFunctions", "LargeClass", "LongParameterList")
 class DefaultSessionControlController(
     private val activity: HomeActivity,
     private val engine: Engine,
