@@ -9,6 +9,8 @@ import json
 import sys
 import logging
 
+import six
+
 from slugid import nice as slugid
 from taskgraph.util.parameterization import resolve_timestamps
 from taskgraph.util.time import current_json_time
@@ -21,7 +23,7 @@ testing = False
 
 
 def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task_id):
-    taskid_to_label = {t: l for l, t in label_to_taskid.iteritems()}
+    taskid_to_label = {t: l for l, t in six.iteritems(label_to_taskid)}
 
     # when running as an actual decision task, we use the decision task's
     # taskId as the taskGroupId.  The process that created the decision task
