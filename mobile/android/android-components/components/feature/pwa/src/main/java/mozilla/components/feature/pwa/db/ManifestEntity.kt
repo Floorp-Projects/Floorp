@@ -18,17 +18,33 @@ internal data class ManifestEntity(
 
     @PrimaryKey
     @ColumnInfo(name = "start_url")
-    val startUrl: String = manifest.startUrl,
+    val startUrl: String,
 
     @ColumnInfo(name = "scope", index = true)
-    var scope: String? = manifest.scope,
+    val scope: String?,
+
+    @ColumnInfo(name = "has_share_targets", index = true)
+    val hasShareTargets: Int,
 
     @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis(),
+    val createdAt: Long,
 
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long,
 
     @ColumnInfo(name = "used_at")
-    val usedAt: Long = System.currentTimeMillis()
-)
+    val usedAt: Long
+) {
+    constructor(
+        manifest: WebAppManifest,
+        currentTime: Long = System.currentTimeMillis()
+    ) : this(
+        manifest,
+        startUrl = manifest.startUrl,
+        scope = manifest.scope,
+        hasShareTargets = if (manifest.shareTarget != null) 1 else 0,
+        createdAt = currentTime,
+        updatedAt = currentTime,
+        usedAt = currentTime
+    )
+}

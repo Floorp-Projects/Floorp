@@ -38,7 +38,7 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
 
     /**
      * Load all Web App Manifests with a matching scope for the given URL from disk.
-     * If no manifest is found, an empty list is returned.
+     * If no manifests are found, an empty list is returned.
      *
      * @param url URL of site. Should correspond to an url covered by the scope of a stored manifest.
      */
@@ -60,7 +60,7 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
     }
 
     /**
-     * Counts number of recently used manifests, as configured by [usedAtTimeout].
+     * Counts number of recently used manifests, as configured by [activeThresholdMs].
      *
      * @param currentTimeMs current time, exposed for testing
      * @param activeThresholdMs a time threshold within which manifests are considered to be recently used.
@@ -93,22 +93,27 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
      */
     suspend fun warmUpScopes(currentTime: Long) = withContext(IO) {
         installedScopes = manifestDao.value
-            .getInstalledScopes(currentTime - activeThresholdMs)
-            .map { manifest -> manifest.scope?.let { scope -> Pair(scope, manifest.startUrl) } }
-            .filterNotNull()
+            .getInstalledScopes(deadline(currentTime))
+            .mapNotNull { manifest -> manifest.scope?.let { scope -> Pair(scope, manifest.startUrl) } }
             .toMap()
             .toMutableMap()
+    }
+
+    /**
+     * Load all Web App Manifests that contain share targets.
+     * If no manifests are found, an empty list is returned.
+     *
+     * @param currentTime the current time in milliseconds.
+     */
+    suspend fun loadShareableManifests(currentTime: Long): List<WebAppManifest> = withContext(IO) {
+        manifestDao.value.getRecentShareableManifests(deadline(currentTime)).map { it.manifest }
     }
 
     /**
      * Save a Web App Manifest to disk.
      */
     suspend fun saveManifest(manifest: WebAppManifest) = withContext(IO) {
-        val entity = ManifestEntity(
-            manifest = manifest,
-            updatedAt = System.currentTimeMillis(),
-            createdAt = System.currentTimeMillis()
-        )
+        val entity = ManifestEntity(manifest, currentTime = System.currentTimeMillis())
         manifestDao.value.insertManifest(entity)
     }
 
@@ -146,6 +151,8 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
     suspend fun removeManifests(startUrls: List<String>) = withContext(IO) {
         manifestDao.value.deleteManifests(startUrls)
     }
+
+    private fun deadline(currentTime: Long) = currentTime - activeThresholdMs
 
     companion object {
         const val ACTIVE_THRESHOLD_MS = 86400000 * 30L // 30 days

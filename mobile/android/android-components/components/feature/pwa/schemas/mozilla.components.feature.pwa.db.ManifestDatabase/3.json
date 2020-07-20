@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "eb8c34cf7bcaf5f84bf0c3b407c8061a",
+    "entities": [
+      {
+        "tableName": "manifests",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`manifest` TEXT NOT NULL, `start_url` TEXT NOT NULL, `scope` TEXT, `has_share_targets` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `used_at` INTEGER NOT NULL, PRIMARY KEY(`start_url`))",
+        "fields": [
+          {
+            "fieldPath": "manifest",
+            "columnName": "manifest",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startUrl",
+            "columnName": "start_url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scope",
+            "columnName": "scope",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "hasShareTargets",
+            "columnName": "has_share_targets",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usedAt",
+            "columnName": "used_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "start_url"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_manifests_scope",
+            "unique": false,
+            "columnNames": [
+              "scope"
+            ],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_manifests_scope` ON `${TABLE_NAME}` (`scope`)"
+          },
+          {
+            "name": "index_manifests_has_share_targets",
+            "unique": false,
+            "columnNames": [
+              "has_share_targets"
+            ],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_manifests_has_share_targets` ON `${TABLE_NAME}` (`has_share_targets`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'eb8c34cf7bcaf5f84bf0c3b407c8061a')"
+    ]
+  }
+}
