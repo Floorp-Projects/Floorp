@@ -43,6 +43,7 @@ export class CardGrid extends React.PureComponent {
             cta={rec.cta}
             cta_variant={this.props.cta_variant}
             is_video={this.props.enable_video_playheads && rec.is_video}
+            is_collection={this.props.is_collection}
           />
         )
       );

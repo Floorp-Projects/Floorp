@@ -1241,70 +1241,6 @@ describe("DiscoveryStreamFeed", () => {
       ]);
     });
   });
-  describe("#removeFlightDupes", () => {
-    it("should no op with no params", () => {
-      const { data: result, filtered } = feed.removeFlightDupes([]);
-
-      assert.equal(result.length, 0);
-      assert.equal(filtered.length, 0);
-    });
-    it("should filter out duplicate flights", () => {
-      const { data: result, filtered } = feed.removeFlightDupes([
-        { id: 1, flight_id: 2 },
-        { id: 2, flight_id: 3 },
-        { id: 3, flight_id: 1 },
-        { id: 4, flight_id: 3 },
-        { id: 5, flight_id: 1 },
-      ]);
-
-      assert.deepEqual(result, [
-        { id: 1, flight_id: 2 },
-        { id: 2, flight_id: 3 },
-        { id: 3, flight_id: 1 },
-      ]);
-
-      assert.deepEqual(filtered, [
-        { id: 4, flight_id: 3 },
-        { id: 5, flight_id: 1 },
-      ]);
-    });
-    it("should filter out duplicate flight while using spocs_per_domain", async () => {
-      sandbox.stub(feed.store, "getState").returns({
-        DiscoveryStream: {
-          spocs: { spocs_per_domain: 2 },
-        },
-      });
-
-      const { data: result, filtered } = feed.removeFlightDupes([
-        { id: 1, flight_id: 2 },
-        { id: 2, flight_id: 3 },
-        { id: 3, flight_id: 1 },
-        { id: 4, flight_id: 3 },
-        { id: 5, flight_id: 1 },
-        { id: 6, flight_id: 2 },
-        { id: 7, flight_id: 3 },
-        { id: 8, flight_id: 1 },
-        { id: 9, flight_id: 3 },
-        { id: 10, flight_id: 1 },
-      ]);
-
-      assert.deepEqual(result, [
-        { id: 1, flight_id: 2 },
-        { id: 2, flight_id: 3 },
-        { id: 3, flight_id: 1 },
-        { id: 4, flight_id: 3 },
-        { id: 5, flight_id: 1 },
-        { id: 6, flight_id: 2 },
-      ]);
-
-      assert.deepEqual(filtered, [
-        { id: 7, flight_id: 3 },
-        { id: 8, flight_id: 1 },
-        { id: 9, flight_id: 3 },
-        { id: 10, flight_id: 1 },
-      ]);
-    });
-  });
 
   describe("#filterBlocked", () => {
     it("should return initial data if spocs are empty", () => {
@@ -1771,7 +1707,6 @@ describe("DiscoveryStreamFeed", () => {
         DiscoveryStream: {
           spocs: {
             data,
-            spocs_per_domain: 2,
           },
         },
       });
@@ -1871,7 +1806,6 @@ describe("DiscoveryStreamFeed", () => {
           spocs: {
             data,
             placements: [{ name: "spocs" }, { name: "notSpocs" }],
-            spocs_per_domain: 1,
           },
         },
       });

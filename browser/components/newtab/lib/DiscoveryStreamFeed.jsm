@@ -449,7 +449,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
           data: {
             url,
-            spocs_per_domain: layoutResp.spocs.spocs_per_domain,
           },
           meta: {
             isStartup,
@@ -690,7 +689,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     let frequencyCapped = [];
     let blockedItems = [];
     let belowMinScore = [];
-    let flightDupes = [];
 
     const { placements } = this.store.getState().DiscoveryStream.spocs;
 
@@ -785,20 +783,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
               } = this.filterBlocked(capResult);
               blockedItems = [...blockedItems, ...blocks];
 
-              // It's important that we score before removing flight dupes.
-              // This ensure we remove the lower ranking dupes.
               const {
                 data: scoredResults,
                 filtered: minScoreFilter,
               } = await this.scoreItems(blockedResults, "spocs");
 
               belowMinScore = [...belowMinScore, ...minScoreFilter];
-
-              let {
-                data: dupesResult,
-                filtered: dupes,
-              } = this.removeFlightDupes(scoredResults);
-              flightDupes = [...flightDupes, ...dupes];
 
               spocsState.spocs = {
                 ...spocsState.spocs,
@@ -807,7 +797,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
                   context,
                   sponsor,
                   sponsored_by_override,
-                  items: dupesResult,
+                  items: scoredResults,
                 },
               };
             }
@@ -824,7 +814,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
               frequency_cap: frequencyCapped,
               blocked_by_user: blockedItems,
               below_min_score: belowMinScore,
-              flight_duplicate: flightDupes,
             },
             true
           );
@@ -1028,38 +1017,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       };
     }
     return { data, filtered };
-  }
-
-  removeFlightDupes(spocs) {
-    if (spocs && spocs.length) {
-      const spocsPerDomain =
-        this.store.getState().DiscoveryStream.spocs.spocs_per_domain || 1;
-      const flightMap = {};
-      const flightDuplicates = [];
-
-      // This removes flight dupes.
-      // We do this only after scoring and sorting because that way
-      // we can keep the first item we see, and end up keeping the highest scored.
-      const newSpocs = spocs.filter(s => {
-        if (!flightMap[s.flight_id]) {
-          flightMap[s.flight_id] = 1;
-          return true;
-        } else if (flightMap[s.flight_id] < spocsPerDomain) {
-          flightMap[s.flight_id]++;
-          return true;
-        }
-        flightDuplicates.push(s);
-        return false;
-      });
-      return {
-        data: newSpocs,
-        filtered: flightDuplicates,
-      };
-    }
-    return {
-      data: spocs,
-      filtered: [],
-    };
   }
 
   // For backwards compatibility, older spoc endpoint don't have flight_id,
@@ -1947,7 +1904,6 @@ getHardcodedLayout = isBasicLayout => ({
   lastUpdate: Date.now(),
   spocs: {
     url: "https://spocs.getpocket.com/spocs",
-    spocs_per_domain: 3,
   },
   layout: [
     {

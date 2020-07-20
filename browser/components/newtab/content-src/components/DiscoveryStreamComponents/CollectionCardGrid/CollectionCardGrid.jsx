@@ -31,6 +31,7 @@ export class CollectionCardGrid extends React.PureComponent {
         url: item.url,
         guid: item.id,
         shim: item.shim,
+        flight_id: item.flightId,
       }));
 
       const blockUrlOption = LinkMenuOptions.BlockUrls(spocsData, pos, source);
@@ -116,6 +117,7 @@ export class CollectionCardGrid extends React.PureComponent {
           feed={feed}
           border={this.props.border}
           type={type}
+          is_collection={true}
           dispatch={this.props.dispatch}
           items={this.props.items}
         />

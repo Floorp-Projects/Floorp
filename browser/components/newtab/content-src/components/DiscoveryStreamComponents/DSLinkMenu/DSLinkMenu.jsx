@@ -47,7 +47,7 @@ export class DSLinkMenu extends React.PureComponent {
       "OpenInPrivateWindow",
       "Separator",
       "BlockUrl",
-      ...(this.props.flightId ? ["ShowPrivacyInfo"] : []),
+      ...(this.props.showPrivacyInfo ? ["ShowPrivacyInfo"] : []),
     ];
     const type = this.props.type || "DISCOVERY_STREAM";
     const title = this.props.title || this.props.source;
