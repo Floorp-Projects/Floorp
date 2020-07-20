@@ -14,6 +14,12 @@ from mozbuild.util import memoize
 
 from taskgraph.util.taskcluster import requests_retry_session
 
+try:
+    # TODO(py3): use time.monotonic()
+    from time import monotonic
+except ImportError:
+    from time import time as monotonic
+
 BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
 RETRY_TIMEOUT = 8 * 60  # seconds
 RETRY_INTERVAL = 10      # seconds
@@ -71,8 +77,7 @@ def _write_perfherder_data(lower_is_better):
 @memoize
 def push_schedules(branch, rev):
     url = BUGBUG_BASE_URL + '/push/{branch}/{rev}/schedules'.format(branch=branch, rev=rev)
-    # TODO(py3): use time.monotonic()
-    start = time.clock()
+    start = monotonic()
     session = get_session()
     attempts = RETRY_TIMEOUT / RETRY_INTERVAL
     i = 0
@@ -85,7 +90,7 @@ def push_schedules(branch, rev):
 
         time.sleep(RETRY_INTERVAL)
         i += 1
-    end = time.clock()
+    end = monotonic()
 
     _write_perfherder_data(lower_is_better={
         'bugbug_push_schedules_time': end-start,
