@@ -1031,6 +1031,10 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
   RefPtr<Element> oldFocusedElement = std::move(mFocusedElement);
 
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
+  if (!focusedDocShell) {
+    return NS_OK;
+  }
+
   RefPtr<PresShell> presShell = focusedDocShell->GetPresShell();
 
   if (oldFocusedElement && oldFocusedElement->IsInComposedDoc()) {
