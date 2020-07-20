@@ -37,6 +37,7 @@ job-defaults:
             talos-.*-profiling:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
+                    .*(?:shippable-qr).*: []
                     default: ['mozilla-central']
             default:
                 by-test-platform:
