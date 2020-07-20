@@ -101,7 +101,7 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid, parameter
 
     task = Task(kind='misc', label=label, attributes={}, task=task_def,
                 dependencies=dependencies)
-    task.task_id = slugid()
+    task.task_id = slugid().decode('ascii')
     return task
 
 
