@@ -947,8 +947,12 @@ var AddonTestUtils = {
    * @param {string} [newVersion]
    *        If provided, the application version is changed to this string
    *        before the AddonManager is started.
+   * @param {string} [newPlatformVersion]
+   *        If provided, the platform version is changed to this string
+   *        before the AddonManager is started.  It will default to the appVersion
+   *        as that is how Firefox currently builds (app === platform).
    */
-  async promiseStartupManager(newVersion) {
+  async promiseStartupManager(newVersion, newPlatformVersion = newVersion) {
     if (this.addonIntegrationService) {
       throw new Error(
         "Attempting to startup manager that was already started."
@@ -958,6 +962,11 @@ var AddonTestUtils = {
     if (newVersion) {
       this.appInfo.version = newVersion;
     }
+
+    if (newPlatformVersion) {
+      this.appInfo.platformVersion = newPlatformVersion;
+    }
+
     // AddonListeners are removed when the addonManager is shutdown,
     // ensure the Extension observer is added.  We call uninit in
     // promiseShutdown to allow re-initialization.

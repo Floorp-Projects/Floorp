@@ -7,6 +7,10 @@ const { L10nRegistry } = ChromeUtils.import(
   "resource://gre/modules/L10nRegistry.jsm"
 );
 
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 const ID = "langpack-und@test.mozilla.org";
@@ -334,12 +338,7 @@ add_task(async function test_disable_after_app_update() {
   ]);
   Assert.ok(addon.isActive);
 
-  await promiseShutdownManager();
-
-  gAppInfo.version = "59";
-  gAppInfo.platformVersion = "59";
-
-  await promiseStartupManager();
+  await promiseRestartManager("59");
 
   addon = await promiseAddonByID(ID);
   Assert.ok(!addon.isActive);
@@ -354,21 +353,14 @@ add_task(async function test_disable_after_app_update() {
  * applied after a restart.
  */
 add_task(async function test_after_app_update() {
-  gAppInfo.version = "58";
-  gAppInfo.platformVersion = "58";
-  await promiseStartupManager();
+  await promiseStartupManager("58");
   let [, { addon }] = await Promise.all([
     promiseLangpackStartup(),
     AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);
   Assert.ok(addon.isActive);
 
-  await promiseShutdownManager();
-
-  gAppInfo.version = "60";
-  gAppInfo.platformVersion = "60";
-
-  await promiseStartupManager();
+  await promiseRestartManager("60");
 
   addon = await promiseAddonByID(ID);
   Assert.ok(!addon.isActive);
@@ -395,4 +387,95 @@ add_task(async function test_after_app_update() {
 
   await addon.uninstall();
   await promiseShutdownManager();
+});
+
+// Support setting the request locale.
+function promiseLocaleChanged(requestedLocales) {
+  let changed = ExtensionUtils.promiseObserved(
+    "intl:requested-locales-changed"
+  );
+  Services.locale.requestedLocales = requestedLocales;
+  return changed;
+}
+
+/**
+ * This test verifies that an addon update for the next version can be
+ * retrieved and staged for restart.
+ */
+add_task(async function test_staged_langpack_for_app_update() {
+  let originalLocales = Services.locale.requestedLocales;
+
+  await promiseStartupManager("58");
+  let [, { addon }] = await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+  Assert.ok(addon.isActive);
+  await promiseLocaleChanged(["und"]);
+
+  await AddonManager.stageLangpacksForAppUpdate("60");
+  await promiseRestartManager("60");
+
+  addon = await promiseAddonByID(ID);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.version, "2.0");
+
+  await addon.uninstall();
+  await promiseShutdownManager();
+
+  Services.locale.requestedLocales = originalLocales;
+});
+
+/**
+ * This test verifies that an addon update for the next version can be
+ * retrieved and staged for restart, but a restart failure falls back.
+ */
+add_task(async function test_staged_langpack_for_app_update_fail() {
+  let originalLocales = Services.locale.requestedLocales;
+
+  await promiseStartupManager("58");
+  let [, { addon }] = await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+  Assert.ok(addon.isActive);
+  await promiseLocaleChanged(["und"]);
+
+  await AddonManager.stageLangpacksForAppUpdate("60");
+  await promiseRestartManager();
+
+  addon = await promiseAddonByID(ID);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.version, "1.0");
+
+  await addon.uninstall();
+  await promiseShutdownManager();
+  Services.locale.requestedLocales = originalLocales;
+});
+
+/**
+ * This test verifies that an update restart works when the langpack
+ * cannot be updated.
+ */
+add_task(async function test_staged_langpack_for_app_update_not_found() {
+  let originalLocales = Services.locale.requestedLocales;
+
+  await promiseStartupManager("58");
+  let [, { addon }] = await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+  Assert.ok(addon.isActive);
+  await promiseLocaleChanged(["und"]);
+
+  await AddonManager.stageLangpacksForAppUpdate("59");
+  await promiseRestartManager("59");
+
+  addon = await promiseAddonByID(ID);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.version, "1.0");
+
+  await addon.uninstall();
+  await promiseShutdownManager();
+  Services.locale.requestedLocales = originalLocales;
 });
