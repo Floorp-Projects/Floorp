@@ -22,6 +22,22 @@ bool BaseProxyHandler::enter(JSContext* cx, HandleObject wrapper, HandleId id,
   return true;
 }
 
+bool BaseProxyHandler::hasPrivate(JSContext* cx, HandleObject proxy,
+                                  HandleId id, bool* bp) const {
+  assertEnteredPolicy(cx, proxy, id, GET);
+
+  // For BaseProxyHandler, private names are stored in the expando object.
+  RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
+
+  // If there is no expando object, then there is no private field.
+  if (!expando) {
+    *bp = false;
+    return true;
+  }
+
+  return HasOwnProperty(cx, expando, id, bp);
+}
+
 bool BaseProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id,
                            bool* bp) const {
   assertEnteredPolicy(cx, proxy, id, GET);
@@ -66,6 +82,35 @@ bool BaseProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
     return false;
   }
   *bp = !!desc.object();
+  return true;
+}
+
+bool BaseProxyHandler::getPrivate(JSContext* cx, HandleObject proxy,
+                                  HandleValue receiver, HandleId id,
+                                  MutableHandleValue vp) const {
+  assertEnteredPolicy(cx, proxy, id, GET);
+
+  // For BaseProxyHandler, private names are stored in the expando object.
+  RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
+
+  // We must have the expando, or GetPrivateElemOperation didn't call
+  // hasPrivate first.
+  MOZ_ASSERT(expando);
+
+  // Because we controlled the creation of the expando, we know it's not a
+  // proxy, and so can safely call internal methods on it without worrying about
+  // exposing information about private names.
+  Rooted<PropertyDescriptor> desc(cx);
+  if (!GetOwnPropertyDescriptor(cx, expando, id, &desc)) {
+    return false;
+  }
+
+  // We must have the object, same reasoning as the expando.
+  MOZ_ASSERT(desc.object());
+  MOZ_ASSERT(desc.hasValue());
+  MOZ_ASSERT(desc.isDataDescriptor());
+
+  vp.set(desc.value());
   return true;
 }
 
@@ -123,6 +168,33 @@ bool BaseProxyHandler::get(JSContext* cx, HandleObject proxy,
   // Step 7.
   RootedValue getterFunc(cx, ObjectValue(*getter));
   return CallGetter(cx, receiver, getterFunc, vp);
+}
+
+bool BaseProxyHandler::setPrivate(JSContext* cx, HandleObject proxy,
+                                  HandleId id, HandleValue v,
+                                  HandleValue receiver,
+                                  ObjectOpResult& result) const {
+  assertEnteredPolicy(cx, proxy, id, SET);
+  MOZ_ASSERT(JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName());
+
+  // For BaseProxyHandler, private names are stored in the expando object.
+  RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
+
+  // SetPrivateElementOperation checks for hasPrivate first, which ensures the
+  // expando exsists.
+  MOZ_ASSERT(expando);
+
+  Rooted<PropertyDescriptor> ownDesc(cx);
+  if (!GetOwnPropertyDescriptor(cx, expando, id, &ownDesc)) {
+    return false;
+  }
+  ownDesc.assertCompleteIfFound();
+
+  MOZ_ASSERT(ownDesc.object());
+
+  RootedValue expandoValue(cx, proxy->as<ProxyObject>().expando());
+  return SetPropertyIgnoringNamedGetter(cx, expando, id, v, expandoValue,
+                                        ownDesc, result);
 }
 
 bool BaseProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id,
@@ -228,6 +300,41 @@ bool js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj,
     return false;
   }
   return result.succeed();
+}
+
+bool BaseProxyHandler::definePrivateField(JSContext* cx, HandleObject proxy,
+                                          HandleId id,
+                                          Handle<PropertyDescriptor> desc,
+                                          ObjectOpResult& result) const {
+  MOZ_ASSERT(JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName());
+
+  // For BaseProxyHandler, private names are stored in the expando object.
+  RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
+
+  if (!expando) {
+    expando = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
+    if (!expando) {
+      return false;
+    }
+
+    proxy->as<ProxyObject>().setExpando(expando);
+  }
+
+  // Get a new property descriptor for the expando.
+  Rooted<PropertyDescriptor> ownDesc(cx);
+  if (!GetOwnPropertyDescriptor(cx, expando, id, &ownDesc)) {
+    return false;
+  }
+  ownDesc.assertCompleteIfFound();
+  // Copy the incoming value into the expando descriptor.
+  ownDesc.setValue(desc.value());
+
+  // PrivateFieldAdd: Step 4: We must throw a type error if obj already has
+  // this property. This should have been checked by InitPrivateElemOperation
+  // calling hasPrivate already.
+  MOZ_ASSERT(!ownDesc.object());
+
+  return DefineProperty(cx, expando, id, ownDesc, result);
 }
 
 bool BaseProxyHandler::getOwnEnumerablePropertyKeys(
