@@ -887,9 +887,9 @@ struct PrefHasher {
   using Key = UniquePtr<Pref>;
   using Lookup = const char*;
 
-  static HashNumber hash(const Lookup& aLookup) { return HashString(aLookup); }
+  static HashNumber hash(const Lookup aLookup) { return HashString(aLookup); }
 
-  static bool match(const Key& aKey, const Lookup& aLookup) {
+  static bool match(const Key& aKey, const Lookup aLookup) {
     if (!aLookup || !aKey->Name()) {
       return false;
     }
