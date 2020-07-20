@@ -635,6 +635,8 @@
     <string name="tracking_protection_on">Ενεργό</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ανενεργό</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Αποδοχή ήχου και βίντεο</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Φραγή ήχου μόνο</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
@@ -649,6 +651,10 @@
     <string name="collections_header">Συλλογές</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Μενού συλλογής</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Συλλέξτε όλα όσα έχουν σημασία για εσάς</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Επιλέξτε καρτέλες</string>
     <!-- Title for the "select collection" step of the collection creator -->
     <string name="create_collection_select_collection">Επιλογή συλλογής</string>
     <!-- Title for the "name collection" step of the collection creator -->
@@ -661,6 +667,12 @@
     <string name="create_collection_deselect_all">Από-επιλογή όλων</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Επιλέξτε καρτέλες για αποθήκευση</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Επιλέχθηκαν %d καρτέλες</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">Επιλέχθηκε %d καρτέλα</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Κλείσιμο</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
@@ -734,6 +746,8 @@
     <string name="snackbar_tab_closed">Η καρτέλα έκλεισε</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Οι καρτέλες έκλεισαν</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Προστέθηκε στις κορυφαίες σελίδες!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Η ιδιωτική καρτέλα έκλεισε</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -834,6 +848,9 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Το Firefox Nightly έχει μετακινηθεί</string>
 
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Αποκτήστε το νέο Nightly</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -891,6 +908,8 @@
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Φωτεινό θέμα</string>
 
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Δεν ήταν δυνατή η αποστολή</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">ΕΠΑΝΑΛΗΨΗ</string>
     <!-- Title of QR Pairing Fragment -->

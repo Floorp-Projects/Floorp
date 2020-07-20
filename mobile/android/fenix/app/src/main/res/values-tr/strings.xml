@@ -13,7 +13,7 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Gizli gezintiyi kapat</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">Arama yapın veya adres yazın</string>
+    <string name="search_hint">Arama yap veya adres yaz</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Açık sekmeleriniz burada gösterilecek.</string>
 

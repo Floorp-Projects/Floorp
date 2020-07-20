@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">FIrefox Preview privata</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (privata)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s en reĝimo de privata retumo</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Private)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Pli da elektebloj</string>
@@ -14,25 +14,53 @@
     <string name="content_description_disable_private_browsing_button">Malaktivigi privatan retumon</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Serĉo aŭ adreso</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Neniu malfermita langeto</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Viaj malfermitaj langetoj aperos ĉi tie.</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Viaj privataj langetoj aperos ĉi tie.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 malfermita langeto. Tuŝetu por ŝanĝi langeton.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s malfermitaj langetoj. Tuŝetu por ŝanĝi langetojn.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s estas kreita de Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Vi estas en privata seanco</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s viŝas la serĉan kaj retuman historion de langetoj kiam vi fermas ilin aŭ finas la programon. Kvankam tio ne igas vin anonima antaŭ retejoj aŭ via retprovizanto, tio faciligas la taskon kaŝi vian retumon de aliaj uzantoj en tui ĉi aparato.</string>
+    <string name="private_browsing_common_myths">Oftaj mitoj pri privata retumo</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Forigi seancon</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Aldoni ŝparvojon por malfermi privatajn langetojn el via hejmekrano.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Aldoni ŝparvojon</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ne, dankon</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Atingu Firefox pli rapide. Aldonu kromprogrameton al via hejmekrano.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Aldoni komprogrameton</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ne nun</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nova langeto</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova privata langeto</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Plej vizititaj</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -50,7 +78,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Redakti legosignon</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Administrilo de aldonaĵoj</string>
+    <string name="browser_menu_add_ons">Aldonaĵoj</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Neniu aldonaĵo estas ĉi tie</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -60,22 +88,24 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Agordoj</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Via biblioteko</string>
+    <string name="browser_menu_library">Biblioteko</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Labortabla retejo</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Aldoni al hejmekrano</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instali</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Spegulitaj langetoj</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Serĉi en paĝo</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Privata langeto</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Nova langeto</string>
-    <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Konservi en kolekto</string>
 
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Raporti problemon kun retejo</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Konservi en kolekto</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Kundividi</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -89,13 +119,19 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Kun teknologio de %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Legila vido</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Fermi legilan vidon</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Malfermi per programo</string>
 
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aspekto</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Konekto neebla. Nerekonita skemo de URL.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -136,6 +172,9 @@
     <string name="search_widget_text_short">Serĉi</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Serĉi en la reto</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Voĉa serĉo</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -182,10 +221,18 @@
     <string name="preferences_private_browsing_options">Privata retumo</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Malfermi ligilojn en privata langeto</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permesi ekrankopiojn en privata retumo</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Aldoni privatan retuman ŝparvojon</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Alirebleco</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Personecigita servilo de konto de Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Personecigita servilo de spegulado</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">La serviloj de Konto de Firefox Account/Spegulado estis ŝanĝitaj. La programo nun finiĝos por apliki la ŝanĝojn…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference shown on banner to sign into account -->
@@ -200,6 +247,8 @@
     <string name="preferences_sign_in_description">Spegulu legosignojn, historion kaj aliajn aferojn per via konto de Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Konto de Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Rekonektiĝu por daŭrigi la speguladon</string>
     <!-- Preference for language -->
     <string name="preferences_language">Lingvo</string>
     <!-- Preference for data choices -->
@@ -216,6 +265,8 @@
     <string name="preferences_show_search_shortcuts">Montri serĉajn ŝparvojojn</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Montri serĉajn sugestojn</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Montri voĉan serĉon</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Montri en privataj seancoj</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -243,6 +294,8 @@
     <string name="preferences_sync_bookmarks">legosignojn</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">legitimilojn</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Malfermitaj langetoj</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Fini seancon</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -259,19 +312,93 @@
     <string name="sync_last_synced_summary">Lasta spegulado: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Lasta spegulado: neniam</string>
+
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s en %s %s</string>
+    <string name="default_device_name_2">%1$s en %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Ricevitaj langetoj</string>
 
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Sciigoj por langetoj ricevitaj el aliaj aparatoj Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Langeto ricevita</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Langetoj ricevitaj</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Langeto el %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Protekto kontraŭ spurado</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Protekto kontraŭ spurado</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Bloki enhavon kaj skriptojn kiuj spuras vin en la reto</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Esceptoj</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Protekto kontraŭ spurado malŝaltita por tiuj ĉi retejoj</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Malŝalti por ĉiuj retejoj</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Esceptoj permesas al vi malŝalti protekton kontraŭ spurado por elektitaj retejoj.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Pli da informo</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Malŝaltita ĝenerale, iru al Agordoj por ŝalti ĝin.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemezuro</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Uzo kaj teknikaj datumoj</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Divido kun Mozilla de retumilaj datumoj pri efikeco, uzo, aparataro kaj personecigoj, por helpi nin plibonigi %1$s.</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Merkatikaj datumoj</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Divido de datumoj pri la trajtoj, kiujn vi uzas en %1$s kun Leanplum, nia poŝaparata merkatika provizanto.</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Eksperimentoj</string>
+
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Permeso al Mozilla instali kaj kolekti datumojn pri eksperimentaj trajtoj</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Raportado de paneoj</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Pozicia servo de Mozilla</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Sanraporto de %s</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Ŝalti Speguladon</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Skani asociigan kodon en komputila Firefox</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Komenci seancon</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Komenci seancon por rekonekti</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Forigi konton</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Skani la kodon QR montrita ĉe <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Malfermi filmilon</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Nuligi</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Supre</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Malsupre</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -303,12 +430,12 @@
     <string name="library_desktop_bookmarks_unfiled">Aliaj legosignoj</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historio</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Spegulitaj langetoj</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Legolisto</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Serĉi</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Biblioteko</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Agordoj</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -325,6 +452,26 @@
     <string name="tabs_header_private_tabs_title">Privataj langetoj</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Aldoni langeton</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Aldoni privatan langeton</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privata</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Malfermi langetojn</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Konservi en kolekto</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Dividi ĉiujn langetojn</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Fermi ĉiujn langetojn</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nova langeto</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Iri al la komenco</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Ŝanĝi la langetan reĝimon</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Forigi langeton el kolekto</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Fermi langeton</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -337,7 +484,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Kundividi langetojn</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Konservi en kolekto</string>
+    <string name="tabs_menu_save_to_collection1">Konservi langetojn en kolekto</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menuo de langeto</string>
     <!-- Tab menu item to share the tab -->
@@ -348,6 +495,8 @@
     <string name="current_session_save">Konservi</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Kundividi</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Bildo por la nuna seanco</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Konservi en kolekto</string>
 
@@ -361,13 +510,28 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Forigi</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Privata reĝimo)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Forigi historion</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Ĉu vi certe volas forigi vian historion?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Historio viŝita</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s forigita</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Viŝi</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopii</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Dividi</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Malfermi en nova langeto</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Malfermi en privata langeto</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Forigi</string>
     <!-- History multi select title in app bar
@@ -390,6 +554,8 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Bedaŭrinde %1$s ne povas ŝargi tiun paĝon.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Vi povas klopodi restarigi aŭ fermi la malsupran langeton.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Sendi raporton pri paneo al Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -411,6 +577,10 @@
     <string name="bookmark_edit">Redakti legosignon</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Elekti dosierujon</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Ĉu vi certe volas forigi tiun ĉi dosierujon?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s forigita</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Aldoni dosierujon</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -465,7 +635,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s forigita</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Elektitaj legosignoj forigataj</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Legosignoj forigitaj</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">MALFARI</string>
 
@@ -474,6 +644,10 @@
     <string name="permissions_header">Permesoj</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Iri al agordoj</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Rapidalira agorda panelo</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Rekomenditaj</string>
     <!-- button that allows editing site permissions settings -->
@@ -509,21 +683,42 @@
     <string name="tracking_protection_on">Ŝaltita</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Malŝaltita</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video kaj sono blokitaj</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video kaj sono permesitaj</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Permesi sonon kaj videon</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Bloki sonon kaj videon nur dum konekto al poŝaparataj retoj</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Sono kaj video estos ludataj en sendrata konektoj (Wi-Fi)</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Nur bloki sonon</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Bloki sonon kaj videon</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Ŝaltita</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Malŝaltita</string>
 
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Kolektoj</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menuo de kolektoj</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Neniu kolekto</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Viaj kolektoj aperos ĉi tie.</string>
+    <string name="no_collections_header1">Kolekti la aferojn kiu gravas por vi</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Grupigi similajn serĉojn, retejojn kaj langetojn por pli rapida posta aliro.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Elektitaj langetoj</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Elekti kolekton</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Nomi kolekton</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Aldoni novan kolekton</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Elekti ĉiujn</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Malelekti ĉiujn</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Elektu konservotajn langetojn</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
@@ -542,38 +737,263 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Konservi</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Vidi</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Kolekto %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Sendi kaj dividi</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Dividi</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
-    <string name="share_button_content_description">Kundividi</string>
+    <string name="share_button_content_description">Dividi</string>
 
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Dividi kiel ligilon</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Sendi al aparato</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Ĉiuj agoj</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Ĵuse uzitaj</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Komenci seancon en Speguli</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Sendi al ĉiuj aparatoj</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Rekonekti al Spegulado</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Malkonektite</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Konekti alian aparaton</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Por sendi langeton, komencu seancon en Firefox en almenaŭ unu alia aparato.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Mi komprenis</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Ne eblas dividi kun tiu ĉi programo</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Sendi al aparato</string>
+
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Neniu aparato konektita</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Pli da informo pri sendo de langetoj…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Konekti alian aparaton…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Privata retuma seanco</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Forigi privatajn langetojn</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Fermi privatajn langetojn</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Malfermi</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Forigi kaj malfermi</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Funkciigita de</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Kolekto forigita</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Kolekto renomita</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Langeto forigita</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Langetoj forigitaj</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Langeto fermita</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Langetoj fermitaj</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Aldonita al la plej vizititaj!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privata langeto fermita</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Privataj langetoj fermitaj</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Privataj langetoj forigitaj</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">MALFARI</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Retejo forigita</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Malfari</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Konfirmi</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Permesi al %1$s malfermi %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">PERMESI</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">RIFUZI</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Ĉu vi certe volas forigi %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Forigi</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Nuligi</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Plenekrana reĝimo aktiva</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Retadreso kopiita</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Tiu ĉi estas ekzempla teksto. Ĝi estas ĉi tie por montri kiel teksto aperos kiam vi etigas aŭ grandigas la tiparon per tiu ĉi agordo.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Grandigi aŭ etigi tekston en retejoj</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Tipara grando</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Automata tipara grando</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">La tipara grando kongruos kun tiu de vian agordoj de Android. Malaktivigu tion ĉi por ŝanĝi la grandon ĉi tie.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Forigi retumajn datumojn</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Malfermitaj langetoj</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Malfermitaj langetoj</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d langetoj</string>
 
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Retuma historio kaj retejaj datumoj</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adresoj</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historio</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d paĝoj</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Kuketoj</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">La plimulto de viaj retejaj seancon finiĝos</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Staplitaj bildoj kaj dosieroj</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Liberigo de loko en konservejo</string>
+
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Permesoj por retejoj</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Forigi retumajn datumojn</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Forigi retumajn datumojn kiam la programo finiĝas</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Aŭtomate forigi retumajn datumojn kiam vi elektas &quot;Fini&quot; en la ĉefa menuo</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Aŭtomate forigi retumajn datumojn kiam vi elektas \&quot;Fini\&quot; en la ĉefa menuo</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Fini</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Ĉiujn viajn retumajn datumojn estos forigitaj.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s forigos la elektitajn retumajn datumojn.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Nuligi</string>
 
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Forigi</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Retumaj datumoj forigitaj</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Retumaj datumoj forigataj…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview estas ekde nun Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly estas ĝisdatigita ĉiu vespere kaj enhavas novajn eksperimentajn trajtojn.
+        Ĝi povas tamen esti malpli stabila. Elŝutu nian retumilon Beta por pli stabila sperto.</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Ricevi Firefox por Android Beta</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly translokiĝis</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Tiu ĉi programo ne plu ricevos sekurecajn ĝisdatigojn. Bonvolu ne plu uzi tiun ĉi programon kaj ŝanĝi ĝin per la nova Nightly.
+        \n\nPor transmeti viajn legosignojn, legitimilojn kaj historion al alia programo, kreu konton de Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Ŝanĝi al la nova Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly translokiĝis</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Tiu ĉi programo ne plu ricevos sekurecajn ĝisdatigojn. Ricevu la novan Nightly kaj ne plu uzu tiun ĉi programon.
+        \n\nPor transmeti viajn legosignojn, legitimilojn kaj historion al alia programo, kreu konton de Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Ricevi la novan Nightly</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Bonvenon al %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Ĉu vi jam havas konton?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Malkovru %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Vidi la novaĵojn</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Ĉu vi havas demandojn pri la refasonita %s? Ĉu vi volas scii kio ŝanĝiĝis?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Trovu respondojn ĉi tie</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Eltiru la maksimumon el %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Vi komencis seancon kiel %s en alia retumilo Firefox en tiu ĉi poŝaparato. Ĉu vi ŝatus komenci seancon per tiu konto?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Jes, komenci seancon</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Komenco de seanco…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Komenci seancon en Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Ne komenci seancon</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Spegulado estas ŝaltita</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Malsukcesa komenco de seanco</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Aŭtomata privateco</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">La agordoj privatecaj kaj sekurecaj blokas spurilojn, malicajn programojn kaj kompaniojn kiuj sekvas vin.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Norma</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Malpli da spuriloj blokitaj. Paĝoj ŝargiĝos normale.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Rigora (rekomendita)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Rigora</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Pli da spuriloj, reklamoj kaj ŝprucaĵoj blokitaj. Paĝoj ŝargiĝos pli rapide, sed kelkaj aferoj povus ne bone funkcii.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Preni pozicion</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Provu la unumanan retumon per la malsupra ilaro, aŭ movu ĝin al la supro.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Retumi private</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Por malfermi privatan langeton nur unufoje: tuŝu la emblemon %s.</string>
@@ -582,9 +1002,153 @@
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Malfermi agordojn</string>
 
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Via privateco</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Ni kreis %s por doni al vi la eblon plene  regi kion vi dividas
+en la reto kaj kion vi dividas kun ni.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Legu nian rimarkon pri privateco</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Fermi</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Komenci retumi</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Elektu vian etoson</string>
+
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Ŝparu iom da baterio kaj protektu viajn okulojn per malhela reĝimo.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Aŭtomate</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Adaptita al la agordoj de via aparato</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Malhela etoso</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Hela etoso</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Langetoj senditaj!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Langeto sendita!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Ne eblis sendi</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">REPROVI</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Skani la kodon</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[En via komputilo malfermu Firefox kaj vizitu <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Preta skani</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Komencu seancon per via filmilo</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Anstataŭe uzi retpoŝton</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox ne plu spegulos vian konton, sed ĝi ne forigos iun ajn el viaj retumaj datumoj en tiu ĉi aparato.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s ne plu spegulos vian konton, sed ĝi ne forigos iun ajn el viaj retumaj datumoj en tiu ĉi aparato.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Malkonekti</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Nuligi</string>
 
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Ne eblas modifi la normajn dosierojn</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Agordoj de protekto</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Plibonigita protekto kontraŭ spurado</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Retumu sen esti observata</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Gardu viajn datumojn por vi mem. %s protektas vin de pluraj el la plej oftaj spuriloj, kiuj sekvas vian retumon.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Pli da informo</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Norma</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Malpli da spuriloj blokitaj. Paĝoj ŝargiĝos normale.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Aferoj blokitaj de la norma protekto kontraŭ spurado</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Rigora</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Pli da spuriloj, reklamoj kaj ŝprucaĵoj blokitaj. Paĝoj ŝargiĝos pli rapide, sed kelkaj aferoj povus ne bone funkcii.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Aferoj blokitaj de la rigora protekto kontraŭ spurado</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Personecigita</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Elektu blokotajn spurilojn kaj skriptojn</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Aferoj blokitaj de la personecigita protekto kontraŭ spurado</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Kuketoj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Interretejaj kaj sociretaj spuriloj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Kuketoj el ne vizititaj retejoj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Ĉiuj nerektaj kuketoj (tio povus misfunkciigi retejojn)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Ĉiuj kuketoj (tio misfunkciigos retejojn)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Spurila enhavo</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">En ĉiuj langetoj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Nur en privataj langetoj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Nur en personecigitaj langetoj</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Miniloj de ĉifromono</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Identigiloj de ciferecaj spuroj</string>
+    <string name="enhanced_tracking_protection_blocked">Blokita</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Permesita</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sociretaj spuriloj</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Limigo de la kapablo de sociaj retoj por spuri vian retumon.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Interretejaj spurilaj kuketoj</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blokado de kuketoj uzataj de reklamaj retoj kaj statistikaj kompanioj por kunigi viajn retajn datumojn el pluraj retejoj.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Miniloj de ĉifromono</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Evito de funkciado de malicaj skriptoj en via aparato por mini ĉifromonon.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Identigiloj de ciferecaj spuroj</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Haltigo de kolekto de unike identigeblaj informoj pri via aparato, kiu povas esti uzita por spuri vin.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Spurila enhavo</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Haltigo de ŝargado de nerektaj reklamoj, filmetoj kaj aliaj enhavoj, kiuj portas spurilan kodon. Tio povas misfunkciigi kelkajn trajtojn de retejoj.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Se la ŝildo estas violkolora estas pro tio ke %s blokis spurilojn en retejo. Tuŝetu por havi pli da informo.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Protektoj ŝaltitaj por tiu ĉi retejo</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Protektoj malŝaltitaj por tiu ĉi retejo</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Plibonigita protekto kontraŭ spurado estas malŝaltita por tiuj ĉi retejoj</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Iri reen</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Viaj rajtoj</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Malfermitkodaj bibliotekoj uzataj de ni</string>
     <!-- About page link text to open what's new link -->
@@ -595,6 +1159,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Helpo</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Paneoj</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Rimarko pri privateco</string>
     <!-- About page link text to open know your rights link -->
@@ -604,14 +1170,43 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Bibliotekoj uzataj de ni</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Senerariga menuo: mankas %1$d alklako(j) por aktivigi</string>
+    <string name="about_debug_menu_toast_done">Senerariga menuo aktiva</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 langeto</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d langetoj</string>
 
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopii</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Alglui kaj viziti</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Alglui</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Retadreso kopiita al tondujo</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Aldoni al hejmekrano</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Nuligi</string>
 
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Aldoni</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Daŭrigi al la retejo</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Nomo de ŝparvojo</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Vi povas facile aldoni tiun ĉi retejon al la hejmpaĝo de via telefono, por havi tujan aliron kaj retumi pli rapide per kvazaŭprograma sperto.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Legitimiloj kaj pasvortoj</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Konservi legitimilojn kaj pasvortojn</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -632,6 +1227,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Komenci seancon en Spegulado</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Konservitaj legitimiloj</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">La legitimiloj, kiujn vi konservas aŭ spegulas al %s, aperos ĉi tie.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Pli da informo pri Spegulado.</string>
 
@@ -657,12 +1254,22 @@
     <string name="preferences_passwords_saved_logins_enter_pin">Tajpu vian PIN denove</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">Malŝlosu por vidi viajn konservitajn legitimilojn</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Tiu ĉi konekto ne estas sekura. La akreditiloj uzitaj ĉi tie povus esti minacataj.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Pli da informo</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
     <string name="logins_doorhanger_save">Ĉu vi volas ke %s konservu tiun ĉi legitimilon?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Konservi</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Ne konservi</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Pasvorto kopiita al la tondujo</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nomo de uzanto kopiita al la tondujo</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Retejo kopiita al tondujo</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopii pasvorton</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
@@ -676,10 +1283,173 @@
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Malŝlosu por vidi viajn konservitajn legitimilojn</string>
 
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Protektu viajn legitimilojn kaj pasvortojn</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn legitimilojn kaj pasvortojn se iu alia havas vian aparaton.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Poste</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Agordi nun</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Malbloki vian aparaton</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Pligrandigo en ĉiuj retejoj</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Aktivigi pinĉon kaj pligrandigon, eĉ en retejoj kiuj malpermesas tiun geston.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nomo (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Laste uzita</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordigi menuon de legitimiloj</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Aldoni serĉilon</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Modifi serĉilon</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Aldoni</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description">Konservi</string>
 
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Modifi</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Forigi</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Aliaj</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Nomo</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Teksto por serĉi</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Anstataŭigi la serĉotan tekston per “%s”. Ekzemple:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Pli da informo</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detaloj de personecigita serĉilo</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Ligilo al pli da informo</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Modifi nomon de serĉilo</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Jam ekzistas serĉilo nomita “%s”.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Tajpu serĉan tekston</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Kontrolu ĉu la serĉa teksto kongruas kun la formo de la ekzemplo</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Eraro dum konekto al “%s”</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s kreita</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
     <string name="search_edit_custom_engine_success_message">%s konservita</string>
 
-    </resources>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s forigita</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Bonvenon al tute nova %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Tute nove fasonita retumilo atendas vin, kun plibonigita efikeco kaj trajtoj por helpi vin fari pli en la reto.\nBonvolu atendi dum ni ĝisdatigas %s:</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Ĝisdatigo de %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Komeonci %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migro kompleta</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Pasvortoj</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Por permesi ion:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Iru al Agordoj de Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tuŝetu <b>Permesoj</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Aktivigu <b>%1$s</b>]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Sekura konekto</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Nesekura konekto</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Ĉu vi certe volas viŝi ĉiujn permesojn por ĉiuj retejoj?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Ĉu vi certe volas viŝi ĉiujn permesojn por tiu ĉi retejo?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Ĉu vi certe volas viŝi tiun ĉi permeson por tiu ĉi retejo?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Sen esceptoj por retejo</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Ĉefaj artikoloj</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Ĉu vi certe volas forigi tiun ĉi legosignon?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Aldoni al la plej vizititaj</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Kontrolita de: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Forigi</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Modifi</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Ĉu vi certe volas forigi tiun ĉi legitimilon?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Forigi</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Preferoj de komenco de seanco</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">La modifebla teksta kampo de la retadreso por komenci seancon.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">La modifebla teksta kampo de la nomo de uzanto por komenci seancon.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">La modifebla teksta kampo de la pasvorto por komenci seancon.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Konservi ŝanĝojn je komenco de seanco.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Ignori ŝanĝojn</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Modifi</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Pasvorto postulata</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Voĉa serĉo</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Vi povas nun paroli</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Jam ekzistas legitimilo kun tiu nomo de uzanto</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Konekti per konto de Firefox.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Konekti alian aparaton</string>
+
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Bonvolu legitimiĝu denove.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Bonvolu aktivigi speguladon de langetoj.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Vi ne havas iun ajn langeton malfermita en viaj aliaj aparatoj.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Vidi liston de langetoj el viaj aliaj aparatoj.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Komenci seancon por speguli</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Maksimuma nombro de plej vizititaj retejoj atingita</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Por aldoni novan plej vizititan retejon, forigu alian. Premu longe la forigotan retejon kaj elekti forigi.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">En ordo, mi komprenis</string>
+
+</resources>

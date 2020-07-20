@@ -408,6 +408,9 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">ຕັ້ງໂດຍຕົວປະຢັດແບດເຕີລີ່</string>
 
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">ຕາມຊຸດຕົກແຕ່ງອຸປະກອນ</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">ເຊດຊັນ</string>
@@ -863,5 +866,249 @@
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">ຫນ້າ %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">ຄຸກກີ້</string>
+
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">ທ່ານຈະໄດ້ອອກຈາກລະບົບທັງຫມົດ</string>
+
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">ແຄສຮູບພາບ ແລະ ໄຟລ</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">ເພີ່ມພື້ນທີ່ເກັບຂໍ້ມູນ</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">ສິດທິໃນເວັບໄຊທ</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">ລຶບຂໍ້ມູນການທ່ອງເວັບ</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">ລຶບຂໍ້ມູນການທ່ອງເວັບຫລັງຈາກອອກ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">ລຶບຂໍ້ມູນການທ່ອງເວັບໂດຍອັດຕະໂນມັດເມື່ອທ່ານເລືອກ &quot;ອອກ&quot; ຈາກເມນູຫລັກ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">ລຶບຂໍ້ມູນການທ່ອງເວັບໂດຍອັດຕະໂນມັດເມື່ອທ່ານເລືອກ \&quot;ອອກ\&quot; ຈາກເມນູຫລັກ</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">ອອກ</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">ສິ່ງນີ້ຈະລຶບຂໍ້ມູນການທ່ອງເວັບທັງໝົດຂອງທ່ານ.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s ຈະລຶບຂໍ້ມູນການທ່ອງເວັບທີ່ທ່ານເລືອກ.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">ຍົກເລີກ</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">ລົບ</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">ລຶບຂໍ້ມູນການທ່ອງເວັບແລ້ວ</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">ກຳລັງລຶບຂໍ້ມູນການທ່ອງເວັບ…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview ຕອນນີ້ໄດ້ກາຍມາເປັນ Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly ໄດ້ຮັບການອັບເດດທຸກໆມື້ ແລະ ມີຟິວເຈີໃຫມ່ໆໃຫ້ທົດລອງ.
+        ແນວໃດກໍຕາມມັນອາດຈະຍັງບໍ່ທັນສະຖຽນປານ. ດາວໂຫລດເວີຊັນທົດລອງເພື່ອໃຫ້ມີຄວາມສະຖຽນຫລາຍຂື້ນ.</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">ຕິດຕັ້ງ Firefox ສຳລັບ Android Beta</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed"></string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">ແອັບນີ້ຈະບໍ່ໄດ້ຮັບການອັບເດດທາງດ້ານຄວາມປອດໄພອີກຕໍ່ໄປ. ຢຸດນຳໃຊ້ແອັບນີ້ ແລະ ປ່ຽນໄປໃຊ້ລຸ້ນໃຫມ່ Nightly ແທ່ນ.
+        \n\n ສ້າງບັນຊີ Firefox ເພື່ອໂອນບຸກມາກ, ການລັອກອິນ ແລະ ປະຫວັດການນຳໃຊ້ຂອງທ່ານໄປຫາແອັບອື່ນ.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">ປ່ຽນໄປໃຊ້ລຸ້ນໃຫມ່ Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly ໄດ້ຍ້າຍໄປແລ້ວ</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">ແອັບນີ້ຈະບໍ່ໄດ້ຮັບການອັບເດດທາງດ້ານຄວາມປອດໄພອີກຕໍ່ໄປ. ຕິດຕັ້ງ Nightly ຕົວໃຫມ່ ແລະ ຢຸດນຳໃຊ້ແອັບນີ້.
+        \n\nສ້າງບັນຊີ Firefox ເພື່ອໂອນບຸກມາກ, ການລັອກອິນ ແລະ ປະຫວັດການນຳໃຊ້ຂອງທ່ານໄປຫາແອັບອື່ນ.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">ຕິດຕັ້ງ Nightly ຕົວໃຫມ່</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">ຍິນດີຕ້ອນຮັບສູ່ %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">ມີບັນຊີຢູ່ແລ້ວບໍ່?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">ທຳຄວາມຮູ້ຈັກ %s</string>
+
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">ເບິ່ງວ່າມີຫຍັງໃຫມ່</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">ມີຄຳຖາມກ່ຽວກັບການອອກແບບ %s ຄືນໃຫມ່ບໍ່? ຕ້ອງການຢາກຮູ້ຈັກວ່າມີຫຍັງປ່ຽນແປງແດ່ບໍ່?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">ພົບຄຳຕອບໄດ້ທີ່ນີ້</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">ຮັບຜົນປະໂຫຍດສູງສຸດຈາກ %s.</string>
+
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">ທ່ານໄດ້ລົງຊື່ເຂົ້າໃຊ້ດ້ວຍຖານະ %s ໃນ Firefox  ໃນໂທລະສັບເຄື່ອງນີ້. ທ່ານຕ້ອງການຈະລົງຊື່ເຂົ້າໃຊ້ດ້ວຍບັນຊີນີ້ບໍ່?</string>
+
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">ກຳລັງລົງຊື່ເຂົ້າໃຊ້…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">ລົງຊື່ເຂົ້າໃຊ້ Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">ລົງຊື່ອອກຈາກລະບົບຕໍ່ໄປ</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sync ເປີດຢູ່</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">ການເຂົ້າສູ່ລະບົບລົ້ມເຫລວ</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">ປັບຄວາມເປັນສ່ວນຕົວອັດຕະໂນມັດ</string>
+
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພໄດ້ບັອກຜູ້ຕິດຕາມ, ມັລແວ ແລະ ບໍລິສັດທີ່ຕິດຕາມທ່ານ.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">ບັອກຕົວຕິດຕາມນ້ອຍລົງ. ຫນ້າເວັບຈະໂຫລດແບບປົກກະຕິ.</string>
+
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">ເຂັ້ມງວດ (ແນະນຳ)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">ເຂັ້ມງວດ</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">ບັອກຕົວຕິດຕາມ, ໂຄສະນາ ແລະ ປັອບອັບໃຫ້ຫລາຍຂື້ນ. ຫນ້າເວັບຈະໂຫລດໄວຂື້ນ ແຕ່ອາດຈະມີບາງຟັງຊັນບໍ່ສາມາດເຮັດວຽກໄດ້.</string>
+
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">ເລືອກຕຳແຫນ່ງ</string>
+
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">ທ່ອງເວັບແບບສ່ວນຕົວ</string>
+
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">ເປີດແທັບສ່ວນຕົວຄັ້ງດຽວ: ແຕະທີ່ໄອຄອນ %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">ເປີດແທັບສ່ວນຕົວທຸກຄັ້ງ: ອັບເດດການຕັ້ງຄ່າການທ່ອງເວັບແບບສ່ວນຕົວຂອງທ່ານ.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">ເປີດການຕັ້ງຄ່າ</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">ຄວາມເປັນສ່ວນຕົວຂອງທ່ານ</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">ອ່ານນະໂຍບາຍຄວາມເປັນສ່ວນຕົວຂອງພວກເຮົາ</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">ປິດ</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">ເລີ່ມການທ່ອງເວັບ</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">ເລືອກຊຸດປັບແຕ່ງຂອງທ່ານ</string>
+
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">ປະຫຍັດແບດເຕີລີ່ ແລະ ສາຍຕາຂອງທ່ານໂດຍເປີດນຳໃຊ້ໂຫມດມືດ.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">ອັດຕະໂນມັດ</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">ປັບໃຫ້ເຂົ້າກັບການຕັ້ງຄ່າອຸປະກອນຂອງທ່ານ</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">ຊຸດຕົກແຕ່ງມືດ</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">ຊຸດຕົກແຕ່ງແຈ້ງ</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">ສົ່ງແທັບແລ້ວ!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">ສົ່ງແທັບແລ້ວ!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">ບໍ່ສາມາດສົ່ງ</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ລອງໃໝ່</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">ສະແກນລະຫັດ</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[ໃນຄອມພິວເຕີຂອງທ່ານເປີດ Firefox ແລະ ເຂົ້າໄປທີ່ <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">ກຽມພ້ອມທີ່ຈະສະແກນ</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">ເຂົ້າສູ່ລະບົບດ້ວຍກ້ອງຂອງທ່ານ</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">ໃຊ້ອີເມວແທນ</string>
+
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox ຈະຢຸດການ Sync ກັບບັນຊີຂອງທ່ານ ແຕວ່າຈະບໍ່ລຶບຂໍ້ມູນປະຫວັດການຄົ້ນຫາຂອງທ່ານໃນອຸປະກອນນີ້.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s ຈະຢຸດການ Sync ກັບບັນຊີຂອງທ່ານ ແຕວ່າຈະບໍ່ລຶບຂໍ້ມູນປະຫວັດການຄົ້ນຫາຂອງທ່ານໃນອຸປະກອນນີ້.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">ຕັດການເຊື່ອມຕໍ່</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">ຍົກເລີກ</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">ບໍ່ສາມາດແກ້ໄຂໂຟນເດີພື້ນຖານໄດ້</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">ຕັ້ງຄ່າການປ້ອງກັນ</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">ທ່ອງເວັບໂດຍບໍ່ມີການຕິດຕາມ</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">ບັອກຕົວຕິດຕາມນ້ອຍລົງ. ຫນ້າເວັບຈະໂຫລດແບບປົກກະຕິ.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມແບບມາດຕະຖານ</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">ເຂັ້ມງວດ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">ບັອກຕົວຕິດຕາມ, ໂຄສະນາ ແລະ ປັອບອັບໃຫ້ຫລາຍຂື້ນ. ຫນ້າເວັບຈະໂຫລດໄວຂື້ນ ແຕ່ອາດຈະມີບາງຟັງຊັນບໍ່ສາມາດເຮັດວຽກໄດ້.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມຢ່າງເຂັ້ມງວດ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">ດັດແກ້</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">ເລືອກຕົວຕິດຕາມ ແລະ ສະຄິບທີ່ຈະບັອກ.</string>
+
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">ຄຸກກີ້</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">ຕົວຕິດຕາມຂ້າມເວັບໄຊທ ແລະ ສືອອນລາຍ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">ຄຸກກີ້ຈາກເວັບໄຊທທີ່ບໍ່ເຄີຍເຂົ້າໄປ</string>
+
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ຄຸກກີ້ທັງຫມົດ (ຈະສົ່ງຜົນໃຫ້ເວັບໄຊທບໍ່ສົມບູນ)</string>
+
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">ຕົວຕິດຕາມເນື້ອຫາ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">ໃນແທັບທັງຫມົດ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">ໃນແທັບສ່ວນຕົວເທົ່ານັ້ນ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">ໃນແທັບທີ່ດັດແປງເທົ່ານັ້ນ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ເຄືອງພິມລາຍນິ້ວມື</string>
+    <string name="enhanced_tracking_protection_blocked">ບັອກແລ້ວ</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">ອະນຸຍາດແລ້ວ</string>
+
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">ຕົວຕິດຕາມສືສັງຄົມອອນລາຍ</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ຈຳກັດຄວາມສາມາດຂອງເຄືອຂ່າຍສັງຄົມທີ່ຕິດຕາມການເຄື່ອນໄຫວການທ່ອງເວັບຂອງທ່ານ.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">ຕົວຕິດຕາມຄຸກກີ້ Cross-Site</string>
 
     </resources>

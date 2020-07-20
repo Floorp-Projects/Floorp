@@ -902,14 +902,14 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Mae Firefox Preview bellach yn Firefox Nightly</string>
+    <string name="tip_firefox_preview_moved_header">Firefox Preview yw Firefox Nightly nawr</string>
 
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Mae Firefox Nightly yn cael ei ddiweddaru bob nos ac mae ganddo nodweddion newydd arbrofol.
-        Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr beta i gael profiad mwy sefydlog.</string>
+Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr beta i gael profiad mwy sefydlog.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Cael Firefox ar gyfer Android Beta</string>
+    <string name="tip_firefox_preview_moved_button_2">Estyn Firefox ar gyfer Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Mae Firefox Nightly wedi symud</string>

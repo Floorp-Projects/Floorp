@@ -151,7 +151,7 @@
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Atalhos</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Configurações do mecanismo de pesquisa</string>
+    <string name="search_shortcuts_engine_settings">Configurações de mecanismos de pesquisa</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Pesquisar com</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -853,7 +853,7 @@
     <string name="preference_accessibility_auto_size_summary">Usar a configuração do Android de tamanho de fontes de caracteres. Desative para definir aqui o tamanho.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">Excluir dados de navegação</string>
+    <string name="preferences_delete_browsing_data">Limpar dados de navegação</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Abas abertas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -880,9 +880,9 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permissões de sites</string>
     <!-- Text for the button to delete browsing data -->
-    <string name="preferences_delete_browsing_data_button">Excluir dados de navegação</string>
+    <string name="preferences_delete_browsing_data_button">Limpar dados de navegação</string>
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Excluir dados de navegação ao sair</string>
+    <string name="preferences_delete_browsing_data_on_quit">Limpar dados de navegação ao sair</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Excluir dados de navegação automaticamente ao selecionar &quot;Sair&quot; no menu principal.</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->

@@ -150,7 +150,7 @@
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">Skenovat</string>
+    <string name="search_scan_button">Naskenovat</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Zkratky</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
@@ -416,7 +416,7 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Tmavý</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
-    <string name="preference_auto_battery_theme">Podle nastavení šetření baterie</string>
+    <string name="preference_auto_battery_theme">Podle nastavení spořiče baterie</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Podle nastavení zařízení</string>
 
@@ -823,15 +823,15 @@
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Panely zavřeny</string>
     <!-- Text shown in snackbar when user closes a tab -->
-    <string name="snackbar_tab_closed">Panel zavřen</string>
+    <string name="snackbar_tab_closed">Panel byl zavřen</string>
     <!-- Text shown in snackbar when user closes all tabs -->
-    <string name="snackbar_tabs_closed">Panely zavřen</string>
+    <string name="snackbar_tabs_closed">Panely byly zavřeny</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Přidáno do top stránek</string>
     <!-- Text shown in snackbar when user closes a private tab -->
-    <string name="snackbar_private_tab_closed">Anonymní panel zavřen</string>
+    <string name="snackbar_private_tab_closed">Anonymní panel byl zavřen</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
-    <string name="snackbar_private_tabs_closed">Anonymní panely zavřeny</string>
+    <string name="snackbar_private_tabs_closed">Anonymní panely byly zavřeny</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Anonymní panely smazány</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->

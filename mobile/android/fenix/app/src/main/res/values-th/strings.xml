@@ -700,6 +700,8 @@
     <string name="collection_menu_button_content_description">เมนูชุดสะสม</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header1">รวบรวมสิ่งที่สำคัญสำหรับคุณ</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">จัดกลุ่มการค้นหา ไซต์ และแท็บที่คล้ายกันเพื่อการเข้าถึงอย่างรวดเร็วในภายหลัง</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">เลือกแท็บ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -961,6 +963,9 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">ไม่สามารถเข้าสู่ระบบ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">ความเป็นส่วนตัวอัตโนมัติ</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">ตั้งค่าความเป็นส่วนตัวและความปลอดภัยป้องกันตัวติดตาม มัลแวร์ และบริษัทที่ตามคุณ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">มาตรฐาน (ค่าเริ่มต้น)</string>
     <!-- text for standard blocking option button description -->
@@ -1121,6 +1126,8 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">หยุดไม่ให้โหลดโฆษณาภายนอก, วิดีโอ, และเนื้อหาอื่น ๆ ที่มีรหัสการติดตาม อาจส่งผลต่อฟังก์ชันการทำงานของบางเว็บไซต์</string>
 
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">ทุกครั้งที่โล่เป็นสีม่วง %s ได้ทำการปิดกั้นตัวติดตามบนไซต์ แตะเพื่ออ่านข้อมูลเพิ่มเติม</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">การป้องกันถูก เปิด สำหรับไซต์นี้</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1386,6 +1393,12 @@
     <string name="dialog_delete_positive">ลบ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">ตัวเลือกการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บของการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description"></string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description"></string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1422,6 +1435,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">ถึงขีดจำกัดของไซต์เด่นแล้ว</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">การเพิ่มไซต์ยอดนิยมต้องลบอันเก่าออก แตะค้างที่ไซต์และเลือกลบ</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
 

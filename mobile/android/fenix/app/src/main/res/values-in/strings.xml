@@ -101,7 +101,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Pasang</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Tab yang Disinkronkan</string>
+    <string name="synced_tabs">Tab yang disinkronkan</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Temukan di laman</string>
     <!-- Browser menu button that creates a private tab -->
@@ -303,9 +303,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Markah</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Log Masuk</string>
+    <string name="preferences_sync_logins">Info Masuk</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs_2">Buka tab</string>
+    <string name="preferences_sync_tabs_2">Tab terbuka</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Keluar</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -444,7 +444,7 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Riwayat</string>
     <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Tab yang Disinkronkan</string>
+    <string name="library_synced_tabs">Tab yang disinkronkan</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Daftar Baca</string>
     <!-- Menu Item Label for Search in Library -->
@@ -470,7 +470,7 @@
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Pribadi</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Buka Tab</string>
+    <string name="tab_tray_title">Tab Terbuka</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Simpan ke koleksi</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -480,9 +480,9 @@
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Tab baru</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Ke beranda</string>
+    <string name="tab_tray_menu_home">Buka beranda</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Aktifkan mode tab</string>
+    <string name="tab_tray_menu_toggle">Alihkan mode tab</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Hapus tab dari koleksi</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -719,7 +719,7 @@
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header1">Kumpulkan hal-hal yang penting bagi Anda</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Kelompokkan pencarian, situs, dan tab yang serupa agar akses cepat nanti.</string>
+    <string name="no_collections_description1">Kelompokkan pencarian, situs, dan tab yang serupa agar dapat diakses cepat nanti.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Pilih Tab</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -905,8 +905,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Otomatis menghapus data penjelajahan ketika Anda memilih &quot;Keluar&quot; pada menu utama</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Otomatis menghapus data penjelajahan ketika Anda memilih \&quot;Keluar\&quot; pada menu utama</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Riwayat jelajah</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Keluar</string>
 
@@ -938,16 +936,16 @@
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly telah pindah</string>
 
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Berhenti memakai aplikasi ini dan beralih ke Nightly.
-        \n\nUntuk memindahkan markah, log masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
+    <string name="tip_firefox_preview_moved_description_preview_installed">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Hentikan memakai aplikasi ini dan beralih ke Nightly yang baru.
+        \n\nUntuk memindahkan markah, info masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Beralih ke Nightly baru</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly telah pindah</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Dapatkan Nightly baru dan berhenti memakai aplikasi ini.
-        \n\nUntuk memindahkan markah, log masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Dapatkan Nightly baru dan hentikan memakai aplikasi ini.
+        \n\nUntuk memindahkan markah, info masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Dapatkan Nightly baru</string>
 
@@ -988,10 +986,10 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Gagal masuk</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privasi otomasi</string>
+    <string name="onboarding_tracking_protection_header_2">Privasi otomatis</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Pengaturan privasi dan keamanan memblokir pelacak, perusak, dan perusahaan yang mengikuti Anda.</string>
+    <string name="onboarding_tracking_protection_description_2">Pengaturan privasi dan keamanan memblokir pelacak, malware, dan perusahaan yang mengikuti Anda.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standar (baku)</string>
     <!-- text for standard blocking option button description -->
@@ -1001,7 +999,7 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Ketat</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokir lebih banyak pelacak, iklan, dan sembulan. Halaman dimuat lebih cepat, namun beberapa fungsi mungkin tidak berfungsi.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Memblokir lebih banyak pelacak, iklan, dan sembulan. Halaman dimuat lebih cepat, namun beberapa fungsi mungkin tidak berfungsi.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1095,7 +1093,7 @@
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ketat</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokir lebih banyak pelacak, iklan, dan sembulan. Halaman dimuat lebih cepat, namun beberapa fungsi mungkin tidak berfungsi.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Memblokir lebih banyak pelacak, iklan, dan sembulan. Halaman dimuat lebih cepat, namun beberapa fungsi mungkin tidak berfungsi.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Apa yang diblokir oleh perlindungan pelacakan ketat</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1220,9 +1218,9 @@
     <string name="add_to_homescreen_description">Anda dapat dengan mudah menambahkan situs web ini ke layar Beranda ponsel Anda untuk mendapatkan akses instan dan penjelajahan lebih cepat seperti menggunakan aplikasi.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Log masuk dan kata sandi</string>
+    <string name="preferences_passwords_logins_and_passwords">Info masuk dan kata sandi</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Simpan log masuk dan kata sandi</string>
+    <string name="preferences_passwords_save_logins">Simpan info masuk dan kata sandi</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Minta untuk menyimpan</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1230,7 +1228,7 @@
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">Isi Otomatis</string>
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sinkronkan log masuk</string>
+    <string name="preferences_passwords_sync_logins">Sinkronkan info masuk</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Aktif</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -1240,7 +1238,7 @@
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Masuk ke Sync</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Log masuk tersimpan</string>
+    <string name="preferences_passwords_saved_logins">Info masuk tersimpan</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Info masuk yang Anda simpan atau sinkronkan ke %s akan ditampilkan di sini.</string>
     <!-- Preference to access list of saved logins -->
@@ -1266,13 +1264,13 @@
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Masukkan kembali PIN Anda</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Buka kunci untuk melihat log masuk Anda yang tersimpan</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Buka kunci untuk melihat info masuk Anda yang tersimpan</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning">Sambungan ini tidak aman. Info masuk yang diketikkan di sini bisa diketahui orang lain.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Pelajari lebih lanjut</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Apakah Anda ingin %s menyimpan log masuk ini?</string>
+    <string name="logins_doorhanger_save">Ingin %s menyimpan info masuk ini?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Simpan</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1294,11 +1292,11 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Sembunyikan sandi</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Buka kunci untuk melihat log masuk Anda yang tersimpan</string>
+    <string name="logins_biometric_prompt_message">Buka kunci untuk melihat info masuk Anda yang tersimpan</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Amankan log masuk dan kata sandi Anda</string>
+    <string name="logins_warning_dialog_title">Amankan info masuk dan kata sandi Anda</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Atur pola, PIN, atau kata sandi kunci perangkat untuk melindungi log masuk dan kata sandi Anda yang tersimpan agar tidak diakses jika orang lain memiliki perangkat Anda.</string>
+    <string name="logins_warning_dialog_message">Atur pola, PIN, atau kata sandi kunci perangkat untuk melindungi info masuk dan kata sandi Anda yang tersimpan agar tidak diakses jika orang lain memiliki perangkat Anda.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Nanti</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1315,7 +1313,7 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Terakhir digunakan</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortir menu log masuk</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortir menu info masuk</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pencari</string>
@@ -1415,13 +1413,13 @@
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Hapus</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Opsi log masuk</string>
+    <string name="login_options_menu">Opsi info masuk</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Bidang teks yang dapat diubah untuk alamat web log masuk</string>
+    <string name="saved_login_hostname_description">Bidang teks yang dapat diubah untuk alamat web info masuk</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Bidang teks yang dapat diubah untuk nama pengguna log masuk</string>
+    <string name="saved_login_username_description">Bidang teks yang dapat diubah untuk nama pengguna info masuk</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Bidang teks yang dapat diubah untuk kata sandi log masuk</string>
+    <string name="saved_login_password_description">Bidang teks yang dapat diubah untuk kata sandi info masuk</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Simpan perubahan untuk masuk</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1436,7 +1434,7 @@
     <string name="voice_search_explainer">Bicara sekarang</string>
 
     <!--  The error message in edit login view when a duplicate username exists. -->
-    <string name="saved_login_duplicate">Sebuah log masuk dengan nama pengguna tersebut sudah ada</string>
+    <string name="saved_login_duplicate">Sebuah info masuk dengan nama pengguna tersebut sudah ada</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
@@ -1444,7 +1442,7 @@
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Hubungkan perangkat lain</string>
     <!-- Text displayed asking user to re-authenticate -->
-    <string name="synced_tabs_reauth">Harap otentikasi ulang.</string>
+    <string name="synced_tabs_reauth">Harap autentikasi ulang.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Harap aktifkan sinkronisasi tab.</string>
 

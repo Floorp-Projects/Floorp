@@ -1255,6 +1255,10 @@
     <string name="saved_login_hostname_description">Тэкставае поле для рэдагавання вэб-адраса для ўваходу ў сістэму.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Тэкставае поле для рэдагавання імені карыстальніка для ўваходу ў сістэму.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Адмяніць змены</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Рэдагаванне</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Патрабуецца пароль</string>
     <!-- Voice search button content description  -->
@@ -1268,6 +1272,9 @@
 
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Падключыць іншую прыладу.</string>
+
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Увайсці ў сінхранізацыю</string>
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, зразумела</string>

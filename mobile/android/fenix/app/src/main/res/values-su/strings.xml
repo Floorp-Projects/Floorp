@@ -30,13 +30,24 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Anjeun keur dina rintakan nyamuni</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s meresihan jujutan sungsian jeung pamaluruhan ti tab pribadi nalika anjeun nutup jeung kaluar ti aplikasi. Najan henteu matak anonim ka raramatloka atawa panyadia layanan internét anjeun, bakal leuwih gampang pikeun ngajaga anu dipigawé jering tetep nyamuni ti batur nu maké ieu piranti.</string>
     <string name="private_browsing_common_myths">Mitos umum ngeunaan langlangan nyamuni</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Hapus rintakan</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Tambah takulan ka tab pribadi nu muka ti layar Tepas.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Tambah takulan</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Teu, nuhun</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Muka Firefox leuwih gancang. Tambahan émboh kana layar Tepas.</string>
     <!-- Text for the positive button -->
     <string name="search_widget_cfr_pos_button_text">Tambihkeun widget</string>
     <!-- Text for the negative button -->
@@ -111,16 +122,24 @@
     <string name="browser_menu_powered_by2">Dijalankeun ku %1$s</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Pidangan baca</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Tutup panémbong pamaca</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Buka di aplikasi</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Pidangan</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Teu bisa nyambung. Skéma URL teu dipikawanoh.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Basa anu dipilih</string>
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Paluruh</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Tuturkeun basa piranti</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Paluruh basa</string>
 
@@ -155,6 +174,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Paluruh raramat</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Sungsi sora</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Setélan</string>
@@ -183,6 +205,8 @@
     <string name="preferences_your_rights">Hak Anjeun</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Kecap sandi</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Kartu kiridit jeung alamat</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Jadikeun panyungsi baku</string>
     <!-- Preference category for advanced settings -->
@@ -205,10 +229,16 @@
     <string name="preferences_accessibility">Aksésibilitas</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">Serper Firefox Account biasa</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Serper Sync kustom</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Serper Firefox Account/Sync geus dirobah. Kaluar ti aplikasi pikeun nerapkeun parobahan…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akun</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Asup</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Tulbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma</string>
     <!-- Preference for settings related to visual options -->
@@ -250,6 +280,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Setélan akun</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Buka tutumbu dina aplikasi</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Émbohan</string>
 
@@ -264,16 +296,22 @@
     <string name="preferences_sync_bookmarks">Markah</string>
 
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Asup log</string>
+    <string name="preferences_sync_logins">Login</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Buka tab</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Kaluar</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Ngaran parangkat</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Ngaran piranti teu bisa kosong.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Nyingkronkeun…</string>
 
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Gagal Sync. Panungtung laksana: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Gagal Sync. Panungtung laksana: can kungsi</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Singkronan panungtung: %s</string>
     <!-- Label summary showing never synced -->
@@ -286,6 +324,8 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Tab nu katampa</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Iber pikeun tab anu katampa ti séjén piranti Firefox.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Tab Katampa</string>
     <!-- When multiple tabs have been received -->
@@ -298,24 +338,41 @@
     <string name="preferences_tracking_protection_settings">Kilung Palacakan</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Kilung Palacakan</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Peungpeuk kontén jeung skrip anu ngalacak anjeun jering</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Iwal</string>
     <!-- Preference description for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions_description">Kilung Palacakan pikeun ieu loka ayeuna pareum</string>
 
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Hurungkeun pikeun sakabéh loka</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Pangiwalan bisa dipaké mareuman protéksi palacakan pikeun loka anu dipilih.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Lenyepan</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Dipareuman sacara global, buka Setélan pikeun ngahurungkeun.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemétri</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Data pamakéan jeung téknis</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Bagikeun kinerja, pamakéan, data hadwér jeung kustomisasi ngeunaan pamaluruh anjeun ka Mozilla pikeun mantuan sangkan %1$s leuwih hadé</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Data pamasaran</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Bagikeun data ngeunaan fitur naon baé anu dipaké di %1$s ka Leanplum, péndor pamasaran ider kami.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Éksperimén</string>
     <!-- Summary for experiments preferences -->
     <string name="preference_experiments_summary">Ngidinan Mozilla masang sareng ngumpulkeun data kanggo fitur ékspérimén</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Laporan karuksakan</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Layanan perenah Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preferences_fenix_health_report">Laporan kaséhatan %s</string>
 
@@ -332,6 +389,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Cabut akun</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Pindai sandi QR anu ditémbongkeun dina <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Buka Kaméra</string>
     <!-- Button to cancel pairing -->
@@ -348,6 +408,8 @@
     <string name="preference_light_theme">Caang</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Poék</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Atur ku Pangirit Batré</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Turutan téma paranti</string>
 
@@ -407,6 +469,10 @@
     <string name="tab_tray_menu_item_close">Tutup kabéh tab</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Tab anyar</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Mulang</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Mode tab pindah</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Cabut tab tina koléksi</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -489,6 +555,8 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Hampura. %1$s teu tiasa nyungsi ieu kaca.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Anjeun bisa nyoba mulangkeun deui atawa nutup tab di handap.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Kirim laporan nu ruksak ka Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -701,12 +769,18 @@
     <string name="sync_offline">Luring</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Sambungkeun parangkat séjén</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Pikeun ngirim tab, asup ka Firefox sahanteuna sakali di piranti nu séjén.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Ngarti</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Teu bisa ngabagi ka aplikasi ieu</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Kirim ka parangkat</string>
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Teu aya parangkat nyambung</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Diajar Ngeunaan Ngirim Tab…</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">Sambungkeun Parangkat Séjén…</string>
 
@@ -765,15 +839,22 @@
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Bolay</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Asup ka mode layar pinuh</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL ditiron</string>
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">Ieu mangrupikeun conto téks. Di dieu pikeun nunjukkeun kumaha téks bakal némbongan nalika anjeun ningkatkeun atanapi ngirangan ukuran dina sétélan ieu.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Jadikeun tulisan dina raramatloka leuwih badag atawa leuwih leutik</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Ukuran font</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Ukuran font otomatis</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Ukuran aksara bakal nyaluyukeun jeung setélan Android anjeun. Pareuman pikeun ngatur ukuran tulisan di dieu.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Hapus data sungsian</string>
@@ -797,6 +878,8 @@
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Anjeun bakal kaluar log ti kalolobaan loka</string>
 
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Berkas jeung gambar dina telih</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Bébaskeun rohang panyimpenan</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -831,16 +914,26 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Sawangan téh ayeuna Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly diapdét unggal peuting sarta mibanda fitur anyar uji coba.
+        Ngan, bisa jadi kurang stabil. Undeur pamaluruh béta pikeun pangalaman anu leuwih stabil.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Manggih Firefox Android Béta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly parantos ngalih</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ieu aplikasi moal nampa deui apdét kaamanan. Eureunan maké ieu aplikasi sarta pindah ka Nightly nu anyar.
+        \n\nPikeun mindahkeun markah, login, jeung jujutan anjeun ka séjén aplikasi, jieun rekening Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Ngalih ka Nightly anyar</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly parantos ngalih</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ieu aplikasi moal nampa deui apdét kaamanan. Undeur Nightly nu anyar sarta eureunan maké ieu aplikasi.
+
+        \n\nPikeun mindahkeun markah, login, jeung jujutan anjeun ka séjén aplikasi, jieun rekening Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Manggih Nightly anyar</string>
 
@@ -855,6 +948,9 @@
     <string name="onboarding_feature_section_header">Ngenalkeun %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Tingali naon nu anyar</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Boga patalekan ngeunaan rarancang anyar %s? Hoyong uninga naon anu robah?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Kéngingkeun waleran di dieu</string>
     <!-- text for the firefox account onboarding card header
@@ -879,12 +975,25 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Salindungan otomatis</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Setélan kawijakan privasi jeung kaamanan meungpeuk palacak, malwér, jeung maskapé anu nunutur anjeun.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Baku (bawaan)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Peungpeuk palacak leuwih saeutik. Kaca bakal muka leuwih normal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Pereketkeun (pijeujeuh)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Pereketkeun</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Peungpeuk palacak, iklan, jeung popup leuwih loba. Kaca muka leuwih gancang, tapi sababaraha pungsionalitas bisa teu jalan.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Pilih posisi</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Cobian maluruh saleungeun maké tulbar di handap atawa pindahkeun ka luhur.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Nyungsi nyamuni</string>
     <!-- text for the private browsing onboarding card description
@@ -896,6 +1005,10 @@
     <string name="onboarding_private_browsing_button">Buka setélan</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Salindungan anjeun</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Kami geus ngarancang %s sangkan anjeun bisa ngatur naon anu dibagikeun
+        jering jeung naon anu dibagikeun ka kami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Maca wawaran salindungan kami</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -907,8 +1020,12 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Pilih téma anjeun</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Irit batré jeung jaga kaséhatan panon ku ngahurungkeun mode poék.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Otomatis</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Luyukeun jeung setélan paranti</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Téma poék</string>
     <!-- Theme setting for light mode -->
@@ -941,6 +1058,9 @@
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Bolay</string>
 
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Teu bisa ngédit folder baku</string>
+
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Setélan Kilung</string>
@@ -948,12 +1068,28 @@
     <string name="preference_enhanced_tracking_protection">Protéksi Palacakan Tingkat Lanjut</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Nyungsi bari teu dituturkeun</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Jaga data anjeun keur sorangan. %s ngajaga anjeun ti kalolobaan palacak anu nunutur lalampahan anjeun jering.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lenyepan</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Baku (bawaan)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Peungpeuk palacak leuwih saeutik. Kaca bakal muat normal.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Naon anu dipeungpeuk ku perlindungan pelacakan baku</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Pereketkeun</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Peungpeuk palacak, iklan, jeung popup. Kaca muka leuwih gancang, tapi sababaraha pungsionalitas bisa teu jalan.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Naon anu dipeungpeuk ku perlindungan palacak rékép</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Sakahayang</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Pilih palacak jeung skrip mana anu rék dipeungpeuk.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Naon anu dipeungpeuk ku perlindungan palacakan sakahayang</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Réréméh</string>
@@ -971,6 +1107,8 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Dina sadaya tab</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Ngan dina tab Nyamuni</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Ukur dina tab Sakahayang</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Gurandil kripto</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -980,6 +1118,8 @@
     <string name="enhanced_tracking_protection_allowed">Idinan</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Palacak Media Sosial</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Ngawatesan kabisa jaringan sosial pikeun ngalacak kagiatan pamaluruhan anjeun di sakuliah raramat.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Réréméh Palacak Meuntas-Loka</string>
 
@@ -988,13 +1128,23 @@
 
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Gurandil kripto</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Nyegah skrip bahya nyokot aksés kana paranti anjeun pikeun ngagali mata uang digital.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Sidik ramo</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Ngeureunan data idéntifikasi unik paranti anjeun anu bisa dipaké pikeun tujuan ngalacak.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Kontén palacak</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Eureunan iklan, pidéo, jeung kontén lianna anu ngandung sandi palacak. Bisa mangaruhan fungsionalitas sababaraha raramatloka.</string>
 
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Nalika taméngna bungur, %s geus meungpeuk palacak dina loka. Toél pikeun iber leuwih lengkep.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Perlindungan ON pikeun ieu loka</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Perlindungan OFF pikeun ieu loka</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Protéksi Palacakan Tingkat Lanjut pareum dina ieu loka</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
@@ -1002,8 +1152,14 @@
     <string name="etp_back_button_content_description">Mundur</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Hak anjeun</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Pabukon sumber nembrak anu dipaké</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Nu anyar di %s</string>
+
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Pabukon OSS</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Pangrojong</string>
@@ -1015,6 +1171,13 @@
     <string name="about_know_your_rights">Ieu hak anjeun</string>
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Émbaran lisensi</string>
+
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Pabukon anu dipaké</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menu debug: %1$d klik deui pikeun ngahurungkeun</string>
+    <string name="about_debug_menu_toast_done">Menu debug geus hurung</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 tab</string>
@@ -1041,10 +1204,23 @@
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
     <string name="add_to_homescreen_continue">Teruskeun ka loka</string>
 
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Ngaran takulan</string>
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Anjeun bisa kalawan gampang nambahkeun ieu raramatloka kana layar Tepas ponsél pikeun aksés instan sarta maluruh leuwih gancang kawas muka aplikasi.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Login jeung kecap sandi</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Teundeun login jeung kecap sandi</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Naros keur neundeun</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ulah diteundeun</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Eusi otomatis</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Singkronkeun login</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Hurung</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -1054,11 +1230,17 @@
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Asup ka Sync</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Asup log kasimpen</string>
+    <string name="preferences_passwords_saved_logins">Login nu disimpen</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Login anu diteundeun atawa disingkronkeun ka %s bakal némbongan di dieu.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Leuwih jéntré ngeunaan Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Iwal</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Login jeung kecap sandi anu teu diteundeun bakal ditémbongkeun di dieu.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Login jeung kecap sandi moal diteundeun pikeun ieu loka.</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Paluruh login</string>
 
@@ -1072,8 +1254,16 @@
     <string name="preferences_passwords_saved_logins_username">Sandiasma</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Kecap sandi</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Asupkeun deui PIN anjeun</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Buka konci pikeun nempo login anu diteundeun</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Ieu sambungan teu aman. Login anu diasupkeun ka dieu rawan.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Lenyepan</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Loginna badé disimpen di %s?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Teundeun</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1094,10 +1284,29 @@
     <string name="saved_login_reveal_password">Témbongkeun sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Sumputkeun sandi</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Buka konci pikeun nempo login anu diteundeun</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Amankeun login jeung kecap sandi anjeun</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Jieun pola konci paranti, PIN, atawa kecap sandi pikeun ngajaga login jeung kecap sandi anu diteundeun bisi paranti anjeun dipaké batur.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Engké</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Setél ayeuna</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Buka konci paranti anjeun</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Gedéan di sakabéh raramatloka</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Hurungkeun ngarah bisa niron jeung ngabadagan, najan dina raramatloka anu nyegah ieu pungsi.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Ngaran (A-Z)</string>
+
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Panungtun dipaké</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Runtuykeun menu login</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pamaluruh</string>
@@ -1123,6 +1332,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Lenyepan</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Wincikan mesin pamaluruh sakahayang</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Lenyepan tutumbu lianna</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Asupkeun ngaran mesin pamaluruh</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1143,6 +1357,8 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Wilujeng sumping ka %s anyar</string>
 
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Pamaluruh wanda anyar geus nungguan, kalawan kinerja anu ngaronjat sarta pitur anu mantuan jering anjeun leuwih loba.\n\nMangga tungguan sabot kami ngapdét %s anjeun</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Mutahirkeun %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1152,31 +1368,91 @@
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Kecap sandi</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Ngarah bisa:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Buka Setélan Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Buka <b>Idin</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Gilir <b>%1$s</b> ka ON]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Sambungan Aman</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Sambungan Teu Aman</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Yakin rék ngaberesihan sadaya idin di sadaya loka?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
     <string name="confirm_clear_permissions_site">Yakin rék ngaberesihan sadaya idin di ieu loka?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Yakin rék ngaberesihan ieu idin di ieu loka?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Taya pengecualian loka</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Artikel Top</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Yakin anjeun rék mupus ieu markah?</string>
 
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Tambahkeun ka loka kawentar</string>
 
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Dipéripikasi ku: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Pupus</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Édit</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Yakin rék mupus ieu login?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Pupus</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Pilihan asup log</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Widang téks éditeun pikeun alamat raramat login.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Widang téks éditeun pikeun sandiasma login.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Widang téks éditeun pikeun kecap sandi login.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Teundeun parobahan login.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Piceun parobahan</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Édit</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Butuh kecap sandi</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Sungsi sora</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nyarios ayeuna</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Login maké éta sandiasma geus aya</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Sambungkeun maké Firefox Account.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Sambungkeun séjén paranti.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Mangga oténtikasi ulang.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Mangga hurungkeun singkronan tab.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Anjeun teu miboga tab anu muka dina Firefox di séjén paranti anjeun.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Témbongkeun béréndélan tab ti séjén paranti anjeun.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Asup pikeun nyingkronkeun</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Wates loka top geus kahontal</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Pikeun nambah loka top anyar, piceun hiji. Pencét lila lokana sarta pilih piceun.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Okéh, Ngarti</string>
 
