@@ -3697,6 +3697,80 @@ class SystemAddonInstaller extends DirectoryInstaller {
   uninstallAddon(aAddon) {}
 }
 
+var AppUpdate = {
+  findAddonUpdates(addon, reason, appVersion, platformVersion) {
+    return new Promise((resolve, reject) => {
+      let update = null;
+      addon.findUpdates(
+        {
+          onUpdateAvailable(addon2, install) {
+            update = install;
+          },
+
+          onUpdateFinished(addon2, error) {
+            if (error == AddonManager.UPDATE_STATUS_NO_ERROR) {
+              resolve(update);
+            } else {
+              reject(error);
+            }
+          },
+        },
+        reason,
+        appVersion,
+        platformVersion || appVersion
+      );
+    });
+  },
+
+  stageInstall(installer) {
+    return new Promise((resolve, reject) => {
+      let listener = {
+        onDownloadEnded: install => {
+          install.postpone();
+        },
+        onInstallFailed: install => {
+          install.removeListener(listener);
+          reject();
+        },
+        onInstallEnded: install => {
+          // We shouldn't end up here, but if we do, resolve
+          // since we've installed.
+          install.removeListener(listener);
+          resolve();
+        },
+        onInstallPostponed: install => {
+          // At this point the addon is staged for restart.
+          install.removeListener(listener);
+          resolve();
+        },
+      };
+
+      installer.addListener(listener);
+      installer.install();
+    });
+  },
+
+  async stageLangpackUpdates(nextVersion, nextPlatformVersion) {
+    let updates = [];
+    let addons = await AddonManager.getAddonsByTypes(["locale"]);
+    for (let addon of addons) {
+      updates.push(
+        this.findAddonUpdates(
+          addon,
+          AddonManager.UPDATE_WHEN_NEW_APP_DETECTED,
+          nextVersion,
+          nextPlatformVersion
+        )
+          .then(update => update && this.stageInstall(update))
+          .catch(e => {
+            logger.debug(`addon.findUpdate error: ${e}`);
+          })
+      );
+    }
+    return Promise.all(updates);
+  },
+};
+
 var XPIInstall = {
   // An array of currently active AddonInstalls
   installs: new Set(),
@@ -3708,6 +3782,10 @@ var XPIInstall = {
   syncLoadManifest,
   loadManifestFromFile,
   uninstallAddonFromLocation,
+
+  stageLangpacksForAppUpdate(nextVersion, nextPlatformVersion) {
+    return AppUpdate.stageLangpackUpdates(nextVersion, nextPlatformVersion);
+  },
 
   // Keep track of in-progress operations that support cancel()
   _inProgress: [],
