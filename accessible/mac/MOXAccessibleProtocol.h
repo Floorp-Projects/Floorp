@@ -329,4 +329,22 @@
 // AXTextMarkerRangeForUnorderedTextMarkers
 - (id _Nullable)moxTextMarkerRangeForUnorderedTextMarkers:(NSArray* _Nonnull)textMarkers;
 
+// AXLeftWordTextMarkerRangeForTextMarker
+- (id _Nullable)moxLeftWordTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+
+// AXRightWordTextMarkerRangeForTextMarker
+- (id _Nullable)moxRightWordTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+
+// AXStartTextMarkerForTextMarkerRange
+- (id _Nullable)moxStartTextMarkerForTextMarkerRange:(id _Nonnull)textMarkerRange;
+
+// AXEndTextMarkerForTextMarkerRange
+- (id _Nullable)moxEndTextMarkerForTextMarkerRange:(id _Nonnull)textMarkerRange;
+
+// AXNextTextMarkerForTextMarker
+- (id _Nullable)moxNextTextMarkerForTextMarker:(id _Nonnull)textMarker;
+
+// AXPreviousTextMarkerForTextMarker
+- (id _Nullable)moxPreviousTextMarkerForTextMarker:(id _Nonnull)textMarker;
+
 @end
