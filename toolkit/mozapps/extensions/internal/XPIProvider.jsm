@@ -3182,6 +3182,7 @@ for (let meth of [
   "isInstallAllowed",
   "isInstallEnabled",
   "updateSystemAddons",
+  "stageLangpacksForAppUpdate",
 ]) {
   XPIProvider[meth] = function() {
     return XPIInstall[meth](...arguments);

@@ -3997,6 +3997,12 @@ var AddonManager = {
     return AddonManagerInternal.uninstallSystemProfileAddon(aID);
   },
 
+  stageLangpacksForAppUpdate(appVersion, platformVersion) {
+    return AddonManagerInternal._getProviderByName(
+      "XPIProvider"
+    ).stageLangpacksForAppUpdate(appVersion, platformVersion);
+  },
+
   /**
    * Gets an array of add-on IDs that changed during the most recent startup.
    *
