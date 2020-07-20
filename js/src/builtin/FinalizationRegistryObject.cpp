@@ -663,7 +663,7 @@ FinalizationQueueObject* FinalizationQueueObject::create(
   // back. Instead store a CCW to a plain object in the same compartment as the
   // global (this uses Object.prototype).
   RootedObject incumbentObject(cx);
-  if (!GetObjectFromIncumbentGlobal(cx, &incumbentObject)) {
+  if (!GetObjectFromIncumbentGlobal(cx, &incumbentObject) || !incumbentObject) {
     return nullptr;
   }
 
