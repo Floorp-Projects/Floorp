@@ -17,8 +17,8 @@ SPHINX_TREES['docs'] = 'schemas'
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    'schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.js',
-    'schemas/TriggerActionSchemas/TriggerActionSchemas.js',
+    'schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json',
+    'schemas/TriggerActionSchemas/TriggerActionSchemas.json',
     'test/MSTestUtils.jsm',
 ]
 

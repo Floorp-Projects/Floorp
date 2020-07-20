@@ -1,0 +1,418 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/SpecialMessageActionSchemas",
+  "definitions": {
+    "SpecialMessageActionSchemas": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DISABLE_STP_DOORHANGERS"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Disables all STP doorhangers."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "args": {
+                  "type": "string",
+                  "description": "The element to highlight"
+                }
+              },
+              "required": [
+                "args"
+              ],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "HIGHLIGHT_FEATURE"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Highlights an element, such as a menu item"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "telemetrySource": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "telemetrySource",
+                "url"
+              ],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "INSTALL_ADDON_FROM_URL"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Install an add-on from AMO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "args": {
+                  "type": "string",
+                  "description": "The about page. E.g. \"welcome\" for about:welcome'"
+                },
+                "where": {
+                  "type": "string",
+                  "enum": [
+                    "current",
+                    "save",
+                    "tab",
+                    "tabshifted",
+                    "window"
+                  ],
+                  "description": "Where the URL is opened",
+                  "default": "tab"
+                },
+                "entrypoint": {
+                  "type": "string",
+                  "description": "Any optional entrypoint value that will be added to the search. E.g. \"foo=bar\" would result in about:welcome?foo=bar'"
+                }
+              },
+              "required": [
+                "args",
+                "where",
+                "entrypoint"
+              ],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_ABOUT_PAGE"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens an about: page in Firefox"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "args": {
+                  "type": "string",
+                  "description": "The menu name, e.g. \"appMenu\""
+                }
+              },
+              "required": [
+                "args"
+              ],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_APPLICATIONS_MENU"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens an application menu"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_AWESOME_BAR"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Focuses and expands the awesome bar"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "description": "Section of about:preferences, e.g. \"privacy-reports\""
+                },
+                "entrypoint": {
+                  "type": "string",
+                  "description": "Add a queryparam for metrics"
+                }
+              },
+              "required": [
+                "category"
+              ],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_PREFERENCES_PAGE"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens a preference page"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_PRIVATE_BROWSER_WINDOW"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens a private browsing window."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_PROTECTION_PANEL"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens the protections panel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_PROTECTION_REPORT"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens the protections panel report"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "args": {
+                  "type": "string",
+                  "description": "URL to open"
+                },
+                "where": {
+                  "type": "string",
+                  "enum": [
+                    "current",
+                    "save",
+                    "tab",
+                    "tabshifted",
+                    "window"
+                  ],
+                  "description": "Where the URL is opened",
+                  "default": "tab"
+                }
+              },
+              "required": [
+                "args",
+                "where"
+              ],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "OPEN_URL"
+              ]
+            }
+          },
+          "required": [
+            "data",
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Opens given URL"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "PIN_CURRENT_TAB"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Pin the current tab"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "SHOW_FIREFOX_ACCOUNTS"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "entrypoint": {
+                  "type": "string",
+                  "description": "Adds entrypoint={your value} to the FXA URL"
+                }
+              },
+              "required": [
+                "entrypoint"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "type",
+            "data"
+          ],
+          "additionalProperties": false,
+          "description": "Show Firefox Accounts"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "SHOW_MIGRATION_WIZARD"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Shows the Migration Wizard to import data from another Browser. See https://support.mozilla.org/en-US/kb/import-data-another-browser\""
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "CANCEL"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Minimize the CFR doorhanger back into the URLbar"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ACCEPT_DOH"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Accept DOH doorhanger notification"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DISABLE_DOH"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Dismiss DOH doorhanger notification"
+        }
+      ]
+    }
+  }
+}
