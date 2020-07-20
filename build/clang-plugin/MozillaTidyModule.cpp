@@ -8,6 +8,10 @@
 #include "../ClangTidyModule.h"
 #include "../ClangTidyModuleRegistry.h"
 #include "ChecksIncludes.inc"
+#include "external/ExternalIncludes.inc"
+#ifdef MOZ_CLANG_PLUGIN_ALPHA
+#include "alpha/AlphaIncludes.inc"
+#endif
 
 using namespace clang::ast_matchers;
 
