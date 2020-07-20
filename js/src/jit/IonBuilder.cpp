@@ -3937,19 +3937,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_tostring() {
   return Ok();
 }
 
-class AutoAccumulateReturns {
-  MIRGraph& graph_;
-  MIRGraphReturns* prev_;
-
- public:
-  AutoAccumulateReturns(MIRGraph& graph, MIRGraphReturns& returns)
-      : graph_(graph) {
-    prev_ = graph_.returnAccumulator();
-    graph_.setReturnAccumulator(&returns);
-  }
-  ~AutoAccumulateReturns() { graph_.setReturnAccumulator(prev_); }
-};
-
 IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
                                                           JSFunction* target) {
   MOZ_ASSERT(target->hasBytecode());

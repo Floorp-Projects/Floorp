@@ -307,6 +307,19 @@ class MOZ_STACK_CLASS CallInfo {
   }
 };
 
+class AutoAccumulateReturns {
+  MIRGraph& graph_;
+  MIRGraphReturns* prev_;
+
+ public:
+  AutoAccumulateReturns(MIRGraph& graph, MIRGraphReturns& returns)
+      : graph_(graph) {
+    prev_ = graph_.returnAccumulator();
+    graph_.setReturnAccumulator(&returns);
+  }
+  ~AutoAccumulateReturns() { graph_.setReturnAccumulator(prev_); }
+};
+
 }  // namespace jit
 }  // namespace js
 
