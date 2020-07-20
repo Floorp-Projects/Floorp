@@ -33,7 +33,6 @@ function PausedDebuggerOverlay(highlighterEnv, options = {}) {
     highlighterEnv,
     this._buildMarkup.bind(this)
   );
-  this.isReady = this.markup.initialize();
 }
 
 PausedDebuggerOverlay.prototype = {

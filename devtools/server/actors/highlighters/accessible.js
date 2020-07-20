@@ -17,20 +17,11 @@ const {
   TEXT_NODE,
   DOCUMENT_NODE,
 } = require("devtools/shared/dom-node-constants");
-const {
-  getCurrentZoom,
-  setIgnoreLayoutChanges,
-} = require("devtools/shared/layout/utils");
+const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 
 loader.lazyRequireGetter(
   this,
   "getBounds",
-  "devtools/server/actors/highlighters/utils/accessibility",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getBoundsXUL",
   "devtools/server/actors/highlighters/utils/accessibility",
   true
 );
@@ -93,7 +84,6 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       this.highlighterEnv,
       this._buildMarkup.bind(this)
     );
-    this.isReady = this.markup.initialize();
 
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
@@ -102,14 +92,6 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
 
     this.pageListenerTarget = highlighterEnv.pageListenerTarget;
     this.pageListenerTarget.addEventListener("pagehide", this.onPageHide);
-  }
-
-  /**
-   * Static getter that indicates that AccessibleHighlighter supports
-   * highlighting in XUL windows.
-   */
-  static get XULSupported() {
-    return true;
   }
 
   /**
@@ -336,20 +318,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
    *                       information for the accessible object.
    */
   get _bounds() {
-    let { win, options } = this;
-    let getBoundsFn = getBounds;
-    if (this.options.isXUL) {
-      // Zoom level for the top level browser window does not change and only
-      // inner frames do. So we need to get the zoom level of the current node's
-      // parent window.
-      let zoom = getCurrentZoom(this.currentNode);
-      zoom *= zoom;
-      options = { ...options, zoom };
-      getBoundsFn = getBoundsXUL;
-      win = this.win.parent.ownerGlobal;
-    }
-
-    return getBoundsFn(win, options);
+    return getBounds(this.win, this.options);
   }
 
   /**

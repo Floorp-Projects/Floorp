@@ -216,10 +216,8 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return this._highlighterPromise;
     }
 
-    this._highlighterPromise = this.getWalker().then(async walker => {
+    this._highlighterPromise = this.getWalker().then(walker => {
       const highlighter = HighlighterActor(this, autohide);
-      await highlighter.initializeInstance();
-      await highlighter.instance.isReady;
       this.manage(highlighter);
       return highlighter;
     });
@@ -237,14 +235,9 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * @return {Highlighter} The highlighter actor instance or null if the
    * typeName passed doesn't match any available highlighter
    */
-  getHighlighterByType: async function(typeName) {
+  getHighlighterByType: function(typeName) {
     if (isTypeRegistered(typeName)) {
-      const highlighterActor = CustomHighlighterActor(this, typeName);
-      if (highlighterActor.instance.isReady) {
-        await highlighterActor.instance.isReady;
-      }
-
-      return highlighterActor;
+      return CustomHighlighterActor(this, typeName);
     }
     return null;
   },
@@ -303,7 +296,6 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this._highlighterEnv = new HighlighterEnvironment();
     this._highlighterEnv.initFromTargetActor(this.targetActor);
     this._eyeDropper = new EyeDropper(this._highlighterEnv);
-    return this._eyeDropper.isReady;
   },
 
   /**
@@ -325,8 +317,8 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * cancels the picker.
    * @param {Object} options
    */
-  pickColorFromPage: async function(options) {
-    await this.createEyeDropper();
+  pickColorFromPage: function(options) {
+    this.createEyeDropper();
     this._eyeDropper.show(this.window.document.documentElement, options);
     this._eyeDropper.once("selected", this._onColorPicked);
     this._eyeDropper.once("canceled", this._onColorPickCanceled);

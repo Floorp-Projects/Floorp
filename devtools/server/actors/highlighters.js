@@ -22,6 +22,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "SimpleOutlineHighlighter",
+  "devtools/server/actors/highlighters/simple-outline",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "BoxModelHighlighter",
   "devtools/server/actors/highlighters/box-model",
   true
@@ -96,6 +102,14 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     this._highlighterEnv.initFromTargetActor(this._targetActor);
 
     this._onNavigate = this._onNavigate.bind(this);
+
+    const doc = this._targetActor.window.document;
+    // Only try to create the highlighter when the document is loaded,
+    // otherwise, wait for the navigate event to fire.
+    if (doc.documentElement && doc.readyState != "uninitialized") {
+      this._createHighlighter();
+    }
+
     // Listen to navigation events to switch from the BoxModelHighlighter to the
     // SimpleOutlineHighlighter, and back, if the top level window changes.
     this._targetActor.on("navigate", this._onNavigate);
@@ -105,41 +119,23 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     return this._inspector && this._inspector.conn;
   },
 
-  /**
-   * Get an instance of the box model highlighter.
-   */
-  get instance() {
-    return this._highlighter;
-  },
-
   form: function() {
     return {
       actor: this.actorID,
     };
   },
 
-  initializeInstance() {
-    // _createHighlighter will resolve this promise once the highlighter
-    // instance is created.
-    const onInitialized = new Promise(resolve => {
-      this._initialized = resolve;
-    });
-    // Only try to create the highlighter isntance when the document is loaded,
-    // otherwise, wait for the navigate event to fire.
-    const doc = this._targetActor.window.document;
-    if (doc.documentElement && doc.readyState != "uninitialized") {
-      this._createHighlighter();
-    }
-
-    return onInitialized;
-  },
-
   _createHighlighter: function() {
-    this._highlighter = new BoxModelHighlighter(
-      this._highlighterEnv,
-      this._inspector
-    );
-    this._initialized();
+    this._isPreviousWindowXUL = isXUL(this._targetActor.window);
+
+    if (!this._isPreviousWindowXUL) {
+      this._highlighter = new BoxModelHighlighter(
+        this._highlighterEnv,
+        this._inspector
+      );
+    } else {
+      this._highlighter = new SimpleOutlineHighlighter(this._highlighterEnv);
+    }
   },
 
   _destroyHighlighter: function() {
@@ -156,8 +152,11 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       return;
     }
 
-    this._destroyHighlighter();
-    this._createHighlighter();
+    // Only rebuild the highlighter if the window type changed.
+    if (isXUL(this._targetActor.window) !== this._isPreviousWindowXUL) {
+      this._destroyHighlighter();
+      this._createHighlighter();
+    }
   },
 
   destroy: function() {

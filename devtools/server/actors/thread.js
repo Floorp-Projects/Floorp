@@ -515,7 +515,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return highlighter;
   },
 
-  async showOverlay() {
+  showOverlay() {
     if (
       this._options.shouldShowOverlay &&
       this.isPaused() &&
@@ -525,7 +525,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.pauseOverlay
     ) {
       const reason = this._priorPause.why.type;
-      await this.pauseOverlay.isReady;
       this.pauseOverlay.show(null, { reason });
     }
   },
