@@ -5,9 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import sys
 
 import pytest
+import six
 
 from taskgraph import morph, GECKO
 from taskgraph.config import load_graph_config
@@ -28,7 +28,7 @@ def graph_config():
 def make_taskgraph():
     def inner(tasks):
         label_to_taskid = {k: k + '-tid' for k in tasks}
-        for label, task_id in label_to_taskid.iteritems():
+        for label, task_id in six.iteritems(label_to_taskid):
             tasks[label].task_id = task_id
         graph = Graph(nodes=set(tasks), edges=set())
         taskgraph = TaskGraph(tasks, graph)
@@ -37,9 +37,6 @@ def make_taskgraph():
     return inner
 
 
-@pytest.mark.xfail(
-    sys.version_info >= (3, 0), reason="python3 migration is not complete"
-)
 def test_make_index_tasks(make_taskgraph, graph_config):
     task_def = {
         'routes': [
