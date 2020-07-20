@@ -71,9 +71,13 @@ void ImageComposite::UpdateBias(size_t aImageIndex) {
     // We're in a dangerous situation because jitter might cause frames to
     // fall one side or the other of the composition times, causing many frames
     // to be skipped or duplicated.
-    // Try to prevent that by adding a negative bias to the frame times during
-    // the next composite; that should ensure the next frame's time is treated
-    // as falling just before a composite time.
+    // Specifically, the next composite is at risk of picking the "next + 1"
+    // frame rather than the "next" frame, which would cause the "next" frame to
+    // be skipped. Try to prevent that by adding a positive bias to the frame
+    // times during the next composite; if the inter-frame time is almost
+    // exactly equal to the inter-composition time, that should ensure that the
+    // next + 1 frame falls just *after* the next composition time, and the next
+    // composite should then pick the next frame rather than the next + 1 frame.
     mBias = ImageComposite::BIAS_POSITIVE;
     return;
   }
