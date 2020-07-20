@@ -383,16 +383,16 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_GL_SWIZZLE,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_GPU_SWITCHING_NO_SWIZZLE");
 
-#ifdef NIGHTLY_BUILD
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, "FEATURE_ROLLOUT_INTEL_MAC");
+#ifdef EARLY_BETA_OR_EARLIER
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::IntelRolloutWebRender,
+                                   nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
+                                   "FEATURE_ROLLOUT_INTEL_MAC");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::AtiRolloutWebRender,
-                                   nsIGfxInfo::FEATURE_WEBRENDER,
-                                   nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, "FEATURE_ROLLOUT_AMD_MAC");
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::NvidiaRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, "FEATURE_ROLLOUT_NVIDIA_MAC");
+                                   nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
+                                   "FEATURE_ROLLOUT_AMD_MAC");
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::NvidiaRolloutWebRender,
+                                   nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
+                                   "FEATURE_ROLLOUT_NVIDIA_MAC");
 #endif
   }
   return *sDriverInfo;
