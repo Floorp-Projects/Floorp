@@ -317,6 +317,22 @@ class JS_FRIEND_API BaseProxyHandler {
                    HandleValue v, HandleValue receiver,
                    ObjectOpResult& result) const;
 
+  // Private fields don't use [[Has]], [[Get]] and [[Set]] semantics, as they
+  // technically use a weak-map semantics, however we end up on these paths with
+  // our implementation.
+  virtual bool hasPrivate(JSContext* cx, HandleObject proxy, HandleId id,
+                          bool* bp) const;
+  virtual bool getPrivate(JSContext* cx, HandleObject proxy,
+                          HandleValue receiver, HandleId id,
+                          MutableHandleValue vp) const;
+  virtual bool setPrivate(JSContext* cx, HandleObject proxy, HandleId id,
+                          HandleValue v, HandleValue receiver,
+                          ObjectOpResult& result) const;
+
+  virtual bool definePrivateField(JSContext* cx, HandleObject proxy,
+                                  HandleId id, Handle<PropertyDescriptor> desc,
+                                  ObjectOpResult& result) const;
+
   /*
    * [[Call]] and [[Construct]] are standard internal methods but according
    * to the spec, they are not present on every object.
@@ -386,6 +402,8 @@ namespace detail {
 //
 // Every proxy has a ProxyValueArray that contains the following Values:
 //
+// - The expando slot. This is used to hold private fields should they be
+//   stamped into a non-forwarding proxy type.
 // - The private slot.
 // - The reserved slots. The number of slots is determined by the proxy's Class.
 //
@@ -419,10 +437,12 @@ struct ProxyReservedSlots {
 };
 
 struct ProxyValueArray {
+  Value expandoSlot;
   Value privateSlot;
   ProxyReservedSlots reservedSlots;
 
   void init(size_t nreserved) {
+    expandoSlot = JS::ObjectOrNullValue(nullptr);
     privateSlot = JS::UndefinedValue();
     reservedSlots.init(nreserved);
   }
@@ -503,6 +523,10 @@ inline const BaseProxyHandler* GetProxyHandler(const JSObject* obj) {
 
 inline const Value& GetProxyPrivate(const JSObject* obj) {
   return detail::GetProxyDataLayout(obj)->values()->privateSlot;
+}
+
+inline const Value& GetProxyExpando(const JSObject* obj) {
+  return detail::GetProxyDataLayout(obj)->values()->expandoSlot;
 }
 
 inline JSObject* GetProxyTargetObject(JSObject* obj) {
