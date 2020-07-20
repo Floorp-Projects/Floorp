@@ -14,7 +14,7 @@
 
 NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
-#if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3, 4, 0)
+#if defined(ACTIVATE_GTK3_COLOR_PICKER)
 int nsColorPicker::convertGdkRgbaComponent(gdouble color_component) {
   // GdkRGBA value is in range [0.0..1.0]. We need something in range [0..255]
   return color_component * 255 + 0.5;
@@ -93,7 +93,7 @@ NS_IMETHODIMP nsColorPicker::Open(
   GtkWindow* parent_window =
       GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
 
-#if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3, 4, 0)
+#if defined(ACTIVATE_GTK3_COLOR_PICKER)
   GtkWidget* color_chooser = gtk_color_chooser_dialog_new(title, parent_window);
 
   if (parent_window) {
@@ -139,7 +139,7 @@ NS_IMETHODIMP nsColorPicker::Open(
   return NS_OK;
 }
 
-#if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3, 4, 0)
+#if defined(ACTIVATE_GTK3_COLOR_PICKER)
 /* static */
 void nsColorPicker::OnColorChanged(GtkColorChooser* color_chooser,
                                    GdkRGBA* color, gpointer user_data) {
@@ -201,7 +201,7 @@ void nsColorPicker::Done(GtkWidget* color_chooser, gint response) {
   switch (response) {
     case GTK_RESPONSE_OK:
     case GTK_RESPONSE_ACCEPT:
-#if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3, 4, 0)
+#if defined(ACTIVATE_GTK3_COLOR_PICKER)
       GdkRGBA color;
       gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(color_chooser), &color);
       SetColor(&color);

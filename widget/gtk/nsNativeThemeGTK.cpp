@@ -1893,8 +1893,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Window:
     case StyleAppearance::Dialog:
     case StyleAppearance::MozGtkInfoBar:
-      return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
-
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
@@ -1902,10 +1900,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::MozWindowButtonRestore:
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::MozWindowTitlebarMaximized:
-      // GtkHeaderBar is available on GTK 3.10+, which is used for styling
-      // title bars and title buttons.
-      return gtk_check_version(3, 10, 0) == nullptr &&
-             !IsWidgetStyled(aPresContext, aFrame, aAppearance);
+      return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
     case StyleAppearance::MozMenulistArrowButton:
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
