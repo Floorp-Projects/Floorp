@@ -42,9 +42,10 @@
     <dimen name="context_menu_height">48dp</dimen>
     <dimen name="context_menu_x_offset">8dp</dimen>
     <dimen name="tp_onboarding_width">256dp</dimen>
-    <dimen name="tp_onboarding_triangle_height">16dp</dimen>
-    <dimen name="tp_onboarding_triangle_width">16dp</dimen>
-    <dimen name="tp_onboarding_triangle_margin_start">16dp</dimen>
+    <!-- Dimensions for the CFR (Contextual Feature Recommendation) tooltip triangle. -->
+    <dimen name="cfr_triangle_height">16dp</dimen>
+    <dimen name="cfr_triangle_width">16dp</dimen>
+    <dimen name="cfr_triangle_margin_edge">16dp</dimen>
 
     <dimen name="tab_counter_box_width_height">24dp</dimen>
 

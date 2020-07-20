@@ -81,8 +81,8 @@ class TrackingProtectionOverlay(
         }
 
         val res = context.resources
-        val triangleWidthPx = res.getDimension(R.dimen.tp_onboarding_triangle_height)
-        val triangleMarginStartPx = res.getDimension(R.dimen.tp_onboarding_triangle_margin_start)
+        val triangleWidthPx = res.getDimension(R.dimen.cfr_triangle_height)
+        val triangleMarginStartPx = res.getDimension(R.dimen.cfr_triangle_margin_edge)
 
         val toolbar = getToolbar()
         val trackingProtectionIcon: View =

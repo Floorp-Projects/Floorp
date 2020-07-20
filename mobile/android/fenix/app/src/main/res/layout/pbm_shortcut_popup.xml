@@ -9,12 +9,13 @@
     android:orientation="vertical">
 
     <ImageView
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_width="@dimen/cfr_triangle_width"
+        android:layout_height="@dimen/cfr_triangle_height"
         android:layout_gravity="end"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="@dimen/cfr_triangle_margin_edge"
         android:importantForAccessibility="no"
-        app:srcCompat="@drawable/ic_pbm_triangle" />
+        app:srcCompat="@drawable/ic_cfr_triangle"
+        app:tint="#7542E5" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

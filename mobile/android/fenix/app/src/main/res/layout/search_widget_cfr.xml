@@ -13,11 +13,12 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:visibility="gone"
         android:id="@+id/drop_down_triangle"
-        android:layout_width="@dimen/tp_onboarding_triangle_width"
-        android:layout_height="@dimen/tp_onboarding_triangle_height"
+        android:layout_width="@dimen/cfr_triangle_width"
+        android:layout_height="@dimen/cfr_triangle_height"
         android:importantForAccessibility="no"
         android:rotation="0"
-        app:srcCompat="@drawable/ic_pbm_triangle"
+        app:srcCompat="@drawable/ic_cfr_triangle"
+        app:tint="#7542E5"
         android:layout_gravity="center" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -92,9 +93,10 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/pop_up_triangle"
         android:layout_width="16dp"
-        android:layout_height="@dimen/tp_onboarding_triangle_height"
+        android:layout_height="@dimen/cfr_triangle_height"
         android:importantForAccessibility="no"
         android:rotation="180"
-        app:srcCompat="@drawable/ic_pbm_triangle"
+        app:srcCompat="@drawable/ic_cfr_triangle"
+        app:tint="#7542E5"
         android:layout_gravity="center" />
 </LinearLayout>
