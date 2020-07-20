@@ -840,9 +840,9 @@ const OBSERVE_LASTWINDOW_CLOSE_TOPICS = AppConstants.platform != "macosx";
 function BrowserGlue() {
   XPCOMUtils.defineLazyServiceGetter(
     this,
-    "_idleService",
-    "@mozilla.org/widget/idleservice;1",
-    "nsIIdleService"
+    "_userIdleService",
+    "@mozilla.org/widget/useridleservice;1",
+    "nsIUserIdleService"
   );
 
   XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function() {
@@ -1191,11 +1191,14 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "weave:engine:clients:display-uris");
     os.removeObserver(this, "session-save");
     if (this._bookmarksBackupIdleTime) {
-      this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
+      this._userIdleService.removeIdleObserver(
+        this,
+        this._bookmarksBackupIdleTime
+      );
       delete this._bookmarksBackupIdleTime;
     }
     if (this._lateTasksIdleObserver) {
-      this._idleService.removeIdleObserver(
+      this._userIdleService.removeIdleObserver(
         this._lateTasksIdleObserver,
         LATE_TASKS_IDLE_TIME_SEC
       );
@@ -1989,7 +1992,10 @@ BrowserGlue.prototype = {
     }
 
     if (this._bookmarksBackupIdleTime) {
-      this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
+      this._userIdleService.removeIdleObserver(
+        this,
+        this._bookmarksBackupIdleTime
+      );
       delete this._bookmarksBackupIdleTime;
     }
 
@@ -2246,7 +2252,7 @@ BrowserGlue.prototype = {
         this._scheduleArbitrarilyLateIdleTasks();
       }
     };
-    this._idleService.addIdleObserver(
+    this._userIdleService.addIdleObserver(
       this._lateTasksIdleObserver,
       LATE_TASKS_IDLE_TIME_SEC
     );
@@ -2988,7 +2994,10 @@ BrowserGlue.prototype = {
             }
           }
         }
-        this._idleService.addIdleObserver(this, this._bookmarksBackupIdleTime);
+        this._userIdleService.addIdleObserver(
+          this,
+          this._bookmarksBackupIdleTime
+        );
       }
 
       if (this._isNewProfile) {

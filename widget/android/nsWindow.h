@@ -9,7 +9,7 @@
 
 #include "nsBaseWidget.h"
 #include "gfxPoint.h"
-#include "nsIIdleServiceInternal.h"
+#include "nsIUserIdleServiceInternal.h"
 #include "nsTArray.h"
 #include "EventDispatcher.h"
 #include "mozilla/EventForwards.h"
@@ -352,7 +352,7 @@ class nsWindow final : public nsBaseWidget {
   nsTArray<nsWindow*> mChildren;
   nsWindow* mParent;
 
-  nsCOMPtr<nsIIdleServiceInternal> mIdleService;
+  nsCOMPtr<nsIUserIdleServiceInternal> mIdleService;
   mozilla::ScreenIntCoord mDynamicToolbarMaxHeight;
   mozilla::ScreenIntMargin mSafeAreaInsets;
 

@@ -266,7 +266,7 @@ var SearchTestUtils = Object.freeze({
       }
     },
 
-    QueryInterface: ChromeUtils.generateQI(["nsIIdleService"]),
+    QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
     idleTime: 19999,
 
     addIdleObserver(observer, time) {
@@ -285,7 +285,7 @@ var SearchTestUtils = Object.freeze({
    */
   useMockIdleService(registerCleanupFunction) {
     let fakeIdleService = MockRegistrar.register(
-      "@mozilla.org/widget/idleservice;1",
+      "@mozilla.org/widget/useridleservice;1",
       SearchTestUtils.idleService
     );
     registerCleanupFunction(() => {

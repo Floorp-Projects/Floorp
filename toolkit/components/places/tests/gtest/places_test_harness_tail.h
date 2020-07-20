@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWidgetsCID.h"
-#include "nsIIdleService.h"
+#include "nsIUserIdleService.h"
 
 #ifndef TEST_NAME
 #  error "Must #define TEST_NAME before including places_test_harness_tail.h"
@@ -63,8 +63,8 @@ void do_test_finished() {
 void disable_idle_service() {
   (void)fprintf(stderr, TEST_INFO_STR "Disabling Idle Service.\n");
 
-  nsCOMPtr<nsIIdleService> idle =
-      do_GetService("@mozilla.org/widget/idleservice;1");
+  nsCOMPtr<nsIUserIdleService> idle =
+      do_GetService("@mozilla.org/widget/useridleservice;1");
   idle->SetDisabled(true);
 }
 

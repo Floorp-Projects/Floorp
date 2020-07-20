@@ -50,16 +50,16 @@ var idleObserver =
 //        if (diff >= 5000)
 //            alert(data + "  " + newIdleSeconds);
 
-        // Attempt to get to the nsIIdleService        
+        // Attempt to get to the nsIUserIdleService        
         var subjectOK = false;
         try {
-            var idleService = subject.QueryInterface(nsIIdleService);
+            var idleService = subject.QueryInterface(nsIUserIdleService);
             subjectOK = true;
         }
         catch (ex)
         {}
         ok(subjectOK, "The subject of the notification should be the " +
-                      "nsIIdleService.");
+                      "nsIUserIdleService.");
 
         // Attempt to remove ourselves.
         var removedObserver = false;
@@ -80,17 +80,17 @@ var idleObserver =
 };
 
 
-const nsIIdleService = Ci.nsIIdleService;
-const nsIISCID = "@mozilla.org/widget/idleservice;1";
+const nsIUserIdleService = Ci.nsIUserIdleService;
+const nsIISCID = "@mozilla.org/widget/useridleservice;1";
 var idleService = null;
 try
 {
-    idleService = Cc[nsIISCID].getService(nsIIdleService);
+    idleService = Cc[nsIISCID].getService(nsIUserIdleService);
 }
 catch (ex)
 {}
 
-ok(idleService, "nsIIdleService should exist and be implemented on all tier 1 platforms.");
+ok(idleService, "nsIUserIdleService should exist and be implemented on all tier 1 platforms.");
 
 var idleTime = null;
 var gotIdleTime = false;
@@ -120,7 +120,7 @@ try
 catch (ex)
 {}
 
-ok(addedObserver, "The nsIIdleService should allow us to add an observer.");
+ok(addedObserver, "The nsIUserIdleService should allow us to add an observer.");
 
 addedObserver = false;
 try
@@ -131,7 +131,7 @@ try
 catch (ex)
 {}
 
-ok(addedObserver, "The nsIIdleService should allow us to add the same observer again.");
+ok(addedObserver, "The nsIUserIdleService should allow us to add the same observer again.");
 
 var removedObserver = false;
 try
@@ -142,7 +142,7 @@ try
 catch (ex)
 {}
 
-ok(removedObserver, "The nsIIdleService should allow us to remove the observer just once.");
+ok(removedObserver, "The nsIUserIdleService should allow us to remove the observer just once.");
 
 function testIdleTime()
 {

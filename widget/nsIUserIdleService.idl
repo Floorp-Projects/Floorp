@@ -17,7 +17,7 @@ interface nsIObserver;
  */
 
 [scriptable, uuid(cc52f19a-63ae-4a1c-9cc3-e79eace0b471)]
-interface nsIIdleService : nsISupports
+interface nsIUserIdleService : nsISupports
 {
     /**
      * The amount of time in milliseconds that has passed
@@ -39,7 +39,7 @@ interface nsIIdleService : nsISupports
      *
      * @note
      * The subject of the notification the observer will get is always the
-     * nsIIdleService itself.
+     * nsIUserIdleService itself.
      * When the user goes idle, the observer topic is "idle" and when he gets
      * back, the observer topic is "active".
      * The data param for the notification contains the current user idle time.

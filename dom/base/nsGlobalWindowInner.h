@@ -81,7 +81,7 @@ class nsHistory;
 class nsGlobalWindowObserver;
 class nsGlobalWindowOuter;
 class nsDOMWindowUtils;
-class nsIIdleService;
+class nsIUserIdleService;
 struct nsRect;
 
 class nsWindowSizes;

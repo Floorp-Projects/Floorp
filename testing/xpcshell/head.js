@@ -277,7 +277,7 @@ var _fakeIdleService = {
       Ci.nsIComponentRegistrar
     ));
   },
-  contractID: "@mozilla.org/widget/idleservice;1",
+  contractID: "@mozilla.org/widget/useridleservice;1",
   CID: Components.ID("{9163a4ae-70c2-446c-9ac1-bbe4ab93004e}"),
 
   activate: function FIS_activate() {
@@ -322,7 +322,7 @@ var _fakeIdleService = {
     QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
   },
 
-  // nsIIdleService
+  // nsIUserIdleService
   get idleTime() {
     return 0;
   },
@@ -335,7 +335,7 @@ var _fakeIdleService = {
     if (aIID.equals(Ci.nsIFactory)) {
       return this.factory;
     }
-    if (aIID.equals(Ci.nsIIdleService) || aIID.equals(Ci.nsISupports)) {
+    if (aIID.equals(Ci.nsIUserIdleService) || aIID.equals(Ci.nsISupports)) {
       return this;
     }
     throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
@@ -348,7 +348,7 @@ var _fakeIdleService = {
  */
 function do_get_idle() {
   _fakeIdleService.deactivate();
-  return Cc[_fakeIdleService.contractID].getService(Ci.nsIIdleService);
+  return Cc[_fakeIdleService.contractID].getService(Ci.nsIUserIdleService);
 }
 
 // Map resource://test/ to current working directory and

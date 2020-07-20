@@ -25,7 +25,7 @@ let idleService = {
       this._activity.observerFires.push(state);
     }
   },
-  QueryInterface: ChromeUtils.generateQI(["nsIIdleService"]),
+  QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
   idleTime: 19999,
   addIdleObserver: function(observer, time) {
     this._observers.add(observer);
@@ -74,7 +74,7 @@ function checkActivity(expectedActivity) {
 
 add_task(async function setup() {
   let fakeIdleService = MockRegistrar.register(
-    "@mozilla.org/widget/idleservice;1",
+    "@mozilla.org/widget/useridleservice;1",
     idleService
   );
   registerCleanupFunction(() => {

@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIdleServiceWin_h__
-#define nsIdleServiceWin_h__
+#ifndef nsUserIdleServiceWin_h__
+#define nsUserIdleServiceWin_h__
 
-#include "nsIdleService.h"
+#include "nsUserIdleService.h"
 
 /* NOTE: Compare of GetTickCount() could overflow.  This corrects for
  * overflow situations.
@@ -18,26 +18,26 @@
     (((int)((long)A - (long)B) & 0xFFFFFFFF))
 #endif
 
-class nsIdleServiceWin : public nsIdleService {
+class nsUserIdleServiceWin : public nsUserIdleService {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceWin, nsIdleService)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsUserIdleServiceWin, nsUserIdleService)
 
   bool PollIdleTime(uint32_t* aIdleTime) override;
 
-  static already_AddRefed<nsIdleServiceWin> GetInstance() {
-    RefPtr<nsIdleServiceWin> idleService =
-        nsIdleService::GetInstance().downcast<nsIdleServiceWin>();
+  static already_AddRefed<nsUserIdleServiceWin> GetInstance() {
+    RefPtr<nsUserIdleServiceWin> idleService =
+        nsUserIdleService::GetInstance().downcast<nsUserIdleServiceWin>();
     if (!idleService) {
-      idleService = new nsIdleServiceWin();
+      idleService = new nsUserIdleServiceWin();
     }
 
     return idleService.forget();
   }
 
  protected:
-  nsIdleServiceWin() {}
-  virtual ~nsIdleServiceWin() {}
+  nsUserIdleServiceWin() {}
+  virtual ~nsUserIdleServiceWin() {}
   bool UsePollMode() override;
 };
 
-#endif  // nsIdleServiceWin_h__
+#endif  // nsUserIdleServiceWin_h__
