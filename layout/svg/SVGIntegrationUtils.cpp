@@ -1331,12 +1331,10 @@ already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
   // patterns this would be the whole target frame fill area.
   // aRenderSize is what we will be actually filling after accounting for
   // background-size.
-  if (aFrame->IsFrameOfType(nsIFrame::eSVGPaintServer)) {
+  if (SVGPaintServerFrame* server = do_QueryFrame(aFrame)) {
     // aFrame is either a pattern or a gradient. These fill the whole target
     // frame by default, so aPaintServerSize is the whole target background fill
     // area.
-    auto* server = static_cast<SVGPaintServerFrame*>(aFrame);
-
     gfxRect overrideBounds(0, 0, aPaintServerSize.width,
                            aPaintServerSize.height);
     overrideBounds.Scale(1.0 / aFrame->PresContext()->AppUnitsPerDevPixel());
