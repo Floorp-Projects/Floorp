@@ -336,8 +336,8 @@ RefPtr<TextureSource> ImageHost::AcquireTextureSource(const RenderInfo& aInfo) {
 }
 
 void ImageHost::FinishRendering(const RenderInfo& aInfo) {
-  OnFinishRendering(aInfo.imageIndex, aInfo.img, mAsyncRef.mProcessId,
-                    mAsyncRef.mHandle);
+  UpdateCompositedFrame(aInfo.imageIndex, aInfo.img, mAsyncRef.mProcessId,
+                        mAsyncRef.mHandle);
 }
 
 void ImageHost::SetTextureSourceProvider(TextureSourceProvider* aProvider) {
