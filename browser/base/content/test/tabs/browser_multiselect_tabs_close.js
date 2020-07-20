@@ -1,19 +1,5 @@
 const PREF_WARN_ON_CLOSE = "browser.tabs.warnOnCloseOtherTabs";
 
-async function openTabMenuFor(tab) {
-  let tabMenu = tab.ownerDocument.getElementById("tabContextMenu");
-
-  let tabMenuShown = BrowserTestUtils.waitForEvent(tabMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
-    tab,
-    { type: "contextmenu" },
-    tab.ownerGlobal
-  );
-  await tabMenuShown;
-
-  return tabMenu;
-}
-
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_WARN_ON_CLOSE, false]],
@@ -81,6 +67,10 @@ add_task(async function usingTabContextMenu() {
   let tab4 = await addTab();
 
   let menuItemCloseTab = document.getElementById("context_closeTab");
+  let menuItemCloseSelectedTabs = document.getElementById(
+    "context_closeSelectedTabs"
+  );
+
   is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
@@ -94,20 +84,17 @@ add_task(async function usingTabContextMenu() {
 
   // Check the context menu with a non-multiselected tab
   updateTabContextMenu(tab4);
-  let { args } = document.l10n.getAttributes(menuItemCloseTab);
-  is(args.tabCount, 1, "Close Tab item lists a single tab");
+  is(menuItemCloseTab.hidden, false, "Close Tab is visible");
+  is(menuItemCloseSelectedTabs.hidden, true, "Close Selected Tabs is hidden");
 
-  // Check the context menu with a multiselected tab. We have to actually open
-  // it (not just call `updateTabContextMenu`) in order for
-  // `TabContextMenu.contextTab` to stay non-null when we click an item.
-  let menu = openTabMenuFor(tab2);
-  ({ args } = document.l10n.getAttributes(menuItemCloseTab));
-  is(args.tabCount, 2, "Close Tab item lists more than one tab");
+  // Check the context menu with a multiselected tab
+  updateTabContextMenu(tab2);
+  is(menuItemCloseTab.hidden, true, "Close Tab is hidden");
+  is(menuItemCloseSelectedTabs.hidden, false, "Close Selected Tabs is visible");
 
   let tab1Closing = BrowserTestUtils.waitForTabClosing(tab1);
   let tab2Closing = BrowserTestUtils.waitForTabClosing(tab2);
-  menuItemCloseTab.click();
-  menu.hidePopup();
+  menuItemCloseSelectedTabs.click();
   await tab1Closing;
   await tab2Closing;
 
