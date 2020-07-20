@@ -1046,8 +1046,8 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanWhiteSpaceEndFrom(
       aNBSPData);
 }
 
-EditorDOMRange
-WSRunScanner::TextFragmentData::GetInvisibleLeadingWhiteSpaceRange() const {
+const EditorDOMRange&
+WSRunScanner::TextFragmentData::InvisibleLeadingWhiteSpaceRangeRef() const {
   if (mLeadingWhiteSpaceRange.isSome()) {
     return mLeadingWhiteSpaceRange.ref();
   }
@@ -1077,8 +1077,8 @@ WSRunScanner::TextFragmentData::GetInvisibleLeadingWhiteSpaceRange() const {
   return mLeadingWhiteSpaceRange.ref();
 }
 
-EditorDOMRange
-WSRunScanner::TextFragmentData::GetInvisibleTrailingWhiteSpaceRange() const {
+const EditorDOMRange&
+WSRunScanner::TextFragmentData::InvisibleTrailingWhiteSpaceRangeRef() const {
   if (mTrailingWhiteSpaceRange.isSome()) {
     return mTrailingWhiteSpaceRange.ref();
   }
@@ -1143,8 +1143,8 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 
   // If all of the range is invisible leading or trailing white-spaces,
   // there is no visible content.
-  const EditorDOMRange leadingWhiteSpaceRange =
-      GetInvisibleLeadingWhiteSpaceRange();
+  const EditorDOMRange& leadingWhiteSpaceRange =
+      InvisibleLeadingWhiteSpaceRangeRef();
   const bool maybeHaveLeadingWhiteSpaces =
       leadingWhiteSpaceRange.StartRef().IsSet() ||
       leadingWhiteSpaceRange.EndRef().IsSet();
@@ -1154,8 +1154,8 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     mVisibleWhiteSpacesData.emplace(VisibleWhiteSpacesData());
     return mVisibleWhiteSpacesData.ref();
   }
-  const EditorDOMRange trailingWhiteSpaceRange =
-      GetInvisibleTrailingWhiteSpaceRange();
+  const EditorDOMRange& trailingWhiteSpaceRange =
+      InvisibleTrailingWhiteSpaceRangeRef();
   const bool maybeHaveTrailingWhiteSpaces =
       trailingWhiteSpaceRange.StartRef().IsSet() ||
       trailingWhiteSpaceRange.EndRef().IsSet();
@@ -2306,12 +2306,12 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
   MOZ_ASSERT(aPoint.IsSet());
   Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentData(aPoint, editingHost);
-  EditorDOMRange leadingWhiteSpaceRange =
-      textFragmentData.GetInvisibleLeadingWhiteSpaceRange();
+  const EditorDOMRange& leadingWhiteSpaceRange =
+      textFragmentData.InvisibleLeadingWhiteSpaceRangeRef();
   // XXX Getting trailing white-space range now must be wrong because
   //     mutation event listener may invalidate it.
-  EditorDOMRange trailingWhiteSpaceRange =
-      textFragmentData.GetInvisibleTrailingWhiteSpaceRange();
+  const EditorDOMRange& trailingWhiteSpaceRange =
+      textFragmentData.InvisibleTrailingWhiteSpaceRangeRef();
   DebugOnly<bool> leadingWhiteSpacesDeleted = false;
   if (leadingWhiteSpaceRange.IsPositioned() &&
       !leadingWhiteSpaceRange.Collapsed()) {
