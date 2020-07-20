@@ -5,7 +5,7 @@ use std::string::{String, ToString};
 
 use regalloc::{RealRegUniverse, Reg, RegClass, RegUsageCollector, RegUsageMapper};
 
-use crate::ir::condcodes::IntCC;
+use crate::ir::condcodes::{FloatCC, IntCC};
 use crate::machinst::*;
 
 use super::{
@@ -194,6 +194,13 @@ impl RegMemImm {
         Self::Imm { simm32 }
     }
 
+    /// Asserts that in register mode, the reg class is the one that's expected.
+    pub(crate) fn assert_regclass_is(&self, expected_reg_class: RegClass) {
+        if let Self::Reg { reg } = self {
+            debug_assert_eq!(reg.get_class(), expected_reg_class);
+        }
+    }
+
     /// Add the regs mentioned by `self` to `collector`.
     pub(crate) fn get_regs_as_uses(&self, collector: &mut RegUsageCollector) {
         match self {
@@ -233,6 +240,12 @@ impl RegMem {
     }
     pub(crate) fn mem(addr: impl Into<SyntheticAmode>) -> Self {
         Self::Mem { addr: addr.into() }
+    }
+    /// Asserts that in register mode, the reg class is the one that's expected.
+    pub(crate) fn assert_regclass_is(&self, expected_reg_class: RegClass) {
+        if let Self::Reg { reg } = self {
+            debug_assert_eq!(reg.get_class(), expected_reg_class);
+        }
     }
     /// Add the regs mentioned by `self` to `collector`.
     pub(crate) fn get_regs_as_uses(&self, collector: &mut RegUsageCollector) {
@@ -346,6 +359,7 @@ pub enum SseOpcode {
     Minsd,
     Movaps,
     Movd,
+    Movq,
     Movss,
     Movsd,
     Mulss,
@@ -399,6 +413,7 @@ impl SseOpcode {
             | SseOpcode::Maxsd
             | SseOpcode::Minsd
             | SseOpcode::Movd
+            | SseOpcode::Movq
             | SseOpcode::Movsd
             | SseOpcode::Mulsd
             | SseOpcode::Sqrtsd
@@ -411,7 +426,7 @@ impl SseOpcode {
         }
     }
 
-    /// Returns the src operand size for an instruction
+    /// Returns the src operand size for an instruction.
     pub(crate) fn src_size(&self) -> u8 {
         match self {
             SseOpcode::Movd => 4,
@@ -445,6 +460,7 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Minsd => "minsd",
             SseOpcode::Movaps => "movaps",
             SseOpcode::Movd => "movd",
+            SseOpcode::Movq => "movq",
             SseOpcode::Movss => "movss",
             SseOpcode::Movsd => "movsd",
             SseOpcode::Mulss => "mulss",
@@ -620,6 +636,12 @@ pub enum CC {
     LE = 14,
     /// > signed
     NLE = 15,
+
+    /// parity
+    P = 10,
+
+    /// not parity
+    NP = 11,
 }
 
 impl CC {
@@ -662,6 +684,33 @@ impl CC {
 
             CC::LE => CC::NLE,
             CC::NLE => CC::LE,
+
+            CC::P => CC::NP,
+            CC::NP => CC::P,
+        }
+    }
+
+    pub(crate) fn from_floatcc(floatcc: FloatCC) -> Self {
+        match floatcc {
+            FloatCC::Ordered => CC::NP,
+            FloatCC::Unordered => CC::P,
+            // Alias for NE
+            FloatCC::NotEqual | FloatCC::OrderedNotEqual => CC::NZ,
+            // Alias for E
+            FloatCC::UnorderedOrEqual => CC::Z,
+            // Alias for A
+            FloatCC::GreaterThan => CC::NBE,
+            // Alias for AE
+            FloatCC::GreaterThanOrEqual => CC::NB,
+            FloatCC::UnorderedOrLessThan => CC::B,
+            FloatCC::UnorderedOrLessThanOrEqual => CC::BE,
+            FloatCC::Equal
+            | FloatCC::LessThan
+            | FloatCC::LessThanOrEqual
+            | FloatCC::UnorderedOrGreaterThan
+            | FloatCC::UnorderedOrGreaterThanOrEqual => unimplemented!(
+                "No single condition code to guarantee ordered. Treat as special case."
+            ),
         }
     }
 
@@ -687,6 +736,8 @@ impl fmt::Debug for CC {
             CC::NL => "nl",
             CC::LE => "le",
             CC::NLE => "nle",
+            CC::P => "p",
+            CC::NP => "np",
         };
         write!(fmt, "{}", name)
     }
