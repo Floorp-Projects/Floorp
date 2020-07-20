@@ -340,63 +340,63 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * for the detail.
    */
   nsIContent* GetStartReasonContent() const {
-    return TextFragmentDataAtStart().GetStartReasonContent();
+    return TextFragmentDataAtStartRef().GetStartReasonContent();
   }
   nsIContent* GetEndReasonContent() const {
-    return TextFragmentDataAtStart().GetEndReasonContent();
+    return TextFragmentDataAtStartRef().GetEndReasonContent();
   }
 
   bool StartsFromNormalText() const {
-    return TextFragmentDataAtStart().StartsFromNormalText();
+    return TextFragmentDataAtStartRef().StartsFromNormalText();
   }
   bool StartsFromSpecialContent() const {
-    return TextFragmentDataAtStart().StartsFromSpecialContent();
+    return TextFragmentDataAtStartRef().StartsFromSpecialContent();
   }
   bool StartsFromBRElement() const {
-    return TextFragmentDataAtStart().StartsFromBRElement();
+    return TextFragmentDataAtStartRef().StartsFromBRElement();
   }
   bool StartsFromCurrentBlockBoundary() const {
-    return TextFragmentDataAtStart().StartsFromCurrentBlockBoundary();
+    return TextFragmentDataAtStartRef().StartsFromCurrentBlockBoundary();
   }
   bool StartsFromOtherBlockElement() const {
-    return TextFragmentDataAtStart().StartsFromOtherBlockElement();
+    return TextFragmentDataAtStartRef().StartsFromOtherBlockElement();
   }
   bool StartsFromBlockBoundary() const {
-    return TextFragmentDataAtStart().StartsFromBlockBoundary();
+    return TextFragmentDataAtStartRef().StartsFromBlockBoundary();
   }
   bool StartsFromHardLineBreak() const {
-    return TextFragmentDataAtStart().StartsFromHardLineBreak();
+    return TextFragmentDataAtStartRef().StartsFromHardLineBreak();
   }
   bool EndsByNormalText() const {
-    return TextFragmentDataAtStart().EndsByNormalText();
+    return TextFragmentDataAtStartRef().EndsByNormalText();
   }
   bool EndsBySpecialContent() const {
-    return TextFragmentDataAtStart().EndsBySpecialContent();
+    return TextFragmentDataAtStartRef().EndsBySpecialContent();
   }
   bool EndsByBRElement() const {
-    return TextFragmentDataAtStart().EndsByBRElement();
+    return TextFragmentDataAtStartRef().EndsByBRElement();
   }
   bool EndsByCurrentBlockBoundary() const {
-    return TextFragmentDataAtStart().EndsByCurrentBlockBoundary();
+    return TextFragmentDataAtStartRef().EndsByCurrentBlockBoundary();
   }
   bool EndsByOtherBlockElement() const {
-    return TextFragmentDataAtStart().EndsByOtherBlockElement();
+    return TextFragmentDataAtStartRef().EndsByOtherBlockElement();
   }
   bool EndsByBlockBoundary() const {
-    return TextFragmentDataAtStart().EndsByBlockBoundary();
+    return TextFragmentDataAtStartRef().EndsByBlockBoundary();
   }
 
   MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr() const {
-    return TextFragmentDataAtStart().StartReasonOtherBlockElementPtr();
+    return TextFragmentDataAtStartRef().StartReasonOtherBlockElementPtr();
   }
   MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* StartReasonBRElementPtr() const {
-    return TextFragmentDataAtStart().StartReasonBRElementPtr();
+    return TextFragmentDataAtStartRef().StartReasonBRElementPtr();
   }
   MOZ_NEVER_INLINE_DEBUG dom::Element* EndReasonOtherBlockElementPtr() const {
-    return TextFragmentDataAtStart().EndReasonOtherBlockElementPtr();
+    return TextFragmentDataAtStartRef().EndReasonOtherBlockElementPtr();
   }
   MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* EndReasonBRElementPtr() const {
-    return TextFragmentDataAtStart().EndReasonBRElementPtr();
+    return TextFragmentDataAtStartRef().EndReasonBRElementPtr();
   }
 
   /**
@@ -528,7 +528,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
   template <typename PT, typename CT>
   EditorDOMPointInText GetInclusiveNextEditableCharPoint(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return TextFragmentDataAtStart().GetInclusiveNextEditableCharPoint(aPoint);
+    return TextFragmentDataAtStartRef().GetInclusiveNextEditableCharPoint(
+        aPoint);
   }
 
   /**
@@ -541,7 +542,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   template <typename PT, typename CT>
   EditorDOMPointInText GetPreviousEditableCharPoint(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return TextFragmentDataAtStart().GetPreviousEditableCharPoint(aPoint);
+    return TextFragmentDataAtStartRef().GetPreviousEditableCharPoint(aPoint);
   }
 
   /**
@@ -553,7 +554,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
       const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
-    return TextFragmentDataAtStart().GetEndOfCollapsibleASCIIWhiteSpaces(
+    return TextFragmentDataAtStartRef().GetEndOfCollapsibleASCIIWhiteSpaces(
         aPointAtASCIIWhiteSpace);
   }
 
@@ -567,7 +568,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
       const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
-    return TextFragmentDataAtStart().GetFirstASCIIWhiteSpacePointCollapsedTo(
+    return TextFragmentDataAtStartRef().GetFirstASCIIWhiteSpacePointCollapsedTo(
         aPointAtASCIIWhiteSpace);
   }
 
@@ -1059,7 +1060,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     bool mIsPreformatted;
   };
 
-  const TextFragmentData& TextFragmentDataAtStart() const {
+  const TextFragmentData& TextFragmentDataAtStartRef() const {
     return mTextFragmentDataAtStart;
   }
 
