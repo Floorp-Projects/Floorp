@@ -51,8 +51,10 @@ class DefaultSelectionActionDelegate(
     override fun isActionAvailable(id: String, selectedText: String): Boolean {
         val isPrivate = searchAdapter.isPrivateSession()
         return (id == SHARE && shareTextClicked != null) ||
-                (id == EMAIL && emailTextClicked != null && Patterns.EMAIL_ADDRESS.matcher(selectedText).matches()) ||
-                (id == CALL && callTextClicked != null && Patterns.PHONE.matcher(selectedText).matches()) ||
+                (id == EMAIL && emailTextClicked != null &&
+                    Patterns.EMAIL_ADDRESS.matcher(selectedText.trim()).matches()) ||
+                (id == CALL &&
+                    callTextClicked != null && Patterns.PHONE.matcher(selectedText.trim()).matches()) ||
                 (id == SEARCH && !isPrivate) ||
                 (id == SEARCH_PRIVATELY && isPrivate)
     }
@@ -80,11 +82,11 @@ class DefaultSelectionActionDelegate(
             true
         }
         EMAIL -> {
-            emailTextClicked?.invoke(selectedText)
+            emailTextClicked?.invoke(selectedText.trim())
             true
         }
         CALL -> {
-            callTextClicked?.invoke(selectedText)
+            callTextClicked?.invoke(selectedText.trim())
             true
         }
         else -> false
