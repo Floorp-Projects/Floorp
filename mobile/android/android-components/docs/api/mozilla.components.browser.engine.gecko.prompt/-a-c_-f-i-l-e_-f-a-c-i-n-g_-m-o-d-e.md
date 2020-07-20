@@ -2,4 +2,4 @@
 
 # AC_FILE_FACING_MODE
 
-`typealias AC_FILE_FACING_MODE = `[`FacingMode`](../mozilla.components.concept.engine.prompt/-prompt-request/-file/-facing-mode/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L51)
+`typealias AC_FILE_FACING_MODE = `[`FacingMode`](../mozilla.components.concept.engine.prompt/-prompt-request/-file/-facing-mode/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L52)

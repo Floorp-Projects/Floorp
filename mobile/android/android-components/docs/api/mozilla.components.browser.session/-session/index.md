@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L49)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L50)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -12,13 +12,12 @@ Value type that represents the state of a browser session. Changes can be observ
 |---|---|
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe a session. |
 | [SecurityInfo](-security-info/index.md) | `data class SecurityInfo`<br>A value type holding security information for a Session. |
-| [Source](-source/index.md) | `enum class Source`<br>Represents the origin of a session to describe how and why it was created. |
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Session(initialUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, source: `[`Source`](-source/index.md)` = Source.NONE, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`> = ObserverRegistry())`<br>Value type that represents the state of a browser session. Changes can be observed. |
+| [&lt;init&gt;](-init-.md) | `Session(initialUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, source: `[`Source`](../../mozilla.components.browser.state.state/-session-state/-source/index.md)` = SessionState.Source.NONE, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`> = ObserverRegistry())`<br>Value type that represents the state of a browser session. Changes can be observed. |
 
 ### Properties
 
@@ -43,7 +42,7 @@ Value type that represents the state of a browser session. Changes can be observ
 | [recordingDevices](recording-devices.md) | `var recordingDevices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`RecordingDevice`](../../mozilla.components.concept.engine.media/-recording-device/index.md)`>`<br>List of recording devices (e.g. camera or microphone) currently in use by web content. |
 | [searchTerms](search-terms.md) | `var searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The currently / last used search terms (or an empty string). |
 | [securityInfo](security-info.md) | `var securityInfo: `[`SecurityInfo`](-security-info/index.md)<br>Security information indicating whether or not the current session is for a secure URL, as well as the host and SSL certificate authority, if applicable. |
-| [source](source.md) | `val source: `[`Source`](-source/index.md) |
+| [source](source.md) | `val source: `[`Source`](../../mozilla.components.browser.state.state/-session-state/-source/index.md) |
 | [thumbnail](thumbnail.md) | `var thumbnail: <ERROR CLASS>?`<br>The target of the latest thumbnail. |
 | [title](title.md) | `var title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The title of the currently displayed website changed. |
 | [trackerBlockingEnabled](tracker-blocking-enabled.md) | `var trackerBlockingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tracker blocking state, true if blocking trackers is enabled, otherwise false. |

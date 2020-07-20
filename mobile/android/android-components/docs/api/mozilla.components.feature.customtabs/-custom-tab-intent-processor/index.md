@@ -2,7 +2,7 @@
 
 # CustomTabIntentProcessor
 
-`class CustomTabIntentProcessor : `[`IntentProcessor`](../../mozilla.components.feature.intent.processing/-intent-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabIntentProcessor.kt#L24)
+`class CustomTabIntentProcessor : `[`IntentProcessor`](../../mozilla.components.feature.intent.processing/-intent-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabIntentProcessor.kt#L25)
 
 Processor for intents which trigger actions related to custom tabs.
 

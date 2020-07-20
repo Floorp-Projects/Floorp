@@ -2,7 +2,7 @@
 
 # WebExtensionSupport
 
-`object WebExtensionSupport` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/webextensions/src/main/java/mozilla/components/support/webextensions/WebExtensionSupport.kt#L51)
+`object WebExtensionSupport` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/webextensions/src/main/java/mozilla/components/support/webextensions/WebExtensionSupport.kt#L57)
 
 Provides functionality to make sure web extension related events in the
 [WebExtensionRuntime](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md) are reflected in the browser state by dispatching the
