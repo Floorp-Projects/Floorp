@@ -531,6 +531,7 @@ STATIC_ATOMS = [
     Atom("indent", "indent"),
     Atom("indeterminate", "indeterminate"),
     Atom("index", "index"),
+    Atom("inert", "inert"),
     Atom("infinity", "infinity"),
     Atom("inherits", "inherits"),
     Atom("inheritOverflow", "inherit-overflow"),
