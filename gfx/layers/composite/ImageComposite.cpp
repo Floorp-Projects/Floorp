@@ -106,25 +106,25 @@ int ImageComposite::ChooseImageIndex() {
     return 0;
   }
 
-  // We are inside a composition.
-  auto compositionOpportunityId = GetCompositionOpportunityId();
-
-  // Find the newest frame whose biased timestamp is at or before `now`.
-  uint32_t result = 0;
+  uint32_t result = mLastChosenImageIndex;
   while (result + 1 < mImages.Length() &&
          GetBiasedTime(mImages[result + 1].mTimeStamp) <= now) {
     ++result;
   }
-
-  // If ChooseImageIndex is called for the first time during this composition,
-  // call UpdateCompositedFrame.
-  if (compositionOpportunityId != mLastChooseImageIndexComposition) {
-    bool wasVisibleAtPreviousComposition =
-        compositionOpportunityId == mLastChooseImageIndexComposition.Next();
-    UpdateCompositedFrame(&mImages[result], wasVisibleAtPreviousComposition);
-    mLastChooseImageIndexComposition = compositionOpportunityId;
+  if (result - mLastChosenImageIndex > 1) {
+    // We're not returning the same image as the last call to ChooseImageIndex
+    // or the immediately next one. We can assume that the frames not returned
+    // have been dropped as they were too late to be displayed
+    for (size_t idx = mLastChosenImageIndex; idx <= result; idx++) {
+      if (IsImagesUpdateRateFasterThanCompositedRate(mImages[result],
+                                                     mImages[idx])) {
+        continue;
+      }
+      mDroppedFrames++;
+      PROFILER_ADD_MARKER("Video frames dropped", GRAPHICS);
+    }
   }
-
+  mLastChosenImageIndex = result;
   return result;
 }
 
@@ -142,22 +142,83 @@ void ImageComposite::RemoveImagesWithTextureHost(TextureHost* aTexture) {
   }
 }
 
-void ImageComposite::ClearImages() { mImages.Clear(); }
+void ImageComposite::ClearImages() {
+  mImages.Clear();
+  mLastChosenImageIndex = 0;
+}
+
+uint32_t ImageComposite::ScanForLastFrameIndex(
+    const nsTArray<TimedImage>& aNewImages) {
+  if (mImages.IsEmpty()) {
+    return 0;
+  }
+  uint32_t i = mLastChosenImageIndex;
+  uint32_t newIndex = 0;
+  uint32_t dropped = 0;
+  // See if the new array of images have any images in common with the
+  // previous list that we haven't played yet.
+  uint32_t j = 0;
+  while (i < mImages.Length() && j < aNewImages.Length()) {
+    if (mImages[i].mProducerID != aNewImages[j].mProducerID) {
+      // This is new content, can stop.
+      newIndex = j;
+      break;
+    }
+    int32_t oldFrameID = mImages[i].mFrameID;
+    int32_t newFrameID = aNewImages[j].mFrameID;
+    if (oldFrameID > newFrameID) {
+      // This is an image we have already returned, we don't need to present
+      // it again and can start from this index next time.
+      newIndex = ++j;
+      continue;
+    }
+    if (oldFrameID < mLastFrameID) {
+      // we have already returned that frame previously, ignore.
+      i++;
+      continue;
+    }
+    if (oldFrameID < newFrameID) {
+      // This is a new image, all images prior the new one and not yet
+      // rendered can be considered as dropped. Those images have a FrameID
+      // inferior to the new image.
+      for (++i; i < mImages.Length() && mImages[i].mFrameID < newFrameID &&
+                mImages[i].mProducerID == aNewImages[j].mProducerID;
+           i++) {
+        if (IsImagesUpdateRateFasterThanCompositedRate(aNewImages[j],
+                                                       mImages[i])) {
+          continue;
+        }
+        dropped++;
+      }
+      break;
+    }
+    i++;
+    j++;
+  }
+  if (dropped > 0) {
+    mDroppedFrames += dropped;
+    PROFILER_ADD_MARKER("Video frames dropped", GRAPHICS);
+  }
+  if (newIndex >= aNewImages.Length()) {
+    // Somehow none of those images should be rendered (can this happen?)
+    // We will always return the last one for now.
+    newIndex = aNewImages.Length() - 1;
+  }
+  return newIndex;
+}
 
 void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
   if (!aNewImages.IsEmpty()) {
     DetectTimeStampJitter(&aNewImages[0]);
-
-    // Frames older than the first frame in aNewImages that we haven't shown yet
-    // will never be shown.
-    CountSkippedFrames(&aNewImages[0]);
   }
+  mLastChosenImageIndex = ScanForLastFrameIndex(aNewImages);
   mImages = std::move(aNewImages);
 }
 
-void ImageComposite::UpdateCompositedFrame(
-    const TimedImage* aImage, bool aWasVisibleAtPreviousComposition) {
-  auto compositionOpportunityId = GetCompositionOpportunityId();
+void ImageComposite::UpdateCompositedFrame(int aImageIndex,
+                                           const TimedImage* aImage,
+                                           base::ProcessId aProcessId,
+                                           const CompositableHandle& aHandle) {
   TimeStamp compositionTime = GetCompositionTime();
   MOZ_RELEASE_ASSERT(compositionTime,
                      "Should only be called during a composition");
@@ -173,10 +234,9 @@ void ImageComposite::UpdateCompositedFrame(
     }
     static const char* kBiasStrings[] = {"NONE", "NEGATIVE", "POSITIVE"};
     descr.AppendPrintf("frameID %" PRId32 " (producerID %" PRId32
-                       ") [composite %" PRIu64 "] [bias %s]%s",
+                       ") [bias %s]%s",
                        aImage->mFrameID, aImage->mProducerID,
-                       compositionOpportunityId.mId, kBiasStrings[mBias],
-                       relativeTimeString.get());
+                       kBiasStrings[mBias], relativeTimeString.get());
     if (mLastProducerID != aImage->mProducerID) {
       descr.AppendPrintf(", previous producerID: %" PRId32, mLastProducerID);
     } else if (mLastFrameID != aImage->mFrameID) {
@@ -194,48 +254,8 @@ void ImageComposite::UpdateCompositedFrame(
     return;
   }
 
-  CountSkippedFrames(aImage);
-
-  int32_t dropped = mSkippedFramesSinceLastComposite;
-  mSkippedFramesSinceLastComposite = 0;
-
-  if (!aWasVisibleAtPreviousComposition) {
-    // This video was not part of the on-screen scene during the previous
-    // composition opportunity, for example it may have been scrolled off-screen
-    // or in a background tab, or compositing might have been paused.
-    // Ignore any skipped frames and don't count them as dropped.
-    dropped = 0;
-  }
-
-  if (dropped > 0) {
-    mDroppedFrames += dropped;
-#if MOZ_GECKO_PROFILER
-    if (profiler_can_accept_markers()) {
-      TimeStamp now = TimeStamp::Now();
-      const char* frameOrFrames = dropped == 1 ? "frame" : "frames";
-      nsPrintfCString text("%" PRId32 " %s dropped: %" PRId32 " -> %" PRId32
-                           " (producer %" PRId32 ")",
-                           dropped, frameOrFrames, mLastFrameID,
-                           aImage->mFrameID, mLastProducerID);
-      profiler_add_text_marker("Video frames dropped", text,
-                               JS::ProfilingCategoryPair::GRAPHICS, now, now);
-    }
-#endif
-  }
-
   mLastFrameID = aImage->mFrameID;
   mLastProducerID = aImage->mProducerID;
-  mLastFrameUpdateComposition = compositionOpportunityId;
-}
-
-void ImageComposite::OnFinishRendering(int aImageIndex,
-                                       const TimedImage* aImage,
-                                       base::ProcessId aProcessId,
-                                       const CompositableHandle& aHandle) {
-  if (mLastFrameUpdateComposition != GetCompositionOpportunityId()) {
-    // The frame did not change in this composition.
-    return;
-  }
 
   if (aHandle) {
     ImageCompositeNotificationInfo info;
@@ -261,52 +281,16 @@ const ImageComposite::TimedImage* ImageComposite::GetImage(
   return &mImages[aIndex];
 }
 
-void ImageComposite::CountSkippedFrames(const TimedImage* aImage) {
-  if (aImage->mProducerID != mLastProducerID) {
-    // Switched producers.
-    return;
+bool ImageComposite::IsImagesUpdateRateFasterThanCompositedRate(
+    const TimedImage& aNewImage, const TimedImage& aOldImage) const {
+  MOZ_ASSERT(aNewImage.mFrameID >= aOldImage.mFrameID);
+  const uint32_t compositedRate = gfxPlatform::TargetFrameRate();
+  if (compositedRate == 0) {
+    return true;
   }
-
-  if (aImage->mFrameID <= mLastFrameID + 1) {
-    // No frames were skipped.
-    return;
-  }
-
-  uint32_t targetFrameRate = gfxPlatform::TargetFrameRate();
-  if (targetFrameRate == 0) {
-    // Can't know whether we could have reasonably displayed all video frames.
-    return;
-  }
-
-  double targetFrameDurationMS = 1000.0 / targetFrameRate;
-
-  // Count how many images in mImages were skipped between mLastFrameID and
-  // aImage.mFrameID. Only count frames for which we can estimate a duration by
-  // looking at the next frame's timestamp, and only if the video frame rate is
-  // no faster than the target frame rate.
-  int32_t skipped = 0;
-  for (size_t i = 0; i < mImages.Length() - 1; i++) {
-    const auto& img = mImages[i];
-    if (img.mProducerID != aImage->mProducerID ||
-        img.mFrameID <= mLastFrameID || img.mFrameID >= aImage->mFrameID) {
-      continue;
-    }
-
-    // We skipped img! Estimate img's time duration.
-    const auto& next = mImages[i + 1];
-    if (next.mProducerID != aImage->mProducerID) {
-      continue;
-    }
-
-    MOZ_ASSERT(next.mFrameID > img.mFrameID);
-    TimeDuration duration = next.mTimeStamp - img.mTimeStamp;
-    if (floor(duration.ToMilliseconds()) >= floor(targetFrameDurationMS)) {
-      // Count the frame.
-      skipped++;
-    }
-  }
-
-  mSkippedFramesSinceLastComposite += skipped;
+  const double compositedInterval = 1.0 / compositedRate;
+  return aNewImage.mTimeStamp - aOldImage.mTimeStamp <
+         TimeDuration::FromSeconds(compositedInterval);
 }
 
 void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
