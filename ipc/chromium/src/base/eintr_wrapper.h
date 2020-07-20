@@ -43,10 +43,20 @@
       eintr_wrapper_result;                                 \
     })
 
+#  define HANDLE_RV_EINTR(x)                   \
+    ({                                         \
+      decltype(x) eintr_wrapper_result;        \
+      do {                                     \
+        eintr_wrapper_result = (x);            \
+      } while (eintr_wrapper_result == EINTR); \
+      eintr_wrapper_result;                    \
+    })
+
 #else
 
 #  define HANDLE_EINTR(x) (x)
 #  define IGNORE_EINTR(x) (x)
+#  define HANDLE_RV_EINTR(x) (x)
 
 #endif  // OS_POSIX
 
