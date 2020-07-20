@@ -1047,6 +1047,19 @@ bool WarpCacheIRTranspiler::emitInt32IncResult(Int32OperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitDoubleIncResult(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* constOne = MConstant::New(alloc(), DoubleValue(1.0));
+  add(constOne);
+
+  auto* ins = MAdd::New(alloc(), input, constOne, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
@@ -1054,6 +1067,19 @@ bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
   add(constOne);
 
   auto* ins = MSub::New(alloc(), input, constOne, MIRType::Int32);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitDoubleDecResult(NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* constOne = MConstant::New(alloc(), DoubleValue(1.0));
+  add(constOne);
+
+  auto* ins = MSub::New(alloc(), input, constOne, MIRType::Double);
   add(ins);
 
   pushResult(ins);

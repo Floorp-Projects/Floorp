@@ -1826,14 +1826,14 @@
 
 - name: DoubleIncResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     input: NumberId
 
 - name: DoubleDecResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     input: NumberId
