@@ -151,8 +151,10 @@ var PrintUtils = {
    *
    * @param aBrowsingContext
    *        The BrowsingContext of the window to print.
+   * @param {Object?} aPrintSettings
+   *        Optional print settings for the print operation
    */
-  printWindow(aBrowsingContext) {
+  printWindow(aBrowsingContext, aPrintSettings) {
     let windowID = aBrowsingContext.currentWindowGlobal.outerWindowId;
     let topBrowser = aBrowsingContext.top.embedderElement;
 
@@ -166,7 +168,8 @@ var PrintUtils = {
       this._logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PAGE");
     }
 
-    let printSettings = this.getPrintSettings();
+    // Use the passed in settings if provided, otherwise pull the saved ones.
+    let printSettings = aPrintSettings || this.getPrintSettings();
 
     // Set the title so that the print dialog can pick it up and
     // use it to generate the filename for save-to-PDF.
