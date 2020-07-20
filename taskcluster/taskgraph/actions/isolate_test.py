@@ -236,10 +236,10 @@ def isolate_test_failures(parameters, graph_config, input, task_group_id, task_i
     # fix up the task's dependencies, similar to how optimization would
     # have done in the decision
     dependencies = {name: label_to_taskid[label]
-                    for name, label in pre_task.dependencies.iteritems()}
+                    for name, label in six.iteritems(pre_task.dependencies)}
 
     task_definition = resolve_task_references(pre_task.label, pre_task.task, dependencies)
-    task_definition.setdefault('dependencies', []).extend(dependencies.itervalues())
+    task_definition.setdefault('dependencies', []).extend(six.itervalues(dependencies))
 
     failures = get_failures(task_id)
     logger.info('isolate_test_failures: %s' % failures)

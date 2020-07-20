@@ -153,10 +153,10 @@ def load_image(url, imageName=None, imageTag=None):
                     # here.
                     if len(repos.keys()) > 1:
                         raise Exception('file contains more than one image')
-                    info['image'] = image = repos.keys()[0]
+                    info['image'] = image = list(repos.keys())[0]
                     if len(repos[image].keys()) > 1:
                         raise Exception('file contains more than one tag')
-                    info['tag'] = tag = repos[image].keys()[0]
+                    info['tag'] = tag = list(repos[image].keys())[0]
                     info['layer'] = layer = repos[image][tag]
 
                     # Rewrite the repositories file

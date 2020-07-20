@@ -38,7 +38,7 @@ def find_hg_revision_push_info(repository, revision):
         query_pushlog, args=(pushlog_url,),
         attempts=5, sleeptime=10,
     )
-    pushid = pushes.keys()[0]
+    pushid = list(pushes.keys())[0]
     return {
         'pushdate': pushes[pushid]['date'],
         'pushid': pushid,

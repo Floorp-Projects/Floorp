@@ -10,6 +10,8 @@ Tools for interacting with existing taskgraphs.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import six
+
 from taskgraph.util.taskcluster import (
     find_task_id,
     get_artifact,
@@ -43,7 +45,7 @@ def find_existing_tasks_from_previous_kinds(
     existing_tasks = find_existing_tasks(previous_graph_ids)
     kind_labels = {
         t.label
-        for t in full_task_graph.tasks.itervalues()
+        for t in six.itervalues(full_task_graph.tasks)
         if t.attributes["kind"] not in rebuild_kinds
     }
     return {
