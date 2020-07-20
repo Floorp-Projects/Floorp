@@ -256,12 +256,17 @@ jobs:
                 - type: file
                   name: public/build/reftests.tar.gz
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
+                - type: file
+                  name: public/build/mozdevice.tar.gz
+                  path: /builds/worker/checkouts/gecko/testing/mozbase/mozdevice.tar.gz
         run:
             using: run-task
             cwd: '{checkout}/gfx/wr/wrench'
             command: >-
                 $GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh debug &&
-                tar czf reftests.tar.gz reftests/
+                tar czf reftests.tar.gz reftests/ &&
+                cd $GECKO_PATH/testing/mozbase &&
+                tar czf mozdevice.tar.gz mozdevice/
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -291,12 +296,17 @@ jobs:
                 - type: file
                   name: public/build/reftests.tar.gz
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
+                - type: file
+                  name: public/build/mozdevice.tar.gz
+                  path: /builds/worker/checkouts/gecko/testing/mozbase/mozdevice.tar.gz
         run:
             using: run-task
             cwd: '{checkout}/gfx/wr/wrench'
             command: >-
                 $GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh release &&
-                tar czf reftests.tar.gz reftests/
+                tar czf reftests.tar.gz reftests/ &&
+                cd $GECKO_PATH/testing/mozbase &&
+                tar czf mozdevice.tar.gz mozdevice/
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -417,6 +427,7 @@ jobs:
             webrender-wrench-android-debug:
                 - 'wrench-debug.apk'
                 - 'reftests.tar.gz'
+                - 'mozdevice.tar.gz'
             android-build:
                 - 'mozharness.zip'
         run:
@@ -427,6 +438,7 @@ jobs:
                 export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-debug.apk &&
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
+                export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p2-8-0-arm7-api-16/debug
@@ -436,6 +448,7 @@ jobs:
                 - 'gfx/wr/**'
                 - 'testing/mozharness/scripts/android_*.py'
                 - 'testing/mozharness/configs/android/*.py'
+                - 'testing/mozbase/mozdevice/**'
 
     android-hw-p2-opt:
         description: Run opt wrench reftests on Android Pixel2
@@ -457,6 +470,7 @@ jobs:
             webrender-wrench-android-release:
                 - 'wrench-release.apk'
                 - 'reftests.tar.gz'
+                - 'mozdevice.tar.gz'
             android-build:
                 - 'mozharness.zip'
         run:
@@ -467,6 +481,7 @@ jobs:
                 export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-release.apk &&
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
+                export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p2-8-0-arm7-api-16/opt
@@ -476,3 +491,4 @@ jobs:
                 - 'gfx/wr/**'
                 - 'testing/mozharness/scripts/android_*.py'
                 - 'testing/mozharness/configs/android/*.py'
+                - 'testing/mozbase/mozdevice/**'
