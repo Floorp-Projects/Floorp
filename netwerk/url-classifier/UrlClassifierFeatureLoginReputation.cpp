@@ -40,7 +40,7 @@ UrlClassifierFeatureLoginReputation::UrlClassifierFeatureLoginReputation()
 
 /* static */
 void UrlClassifierFeatureLoginReputation::MaybeShutdown() {
-  UC_LOG_LEAK(("UrlClassifierFeatureLoginReputation::MaybeShutdown"));
+  UC_LOG(("UrlClassifierFeatureLoginReputation: MaybeShutdown"));
 
   if (gFeatureLoginReputation) {
     gFeatureLoginReputation->ShutdownPreferences();

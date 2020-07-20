@@ -162,7 +162,7 @@ UrlClassifierFeatureFlash::ProcessChannel(nsIChannel* aChannel,
   // This is not a blocking feature.
   *aShouldContinue = true;
 
-  UC_LOG(("UrlClassifierFeatureFlash::ProcessChannel - annotating channel %p",
+  UC_LOG(("UrlClassifierFeatureFlash::ProcessChannel, annotating channel[%p]",
           aChannel));
 
   nsCOMPtr<nsIParentChannel> parentChannel;

@@ -58,7 +58,7 @@ UrlClassifierFeatureCryptominingAnnotation::
 
 /* static */
 void UrlClassifierFeatureCryptominingAnnotation::MaybeInitialize() {
-  UC_LOG_LEAK(("UrlClassifierFeatureCryptominingAnnotation::MaybeInitialize"));
+  UC_LOG(("UrlClassifierFeatureCryptominingAnnotation: MaybeInitialize"));
 
   if (!gFeatureCryptominingAnnotation) {
     gFeatureCryptominingAnnotation =
@@ -69,7 +69,7 @@ void UrlClassifierFeatureCryptominingAnnotation::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureCryptominingAnnotation::MaybeShutdown() {
-  UC_LOG_LEAK(("UrlClassifierFeatureCryptominingAnnotation::MaybeShutdown"));
+  UC_LOG(("UrlClassifierFeatureCryptominingAnnotation: MaybeShutdown"));
 
   if (gFeatureCryptominingAnnotation) {
     gFeatureCryptominingAnnotation->ShutdownPreferences();
@@ -82,8 +82,8 @@ already_AddRefed<UrlClassifierFeatureCryptominingAnnotation>
 UrlClassifierFeatureCryptominingAnnotation::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG_LEAK(
-      ("UrlClassifierFeatureCryptominingAnnotation::MaybeCreate - channel %p",
+  UC_LOG(
+      ("UrlClassifierFeatureCryptominingAnnotation: MaybeCreate for channel %p",
        aChannel));
 
   MaybeInitialize();
@@ -121,8 +121,8 @@ UrlClassifierFeatureCryptominingAnnotation::ProcessChannel(
   *aShouldContinue = true;
 
   UC_LOG(
-      ("UrlClassifierFeatureCryptominingAnnotation::ProcessChannel - "
-       "annotating channel %p",
+      ("UrlClassifierFeatureCryptominingAnnotation::ProcessChannel, annotating "
+       "channel[%p]",
        aChannel));
 
   static std::vector<UrlClassifierCommon::ClassificationData>
