@@ -102,12 +102,25 @@ int ImageComposite::ChooseImageIndex() {
     return 0;
   }
 
+  // We are inside a composition.
+  auto compositionOpportunityId = GetCompositionOpportunityId();
+
   // Find the newest frame whose biased timestamp is at or before `now`.
   uint32_t result = 0;
   while (result + 1 < mImages.Length() &&
          GetBiasedTime(mImages[result + 1].mTimeStamp) <= now) {
     ++result;
   }
+
+  // If ChooseImageIndex is called for the first time during this composition,
+  // call UpdateCompositedFrame.
+  if (compositionOpportunityId != mLastChooseImageIndexComposition) {
+    bool wasVisibleAtPreviousComposition =
+        compositionOpportunityId == mLastChooseImageIndexComposition.Next();
+    UpdateCompositedFrame(&mImages[result], wasVisibleAtPreviousComposition);
+    mLastChooseImageIndexComposition = compositionOpportunityId;
+  }
+
   return result;
 }
 
@@ -138,10 +151,8 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
   mImages = std::move(aNewImages);
 }
 
-void ImageComposite::UpdateCompositedFrame(int aImageIndex,
-                                           const TimedImage* aImage,
-                                           base::ProcessId aProcessId,
-                                           const CompositableHandle& aHandle) {
+void ImageComposite::UpdateCompositedFrame(
+    const TimedImage* aImage, bool aWasVisibleAtPreviousComposition) {
   auto compositionOpportunityId = GetCompositionOpportunityId();
   TimeStamp compositionTime = GetCompositionTime();
   MOZ_RELEASE_ASSERT(compositionTime,
@@ -176,7 +187,6 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
 
   if (mLastFrameID == aImage->mFrameID &&
       mLastProducerID == aImage->mProducerID) {
-    mLastCompositionOpportunityId = compositionOpportunityId;
     return;
   }
 
@@ -185,7 +195,7 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
   int32_t dropped = mSkippedFramesSinceLastComposite;
   mSkippedFramesSinceLastComposite = 0;
 
-  if (compositionOpportunityId != mLastCompositionOpportunityId.Next()) {
+  if (!aWasVisibleAtPreviousComposition) {
     // This video was not part of the on-screen scene during the previous
     // composition opportunity, for example it may have been scrolled off-screen
     // or in a background tab, or compositing might have been paused.
@@ -211,7 +221,17 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
 
   mLastFrameID = aImage->mFrameID;
   mLastProducerID = aImage->mProducerID;
-  mLastCompositionOpportunityId = compositionOpportunityId;
+  mLastFrameUpdateComposition = compositionOpportunityId;
+}
+
+void ImageComposite::OnFinishRendering(int aImageIndex,
+                                       const TimedImage* aImage,
+                                       base::ProcessId aProcessId,
+                                       const CompositableHandle& aHandle) {
+  if (mLastFrameUpdateComposition != GetCompositionOpportunityId()) {
+    // The frame did not change in this composition.
+    return;
+  }
 
   if (aHandle) {
     ImageCompositeNotificationInfo info;
