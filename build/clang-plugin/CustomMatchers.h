@@ -142,18 +142,6 @@ AST_MATCHER(CallExpr, isInWhitelistForFopenUsage) {
   return llvm::sys::path::rbegin(FileName)->equals(Whitelist);
 }
 
-// This matcher will match any node in "gtest-port.h". This file is third-party
-// code (and thus exempt from our rules prohibiting <ctypes.h>), but it's
-// linked into $OBJDIR, so inThirdPartyPath() misclassifies it.
-AST_MATCHER(Stmt, isAllowedToUseLocaleSpecificFunctions) {
-  static const char AllowedFile[] = "gtest-port.h";
-  SourceLocation Loc = Node.getBeginLoc();
-  StringRef FileName =
-      getFilename(Finder->getASTContext().getSourceManager(), Loc);
-
-  return llvm::sys::path::rbegin(FileName)->equals(AllowedFile);
-}
-
 /// This matcher will match a list of files.  These files contain
 /// known NaN-testing expressions which we would like to whitelist.
 AST_MATCHER(BinaryOperator, isInWhitelistForNaNExpr) {
