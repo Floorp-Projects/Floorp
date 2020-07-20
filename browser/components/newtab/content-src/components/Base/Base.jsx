@@ -130,12 +130,15 @@ export class BaseContent extends React.PureComponent {
 
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
-    let filteredSections = props.Sections;
+    let filteredSections = props.Sections.filter(
+      section => section.id !== "topstories"
+    );
 
     const pocketEnabled =
       prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled =
       !prefs["feeds.topsites"] &&
+      !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
 
