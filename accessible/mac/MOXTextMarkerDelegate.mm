@@ -129,4 +129,69 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   return range.CreateAXTextMarkerRange();
 }
 
+- (id)moxStartTextMarkerForTextMarkerRange:(id)textMarkerRange {
+  mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible, textMarkerRange);
+
+  return range.IsValid() ? range.mStart.CreateAXTextMarker() : nil;
+}
+
+- (id)moxEndTextMarkerForTextMarkerRange:(id)textMarkerRange {
+  mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible, textMarkerRange);
+
+  return range.IsValid() ? range.mEnd.CreateAXTextMarker() : nil;
+}
+
+- (id)moxLeftWordTextMarkerRangeForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  geckoTextMarker.NormalizePrevious();
+
+  if (geckoTextMarker.mOffset == 0) {
+    // We are probably at the start of the root container, normalize next
+    // so we get the first word.
+    geckoTextMarker.NormalizeNext();
+  } else {
+    // Go to preceding offset to get "left" word.
+    geckoTextMarker.mOffset--;
+    geckoTextMarker.NormalizePrevious();
+  }
+
+  return geckoTextMarker.WordRange().CreateAXTextMarkerRange();
+}
+
+- (id)moxRightWordTextMarkerRangeForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  geckoTextMarker.NormalizeNext();
+
+  GeckoTextMarkerRange range = geckoTextMarker.AtEnd()
+                                   ? GeckoTextMarkerRange(geckoTextMarker, geckoTextMarker)
+                                   : geckoTextMarker.WordRange();
+
+  return range.CreateAXTextMarkerRange();
+}
+
+- (id)moxNextTextMarkerForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+
+  geckoTextMarker.NormalizeNext();
+  if (geckoTextMarker.AtEnd()) {
+    return nil;
+  }
+
+  geckoTextMarker.mOffset++;
+
+  return geckoTextMarker.CreateAXTextMarker();
+}
+
+- (id)moxPreviousTextMarkerForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+
+  geckoTextMarker.NormalizePrevious();
+  if (geckoTextMarker.mOffset == 0) {
+    return nil;
+  }
+
+  geckoTextMarker.mOffset--;
+  return geckoTextMarker.CreateAXTextMarker();
+}
+
 @end

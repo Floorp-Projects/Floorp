@@ -16,6 +16,7 @@ namespace mozilla {
 namespace a11y {
 
 class AccessibleOrProxy;
+class GeckoTextMarkerRange;
 
 class GeckoTextMarker final {
  public:
@@ -31,10 +32,30 @@ class GeckoTextMarker final {
 
   id CreateAXTextMarker();
 
+  // Mutate marker so that its offset references an actual character
+  // and not an embedded link. Or, if the offset is at the end of the
+  // container, mutate the marker to the end offset of an ancestor
+  // container that has following non-link text.
+  void NormalizeNext();
+
+  // Mutate the marker so that its offset is preceded by a non-link
+  // offset, If the marker's offset is at the begining of a container,
+  // mutate the marker to point to the top-most link offset in an ancestor.
+  void NormalizePrevious();
+
+  // Return true if offset is at the end of the container.
+  bool AtEnd() { return static_cast<uint32_t>(mOffset) >= CharacterCount(mContainer); }
+
+  // Return a word range for the given offset.
+  GeckoTextMarkerRange WordRange();
+
   bool operator<(const GeckoTextMarker& aPoint) const;
 
   AccessibleOrProxy mContainer;
   int32_t mOffset;
+
+ private:
+  uint32_t CharacterCount(const AccessibleOrProxy& aContainer);
 };
 
 class GeckoTextMarkerRange final {
