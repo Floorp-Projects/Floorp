@@ -45,6 +45,7 @@ static FeatureMap sExperimentalFeatures[] = {
     // policy.
     {"autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll},
     {"encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"payment", FeaturePolicyUtils::FeaturePolicyValue::eAll},
     {"document-domain", FeaturePolicyUtils::FeaturePolicyValue::eAll},
