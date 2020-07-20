@@ -58,6 +58,8 @@ class ContentIteratorBase {
  protected:
   explicit ContentIteratorBase(bool aPre);
 
+  class Initializer;
+
   /**
    * Callers must guarantee that:
    * - Neither aStartContainer nor aEndContainer is nullptr.

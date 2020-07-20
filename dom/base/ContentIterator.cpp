@@ -181,12 +181,28 @@ nsresult ContentIteratorBase::Init(const RawRangeBoundary& aStart,
   return InitInternal(aStart, aEnd);
 }
 
+class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
+ public:
+  explicit Initializer(ContentIteratorBase& aIterator) : mIterator{aIterator} {}
+
+  nsresult Run(const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd);
+
+ private:
+  ContentIteratorBase& mIterator;
+};
+
 nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
                                            const RawRangeBoundary& aEnd) {
+  Initializer initializer{*this};
+  return initializer.Run(aStart, aEnd);
+}
+
+nsresult ContentIteratorBase::Initializer::Run(const RawRangeBoundary& aStart,
+                                               const RawRangeBoundary& aEnd) {
   // get common content parent
-  mCommonParent = nsContentUtils::GetClosestCommonInclusiveAncestor(
+  mIterator.mCommonParent = nsContentUtils::GetClosestCommonInclusiveAncestor(
       aStart.Container(), aEnd.Container());
-  if (NS_WARN_IF(!mCommonParent)) {
+  if (NS_WARN_IF(!mIterator.mCommonParent)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -200,15 +216,15 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
   //      of a range.
 
   if (!startIsCharacterData && aStart == aEnd) {
-    SetEmpty();
+    mIterator.SetEmpty();
     return NS_OK;
   }
 
   // Handle ranges within a single character data node.
   if (startIsCharacterData && aStart.Container() == aEnd.Container()) {
-    mFirst = aStart.Container()->AsContent();
-    mLast = mFirst;
-    mCurNode = mFirst;
+    mIterator.mFirst = aStart.Container()->AsContent();
+    mIterator.mLast = mIterator.mFirst;
+    mIterator.mCurNode = mIterator.mFirst;
 
     return NS_OK;
   }
@@ -226,7 +242,7 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
   if (!cChild) {
     // No children (possibly a <br> or text node), or index is after last child.
 
-    if (mPre) {
+    if (mIterator.mPre) {
       // XXX: In the future, if start offset is after the last
       //      character in the cdata node, should we set mFirst to
       //      the next sibling?
@@ -243,40 +259,43 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
       }
       if (!startIsCharacterData &&
           (startIsContainer || !aStart.IsStartOfContainer())) {
-        mFirst = GetNextSibling(aStart.Container());
-        NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
+        mIterator.mFirst = mIterator.GetNextSibling(aStart.Container());
+        NS_WARNING_ASSERTION(mIterator.mFirst, "GetNextSibling returned null");
 
         // Does mFirst node really intersect the range?  The range could be
         // 'degenerate', i.e., not collapsed but still contain no content.
-        if (mFirst &&
-            NS_WARN_IF(!NodeIsInTraversalRange(mFirst, mPre, aStart, aEnd))) {
-          mFirst = nullptr;
+        if (mIterator.mFirst &&
+            NS_WARN_IF(!NodeIsInTraversalRange(mIterator.mFirst, mIterator.mPre,
+                                               aStart, aEnd))) {
+          mIterator.mFirst = nullptr;
         }
       } else {
-        mFirst = aStart.Container()->AsContent();
+        mIterator.mFirst = aStart.Container()->AsContent();
       }
     } else {
       // post-order
       if (NS_WARN_IF(!aStart.Container()->IsContent())) {
         // What else can we do?
-        mFirst = nullptr;
+        mIterator.mFirst = nullptr;
       } else {
-        mFirst = aStart.Container()->AsContent();
+        mIterator.mFirst = aStart.Container()->AsContent();
       }
     }
   } else {
-    if (mPre) {
-      mFirst = cChild;
+    if (mIterator.mPre) {
+      mIterator.mFirst = cChild;
     } else {
       // post-order
-      mFirst = GetDeepFirstChild(cChild);
-      NS_WARNING_ASSERTION(mFirst, "GetDeepFirstChild returned null");
+      mIterator.mFirst = mIterator.GetDeepFirstChild(cChild);
+      NS_WARNING_ASSERTION(mIterator.mFirst, "GetDeepFirstChild returned null");
 
       // Does mFirst node really intersect the range?  The range could be
       // 'degenerate', i.e., not collapsed but still contain no content.
 
-      if (mFirst && !NodeIsInTraversalRange(mFirst, mPre, aStart, aEnd)) {
-        mFirst = nullptr;
+      if (mIterator.mFirst &&
+          !NodeIsInTraversalRange(mIterator.mFirst, mIterator.mPre, aStart,
+                                  aEnd)) {
+        mIterator.mFirst = nullptr;
       }
     }
   }
@@ -287,10 +306,10 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
 
   if (endIsData || !aEnd.Container()->HasChildren() ||
       aEnd.IsStartOfContainer()) {
-    if (mPre) {
+    if (mIterator.mPre) {
       if (NS_WARN_IF(!aEnd.Container()->IsContent())) {
         // Not much else to do here...
-        mLast = nullptr;
+        mIterator.mLast = nullptr;
       } else {
         // If the end node is a non-container element and the end offset is 0,
         // the last element should be the previous node (i.e., shouldn't
@@ -302,15 +321,16 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
               nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
         }
         if (!endIsData && !endIsContainer && aEnd.IsStartOfContainer()) {
-          mLast = PrevNode(aEnd.Container());
-          NS_WARNING_ASSERTION(mLast, "PrevNode returned null");
-          if (mLast && mLast != mFirst &&
+          mIterator.mLast = mIterator.PrevNode(aEnd.Container());
+          NS_WARNING_ASSERTION(mIterator.mLast, "PrevNode returned null");
+          if (mIterator.mLast && mIterator.mLast != mIterator.mFirst &&
               NS_WARN_IF(!NodeIsInTraversalRange(
-                  mLast, mPre, RawRangeBoundary(mFirst, 0u), aEnd))) {
-            mLast = nullptr;
+                  mIterator.mLast, mIterator.mPre,
+                  RawRangeBoundary(mIterator.mFirst, 0u), aEnd))) {
+            mIterator.mLast = nullptr;
           }
         } else {
-          mLast = aEnd.Container()->AsContent();
+          mIterator.mLast = aEnd.Container()->AsContent();
         }
       }
     } else {
@@ -320,14 +340,15 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
       //      cdata node, should we set mLast to the prev sibling?
 
       if (!endIsData) {
-        mLast = GetPrevSibling(aEnd.Container());
-        NS_WARNING_ASSERTION(mLast, "GetPrevSibling returned null");
+        mIterator.mLast = mIterator.GetPrevSibling(aEnd.Container());
+        NS_WARNING_ASSERTION(mIterator.mLast, "GetPrevSibling returned null");
 
-        if (!NodeIsInTraversalRange(mLast, mPre, aStart, aEnd)) {
-          mLast = nullptr;
+        if (!NodeIsInTraversalRange(mIterator.mLast, mIterator.mPre, aStart,
+                                    aEnd)) {
+          mIterator.mLast = nullptr;
         }
       } else {
-        mLast = aEnd.Container()->AsContent();
+        mIterator.mLast = aEnd.Container()->AsContent();
       }
     }
   } else {
@@ -339,28 +360,29 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
       return NS_ERROR_FAILURE;
     }
 
-    if (mPre) {
-      mLast = GetDeepLastChild(cChild);
-      NS_WARNING_ASSERTION(mLast, "GetDeepLastChild returned null");
+    if (mIterator.mPre) {
+      mIterator.mLast = mIterator.GetDeepLastChild(cChild);
+      NS_WARNING_ASSERTION(mIterator.mLast, "GetDeepLastChild returned null");
 
-      if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre, aStart, aEnd))) {
-        mLast = nullptr;
+      if (NS_WARN_IF(!NodeIsInTraversalRange(mIterator.mLast, mIterator.mPre,
+                                             aStart, aEnd))) {
+        mIterator.mLast = nullptr;
       }
     } else {
       // post-order
-      mLast = cChild;
+      mIterator.mLast = cChild;
     }
   }
 
   // If either first or last is null, they both have to be null!
 
-  if (!mFirst || !mLast) {
-    mFirst = nullptr;
-    mLast = nullptr;
+  if (!mIterator.mFirst || !mIterator.mLast) {
+    mIterator.mFirst = nullptr;
+    mIterator.mLast = nullptr;
   }
 
-  mCurNode = mFirst;
-  mIsDone = !mCurNode;
+  mIterator.mCurNode = mIterator.mFirst;
+  mIterator.mIsDone = !mIterator.mCurNode;
 
   return NS_OK;
 }
