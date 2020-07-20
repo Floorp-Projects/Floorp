@@ -32,7 +32,6 @@ static FeatureMap sSupportedFeatures[] = {
     {"microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"display-capture", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
-    {"web-share", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
 };
 
 /*
