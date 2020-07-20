@@ -37,7 +37,7 @@ class nsWebSocketConnection : public nsIWebSocketConnection,
                              nsTArray<uint8_t>&& aPayload);
 
  private:
-  virtual ~nsWebSocketConnection() = default;
+  virtual ~nsWebSocketConnection();
 
   class OutputData {
    public:
