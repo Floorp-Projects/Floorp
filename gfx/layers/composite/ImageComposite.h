@@ -91,6 +91,7 @@ class ImageComposite {
 
   int32_t mLastFrameID = -1;
   int32_t mLastProducerID = -1;
+  CompositionOpportunityId mLastCompositionOpportunityId;
 
  private:
   nsTArray<TimedImage> mImages;
@@ -115,7 +116,10 @@ class ImageComposite {
   int32_t mSkippedFramesSinceLastComposite = 0;
 
   // The number of dropped frames since the last call to
-  // GetDroppedFramesAndReset().
+  // GetDroppedFramesAndReset(). Not all skipped frames are considered "dropped"
+  // - for example, videos that are scrolled out of view or videos in background
+  // tabs are expected to skip frames, and those skipped frames are not counted
+  // as dropped frames.
   uint32_t mDroppedFrames = 0;
 };
 
