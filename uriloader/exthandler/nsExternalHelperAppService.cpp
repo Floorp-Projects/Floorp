@@ -977,6 +977,9 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   // from otherwise disjoint browsingcontext trees.
   if (aBrowsingContext && aTriggeringPrincipal &&
       !StaticPrefs::security_allow_disjointed_external_uri_loads() &&
+      // Add-on principals are always allowed:
+      !BasePrincipal::Cast(aTriggeringPrincipal)->AddonPolicy() &&
+      // As is chrome code:
       !aTriggeringPrincipal->IsSystemPrincipal()) {
     RefPtr<BrowsingContext> bc = aBrowsingContext;
     WindowGlobalParent* wgp = bc->Canonical()->GetCurrentWindowGlobal();
