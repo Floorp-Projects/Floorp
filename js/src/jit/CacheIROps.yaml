@@ -184,7 +184,7 @@
 
 - name: GuardToUint8Clamped
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     input: ValId
