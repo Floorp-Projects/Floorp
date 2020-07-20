@@ -1013,7 +1013,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
 
     // Record what we learned from the last reflow
     if (aColData.mFeasible) {
-      // maxBSize is feasible. Also, mLastBalanceBSize is feasible.
+      // mMaxBSize is feasible. Also, mLastBalanceBSize is feasible.
       aConfig.mKnownFeasibleBSize =
           std::min(aConfig.mKnownFeasibleBSize, aColData.mMaxBSize);
       aConfig.mKnownFeasibleBSize =
@@ -1055,7 +1055,9 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
         aConfig.mKnownFeasibleBSize);
 
     if (aConfig.mKnownInfeasibleBSize >= aConfig.mKnownFeasibleBSize - 1) {
-      // aConfig.mKnownFeasibleBSize is where we want to be
+      // aConfig.mKnownFeasibleBSize is where we want to be. This can happen in
+      // the very first iteration when a column container solely has a tall
+      // unbreakable child that overflows the container.
       break;
     }
 
