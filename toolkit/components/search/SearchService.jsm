@@ -3763,8 +3763,8 @@ var engineUpdateService = {
 XPCOMUtils.defineLazyServiceGetter(
   SearchService.prototype,
   "idleService",
-  "@mozilla.org/widget/idleservice;1",
-  "nsIIdleService"
+  "@mozilla.org/widget/useridleservice;1",
+  "nsIUserIdleService"
 );
 
 /**

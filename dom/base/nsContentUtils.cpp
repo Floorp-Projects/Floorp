@@ -175,7 +175,7 @@
 #include "nsContainerFrame.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIIdleService.h"
+#include "nsIUserIdleService.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -1419,8 +1419,8 @@ void nsContentUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
 nsresult nsContentUtils::IsUserIdle(uint32_t aRequestedIdleTimeInMS,
                                     bool* aUserIsIdle) {
   nsresult rv;
-  nsCOMPtr<nsIIdleService> idleService =
-      do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  nsCOMPtr<nsIUserIdleService> idleService =
+      do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t idleTimeInMS;

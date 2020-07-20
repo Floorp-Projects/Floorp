@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIdleServiceWin.h"
+#include "nsUserIdleServiceWin.h"
 #include <windows.h>
 
-bool nsIdleServiceWin::PollIdleTime(uint32_t* aIdleTime) {
+bool nsUserIdleServiceWin::PollIdleTime(uint32_t* aIdleTime) {
   LASTINPUTINFO inputInfo;
   inputInfo.cbSize = sizeof(inputInfo);
   if (!::GetLastInputInfo(&inputInfo)) return false;
@@ -19,4 +19,4 @@ bool nsIdleServiceWin::PollIdleTime(uint32_t* aIdleTime) {
   return true;
 }
 
-bool nsIdleServiceWin::UsePollMode() { return true; }
+bool nsUserIdleServiceWin::UsePollMode() { return true; }

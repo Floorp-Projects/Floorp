@@ -28,7 +28,7 @@
 #include "nsCRT.h"
 #include "nsEffectiveTLDService.h"
 #include "nsIConsoleService.h"
-#include "nsIIdleService.h"
+#include "nsIUserIdleService.h"
 #include "nsIInputStream.h"
 #include "nsINavHistoryService.h"
 #include "nsIObserverService.h"

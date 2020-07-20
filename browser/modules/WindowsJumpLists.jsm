@@ -49,8 +49,8 @@ XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "_idle",
-  "@mozilla.org/widget/idleservice;1",
-  "nsIIdleService"
+  "@mozilla.org/widget/useridleservice;1",
+  "nsIUserIdleService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   this,

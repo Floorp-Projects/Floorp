@@ -120,7 +120,7 @@ var SessionSaverInternal = {
   /**
    * `true` if the user has been idle for at least
    * `SessionSaverInternal._intervalWhileIdle` ms. Idleness is computed
-   * with `nsIIdleService`.
+   * with `nsIUserIdleService`.
    */
   _isIdle: false,
 
@@ -394,8 +394,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
     // to re-fetch the service instead of the original one in use; This is for a
     // case that the Mock service in the unit test needs to be fetched to
     // replace the original one.
-    var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(
-      Ci.nsIIdleService
+    var idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(
+      Ci.nsIUserIdleService
     );
     if (previous != undefined) {
       idleService.removeIdleObserver(SessionSaverInternal, previous);
@@ -406,8 +406,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
-var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(
-  Ci.nsIIdleService
+var idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(
+  Ci.nsIUserIdleService
 );
 idleService.addIdleObserver(
   SessionSaverInternal,

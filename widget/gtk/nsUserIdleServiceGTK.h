@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIdleServiceGTK_h__
-#define nsIdleServiceGTK_h__
+#ifndef nsUserIdleServiceGTK_h__
+#define nsUserIdleServiceGTK_h__
 
-#include "nsIdleService.h"
+#include "nsUserIdleService.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <gdk/gdkx.h>
@@ -22,29 +22,29 @@ typedef struct {
   unsigned long event_mask;    // event stuff
 } XScreenSaverInfo;
 
-class nsIdleServiceGTK : public nsIdleService {
+class nsUserIdleServiceGTK : public nsUserIdleService {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceGTK, nsIdleService)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsUserIdleServiceGTK, nsUserIdleService)
 
   virtual bool PollIdleTime(uint32_t* aIdleTime) override;
 
-  static already_AddRefed<nsIdleServiceGTK> GetInstance() {
-    RefPtr<nsIdleServiceGTK> idleService =
-        nsIdleService::GetInstance().downcast<nsIdleServiceGTK>();
+  static already_AddRefed<nsUserIdleServiceGTK> GetInstance() {
+    RefPtr<nsUserIdleServiceGTK> idleService =
+        nsUserIdleService::GetInstance().downcast<nsUserIdleServiceGTK>();
     if (!idleService) {
-      idleService = new nsIdleServiceGTK();
+      idleService = new nsUserIdleServiceGTK();
     }
 
     return idleService.forget();
   }
 
  private:
-  ~nsIdleServiceGTK();
+  ~nsUserIdleServiceGTK();
   XScreenSaverInfo* mXssInfo;
 
  protected:
-  nsIdleServiceGTK();
+  nsUserIdleServiceGTK();
   virtual bool UsePollMode() override;
 };
 
-#endif  // nsIdleServiceGTK_h__
+#endif  // nsUserIdleServiceGTK_h__

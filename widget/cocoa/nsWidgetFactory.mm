@@ -28,7 +28,7 @@
 #include "nsLookAndFeel.h"
 
 #include "nsSound.h"
-#include "nsIdleServiceX.h"
+#include "nsUserIdleServiceX.h"
 #include "NativeKeyBindings.h"
 #include "OSXNotificationCenter.h"
 
@@ -66,7 +66,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterListX)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceX, nsIdleServiceX::GetInstance)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsUserIdleServiceX, nsUserIdleServiceX::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(OSXNotificationCenter, Init)
 
@@ -147,7 +147,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor},
     {&kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintSettingsServiceXConstructor},
     {&kNS_PRINTDIALOGSERVICE_CID, false, NULL, nsPrintDialogServiceXConstructor},
-    {&kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceXConstructor},
+    {&kNS_IDLE_SERVICE_CID, false, NULL, nsUserIdleServiceXConstructor},
     {&kNS_SYSTEMALERTSSERVICE_CID, false, NULL, OSXNotificationCenterConstructor},
     {&kNS_NATIVEMENUSERVICE_CID, false, NULL, nsNativeMenuServiceXConstructor},
     {&kNS_MACDOCKSUPPORT_CID, false, NULL, nsMacDockSupportConstructor},
@@ -177,7 +177,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     {"@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID},
     {"@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID},
     {NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID},
-    {"@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID},
+    {"@mozilla.org/widget/useridleservice;1", &kNS_IDLE_SERVICE_CID},
     {"@mozilla.org/system-alerts-service;1", &kNS_SYSTEMALERTSSERVICE_CID},
     {"@mozilla.org/widget/nativemenuservice;1", &kNS_NATIVEMENUSERVICE_CID},
     {"@mozilla.org/widget/macdocksupport;1", &kNS_MACDOCKSUPPORT_CID},

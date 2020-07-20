@@ -16,7 +16,7 @@
 #  include "nsIObserverService.h"
 #  include "mozilla/ResultExtensions.h"
 #  include "mozilla/Services.h"
-#  include "nsIIdleService.h"
+#  include "nsIUserIdleService.h"
 #  include "nsISimpleEnumerator.h"
 #  include "nsIFile.h"
 #  include "nsITimer.h"
@@ -183,8 +183,8 @@ class nsAnonTempFileRemover final : public nsIObserver {
       mTimer = nullptr;
     }
     // Remove idle service observer.
-    nsCOMPtr<nsIIdleService> idleSvc =
-        do_GetService("@mozilla.org/widget/idleservice;1");
+    nsCOMPtr<nsIUserIdleService> idleSvc =
+        do_GetService("@mozilla.org/widget/useridleservice;1");
     if (idleSvc) {
       idleSvc->RemoveIdleObserver(this, TEMP_FILE_IDLE_TIME_S);
     }
@@ -216,8 +216,8 @@ class nsAnonTempFileRemover final : public nsIObserver {
     // Add this as an idle observer. When we've been idle for
     // TEMP_FILE_IDLE_TIME_S seconds, we'll get a notification, and we'll then
     // try to delete any stray temp files.
-    nsCOMPtr<nsIIdleService> idleSvc =
-        do_GetService("@mozilla.org/widget/idleservice;1");
+    nsCOMPtr<nsIUserIdleService> idleSvc =
+        do_GetService("@mozilla.org/widget/useridleservice;1");
     if (!idleSvc) {
       return NS_ERROR_FAILURE;
     }

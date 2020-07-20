@@ -25,7 +25,7 @@ var idleService = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIIdleService"]),
+  QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
   idleTime: 19999,
 
   addIdleObserver(observer, time) {
@@ -53,7 +53,7 @@ add_task(async function testIntervalChanges() {
 
   // Mock an idle service.
   let fakeIdleService = MockRegistrar.register(
-    "@mozilla.org/widget/idleservice;1",
+    "@mozilla.org/widget/useridleservice;1",
     idleService
   );
   idleService._reset();

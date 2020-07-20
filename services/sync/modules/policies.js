@@ -64,8 +64,8 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "IdleService",
-  "@mozilla.org/widget/idleservice;1",
-  "nsIIdleService"
+  "@mozilla.org/widget/useridleservice;1",
+  "nsIUserIdleService"
 );
 XPCOMUtils.defineLazyServiceGetter(
   this,

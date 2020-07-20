@@ -49,7 +49,7 @@ using mozilla::dom::ContentParent;
 
 #include "nsAppShell.h"
 #include "nsFocusManager.h"
-#include "nsIdleService.h"
+#include "nsUserIdleService.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
 
@@ -2165,7 +2165,7 @@ void nsWindow::GeckoViewSupport::OnReady(jni::Object::Param aQueue) {
 
 void nsWindow::UserActivity() {
   if (!mIdleService) {
-    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+    mIdleService = do_GetService("@mozilla.org/widget/useridleservice;1");
   }
 
   if (mIdleService) {

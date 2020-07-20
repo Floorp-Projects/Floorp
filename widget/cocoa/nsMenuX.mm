@@ -38,6 +38,7 @@
 #include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static bool gConstructingMenu = false;
 static bool gMenuMethodsSwizzled = false;

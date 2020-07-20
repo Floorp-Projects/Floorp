@@ -30,7 +30,7 @@ const { TelemetryPrioPing } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  idleService: ["@mozilla.org/widget/idleservice;1", "nsIIdleService"],
+  idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
 });
 
 const MIN_SUBSESSION_LENGTH_MS =
