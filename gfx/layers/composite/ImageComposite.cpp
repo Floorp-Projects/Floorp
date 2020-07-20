@@ -142,6 +142,7 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
                                            const TimedImage* aImage,
                                            base::ProcessId aProcessId,
                                            const CompositableHandle& aHandle) {
+  auto compositionOpportunityId = GetCompositionOpportunityId();
   TimeStamp compositionTime = GetCompositionTime();
   MOZ_RELEASE_ASSERT(compositionTime,
                      "Should only be called during a composition");
@@ -157,9 +158,10 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
     }
     static const char* kBiasStrings[] = {"NONE", "NEGATIVE", "POSITIVE"};
     descr.AppendPrintf("frameID %" PRId32 " (producerID %" PRId32
-                       ") [bias %s]%s",
+                       ") [composite %" PRIu64 "] [bias %s]%s",
                        aImage->mFrameID, aImage->mProducerID,
-                       kBiasStrings[mBias], relativeTimeString.get());
+                       compositionOpportunityId.mId, kBiasStrings[mBias],
+                       relativeTimeString.get());
     if (mLastProducerID != aImage->mProducerID) {
       descr.AppendPrintf(", previous producerID: %" PRId32, mLastProducerID);
     } else if (mLastFrameID != aImage->mFrameID) {
@@ -174,6 +176,7 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
 
   if (mLastFrameID == aImage->mFrameID &&
       mLastProducerID == aImage->mProducerID) {
+    mLastCompositionOpportunityId = compositionOpportunityId;
     return;
   }
 
@@ -181,6 +184,14 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
 
   int32_t dropped = mSkippedFramesSinceLastComposite;
   mSkippedFramesSinceLastComposite = 0;
+
+  if (compositionOpportunityId != mLastCompositionOpportunityId.Next()) {
+    // This video was not part of the on-screen scene during the previous
+    // composition opportunity, for example it may have been scrolled off-screen
+    // or in a background tab, or compositing might have been paused.
+    // Ignore any skipped frames and don't count them as dropped.
+    dropped = 0;
+  }
 
   if (dropped > 0) {
     mDroppedFrames += dropped;
@@ -200,6 +211,7 @@ void ImageComposite::UpdateCompositedFrame(int aImageIndex,
 
   mLastFrameID = aImage->mFrameID;
   mLastProducerID = aImage->mProducerID;
+  mLastCompositionOpportunityId = compositionOpportunityId;
 
   if (aHandle) {
     ImageCompositeNotificationInfo info;
