@@ -1,9 +1,0 @@
-[android-components](../index.md) / [mozilla.components.lib.state.helpers](./index.md)
-
-## Package mozilla.components.lib.state.helpers
-
-### Functions
-
-| Name | Summary |
-|---|---|
-| [onlyIfChanged](only-if-changed.md) | `fun <S : `[`State`](../mozilla.components.lib.state/-state.md)`, T> onlyIfChanged(onMainThread: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, map: (`[`S`](only-if-changed.md#S)`) -> `[`T`](only-if-changed.md#T)`?, then: (`[`S`](only-if-changed.md#S)`, `[`T`](only-if-changed.md#T)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, scope: CoroutineScope = GlobalScope): `[`Observer`](../mozilla.components.lib.state/-observer.md)`<`[`S`](only-if-changed.md#S)`>`<br>Creates an [Observer](../mozilla.components.lib.state/-observer.md) that will map the received [State](../mozilla.components.lib.state/-state.md) to [T](only-if-changed.md#T) (using [map](only-if-changed.md#mozilla.components.lib.state.helpers$onlyIfChanged(kotlin.Boolean, kotlin.Function1((mozilla.components.lib.state.helpers.onlyIfChanged.S, mozilla.components.lib.state.helpers.onlyIfChanged.T)), kotlin.Function2((mozilla.components.lib.state.helpers.onlyIfChanged.S, mozilla.components.lib.state.helpers.onlyIfChanged.T, kotlin.Unit)), kotlinx.coroutines.CoroutineScope)/map)) and will invoke the callback [then](only-if-changed.md#mozilla.components.lib.state.helpers$onlyIfChanged(kotlin.Boolean, kotlin.Function1((mozilla.components.lib.state.helpers.onlyIfChanged.S, mozilla.components.lib.state.helpers.onlyIfChanged.T)), kotlin.Function2((mozilla.components.lib.state.helpers.onlyIfChanged.S, mozilla.components.lib.state.helpers.onlyIfChanged.T, kotlin.Unit)), kotlinx.coroutines.CoroutineScope)/then) only if the value has changed from the last mapped value. |
