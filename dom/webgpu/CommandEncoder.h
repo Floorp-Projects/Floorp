@@ -16,13 +16,13 @@ namespace dom {
 template <typename T>
 class Sequence;
 class GPUComputePipelineOrGPURenderPipeline;
-class UnsignedLongSequenceOrGPUExtent3DDict;
+class RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 struct GPUBufferCopyView;
 struct GPUCommandBufferDescriptor;
 struct GPUImageBitmapCopyView;
 struct GPURenderPassDescriptor;
 struct GPUTextureCopyView;
-typedef UnsignedLongSequenceOrGPUExtent3DDict GPUExtent3D;
+typedef RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict GPUExtent3D;
 }  // namespace dom
 namespace webgpu {
 

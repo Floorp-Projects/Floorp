@@ -36,8 +36,8 @@ static ffi::WGPUTextureCopyView ConvertTextureCopyView(
   view.array_layer = aView.mArrayLayer;
   if (aView.mOrigin.WasPassed()) {
     const auto& origin = aView.mOrigin.Value();
-    if (origin.IsUnsignedLongSequence()) {
-      const auto& seq = origin.GetAsUnsignedLongSequence();
+    if (origin.IsRangeEnforcedUnsignedLongSequence()) {
+      const auto& seq = origin.GetAsRangeEnforcedUnsignedLongSequence();
       view.origin.x = seq.Length() > 0 ? seq[0] : 0;
       view.origin.y = seq.Length() > 1 ? seq[1] : 0;
       view.origin.z = seq.Length() > 2 ? seq[2] : 0;
@@ -55,8 +55,8 @@ static ffi::WGPUTextureCopyView ConvertTextureCopyView(
 
 static ffi::WGPUExtent3d ConvertExtent(const dom::GPUExtent3D& aExtent) {
   ffi::WGPUExtent3d extent = {};
-  if (aExtent.IsUnsignedLongSequence()) {
-    const auto& seq = aExtent.GetAsUnsignedLongSequence();
+  if (aExtent.IsRangeEnforcedUnsignedLongSequence()) {
+    const auto& seq = aExtent.GetAsRangeEnforcedUnsignedLongSequence();
     extent.width = seq.Length() > 0 ? seq[0] : 0;
     extent.height = seq.Length() > 1 ? seq[1] : 0;
     extent.depth = seq.Length() > 2 ? seq[2] : 0;
