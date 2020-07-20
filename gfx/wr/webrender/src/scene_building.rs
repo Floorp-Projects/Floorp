@@ -304,6 +304,13 @@ pub struct SceneBuilder<'a> {
 
     /// Map of information about the picture cache slices this scene requires.
     tile_caches: FastHashMap<SliceId, TileCacheParams>,
+
+    /// A helper struct to snap local rects in device space. During frame
+    /// building we may establish new raster roots, however typically that is in
+    /// cases where we won't be applying snapping (e.g. has perspective), or in
+    /// edge cases (e.g. SVG filter) where we can accept slightly incorrect
+    /// behaviour in favour of getting the common case right.
+    snap_to_device: SpaceSnapper,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -326,9 +333,17 @@ impl<'a> SceneBuilder<'a> {
             .background_color
             .and_then(|color| if color.a > 0.0 { Some(color) } else { None });
 
+        let device_pixel_scale = view.accumulated_scale_factor_for_snapping();
+        let spatial_tree = SpatialTree::new();
+
+        let snap_to_device = SpaceSnapper::new(
+            ROOT_SPATIAL_NODE_INDEX,
+            device_pixel_scale,
+        );
+
         let mut builder = SceneBuilder {
             scene,
-            spatial_tree: SpatialTree::new(),
+            spatial_tree,
             font_instances,
             config: *frame_builder_config,
             output_pipelines,
@@ -349,9 +364,8 @@ impl<'a> SceneBuilder<'a> {
             picture_cache_spatial_nodes: FastHashSet::default(),
             quality_settings: view.quality_settings,
             tile_caches: FastHashMap::default(),
+            snap_to_device,
         };
-
-        let device_pixel_scale = view.accumulated_scale_factor_for_snapping();
 
         builder.clip_store.register_clip_template(
             ClipId::root(root_pipeline_id),
@@ -368,7 +382,6 @@ impl<'a> SceneBuilder<'a> {
             root_pipeline_id,
             &root_pipeline.viewport_size,
             &root_pipeline.content_size,
-            device_pixel_scale,
         );
 
         // In order to ensure we have a single root stacking context for the
@@ -391,7 +404,6 @@ impl<'a> SceneBuilder<'a> {
             None,
             RasterSpace::Screen,
             StackingContextFlags::IS_BACKDROP_ROOT,
-            device_pixel_scale,
         );
 
         builder.build_items(
@@ -806,7 +818,6 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.clip_id,
             stacking_context.raster_space,
             stacking_context.flags,
-            self.sc_stack.last().unwrap().snap_to_device.device_pixel_scale,
         );
 
         self.rf_mapper.push_offset(origin.to_vector());
@@ -848,17 +859,14 @@ impl<'a> SceneBuilder<'a> {
             true,
         );
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            spatial_node_index,
-            &self.spatial_tree,
-        );
-
-        let bounds = snap_to_device.snap_rect(
+        let bounds = self.snap_rect(
             &info.bounds.translate(current_offset),
+            spatial_node_index,
         );
-
-        let content_size = snap_to_device.snap_size(&pipeline.content_size);
+        let content_size = self.snap_size(
+            &pipeline.content_size,
+            spatial_node_index,
+        );
 
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(iframe_pipeline_id),
@@ -922,14 +930,11 @@ impl<'a> SceneBuilder<'a> {
 
         let current_offset = self.current_offset(spatial_node_index);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            spatial_node_index,
-            &self.spatial_tree
-        );
-
         let unsnapped_clip_rect = common.clip_rect.translate(current_offset);
-        let clip_rect = snap_to_device.snap_rect(&unsnapped_clip_rect);
+        let clip_rect = self.snap_rect(
+            &unsnapped_clip_rect,
+            spatial_node_index,
+        );
 
         let unsnapped_rect = bounds.map(|bounds| {
             bounds.translate(current_offset)
@@ -937,7 +942,10 @@ impl<'a> SceneBuilder<'a> {
 
         // If no bounds rect is given, default to clip rect.
         let rect = unsnapped_rect.map_or(clip_rect, |bounds| {
-            snap_to_device.snap_rect(&bounds)
+            self.snap_rect(
+                &bounds,
+                spatial_node_index,
+            )
         });
 
         let layout = LayoutPrimitiveInfo {
@@ -961,17 +969,28 @@ impl<'a> SceneBuilder<'a> {
         )
     }
 
+    fn snap_size(
+        &mut self,
+        size: &LayoutSize,
+        target_spatial_node: SpatialNodeIndex,
+    ) -> LayoutSize {
+        self.snap_to_device.set_target_spatial_node(
+            target_spatial_node,
+            &self.spatial_tree
+        );
+        self.snap_to_device.snap_size(size)
+    }
+
     pub fn snap_rect(
         &mut self,
         rect: &LayoutRect,
         target_spatial_node: SpatialNodeIndex,
     ) -> LayoutRect {
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
+        self.snap_to_device.set_target_spatial_node(
             target_spatial_node,
             &self.spatial_tree
         );
-        snap_to_device.snap_rect(rect)
+        self.snap_to_device.snap_rect(rect)
     }
 
     fn build_item<'b>(
@@ -1682,7 +1701,6 @@ impl<'a> SceneBuilder<'a> {
         clip_id: Option<ClipId>,
         requested_raster_space: RasterSpace,
         flags: StackingContextFlags,
-        device_pixel_scale: DevicePixelScale,
     ) {
         profile_scope!("push_stacking_context");
 
@@ -1795,14 +1813,6 @@ impl<'a> SceneBuilder<'a> {
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
-        let snap_to_device = self.sc_stack.last().map_or(
-            SpaceSnapper::new(
-                ROOT_SPATIAL_NODE_INDEX,
-                device_pixel_scale,
-            ),
-            |sc| sc.snap_to_device.clone(),
-        );
-
         let is_redundant = match self.sc_stack.last() {
             Some(parent) => {
                 FlattenedStackingContext::is_redundant(
@@ -1851,7 +1861,6 @@ impl<'a> SceneBuilder<'a> {
             context_3d,
             is_redundant,
             is_backdrop_root: flags.contains(StackingContextFlags::IS_BACKDROP_ROOT),
-            snap_to_device,
         });
     }
 
@@ -2184,7 +2193,6 @@ impl<'a> SceneBuilder<'a> {
         pipeline_id: PipelineId,
         viewport_size: &LayoutSize,
         content_size: &LayoutSize,
-        device_pixel_scale: DevicePixelScale,
     ) {
         if let ChasePrimitive::Id(id) = self.config.chase_primitive {
             println!("Chasing {:?} by index", id);
@@ -2201,18 +2209,13 @@ impl<'a> SceneBuilder<'a> {
             LayoutVector2D::zero(),
         );
 
-        // We can't use this with the stacking context because it does not exist
-        // yet. Just create a dedicated snapper for the root.
-        let snap_to_device = SpaceSnapper::new_with_target(
+        let content_size = self.snap_size(
+            content_size,
             spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
-            device_pixel_scale,
-            &self.spatial_tree,
         );
-
-        let content_size = snap_to_device.snap_size(content_size);
-        let viewport_rect = snap_to_device.snap_rect(
+        let viewport_rect = self.snap_rect(
             &LayoutRect::new(LayoutPoint::zero(), *viewport_size),
+            spatial_node_index,
         );
 
         self.add_scroll_frame(
@@ -2236,13 +2239,10 @@ impl<'a> SceneBuilder<'a> {
     ) {
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
+        let snapped_mask_rect = self.snap_rect(
+            &image_mask.rect,
             spatial_node_index,
-            &self.spatial_tree,
         );
-
-        let snapped_mask_rect = snap_to_device.snap_rect(&image_mask.rect);
         let item = ClipItemKey {
             kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
         };
@@ -2274,13 +2274,10 @@ impl<'a> SceneBuilder<'a> {
     ) {
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
+        let snapped_clip_rect = self.snap_rect(
+            clip_rect,
             spatial_node_index,
-            &self.spatial_tree,
         );
-
-        let snapped_clip_rect = snap_to_device.snap_rect(clip_rect);
 
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
@@ -2312,13 +2309,10 @@ impl<'a> SceneBuilder<'a> {
     ) {
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
+        let snapped_region_rect = self.snap_rect(
+            &clip.rect.translate(current_offset),
             spatial_node_index,
-            &self.spatial_tree,
         );
-
-        let snapped_region_rect = snap_to_device.snap_rect(&clip.rect.translate(current_offset));
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rounded_rect(
                 snapped_region_rect,
@@ -2357,13 +2351,10 @@ impl<'a> SceneBuilder<'a> {
         // Map the ClipId for the positioning node to a spatial node index.
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
+        let snapped_clip_rect = self.snap_rect(
+            &clip_region.main,
             spatial_node_index,
-            &self.spatial_tree,
         );
-
-        let snapped_clip_rect = snap_to_device.snap_rect(&clip_region.main);
         let mut instances: SmallVec<[ClipInstance; 4]> = SmallVec::new();
 
         // Intern each clip item in this clip node, and add the interned
@@ -2386,7 +2377,7 @@ impl<'a> SceneBuilder<'a> {
         instances.push(ClipInstance::new(handle, spatial_node_index));
 
         for region in clip_region.complex_clips {
-            let snapped_region_rect = snap_to_device.snap_rect(&region.rect);
+            let snapped_region_rect = self.snap_rect(&region.rect, spatial_node_index);
             let item = ClipItemKey {
                 kind: ClipItemKeyKind::rounded_rect(
                     snapped_region_rect,
@@ -2651,23 +2642,19 @@ impl<'a> SceneBuilder<'a> {
         P: InternablePrimitive + CreateShadow,
         Interners: AsMut<Interner<P>>,
     {
-        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
-        snap_to_device.set_target_spatial_node(
-            pending_primitive.spatial_node_index,
-            &self.spatial_tree,
-        );
-
         // Offset the local rect and clip rect by the shadow offset. The pending
         // primitive has already been snapped, but we will need to snap the
         // shadow after translation. We don't need to worry about the size
         // changing because the shadow has the same raster space as the
         // primitive, and thus we know the size is already rounded.
         let mut info = pending_primitive.info.clone();
-        info.rect = snap_to_device.snap_rect(
+        info.rect = self.snap_rect(
             &info.rect.translate(pending_shadow.shadow.offset),
+            pending_primitive.spatial_node_index,
         );
-        info.clip_rect = snap_to_device.snap_rect(
+        info.clip_rect = self.snap_rect(
             &info.clip_rect.translate(pending_shadow.shadow.offset),
+            pending_primitive.spatial_node_index,
         );
 
         // Construct and add a primitive for the given shadow.
@@ -3667,13 +3654,6 @@ struct FlattenedStackingContext {
 
     /// True if this stacking context is redundant (i.e. doesn't require a surface)
     is_redundant: bool,
-
-    /// A helper struct to snap local rects in device space. During frame
-    /// building we may establish new raster roots, however typically that is in
-    /// cases where we won't be applying snapping (e.g. has perspective), or in
-    /// edge cases (e.g. SVG filter) where we can accept slightly incorrect
-    /// behaviour in favour of getting the common case right.
-    snap_to_device: SpaceSnapper,
 }
 
 impl FlattenedStackingContext {
