@@ -9,8 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
@@ -70,7 +68,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.tabsUseCases.selectTab
             )
             .addSearchActionProvider(
-                searchEngine = GlobalScope.async {
+                searchEngineGetter = suspend {
                     components.searchEngineManager.getDefaultSearchEngine(applicationContext)
                 },
                 searchUseCase = components.searchUseCases.defaultSearch
