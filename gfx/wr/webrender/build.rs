@@ -178,17 +178,15 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
         // as a literal alongside the source string so that we don't need
         // to hash large strings at runtime.
         let mut hasher = DefaultHasher::new();
-        hasher.write(vert_source.as_bytes());
-        hasher.write(frag_source.as_bytes());
-        let digest: ProgramSourceDigest = hasher.into();
 
         let vert_file_path = Path::new(out_dir)
             .join(format!("{}_{:?}.vert", full_shader_name, shader.gl_version));
-        let mut vert_file = File::create(&vert_file_path).unwrap();
-        vert_file.write_all(vert_source.as_bytes()).unwrap();
+        write_optimized_shader_file(&vert_file_path, vert_source, &shader.shader_name, &features, &mut hasher);
+
         let frag_file_path = vert_file_path.with_extension("frag");
-        let mut frag_file = File::create(&frag_file_path).unwrap();
-        frag_file.write_all(frag_source.as_bytes()).unwrap();
+        write_optimized_shader_file(&frag_file_path, frag_source, &shader.shader_name, &features, &mut hasher);
+
+        let digest: ProgramSourceDigest = hasher.into();
 
         println!("Finished optimizing shader {:?}", shader);
 
@@ -242,6 +240,34 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
     writeln!(shader_file, "  }};")?;
 
     Ok(())
+}
+
+fn write_optimized_shader_file(
+    path: &Path,
+    source: &str,
+    shader_name: &str,
+    features: &[&str],
+    hasher: &mut DefaultHasher,
+) {
+    let mut file = File::create(&path).unwrap();
+    for (line_number, line) in source.lines().enumerate() {
+        // We embed the shader name and features as a comment in the
+        // source to make debugging easier.
+        // The #version directive must be on the first line so we insert
+        // the extra information on the next line.
+        if line_number == 1 {
+            let prelude = format!(
+                "// {}\n// features: {:?}\n\n",
+                shader_name, features
+            );
+            file.write_all(prelude.as_bytes()).unwrap();
+            hasher.write(prelude.as_bytes());
+        }
+        file.write_all(line.as_bytes()).unwrap();
+        file.write_all("\n".as_bytes()).unwrap();
+        hasher.write(line.as_bytes());
+        hasher.write("\n".as_bytes());
+    }
 }
 
 fn main() -> Result<(), std::io::Error> {
