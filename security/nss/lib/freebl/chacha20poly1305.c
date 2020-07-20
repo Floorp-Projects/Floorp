@@ -81,7 +81,7 @@ ChaCha20Poly1305_InitContext(ChaCha20Poly1305Context *ctx,
         PORT_SetError(SEC_ERROR_BAD_KEY);
         return SECFailure;
     }
-    if (tagLen == 0 || tagLen > 16) {
+    if (tagLen != 16) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         return SECFailure;
     }

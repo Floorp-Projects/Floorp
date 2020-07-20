@@ -45,7 +45,7 @@ class Pkcs11ChaCha20Poly1305Test
     SECItem params = {siBuffer, reinterpret_cast<unsigned char*>(&aead_params),
                       sizeof(aead_params)};
 
-    // Encrypt with bad parameters.
+    // Encrypt with bad parameters (TagLen is too long).
     unsigned int encrypted_len = 0;
     std::vector<uint8_t> encrypted(data_len + aead_params.ulTagLen);
     aead_params.ulTagLen = 158072;
@@ -54,9 +54,16 @@ class Pkcs11ChaCha20Poly1305Test
                      &encrypted_len, encrypted.size(), data, data_len);
     EXPECT_EQ(SECFailure, rv);
     EXPECT_EQ(0U, encrypted_len);
-    aead_params.ulTagLen = 16;
+
+    // Encrypt with bad parameters (TagLen is too short).
+    aead_params.ulTagLen = 2;
+    rv = PK11_Encrypt(key.get(), kMech, &params, encrypted.data(),
+                      &encrypted_len, encrypted.size(), data, data_len);
+    EXPECT_EQ(SECFailure, rv);
+    EXPECT_EQ(0U, encrypted_len);
 
     // Encrypt.
+    aead_params.ulTagLen = 16;
     rv = PK11_Encrypt(key.get(), kMech, &params, encrypted.data(),
                       &encrypted_len, encrypted.size(), data, data_len);
 
