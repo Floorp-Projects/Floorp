@@ -29,10 +29,6 @@ class ArchlinuxBootstrapper(
         'autoconf2.13',
         'base-devel',
         'nodejs',
-        'python2',
-        'python2-setuptools',
-        'python',  # This is Python 3 on Arch.
-        'python-pip',
         'unzip',
         'zip',
     ]
@@ -137,9 +133,6 @@ class ArchlinuxBootstrapper(
 
     def upgrade_mercurial(self, current):
         self.pacman_install('mercurial')
-
-    def upgrade_python(self, current):
-        self.pacman_install('python2')
 
     def pacman_install(self, *packages):
         command = ['pacman', '-S', '--needed']

@@ -170,6 +170,12 @@ this bootstrap again.
 
 
 class OSXBootstrapper(BaseBootstrapper):
+
+    INSTALL_PYTHON_GUIDANCE = (
+        'See https://firefox-source-docs.mozilla.org/setup/macos_build.html'
+        '#install-via-homebrew for guidance on how to install Python on your '
+        'system.')
+
     def __init__(self, version, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
@@ -315,15 +321,6 @@ class OSXBootstrapper(BaseBootstrapper):
 
         if to_install or to_upgrade:
             print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
-        if 'python@2' in to_install:
-            # Special handling for Python 2 since brew can't install it
-            # out-of-the-box any more.
-            to_install.remove('python@2')
-            subprocess.check_call(
-                cmd + ['install',
-                       'https://raw.githubusercontent.com/Homebrew/homebrew-core'
-                       '/86a44a0a552c673a05f11018459c9f5faae3becc'
-                       '/Formula/python@2.rb'])
         if to_install:
             subprocess.check_call(cmd + ['install'] + list(to_install))
         if to_upgrade:
@@ -350,17 +347,11 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
 
     def ensure_homebrew_system_packages(self, install_mercurial):
-        # We need to install Python because Mercurial requires the
-        # Python development headers which are missing from OS X (at
-        # least on 10.8) and because the build system wants a version
-        # newer than what Apple ships.
         packages = [
             'autoconf@2.13',
             'git',
             'gnu-tar',
             'node',
-            'python',
-            'python@2',
             'terminal-notifier',
             'watchman',
         ]
@@ -427,9 +418,6 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def ensure_macports_system_packages(self, install_mercurial):
         packages = [
-            'python27',
-            'python36',
-            'py27-gnureadline',
             'autoconf213',
             'gnutar',
             'watchman',
@@ -627,9 +615,3 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def upgrade_mercurial(self, current):
         self._upgrade_package('mercurial')
-
-    def upgrade_python(self, current):
-        if self.package_manager == 'homebrew':
-            self._upgrade_package('python')
-        else:
-            self._upgrade_package('python27')
