@@ -107,6 +107,19 @@ class JS_FRIEND_API ForwardingProxyHandler : public BaseProxyHandler {
                                 MutableHandleValue vp) const override;
   virtual bool isCallable(JSObject* obj) const override;
   virtual bool isConstructor(JSObject* obj) const override;
+
+  virtual bool hasPrivate(JSContext* cx, HandleObject proxy, HandleId id,
+                          bool* bp) const override;
+  virtual bool getPrivate(JSContext* cx, HandleObject proxy,
+                          HandleValue receiver, HandleId id,
+                          MutableHandleValue vp) const override;
+  virtual bool setPrivate(JSContext* cx, HandleObject proxy, HandleId id,
+                          HandleValue v, HandleValue receiver,
+                          ObjectOpResult& result) const override;
+
+  virtual bool definePrivateField(JSContext* cx, HandleObject proxy,
+                                  HandleId id, Handle<PropertyDescriptor> desc,
+                                  ObjectOpResult& result) const override;
 };
 
 /*
