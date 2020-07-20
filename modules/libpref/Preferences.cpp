@@ -2002,44 +2002,7 @@ class nsPrefBranch final : public nsIPrefBranch,
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
  private:
-  // Helper class for either returning a raw cstring or nsCString.
-  typedef Variant<const char*, const nsCString> PrefNameBase;
-  class PrefName : public PrefNameBase {
-   public:
-    explicit PrefName(const char* aName) : PrefNameBase(aName) {}
-    explicit PrefName(const nsCString& aName) : PrefNameBase(aName) {}
-
-    // Use default move constructors, disallow copy constructors.
-    PrefName(PrefName&& aOther) = default;
-    PrefName& operator=(PrefName&& aOther) = default;
-    PrefName(const PrefName&) = delete;
-    PrefName& operator=(const PrefName&) = delete;
-
-    struct PtrMatcher {
-      const char* operator()(const char* aVal) { return aVal; }
-      const char* operator()(const nsCString& aVal) { return aVal.get(); }
-    };
-
-    struct CStringMatcher {
-      // Note: This is a reference, not an instance. It's used to pass our outer
-      // method argument through to our matcher methods.
-      nsACString& mStr;
-
-      void operator()(const char* aVal) { mStr.Assign(aVal); }
-      void operator()(const nsCString& aVal) { mStr.Assign(aVal); }
-    };
-
-    struct LenMatcher {
-      size_t operator()(const char* aVal) { return strlen(aVal); }
-      size_t operator()(const nsCString& aVal) { return aVal.Length(); }
-    };
-
-    const char* get() const { return match(PtrMatcher{}); }
-
-    void get(nsACString& aStr) const { match(CStringMatcher{aStr}); }
-
-    size_t Length() const { return match(LenMatcher{}); }
-  };
+  using PrefName = nsCString;
 
   virtual ~nsPrefBranch();
 
@@ -2666,8 +2629,7 @@ nsPrefBranch::AddObserverImpl(const nsACString& aDomain, nsIObserver* aObserver,
 
   NS_ENSURE_ARG(aObserver);
 
-  nsCString prefName;
-  GetPrefName(aDomain).get(prefName);
+  const nsCString& prefName = GetPrefName(aDomain);
 
   // Hold a weak reference to the observer if so requested.
   if (aHoldWeak) {
@@ -2727,8 +2689,7 @@ nsPrefBranch::RemoveObserverImpl(const nsACString& aDomain,
   // Remove the relevant PrefCallback from mObservers and get an owning pointer
   // to it. Unregister the callback first, and then let the owning pointer go
   // out of scope and destroy the callback.
-  nsCString prefName;
-  GetPrefName(aDomain).get(prefName);
+  const nsCString& prefName = GetPrefName(aDomain);
   PrefCallback key(prefName, aObserver, this);
   mozilla::UniquePtr<PrefCallback> pCallback;
   mObservers.Remove(&key, &pCallback);
