@@ -62,22 +62,6 @@ static gint PollWrapper(GPollFD* ufds, guint nfsd, gint timeout_) {
   return result;
 }
 
-// For bug 726483.
-static decltype(GtkContainerClass::check_resize) sReal_gtk_window_check_resize;
-
-static void wrap_gtk_window_check_resize(GtkContainer* container) {
-  GdkWindow* gdk_window = gtk_widget_get_window(&container->widget);
-  if (gdk_window) {
-    g_object_ref(gdk_window);
-  }
-
-  sReal_gtk_window_check_resize(container);
-
-  if (gdk_window) {
-    g_object_unref(gdk_window);
-  }
-}
-
 // Emit resume-events on GdkFrameClock if flush-events has not been
 // balanced by resume-events at dispose.
 // For https://bugzilla.gnome.org/show_bug.cgi?id=742636
@@ -184,16 +168,6 @@ nsresult nsAppShell::Init() {
         gdk_set_program_class(NS_ConvertUTF16toUTF8(brandName).get());
       }
     }
-  }
-
-  if (!sReal_gtk_window_check_resize &&
-      gtk_check_version(3, 8, 0) != nullptr) {  // GTK 3.0 to GTK 3.6.
-    // GtkWindow is a static class and so will leak anyway but this ref
-    // makes sure it isn't recreated.
-    gpointer gtk_plug_class = g_type_class_ref(GTK_TYPE_WINDOW);
-    auto check_resize = &GTK_CONTAINER_CLASS(gtk_plug_class)->check_resize;
-    sReal_gtk_window_check_resize = *check_resize;
-    *check_resize = wrap_gtk_window_check_resize;
   }
 
   if (!sPendingResumeQuark &&

@@ -228,9 +228,7 @@ class nsWindow final : public nsBaseWidget {
                                GtkSelectionData* aSelectionData, guint aInfo,
                                guint aTime, gpointer aData);
   gboolean OnPropertyNotifyEvent(GtkWidget* aWidget, GdkEventProperty* aEvent);
-#if GTK_CHECK_VERSION(3, 4, 0)
   gboolean OnTouchEvent(GdkEventTouch* aEvent);
-#endif
 
   virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(
       LayoutDeviceIntRegion& aInvalidRegion,
@@ -361,14 +359,12 @@ class nsWindow final : public nsBaseWidget {
       double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
       uint32_t aAdditionalFlags, nsIObserver* aObserver) override;
 
-#if GTK_CHECK_VERSION(3, 4, 0)
   virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                               TouchPointerState aPointerState,
                                               LayoutDeviceIntPoint aPoint,
                                               double aPointerPressure,
                                               uint32_t aPointerOrientation,
                                               nsIObserver* aObserver) override;
-#endif
 
 #ifdef MOZ_X11
   Display* XDisplay() { return mXDisplay; }
@@ -473,10 +469,8 @@ class nsWindow final : public nsBaseWidget {
   bool mEnabled;
   // has the native window for this been created yet?
   bool mCreated;
-#if GTK_CHECK_VERSION(3, 4, 0)
   // whether we handle touch event
   bool mHandleTouchEvent;
-#endif
   // true if this is a drag and drop feedback popup
   bool mIsDragPopup;
   // Can we access X?
@@ -547,7 +541,6 @@ class nsWindow final : public nsBaseWidget {
   // Cached result of gdk_window_get_origin which can be expensive.
   mozilla::Maybe<nsIntPoint> mWindowOrigin;
 
-#if GTK_CHECK_VERSION(3, 4, 0)
   // This field omits duplicate scroll events caused by GNOME bug 726878.
   guint32 mLastScrollEventTime;
 
@@ -556,7 +549,6 @@ class nsWindow final : public nsBaseWidget {
   // for touch event handling
   nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch>
       mTouches;
-#endif
 
 #ifdef MOZ_X11
   Display* mXDisplay;

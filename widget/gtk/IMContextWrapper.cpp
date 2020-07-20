@@ -1294,8 +1294,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
   mInputContext = *aContext;
 
   if (changingEnabledState) {
-    static bool sInputPurposeSupported = !gtk_check_version(3, 6, 0);
-    if (sInputPurposeSupported && mInputContext.mIMEState.MaybeEditable()) {
+    if (mInputContext.mIMEState.MaybeEditable()) {
       GtkIMContext* currentContext = GetCurrentContext();
       if (currentContext) {
         GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
