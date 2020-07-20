@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -61,26 +62,6 @@ upgrade Python on your machine.
 
 Please search the Internet for how to upgrade your Python and try running this
 bootstrapper again to ensure your machine is up to date.
-'''
-
-PYTHON_UPGRADE_FAILED = '''
-We attempted to upgrade Python to a modern version (%s or newer).
-However, you appear to still have version %s.
-
-It's possible your package manager doesn't yet expose a modern version of
-Python. It's also possible Python is not being installed in the search path for
-this shell. Try creating a new shell and run this bootstrapper again.
-
-If this continues to fail and you are sure you have a modern Python on your
-system, ensure it is on the $PATH and try again. If that fails, you'll need to
-install Python manually and ensure the path with the python binary is listed in
-the $PATH environment variable.
-
-We recommend the following tools for installing Python:
-
-    pyenv   -- https://github.com/yyuu/pyenv
-    pythonz -- https://github.com/saghul/pythonz
-    official installers -- http://www.python.org/
 '''
 
 RUST_INSTALL_COMPLETE = '''
@@ -150,8 +131,8 @@ ac_add_options --enable-artifact-builds
 # Upgrade Mercurial older than this.
 MODERN_MERCURIAL_VERSION = LooseVersion('4.8')
 
-# Upgrade Python older than this.
-MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
+MODERN_PYTHON2_VERSION = LooseVersion('2.7.3')
+MODERN_PYTHON3_VERSION = LooseVersion('3.6.0')
 
 # Upgrade rust older than this.
 MODERN_RUST_VERSION = LooseVersion(MINIMUM_RUST_VERSION)
@@ -162,6 +143,12 @@ MODERN_NASM_VERSION = LooseVersion('2.14')
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
+
+    INSTALL_PYTHON_GUIDANCE = (
+        'We do not have specific instructions for your platform on how to '
+        'install Python. You may find Pyenv (https://github.com/pyenv/pyenv) '
+        'helpful, if your system package manager does not provide a way to '
+        'install a recent enough Python 3 and 2.')
 
     def __init__(self, no_interactive=False, no_system_changes=False):
         self.package_manager_updated = False
@@ -509,11 +496,16 @@ class BaseBootstrapper(object):
         if name.endswith('.exe'):
             name = name[:-4]
 
-        info = subprocess.check_output(
-            [path, version_param], env=env, stderr=subprocess.STDOUT,
-            universal_newlines=True)
-        match = re.search(name + ' ([a-z0-9\.]+)', info)
+        process = subprocess.run(
+            [path, version_param], env=env, universal_newlines=True,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if process.returncode != 0:
+            # This can happen e.g. if the user has an inactive pyenv shim in
+            # their path. Just silently treat this as a failure to parse the
+            # path and move on.
+            return None
 
+        match = re.search(name + ' ([a-z0-9\.]+)', process.stdout)
         if not match:
             print('ERROR! Unable to identify %s version.' % name)
             return None
@@ -594,47 +586,53 @@ class BaseBootstrapper(object):
         """
         print(MERCURIAL_UNABLE_UPGRADE % (current, MODERN_MERCURIAL_VERSION))
 
-    def is_python_modern(self):
-        python = None
+    def is_python_modern(self, major):
+        assert major in (2, 3)
 
-        for test in ['python2.7', 'python']:
-            python = self.which(test)
-            if python:
-                break
+        our = None
 
-        assert python
+        if major == 3:
+            our = LooseVersion(platform.python_version())
+        else:
+            for test in ('python2.7', 'python'):
+                python = self.which(test)
+                if python:
+                    candidate_version = self._parse_version(python, 'Python')
+                    if (candidate_version and
+                        candidate_version.version[0] == major):
+                        our = candidate_version
+                        break
 
-        our = self._parse_version(python, 'Python')
-        if not our:
+        if our is None:
             return False, None
 
-        return our >= MODERN_PYTHON_VERSION, our
+        modern = {
+            2: MODERN_PYTHON2_VERSION,
+            3: MODERN_PYTHON3_VERSION,
+        }
+        return our >= modern[major], our
 
     def ensure_python_modern(self):
-        modern, version = self.is_python_modern()
-
+        modern, version = self.is_python_modern(3)
         if modern:
-            print('Your version of Python (%s) is new enough.' % version)
-            return
-
-        print('Your version of Python (%s) is too old. Will try to upgrade.' %
-              version)
-
-        self._ensure_package_manager_updated()
-        self.upgrade_python(version)
-
-        modern, after = self.is_python_modern()
-
-        if not modern:
-            print(PYTHON_UPGRADE_FAILED % (MODERN_PYTHON_VERSION, after))
+            print('Your version of Python 3 (%s) is new enough.' % version)
+        else:
+            print('ERROR: Your version of Python 3 (%s) is not new enough. You '
+                  'must have Python >= %s to build Firefox.' % (
+                      version, MODERN_PYTHON3_VERSION))
+            print(self.INSTALL_PYTHON_GUIDANCE)
             sys.exit(1)
-
-    def upgrade_python(self, current):
-        """Upgrade Python.
-
-        Child classes should reimplement this.
-        """
-        print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
+        modern, version = self.is_python_modern(2)
+        if modern:
+            print('Your version of Python 2 (%s) is new enough.' % version)
+        else:
+            print('WARNING: Your version of Python 2 (%s) is not new enough. '
+                  'You must have Python >= %s to build Firefox. Python 2 is '
+                  'not required to build, so we will proceed. However, Python '
+                  '2 is required for other development tasks, like running '
+                  'tests; you may like to have Python 2 installed for that '
+                  'reason.' % (version, MODERN_PYTHON2_VERSION))
+            print(self.INSTALL_PYTHON_GUIDANCE)
 
     def is_nasm_modern(self):
         nasm = self.which('nasm')

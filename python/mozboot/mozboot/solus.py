@@ -25,8 +25,6 @@ class SolusBootstrapper(
     SYSTEM_PACKAGES = [
         'autoconf213',
         'nodejs',
-        'python',
-        'python3',
         'unzip',
         'zip',
     ]
@@ -113,9 +111,6 @@ class SolusBootstrapper(
 
     def upgrade_mercurial(self, current):
         self.package_install('mercurial')
-
-    def upgrade_python(self, current):
-        self.package_install('python2')
 
     def package_install(self, *packages):
         command = ['eopkg', 'install']
