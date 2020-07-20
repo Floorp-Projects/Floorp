@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import
 
-import sys
 import unittest
 
-import pytest
 from taskgraph.decision import full_task_graph_to_runnable_jobs
 from taskgraph.graph import Graph
 from taskgraph.taskgraph import TaskGraph
@@ -54,15 +52,12 @@ class TestRunnableJobs(unittest.TestCase):
 
     def make_taskgraph(self, tasks):
         label_to_taskid = {k: k + '-tid' for k in tasks}
-        for label, task_id in label_to_taskid.iteritems():
+        for label, task_id in label_to_taskid.items():
             tasks[label].task_id = task_id
         graph = Graph(nodes=set(tasks), edges=set())
         taskgraph = TaskGraph(tasks, graph)
         return taskgraph, label_to_taskid
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_taskgraph_to_runnable_jobs(self):
         tg, label_to_taskid = self.make_taskgraph({
             t['label']: Task(**t) for t in self.tasks[:]
