@@ -95,18 +95,12 @@ class ImageComposite {
  private:
   nsTArray<TimedImage> mImages;
   TimeStamp GetBiasedTime(const TimeStamp& aInput) const;
-  // Scan new images and look for common ones in the existing mImages array.
-  // Will determine if an image has been dropped through gaps between images and
-  // adjust mDroppedFrames accordingly.
-  // Return the index of what the last returned image would have been.
-  uint32_t ScanForLastFrameIndex(const nsTArray<TimedImage>& aNewImages);
 
-  // Return true if we send image in a speed which is faster than the one we can
-  // composite image. It's used to decide whether we should report the frame
-  // dropping, because we only want to know the frame dropping, which is caused
-  // by machine overload.
-  bool IsImagesUpdateRateFasterThanCompositedRate(
-      const TimedImage& aNewImage, const TimedImage& aOldImage) const;
+  // Called when we know that frames older than aImage will never get another
+  // chance to be displayed.
+  // Counts frames in mImages that were skipped, and adds the skipped count to
+  // mSkippedFramesSinceLastComposite.
+  void CountSkippedFrames(const TimedImage* aImage);
 
   // Emit a profiler marker about video frame timestamp jitter.
   void DetectTimeStampJitter(const TimedImage* aNewImage);
@@ -115,8 +109,14 @@ class ImageComposite {
    * Bias to apply to the next frame.
    */
   Bias mBias = BIAS_NONE;
+
+  // Video frames that were in mImages but that will never reach the screen.
+  // This count is reset in UpdateCompositedFrame.
+  int32_t mSkippedFramesSinceLastComposite = 0;
+
+  // The number of dropped frames since the last call to
+  // GetDroppedFramesAndReset().
   uint32_t mDroppedFrames = 0;
-  uint32_t mLastChosenImageIndex = 0;
 };
 
 }  // namespace layers
