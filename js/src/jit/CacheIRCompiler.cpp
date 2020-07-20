@@ -4463,6 +4463,175 @@ bool CacheIRCompiler::emitLoadTypedObjectElementResult(
                                     /* allowDoubleForUint32 = */ true);
 }
 
+bool CacheIRCompiler::emitLoadDataViewValueResult(ObjOperandId objId,
+                                                  Int32OperandId offsetId,
+                                                  Int32OperandId littleEndianId,
+                                                  Scalar::Type elementType,
+                                                  bool allowDoubleForUint32) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  Register offset = allocator.useRegister(masm, offsetId);
+  Register littleEndian = allocator.useRegister(masm, littleEndianId);
+
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
+  Register64 outputReg64 = output.valueReg().toRegister64();
+  Register outputScratch = outputReg64.scratchReg();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  const size_t byteSize = Scalar::byteSize(elementType);
+
+  // Ensure both offset < length and offset + (byteSize - 1) < length.
+  static_assert(ArrayBufferObject::MaxBufferByteLength <= INT32_MAX,
+                "Code assumes DataView length fits in int32");
+  masm.unboxInt32(Address(obj, DataViewObject::lengthOffset()), outputScratch);
+  if (byteSize == 1) {
+    masm.spectreBoundsCheck32(offset, outputScratch, InvalidReg,
+                              failure->label());
+  } else {
+    // temp := length - (byteSize - 1)
+    // if temp < 0: fail
+    // if offset >= temp: fail
+    masm.branchSub32(Assembler::Signed, Imm32(byteSize - 1), outputScratch,
+                     failure->label());
+    masm.spectreBoundsCheck32(offset, outputScratch, InvalidReg,
+                              failure->label());
+  }
+
+  masm.loadPtr(Address(obj, DataViewObject::dataOffset()), outputScratch);
+
+  // Load the value.
+  BaseIndex source(outputScratch, offset, TimesOne);
+  switch (elementType) {
+    case Scalar::Int8:
+      masm.load8SignExtend(source, outputScratch);
+      break;
+    case Scalar::Uint8:
+      masm.load8ZeroExtend(source, outputScratch);
+      break;
+    case Scalar::Int16:
+      masm.load16UnalignedSignExtend(source, outputScratch);
+      break;
+    case Scalar::Uint16:
+      masm.load16UnalignedZeroExtend(source, outputScratch);
+      break;
+    case Scalar::Int32:
+    case Scalar::Uint32:
+    case Scalar::Float32:
+      masm.load32Unaligned(source, outputScratch);
+      break;
+    case Scalar::Float64:
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+      masm.load64Unaligned(source, outputReg64);
+      break;
+    case Scalar::Uint8Clamped:
+    default:
+      MOZ_CRASH("Invalid typed array type");
+  }
+
+  // Swap the bytes in the loaded value.
+  if (byteSize > 1) {
+    Label skip;
+    masm.branch32(MOZ_LITTLE_ENDIAN() ? Assembler::NotEqual : Assembler::Equal,
+                  littleEndian, Imm32(0), &skip);
+
+    switch (elementType) {
+      case Scalar::Int16:
+        masm.byteSwap16SignExtend(outputScratch);
+        break;
+      case Scalar::Uint16:
+        masm.byteSwap16ZeroExtend(outputScratch);
+        break;
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Float32:
+        masm.byteSwap32(outputScratch);
+        break;
+      case Scalar::Float64:
+      case Scalar::BigInt64:
+      case Scalar::BigUint64:
+        masm.byteSwap64(outputReg64);
+        break;
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
+      default:
+        MOZ_CRASH("Invalid type");
+    }
+
+    masm.bind(&skip);
+  }
+
+  // Move the value into the output register.
+  switch (elementType) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+      masm.tagValue(JSVAL_TYPE_INT32, outputScratch, output.valueReg());
+      break;
+    case Scalar::Uint32:
+      masm.boxUint32(outputScratch, output.valueReg(), allowDoubleForUint32,
+                     failure->label());
+      break;
+    case Scalar::Float32: {
+      FloatRegister scratchFloat32 = floatScratch0.get().asSingle();
+      masm.moveGPRToFloat32(outputScratch, scratchFloat32);
+      masm.canonicalizeFloat(scratchFloat32);
+      masm.convertFloat32ToDouble(scratchFloat32, floatScratch0);
+      masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
+      break;
+    }
+    case Scalar::Float64:
+      masm.moveGPR64ToDouble(outputReg64, floatScratch0);
+      masm.canonicalizeDouble(floatScratch0);
+      masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
+      break;
+    case Scalar::BigInt64:
+    case Scalar::BigUint64: {
+      // We need two extra registers. Reuse the obj/littleEndian registers.
+      Register bigInt = obj;
+      Register bigIntScratch = littleEndian;
+      masm.push(bigInt);
+      masm.push(bigIntScratch);
+      Label fail, done;
+      LiveRegisterSet save(GeneralRegisterSet::Volatile(),
+                           liveVolatileFloatRegs());
+      save.takeUnchecked(bigInt);
+      save.takeUnchecked(bigIntScratch);
+      bool attemptNursery = CanNurseryAllocateBigInt(cx_);
+      EmitAllocateBigInt(masm, bigInt, bigIntScratch, save, &fail,
+                         attemptNursery);
+      masm.jump(&done);
+
+      masm.bind(&fail);
+      masm.pop(bigIntScratch);
+      masm.pop(bigInt);
+      masm.jump(failure->label());
+
+      masm.bind(&done);
+      masm.initializeBigInt64(elementType, bigInt, outputReg64);
+      masm.tagValue(JSVAL_TYPE_BIGINT, bigInt, output.valueReg());
+      masm.pop(bigIntScratch);
+      masm.pop(bigInt);
+      break;
+    }
+    case Scalar::Uint8Clamped:
+    default:
+      MOZ_CRASH("Invalid typed array type");
+  }
+
+  return true;
+}
+
 bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
     ObjOperandId objId, uint32_t offsetOffset, TypedThingLayout layout,
     Scalar::Type type, uint32_t rhsId) {
