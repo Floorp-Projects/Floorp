@@ -402,6 +402,10 @@ bool WarpCacheIRTranspiler::emitGuardToSymbol(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::Symbol);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToBigInt(ValOperandId inputId) {
+  return emitGuardTo(inputId, MIRType::BigInt);
+}
+
 bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId,
                                                Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
