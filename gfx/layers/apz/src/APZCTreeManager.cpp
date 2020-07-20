@@ -1701,6 +1701,12 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
     }
     case PINCHGESTURE_INPUT: {
       PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
+      if (pinchInput.modifiers != 0) {
+        APZCTM_LOG("Discarding pinch input due to modifiers 0x%x\n",
+                   pinchInput.modifiers);
+        return result;
+      }
+
       HitTestResult hit = GetTargetAPZC(pinchInput.mFocusPoint);
       aEvent.mLayersId = hit.mLayersId;
       hitResult = hit.mHitResult;
