@@ -37,7 +37,7 @@ SelectorHighlighter.prototype = {
    * string that will be used in querySelectorAll. On top of this, all of the
    * valid options to BoxModelHighlighter.show are also valid here.
    */
-  show: async function(node, options = {}) {
+  show: function(node, options = {}) {
     this.hide();
 
     if (!isNodeValid(node) || !options.selector) {
@@ -55,28 +55,21 @@ SelectorHighlighter.prototype = {
     delete options.selector;
 
     let i = 0;
-    const highlighters = [];
     for (const matchingNode of nodes) {
-      if (i++ >= MAX_HIGHLIGHTED_ELEMENTS) {
+      if (i >= MAX_HIGHLIGHTED_ELEMENTS) {
         break;
       }
 
-      highlighters.push(this._accumulateHighlighter(matchingNode, options));
+      const highlighter = new BoxModelHighlighter(this.highlighterEnv);
+      if (options.fill) {
+        highlighter.regionFill[options.region || "border"] = options.fill;
+      }
+      highlighter.show(matchingNode, options);
+      this._highlighters.push(highlighter);
+      i++;
     }
 
-    await Promise.all(highlighters);
     return true;
-  },
-
-  _accumulateHighlighter: async function(node, options) {
-    const highlighter = new BoxModelHighlighter(this.highlighterEnv);
-    await highlighter.ready;
-    if (options.fill) {
-      highlighter.regionFill[options.region || "border"] = options.fill;
-    }
-
-    highlighter.show(node, options);
-    this._highlighters.push(highlighter);
   },
 
   hide: function() {
