@@ -65,6 +65,105 @@ tests.push({
     hasEnginesFirst(engines, ["Bing"]),
 });
 
+for (let canonicalId of ["canonical", "canonical-001", "canonical-002"]) {
+  tests.push({
+    locale: "en-US",
+    region: "US",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Google", "searchbar", "client=ubuntu") &&
+      hasParams(engines, "Google", "searchbar", "channel=fs"),
+  });
+
+  tests.push({
+    locale: "en-US",
+    region: "GB",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Google", "searchbar", "client=ubuntu") &&
+      hasParams(engines, "Google", "searchbar", "channel=fs"),
+  });
+
+  tests.push({
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "DuckDuckGo", "searchbar", "t=canonical"),
+  });
+
+  tests.push({
+    locale: "en-US",
+    region: "US",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.com", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "de",
+    region: "DE",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.de", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "en-GB",
+    region: "GB",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.co.uk", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "fr",
+    region: "FR",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.fr", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "it",
+    region: "IT",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.it", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "ja",
+    region: "JP",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.co.jp", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "ur",
+    region: "IN",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "Amazon.in", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "zh-CN",
+    region: "CN",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "亚马逊", "searchbar", "tag=wwwcanoniccom-20"),
+  });
+
+  tests.push({
+    locale: "zh-CN",
+    region: "CN",
+    distribution: canonicalId,
+    test: engines =>
+      hasParams(engines, "百度", "searchbar", "tn=ubuntuu_cb") &&
+      hasParams(engines, "百度", "suggestions", "tn=ubuntuu_cb"),
+  });
+}
+
 tests.push({
   locale: "ru",
   distribution: "mailru-001",
@@ -510,7 +609,7 @@ function hasParams(engines, engineName, purpose, param) {
     let queryParam = query.split("=")[0];
     Assert.ok(
       !paramNames.has(queryParam),
-      `Should not have a duplicate ${param}`
+      `Should not have a duplicate ${queryParam} param`
     );
     paramNames.add(queryParam);
   }
