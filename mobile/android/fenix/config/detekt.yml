@@ -23,10 +23,6 @@ console-reports:
   #  - 'NotificationReport'
   #  - 'FindingsReport'
   #  - 'BuildFailureReport'
-
-console-reports:
-  active: true
-  exclude:
   #  - 'HtmlOutputReport'
     - 'PlainOutputReport'
     - 'XmlOutputReport'
@@ -34,6 +30,8 @@ console-reports:
 comments:
   active: true
   excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
+  AbsentOrWrongFileLicense:
+    active: true
   CommentOverPrivateFunction:
     active: false
   CommentOverPrivateProperty:

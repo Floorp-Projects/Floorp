@@ -72,7 +72,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.6.0")
+    id("io.gitlab.arturbosch.detekt").version("1.9.1")
 }
 
 allprojects {
@@ -133,8 +133,7 @@ allprojects {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.allWarningsAsErrors = true
         kotlinOptions.freeCompilerArgs += [
-            "-Xuse-experimental=kotlin.Experimental",
-            "-Xskip-runtime-version-check"
+            "-Xuse-experimental=kotlin.Experimental"
         ]
     }
 }
@@ -145,9 +144,10 @@ task clean(type: Delete) {
 
 detekt {
     // The version number is duplicated, please refer to plugins block for more details
-    version = "1.6.0"
+    version = "1.9.1"
     input = files("$projectDir/app/src")
     config = files("$projectDir/config/detekt.yml")
+    baseline = file("$projectDir/config/detekt-baseline.xml")
 
     reports {
         html {
