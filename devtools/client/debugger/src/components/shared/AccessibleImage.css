@@ -33,7 +33,7 @@
   transition: transform 180ms var(--animation-curve);
 }
 
-html[dir="rtl"] .img.arrow {
+.img.arrow:dir(rtl) {
   transform: rotate(90deg);
 }
 
