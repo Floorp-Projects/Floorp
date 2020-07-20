@@ -4,12 +4,10 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import sys
 
 import jsone
 import pprint
 
-import pytest
 import slugid
 import unittest
 
@@ -26,9 +24,6 @@ class TestTaskclusterYml(unittest.TestCase):
     def taskcluster_yml(self):
         return load_yaml(GECKO, ".taskcluster.yml")
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_push(self):
         context = {
             "tasks_for": "hg-push",
@@ -43,7 +38,7 @@ class TestTaskclusterYml(unittest.TestCase):
                 "project": "mozilla-central",
                 "level": "3",
             },
-            "ownTaskId": slugid.nice().encode("ascii"),
+            "ownTaskId": slugid.nice().decode("ascii"),
         }
         rendered = jsone.render(self.taskcluster_yml, context)
         pprint.pprint(rendered)
@@ -51,9 +46,6 @@ class TestTaskclusterYml(unittest.TestCase):
             rendered["tasks"][0]["metadata"]["name"], "Gecko Decision Task"
         )
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_cron(self):
         context = {
             "tasks_for": "cron",
@@ -75,7 +67,7 @@ class TestTaskclusterYml(unittest.TestCase):
                 "quoted_args": "abc def",
             },
             "now": current_json_time(),
-            "ownTaskId": slugid.nice().encode("ascii"),
+            "ownTaskId": slugid.nice().decode("ascii"),
         }
         rendered = jsone.render(self.taskcluster_yml, context)
         pprint.pprint(rendered)
@@ -83,9 +75,6 @@ class TestTaskclusterYml(unittest.TestCase):
             rendered["tasks"][0]["metadata"]["name"], "Decision Task for cron job test"
         )
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_action(self):
         context = {
             "tasks_for": "action",
@@ -104,7 +93,7 @@ class TestTaskclusterYml(unittest.TestCase):
                 "name": "test-action",
                 "title": "Test Action",
                 "description": "Just testing",
-                "taskGroupId": slugid.nice().encode("ascii"),
+                "taskGroupId": slugid.nice().decode("ascii"),
                 "symbol": "t",
                 "repo_scope": "assume:repo:hg.mozilla.org/try:action:generic",
                 "cb_name": "test_action",
@@ -112,8 +101,8 @@ class TestTaskclusterYml(unittest.TestCase):
             "input": {},
             "parameters": {},
             "now": current_json_time(),
-            "taskId": slugid.nice().encode("ascii"),
-            "ownTaskId": slugid.nice().encode("ascii"),
+            "taskId": slugid.nice().decode("ascii"),
+            "ownTaskId": slugid.nice().decode("ascii"),
             "clientId": "testing/testing/testing",
         }
         rendered = jsone.render(self.taskcluster_yml, context)
