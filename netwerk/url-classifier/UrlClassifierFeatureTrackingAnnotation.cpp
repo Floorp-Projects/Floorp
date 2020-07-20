@@ -57,7 +57,7 @@ UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
 /* static */
 void UrlClassifierFeatureTrackingAnnotation::MaybeInitialize() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  UC_LOG_LEAK(("UrlClassifierFeatureTrackingAnnotation::MaybeInitialize"));
+  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeInitialize"));
 
   if (!gFeatureTrackingAnnotation) {
     gFeatureTrackingAnnotation = new UrlClassifierFeatureTrackingAnnotation();
@@ -67,7 +67,7 @@ void UrlClassifierFeatureTrackingAnnotation::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureTrackingAnnotation::MaybeShutdown() {
-  UC_LOG_LEAK(("UrlClassifierFeatureTrackingAnnotation::MaybeShutdown"));
+  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeShutdown"));
 
   if (gFeatureTrackingAnnotation) {
     gFeatureTrackingAnnotation->ShutdownPreferences();
@@ -80,9 +80,8 @@ already_AddRefed<UrlClassifierFeatureTrackingAnnotation>
 UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG_LEAK(
-      ("UrlClassifierFeatureTrackingAnnotation::MaybeCreate - channel %p",
-       aChannel));
+  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeCreate for channel %p",
+          aChannel));
 
   if (!StaticPrefs::privacy_trackingprotection_annotate_channels()) {
     return nullptr;
@@ -121,11 +120,6 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(
 
   // This is not a blocking feature.
   *aShouldContinue = true;
-
-  UC_LOG(
-      ("UrlClassifierFeatureTrackingAnnotation::ProcessChannel - "
-       "annotating channel %p",
-       aChannel));
 
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {

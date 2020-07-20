@@ -55,7 +55,7 @@ UrlClassifierFeatureCryptominingProtection::
 
 /* static */
 void UrlClassifierFeatureCryptominingProtection::MaybeInitialize() {
-  UC_LOG_LEAK(("UrlClassifierFeatureCryptominingProtection::MaybeInitialize"));
+  UC_LOG(("UrlClassifierFeatureCryptominingProtection: MaybeInitialize"));
 
   if (!gFeatureCryptominingProtection) {
     gFeatureCryptominingProtection =
@@ -66,7 +66,7 @@ void UrlClassifierFeatureCryptominingProtection::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureCryptominingProtection::MaybeShutdown() {
-  UC_LOG_LEAK(("UrlClassifierFeatureCryptominingProtection::MaybeShutdown"));
+  UC_LOG(("UrlClassifierFeatureCryptominingProtection: MaybeShutdown"));
 
   if (gFeatureCryptominingProtection) {
     gFeatureCryptominingProtection->ShutdownPreferences();
@@ -79,8 +79,8 @@ already_AddRefed<UrlClassifierFeatureCryptominingProtection>
 UrlClassifierFeatureCryptominingProtection::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG_LEAK(
-      ("UrlClassifierFeatureCryptominingProtection::MaybeCreate - channel %p",
+  UC_LOG(
+      ("UrlClassifierFeatureCryptominingProtection: MaybeCreate for channel %p",
        aChannel));
 
   if (!StaticPrefs::privacy_trackingprotection_cryptomining_enabled()) {
@@ -89,10 +89,21 @@ UrlClassifierFeatureCryptominingProtection::MaybeCreate(nsIChannel* aChannel) {
 
   bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
   if (!isThirdParty) {
-    UC_LOG(
-        ("UrlClassifierFeatureCryptominingProtection::MaybeCreate - "
-         "skipping first party or top-level load for channel %p",
-         aChannel));
+    if (UC_LOG_ENABLED()) {
+      nsCOMPtr<nsIURI> chanURI;
+      Unused << aChannel->GetURI(getter_AddRefs(chanURI));
+      if (chanURI) {
+        nsCString spec = chanURI->GetSpecOrDefault();
+        spec.Truncate(
+            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
+        UC_LOG((
+            "UrlClassifierFeatureCryptominingProtection: Skipping cryptomining "
+            "checks "
+            "for first party or top-level load channel[%p] "
+            "with uri %s",
+            aChannel, spec.get()));
+      }
+    }
     return nullptr;
   }
 
@@ -153,10 +164,10 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
                                          list, EmptyCString(), EmptyCString());
 
   UC_LOG(
-      ("UrlClassifierFeatureCryptominingProtection::ProcessChannel - "
-       "cancelling channel %p",
+      ("UrlClassifierFeatureCryptominingProtection::ProcessChannel, "
+       "cancelling "
+       "channel[%p]",
        aChannel));
-
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   if (httpChannel) {
