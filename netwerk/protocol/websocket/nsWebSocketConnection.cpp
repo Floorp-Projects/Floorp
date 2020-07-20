@@ -20,13 +20,7 @@ nsWebSocketConnection::nsWebSocketConnection(
       mSocketIn(aInputStream),
       mSocketOut(aOutputStream),
       mWriteOffset(0),
-      mStartReadingCalled(false) {
-  LOG(("nsWebSocketConnection ctor %p\n", this));
-}
-
-nsWebSocketConnection::~nsWebSocketConnection() {
-  LOG(("nsWebSocketConnection dtor %p\n", this));
-}
+      mStartReadingCalled(false) {}
 
 NS_IMETHODIMP
 nsWebSocketConnection::Init(nsIWebSocketConnectionListener* aListener,
@@ -53,7 +47,6 @@ nsWebSocketConnection::Init(nsIWebSocketConnectionListener* aListener,
 
 NS_IMETHODIMP
 nsWebSocketConnection::Close() {
-  LOG(("nsWebSocketConnection::Close %p\n", this));
   if (mTransport) {
     mTransport->SetSecurityCallbacks(nullptr);
     mTransport->SetEventSink(nullptr, nullptr);
@@ -73,6 +66,7 @@ nsWebSocketConnection::Close() {
     mSocketOut = nullptr;
   }
 
+  mListener = nullptr;
   return NS_OK;
 }
 
