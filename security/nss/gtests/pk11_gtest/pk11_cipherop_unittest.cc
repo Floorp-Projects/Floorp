@@ -77,4 +77,53 @@ TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
   NSS_ShutdownContext(globalctx);
 }
 
+TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOpsChaCha20) {
+  PK11SlotInfo* slot;
+  PK11SymKey* key;
+  PK11Context* ctx;
+
+  NSSInitContext* globalctx =
+      NSS_InitContext("", "", "", "", NULL,
+                      NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
+                          NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT);
+
+  const CK_MECHANISM_TYPE cipher = CKM_NSS_CHACHA20_CTR;
+
+  slot = PK11_GetInternalSlot();
+  ASSERT_TRUE(slot);
+
+  // Use arbitrary bytes for the ChaCha20 key and IV
+  uint8_t key_bytes[32];
+  for (size_t i = 0; i < 32; i++) {
+    key_bytes[i] = i;
+  }
+  SECItem keyItem = {siBuffer, key_bytes, 32};
+
+  uint8_t iv_bytes[16];
+  for (size_t i = 0; i < 16; i++) {
+    key_bytes[i] = i;
+  }
+  SECItem ivItem = {siBuffer, iv_bytes, 16};
+
+  SECItem* param = PK11_ParamFromIV(cipher, &ivItem);
+
+  key = PK11_ImportSymKey(slot, cipher, PK11_OriginUnwrap, CKA_ENCRYPT,
+                          &keyItem, NULL);
+  ctx = PK11_CreateContextBySymKey(cipher, CKA_ENCRYPT, key, param);
+  ASSERT_TRUE(key);
+  ASSERT_TRUE(ctx);
+
+  uint8_t outbuf[128];
+  // This is supposed to fail for Chacha20. This is because the underlying
+  // PK11_CipherOp operation is calling the C_EncryptUpdate function for
+  // which multi-part is disabled for ChaCha20 in counter mode.
+  ASSERT_EQ(GetBytes(ctx, outbuf, 7), SECFailure);
+
+  PK11_FreeSymKey(key);
+  PK11_FreeSlot(slot);
+  SECITEM_FreeItem(param, PR_TRUE);
+  PK11_DestroyContext(ctx, PR_TRUE);
+  NSS_ShutdownContext(globalctx);
+}
+
 }  // namespace nss_test
