@@ -4,15 +4,15 @@
 
 package org.mozilla.fenix.settings.logins.fragment
 
-import android.annotation.TargetApi
 import android.app.Activity.RESULT_OK
 import android.app.KeyguardManager
-import android.content.Context.KEYGUARD_SERVICE
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
+import android.provider.Settings.ACTION_SECURITY_SETTINGS
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
@@ -27,11 +27,6 @@ import androidx.preference.SwitchPreference
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mozilla.components.concept.sync.AccountObserver
-import mozilla.components.concept.sync.AuthType
-import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.service.fxa.SyncEngine
-import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.metrics.Event
@@ -41,23 +36,32 @@ import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
+import org.mozilla.fenix.settings.logins.SyncLoginsPreferenceView
 import org.mozilla.fenix.settings.requirePreference
-import java.util.concurrent.Executor
 
-@Suppress("TooManyFunctions", "LargeClass")
-class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
+@Suppress("TooManyFunctions")
+class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
-    @TargetApi(M)
-    private lateinit var biometricPromptCallback: BiometricPrompt.AuthenticationCallback
-
-    @TargetApi(M)
-    private lateinit var executor: Executor
-
-    @TargetApi(M)
     private lateinit var biometricPrompt: BiometricPrompt
-
-    @TargetApi(M)
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
+
+    private val biometricPromptCallback = object : BiometricPrompt.AuthenticationCallback() {
+
+        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+            Log.e(LOG_TAG, "onAuthenticationError $errString")
+            togglePrefsEnabledWhileAuthenticating(enabled = true)
+        }
+
+        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+            Log.d(LOG_TAG, "onAuthenticationSucceeded")
+            navigateToSavedLogins()
+        }
+
+        override fun onAuthenticationFailed() {
+            Log.e(LOG_TAG, "onAuthenticationFailed")
+            togglePrefsEnabledWhileAuthenticating(enabled = true)
+        }
+    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.logins_preferences, rootKey)
@@ -88,25 +92,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        biometricPromptCallback = object : BiometricPrompt.AuthenticationCallback() {
-
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                Log.e(LOG_TAG, "onAuthenticationError $errString")
-                togglePrefsEnabledWhileAuthenticating(enabled = true)
-            }
-
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                Log.d(LOG_TAG, "onAuthenticationSucceeded")
-                navigateToSavedLogins()
-            }
-
-            override fun onAuthenticationFailed() {
-                Log.e(LOG_TAG, "onAuthenticationFailed")
-                togglePrefsEnabledWhileAuthenticating(enabled = true)
-            }
-        }
-
-        executor = ContextCompat.getMainExecutor(requireContext())
+        val executor = ContextCompat.getMainExecutor(requireContext())
 
         biometricPrompt = BiometricPrompt(this, executor, biometricPromptCallback)
 
@@ -116,7 +102,6 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
             .build()
     }
 
-    @Suppress("ComplexMethod")
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_passwords_logins_and_passwords))
@@ -144,7 +129,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
             isChecked = context.settings().shouldAutofillLogins
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                    context?.components?.core?.engine?.settings?.loginAutofillEnabled =
+                    context.components.core.engine.settings.loginAutofillEnabled =
                         newValue as Boolean
                     return super.onPreferenceChange(preference, newValue)
                 }
@@ -152,177 +137,99 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         requirePreference<Preference>(R.string.pref_key_saved_logins).setOnPreferenceClickListener {
-            if (Build.VERSION.SDK_INT >= M && isHardwareAvailable && hasBiometricEnrolled) {
-                togglePrefsEnabledWhileAuthenticating(enabled = false)
-                biometricPrompt.authenticate(promptInfo)
-            } else {
-                verifyPinOrShowSetupWarning()
-            }
+            verifyCredentialsOrShowSetupWarning(it.context)
             true
         }
 
-        val accountManager = requireComponents.backgroundServices.accountManager
-        accountManager.register(this, owner = this)
-
-        val accountExists = accountManager.authenticatedAccount() != null
-        val needsReauth = accountManager.accountNeedsReauth()
-        when {
-            needsReauth -> updateSyncPreferenceNeedsReauth()
-            accountExists -> updateSyncPreferenceStatus()
-            !accountExists -> updateSyncPreferenceNeedsLogin()
-        }
+        SyncLoginsPreferenceView(
+            requirePreference(R.string.pref_key_password_sync_logins),
+            lifecycleOwner = viewLifecycleOwner,
+            accountManager = requireComponents.backgroundServices.accountManager,
+            navController = findNavController()
+        )
 
         togglePrefsEnabledWhileAuthenticating(enabled = true)
     }
 
-    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) =
-        updateSyncPreferenceStatus()
+    private fun canUseBiometricPrompt(context: Context): Boolean {
+        return if (SDK_INT >= M) {
+            val manager = BiometricManager.from(context)
+            val canAuthenticate = manager.canAuthenticate()
 
-    override fun onLoggedOut() = updateSyncPreferenceNeedsLogin()
+            val hardwareUnavailable = canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ||
+                canAuthenticate == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE
+            val biometricsEnrolled = canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS
 
-    override fun onAuthenticationProblems() = updateSyncPreferenceNeedsReauth()
-
-    private val isHardwareAvailable: Boolean by lazy {
-        if (Build.VERSION.SDK_INT >= M) {
-            context?.let {
-                val bm = BiometricManager.from(it)
-                val canAuthenticate = bm.canAuthenticate()
-                !(canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ||
-                        canAuthenticate == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE)
-            } ?: false
+            !hardwareUnavailable && biometricsEnrolled
         } else {
             false
         }
     }
 
-    private val hasBiometricEnrolled: Boolean by lazy {
-        if (Build.VERSION.SDK_INT >= M) {
-            context?.let {
-                val bm = BiometricManager.from(it)
-                val canAuthenticate = bm.canAuthenticate()
-                (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS)
-            } ?: false
+    private fun verifyCredentialsOrShowSetupWarning(context: Context) {
+        // Use the BiometricPrompt first
+        if (canUseBiometricPrompt(context)) {
+            biometricPrompt.authenticate(promptInfo)
+            return
+        }
+
+        // Fallback to prompting for password with the KeyguardManager
+        val manager = context.getSystemService<KeyguardManager>()
+        if (manager?.isKeyguardSecure == true) {
+            showPinVerification(manager)
         } else {
-            false
-        }
-    }
-
-    private fun updateSyncPreferenceStatus() {
-        requirePreference<Preference>(R.string.pref_key_password_sync_logins).apply {
-            val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
-            val loginsSyncStatus = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { false }
-            summary = getString(
-                if (loginsSyncStatus) R.string.preferences_passwords_sync_logins_on
-                else R.string.preferences_passwords_sync_logins_off
-            )
-            setOnPreferenceClickListener {
-                navigateToAccountSettingsFragment()
-                true
-            }
-        }
-    }
-
-    private fun updateSyncPreferenceNeedsLogin() {
-        requirePreference<Preference>(R.string.pref_key_password_sync_logins).apply {
-            summary = getString(R.string.preferences_passwords_sync_logins_sign_in)
-            setOnPreferenceClickListener {
-                navigateToTurnOnSyncFragment()
-                true
-            }
-        }
-    }
-
-    private fun updateSyncPreferenceNeedsReauth() {
-        requirePreference<Preference>(R.string.pref_key_password_sync_logins).apply {
-            summary = getString(R.string.preferences_passwords_sync_logins_reconnect)
-            setOnPreferenceClickListener {
-                navigateToAccountProblemFragment()
-                true
-            }
-        }
-    }
-
-    private fun verifyPinOrShowSetupWarning() {
-        val manager = activity?.getSystemService(KEYGUARD_SERVICE) as KeyguardManager
-        if (manager.isKeyguardSecure) {
-            showPinVerification()
-        } else {
-            if (context?.settings()?.shouldShowSecurityPinWarning == true) {
-                showPinDialogWarning()
+            // Warn that the device has not been secured
+            if (context.settings().shouldShowSecurityPinWarning) {
+                showPinDialogWarning(context)
             } else {
                 navigateToSavedLoginsFragment()
             }
         }
     }
 
-    private fun showPinDialogWarning() {
-        context?.let {
-            AlertDialog.Builder(it).apply {
-                setTitle(getString(R.string.logins_warning_dialog_title))
-                setMessage(
-                    getString(R.string.logins_warning_dialog_message)
-                )
+    private fun showPinDialogWarning(context: Context) {
+        AlertDialog.Builder(context).apply {
+            setTitle(getString(R.string.logins_warning_dialog_title))
+            setMessage(
+                getString(R.string.logins_warning_dialog_message)
+            )
 
-                setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
-                    navigateToSavedLoginsFragment()
-                }
+            setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
+                navigateToSavedLoginsFragment()
+            }
 
-                setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
-                    it.dismiss()
-                    val intent = Intent(
-                        android.provider.Settings.ACTION_SECURITY_SETTINGS
-                    )
-                    startActivity(intent)
-                }
-                create()
-            }.show().secure(activity)
-            it.settings().incrementShowLoginsSecureWarningCount()
-        }
+            setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
+                it.dismiss()
+                val intent = Intent(ACTION_SECURITY_SETTINGS)
+                startActivity(intent)
+            }
+            create()
+        }.show().secure(activity)
+        context.settings().incrementShowLoginsSecureWarningCount()
     }
 
-    @Suppress("Deprecation")
-    private fun showPinVerification() {
-        val manager = activity?.getSystemService<KeyguardManager>()!!
+    @Suppress("Deprecation") // This is only used when BiometricPrompt is unavailable
+    private fun showPinVerification(manager: KeyguardManager) {
         val intent = manager.createConfirmDeviceCredentialIntent(
             getString(R.string.logins_biometric_prompt_message_pin),
             getString(R.string.logins_biometric_prompt_message)
         )
-        startActivityForResult(
-            intent,
-            PIN_REQUEST
-        )
+        startActivityForResult(intent, PIN_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == PIN_REQUEST && resultCode == RESULT_OK) {
             navigateToSavedLoginsFragment()
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
+    /**
+     * Called when authentication succeeds.
+     */
     private fun navigateToSavedLoginsFragment() {
         context?.components?.analytics?.metrics?.track(Event.OpenLogins)
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginsListFragment()
-        findNavController().navigate(directions)
-    }
-
-    private fun navigateToAccountSettingsFragment() {
-        val directions =
-            SavedLoginsAuthFragmentDirections.actionGlobalAccountSettingsFragment()
-        findNavController().navigate(directions)
-    }
-
-    private fun navigateToAccountProblemFragment() {
-        val directions =
-            SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment()
-        findNavController().navigate(directions)
-    }
-
-    private fun navigateToTurnOnSyncFragment() {
-        val directions =
-            SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
         findNavController().navigate(directions)
     }
 
