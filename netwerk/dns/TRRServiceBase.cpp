@@ -16,7 +16,7 @@ namespace net {
 extern mozilla::LazyLogModule gHostResolverLog;
 #define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
-TRRServiceBase::TRRServiceBase() : mMode(0) {}
+TRRServiceBase::TRRServiceBase() : mMode(0), mURISetByDetection(false) {}
 
 void TRRServiceBase::ProcessURITemplate(nsACString& aURI) {
   // URI Template, RFC 6570.
