@@ -38,6 +38,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.allowUndo
@@ -204,19 +205,32 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
             getString(R.string.snackbar_tab_closed)
         }
 
-        view?.tabLayout?.let {
-            viewLifecycleOwner.lifecycleScope.allowUndo(
-                it,
-                snackbarMessage,
-                getString(R.string.snackbar_deleted_undo),
-                {
-                    sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
-                    tabTrayView.scrollToTab(snapshot.session.id)
-                },
-                operation = { },
-                elevation = ELEVATION,
-                anchorView = snackbarAnchor
-            )
+        // Check if this is the last tab of this session type
+        val isLastOpenTab = sessionManager.sessions.filter { snapshot.session.private }.size == 1
+        val rootView = if (isLastOpenTab) { requireActivity().getRootView()!! } else { requireView().tabLayout }
+        val anchorView = if (isLastOpenTab) { null } else { snackbarAnchor }
+
+        requireActivity().lifecycleScope.allowUndo(
+            rootView,
+            snackbarMessage,
+            getString(R.string.snackbar_deleted_undo),
+            {
+                sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
+                _tabTrayView?.scrollToTab(snapshot.session.id)
+            },
+            operation = { },
+            elevation = ELEVATION,
+            paddedForBottomToolbar = isLastOpenTab,
+            anchorView = anchorView
+        )
+
+        dismissTabTrayIfNecessary()
+    }
+
+    private fun dismissTabTrayIfNecessary() {
+        if (requireComponents.core.sessionManager.sessions.size == 1) {
+            findNavController().popBackStack(R.id.homeFragment, false)
+            dismissAllowingStateLoss()
         }
     }
 
@@ -250,19 +264,20 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun showUndoSnackbar(snackbarMessage: String, snapshot: SessionManager.Snapshot) {
-        view?.let {
-            viewLifecycleOwner.lifecycleScope.allowUndo(
-                it,
-                snackbarMessage,
-                getString(R.string.snackbar_deleted_undo),
-                {
-                    context?.components?.core?.sessionManager?.restore(snapshot)
-                },
-                operation = { },
-                elevation = ELEVATION,
-                anchorView = snackbarAnchor
-            )
-        }
+        // Warning: removing this definition and using it directly in the onCancel block will fail silently.
+        val sessionManager = view?.context?.components?.core?.sessionManager
+
+        requireActivity().lifecycleScope.allowUndo(
+            requireActivity().getRootView()!!,
+            snackbarMessage,
+            getString(R.string.snackbar_deleted_undo),
+            {
+                sessionManager?.restore(snapshot)
+            },
+            operation = { },
+            elevation = ELEVATION,
+            paddedForBottomToolbar = true
+        )
     }
 
     private fun showCollectionSnackbar(tabSize: Int, isNewCollection: Boolean = false) {

@@ -117,6 +117,7 @@ class DefaultTabTrayController(
         }
 
         showUndoSnackbar(snackbarMessage, snapshot)
+        dismissTabTray()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

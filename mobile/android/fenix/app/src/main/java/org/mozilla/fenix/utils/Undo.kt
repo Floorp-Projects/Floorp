@@ -5,10 +5,12 @@
 package org.mozilla.fenix.utils
 
 import android.view.View
+import androidx.appcompat.widget.ContentFrameLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.settings
 import java.util.concurrent.atomic.AtomicBoolean
@@ -37,7 +39,8 @@ fun CoroutineScope.allowUndo(
     onCancel: suspend () -> Unit = {},
     operation: suspend () -> Unit,
     anchorView: View? = null,
-    elevation: Float? = null
+    elevation: Float? = null,
+    paddedForBottomToolbar: Boolean = false
 ) {
     // By using an AtomicBoolean, we achieve memory effects of reading and
     // writing a volatile variable.
@@ -62,6 +65,30 @@ fun CoroutineScope.allowUndo(
         elevation?.also {
             snackbar.view.elevation = it
         }
+
+        val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
+        val toolbarHeight = view.context.resources
+            .getDimensionPixelSize(R.dimen.browser_toolbar_height)
+
+        snackbar.view.setPadding(
+            0,
+            0,
+            0,
+            if (
+                paddedForBottomToolbar &&
+                shouldUseBottomToolbar &&
+                // If the view passed in is a ContentFrameLayout, it does not matter
+                // if the user has a dynamicBottomToolbar or not, as the Android system
+                // can't intelligently position the snackbar on the upper most view.
+                // Ideally we should not pass ContentFrameLayout in, but it's the only
+                // way to display snackbars through a fragment transition.
+                view is ContentFrameLayout
+            ) {
+                toolbarHeight
+            } else {
+                0
+            }
+        )
 
         snackbar.show()
 
