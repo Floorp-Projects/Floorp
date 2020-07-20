@@ -22,8 +22,9 @@ use crate::cursor::{Cursor, FuncCursor};
 use crate::flowgraph::ControlFlowGraph;
 use crate::ir::instructions::CallInfo;
 use crate::ir::{
-    AbiParam, ArgumentLoc, ArgumentPurpose, Block, DataFlowGraph, Function, Inst, InstBuilder,
-    MemFlags, SigRef, Signature, StackSlotData, StackSlotKind, Type, Value, ValueLoc,
+    AbiParam, ArgumentLoc, ArgumentPurpose, Block, DataFlowGraph, ExtFuncData, ExternalName,
+    Function, Inst, InstBuilder, LibCall, MemFlags, SigRef, Signature, StackSlotData,
+    StackSlotKind, Type, Value, ValueLoc,
 };
 use crate::isa::TargetIsa;
 use crate::legalizer::split::{isplit, vsplit};
@@ -113,12 +114,31 @@ fn legalize_entry_params(func: &mut Function, entry: Block) {
 
         let abi_type = pos.func.signature.params[abi_arg];
         let arg_type = pos.func.dfg.value_type(arg);
+        if let ArgumentPurpose::StructArgument(size) = abi_type.purpose {
+            let offset = if let ArgumentLoc::Stack(offset) = abi_type.location {
+                offset
+            } else {
+                unreachable!("StructArgument must already have a Stack ArgumentLoc assigned");
+            };
+            let ss = pos.func.stack_slots.make_incoming_arg(size, offset);
+            let struct_arg = pos.ins().stack_addr(arg_type, ss, 0);
+            pos.func.dfg.change_to_alias(arg, struct_arg);
+            let dummy = pos
+                .func
+                .dfg
+                .append_block_param(entry, crate::ir::types::SARG_T);
+            pos.func.locations[dummy] = ValueLoc::Stack(ss);
+            abi_arg += 1;
+            continue;
+        }
+
         if arg_type == abi_type.value_type {
             // No value translation is necessary, this argument matches the ABI type.
             // Just use the original block argument value. This is the most common case.
             pos.func.dfg.attach_block_param(entry, arg);
             match abi_type.purpose {
                 ArgumentPurpose::Normal => {}
+                ArgumentPurpose::StructArgument(_) => unreachable!("Handled above"),
                 ArgumentPurpose::FramePointer => {}
                 ArgumentPurpose::CalleeSaved => {}
                 ArgumentPurpose::StructReturn => {
@@ -137,7 +157,7 @@ fn legalize_entry_params(func: &mut Function, entry: Block) {
                     debug_assert!(!has_stack_limit, "Multiple stack_limit arguments found");
                     has_stack_limit = true;
                 }
-                _ => panic!("Unexpected special-purpose arg {}", abi_type),
+                ArgumentPurpose::Link => panic!("Unexpected link arg {}", abi_type),
             }
             abi_arg += 1;
         } else {
@@ -168,7 +188,7 @@ fn legalize_entry_params(func: &mut Function, entry: Block) {
     for &arg in &pos.func.signature.params[abi_arg..] {
         match arg.purpose {
             // Any normal parameters should have been processed above.
-            ArgumentPurpose::Normal => {
+            ArgumentPurpose::Normal | ArgumentPurpose::StructArgument(_) => {
                 panic!("Leftover arg: {}", arg);
             }
             // The callee-save parameters should not appear until after register allocation is
@@ -587,9 +607,14 @@ fn convert_to_abi<PutArg>(
 
 /// Check if a sequence of arguments match a desired sequence of argument types.
 fn check_arg_types(dfg: &DataFlowGraph, args: &[Value], types: &[AbiParam]) -> bool {
-    let arg_types = args.iter().map(|&v| dfg.value_type(v));
-    let sig_types = types.iter().map(|&at| at.value_type);
-    arg_types.eq(sig_types)
+    args.len() == types.len()
+        && args.iter().zip(types.iter()).all(|(v, at)| {
+            if let ArgumentPurpose::StructArgument(_) = at.purpose {
+                true
+            } else {
+                dfg.value_type(*v) == at.value_type
+            }
+        })
 }
 
 /// Check if the arguments of the call `inst` match the signature.
@@ -699,7 +724,12 @@ fn legalize_inst_arguments<ArgType>(
             .unwrap();
         let mut put_arg = |func: &mut Function, arg| {
             let abi_type = get_abi_type(func, abi_arg);
-            if func.dfg.value_type(arg) == abi_type.value_type {
+            let struct_argument = if let ArgumentPurpose::StructArgument(_) = abi_type.purpose {
+                true
+            } else {
+                false
+            };
+            if func.dfg.value_type(arg) == abi_type.value_type || struct_argument {
                 // This is the argument type we need.
                 vlist.as_mut_slice(&mut func.dfg.value_lists)[num_fixed_values + abi_arg] = arg;
                 abi_arg += 1;
@@ -762,7 +792,7 @@ pub fn handle_call_abi(
 
     // Start by checking if the argument types already match the signature.
     let sig_ref = match check_call_signature(&pos.func.dfg, inst) {
-        Ok(_) => return spill_call_arguments(pos),
+        Ok(_) => return spill_call_arguments(pos, isa),
         Err(s) => s,
     };
 
@@ -800,7 +830,7 @@ pub fn handle_call_abi(
 
     // Go back and insert spills for any stack arguments.
     pos.goto_inst(inst);
-    spill_call_arguments(pos);
+    spill_call_arguments(pos, isa);
 
     // Yes, we changed stuff.
     true
@@ -990,8 +1020,12 @@ fn spill_entry_params(func: &mut Function, entry: Block) {
         .iter()
         .zip(func.dfg.block_params(entry))
     {
-        if let ArgumentLoc::Stack(offset) = abi.location {
-            let ss = func.stack_slots.make_incoming_arg(abi.value_type, offset);
+        if let ArgumentPurpose::StructArgument(_) = abi.purpose {
+            // Location has already been assigned during legalization.
+        } else if let ArgumentLoc::Stack(offset) = abi.location {
+            let ss = func
+                .stack_slots
+                .make_incoming_arg(abi.value_type.bytes(), offset);
             func.locations[arg] = ValueLoc::Stack(ss);
         }
     }
@@ -1005,7 +1039,7 @@ fn spill_entry_params(func: &mut Function, entry: Block) {
 /// TODO: The outgoing stack slots can be written a bit earlier, as long as there are no branches
 /// or calls between writing the stack slots and the call instruction. Writing the slots earlier
 /// could help reduce register pressure before the call.
-fn spill_call_arguments(pos: &mut FuncCursor) -> bool {
+fn spill_call_arguments(pos: &mut FuncCursor, isa: &dyn TargetIsa) -> bool {
     let inst = pos
         .current_inst()
         .expect("Cursor must point to a call instruction");
@@ -1032,9 +1066,17 @@ fn spill_call_arguments(pos: &mut FuncCursor) -> bool {
                         // Assign `arg` to a new stack slot, unless it's already in the correct
                         // slot. The legalization needs to be idempotent, so we should see a
                         // correct outgoing slot on the second pass.
-                        let ss = stack_slots.get_outgoing_arg(abi.value_type, offset);
+                        let (ss, size) = match abi.purpose {
+                            ArgumentPurpose::StructArgument(size) => {
+                                (stack_slots.get_outgoing_arg(size, offset), Some(size))
+                            }
+                            _ => (
+                                stack_slots.get_outgoing_arg(abi.value_type.bytes(), offset),
+                                None,
+                            ),
+                        };
                         if locations[arg] != ValueLoc::Stack(ss) {
-                            Some((idx, arg, ss))
+                            Some((idx, arg, ss, size))
                         } else {
                             None
                         }
@@ -1049,9 +1091,48 @@ fn spill_call_arguments(pos: &mut FuncCursor) -> bool {
         return false;
     }
 
+    let mut libc_memcpy = None;
+    let mut import_memcpy = |func: &mut Function, pointer_type| {
+        if let Some(libc_memcpy) = libc_memcpy {
+            return libc_memcpy;
+        }
+
+        let signature = {
+            let mut s = Signature::new(isa.default_call_conv());
+            s.params.push(AbiParam::new(pointer_type));
+            s.params.push(AbiParam::new(pointer_type));
+            // The last argument of `memcpy` is a `size_t`. This is the same size as a pointer on
+            // all architectures we are interested in.
+            s.params.push(AbiParam::new(pointer_type));
+            legalize_libcall_signature(&mut s, isa);
+            func.import_signature(s)
+        };
+
+        let func = func.import_function(ExtFuncData {
+            name: ExternalName::LibCall(LibCall::Memcpy),
+            signature,
+            colocated: false,
+        });
+        libc_memcpy = Some(func);
+        func
+    };
+
     // Insert the spill instructions and rewrite call arguments.
-    for (idx, arg, ss) in arglist {
-        let stack_val = pos.ins().spill(arg);
+    for (idx, arg, ss, size) in arglist {
+        let stack_val = if let Some(size) = size {
+            // Struct argument
+            let pointer_type = pos.func.dfg.value_type(arg);
+            let src = arg;
+            let dest = pos.ins().stack_addr(pointer_type, ss, 0);
+            let size = pos.ins().iconst(pointer_type, i64::from(size));
+
+            let libc_memcpy = import_memcpy(pos.func, pointer_type);
+            pos.ins().call(libc_memcpy, &[dest, src, size]);
+            pos.ins().dummy_sarg_t()
+        } else {
+            // Non struct argument
+            pos.ins().spill(arg)
+        };
         pos.func.locations[stack_val] = ValueLoc::Stack(ss);
         pos.func.dfg.inst_variable_args_mut(inst)[idx] = stack_val;
     }
