@@ -193,6 +193,7 @@ class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
   nsresult Run();
 
  private:
+  bool IsCollapsedNonCharacterRange() const;
   bool IsSingleNodeCharacterRange() const;
 
   ContentIteratorBase& mIterator;
@@ -205,6 +206,10 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
                                            const RawRangeBoundary& aEnd) {
   Initializer initializer{*this, aStart, aEnd};
   return initializer.Run();
+}
+
+bool ContentIteratorBase::Initializer::IsCollapsedNonCharacterRange() const {
+  return !mStartIsCharacterData && mStart == mEnd;
 }
 
 bool ContentIteratorBase::Initializer::IsSingleNodeCharacterRange() const {
@@ -226,7 +231,7 @@ nsresult ContentIteratorBase::Initializer::Run() {
   //      we always want to be able to iterate text nodes at the end points
   //      of a range.
 
-  if (!mStartIsCharacterData && mStart == mEnd) {
+  if (IsCollapsedNonCharacterRange()) {
     mIterator.SetEmpty();
     return NS_OK;
   }
