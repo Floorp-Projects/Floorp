@@ -182,7 +182,7 @@ class nsContainerFrame : public nsSplittableFrame {
   // Set the view's size and position after its frame has been reflowed.
   static void SyncFrameViewAfterReflow(
       nsPresContext* aPresContext, nsIFrame* aFrame, nsView* aView,
-      const nsRect& aVisualOverflowArea,
+      const nsRect& aInkOverflowArea,
       ReflowChildFlags aFlags = ReflowChildFlags::Default);
 
   // Syncs properties to the top level view and window, like transparency and

@@ -107,11 +107,11 @@ class FilterInstance {
       nsIFrame* aFilteredFrame, const nsRegion& aPostFilterDirtyRegion);
 
   /**
-   * Returns the post-filter visual overflow rect (paint bounds) of
+   * Returns the post-filter ink overflow rect (paint bounds) of
    * aFilteredFrame.
    * @param aOverrideBBox A user space rect, in user units, that should be used
    *   as aFilteredFrame's bbox ('bbox' is a specific SVG term), if non-null.
-   * @param aPreFilterBounds The pre-filter visual overflow rect of
+   * @param aPreFilterBounds The pre-filter ink overflow rect of
    *   aFilteredFrame, if non-null.
    */
   static nsRect GetPostFilterBounds(nsIFrame* aFilteredFrame,
@@ -147,8 +147,8 @@ class FilterInstance {
    * @param aPreFilterDirtyRegion [optional] The pre-filter area of
    *   the filtered element that changed, in app units. Only required if you
    *   will call ComputePostFilterDirtyRegion().
-   * @param aPreFilterVisualOverflowRectOverride [optional] Use a different
-   *   visual overflow rect for the target element.
+   * @param aPreFilterInkOverflowRectOverride [optional] Use a different
+   *   ink overflow rect for the target element.
    * @param aOverrideBBox [optional] Use a different SVG bbox for the target
    *   element. Must be non-null if aTargetFrame is null.
    */
@@ -160,7 +160,7 @@ class FilterInstance {
                  const gfxMatrix& aPaintTransform,
                  const nsRegion* aPostFilterDirtyRegion = nullptr,
                  const nsRegion* aPreFilterDirtyRegion = nullptr,
-                 const nsRect* aPreFilterVisualOverflowRectOverride = nullptr,
+                 const nsRect* aPreFilterInkOverflowRectOverride = nullptr,
                  const gfxRect* aOverrideBBox = nullptr);
 
   /**

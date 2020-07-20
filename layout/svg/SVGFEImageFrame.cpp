@@ -68,7 +68,7 @@ class SVGFEImageFrame final : public nsIFrame {
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
-    // We don't maintain a visual overflow rect
+    // We don't maintain a ink overflow rect
     return false;
   }
 };

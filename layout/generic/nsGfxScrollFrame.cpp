@@ -1035,7 +1035,7 @@ static void GetScrollableOverflowForPerspective(
           // TODO: Can we reuse the reference box?
           TransformReferenceBox refBox(child);
           preScroll = nsDisplayTransform::TransformRect(
-              child->GetScrollableOverflowRectRelativeToSelf(), child, refBox);
+              child->ScrollableOverflowRectRelativeToSelf(), child, refBox);
         }
 
         // Temporarily override the scroll position of the scrolled frame by
@@ -1046,7 +1046,7 @@ static void GetScrollableOverflowForPerspective(
           aScrolledFrame->SetPosition(scrollPos + nsPoint(600, 600));
           TransformReferenceBox refBox(child);
           postScroll = nsDisplayTransform::TransformRect(
-              child->GetScrollableOverflowRectRelativeToSelf(), child, refBox);
+              child->ScrollableOverflowRectRelativeToSelf(), child, refBox);
           aScrolledFrame->SetPosition(scrollPos);
         }
 
@@ -1095,7 +1095,7 @@ static void GetScrollableOverflowForPerspective(
       } else if (aCurrentFrame == aScrolledFrame) {
         aScrolledFrameOverflowArea.UnionRect(
             aScrolledFrameOverflowArea,
-            child->GetScrollableOverflowRectRelativeToParent());
+            child->ScrollableOverflowRectRelativeToParent());
       }
     }
   }
@@ -1191,7 +1191,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
 
   nsRect oldScrollAreaBounds = mHelper.mScrollPort;
   nsRect oldScrolledAreaBounds =
-      mHelper.mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
+      mHelper.mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   nsPoint oldScrollPosition = mHelper.GetScrollPosition();
 
   state.mComputedBorder = aReflowInput.ComputedPhysicalBorderPadding() -
@@ -1227,7 +1227,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   mHelper.mHasVerticalScrollbar = state.mShowVScrollbar;
   nsRect newScrollAreaBounds = mHelper.mScrollPort;
   nsRect newScrolledAreaBounds =
-      mHelper.mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
+      mHelper.mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   if (mHelper.mSkippedScrollbarLayout || reflowHScrollbar || reflowVScrollbar ||
       reflowScrollCorner || HasAnyStateBits(NS_FRAME_IS_DIRTY) ||
       didHaveHScrollbar != state.mShowHScrollbar ||
@@ -3277,14 +3277,14 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
     // zoomable, and where the scrollbar sizes are bounded by the widget.
     const nsRect visible =
         mIsRoot && mOuter->PresContext()->IsRootContentDocument()
-            ? scrollParts[i]->GetVisualOverflowRectRelativeToParent()
+            ? scrollParts[i]->InkOverflowRectRelativeToParent()
             : aBuilder->GetVisibleRect();
     if (visible.IsEmpty()) {
       continue;
     }
     const nsRect dirty =
         mIsRoot && mOuter->PresContext()->IsRootContentDocument()
-            ? scrollParts[i]->GetVisualOverflowRectRelativeToParent()
+            ? scrollParts[i]->InkOverflowRectRelativeToParent()
             : aBuilder->GetDirtyRect();
 
     // Always create layers for overlay scrollbars so that we don't create a
@@ -3642,7 +3642,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // We only clip if there is *scrollable* overflow, to avoid clipping
     // *visual* overflow unnecessarily.
     nsRect clipRect = effectiveScrollPort + aBuilder->ToReferenceFrame(mOuter);
-    nsRect so = mScrolledFrame->GetScrollableOverflowRect();
+    nsRect so = mScrolledFrame->ScrollableOverflowRect();
     if ((cbH && (clipRect.width != so.width || so.x < 0)) ||
         (cbV && (clipRect.height != so.height || so.y < 0))) {
       nsMargin padding = mOuter->GetUsedPadding();
@@ -3776,7 +3776,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       DisplayListClipState::AutoSaveRestore scrolledRectClipState(aBuilder);
       nsRect scrolledRectClip =
           GetUnsnappedScrolledRectInternal(
-              mScrolledFrame->GetScrollableOverflowRect(), mScrollPort.Size()) +
+              mScrolledFrame->ScrollableOverflowRect(), mScrollPort.Size()) +
           mScrolledFrame->GetPosition();
       bool clippedToDisplayPort = false;
       if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
@@ -6614,7 +6614,7 @@ static nscoord SnapCoord(nscoord aCoord, double aRes,
 
 nsRect ScrollFrameHelper::GetScrolledRect() const {
   nsRect result = GetUnsnappedScrolledRectInternal(
-      mScrolledFrame->GetScrollableOverflowRect(), mScrollPort.Size());
+      mScrolledFrame->ScrollableOverflowRect(), mScrollPort.Size());
 
   if (result.width < mScrollPort.width) {
     NS_WARNING("Scrolled rect smaller than scrollport?");
@@ -6869,7 +6869,7 @@ void ScrollFrameHelper::FireScrolledAreaEvent() {
   nsPresContext* prescontext = mOuter->PresContext();
   nsIContent* content = mOuter->GetContent();
 
-  event.mArea = mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
+  event.mArea = mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   if (Document* doc = content->GetUncomposedDoc()) {
     EventDispatcher::Dispatch(ToSupports(doc), prescontext, &event, nullptr);
   }

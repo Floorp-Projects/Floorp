@@ -211,7 +211,7 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     return;
   }
 
-  nsRect kidDirtyRect = kid->GetVisualOverflowRect();
+  nsRect kidDirtyRect = kid->InkOverflowRect();
 
   /* Check if we need to draw anything. */
   if (aDirtyRect) {
@@ -363,7 +363,7 @@ void SVGForeignObjectFrame::ReflowSVG() {
   }
 
   auto* anonKid = PrincipalChildList().FirstChild();
-  nsRect overflow = anonKid->GetVisualOverflowRect();
+  nsRect overflow = anonKid->InkOverflowRect();
 
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
@@ -377,7 +377,7 @@ void SVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags) {
   MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
              "Invalidation logic may need adjusting");
 
-  bool needNewBounds = false;  // i.e. mRect or visual overflow rect
+  bool needNewBounds = false;  // i.e. mRect or ink overflow rect
   bool needReflow = false;
   bool needNewCanvasTM = false;
 
@@ -547,7 +547,7 @@ nsRect SVGForeignObjectFrame::GetInvalidRegion() {
     gfxRect r(mRect.x, mRect.y, mRect.width, mRect.height);
     r.Scale(1.0 / AppUnitsPerCSSPixel());
     nsRect rect = SVGUtils::ToCanvasBounds(r, GetCanvasTM(), PresContext());
-    rect = SVGUtils::GetPostFilterVisualOverflowRect(this, rect);
+    rect = SVGUtils::GetPostFilterInkOverflowRect(this, rect);
     return rect;
   }
   return nsRect();

@@ -804,11 +804,11 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
 
   // Determine the amount of overflow above and below the frame's mRect.
   //
-  // We need to call GetVisualOverflowRectRelativeToSelf because this includes
+  // We need to call InkOverflowRectRelativeToSelf because this includes
   // overflowing decorations, which the MeasureText call below does not.  We
   // assume here the decorations only overflow above and below the frame, never
   // horizontally.
-  nsRect self = mFrame->GetVisualOverflowRectRelativeToSelf();
+  nsRect self = mFrame->InkOverflowRectRelativeToSelf();
   nsRect rect = mFrame->GetRect();
   bool vertical = IsVertical();
   nscoord above = vertical ? -self.x : -self.y;
@@ -3210,8 +3210,8 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       bool paintSVGGlyphs;
       nsTextFrame::PaintTextParams params(&aContext);
       params.framePt = Point();
-      params.dirtyRect = LayoutDevicePixel::FromAppUnits(
-          frame->GetVisualOverflowRect(), auPerDevPx);
+      params.dirtyRect =
+          LayoutDevicePixel::FromAppUnits(frame->InkOverflowRect(), auPerDevPx);
       params.contextPaint = contextPaint;
 
       const bool isSelected = frame->IsSelected();

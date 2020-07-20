@@ -813,12 +813,11 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   Maybe<ReflowInput> innerRI;
 
   nsRect origCaptionRect;
-  nsRect origCaptionVisualOverflow;
+  nsRect origCaptionInkOverflow;
   bool captionFirstReflow = false;
   if (mCaptionFrames.NotEmpty()) {
     origCaptionRect = mCaptionFrames.FirstChild()->GetRect();
-    origCaptionVisualOverflow =
-        mCaptionFrames.FirstChild()->GetVisualOverflowRect();
+    origCaptionInkOverflow = mCaptionFrames.FirstChild()->InkOverflowRect();
     captionFirstReflow =
         mCaptionFrames.FirstChild()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
   }
@@ -977,9 +976,9 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   innerRI.reset();
 
   if (mCaptionFrames.NotEmpty()) {
-    nsTableFrame::InvalidateTableFrame(
-        mCaptionFrames.FirstChild(), origCaptionRect, origCaptionVisualOverflow,
-        captionFirstReflow);
+    nsTableFrame::InvalidateTableFrame(mCaptionFrames.FirstChild(),
+                                       origCaptionRect, origCaptionInkOverflow,
+                                       captionFirstReflow);
   }
 
   UpdateOverflowAreas(aDesiredSize);

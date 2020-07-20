@@ -1375,10 +1375,9 @@ gfx::sRGBColor nsCSSRendering::GetShadowColor(const StyleSimpleShadow& aShadow,
 
 nsRect nsCSSRendering::GetShadowRect(const nsRect& aFrameArea,
                                      bool aNativeTheme, nsIFrame* aForFrame) {
-  nsRect frameRect = aNativeTheme
-                         ? aForFrame->GetVisualOverflowRectRelativeToSelf() +
-                               aFrameArea.TopLeft()
-                         : aFrameArea;
+  nsRect frameRect = aNativeTheme ? aForFrame->InkOverflowRectRelativeToSelf() +
+                                        aFrameArea.TopLeft()
+                                  : aFrameArea;
   Sides skipSides = aForFrame->GetSkipSides();
   frameRect = BoxDecorationRectForBorder(aForFrame, frameRect, skipSides);
 

@@ -549,7 +549,7 @@ class nsDisplayBullet final : public nsPaintedDisplayItem {
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = false;
-    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+    return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
 
   virtual bool CreateWebRenderCommands(

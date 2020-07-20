@@ -4792,8 +4792,8 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
     // XXX deal with frame being null due to display:contents
     for (; frame;
          frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame)) {
-      info->mBuilder.SetVisibleRect(frame->GetVisualOverflowRect());
-      info->mBuilder.SetDirtyRect(frame->GetVisualOverflowRect());
+      info->mBuilder.SetVisibleRect(frame->InkOverflowRect());
+      info->mBuilder.SetDirtyRect(frame->InkOverflowRect());
       frame->BuildDisplayListForStackingContext(&info->mBuilder, &info->mList);
     }
   };
@@ -5936,7 +5936,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
 
     for (nsIFrame* child : list) {
       nsRect r = rect - child->GetPosition();
-      if (!r.IntersectRect(r, child->GetVisualOverflowRect())) {
+      if (!r.IntersectRect(r, child->InkOverflowRect())) {
         continue;
       }
       if (child->IsTransformed()) {
@@ -5944,7 +5944,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
         // rect
         if (!preserves3DChildren ||
             !child->Combines3DTransformWithAncestors()) {
-          const nsRect overflow = child->GetVisualOverflowRectRelativeToSelf();
+          const nsRect overflow = child->InkOverflowRectRelativeToSelf();
           nsRect out;
           if (nsDisplayTransform::UntransformRect(r, overflow, child, &out)) {
             r = out;
@@ -9617,7 +9617,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   target->SetSize(boundsRelativeToTarget.Size());
 
   // Always use boundsRelativeToTarget here, not
-  // desiredSize.GetVisualOverflowArea(), because for root frames (where they
+  // desiredSize.InkOverflowRect(), because for root frames (where they
   // could be different, since root frames are allowed to have overflow) the
   // root view bounds need to match the viewport bounds; the view manager
   // "window dimensions" code depends on it.

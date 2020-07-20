@@ -265,8 +265,8 @@ class SVGObserverUtils {
    * NOTE! A return value of eHasNoRefs does NOT mean that there are no filters
    * to be applied, only that there are no references to SVG filter elements.
    *
-   * XXX Callers other than ComputePostEffectsVisualOverflowRect and
-   * SVGUtils::GetPostFilterVisualOverflowRect should not need to initiate
+   * XXX Callers other than ComputePostEffectsInkOverflowRect and
+   * SVGUtils::GetPostFilterInkOverflowRect should not need to initiate
    * observing.  If we have a bug that causes invalidation (which would remove
    * observers) between reflow and painting, then we don't really want to
    * re-add abservers during painting.  That has the potential to hide logic

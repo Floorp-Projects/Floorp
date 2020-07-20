@@ -2447,7 +2447,7 @@ void nsIFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
   }
 
   if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT) &&
-      GetScrollableOverflowRect().IsEmpty()) {
+      ScrollableOverflowRect().IsEmpty()) {
     // Skip parts of IB-splits with an empty overflow rect, see bug 434301.
     // We may still want to fix some of the overflow area calculations over in
     // that bug.
@@ -3166,7 +3166,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
           aBuilder->SavePreserves3DAllowAsyncAnimation(false);
         }
 
-        const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
+        const nsRect overflow = InkOverflowRectRelativeToSelf();
         if (overflow.IsEmpty() && !extend3DContext) {
           return;
         }
@@ -3196,8 +3196,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // Restict the building area to the overflow rect for these frames, since
     // RetainedDisplayListBuilder uses it to know if the size of the stacking
     // context changed.
-    visibleRect.IntersectRect(visibleRect, GetVisualOverflowRect());
-    dirtyRect.IntersectRect(dirtyRect, GetVisualOverflowRect());
+    visibleRect.IntersectRect(visibleRect, InkOverflowRect());
+    dirtyRect.IntersectRect(dirtyRect, InkOverflowRect());
   }
 
   bool hasOverrideDirtyRect = false;
@@ -3850,7 +3850,7 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
     return true;
   }
 
-  const nsRect overflow = aChild->GetVisualOverflowRect();
+  const nsRect overflow = aChild->InkOverflowRect();
 
   if (aDirty.Intersects(overflow)) {
     return true;
@@ -4049,8 +4049,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
 
     if (aBuilder->GetIncludeAllOutOfFlows()) {
-      visible = child->GetVisualOverflowRect();
-      dirty = child->GetVisualOverflowRect();
+      visible = child->InkOverflowRect();
+      dirty = child->InkOverflowRect();
     } else if (savedOutOfFlowData) {
       visible =
           savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, child, &dirty);
@@ -6178,7 +6178,7 @@ LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
 }
 
 nsRect nsIFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
-  return GetVisualOverflowRect();
+  return InkOverflowRect();
 }
 
 /* virtual */
@@ -7170,11 +7170,11 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // For SVG frames, we only need to account for filters.
     // TODO: We could also take account of clipPath and mask to reduce the
-    // visual overflow, but that's not essential.
+    // ink overflow, but that's not essential.
     if (aFrame->StyleEffects()->HasFilters()) {
       SetOrUpdateRectValuedProperty(aFrame, nsIFrame::PreEffectsBBoxProperty(),
                                     r);
-      r = SVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
+      r = SVGUtils::GetPostFilterInkOverflowRect(aFrame, aOverflowRect);
     }
     return r;
   }
@@ -7213,7 +7213,7 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   if (SVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame)) {
     SetOrUpdateRectValuedProperty(aFrame, nsIFrame::PreEffectsBBoxProperty(),
                                   r);
-    r = SVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);
+    r = SVGIntegrationUtils::ComputePostEffectsInkOverflowRect(aFrame, r);
   }
 
   return r;
@@ -7247,7 +7247,7 @@ nsPoint nsIFrame::GetPositionIgnoringScrolling() const {
 }
 
 nsRect nsIFrame::GetOverflowRect(nsOverflowType aType) const {
-  MOZ_ASSERT(aType == eVisualOverflow || aType == eScrollableOverflow,
+  MOZ_ASSERT(aType == eInkOverflow || aType == eScrollableOverflow,
              "unexpected type");
 
   // Note that in some cases the overflow area might not have been
@@ -7262,8 +7262,8 @@ nsRect nsIFrame::GetOverflowRect(nsOverflowType aType) const {
     return GetOverflowAreasProperty()->Overflow(aType);
   }
 
-  if (aType == eVisualOverflow && mOverflow.mType != NS_FRAME_OVERFLOW_NONE) {
-    return GetVisualOverflowFromDeltas();
+  if (aType == eInkOverflow && mOverflow.mType != NS_FRAME_OVERFLOW_NONE) {
+    return InkOverflowFromDeltas();
   }
 
   return nsRect(nsPoint(0, 0), GetSize());
@@ -7276,7 +7276,7 @@ nsOverflowAreas nsIFrame::GetOverflowAreas() const {
     return *GetOverflowAreasProperty();
   }
 
-  return nsOverflowAreas(GetVisualOverflowFromDeltas(),
+  return nsOverflowAreas(InkOverflowFromDeltas(),
                          nsRect(nsPoint(0, 0), GetSize()));
 }
 
@@ -7285,48 +7285,48 @@ nsOverflowAreas nsIFrame::GetOverflowAreasRelativeToSelf() const {
     nsOverflowAreas* preTransformOverflows =
         GetProperty(PreTransformOverflowAreasProperty());
     if (preTransformOverflows) {
-      return nsOverflowAreas(preTransformOverflows->VisualOverflow(),
+      return nsOverflowAreas(preTransformOverflows->InkOverflow(),
                              preTransformOverflows->ScrollableOverflow());
     }
   }
-  return nsOverflowAreas(GetVisualOverflowRect(), GetScrollableOverflowRect());
+  return nsOverflowAreas(InkOverflowRect(), ScrollableOverflowRect());
 }
 
-nsRect nsIFrame::GetScrollableOverflowRectRelativeToParent() const {
-  return GetScrollableOverflowRect() + mRect.TopLeft();
+nsRect nsIFrame::ScrollableOverflowRectRelativeToParent() const {
+  return ScrollableOverflowRect() + mRect.TopLeft();
 }
 
-nsRect nsIFrame::GetVisualOverflowRectRelativeToParent() const {
-  return GetVisualOverflowRect() + mRect.TopLeft();
+nsRect nsIFrame::InkOverflowRectRelativeToParent() const {
+  return InkOverflowRect() + mRect.TopLeft();
 }
 
-nsRect nsIFrame::GetScrollableOverflowRectRelativeToSelf() const {
+nsRect nsIFrame::ScrollableOverflowRectRelativeToSelf() const {
   if (IsTransformed()) {
     nsOverflowAreas* preTransformOverflows =
         GetProperty(PreTransformOverflowAreasProperty());
     if (preTransformOverflows)
       return preTransformOverflows->ScrollableOverflow();
   }
-  return GetScrollableOverflowRect();
+  return ScrollableOverflowRect();
 }
 
-nsRect nsIFrame::GetVisualOverflowRectRelativeToSelf() const {
+nsRect nsIFrame::InkOverflowRectRelativeToSelf() const {
   if (IsTransformed()) {
     nsOverflowAreas* preTransformOverflows =
         GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows) return preTransformOverflows->VisualOverflow();
+    if (preTransformOverflows) return preTransformOverflows->InkOverflow();
   }
-  return GetVisualOverflowRect();
+  return InkOverflowRect();
 }
 
-nsRect nsIFrame::GetPreEffectsVisualOverflowRect() const {
+nsRect nsIFrame::PreEffectsInkOverflowRect() const {
   nsRect* r = GetProperty(nsIFrame::PreEffectsBBoxProperty());
-  return r ? *r : GetVisualOverflowRectRelativeToSelf();
+  return r ? *r : InkOverflowRectRelativeToSelf();
 }
 
 bool nsIFrame::UpdateOverflow() {
   MOZ_ASSERT(FrameMaintainsOverflow(),
-             "Non-display SVG do not maintain visual overflow rects");
+             "Non-display SVG do not maintain ink overflow rects");
 
   nsRect rect(nsPoint(0, 0), GetSize());
   nsOverflowAreas overflowAreas(rect, rect);
@@ -7347,7 +7347,7 @@ bool nsIFrame::UpdateOverflow() {
       if (!(flags & ReflowChildFlags::NoSizeView)) {
         // Make sure the frame's view is properly sized.
         nsViewManager* vm = view->GetViewManager();
-        vm->ResizeView(view, overflowAreas.VisualOverflow(), true);
+        vm->ResizeView(view, overflowAreas.InkOverflow(), true);
       }
     }
 
@@ -7552,12 +7552,12 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   }
   nsIFrame* f = const_cast<nsIFrame*>(this);
   if (f->HasOverflowAreas()) {
-    nsRect vo = f->GetVisualOverflowRect();
+    nsRect vo = f->InkOverflowRect();
     if (!vo.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" vis-overflow=%s",
+      aTo += nsPrintfCString(" ink-overflow=%s",
                              ConvertToString(vo, aFlags).c_str());
     }
-    nsRect so = f->GetScrollableOverflowRect();
+    nsRect so = f->ScrollableOverflowRect();
     if (!so.IsEqualEdges(mRect)) {
       aTo += nsPrintfCString(" scr-overflow=%s",
                              ConvertToString(so, aFlags).c_str());
@@ -8893,7 +8893,7 @@ bool nsIFrame::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas) {
     return changed;
   }
 
-  const nsRect& vis = aOverflowAreas.VisualOverflow();
+  const nsRect& vis = aOverflowAreas.InkOverflow();
   uint32_t l = -vis.x,                 // left edge: positive delta is leftwards
       t = -vis.y,                      // top: positive is upwards
       r = vis.XMost() - mRect.width,   // right: positive is rightwards
@@ -8923,10 +8923,10 @@ bool nsIFrame::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas) {
     // There was no scrollable overflow before, and there isn't now.
     return oldDeltas != mOverflow.mVisualDeltas;
   } else {
-    bool changed = !aOverflowAreas.ScrollableOverflow().IsEqualEdges(
-                       nsRect(nsPoint(0, 0), GetSize())) ||
-                   !aOverflowAreas.VisualOverflow().IsEqualEdges(
-                       GetVisualOverflowFromDeltas());
+    bool changed =
+        !aOverflowAreas.ScrollableOverflow().IsEqualEdges(
+            nsRect(nsPoint(0, 0), GetSize())) ||
+        !aOverflowAreas.InkOverflow().IsEqualEdges(InkOverflowFromDeltas());
 
     // it's a large overflow area that we need to store as a property
     mOverflow.mType = NS_FRAME_OVERFLOW_LARGE;
@@ -8976,14 +8976,13 @@ static nsRect UnionBorderBoxes(
   // that we might need to, and if the frame doesn't clip its overflow
   // anyway.
   if (aOverflowOverride) {
-    if (!doTransform &&
-        bounds.IsEqualEdges(aOverflowOverride->VisualOverflow()) &&
+    if (!doTransform && bounds.IsEqualEdges(aOverflowOverride->InkOverflow()) &&
         bounds.IsEqualEdges(aOverflowOverride->ScrollableOverflow())) {
       return u;
     }
   } else {
-    if (!doTransform && bounds.IsEqualEdges(aFrame->GetVisualOverflowRect()) &&
-        bounds.IsEqualEdges(aFrame->GetScrollableOverflowRect())) {
+    if (!doTransform && bounds.IsEqualEdges(aFrame->InkOverflowRect()) &&
+        bounds.IsEqualEdges(aFrame->ScrollableOverflowRect())) {
       return u;
     }
   }
@@ -9146,7 +9145,7 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
     outerRect.Inflate(width + offset);
   }
 
-  nsRect& vo = aOverflowAreas.VisualOverflow();
+  nsRect& vo = aOverflowAreas.InkOverflow();
   vo.UnionRectEdges(vo, innerRect.Union(outerRect));
 }
 
@@ -9163,7 +9162,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // Store the passed in overflow area if we are a preserve-3d frame or we have
   // a transform, and it's not just the frame bounds.
   if (hasTransform || Combines3DTransformWithAncestors(disp)) {
-    if (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
+    if (!aOverflowAreas.InkOverflow().IsEqualEdges(bounds) ||
         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
       nsOverflowAreas* initial =
           GetProperty(nsIFrame::InitialOverflowProperty());
@@ -9273,7 +9272,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     if (presContext->Theme()->GetWidgetOverflow(
             presContext->DeviceContext(), this, disp->EffectiveAppearance(),
             &r)) {
-      nsRect& vo = aOverflowAreas.VisualOverflow();
+      nsRect& vo = aOverflowAreas.InkOverflow();
       vo.UnionRectEdges(vo, r);
     }
   }
@@ -9281,8 +9280,8 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   ComputeAndIncludeOutlineArea(this, aOverflowAreas, aNewSize);
 
   // Nothing in here should affect scrollable overflow.
-  aOverflowAreas.VisualOverflow() =
-      ComputeEffectsRect(this, aOverflowAreas.VisualOverflow(), aNewSize);
+  aOverflowAreas.InkOverflow() =
+      ComputeEffectsRect(this, aOverflowAreas.InkOverflow(), aNewSize);
 
   // Absolute position clipping
   const nsStyleEffects* effects = StyleEffects();
@@ -10634,7 +10633,7 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
     return nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(aTarget);
   }
 
-  nsRect clipRect = clipParent->GetVisualOverflowRectRelativeToSelf();
+  nsRect clipRect = clipParent->InkOverflowRectRelativeToSelf();
   // We consider that the target is scrolled out if the scrollable (or root)
   // frame is empty.
   if (clipRect.IsEmpty()) {
@@ -10666,7 +10665,7 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
 }
 
 bool nsIFrame::IsScrolledOutOfView() const {
-  nsRect rect = GetVisualOverflowRectRelativeToSelf();
+  nsRect rect = InkOverflowRectRelativeToSelf();
   return IsFrameScrolledOutOfView(this, rect, this);
 }
 
@@ -10811,7 +10810,7 @@ nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
     // the overflow that are not occupied by descendants get skipped and the
     // APZ code sends touch events to the content underneath instead.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
-    area = GetScrollableOverflowRect();
+    area = ScrollableOverflowRect();
   } else {
     area = nsRect(nsPoint(0, 0), GetSize());
   }
@@ -11946,13 +11945,13 @@ void nsIFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
       printf(" status=%s", ToString(aStatus).c_str());
     }
     if (aFrame->HasOverflowAreas()) {
-      DR_state->PrettyUC(aMetrics.VisualOverflow().x, x, 16);
-      DR_state->PrettyUC(aMetrics.VisualOverflow().y, y, 16);
-      DR_state->PrettyUC(aMetrics.VisualOverflow().width, width, 16);
-      DR_state->PrettyUC(aMetrics.VisualOverflow().height, height, 16);
+      DR_state->PrettyUC(aMetrics.InkOverflow().x, x, 16);
+      DR_state->PrettyUC(aMetrics.InkOverflow().y, y, 16);
+      DR_state->PrettyUC(aMetrics.InkOverflow().width, width, 16);
+      DR_state->PrettyUC(aMetrics.InkOverflow().height, height, 16);
       printf(" vis-o=(%s,%s) %s x %s", x, y, width, height);
 
-      nsRect storedOverflow = aFrame->GetVisualOverflowRect();
+      nsRect storedOverflow = aFrame->InkOverflowRect();
       DR_state->PrettyUC(storedOverflow.x, x, 16);
       DR_state->PrettyUC(storedOverflow.y, y, 16);
       DR_state->PrettyUC(storedOverflow.width, width, 16);
@@ -11965,7 +11964,7 @@ void nsIFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
       DR_state->PrettyUC(aMetrics.ScrollableOverflow().height, height, 16);
       printf(" scr-o=(%s,%s) %s x %s", x, y, width, height);
 
-      storedOverflow = aFrame->GetScrollableOverflowRect();
+      storedOverflow = aFrame->ScrollableOverflowRect();
       DR_state->PrettyUC(storedOverflow.x, x, 16);
       DR_state->PrettyUC(storedOverflow.y, y, 16);
       DR_state->PrettyUC(storedOverflow.width, width, 16);

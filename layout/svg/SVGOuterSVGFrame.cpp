@@ -465,7 +465,7 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   if (HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     ReflowSVGNonDisplayText(this);
   } else {
-    // Update the mRects and visual overflow rects of all our descendants,
+    // Update the mRects and ink overflow rects of all our descendants,
     // including our anonymous wrapper kid:
     anonKid->ReflowSVG();
     MOZ_ASSERT(!anonKid->GetNextSibling(),
@@ -487,10 +487,10 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   // <svg> never allows scrolling to anything outside its mRect (only panning),
   // so we must always keep our scrollable overflow set to our size.
   //
-  // With regards to visual overflow, we always clip root-<svg> (see our
+  // With regards to ink overflow, we always clip root-<svg> (see our
   // BuildDisplayList method) regardless of the value of the 'overflow'
   // property since that is per-spec, even for the initial 'visible' value. For
-  // that reason there's no point in adding descendant visual overflow to our
+  // that reason there's no point in adding descendant ink overflow to our
   // own when this frame is for a root-<svg>. That said, there's also a very
   // good performance reason for us wanting to avoid doing so. If we did, then
   // the frame's overflow would often change as descendants that are partially
@@ -498,7 +498,7 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   // would cause us to do a full NS_FRAME_IS_DIRTY reflow and repaint of the
   // entire document tree each such move (see bug 875175).
   //
-  // So it's only non-root outer-<svg> that has the visual overflow of its
+  // So it's only non-root outer-<svg> that has the ink overflow of its
   // descendants added to its own. (Note that the default user-agent style
   // sheet makes 'hidden' the default value for :not(root(svg)), so usually
   // FinishAndStoreOverflow will still clip this back to the frame's rect.)
@@ -512,9 +512,9 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   // processing test. In that case, we don't maintain its overflow.
   if (!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     if (!mIsRootContent) {
-      aDesiredSize.mOverflowAreas.VisualOverflow().UnionRect(
-          aDesiredSize.mOverflowAreas.VisualOverflow(),
-          anonKid->GetVisualOverflowRect() + anonKid->GetPosition());
+      aDesiredSize.mOverflowAreas.InkOverflow().UnionRect(
+          aDesiredSize.mOverflowAreas.InkOverflow(),
+          anonKid->InkOverflowRect() + anonKid->GetPosition());
     }
     FinishAndStoreOverflow(&aDesiredSize);
   }
@@ -542,9 +542,9 @@ void SVGOuterSVGFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
 
   if (!mIsRootContent) {
     nsIFrame* anonKid = PrincipalChildList().FirstChild();
-    aOverflowAreas.VisualOverflow().UnionRect(
-        aOverflowAreas.VisualOverflow(),
-        anonKid->GetVisualOverflowRect() + anonKid->GetPosition());
+    aOverflowAreas.InkOverflow().UnionRect(
+        aOverflowAreas.InkOverflow(),
+        anonKid->InkOverflowRect() + anonKid->GetPosition());
   }
 }
 
@@ -776,7 +776,7 @@ void SVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRect = aBuilder->GetDirtyRect();
 
   // Per-spec, we always clip root-<svg> even when 'overflow' has its initial
-  // value of 'visible'. See also the "visual overflow" comments in Reflow.
+  // value of 'visible'. See also the "ink overflow" comments in Reflow.
   DisplayListClipState::AutoSaveRestore autoSR(aBuilder);
   if (mIsRootContent || StyleDisplay()->IsScrollableOverflow()) {
     autoSR.ClipContainingBlockDescendantsToContentBox(aBuilder, this);

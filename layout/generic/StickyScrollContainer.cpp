@@ -190,7 +190,7 @@ void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
     // cbFrame is the scrolledFrame, and it won't have continuations. Unlike the
     // else clause, we consider scrollable overflow rect because and the union
     // of its in-flow rects doesn't include the scrollable overflow area.
-    *aContain = cbFrame->GetScrollableOverflowRectRelativeToSelf();
+    *aContain = cbFrame->ScrollableOverflowRectRelativeToSelf();
     nsLayoutUtils::TransformRect(cbFrame, aFrame->GetParent(), *aContain);
   } else {
     *aContain = nsLayoutUtils::GetAllInFlowRectsUnion(

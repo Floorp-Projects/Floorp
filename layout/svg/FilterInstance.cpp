@@ -411,7 +411,7 @@ nsRect FilterInstance::GetPostFilterBounds(nsIFrame* aFilteredFrame,
                                            const nsRect* aPreFilterBounds) {
   MOZ_ASSERT(!aFilteredFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
                  !aFilteredFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-             "Non-display SVG do not maintain visual overflow rects");
+             "Non-display SVG do not maintain ink overflow rects");
 
   nsRegion preFilterRegion;
   nsRegion* preFilterRegionPtr = nullptr;
@@ -443,7 +443,7 @@ FilterInstance::FilterInstance(
     bool aFilterInputIsTainted, SVGFilterPaintCallback* aPaintCallback,
     const gfxMatrix& aPaintTransform, const nsRegion* aPostFilterDirtyRegion,
     const nsRegion* aPreFilterDirtyRegion,
-    const nsRect* aPreFilterVisualOverflowRectOverride,
+    const nsRect* aPreFilterInkOverflowRectOverride,
     const gfxRect* aOverrideBBox)
     : mTargetFrame(aTargetFrame),
       mTargetContent(aTargetContent),
@@ -482,11 +482,10 @@ FilterInstance::FilterInstance(
   mFrameSpaceInCSSPxToFilterSpaceTransform.Invert();
 
   nsIntRect targetBounds;
-  if (aPreFilterVisualOverflowRectOverride) {
-    targetBounds =
-        FrameSpaceToFilterSpace(aPreFilterVisualOverflowRectOverride);
+  if (aPreFilterInkOverflowRectOverride) {
+    targetBounds = FrameSpaceToFilterSpace(aPreFilterInkOverflowRectOverride);
   } else if (mTargetFrame) {
-    nsRect preFilterVOR = mTargetFrame->GetPreEffectsVisualOverflowRect();
+    nsRect preFilterVOR = mTargetFrame->PreEffectsInkOverflowRect();
     targetBounds = FrameSpaceToFilterSpace(&preFilterVOR);
   }
   mTargetBounds.UnionRect(mTargetBBoxInFilterSpace, targetBounds);

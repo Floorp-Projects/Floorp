@@ -1073,12 +1073,12 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
             ICON_SIZE + 2 * (ICON_PADDING + ALT_BORDER_WIDTH)),
         nsPresContext::CSSPixelsToAppUnits(
             ICON_SIZE + 2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
-    // We include the altFeedbackSize in our visual overflow, but not in our
+    // We include the altFeedbackSize in our ink overflow, but not in our
     // scrollable overflow, since it doesn't really need to be scrolled to
     // outside the image.
     static_assert(eOverflowType_LENGTH == 2, "Unknown overflow types?");
-    nsRect& visualOverflow = aMetrics.VisualOverflow();
-    visualOverflow.UnionRect(visualOverflow, altFeedbackSize);
+    nsRect& inkOverflow = aMetrics.InkOverflow();
+    inkOverflow.UnionRect(inkOverflow, altFeedbackSize);
   } else if (PresShell()->IsActive()) {
     // We've just reflowed and we should have an accurate size, so we're ready
     // to request a decode.
@@ -1327,7 +1327,7 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
 
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const final {
     *aSnap = false;
-    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+    return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) final {

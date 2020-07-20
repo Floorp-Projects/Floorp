@@ -349,7 +349,7 @@ std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);
 //----------------------------------------------------------------------
 
 /**
- * When there is no scrollable overflow rect, the visual overflow rect
+ * When there is no scrollable overflow rect, the ink overflow rect
  * may be stored as four 1-byte deltas each strictly LESS THAN 0xff, for
  * the four edges of the rectangle, or the four bytes may be read as a
  * single 32-bit "overflow-rect type" value including at least one 0xff
@@ -2792,7 +2792,7 @@ class nsIFrame : public nsQueryFrame {
    *
    * This probably only needs to include frame bounds, glyph bounds, and
    * text decorations, but today it sometimes includes other things that
-   * contribute to visual overflow.
+   * contribute to ink overflow.
    *
    * @param aDrawTarget a draw target that can be used if we need
    * to do measurement
@@ -3526,7 +3526,7 @@ class nsIFrame : public nsQueryFrame {
    * FinishAndStoreOverflow has been called but mRect hasn't yet been
    * updated yet.  FIXME: This actually isn't true, but it should be.
    *
-   * The visual overflow rect should NEVER be used for things that
+   * The ink overflow rect should NEVER be used for things that
    * affect layout.  The scrollable overflow rect is permitted to affect
    * layout.
    *
@@ -3535,15 +3535,13 @@ class nsIFrame : public nsQueryFrame {
    * system, and may not contain the frame's border-box, e.g. if there
    * is a CSS transform scaling it down)
    */
-  nsRect GetVisualOverflowRect() const {
-    return GetOverflowRect(eVisualOverflow);
-  }
+  nsRect InkOverflowRect() const { return GetOverflowRect(eInkOverflow); }
 
   /**
    * Returns a rect that encompasses the area of this frame that the
    * user should be able to scroll to reach.  This is similar to
-   * GetVisualOverflowRect, but does not include outline or shadows, and
-   * may in the future include more margins than visual overflow does.
+   * InkOverflowRect, but does not include outline or shadows, and
+   * may in the future include more margins than ink overflow does.
    * It does not include areas clipped out by the CSS "overflow" and
    * "clip" properties.
    *
@@ -3559,7 +3557,7 @@ class nsIFrame : public nsQueryFrame {
    * system, and may not contain the frame's border-box, e.g. if there
    * is a CSS transform scaling it down)
    */
-  nsRect GetScrollableOverflowRect() const {
+  nsRect ScrollableOverflowRect() const {
     return GetOverflowRect(eScrollableOverflow);
   }
 
@@ -3577,47 +3575,47 @@ class nsIFrame : public nsQueryFrame {
   nsOverflowAreas GetOverflowAreasRelativeToSelf() const;
 
   /**
-   * Same as GetScrollableOverflowRect, except relative to the parent
+   * Same as ScrollableOverflowRect, except relative to the parent
    * frame.
    *
    * @return the rect relative to the parent frame, in the parent frame's
    * coordinate system
    */
-  nsRect GetScrollableOverflowRectRelativeToParent() const;
+  nsRect ScrollableOverflowRectRelativeToParent() const;
 
   /**
-   * Same as GetScrollableOverflowRect, except in this frame's coordinate
+   * Same as ScrollableOverflowRect, except in this frame's coordinate
    * system (before transforms are applied).
    *
    * @return the rect relative to this frame, before any CSS transforms have
    * been applied, i.e. in this frame's coordinate system
    */
-  nsRect GetScrollableOverflowRectRelativeToSelf() const;
+  nsRect ScrollableOverflowRectRelativeToSelf() const;
 
   /**
-   * Like GetVisualOverflowRect, except in this frame's
+   * Like InkOverflowRect, except in this frame's
    * coordinate system (before transforms are applied).
    *
    * @return the rect relative to this frame, before any CSS transforms have
    * been applied, i.e. in this frame's coordinate system
    */
-  nsRect GetVisualOverflowRectRelativeToSelf() const;
+  nsRect InkOverflowRectRelativeToSelf() const;
 
   /**
-   * Same as GetVisualOverflowRect, except relative to the parent
+   * Same as InkOverflowRect, except relative to the parent
    * frame.
    *
    * @return the rect relative to the parent frame, in the parent frame's
    * coordinate system
    */
-  nsRect GetVisualOverflowRectRelativeToParent() const;
+  nsRect InkOverflowRectRelativeToParent() const;
 
   /**
-   * Returns this frame's visual overflow rect as it would be before taking
+   * Returns this frame's ink overflow rect as it would be before taking
    * account of SVG effects or transforms. The rect returned is relative to
    * this frame.
    */
-  nsRect GetPreEffectsVisualOverflowRect() const;
+  nsRect PreEffectsInkOverflowRect() const;
 
   /**
    * Store the overflow area in the frame's mOverflow.mVisualDeltas
@@ -5223,7 +5221,7 @@ class nsIFrame : public nsQueryFrame {
     return overflow;
   }
 
-  nsRect GetVisualOverflowFromDeltas() const {
+  nsRect InkOverflowFromDeltas() const {
     MOZ_ASSERT(mOverflow.mType != NS_FRAME_OVERFLOW_LARGE,
                "should not be called when overflow is in a property");
     // Calculate the rect using deltas from the frame's border rect.

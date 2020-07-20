@@ -35,7 +35,7 @@ class CSSFilterInstance {
    *   aFilter during the lifetime of CSSFilterInstance.
    * @param aShadowFallbackColor The color that should be used for
    *   drop-shadow() filters that don't specify a shadow color.
-   * @param aTargetBoundsInFilterSpace The pre-filter visual overflow rect of
+   * @param aTargetBoundsInFilterSpace The pre-filter ink overflow rect of
    *   the frame being filtered, in filter space.
    * @param aFrameSpaceInCSSPxToFilterSpaceTransform The transformation from
    *   the filtered element's frame space in CSS pixels to filter space.

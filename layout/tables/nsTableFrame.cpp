@@ -1121,7 +1121,7 @@ void nsTableFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
 nsRect nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder,
                                      bool* aSnap) const {
   *aSnap = false;
-  return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
 void nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame) {
@@ -2671,7 +2671,7 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
                               const nsSize& aContainerSize,
                               ReflowOutput& aKidDesiredSize,
                               const nsRect& aOriginalKidRect,
-                              const nsRect& aOriginalKidVisualOverflow) {
+                              const nsRect& aOriginalKidInkOverflow) {
   WritingMode wm = aReflowInput.reflowInput.GetWritingMode();
   bool isFirstReflow = aKidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
@@ -2680,7 +2680,7 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
                     wm, aKidPosition, aContainerSize,
                     ReflowChildFlags::ApplyRelativePositioning);
 
-  InvalidateTableFrame(aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow,
+  InvalidateTableFrame(aKidFrame, aOriginalKidRect, aOriginalKidInkOverflow,
                        isFirstReflow);
 
   // Adjust the running block-offset
@@ -2803,7 +2803,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
   aReflowInput.bCoord += GetRowSpacing(GetRowCount());
 
   nsRect origTfootRect = aTfoot->GetRect();
-  nsRect origTfootVisualOverflow = aTfoot->GetVisualOverflowRect();
+  nsRect origTfootInkOverflow = aTfoot->InkOverflowRect();
 
   nsReflowStatus footerStatus;
   ReflowOutput desiredSize(aReflowInput.reflowInput);
@@ -2814,8 +2814,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
               footerStatus);
 
   PlaceChild(aReflowInput, aTfoot, footerReflowInput, kidPosition,
-             containerSize, desiredSize, origTfootRect,
-             origTfootVisualOverflow);
+             containerSize, desiredSize, origTfootRect, origTfootInkOverflow);
 }
 
 // Reflow the children based on the avail size and reason in aReflowInput
@@ -2934,7 +2933,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       }
 
       nsRect oldKidRect = kidFrame->GetRect();
-      nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
+      nsRect oldKidInkOverflow = kidFrame->InkOverflowRect();
 
       ReflowOutput desiredSize(aReflowInput.reflowInput);
       desiredSize.ClearSize();
@@ -3000,7 +2999,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
             if (nextRowGroupFrame) {
               PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
                          containerSize, desiredSize, oldKidRect,
-                         oldKidVisualOverflow);
+                         oldKidInkOverflow);
               if (allowRepeatedFooter) {
                 PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
               } else if (tfoot && tfoot->IsRepeatable()) {
@@ -3028,7 +3027,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           } else {  // we can't push so lets make clear how much space we need
             PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
                        containerSize, desiredSize, oldKidRect,
-                       oldKidVisualOverflow);
+                       oldKidInkOverflow);
             aLastChildReflowed = kidFrame;
             if (allowRepeatedFooter) {
               PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
@@ -3053,7 +3052,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
       // Place the child
       PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
-                 containerSize, desiredSize, oldKidRect, oldKidVisualOverflow);
+                 containerSize, desiredSize, oldKidRect, oldKidInkOverflow);
 
       // Remember where we just were in case we end up pushing children
       prevKidFrame = kidFrame;
@@ -3309,7 +3308,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
         }
 
         nsRect origRgNormalRect = rgFrame->GetRect();
-        nsRect origRgVisualOverflow = rgFrame->GetVisualOverflowRect();
+        nsRect origRgInkOverflow = rgFrame->InkOverflowRect();
 
         rgFrame->MovePositionBy(
             wm, LogicalPoint(wm, 0, bOriginRG - rgNormalRect.BStart(wm)));
@@ -3318,7 +3317,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
                                      rgNormalRect.BSize(wm) + amountUsedByRG));
 
         nsTableFrame::InvalidateTableFrame(rgFrame, origRgNormalRect,
-                                           origRgVisualOverflow, false);
+                                           origRgInkOverflow, false);
       }
     } else if (amountUsed > 0 && bOriginRG != rgNormalRect.BStart(wm)) {
       rgFrame->InvalidateFrameSubtree();
@@ -3402,7 +3401,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
     nscoord amountUsedByRG = 0;
     nscoord bOriginRow = 0;
     LogicalRect rgNormalRect(wm, rgFrame->GetNormalRect(), containerSize);
-    nsRect rgVisualOverflow = rgFrame->GetVisualOverflowRect();
+    nsRect rgInkOverflow = rgFrame->InkOverflowRect();
     // see if there is an eligible row group or we distribute to all rows
     if (!firstUnStyledRG || !rgFrame->HasStyleBSize() || !eligibleRows) {
       for (nsTableRowFrame* rowFrame = rgFrame->GetFirstRow(); rowFrame;
@@ -3414,7 +3413,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
         const nsSize dummyContainerSize;
         LogicalRect rowNormalRect(wm, rowFrame->GetNormalRect(),
                                   dummyContainerSize);
-        nsRect rowVisualOverflow = rowFrame->GetVisualOverflowRect();
+        nsRect rowInkOverflow = rowFrame->InkOverflowRect();
         // see if there is an eligible row or we distribute to all rows
         if (!firstUnStyledRow || !rowFrame->HasStyleBSize() || !eligibleRows) {
           float ratio;
@@ -3461,7 +3460,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
           nsTableFrame::RePositionViews(rowFrame);
 
           nsTableFrame::InvalidateTableFrame(rowFrame, origRowRect,
-                                             rowVisualOverflow, false);
+                                             rowInkOverflow, false);
         } else {
           if (amountUsed > 0 && bOriginRow != rowNormalRect.BStart(wm)) {
             rowFrame->InvalidateFrameSubtree();
@@ -3488,7 +3487,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
                                      rgNormalRect.BSize(wm) + amountUsedByRG));
 
         nsTableFrame::InvalidateTableFrame(rgFrame, origRgNormalRect,
-                                           rgVisualOverflow, false);
+                                           rgInkOverflow, false);
       }
 
       // For vertical-rl mode, we needed to position the rows relative to the
@@ -7406,7 +7405,7 @@ bool nsTableFrame::RowIsSpannedInto(int32_t aRowIndex, int32_t aNumEffCols) {
 /* static */
 void nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
                                         const nsRect& aOrigRect,
-                                        const nsRect& aOrigVisualOverflow,
+                                        const nsRect& aOrigInkOverflow,
                                         bool aIsFirstReflow) {
   nsIFrame* parent = aFrame->GetParent();
   NS_ASSERTION(parent, "What happened here?");
@@ -7423,20 +7422,20 @@ void nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
   //
   // This doesn't really make sense now that we have DLBI.
   // This code can probably be simplified a fair bit.
-  nsRect visualOverflow = aFrame->GetVisualOverflowRect();
+  nsRect inkOverflow = aFrame->InkOverflowRect();
   if (aIsFirstReflow || aOrigRect.TopLeft() != aFrame->GetPosition() ||
-      aOrigVisualOverflow.TopLeft() != visualOverflow.TopLeft()) {
+      aOrigInkOverflow.TopLeft() != inkOverflow.TopLeft()) {
     // Invalidate the old and new overflow rects.  Note that if the
-    // frame moved, we can't just use aOrigVisualOverflow, since it's in
+    // frame moved, we can't just use aOrigInkOverflow, since it's in
     // coordinates relative to the old position.  So invalidate via
     // aFrame's parent, and reposition that overflow rect to the right
     // place.
     // XXXbz this doesn't handle outlines, does it?
     aFrame->InvalidateFrame();
-    parent->InvalidateFrameWithRect(aOrigVisualOverflow + aOrigRect.TopLeft());
+    parent->InvalidateFrameWithRect(aOrigInkOverflow + aOrigRect.TopLeft());
   } else if (aOrigRect.Size() != aFrame->GetSize() ||
-             aOrigVisualOverflow.Size() != visualOverflow.Size()) {
-    aFrame->InvalidateFrameWithRect(aOrigVisualOverflow);
+             aOrigInkOverflow.Size() != inkOverflow.Size()) {
+    aFrame->InvalidateFrameWithRect(aOrigInkOverflow);
     aFrame->InvalidateFrame();
   }
 }
