@@ -49,7 +49,7 @@
   "doctor.js": ["Doctor"],
   "dom.js": ["ContentEventObserverService", "WebElementEventTarget"],
   "DOMRequestHelper.jsm": ["DOMRequestIpcHelper"],
-  "DownloadCore.jsm": ["Download", "DownloadSource", "DownloadTarget", "DownloadError", "DownloadSaver", "DownloadCopySaver", "DownloadLegacySaver", "DownloadPDFSaver"],
+  "DownloadCore.jsm": ["Download", "DownloadSource", "DownloadTarget", "DownloadError", "DownloadSaver", "DownloadCopySaver", "DownloadLegacySaver"],
   "DownloadList.jsm": ["DownloadList", "DownloadCombinedList", "DownloadSummary"],
   "driver.js": ["GeckoDriver"],
   "element.js": ["ChromeWebElement", "ContentWebElement", "ContentWebFrame", "ContentWebWindow", "element", "WebElement"],

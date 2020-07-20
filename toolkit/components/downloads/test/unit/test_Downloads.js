@@ -57,34 +57,6 @@ add_task(async function test_createDownload_public() {
 });
 
 /**
- * Tests createDownload for a pdf saver throws if only given a url.
- */
-add_task(async function test_createDownload_pdf() {
-  let download = await Downloads.createDownload({
-    source: { url: "about:blank" },
-    target: { path: getTempFile(TEST_TARGET_FILE_NAME).path },
-    saver: { type: "pdf" },
-  });
-
-  try {
-    await download.start();
-    do_throw("The download should have failed.");
-  } catch (ex) {
-    if (!(ex instanceof Downloads.Error) || !ex.becauseSourceFailed) {
-      throw ex;
-    }
-  }
-
-  Assert.ok(!download.succeeded);
-  Assert.ok(download.stopped);
-  Assert.ok(!download.canceled);
-  Assert.ok(download.error !== null);
-  Assert.ok(download.error.becauseSourceFailed);
-  Assert.ok(!download.error.becauseTargetFailed);
-  Assert.equal(false, await OS.File.exists(download.target.path));
-});
-
-/**
  * Tests "fetch" with nsIURI and nsIFile as arguments.
  */
 add_task(async function test_fetch_uri_file_arguments() {
