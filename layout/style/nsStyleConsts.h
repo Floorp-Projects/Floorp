@@ -286,12 +286,6 @@ enum class StyleUserModify : uint8_t {
   WriteOnly,
 };
 
-// -moz-inert
-enum class StyleInert : uint8_t {
-  None,
-  Inert,
-};
-
 // -moz-window-dragging
 enum class StyleWindowDragging : uint8_t {
   Default,
