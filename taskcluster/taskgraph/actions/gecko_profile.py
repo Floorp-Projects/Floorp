@@ -50,7 +50,7 @@ def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id)
         pushlog_url = PUSHLOG_TMPL.format(parameters['head_repository'], start_id, end_id)
         r = requests.get(pushlog_url)
         r.raise_for_status()
-        pushes = pushes + r.json()['pushes'].keys()
+        pushes = pushes + list(r.json()['pushes'].keys())
         if len(pushes) >= depth:
             break
 

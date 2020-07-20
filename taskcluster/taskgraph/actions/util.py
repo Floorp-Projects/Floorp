@@ -133,7 +133,7 @@ def get_pushes(project, end_id, depth):
         logger.debug(pushlog_url)
         r = requests.get(pushlog_url)
         r.raise_for_status()
-        pushes = pushes + r.json()['pushes'].keys()
+        pushes = pushes + list(r.json()['pushes'].keys())
         if len(pushes) >= depth:
             break
 

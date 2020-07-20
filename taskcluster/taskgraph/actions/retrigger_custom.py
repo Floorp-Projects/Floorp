@@ -9,13 +9,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import logging
 
-from .util import (
-    fetch_graph_and_labels,
-    create_task_from_def,
-)
+import six
+
+from ..util import taskcluster
 from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
-from taskgraph.util import taskcluster
+from .util import create_task_from_def, fetch_graph_and_labels
 
 logger = logging.getLogger(__name__)
 
@@ -120,9 +119,9 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
     # fix up the task's dependencies, similar to how optimization would
     # have done in the decision
     dependencies = {name: label_to_taskid[label]
-                    for name, label in pre_task.dependencies.iteritems()}
+                    for name, label in six.iteritems(pre_task.dependencies)}
     new_task_definition = resolve_task_references(pre_task.label, pre_task.task, dependencies)
-    new_task_definition.setdefault('dependencies', []).extend(dependencies.itervalues())
+    new_task_definition.setdefault('dependencies', []).extend(six.itervalues(dependencies))
 
     # don't want to run mozharness tests, want a custom mach command instead
     new_task_definition['payload']['command'] += ['--no-run-tests']
@@ -150,7 +149,7 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
         custom_mach_command += ['--repeat', str(input.get('repeat', 30))]
 
     # add any custom gecko preferences
-    for (key, val) in input.get('preferences', {}).iteritems():
+    for (key, val) in six.iteritems(input.get('preferences', {})):
         custom_mach_command += ['--setpref', '{}={}'.format(key, val)]
 
     custom_mach_command += [input['path']]
