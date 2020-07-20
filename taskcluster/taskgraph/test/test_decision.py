@@ -7,11 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import json
 import shutil
-import sys
 import unittest
 import tempfile
 
-import pytest
 from mock import patch
 from mozunit import main, MockedOpen
 from taskgraph import decision
@@ -68,9 +66,6 @@ class TestGetDecisionParameters(unittest.TestCase):
             'level': '3',
         }
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     @patch('taskgraph.decision.get_hg_revision_branch')
     def test_simple_options(self, mock_get_hg_revision_branch):
         mock_get_hg_revision_branch.return_value = 'default'
@@ -84,9 +79,6 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['try_options'], None)
         self.assertEqual(params['try_task_config'], {})
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     @patch('taskgraph.decision.get_hg_revision_branch')
     def test_no_email_owner(self, mock_get_hg_revision_branch):
         mock_get_hg_revision_branch.return_value = 'default'
