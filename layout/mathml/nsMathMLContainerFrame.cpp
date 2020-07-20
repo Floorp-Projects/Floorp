@@ -757,7 +757,7 @@ bool nsMathMLContainerFrame::ComputeCustomOverflow(
       mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing,
       mBoundingMetrics.ascent + mBoundingMetrics.descent);
 
-  // REVIEW: Maybe this should contribute only to visual overflow
+  // REVIEW: Maybe this should contribute only to ink overflow
   // and not scrollable?
   aOverflowAreas.UnionAllWith(boundingBox);
   return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);

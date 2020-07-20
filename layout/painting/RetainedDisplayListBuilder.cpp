@@ -1061,8 +1061,8 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
         aOverflow.SetEmpty();
       }
     } else {
-      aOverflow.IntersectRect(
-          aOverflow, currentFrame->GetVisualOverflowRectRelativeToSelf());
+      aOverflow.IntersectRect(aOverflow,
+                              currentFrame->InkOverflowRectRelativeToSelf());
     }
 
     if (aOverflow.IsEmpty()) {
@@ -1127,7 +1127,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
       if (!data->mModifiedAGR) {
         data->mModifiedAGR = *aAGR;
       } else if (data->mModifiedAGR != *aAGR) {
-        data->mDirtyRect = currentFrame->GetVisualOverflowRectRelativeToSelf();
+        data->mDirtyRect = currentFrame->InkOverflowRectRelativeToSelf();
         CRR_LOG(
             "Found multiple modified AGRs within this stacking context, "
             "giving up\n");
@@ -1171,7 +1171,7 @@ bool RetainedDisplayListBuilder::ProcessFrame(
   // outside of the stacking context, since we know the stacking context item
   // exists in the old list, so we can trivially merge without needing other
   // items.
-  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+  nsRect overflow = aFrame->InkOverflowRectRelativeToSelf();
 
   // If the modified frame is also a caret frame, include the caret area.
   // This is needed because some frames (for example text frames without text)
@@ -1450,7 +1450,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   modifiedDirty.IntersectRect(
       modifiedDirty,
-      mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf());
+      mBuilder.RootReferenceFrame()->InkOverflowRectRelativeToSelf());
 
   mBuilder.SetDirtyRect(modifiedDirty);
   mBuilder.SetPartialUpdate(true);
@@ -1463,7 +1463,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
     nsLayoutUtils::AddExtraBackgroundItems(
         &mBuilder, &modifiedDL, mBuilder.RootReferenceFrame(),
         nsRect(nsPoint(0, 0), mBuilder.RootReferenceFrame()->GetSize()),
-        mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf(),
+        mBuilder.RootReferenceFrame()->InkOverflowRectRelativeToSelf(),
         aBackstop);
   }
   mBuilder.SetPartialUpdate(false);

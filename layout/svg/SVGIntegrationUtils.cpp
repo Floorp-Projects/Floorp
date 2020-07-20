@@ -39,25 +39,25 @@ using namespace mozilla::image;
 namespace mozilla {
 
 /**
- * This class is used to get the pre-effects visual overflow rect of a frame,
+ * This class is used to get the pre-effects ink overflow rect of a frame,
  * or, in the case of a frame with continuations, to collect the union of the
- * pre-effects visual overflow rects of all the continuations. The result is
+ * pre-effects ink overflow rects of all the continuations. The result is
  * relative to the origin (top left corner of the border box) of the frame, or,
  * if the frame has continuations, the origin of the  _first_ continuation.
  */
-class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
+class PreEffectsInkOverflowCollector : public nsLayoutUtils::BoxCallback {
  public:
   /**
-   * If the pre-effects visual overflow rect of the frame being examined
+   * If the pre-effects ink overflow rect of the frame being examined
    * happens to be known, it can be passed in as aCurrentFrame and its
-   * pre-effects visual overflow rect can be passed in as
+   * pre-effects ink overflow rect can be passed in as
    * aCurrentFrameOverflowArea. This is just an optimization to save a
    * frame property lookup - these arguments are optional.
    */
-  PreEffectsVisualOverflowCollector(nsIFrame* aFirstContinuation,
-                                    nsIFrame* aCurrentFrame,
-                                    const nsRect& aCurrentFrameOverflowArea,
-                                    bool aInReflow)
+  PreEffectsInkOverflowCollector(nsIFrame* aFirstContinuation,
+                                 nsIFrame* aCurrentFrame,
+                                 const nsRect& aCurrentFrameOverflowArea,
+                                 bool aInReflow)
       : mFirstContinuation(aFirstContinuation),
         mCurrentFrame(aCurrentFrame),
         mCurrentFrameOverflowArea(aCurrentFrameOverflowArea),
@@ -69,7 +69,7 @@ class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
   virtual void AddBox(nsIFrame* aFrame) override {
     nsRect overflow = (aFrame == mCurrentFrame)
                           ? mCurrentFrameOverflowArea
-                          : GetPreEffectsVisualOverflowRect(aFrame, mInReflow);
+                          : PreEffectsInkOverflowRect(aFrame, mInReflow);
     mResult.UnionRect(mResult,
                       overflow + aFrame->GetOffsetTo(mFirstContinuation));
   }
@@ -77,8 +77,7 @@ class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
   nsRect GetResult() const { return mResult; }
 
  private:
-  static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame,
-                                                bool aInReflow) {
+  static nsRect PreEffectsInkOverflowRect(nsIFrame* aFrame, bool aInReflow) {
     nsRect* r = aFrame->GetProperty(nsIFrame::PreEffectsBBoxProperty());
     if (r) {
       return *r;
@@ -86,7 +85,7 @@ class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
 
 #ifdef DEBUG
     // Having PreTransformOverflowAreasProperty cached means
-    // GetVisualOverflowRect() will return post-effect rect, which is not what
+    // InkOverflowRect() will return post-effect rect, which is not what
     // we want. This function intentional reports pre-effect rect. But it does
     // not matter if there is no SVG effect on this frame, since no effect
     // means post-effect rect matches pre-effect rect.
@@ -100,10 +99,10 @@ class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
           aFrame->GetProperty(nsIFrame::PreTransformOverflowAreasProperty());
 
       MOZ_ASSERT(!preTransformOverflows,
-                 "GetVisualOverflowRect() won't return the pre-effects rect!");
+                 "InkOverflowRect() won't return the pre-effects rect!");
     }
 #endif
-    return aFrame->GetVisualOverflowRectRelativeToSelf();
+    return aFrame->InkOverflowRectRelativeToSelf();
   }
 
   nsIFrame* mFirstContinuation;
@@ -114,18 +113,18 @@ class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
 };
 
 /**
- * Gets the union of the pre-effects visual overflow rects of all of a frame's
+ * Gets the union of the pre-effects ink overflow rects of all of a frame's
  * continuations, in "user space".
  */
-static nsRect GetPreEffectsVisualOverflowUnion(
+static nsRect GetPreEffectsInkOverflowUnion(
     nsIFrame* aFirstContinuation, nsIFrame* aCurrentFrame,
     const nsRect& aCurrentFramePreEffectsOverflow,
     const nsPoint& aFirstContinuationToUserSpace, bool aInReflow) {
   NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
                "Need first continuation here");
-  PreEffectsVisualOverflowCollector collector(aFirstContinuation, aCurrentFrame,
-                                              aCurrentFramePreEffectsOverflow,
-                                              aInReflow);
+  PreEffectsInkOverflowCollector collector(aFirstContinuation, aCurrentFrame,
+                                           aCurrentFramePreEffectsOverflow,
+                                           aInReflow);
   // Compute union of all overflow areas relative to aFirstContinuation:
   nsLayoutUtils::GetAllInFlowBoxes(aFirstContinuation, &collector);
   // Return the result in user space:
@@ -133,15 +132,15 @@ static nsRect GetPreEffectsVisualOverflowUnion(
 }
 
 /**
- * Gets the pre-effects visual overflow rect of aCurrentFrame in "user space".
+ * Gets the pre-effects ink overflow rect of aCurrentFrame in "user space".
  */
-static nsRect GetPreEffectsVisualOverflow(
+static nsRect GetPreEffectsInkOverflow(
     nsIFrame* aFirstContinuation, nsIFrame* aCurrentFrame,
     const nsPoint& aFirstContinuationToUserSpace) {
   NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
                "Need first continuation here");
-  PreEffectsVisualOverflowCollector collector(aFirstContinuation, nullptr,
-                                              nsRect(), false);
+  PreEffectsInkOverflowCollector collector(aFirstContinuation, nullptr,
+                                           nsRect(), false);
   // Compute overflow areas of current frame relative to aFirstContinuation:
   nsLayoutUtils::AddBoxesForFrame(aCurrentFrame, &collector);
   // Return the result in user space:
@@ -235,13 +234,12 @@ gfxRect SVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":
-  nsRect r =
-      (aUnionContinuations)
-          ? GetPreEffectsVisualOverflowUnion(firstFrame, nullptr, nsRect(),
-                                             GetOffsetToBoundingBox(firstFrame),
-                                             false)
-          : GetPreEffectsVisualOverflow(firstFrame, aNonSVGFrame,
-                                        GetOffsetToBoundingBox(firstFrame));
+  nsRect r = (aUnionContinuations)
+                 ? GetPreEffectsInkOverflowUnion(
+                       firstFrame, nullptr, nsRect(),
+                       GetOffsetToBoundingBox(firstFrame), false)
+                 : GetPreEffectsInkOverflow(firstFrame, aNonSVGFrame,
+                                            GetOffsetToBoundingBox(firstFrame));
 
   return nsLayoutUtils::RectToGfxRect(r, AppUnitsPerCSSPixel());
 }
@@ -250,22 +248,22 @@ gfxRect SVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
 // continuations. When we're called for a frame with continuations, we're
 // called for each continuation in turn as it's reflowed. However, it isn't
 // until the last continuation is reflowed that this method's
-// GetOffsetToBoundingBox() and GetPreEffectsVisualOverflowUnion() calls will
+// GetOffsetToBoundingBox() and GetPreEffectsInkOverflowUnion() calls will
 // obtain valid border boxes for all the continuations. As a result, we'll
-// end up returning bogus post-filter visual overflow rects for all the prior
+// end up returning bogus post-filter ink overflow rects for all the prior
 // continuations. Unfortunately, by the time the last continuation is
 // reflowed, it's too late to go back and set and propagate the overflow
 // rects on the previous continuations.
 //
 // The reason that we need to pass an override bbox to
-// GetPreEffectsVisualOverflowUnion rather than just letting it call into our
+// GetPreEffectsInkOverflowUnion rather than just letting it call into our
 // GetSVGBBoxForNonSVGFrame method is because we get called by
 // ComputeEffectsRect when it has been called with
 // aStoreRectProperties set to false. In this case the pre-effects visual
 // overflow rect that it has been passed may be different to that stored on
 // aFrame, resulting in a different bbox.
 //
-// XXXjwatt The pre-effects visual overflow rect passed to
+// XXXjwatt The pre-effects ink overflow rect passed to
 // ComputeEffectsRect won't include continuation overflows, so
 // for frames with continuation the following filter analysis will likely end
 // up being carried out with a bbox created as if the frame didn't have
@@ -273,12 +271,12 @@ gfxRect SVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
 //
 // XXXjwatt Using aPreEffectsOverflowRect to create the bbox isn't really right
 // for SVG frames, since for SVG frames the SVG spec defines the bbox to be
-// something quite different to the pre-effects visual overflow rect. However,
+// something quite different to the pre-effects ink overflow rect. However,
 // we're essentially calculating an invalidation area here, and using the
 // pre-effects overflow rect will actually overestimate that area which, while
 // being a bit wasteful, isn't otherwise a problem.
 //
-nsRect SVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(
+nsRect SVGIntegrationUtils::ComputePostEffectsInkOverflowRect(
     nsIFrame* aFrame, const nsRect& aPreEffectsOverflowRect) {
   MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT),
              "Don't call this on SVG child frames");
@@ -307,9 +305,8 @@ nsRect SVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(
   // XXX Why are we rounding out to pixel boundaries? We don't do that in
   // GetSVGBBoxForNonSVGFrame, and it doesn't appear to be necessary.
   gfxRect overrideBBox = nsLayoutUtils::RectToGfxRect(
-      GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
-                                       aPreEffectsOverflowRect,
-                                       firstFrameToBoundingBox, true),
+      GetPreEffectsInkOverflowUnion(firstFrame, aFrame, aPreEffectsOverflowRect,
+                                    firstFrameToBoundingBox, true),
       AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 

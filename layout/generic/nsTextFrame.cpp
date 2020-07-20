@@ -5382,7 +5382,7 @@ static gfxFloat ComputeDecorationLineOffset(
 void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                           nsIFrame* aBlock,
                                           PropertyProvider& aProvider,
-                                          nsRect* aVisualOverflowRect,
+                                          nsRect* aInkOverflowRect,
                                           bool aIncludeTextDecorations,
                                           bool aIncludeShadows) {
   const WritingMode wm = GetWritingMode();
@@ -5427,9 +5427,9 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     nscoord maxAscent =
         inverted ? fontMetrics->MaxDescent() : fontMetrics->MaxAscent();
 
-    Float gfxWidth = (verticalRun ? aVisualOverflowRect->height
-                                  : aVisualOverflowRect->width) /
-                     appUnitsPerDevUnit;
+    Float gfxWidth =
+        (verticalRun ? aInkOverflowRect->height : aInkOverflowRect->width) /
+        appUnitsPerDevUnit;
     params.lineSize.width = gfxWidth;
     params.ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
     params.style = decorationStyle;
@@ -5446,8 +5446,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     nsRect overlineRect =
         nsCSSRendering::GetTextDecorationRect(aPresContext, params);
 
-    aVisualOverflowRect->UnionRect(*aVisualOverflowRect, underlineRect);
-    aVisualOverflowRect->UnionRect(*aVisualOverflowRect, overlineRect);
+    aInkOverflowRect->UnionRect(*aInkOverflowRect, underlineRect);
+    aInkOverflowRect->UnionRect(*aInkOverflowRect, overlineRect);
 
     // XXX If strikeoutSize is much thicker than the underlineSize, it may
     //     cause overflowing from the overflow rect.  However, such case
@@ -5552,15 +5552,15 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                  params.decoration);
       }
 
-      aVisualOverflowRect->UnionRect(
-          *aVisualOverflowRect,
+      aInkOverflowRect->UnionRect(
+          *aInkOverflowRect,
           verticalDec
               ? nsRect(topOrLeft, 0, bottomOrRight - topOrLeft, measure)
               : nsRect(0, topOrLeft, measure, bottomOrRight - topOrLeft));
     }
 
-    aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
-                                   UpdateTextEmphasis(parentWM, aProvider));
+    aInkOverflowRect->UnionRect(*aInkOverflowRect,
+                                UpdateTextEmphasis(parentWM, aProvider));
   }
 
   // text-stroke overflows: add half of text-stroke-width on all sides
@@ -5568,22 +5568,22 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   if (textStrokeWidth > 0) {
     // Inflate rect by stroke-width/2; we add an extra pixel to allow for
     // antialiasing, rounding errors, etc.
-    nsRect strokeRect = *aVisualOverflowRect;
+    nsRect strokeRect = *aInkOverflowRect;
     strokeRect.Inflate(textStrokeWidth / 2 + appUnitsPerDevUnit);
-    aVisualOverflowRect->UnionRect(*aVisualOverflowRect, strokeRect);
+    aInkOverflowRect->UnionRect(*aInkOverflowRect, strokeRect);
   }
 
   // Text-shadow overflows
   if (aIncludeShadows) {
     nsRect shadowRect =
-        nsLayoutUtils::GetTextShadowRectsUnion(*aVisualOverflowRect, this);
-    aVisualOverflowRect->UnionRect(*aVisualOverflowRect, shadowRect);
+        nsLayoutUtils::GetTextShadowRectsUnion(*aInkOverflowRect, this);
+    aInkOverflowRect->UnionRect(*aInkOverflowRect, shadowRect);
   }
 
   // When this frame is not selected, the text-decoration area must be in
   // frame bounds.
   if (!IsSelected() ||
-      !CombineSelectionUnderlineRect(aPresContext, *aVisualOverflowRect))
+      !CombineSelectionUnderlineRect(aPresContext, *aInkOverflowRect))
     return;
   AddStateBits(TEXT_SELECTION_UNDERLINE_OVERFLOWED);
 }
@@ -7053,7 +7053,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
   if (!skipClipping) {
     // Get the inline-size according to the specified range.
     gfxFloat clipLength = mTextRun->GetAdvanceWidth(aRange, aParams.provider);
-    nsRect visualRect = GetVisualOverflowRect();
+    nsRect visualRect = InkOverflowRect();
 
     const bool isInlineReversed = mTextRun->IsInlineReversed();
     if (verticalDec) {
@@ -7156,7 +7156,7 @@ nsRect nsTextFrame::WebRenderBounds() {
     nsOverflowAreas overflowAreas;
     ComputeCustomOverflowInternal(overflowAreas, false);
     cachedBounds = new nsRect();
-    *cachedBounds = overflowAreas.VisualOverflow();
+    *cachedBounds = overflowAreas.InkOverflow();
     SetProperty(WebRenderTextBounds(), cachedBounds);
   }
   return *cachedBounds;
@@ -8639,7 +8639,7 @@ static nsRect RoundOut(const gfxRect& aRect) {
 nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   if (Style()->HasTextDecorationLines() || HasAnyStateBits(TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.
-    return GetVisualOverflowRect();
+    return InkOverflowRect();
   }
 
   gfxSkipCharsIterator iter =
@@ -9432,13 +9432,13 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     boundingBox.y += mAscent;
   }
   aMetrics.SetOverflowAreasToDesiredBounds();
-  aMetrics.VisualOverflow().UnionRect(aMetrics.VisualOverflow(), boundingBox);
+  aMetrics.InkOverflow().UnionRect(aMetrics.InkOverflow(), boundingBox);
 
   // When we have text decorations, we don't need to compute their overflow now
   // because we're guaranteed to do it later
   // (see nsLineLayout::RelativePositionFrames)
   UnionAdditionalOverflow(presContext, aLineLayout.LineContainerRI()->mFrame,
-                          provider, &aMetrics.VisualOverflow(), false, true);
+                          provider, &aMetrics.InkOverflow(), false, true);
 
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
@@ -9675,7 +9675,7 @@ nsOverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
     std::swap(boundingBox.x, boundingBox.y);
     std::swap(boundingBox.width, boundingBox.height);
   }
-  nsRect& vis = result.VisualOverflow();
+  nsRect& vis = result.InkOverflow();
   vis.UnionRect(vis, boundingBox);
   UnionAdditionalOverflow(PresContext(), aBlockFrame, provider, &vis, true,
                           aIncludeShadows);

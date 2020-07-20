@@ -2,7 +2,7 @@
 defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true)
 
 # There are several platform-specific fuzzy-if notations below due to
-# anti-aliasing, extra visual overflow, and slightly inacurate reftest
+# anti-aliasing, extra ink overflow, and slightly inacurate reftest
 # mocking. You can read more about the annotations and their specifics here:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1539212#c25
 

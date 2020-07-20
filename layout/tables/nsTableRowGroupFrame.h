@@ -337,7 +337,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
                   const mozilla::LogicalPoint& aKidPosition,
                   const nsSize& aContainerSize, ReflowOutput& aDesiredSize,
                   const nsRect& aOriginalKidRect,
-                  const nsRect& aOriginalKidVisualOverflow);
+                  const nsRect& aOriginalKidInkOverflow);
 
   void CalculateRowBSizes(nsPresContext* aPresContext,
                           ReflowOutput& aDesiredSize,

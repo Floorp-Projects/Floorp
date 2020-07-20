@@ -242,7 +242,7 @@ void nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayOutsetBoxShadow(aBuilder, aLists.BorderBackground());
 
   for (nsTableRowFrame* row = GetFirstRow(); row; row = row->GetNextRow()) {
-    if (!aBuilder->GetDirtyRect().Intersects(row->GetVisualOverflowRect() +
+    if (!aBuilder->GetDirtyRect().Intersects(row->InkOverflowRect() +
                                              row->GetNormalPosition())) {
       continue;
     }
@@ -280,7 +280,7 @@ void nsTableRowGroupFrame::PlaceChild(
     nsIFrame* aKidFrame, const ReflowInput& aKidReflowInput, WritingMode aWM,
     const LogicalPoint& aKidPosition, const nsSize& aContainerSize,
     ReflowOutput& aDesiredSize, const nsRect& aOriginalKidRect,
-    const nsRect& aOriginalKidVisualOverflow) {
+    const nsRect& aOriginalKidInkOverflow) {
   bool isFirstReflow = aKidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   // Place and size the child
@@ -290,8 +290,8 @@ void nsTableRowGroupFrame::PlaceChild(
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse()) {
-    nsTableFrame::InvalidateTableFrame(
-        aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow, isFirstReflow);
+    nsTableFrame::InvalidateTableFrame(aKidFrame, aOriginalKidRect,
+                                       aOriginalKidInkOverflow, isFirstReflow);
   }
 
   // Adjust the running block-offset
@@ -376,7 +376,7 @@ void nsTableRowGroupFrame::ReflowChildren(
          (isPaginated ||
           kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerSize);
-      nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
+      nsRect oldKidInkOverflow = kidFrame->InkOverflowRect();
 
       ReflowOutput desiredSize(aReflowInput.reflowInput);
       desiredSize.ClearSize();
@@ -413,7 +413,7 @@ void nsTableRowGroupFrame::ReflowChildren(
       PlaceChild(aPresContext, aReflowInput, kidFrame, kidReflowInput, wm,
                  kidPosition, containerSize, desiredSize,
                  oldKidRect.GetPhysicalRect(wm, containerSize),
-                 oldKidVisualOverflow);
+                 oldKidInkOverflow);
       aReflowInput.bCoord += cellSpacingB;
 
       if (!reflowAllKids) {
@@ -828,7 +828,7 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
        rowFrame = rowFrame->GetNextRow(), rowIndex++) {
     nsRect rowBounds = rowFrame->GetRect();
     LogicalSize rowBoundsSize(wm, rowBounds.Size());
-    nsRect rowVisualOverflow = rowFrame->GetVisualOverflowRect();
+    nsRect rowInkOverflow = rowFrame->InkOverflowRect();
     nscoord deltaB =
         bOrigin - rowFrame->GetLogicalNormalPosition(wm, containerSize).B(wm);
 
@@ -844,7 +844,7 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
       rowFrame->MovePositionBy(wm, LogicalPoint(wm, 0, deltaB));
       rowFrame->SetSize(LogicalSize(wm, rowBoundsSize.ISize(wm), rowBSize));
 
-      nsTableFrame::InvalidateTableFrame(rowFrame, rowBounds, rowVisualOverflow,
+      nsTableFrame::InvalidateTableFrame(rowFrame, rowBounds, rowInkOverflow,
                                          false);
 
       if (deltaB != 0) {
@@ -891,7 +891,7 @@ nscoord nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
 
   LogicalRect groupRect = GetLogicalRect(aWM, containerSize);
   nsRect oldGroupRect = GetRect();
-  nsRect oldGroupVisualOverflow = GetVisualOverflowRect();
+  nsRect oldGroupInkOverflow = InkOverflowRect();
 
   groupRect.BSize(aWM) -= bGroupOffset;
   if (didCollapse) {
@@ -912,7 +912,7 @@ nscoord nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
       nsRect(0, 0, groupRect.Width(aWM), groupRect.Height(aWM)));
   FinishAndStoreOverflow(overflow, groupRect.Size(aWM).GetPhysicalSize(aWM));
   nsTableFrame::RePositionViews(this);
-  nsTableFrame::InvalidateTableFrame(this, oldGroupRect, oldGroupVisualOverflow,
+  nsTableFrame::InvalidateTableFrame(this, oldGroupRect, oldGroupInkOverflow,
                                      false);
 
   return bGroupOffset;
@@ -1150,7 +1150,7 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
 
         // Get the old size before we reflow.
         nsRect oldRowRect = rowFrame->GetRect();
-        nsRect oldRowVisualOverflow = rowFrame->GetVisualOverflowRect();
+        nsRect oldRowInkOverflow = rowFrame->InkOverflowRect();
 
         // Reflow the cell with the constrained height. A cell with rowspan >1
         // will get this reflow later during SplitSpanningCells.
@@ -1167,7 +1167,7 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
         }
 
         nsTableFrame::InvalidateTableFrame(rowFrame, oldRowRect,
-                                           oldRowVisualOverflow, false);
+                                           oldRowInkOverflow, false);
 
         if (aStatus.IsIncomplete()) {
           // The row frame is incomplete and all of the rowspan 1 cells' block
@@ -1443,7 +1443,7 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
 
 bool nsTableRowGroupFrame::ComputeCustomOverflow(
     nsOverflowAreas& aOverflowAreas) {
-  // Row cursor invariants depend on the visual overflow area of the rows,
+  // Row cursor invariants depend on the ink overflow area of the rows,
   // which may have changed, so we need to clear the cursor now.
   ClearRowCursor();
   return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
@@ -1926,7 +1926,7 @@ bool nsTableRowGroupFrame::FrameCursorData::AppendFrame(nsIFrame* aFrame) {
   // We take the union of the overflow rect, and the frame's 'normal' position
   // (excluding position:relative changes) and record the max difference between
   // this combined overflow and the frame's rect.
-  nsRect positionedOverflowRect = aFrame->GetVisualOverflowRect();
+  nsRect positionedOverflowRect = aFrame->InkOverflowRect();
   nsPoint positionedToNormal =
       aFrame->GetNormalPosition() - aFrame->GetPosition();
   nsRect normalOverflowRect = positionedOverflowRect + positionedToNormal;
@@ -1947,8 +1947,8 @@ void nsTableRowGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                            bool aRebuildDisplayItems) {
   nsIFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
   if (GetTableFrame()->IsBorderCollapse()) {
-    GetParent()->InvalidateFrameWithRect(
-        GetVisualOverflowRect() + GetPosition(), aDisplayItemKey, false);
+    GetParent()->InvalidateFrameWithRect(InkOverflowRect() + GetPosition(),
+                                         aDisplayItemKey, false);
   }
 }
 

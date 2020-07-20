@@ -7268,7 +7268,7 @@ class nsDisplayText final : public nsPaintedDisplayItem {
   struct ClipEdges {
     ClipEdges(const nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
               nscoord aVisIStartEdge, nscoord aVisIEndEdge) {
-      nsRect r = aFrame->GetScrollableOverflowRect() + aToReferenceFrame;
+      nsRect r = aFrame->ScrollableOverflowRect() + aToReferenceFrame;
       if (aFrame->GetWritingMode().IsVertical()) {
         mVisIStart = aVisIStartEdge > 0 ? r.y + aVisIStartEdge : nscoord_MIN;
         mVisIEnd = aVisIEndEdge > 0

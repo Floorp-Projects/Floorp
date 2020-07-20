@@ -311,7 +311,7 @@ void nsSliderFrame::BuildDisplayListForChildren(
       const CSSCoord thumbStart = NSAppUnitsToFloatPixels(
           isHorizontal ? thumbRect.x : thumbRect.y, appUnitsPerCss);
 
-      const nsRect overflow = thumb->GetVisualOverflowRectRelativeToParent();
+      const nsRect overflow = thumb->InkOverflowRectRelativeToParent();
       nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
       nsRect dirty = aBuilder->GetVisibleRect().Intersect(thumbRect);
       dirty = nsLayoutUtils::ComputePartialPrerenderArea(

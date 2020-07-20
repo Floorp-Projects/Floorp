@@ -181,10 +181,10 @@ class nsBlockFrame : public nsContainerFrame {
   // as a cache for local computation. Use AutoLineCursorSetup for the
   // latter case so that it wouldn't interact unexpectedly with the
   // former. The basic idea for the former is that we set the cursor
-  // property if the lines' overflowArea.VisualOverflow().ys and
-  // overflowArea.VisualOverflow().yMosts are non-decreasing
-  // (considering only non-empty overflowArea.VisualOverflow()s; empty
-  // overflowArea.VisualOverflow()s never participate in event handling
+  // property if the lines' overflowArea.InkOverflow().ys and
+  // overflowArea.InkOverflow().yMosts are non-decreasing
+  // (considering only non-empty overflowArea.InkOverflow()s; empty
+  // overflowArea.InkOverflow()s never participate in event handling
   // or painting), and the block has sufficient number of lines. The
   // cursor property points to a "recently used" line. If we get a
   // series of requests that work on lines

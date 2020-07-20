@@ -706,7 +706,7 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     visible.ScaleInverseRoundOut(GetPrintPreviewScale());
 
     while (child) {
-      if (child->GetVisualOverflowRectRelativeToParent().Intersects(visible)) {
+      if (child->InkOverflowRectRelativeToParent().Intersects(visible)) {
         nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
             aBuilder, child, visible - child->GetPosition(),
             visible - child->GetPosition());

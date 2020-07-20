@@ -255,10 +255,10 @@ void nsLineBox::List(FILE* out, const char* aPrefix,
         nsIFrame::ConvertToString(mBounds, mWritingMode, aFlags).c_str());
   }
   if (mData) {
-    const nsRect vo = mData->mOverflowAreas.VisualOverflow();
+    const nsRect vo = mData->mOverflowAreas.InkOverflow();
     const nsRect so = mData->mOverflowAreas.ScrollableOverflow();
     if (!vo.IsEqualEdges(bounds) || !so.IsEqualEdges(bounds)) {
-      str += nsPrintfCString("vis-overflow=%s scr-overflow=%s ",
+      str += nsPrintfCString("ink-overflow=%s scr-overflow=%s ",
                              nsIFrame::ConvertToString(vo, aFlags).c_str(),
                              nsIFrame::ConvertToString(so, aFlags).c_str());
     }
@@ -536,7 +536,7 @@ void nsLineBox::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas) {
                  "illegal height for combined area");
   }
   nsRect bounds = GetPhysicalBounds();
-  if (!aOverflowAreas.VisualOverflow().IsEqualInterior(bounds) ||
+  if (!aOverflowAreas.InkOverflow().IsEqualInterior(bounds) ||
       !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
     if (!mData) {
       if (IsInline()) {

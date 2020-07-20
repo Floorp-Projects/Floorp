@@ -104,7 +104,7 @@ class SVGIntegrationUtils final {
                                           bool aUnionContinuations);
 
   /**
-   * Used to adjust a frame's pre-effects visual overflow rect to take account
+   * Used to adjust a frame's pre-effects ink overflow rect to take account
    * of SVG effects.
    *
    * XXX This method will not do the right thing for frames with continuations.
@@ -116,7 +116,7 @@ class SVGIntegrationUtils final {
    * the last continuation is reflowed. See:
    * http://groups.google.com/group/mozilla.dev.tech.layout/msg/6b179066f3051f65
    */
-  static nsRect ComputePostEffectsVisualOverflowRect(
+  static nsRect ComputePostEffectsInkOverflowRect(
       nsIFrame* aFrame, const nsRect& aPreEffectsOverflowRect);
 
   /**

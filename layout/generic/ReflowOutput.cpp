@@ -11,7 +11,7 @@
 
 void nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther) {
   // FIXME: We should probably change scrollable overflow to use
-  // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
+  // UnionRectIncludeEmpty (but leave ink overflow using UnionRect).
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
     mRects[otype].UnionRect(mRects[otype], aOther.mRects[otype]);
   }
@@ -19,7 +19,7 @@ void nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther) {
 
 void nsOverflowAreas::UnionAllWith(const nsRect& aRect) {
   // FIXME: We should probably change scrollable overflow to use
-  // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
+  // UnionRectIncludeEmpty (but leave ink overflow using UnionRect).
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
     mRects[otype].UnionRect(mRects[otype], aRect);
   }
@@ -42,7 +42,7 @@ void ReflowOutput::SetOverflowAreasToDesiredBounds() {
 
 void ReflowOutput::UnionOverflowAreasWithDesiredBounds() {
   // FIXME: We should probably change scrollable overflow to use
-  // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
+  // UnionRectIncludeEmpty (but leave ink overflow using UnionRect).
   nsRect rect(0, 0, Width(), Height());
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
     nsRect& o = mOverflowAreas.Overflow(otype);

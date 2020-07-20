@@ -114,7 +114,7 @@ class nsDisplayListFocus : public nsPaintedDisplayItem {
     // override bounds because the list item focus ring may extend outside
     // the nsSelectsAreaFrame
     nsListControlFrame* listFrame = GetEnclosingListFrame(Frame());
-    return listFrame->GetVisualOverflowRectRelativeToSelf() +
+    return listFrame->InkOverflowRectRelativeToSelf() +
            listFrame->GetOffsetToCrossDoc(ReferenceFrame());
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
