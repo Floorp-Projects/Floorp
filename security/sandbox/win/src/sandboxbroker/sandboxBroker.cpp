@@ -1047,6 +1047,14 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       result,
       "With these static arguments AddRule should never fail, what happened?");
 
+  // Add rule to allow process to create the server side of our IPC pipes.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_NAMED_PIPES,
+                            sandbox::TargetPolicy::NAMEDPIPES_ALLOW_ANY,
+                            L"\\\\.\\pipe\\chrome.*");
+  MOZ_RELEASE_ASSERT(
+      sandbox::SBOX_ALL_OK == result,
+      "With these static arguments AddRule should never fail, what happened?");
+
   // Add the policy for the client side of the crash server pipe.
   result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                             sandbox::TargetPolicy::FILES_ALLOW_ANY,
