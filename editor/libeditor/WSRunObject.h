@@ -790,24 +790,24 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
 
     /**
-     * GetInvisibleLeadingWhiteSpaceRange() retruns two DOM points, start
-     * of the line and first visible point or end of the hard line.  When
+     * InvisibleLeadingWhiteSpaceRangeRef() retruns reference to two DOM points,
+     * start of the line and first visible point or end of the hard line.  When
      * this returns non-positioned range or positioned but collapsed range,
      * there is no invisible leading white-spaces.
      * Note that if there are only invisible white-spaces in a hard line,
      * this returns all of the white-spaces.
      */
-    EditorDOMRange GetInvisibleLeadingWhiteSpaceRange() const;
+    const EditorDOMRange& InvisibleLeadingWhiteSpaceRangeRef() const;
 
     /**
-     * GetInvisibleTrailingWhiteSpaceRange() returns two DOM points,
-     * first invisible white-space and end of the hard line.  When this
+     * InvisibleTrailingWhiteSpaceRangeRef() returns reference to two DOM
+     * points, first invisible white-space and end of the hard line.  When this
      * returns non-positioned range or positioned but collapsed range,
      * there is no invisible trailing white-spaces.
      * Note that if there are only invisible white-spaces in a hard line,
      * this returns all of the white-spaces.
      */
-    EditorDOMRange GetInvisibleTrailingWhiteSpaceRange() const;
+    const EditorDOMRange& InvisibleTrailingWhiteSpaceRangeRef() const;
 
     /**
      * GetNewInvisibleLeadingWhiteSpaceRangeIfSplittingAt() returns new
@@ -824,8 +824,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       // become invisible leading white-spaces in the new line, although we
       // don't need to delete them, but for aesthetically and backward
       // compatibility, we should remove them.
-      EditorDOMRange trailingWhiteSpaceRange =
-          GetInvisibleTrailingWhiteSpaceRange();
+      const EditorDOMRange& trailingWhiteSpaceRange =
+          InvisibleTrailingWhiteSpaceRangeRef();
       // XXX Why don't we check leading white-spaces too?
       if (!trailingWhiteSpaceRange.IsPositioned()) {
         return trailingWhiteSpaceRange;
@@ -833,7 +833,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       // XXX Why don't we need to treat new trailing white-spaces are invisible
       //     when the trailing white-spaces are only the content in current
       //     line?
-      if (trailingWhiteSpaceRange != GetInvisibleLeadingWhiteSpaceRange()) {
+      if (trailingWhiteSpaceRange != InvisibleLeadingWhiteSpaceRangeRef()) {
         return EditorDOMRange();
       }
       // If the point is before the trailing white-spaces, the new line won't
@@ -874,15 +874,15 @@ class MOZ_STACK_CLASS WSRunScanner final {
       // become end of current line, they will become visible.  Therefore, we
       // need to delete the invisible leading white-spaces before insertion
       // point.
-      EditorDOMRange leadingWhiteSpaceRange =
-          GetInvisibleLeadingWhiteSpaceRange();
+      const EditorDOMRange& leadingWhiteSpaceRange =
+          InvisibleLeadingWhiteSpaceRangeRef();
       if (!leadingWhiteSpaceRange.IsPositioned()) {
         return leadingWhiteSpaceRange;
       }
       // XXX Why don't we need to treat new leading white-spaces are invisible
       //     when the leading white-spaces are only the content in current
       //     line?
-      if (leadingWhiteSpaceRange != GetInvisibleTrailingWhiteSpaceRange()) {
+      if (leadingWhiteSpaceRange != InvisibleTrailingWhiteSpaceRangeRef()) {
         return EditorDOMRange();
       }
       // If the point equals or is after the leading white-spaces, the line
@@ -927,8 +927,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       }
       // VisibleWhiteSpacesData is marked as start of line only when it
       // represents leading white-spaces.
-      EditorDOMRange leadingWhiteSpaceRange =
-          GetInvisibleLeadingWhiteSpaceRange();
+      const EditorDOMRange& leadingWhiteSpaceRange =
+          InvisibleLeadingWhiteSpaceRangeRef();
       if (!leadingWhiteSpaceRange.StartRef().IsSet()) {
         return false;
       }
