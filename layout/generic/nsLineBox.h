@@ -400,10 +400,9 @@ class nsLineBox final : public nsLineLink {
   void AppendFloats(nsFloatCacheFreeList& aFreeList);
   bool RemoveFloat(nsIFrame* aFrame);
 
-  // Combined area is the area of the line that should influence the
-  // overflow area of its parent block.  The combined area should be
-  // used for painting-related things, but should never be used for
-  // layout (except for handling of 'overflow').
+  // The ink overflow area should never be used for things that affect layout.
+  // The scrollable overflow area are permitted to affect layout for handling of
+  // overflow and scrollbars.
   void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
   mozilla::LogicalRect GetOverflowArea(nsOverflowType aType,
                                        mozilla::WritingMode aWM,
