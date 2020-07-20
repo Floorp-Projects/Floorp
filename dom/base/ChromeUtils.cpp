@@ -800,6 +800,8 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
   // Get all the content parents.
   // Note that this array includes even the long dead content parents, so we
   // might have some garbage, especially with Fission.
+  // SAFETY NOTE: `contentParents` is only valid if used synchronously.
+  // Anything else and you may end up dealing with dangling pointers.
   nsTArray<ContentParent*> contentParents;
   ContentParent::GetAll(contentParents);
 
