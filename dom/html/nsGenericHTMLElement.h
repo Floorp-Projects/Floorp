@@ -86,10 +86,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void SetHidden(bool aHidden, mozilla::ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::hidden, aHidden, aError);
   }
-  bool Inert() const { return GetBoolAttr(nsGkAtoms::inert); }
-  void SetInert(bool aInert, mozilla::ErrorResult& aError) {
-    SetHTMLBoolAttr(nsGkAtoms::inert, aInert, aError);
-  }
   void Click(mozilla::dom::CallerType aCallerType);
   void GetAccessKey(nsString& aAccessKey) {
     GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);

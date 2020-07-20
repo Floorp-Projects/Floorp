@@ -1730,7 +1730,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
 
   nsChangeHint CalcDifference(const nsStyleUI& aNewData) const;
 
-  mozilla::StyleInert mInert;
   mozilla::StyleUserInput mUserInput;
   mozilla::StyleUserModify mUserModify;  // (modify-content)
   mozilla::StyleUserFocus mUserFocus;    // (auto-select)

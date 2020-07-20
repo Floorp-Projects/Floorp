@@ -3107,8 +3107,7 @@ LogicalSide nsStyleText::TextEmphasisSide(WritingMode aWM) const {
 //
 
 nsStyleUI::nsStyleUI(const Document& aDocument)
-    : mInert(StyleInert::None),
-      mUserInput(StyleUserInput::Auto),
+    : mUserInput(StyleUserInput::Auto),
       mUserModify(StyleUserModify::ReadOnly),
       mUserFocus(StyleUserFocus::None),
       mPointerEvents(StylePointerEvents::Auto),
@@ -3119,8 +3118,7 @@ nsStyleUI::nsStyleUI(const Document& aDocument)
 }
 
 nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
-    : mInert(aSource.mInert),
-      mUserInput(aSource.mUserInput),
+    : mUserInput(aSource.mUserInput),
       mUserModify(aSource.mUserModify),
       mUserFocus(aSource.mUserFocus),
       mPointerEvents(aSource.mPointerEvents),
@@ -3181,7 +3179,7 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
     }
   }
 
-  if (mUserFocus != aNewData.mUserFocus || mInert != aNewData.mInert) {
+  if (mUserFocus != aNewData.mUserFocus) {
     hint |= nsChangeHint_NeutralChange;
   }
 
