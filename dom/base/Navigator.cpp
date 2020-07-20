@@ -1373,6 +1373,14 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
     return nullptr;
   }
 
+  if (!FeaturePolicyUtils::IsFeatureAllowed(mWindow->GetExtantDoc(),
+                                            u"web-share"_ns)) {
+    aRv.ThrowNotAllowedError(
+        "Document's Permission Policy does not allow calling "
+        "share() from this context.");
+    return nullptr;
+  }
+
   if (mSharePromise) {
     NS_WARNING("Only one share picker at a time per navigator instance");
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
