@@ -14,7 +14,6 @@ import re
 
 import six
 
-from slugid import nice as slugid
 from taskgraph.util.taskcluster import list_artifacts, get_artifact, get_task_definition
 from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
@@ -148,7 +147,7 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
     th_dict['tier'] = 3
 
     for i in range(times):
-        create_task_from_def(slugid(), task_definition, level)
+        create_task_from_def(task_definition, level)
 
     if repeatable_task:
         task_definition['payload']['maxRunTime'] = 3600 * 3
@@ -200,7 +199,7 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
                 failure_path,
                 task_definition['payload']['command']))
             for i in range(times):
-                create_task_from_def(slugid(), task_definition, level)
+                create_task_from_def(task_definition, level)
 
 
 @register_callback_action(
