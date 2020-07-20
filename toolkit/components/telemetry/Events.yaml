@@ -1138,6 +1138,19 @@ devtools.main:
     extra_keys:
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  close_source_tab:
+    objects: ["debugger"]
+    bug_numbers: [1647346]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com", "dwalsh@mozilla.com"]
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: The method by which users close source tabs within the debugger
+    release_channel_collection: opt-out
+    expiry_version: "82"
+    extra_keys:
+      reason: The method that the tab was closed ("click" or "shortcut")
+      num_tabs: The number of open tabs at the time the tab was closed
   connection_attempt:
     objects: ["aboutdebugging"]
     bug_numbers: [1549970]

@@ -254,16 +254,19 @@ class Editor extends PureComponent<Props, State> {
       L10N.getStr("toggleCondPanel.logPoint.key"),
       this.onToggleConditionalPanel
     );
-    shortcuts.on(L10N.getStr("sourceTabs.closeTab.key"), this.onClosePress);
+    shortcuts.on(
+      L10N.getStr("sourceTabs.closeTab.key"),
+      this.onCloseShortcutPress
+    );
     shortcuts.on("Esc", this.onEscape);
   }
 
-  onClosePress = (key: mixed, e: KeyboardEvent) => {
+  onCloseShortcutPress = (key: mixed, e: KeyboardEvent) => {
     const { cx, selectedSource } = this.props;
     if (selectedSource) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.closeTab(cx, selectedSource);
+      this.props.closeTab(cx, selectedSource, "shortcut");
     }
   };
 
