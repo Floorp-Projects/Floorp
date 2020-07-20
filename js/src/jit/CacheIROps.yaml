@@ -1125,7 +1125,6 @@
 
 - name: CallNativeFunction
   shared: false
-  transpile: false
   transpile: true
   cost_estimate: 4
   custom_writer: true
