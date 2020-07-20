@@ -66,6 +66,7 @@ const TEST_GLOBAL = {
     }
     post() {}
   },
+  browserSearchRegion: "US",
   BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {
     defineModuleGetter() {},
