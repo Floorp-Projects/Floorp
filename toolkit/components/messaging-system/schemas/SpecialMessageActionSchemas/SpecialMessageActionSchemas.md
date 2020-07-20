@@ -13,11 +13,6 @@ For snippets, you should add the action type in `button_action` and any addition
 }
 ```
 
-## How to update
-
-Make a pull request against [mozilla/nimbus-shared](https://github.com/mozilla/nimbus-shared/) repo with your changes.
-Build and copy over resulting schema from `nimbus-shared/schemas/messaging/` to `toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas.json`.
-
 ## Available Actions
 
 ### `OPEN_APPLICATIONS_MENU`
