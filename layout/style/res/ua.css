@@ -153,6 +153,11 @@
   outline: 1px dotted;
 }
 
+/* Inert subtrees */
+*|*:-moz-inert {
+  -moz-inert: inert;
+}
+
 /* Miscellaneous */
 
 *|*::-moz-cell-content {
