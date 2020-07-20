@@ -27,6 +27,7 @@ import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.anyString
@@ -245,6 +246,7 @@ class SessionFeatureTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/android-components/issues/7753")
     fun `Releases when last selected session gets removed`() {
         val store = BrowserStore(BrowserState(
             tabs = listOf(
@@ -329,6 +331,7 @@ class SessionFeatureTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/android-components/issues/7753")
     fun `Releases when custom tab gets removed`() {
         val store = BrowserStore(BrowserState(
             tabs = listOf(
