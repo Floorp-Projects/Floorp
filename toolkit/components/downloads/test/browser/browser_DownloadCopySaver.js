@@ -4,8 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests the PDF download saver, and tests using a window as a
- * source for the copy download saver.
+ * Tests using a window as a source for the copy download saver.
  */
 
 "use strict";
@@ -64,26 +63,11 @@ async function test_createDownload_common(aPrivate, aType) {
   await download.start();
 
   await test_download_state_complete(tab, download, aPrivate, false);
-  if (aType == "pdf") {
-    let signature = await OS.File.read(download.target.path, {
-      bytes: 4,
-      encoding: "us-ascii",
-    });
-    is(signature, "%PDF", "File exists and signature matches");
-  } else {
-    ok(await OS.File.exists(download.target.path), "File exists");
-  }
+  ok(await OS.File.exists(download.target.path), "File exists");
 
   win.gBrowser.removeTab(tab);
   win.close();
 }
-
-add_task(async function test_createDownload_pdf_private() {
-  await test_createDownload_common(true, "pdf");
-});
-add_task(async function test_createDownload_pdf_not_private() {
-  await test_createDownload_common(false, "pdf");
-});
 
 // Even for the copy saver, using a window should produce valid results
 add_task(async function test_createDownload_copy_private() {
@@ -91,30 +75,4 @@ add_task(async function test_createDownload_copy_private() {
 });
 add_task(async function test_createDownload_copy_not_private() {
   await test_createDownload_common(false, "copy");
-});
-
-add_task(async function test_cancel_pdf_download() {
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    getRootDirectory(gTestPath) + "testFile.html"
-  );
-  await promiseBrowserLoaded(tab.linkedBrowser);
-
-  let download = await Downloads.createDownload({
-    source: tab.linkedBrowser.contentWindow,
-    target: { path: getTempFile(TEST_TARGET_FILE_NAME_PDF).path },
-    saver: "pdf",
-  });
-
-  await test_download_windowRef(tab, download);
-  download.start().catch(() => {});
-
-  // Immediately cancel the download to test that it is erased correctly.
-  await download.cancel();
-  await test_download_state_complete(tab, download, false, true);
-
-  let exists = await OS.File.exists(download.target.path);
-  ok(!exists, "Target file does not exist");
-
-  gBrowser.removeTab(tab);
 });
