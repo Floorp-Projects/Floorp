@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use euclid::SideOffsets2D;
-use peek_poke::{ensure_red_zone, peek_from_slice, poke_extend_vec};
+use peek_poke::{ensure_red_zone, peek_from_slice, poke_extend_vec, strip_red_zone};
 use peek_poke::{poke_inplace_slice, poke_into_vec, Poke};
 #[cfg(feature = "deserialize")]
 use serde::de::Deserializer;
@@ -1075,6 +1075,7 @@ impl DisplayListBuilder {
         W: Write
     {
         let mut temp = BuiltDisplayList::default();
+        ensure_red_zone::<di::DisplayItem>(&mut self.data);
         temp.descriptor.extra_data_offset = self.data.len();
         mem::swap(&mut temp.data, &mut self.data);
 
@@ -1090,6 +1091,7 @@ impl DisplayListBuilder {
         }
 
         self.data = temp.data;
+        strip_red_zone::<di::DisplayItem>(&mut self.data);
         index
     }
 
