@@ -10,15 +10,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "prlink.h"
 
-// List of symbols to find in libcups. Must match symAddr[] defined in Init().
-// Making this an array of arrays instead of pointers allows storing the
-// whole thing in read-only memory.
-static const char gSymName[][sizeof("cupsPrintFile")] = {
-    {"cupsAddOption"}, {"cupsFreeDests"}, {"cupsGetDest"},
-    {"cupsGetDests"},  {"cupsPrintFile"}, {"cupsTempFd"},
-};
-static const int gSymNameCt = mozilla::ArrayLength(gSymName);
-
 #ifdef XP_MACOSX
 // TODO: On OS X we are guaranteed to have CUPS, so it would be nice to just
 // assign the members from the header directly instead of dlopen'ing.
@@ -30,34 +21,47 @@ static const char gCUPSLibraryName[] = "libcups.2.dylib";
 static const char gCUPSLibraryName[] = "libcups.so.2";
 #endif
 
-bool nsCUPSShim::Init() {
-  mCupsLib = PR_LoadLibrary(gCUPSLibraryName);
-  if (!mCupsLib) return false;
-
-  // List of symbol pointers. Must match gSymName[] defined above.
-  void** symAddr[] = {
-      (void**)&mCupsAddOption, (void**)&mCupsFreeDests, (void**)&mCupsGetDest,
-      (void**)&mCupsGetDests,  (void**)&mCupsPrintFile, (void**)&mCupsTempFd,
-  };
-
-  for (int i = gSymNameCt; i--;) {
-    *(symAddr[i]) = PR_FindSymbol(mCupsLib, gSymName[i]);
-    if (!*(symAddr[i])) {
+template <typename FuncT>
+static bool LoadCupsFunc(PRLibrary* const lib, FuncT*& dest,
+                         const char* const name) {
+  dest = (FuncT*)PR_FindSymbol(lib, name);
+  if (MOZ_UNLIKELY(!dest)) {
 #ifdef DEBUG
-      nsAutoCString msg(gSymName[i]);
-      msg.AppendLiteral(" not found in CUPS library");
-      NS_WARNING(msg.get());
+    nsAutoCString msg(name);
+    msg.AppendLiteral(" not found in CUPS library");
+    NS_WARNING(msg.get());
 #endif
-
-#ifndef MOZ_TSAN
-      // With TSan, we cannot unload libcups once we have loaded it because
-      // TSan does not support unloading libraries that are matched from its
-      // suppression list. Hence we just keep the library loaded in TSan builds.
-      PR_UnloadLibrary(mCupsLib);
-#endif
-      mCupsLib = nullptr;
-      return false;
-    }
+    return false;
   }
+  return true;
+}
+
+// This is a macro so that it could also load from libcups if we are configured
+// to use it as a compile-time dependency.
+#define CUPS_SHIM_LOAD(MEMBER, NAME) LoadCupsFunc(mCupsLib, MEMBER, #NAME)
+
+bool nsCUPSShim::Init() {
+  MOZ_ASSERT(!mInited);
+  mCupsLib = PR_LoadLibrary(gCUPSLibraryName);
+  if (!mCupsLib) {
+    return false;
+  }
+
+  if (!(CUPS_SHIM_LOAD(mCupsAddOption, cupsAddOption) &&
+        CUPS_SHIM_LOAD(mCupsFreeDests, cupsFreeDests) &&
+        CUPS_SHIM_LOAD(mCupsGetDest, cupsGetDest) &&
+        CUPS_SHIM_LOAD(mCupsGetDests, cupsGetDests) &&
+        CUPS_SHIM_LOAD(mCupsPrintFile, cupsPrintFile) &&
+        CUPS_SHIM_LOAD(mCupsTempFd, cupsTempFd))) {
+#ifndef MOZ_TSAN
+    // With TSan, we cannot unload libcups once we have loaded it because
+    // TSan does not support unloading libraries that are matched from its
+    // suppression list. Hence we just keep the library loaded in TSan builds.
+    PR_UnloadLibrary(mCupsLib);
+#endif
+    mCupsLib = nullptr;
+    return false;
+  }
+  mInited = true;
   return true;
 }

@@ -57,7 +57,7 @@ class nsCUPSShim {
    * @return true  if the object was initialized successfully.
    *         false otherwise.
    */
-  bool IsInitialized() { return nullptr != mCupsLib; }
+  bool IsInitialized() const { return mInited; }
 
   /* Function pointers for supported functions. These are only
    * valid after successful initialization.
@@ -70,6 +70,7 @@ class nsCUPSShim {
   CupsTempFdType mCupsTempFd;
 
  private:
+  bool mInited = false;
   PRLibrary* mCupsLib;
 };
 
