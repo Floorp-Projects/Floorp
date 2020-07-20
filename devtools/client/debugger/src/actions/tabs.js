@@ -10,6 +10,7 @@
  */
 
 import { removeDocument } from "../utils/editor";
+import { recordEvent } from "../utils/telemetry";
 import { selectSource } from "./sources";
 
 import {
@@ -67,7 +68,11 @@ export function moveTabBySourceId(
  * @memberof actions/tabs
  * @static
  */
-export function closeTab(cx: Context, source: Source) {
+export function closeTab(
+  cx: Context,
+  source: Source,
+  reason: string = "click"
+) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     removeDocument(source.id);
 
@@ -76,6 +81,11 @@ export function closeTab(cx: Context, source: Source) {
 
     const sourceId = getNewSelectedSourceId(getState(), tabs);
     dispatch(selectSource(cx, sourceId));
+
+    recordEvent("close_source_tab", {
+      reason,
+      num_tabs: tabs.length,
+    });
   };
 }
 
