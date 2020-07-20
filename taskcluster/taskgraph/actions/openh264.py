@@ -6,12 +6,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from .registry import register_callback_action
+import six
 
-from .util import (
-    create_tasks,
-    fetch_graph_and_labels,
-)
+from .registry import register_callback_action
+from .util import create_tasks, fetch_graph_and_labels
 
 
 @register_callback_action(
@@ -26,7 +24,7 @@ def openh264_action(parameters, graph_config, input, task_group_id, task_id):
         parameters, graph_config)
     to_run = [label
               for label, entry
-              in full_task_graph.tasks.iteritems() if 'openh264' in entry.kind]
+              in six.iteritems(full_task_graph.tasks) if 'openh264' in entry.kind]
     create_tasks(
         graph_config,
         to_run,
