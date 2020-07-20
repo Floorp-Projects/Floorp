@@ -19,6 +19,8 @@ import tempfile
 import xml.etree.ElementTree as ET
 import yaml
 
+import six
+
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -2340,6 +2342,7 @@ class StaticAnalysis(MachCommandBase):
                             # `diff` format.
                             original_path_diff = os.path.join("a", relative_path)
                             target_path_diff = os.path.join("b", relative_path)
+                            e.output = e.output.decode('utf-8')
                             patch = e.output.replace("+++ {}".format(target_file),
                                                      "+++ {}".format(target_path_diff)).replace(
                                                          "-- {}".format(original_path),
@@ -2403,7 +2406,7 @@ class StaticAnalysis(MachCommandBase):
         list of patches, and calculates line level informations from the
         character level provided changes.
         '''
-        content = open(path, 'r').read().decode('utf-8')
+        content = six.ensure_str(open(path, 'r').read())
 
         def _nb_of_lines(start, end):
             return len(content[start:end].splitlines())
