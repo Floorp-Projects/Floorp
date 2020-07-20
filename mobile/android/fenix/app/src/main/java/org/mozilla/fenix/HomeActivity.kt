@@ -330,8 +330,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         order["CUSTOM_CONTEXT_MENU_CALL"] = 1
         order["org.mozilla.geckoview.COPY"] = 2
         order["CUSTOM_CONTEXT_MENU_SEARCH"] = 3
-        order["org.mozilla.geckoview.SELECT_ALL"] = 4
-        order["CUSTOM_CONTEXT_MENU_SHARE"] = 5
+        order["CUSTOM_CONTEXT_MENU_SEARCH_PRIVATELY"] = 4
+        order["org.mozilla.geckoview.SELECT_ALL"] = 5
+        order["CUSTOM_CONTEXT_MENU_SHARE"] = 6
 
         return actions.sortedBy { actionName ->
             // Sort the actions in our preferred order, putting "other" actions unsorted at the end
