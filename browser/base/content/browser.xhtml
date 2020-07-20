@@ -165,7 +165,9 @@
         <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
                    onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
       </menu>
-      <menu id="context_moveTabOptions">
+      <menu id="context_moveTabOptions"
+            data-lazy-l10n-id="tab-context-move-tabs"
+            data-l10n-args='{"tabCount": 1}'>
         <menupopup id="moveTabOptionsMenu">
           <menuitem id="context_moveToStart"
                     data-lazy-l10n-id="move-to-start"
@@ -199,11 +201,10 @@
                 data-lazy-l10n-id="tab-context-undo-close-tabs"
                 data-l10n-args='{"tabCount": 1}'
                 observes="History:UndoCloseTab"/>
-      <menuitem id="context_closeTab" data-lazy-l10n-id="close-tab"
-                oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>
-      <menuitem id="context_closeSelectedTabs" data-lazy-l10n-id="close-tabs"
-                hidden="true"
-                oncommand="gBrowser.removeMultiSelectedTabs();"/>
+      <menuitem id="context_closeTab"
+                data-lazy-l10n-id="tab-context-close-tabs"
+                data-l10n-args='{"tabCount": 1}'
+                oncommand="TabContextMenu.closeContextTabs();"/>
     </menupopup>
 
     <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
