@@ -83,7 +83,7 @@ class ContentIteratorBase {
   nsINode* NextNode(nsINode* aNode);
   nsINode* PrevNode(nsINode* aNode);
 
-  void MakeEmpty();
+  void SetEmpty();
 
   nsCOMPtr<nsINode> mCurNode;
   nsCOMPtr<nsINode> mFirst;
