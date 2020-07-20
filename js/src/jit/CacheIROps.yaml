@@ -1277,6 +1277,17 @@
     layout: TypedThingLayoutImm
     elementType: ScalarTypeImm
 
+- name: LoadDataViewValueResult
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    offset: Int32Id
+    littleEndian: Int32Id
+    elementType: ScalarTypeImm
+    allowDoubleForUint32: BoolImm
+
 - name: LoadInt32ArrayLengthResult
   shared: true
   transpile: true
