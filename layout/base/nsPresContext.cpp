@@ -2624,7 +2624,7 @@ void nsRootPresContext::ComputePluginGeometryUpdates(
       // again. nsDisplayScroll(Info)Layer doesn't support trying to flatten
       // again.
       aBuilder->SetAllowMergingAndFlattening(false);
-      nsRegion region = rootFrame->GetVisualOverflowRectRelativeToSelf();
+      nsRegion region = rootFrame->InkOverflowRectRelativeToSelf();
       // nsDisplayPlugin::ComputeVisibility will automatically set a non-hidden
       // widget configuration for the plugin, if it's visible.
       aList->ComputeVisibilityForRoot(aBuilder, &region);

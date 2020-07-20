@@ -165,12 +165,12 @@ class SVGUtils final {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ObjectBoundingBoxProperty, gfxRect)
 
   /**
-   * Returns the frame's post-filter visual overflow rect when passed the
-   * frame's pre-filter visual overflow rect. If the frame is not currently
+   * Returns the frame's post-filter ink overflow rect when passed the
+   * frame's pre-filter ink overflow rect. If the frame is not currently
    * being filtered, this function simply returns aUnfilteredRect.
    */
-  static nsRect GetPostFilterVisualOverflowRect(nsIFrame* aFrame,
-                                                const nsRect& aPreFilterRect);
+  static nsRect GetPostFilterInkOverflowRect(nsIFrame* aFrame,
+                                             const nsRect& aPreFilterRect);
 
   /**
    * Schedules an update of the frame's bounds (which will in turn invalidate

@@ -420,10 +420,8 @@ class nsLineBox final : public nsLineLink {
     nsRect bounds = GetPhysicalBounds();
     return nsOverflowAreas(bounds, bounds);
   }
-  nsRect GetVisualOverflowArea() const {
-    return GetOverflowArea(eVisualOverflow);
-  }
-  nsRect GetScrollableOverflowArea() {
+  nsRect InkOverflowRect() const { return GetOverflowArea(eInkOverflow); }
+  nsRect ScrollableOverflowRect() {
     return GetOverflowArea(eScrollableOverflow);
   }
 

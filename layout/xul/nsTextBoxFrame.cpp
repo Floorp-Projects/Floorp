@@ -328,7 +328,7 @@ bool nsDisplayXULTextBox::CreateWebRenderCommands(
 nsRect nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder,
                                       bool* aSnap) const {
   *aSnap = false;
-  return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
 nsRect nsDisplayXULTextBox::GetComponentAlphaBounds(
@@ -925,7 +925,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 
   RefPtr<nsFontMetrics> fontMet =
       nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
-  nsBoundingMetrics metrics = fontMet->GetInkBoundsForVisualOverflow(
+  nsBoundingMetrics metrics = fontMet->GetInkBoundsForInkOverflow(
       mCroppedTitle.get(), mCroppedTitle.Length(),
       aBoxLayoutState.GetRenderingContext()->GetDrawTarget());
 
@@ -941,7 +941,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 
   textRect = tr.GetPhysicalRect(wm, GetSize());
 
-  // Our scrollable overflow is our bounds; our visual overflow may
+  // Our scrollable overflow is our bounds; our ink overflow may
   // extend beyond that.
   nsRect visualBounds;
   visualBounds.UnionRect(scrollBounds, textRect);
@@ -949,7 +949,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 
   if (textStyle->HasTextShadow()) {
     // text-shadow extends our visual but not scrollable bounds
-    nsRect& vis = overflow.VisualOverflow();
+    nsRect& vis = overflow.InkOverflow();
     vis.UnionRect(vis,
                   nsLayoutUtils::GetTextShadowRectsUnion(mTextDrawRect, this));
   }
@@ -960,7 +960,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 
 nsRect nsTextBoxFrame::GetComponentAlphaBounds() const {
   if (StyleText()->HasTextShadow()) {
-    return GetVisualOverflowRectRelativeToSelf();
+    return InkOverflowRectRelativeToSelf();
   }
   return mTextDrawRect;
 }

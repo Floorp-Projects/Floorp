@@ -1275,7 +1275,7 @@ nsRect AccessibleCaretManager::GetAllChildFrameRectsUnion(
     for (const auto& childList : frame->ChildLists()) {
       // Loop all children to union their scrollable overflow rect.
       for (nsIFrame* child : childList.mList) {
-        nsRect childRect = child->GetScrollableOverflowRectRelativeToSelf();
+        nsRect childRect = child->ScrollableOverflowRectRelativeToSelf();
         nsLayoutUtils::TransformRect(child, frame, childRect);
 
         // A TextFrame containing only '\n' has positive height and width 0, or

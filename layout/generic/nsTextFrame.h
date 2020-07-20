@@ -824,7 +824,7 @@ class nsTextFrame : public nsIFrame {
 
   void UnionAdditionalOverflow(nsPresContext* aPresContext, nsIFrame* aBlock,
                                PropertyProvider& aProvider,
-                               nsRect* aVisualOverflowRect,
+                               nsRect* aInkOverflowRect,
                                bool aIncludeTextDecorations,
                                bool aIncludeShadows);
 

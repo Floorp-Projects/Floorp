@@ -553,8 +553,7 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
     }
   }
 
-  LogicalRect lineRect(mBlockWM, aLine->GetScrollableOverflowArea(),
-                       mBlockSize);
+  LogicalRect lineRect(mBlockWM, aLine->ScrollableOverflowRect(), mBlockSize);
   const bool istartWantsMarker =
       !suppressIStart &&
       lineRect.IStart(mBlockWM) < contentArea.IStart(mBlockWM);

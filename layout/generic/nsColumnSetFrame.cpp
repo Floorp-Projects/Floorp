@@ -32,7 +32,7 @@ class nsDisplayColumnRule : public nsPaintedDisplayItem {
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayColumnRule)
 
   /**
-   * Returns the frame's visual overflow rect instead of the frame's bounds.
+   * Returns the frame's ink overflow rect instead of the frame's bounds.
    */
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
     *aSnap = false;
@@ -601,14 +601,12 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     if (skipIncremental && shrinkingBSize) {
       switch (wm.GetBlockDir()) {
         case WritingMode::eBlockTB:
-          if (child->GetScrollableOverflowRect().YMost() >
-              aConfig.mColMaxBSize) {
+          if (child->ScrollableOverflowRect().YMost() > aConfig.mColMaxBSize) {
             skipIncremental = false;
           }
           break;
         case WritingMode::eBlockLR:
-          if (child->GetScrollableOverflowRect().XMost() >
-              aConfig.mColMaxBSize) {
+          if (child->ScrollableOverflowRect().XMost() > aConfig.mColMaxBSize) {
             skipIncremental = false;
           }
           break;

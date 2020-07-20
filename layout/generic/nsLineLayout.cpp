@@ -3258,8 +3258,8 @@ void nsLineLayout::RelativePositionFrames(PerSpanData* psd,
 
     overflowAreas.ScrollableOverflow().UnionRect(
         psd->mFrame->mOverflowAreas.ScrollableOverflow(), adjustedBounds);
-    overflowAreas.VisualOverflow().UnionRect(
-        psd->mFrame->mOverflowAreas.VisualOverflow(), adjustedBounds);
+    overflowAreas.InkOverflow().UnionRect(
+        psd->mFrame->mOverflowAreas.InkOverflow(), adjustedBounds);
   } else {
     LogicalRect rect(wm, psd->mIStart, mBStartEdge, psd->mICoord - psd->mIStart,
                      mFinalLineBSize);
@@ -3267,8 +3267,8 @@ void nsLineLayout::RelativePositionFrames(PerSpanData* psd,
     // children of the block starts at the upper left corner of the
     // line and is sized to match the size of the line's bounding box
     // (the same size as the values returned from VerticalAlignFrames)
-    overflowAreas.VisualOverflow() = rect.GetPhysicalRect(wm, ContainerSize());
-    overflowAreas.ScrollableOverflow() = overflowAreas.VisualOverflow();
+    overflowAreas.InkOverflow() = rect.GetPhysicalRect(wm, ContainerSize());
+    overflowAreas.ScrollableOverflow() = overflowAreas.InkOverflow();
   }
 
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
@@ -3283,7 +3283,7 @@ void nsLineLayout::RelativePositionFrames(PerSpanData* psd,
     if (frame->HasView())
       nsContainerFrame::SyncFrameViewAfterReflow(
           mPresContext, frame, frame->GetView(),
-          pfd->mOverflowAreas.VisualOverflow(),
+          pfd->mOverflowAreas.InkOverflow(),
           nsIFrame::ReflowChildFlags::NoSizeView);
 
     // Note: the combined area of a child is in its coordinate
@@ -3330,7 +3330,7 @@ void nsLineLayout::RelativePositionFrames(PerSpanData* psd,
     // about the root span, since it doesn't have a frame.
     if (frame->HasView())
       nsContainerFrame::SyncFrameViewAfterReflow(
-          mPresContext, frame, frame->GetView(), r.VisualOverflow(),
+          mPresContext, frame, frame->GetView(), r.InkOverflow(),
           nsIFrame::ReflowChildFlags::NoMoveView);
 
     overflowAreas.UnionWith(r + frame->GetPosition());

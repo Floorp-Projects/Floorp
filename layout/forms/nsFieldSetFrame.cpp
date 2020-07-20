@@ -157,7 +157,7 @@ nsRect nsDisplayFieldSetBorder::GetBounds(nsDisplayListBuilder* aBuilder,
   // nsDisplayBorder has here, but keeping things in sync would be a pain, and
   // this code is not typically performance-sensitive.
   *aSnap = false;
-  return Frame()->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return Frame()->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
 bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
@@ -187,7 +187,7 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
       // We need to clip out the part of the border where the legend would go
       auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
       auto layoutRect = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
-          frame->GetVisualOverflowRectRelativeToSelf() + offset,
+          frame->InkOverflowRectRelativeToSelf() + offset,
           appUnitsPerDevPixel));
 
       wr::ComplexClipRegion region;
@@ -309,17 +309,16 @@ image::ImgDrawResult nsFieldSetFrame::PaintBorder(
     // We set up a clip path which has our rect clockwise and the legend rect
     // counterclockwise, with FILL_WINDING as the fill rule.  That will allow us
     // to paint within our rect but outside the legend rect.  For "our rect" we
-    // use our visual overflow rect (relative to ourselves, so it's not affected
+    // use our ink overflow rect (relative to ourselves, so it's not affected
     // by transforms), because we can have borders sticking outside our border
     // box (e.g. due to border-image-outset).
     RefPtr<PathBuilder> pathBuilder =
         drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
     int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-    AppendRectToPath(
-        pathBuilder,
-        NSRectToSnappedRect(GetVisualOverflowRectRelativeToSelf() + aPt,
-                            appUnitsPerDevPixel, *drawTarget),
-        true);
+    AppendRectToPath(pathBuilder,
+                     NSRectToSnappedRect(InkOverflowRectRelativeToSelf() + aPt,
+                                         appUnitsPerDevPixel, *drawTarget),
+                     true);
     AppendRectToPath(
         pathBuilder,
         NSRectToSnappedRect(legendRect, appUnitsPerDevPixel, *drawTarget),

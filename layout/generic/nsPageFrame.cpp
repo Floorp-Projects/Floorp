@@ -507,7 +507,7 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     clipState.Clear();
     clipState.ClipContainingBlockDescendants(clipRect, nullptr);
 
-    nsRect visibleRect = child->GetVisualOverflowRectRelativeToSelf();
+    nsRect visibleRect = child->InkOverflowRectRelativeToSelf();
     nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
         aBuilder, child, visibleRect, visibleRect);
     child->BuildDisplayListForStackingContext(aBuilder, &content);

@@ -140,7 +140,7 @@ class TextOverflow final {
       nsIFrame* aFrame) const {
     return LogicalRect(
         mBlockWM,
-        aFrame->GetScrollableOverflowRect() + aFrame->GetOffsetTo(mBlock),
+        aFrame->ScrollableOverflowRect() + aFrame->GetOffsetTo(mBlock),
         mBlockSize);
   }
 

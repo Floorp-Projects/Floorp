@@ -283,10 +283,10 @@ nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 
   ReflowChildFlags flags = GetXULLayoutFlags() | aBoxLayoutState.LayoutFlags();
 
-  nsRect visualOverflow;
+  nsRect inkOverflow;
 
   if (XULComputesOwnOverflowArea()) {
-    visualOverflow = GetVisualOverflowRect();
+    inkOverflow = InkOverflowRect();
   } else {
     nsRect rect(nsPoint(0, 0), GetSize());
     nsOverflowAreas overflowAreas(rect, rect);
@@ -300,7 +300,7 @@ nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
     }
 
     FinishAndStoreOverflow(overflowAreas, GetSize());
-    visualOverflow = overflowAreas.VisualOverflow();
+    inkOverflow = overflowAreas.InkOverflow();
   }
 
   nsView* view = GetView();
@@ -308,7 +308,7 @@ nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     nsContainerFrame::SyncFrameViewAfterReflow(presContext, this, view,
-                                               visualOverflow, flags);
+                                               inkOverflow, flags);
   }
 
   return NS_OK;

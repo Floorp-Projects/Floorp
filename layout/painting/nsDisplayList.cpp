@@ -485,7 +485,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
   *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();
   visible -= aFrame->GetPosition();
 
-  nsRect overflowRect = aFrame->GetVisualOverflowRect();
+  nsRect overflowRect = aFrame->InkOverflowRect();
 
   if (aFrame->IsTransformed() &&
       mozilla::EffectCompositor::HasAnimationsForCompositor(
@@ -4679,7 +4679,7 @@ void nsDisplayBackgroundColor::WriteDebugInfo(std::stringstream& aStream) {
 nsRect nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) const {
   *aSnap = false;
-  return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
 void nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
@@ -5725,7 +5725,7 @@ already_AddRefed<Layer> nsDisplayOpacity::BuildLayer(
  */
 static bool IsItemTooSmallForActiveLayer(nsIFrame* aFrame) {
   nsIntRect visibleDevPixels =
-      aFrame->GetVisualOverflowRectRelativeToSelf().ToOutsidePixels(
+      aFrame->InkOverflowRectRelativeToSelf().ToOutsidePixels(
           aFrame->PresContext()->AppUnitsPerDevPixel());
   return visibleDevPixels.Size() <
          nsIntSize(StaticPrefs::layout_min_active_layer_size(),
@@ -7732,7 +7732,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
 
   // If the incoming dirty rect already contains the entire overflow area,
   // we are already rendering the entire content.
-  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+  nsRect overflow = aFrame->InkOverflowRectRelativeToSelf();
   // UntransformRect will not touch the output rect (`&untranformedDirtyRect`)
   // in cases of non-invertible transforms, so we set `untransformedRect` to
   // `aDirtyRect` as an initial value for such cases.
@@ -8160,7 +8160,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
    * If we can't untransform, take the entire overflow rect */
   nsRect untransformedVisibleRect;
   if (!UntransformPaintRect(aBuilder, &untransformedVisibleRect)) {
-    untransformedVisibleRect = mFrame->GetVisualOverflowRectRelativeToSelf();
+    untransformedVisibleRect = mFrame->InkOverflowRectRelativeToSelf();
   }
 
   bool snap;
@@ -8758,7 +8758,7 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder,
       mVisIEndEdge(0) {
   MOZ_COUNT_CTOR(nsDisplayText);
   mIsFrameSelected = aIsSelected;
-  mBounds = mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  mBounds = mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
   // Bug 748228
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
 }
@@ -9685,7 +9685,7 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
 nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayEffectsBase(aBuilder, aFrame, aList),
-      mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf()) {
+      mEffectsBounds(aFrame->InkOverflowRectRelativeToSelf()) {
   MOZ_COUNT_CTOR(nsDisplayFilters);
 }
 

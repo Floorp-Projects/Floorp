@@ -372,7 +372,7 @@ nsBoundingMetrics nsFontMetrics::GetBoundingMetrics(const char16_t* aString,
                                 gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
 }
 
-nsBoundingMetrics nsFontMetrics::GetInkBoundsForVisualOverflow(
+nsBoundingMetrics nsFontMetrics::GetInkBoundsForInkOverflow(
     const char16_t* aString, uint32_t aLength, DrawTarget* aDrawTarget) {
   return GetTextBoundingMetrics(this, aString, aLength, aDrawTarget,
                                 gfxFont::LOOSE_INK_EXTENTS);

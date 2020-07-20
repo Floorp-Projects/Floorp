@@ -698,7 +698,7 @@ static ParentLayerRect GetClipRectForPartialPrerender(
 static PartialPrerenderData GetPartialPrerenderData(
     const nsIFrame* aFrame, const nsDisplayItem* aItem) {
   const nsRect& partialPrerenderedRect = aItem->GetUntransformedPaintRect();
-  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+  nsRect overflow = aFrame->InkOverflowRectRelativeToSelf();
 
   ScrollableLayerGuid::ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
 

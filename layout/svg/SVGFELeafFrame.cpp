@@ -57,7 +57,7 @@ class SVGFELeafFrame final : public nsIFrame {
                                     int32_t aModType) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
-    // We don't maintain a visual overflow rect
+    // We don't maintain a ink overflow rect
     return false;
   }
 };

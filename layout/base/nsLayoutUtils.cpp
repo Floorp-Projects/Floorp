@@ -2391,7 +2391,7 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
   for (i = 0; i < popups.Length(); i++) {
     nsIFrame* popup = popups[i];
     if (popup->PresContext()->GetRootPresContext() == aPresContext &&
-        popup->GetScrollableOverflowRect().Contains(
+        popup->ScrollableOverflowRect().Contains(
             GetEventCoordinatesRelativeTo(aEvent, RelativeTo{popup}))) {
       return popup;
     }
@@ -3971,7 +3971,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     builder->SetInActiveDocShell(isActive);
   }
 
-  nsRect rootVisualOverflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+  nsRect rootInkOverflow = aFrame->InkOverflowRectRelativeToSelf();
 
   // If we are in a remote browser, then apply clipping from ancestor browsers
   if (BrowserChild* browserChild = BrowserChild::GetFrom(presShell)) {
@@ -3980,8 +3980,8 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     if (unscaledVisibleRect) {
       CSSRect visibleRect =
           *unscaledVisibleRect / presContext->CSSToDevPixelScale();
-      rootVisualOverflow.IntersectRect(rootVisualOverflow,
-                                       CSSPixel::ToAppUnits(visibleRect));
+      rootInkOverflow.IntersectRect(rootInkOverflow,
+                                    CSSPixel::ToAppUnits(visibleRect));
     }
   }
 
@@ -3990,7 +3990,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     nsIScrollableFrame* rootScrollableFrame =
         presShell->GetRootScrollFrameAsScrollable();
     MOZ_ASSERT(rootScrollableFrame);
-    nsRect displayPortBase = rootVisualOverflow;
+    nsRect displayPortBase = rootInkOverflow;
     nsRect temp = displayPortBase;
     Unused << rootScrollableFrame->DecideScrollableLayer(
         builder, &displayPortBase, &temp,
@@ -4005,7 +4005,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     // |ignoreViewportScrolling| and |usingDisplayPort| are persistent
     // document-rendering state.  We rely on PresShell to flush
     // retained layers as needed when that persistent state changes.
-    visibleRegion = rootVisualOverflow;
+    visibleRegion = rootInkOverflow;
   } else {
     visibleRegion = aDirtyRegion;
   }
@@ -6646,7 +6646,7 @@ nscoord nsLayoutUtils::CalculateContentBEnd(WritingMode aWM, nsIFrame* aFrame) {
 
   // We want scrollable overflow rather than visual because this
   // calculation is intended to affect layout.
-  LogicalSize overflowSize(aWM, aFrame->GetScrollableOverflowRect().Size());
+  LogicalSize overflowSize(aWM, aFrame->ScrollableOverflowRect().Size());
   if (overflowSize.BSize(aWM) > contentBEnd) {
     nsIFrame::ChildListIDs skip = {nsIFrame::kOverflowList,
                                    nsIFrame::kExcessOverflowContainersList,

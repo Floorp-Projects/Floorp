@@ -839,9 +839,10 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
   aWidget->SetSizeConstraints(constraints);
 }
 
-void nsContainerFrame::SyncFrameViewAfterReflow(
-    nsPresContext* aPresContext, nsIFrame* aFrame, nsView* aView,
-    const nsRect& aVisualOverflowArea, ReflowChildFlags aFlags) {
+void nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
+                                                nsIFrame* aFrame, nsView* aView,
+                                                const nsRect& aInkOverflowArea,
+                                                ReflowChildFlags aFlags) {
   if (!aView) {
     return;
   }
@@ -854,7 +855,7 @@ void nsContainerFrame::SyncFrameViewAfterReflow(
   if (!(aFlags & ReflowChildFlags::NoSizeView)) {
     nsViewManager* vm = aView->GetViewManager();
 
-    vm->ResizeView(aView, aVisualOverflowArea, true);
+    vm->ResizeView(aView, aInkOverflowArea, true);
   }
 }
 
@@ -1056,7 +1057,7 @@ void nsContainerFrame::ReflowChild(
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "ReflowChild with unconstrained container width!");
   }
-  MOZ_ASSERT(aDesiredSize.VisualOverflow() == nsRect(0, 0, 0, 0) &&
+  MOZ_ASSERT(aDesiredSize.InkOverflow() == nsRect(0, 0, 0, 0) &&
                  aDesiredSize.ScrollableOverflow() == nsRect(0, 0, 0, 0),
              "please reset the overflow areas before calling ReflowChild");
 
@@ -1213,7 +1214,7 @@ void nsContainerFrame::FinishReflowChild(
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                             aDesiredSize.VisualOverflow(), aFlags);
+                             aDesiredSize.InkOverflow(), aFlags);
   }
 
   nsPoint newOrigin = aKidFrame->GetPosition();
@@ -1259,7 +1260,7 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                             aDesiredSize.VisualOverflow(), aFlags);
+                             aDesiredSize.InkOverflow(), aFlags);
   }
 
   if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != pos) {
@@ -2815,7 +2816,7 @@ nsRect nsContainerFrame::ComputeSimpleTightBounds(
       StyleDisplay()->HasAppearance()) {
     // Not necessarily tight, due to clipping, negative
     // outline-offset, and lots of other issues, but that's OK
-    return GetVisualOverflowRect();
+    return InkOverflowRect();
   }
 
   nsRect r(0, 0, 0, 0);
@@ -2886,10 +2887,10 @@ void nsContainerFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
     // If we have layout containment and are not a non-atomic, inline-level
     // principal box, we should only consider our child's visual (ink) overflow,
     // leaving the scrollable regions of the parent unaffected.
-    // Note: scrollable overflow is a subset of visual overflow,
+    // Note: scrollable overflow is a subset of ink overflow,
     // so this has the same affect as unioning the child's visual and
-    // scrollable overflow with the parent's visual overflow.
-    nsRect childVisual = aChildFrame->GetVisualOverflowRect();
+    // scrollable overflow with the parent's ink overflow.
+    nsRect childVisual = aChildFrame->InkOverflowRect();
     nsOverflowAreas combined = nsOverflowAreas(childVisual, nsRect());
     aOverflowAreas.UnionWith(combined + aChildFrame->GetPosition());
   } else {

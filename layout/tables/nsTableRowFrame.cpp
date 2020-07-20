@@ -322,7 +322,7 @@ void nsTableRowFrame::DidResize() {
       LogicalSize cellSize = cellFrame->GetLogicalSize(wm);
       if (cellSize.BSize(wm) != cellBSize || wm.IsVerticalRL()) {
         nsRect cellOldRect = cellFrame->GetRect();
-        nsRect cellVisualOverflow = cellFrame->GetVisualOverflowRect();
+        nsRect cellInkOverflow = cellFrame->InkOverflowRect();
 
         if (wm.IsVerticalRL()) {
           // Get the old position of the cell, as we want to preserve its
@@ -359,7 +359,7 @@ void nsTableRowFrame::DidResize() {
         nsTableFrame* tableFrame = GetTableFrame();
         if (tableFrame->IsBorderCollapse()) {
           nsTableFrame::InvalidateTableFrame(cellFrame, cellOldRect,
-                                             cellVisualOverflow, false);
+                                             cellInkOverflow, false);
         }
       }
 
@@ -378,7 +378,7 @@ void nsTableRowFrame::DidResize() {
   FinishAndStoreOverflow(&desiredSize);
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(),
-                                               desiredSize.VisualOverflow(),
+                                               desiredSize.InkOverflow(),
                                                ReflowChildFlags::Default);
   }
   // Let our base class do the usual work
@@ -771,7 +771,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
     NS_ASSERTION(origKidNormalPosition.B(wm) == 0 || wm.IsVerticalRL(),
                  "unexpected kid position");
 
-    nsRect kidVisualOverflow = kidFrame->GetVisualOverflowRect();
+    nsRect kidInkOverflow = kidFrame->InkOverflowRect();
     LogicalPoint kidPosition(wm, iCoord, 0);
     bool firstReflow = kidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
@@ -902,7 +902,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
 
       nsTableFrame* tableFrame = GetTableFrame();
       if (tableFrame->IsBorderCollapse()) {
-        nsTableFrame::InvalidateTableFrame(kidFrame, kidRect, kidVisualOverflow,
+        nsTableFrame::InvalidateTableFrame(kidFrame, kidRect, kidInkOverflow,
                                            firstReflow);
       }
 
@@ -1057,7 +1057,7 @@ nscoord nsTableRowFrame::ReflowCellFrame(nsPresContext* aPresContext,
   // Reflow the cell frame with the specified height. Use the existing width
   nsSize containerSize = aCellFrame->GetSize();
   LogicalRect cellRect = aCellFrame->GetLogicalRect(wm, containerSize);
-  nsRect cellVisualOverflow = aCellFrame->GetVisualOverflowRect();
+  nsRect cellInkOverflow = aCellFrame->InkOverflowRect();
 
   LogicalSize cellSize = cellRect.Size(wm);
   LogicalSize availSize(wm, cellRect.ISize(wm), aAvailableBSize);
@@ -1090,8 +1090,8 @@ nscoord nsTableRowFrame::ReflowCellFrame(nsPresContext* aPresContext,
   }
 
   nsTableFrame::InvalidateTableFrame(
-      aCellFrame, cellRect.GetPhysicalRect(wm, containerSize),
-      cellVisualOverflow, aCellFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW));
+      aCellFrame, cellRect.GetPhysicalRect(wm, containerSize), cellInkOverflow,
+      aCellFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW));
 
   aCellFrame->DidReflow(aPresContext, nullptr);
 
@@ -1120,7 +1120,7 @@ nscoord nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   nsSize parentSize = GetParent()->GetSize();
   LogicalRect rowRect = GetLogicalRect(wm, parentSize);
   nsRect oldRect = mRect;
-  nsRect oldVisualOverflow = GetVisualOverflowRect();
+  nsRect oldInkOverflow = InkOverflowRect();
 
   rowRect.BStart(wm) -= aRowOffset;
   rowRect.ISize(wm) = aISize;
@@ -1226,7 +1226,7 @@ nscoord nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         LogicalPoint oldCellNormalPos =
             cellFrame->GetLogicalNormalPosition(wm, containerSize);
 
-        nsRect oldCellVisualOverflow = cellFrame->GetVisualOverflowRect();
+        nsRect oldCellInkOverflow = cellFrame->InkOverflowRect();
 
         if (aRowOffset == 0 && cRect.Origin(wm) != oldCellNormalPos) {
           // We're moving the cell.  Invalidate the old overflow area
@@ -1249,7 +1249,7 @@ nscoord nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 
         if (aRowOffset == 0) {
           nsTableFrame::InvalidateTableFrame(cellFrame, oldCellRect,
-                                             oldCellVisualOverflow, false);
+                                             oldCellInkOverflow, false);
         }
       }
     }
@@ -1260,7 +1260,7 @@ nscoord nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   FinishAndStoreOverflow(overflow, rowRect.Size(wm).GetPhysicalSize(wm));
 
   nsTableFrame::RePositionViews(this);
-  nsTableFrame::InvalidateTableFrame(this, oldRect, oldVisualOverflow, false);
+  nsTableFrame::InvalidateTableFrame(this, oldRect, oldInkOverflow, false);
   return shift;
 }
 
@@ -1367,8 +1367,8 @@ void nsTableRowFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                       bool aRebuildDisplayItems) {
   nsIFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
   if (GetTableFrame()->IsBorderCollapse()) {
-    GetParent()->InvalidateFrameWithRect(
-        GetVisualOverflowRect() + GetPosition(), aDisplayItemKey, false);
+    GetParent()->InvalidateFrameWithRect(InkOverflowRect() + GetPosition(),
+                                         aDisplayItemKey, false);
   }
 }
 
