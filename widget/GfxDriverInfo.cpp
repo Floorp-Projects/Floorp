@@ -510,10 +510,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0116);
       APPEND_DEVICE(0x0122);
       APPEND_DEVICE(0x0126);
-#endif
 
-#if defined(MOZ_WIDGET_GTK) || defined(NIGHTLY_BUILD)
-      // Gen7.5 not allowed until bug 1576637 is resolved.
       // gen7.5 gt1
       APPEND_DEVICE(0x0402);
       APPEND_DEVICE(0x0406);
@@ -543,7 +540,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
 #endif
       [[fallthrough]];
     case DeviceFamily::IntelModernRolloutWebRender:
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
       // broxton (apollolake)
       APPEND_DEVICE(0x0a84);
       APPEND_DEVICE(0x1a84);
