@@ -472,6 +472,10 @@ class Bootstrapper(object):
 
         self.instance.prepare()
 
+        # This doesn't affect any system state and we'd like to bail out as soon
+        # as possible if this check fails.
+        self.instance.ensure_python_modern()
+
         if self.instance.no_system_changes:
             state_dir_available, state_dir = self.try_to_create_state_dir()
             # We need to enable the loading of hgrc in case extensions are
@@ -497,7 +501,6 @@ class Bootstrapper(object):
         getattr(self.instance, 'install_%s_packages' % application)()
 
         hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
-        self.instance.ensure_python_modern()
         if not self.instance.artifact_mode:
             self.instance.ensure_rust_modern()
 

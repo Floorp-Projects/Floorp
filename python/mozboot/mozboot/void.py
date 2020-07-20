@@ -22,7 +22,6 @@ class VoidBootstrapper(
         'make',
         'mercurial',
         'nodejs',
-        'python3-pip',
         'unzip',
         'zip',
     ]
@@ -81,8 +80,6 @@ class VoidBootstrapper(
         self.run_as_root(command)
 
     def install_system_packages(self):
-        # Python 3 may not be present on all distros. Search for it and
-        # install if found.
         self.xbps_install(*self.packages)
 
     def install_browser_packages(self):

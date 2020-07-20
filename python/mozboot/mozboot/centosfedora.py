@@ -81,7 +81,6 @@ class CentOSFedoraBootstrapper(
 
             else:
                 self.packages += [
-                    'python2-devel',
                     'redhat-rpm-config',
                 ]
 
@@ -96,7 +95,6 @@ class CentOSFedoraBootstrapper(
 
             self.packages += [
                 'npm',
-                'python2-devel',
                 'redhat-rpm-config',
             ]
 

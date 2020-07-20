@@ -151,5 +151,10 @@ class LinuxBootstrapper(
         StyloInstall,
         WasiSysrootInstall):
 
+    INSTALL_PYTHON_GUIDANCE = (
+        'See https://firefox-source-docs.mozilla.org/setup/linux_build.html'
+        '#installingpython for guidance on how to install Python on your '
+        'system.')
+
     def __init__(self, **kwargs):
         pass
