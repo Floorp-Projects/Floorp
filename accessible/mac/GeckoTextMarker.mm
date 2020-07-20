@@ -100,6 +100,114 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
   return false;
 }
 
+void GeckoTextMarker::NormalizeNext() {
+  if (AtEnd()) {
+    // If this is the end of the current container, mutate to its parent's
+    // end offset.
+    bool unused;
+    uint32_t endOffset = mContainer.IsProxy() ? mContainer.AsProxy()->EndOffset(&unused)
+                                              : mContainer.AsAccessible()->EndOffset();
+
+    if (endOffset != 0) {
+      mContainer = mContainer.Parent();
+      mOffset = endOffset;
+
+      // Call NormalizeNext recursively to get top-most link if at the end of one,
+      // or innermost link if at the beginning.
+      NormalizeNext();
+    }
+  } else {
+    AccessibleOrProxy link;
+
+    if (mContainer.IsProxy()) {
+      ProxyAccessible* proxy = mContainer.AsProxy();
+      link = proxy->LinkAt(proxy->LinkIndexAtOffset(mOffset));
+    } else if (HyperTextAccessible* ht = mContainer.AsAccessible()->AsHyperText()) {
+      link = ht->LinkAt(ht->LinkIndexAtOffset(mOffset));
+    }
+
+    // If there is a link at this offset, mutate into it.
+    if (!link.IsNull()) {
+      mContainer = link;
+      mOffset = 0;
+
+      // Call NormalizeNext recursively to get top-most link if at the end of one,
+      // or innermost link if at the beginning.
+      NormalizeNext();
+    }
+  }
+}
+
+void GeckoTextMarker::NormalizePrevious() {
+  if (mOffset == 0) {
+    // If we are at the beginning of a container, mutate to its parent's start offset.
+    bool unused;
+    uint32_t startOffset = mContainer.IsProxy() ? mContainer.AsProxy()->StartOffset(&unused)
+                                                : mContainer.AsAccessible()->StartOffset();
+
+    if (startOffset != 0) {
+      mContainer = mContainer.Parent();
+      mOffset = startOffset;
+
+      // Call NormalizePrevious recursively to get top-most link if at the start of one,
+      // or innermost link if at the end.
+      NormalizePrevious();
+    }
+  } else {
+    AccessibleOrProxy link;
+
+    if (mContainer.IsProxy()) {
+      ProxyAccessible* proxy = mContainer.AsProxy();
+      link = proxy->LinkAt(proxy->LinkIndexAtOffset(mOffset - 1));
+    } else if (HyperTextAccessible* ht = mContainer.AsAccessible()->AsHyperText()) {
+      link = ht->GetChildAtOffset(mOffset - 1);
+    }
+
+    // If there is a link preceding this offset, mutate into it.
+    if (!link.IsNull()) {
+      mContainer = link;
+      mOffset = CharacterCount(link);
+
+      // Call NormalizePrevious recursively to get top-most link if at the start of one,
+      // or innermost link if at the end.
+      NormalizePrevious();
+    }
+  }
+}
+
+uint32_t GeckoTextMarker::CharacterCount(const AccessibleOrProxy& aContainer) {
+  if (aContainer.IsProxy()) {
+    return aContainer.AsProxy()->CharacterCount();
+  }
+
+  if (aContainer.AsAccessible()->IsHyperText()) {
+    return aContainer.AsAccessible()->AsHyperText()->CharacterCount();
+  }
+
+  return 0;
+}
+
+GeckoTextMarkerRange GeckoTextMarker::WordRange() {
+  int32_t wordstart_start = 0, wordstart_end = 0, wordend_start = 0, wordend_end = 0;
+  nsAutoString unused;
+  if (mContainer.IsProxy()) {
+    mContainer.AsProxy()->GetTextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_START, unused,
+                                          &wordstart_start, &wordstart_end);
+    mContainer.AsProxy()->GetTextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_END, unused,
+                                          &wordend_start, &wordend_end);
+  } else if (HyperTextAccessible* ht = mContainer.AsAccessible()->AsHyperText()) {
+    ht->TextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_START, &wordstart_start,
+                     &wordstart_end, unused);
+    ht->TextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_END, &wordend_start, &wordend_end,
+                     unused);
+  }
+
+  // We use the intersecting boundary of word start, and word end because we don't have
+  // a boundary mode that is non-inclusive of whitespace.
+  return GeckoTextMarkerRange(GeckoTextMarker(mContainer, std::max(wordstart_start, wordend_start)),
+                              GeckoTextMarker(mContainer, std::min(wordstart_end, wordend_end)));
+}
+
 // GeckoTextMarkerRange
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(AccessibleOrProxy aDoc,
