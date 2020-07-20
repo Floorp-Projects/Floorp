@@ -38,44 +38,12 @@ bool nsRetrievalContextX11::HasSelectionSupport(void) {
   return true;
 }
 
-static GdkFilterReturn selection_request_filter(GdkXEvent* gdk_xevent,
-                                                GdkEvent* event,
-                                                gpointer data) {
-  XEvent* xevent = static_cast<XEvent*>(gdk_xevent);
-  if (xevent->xany.type == SelectionRequest) {
-    if (xevent->xselectionrequest.requestor == X11None)
-      return GDK_FILTER_REMOVE;
-
-    GdkDisplay* display =
-        gdk_x11_lookup_xdisplay(xevent->xselectionrequest.display);
-    if (!display) return GDK_FILTER_REMOVE;
-
-    GdkWindow* window = gdk_x11_window_foreign_new_for_display(
-        display, xevent->xselectionrequest.requestor);
-    if (!window) return GDK_FILTER_REMOVE;
-
-    g_object_unref(window);
-  }
-  return GDK_FILTER_CONTINUE;
-}
-
 nsRetrievalContextX11::nsRetrievalContextX11()
     : mState(INITIAL),
       mClipboardRequestNumber(0),
       mClipboardData(nullptr),
       mClipboardDataLength(0),
-      mTargetMIMEType(gdk_atom_intern("TARGETS", FALSE)) {
-  // A custom event filter to workaround attempting to dereference a null
-  // selection requestor in GTK3 versions before 3.11.3. See bug 1178799.
-#if defined(MOZ_X11)
-  if (gtk_check_version(3, 11, 3))
-    gdk_window_add_filter(nullptr, selection_request_filter, nullptr);
-#endif
-}
-
-nsRetrievalContextX11::~nsRetrievalContextX11() {
-  gdk_window_remove_filter(nullptr, selection_request_filter, nullptr);
-}
+      mTargetMIMEType(gdk_atom_intern("TARGETS", FALSE)) {}
 
 static void DispatchSelectionNotifyEvent(GtkWidget* widget, XEvent* xevent) {
   GdkEvent event = {};

@@ -42,10 +42,6 @@ using mozilla::Span;
 #define ARROW_RIGHT G_PI_2
 #define ARROW_LEFT (G_PI + G_PI_2)
 
-#if !GTK_CHECK_VERSION(3, 14, 0)
-#  define GTK_STATE_FLAG_CHECKED (1 << 11)
-#endif
-
 #if 0
 // It's used for debugging only to compare Gecko widget style with
 // the ones used by Gtk+ applications.
@@ -217,8 +213,7 @@ gint moz_gtk_init() {
 }
 
 void moz_gtk_refresh() {
-  if (gtk_check_version(3, 12, 0) == nullptr &&
-      gtk_check_version(3, 20, 0) != nullptr) {
+  if (gtk_check_version(3, 20, 0) != nullptr) {
     // Deprecated for Gtk >= 3.20+
     GtkStyleContext* style = GetStyleContext(MOZ_GTK_TAB_TOP);
     gtk_style_context_get_style(style, "has-tab-gap", &notebook_has_tab_gap,
@@ -458,13 +453,6 @@ static void EnsureToolbarMetrics(void) {
   if (!sToolbarMetrics.initialized) {
     // Make sure we have clean cache after theme reset, etc.
     memset(&sToolbarMetrics, 0, sizeof(sToolbarMetrics));
-
-    // We're running on old Gtk+ version. Leave the cache empty
-    // which means all buttons are disabled.
-    if (gtk_check_version(3, 10, 0) != nullptr) {
-      sToolbarMetrics.initialized = true;
-      return;
-    }
 
     // Calculate titlebar button visibility and positions.
     ButtonLayout aButtonLayout[TOOLBAR_BUTTONS];
@@ -918,9 +906,9 @@ static void moz_gtk_draw_styled_frame(GtkStyleContext* style, cairo_t* cr,
                                       const GdkRectangle* aRect,
                                       bool drawFocus) {
   GdkRectangle rect = *aRect;
-  if (gtk_check_version(3, 6, 0) == nullptr) {
-    InsetByMargin(&rect, style);
-  }
+
+  InsetByMargin(&rect, style);
+
   gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
   gtk_render_frame(style, cr, rect.x, rect.y, rect.width, rect.height);
   if (drawFocus) {
@@ -1703,15 +1691,8 @@ static gint moz_gtk_progress_chunk_paint(cairo_t* cr, GdkRectangle* rect,
     }
   }
 
-  // gtk_render_activity was used to render progress chunks on GTK versions
-  // before 3.13.7, see bug 1173907.
-  if (!gtk_check_version(3, 13, 7)) {
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
-                          rect->height);
-    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-  } else {
-    gtk_render_activity(style, cr, rect->x, rect->y, rect->width, rect->height);
-  }
+  gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+  gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
 
   return MOZ_GTK_SUCCESS;
 }

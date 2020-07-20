@@ -157,10 +157,7 @@ using mozilla::gl::GLContextGLX;
 const gint kEvents =
     GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | GDK_VISIBILITY_NOTIFY_MASK |
     GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_BUTTON_PRESS_MASK |
-    GDK_BUTTON_RELEASE_MASK |
-#if GTK_CHECK_VERSION(3, 4, 0)
-    GDK_SMOOTH_SCROLL_MASK | GDK_TOUCH_MASK |
-#endif
+    GDK_BUTTON_RELEASE_MASK | GDK_SMOOTH_SCROLL_MASK | GDK_TOUCH_MASK |
     GDK_SCROLL_MASK | GDK_POINTER_MOTION_MASK | GDK_PROPERTY_CHANGE_MASK;
 
 #if !GTK_CHECK_VERSION(3, 22, 0)
@@ -175,10 +172,6 @@ typedef enum {
   GDK_ANCHOR_SLIDE = GDK_ANCHOR_SLIDE_X | GDK_ANCHOR_SLIDE_Y,
   GDK_ANCHOR_RESIZE = GDK_ANCHOR_RESIZE_X | GDK_ANCHOR_RESIZE_Y
 } GdkAnchorHints;
-#endif
-
-#if !GTK_CHECK_VERSION(3, 10, 0)
-#  define GDK_WINDOW_STATE_TILED (1 << 8)
 #endif
 
 /* utility functions */
@@ -231,9 +224,7 @@ static void widget_composited_changed_cb(GtkWidget* widget, gpointer user_data);
 
 static void scale_changed_cb(GtkWidget* widget, GParamSpec* aPSpec,
                              gpointer aPointer);
-#if GTK_CHECK_VERSION(3, 4, 0)
 static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent);
-#endif
 static nsWindow* GetFirstNSWindowForGDKWindow(GdkWindow* aGdkWindow);
 
 #ifdef __cplusplus
@@ -339,10 +330,7 @@ static bool gUseWaylandVsync = true;
 static bool gUseWaylandUseOpaqueRegion = true;
 static bool gUseAspectRatio = true;
 static GList* gVisibleWaylandPopupWindows = nullptr;
-
-#if GTK_CHECK_VERSION(3, 4, 0)
 static uint32_t gLastTouchID = 0;
-#endif
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
 
@@ -400,9 +388,7 @@ nsWindow::nsWindow() {
   mNeedsShow = false;
   mEnabled = true;
   mCreated = false;
-#if GTK_CHECK_VERSION(3, 4, 0)
   mHandleTouchEvent = false;
-#endif
   mIsDragPopup = false;
   mIsX11Display = gfxPlatformGtk::GetPlatform()->IsX11Display();
 
@@ -468,9 +454,8 @@ nsWindow::nsWindow() {
   mTransparencyBitmapWidth = 0;
   mTransparencyBitmapHeight = 0;
 
-#if GTK_CHECK_VERSION(3, 4, 0)
   mLastScrollEventTime = GDK_CURRENT_TIME;
-#endif
+
   mPendingConfigures = 0;
   mCSDSupportLevel = CSD_SUPPORT_NONE;
   mDrawToContainer = false;
@@ -943,10 +928,8 @@ void nsWindow::SetModal(bool aModal) {
 bool nsWindow::IsVisible() const { return mIsShown; }
 
 void nsWindow::RegisterTouchWindow() {
-#if GTK_CHECK_VERSION(3, 4, 0)
   mHandleTouchEvent = true;
   mTouches.Clear();
-#endif
 }
 
 void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
@@ -3711,7 +3694,6 @@ gboolean nsWindow::OnKeyReleaseEvent(GdkEventKey* aEvent) {
 void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
   // check to see if we should rollup
   if (CheckForRollup(aEvent->x_root, aEvent->y_root, true, false)) return;
-#if GTK_CHECK_VERSION(3, 4, 0)
   // check for duplicate legacy scroll event, see GNOME bug 726878
   if (aEvent->direction != GDK_SCROLL_SMOOTH &&
       mLastScrollEventTime == aEvent->time) {
@@ -3719,11 +3701,9 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
          aEvent->direction));
     return;
   }
-#endif
   WidgetWheelEvent wheelEvent(true, eWheel, this);
   wheelEvent.mDeltaMode = dom::WheelEvent_Binding::DOM_DELTA_LINE;
   switch (aEvent->direction) {
-#if GTK_CHECK_VERSION(3, 4, 0)
     case GDK_SCROLL_SMOOTH: {
       // As of GTK 3.4, all directional scroll events are provided by
       // the GDK_SCROLL_SMOOTH direction on XInput2 and Wayland devices.
@@ -3778,7 +3758,6 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
 
       break;
     }
-#endif
     case GDK_SCROLL_UP:
       wheelEvent.mDeltaY = wheelEvent.mLineOrPageDeltaY = -3;
       break;
@@ -4096,7 +4075,6 @@ bool nsWindow::IsHandlingTouchSequence(GdkEventSequence* aSequence) {
   return mHandleTouchEvent && mTouches.Contains(aSequence);
 }
 
-#if GTK_CHECK_VERSION(3, 4, 0)
 gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   if (!mHandleTouchEvent) {
     // If a popup window was spawned (e.g. as the result of a long-press)
@@ -4162,7 +4140,6 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   DispatchInputEvent(&event);
   return TRUE;
 }
-#endif
 
 static GdkWindow* CreateGdkWindow(GdkWindow* parent, GtkWidget* widget) {
   GdkWindowAttr attributes;
@@ -4747,10 +4724,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                      G_CALLBACK(button_release_event_cb), nullptr);
     g_signal_connect(eventWidget, "scroll-event", G_CALLBACK(scroll_event_cb),
                      nullptr);
-#if GTK_CHECK_VERSION(3, 4, 0)
     g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
                      nullptr);
-#endif
   }
 
   LOG(("nsWindow [%p] %s %s\n", (void*)this,
@@ -5347,21 +5322,6 @@ void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
 }
 #endif
 
-static void GdkWindowSetOpaqueRegion(GdkWindow* aGdkWindow,
-                                     cairo_region_t* aRegion) {
-  // Available as of GTK 3.10+
-  static auto sGdkWindowSetOpaqueRegion =
-      (void (*)(GdkWindow*, cairo_region_t*))dlsym(
-          RTLD_DEFAULT, "gdk_window_set_opaque_region");
-
-  if (MOZ_UNLIKELY(!sGdkWindowSetOpaqueRegion)) {
-    LOG(("    gdk_window_set_opaque_region is not available!\n"));
-    return;
-  }
-
-  (*sGdkWindowSetOpaqueRegion)(aGdkWindow, aRegion);
-}
-
 // See subtract_corners_from_region() at gtk/gtkwindow.c
 // We need to subtract corners from toplevel window opaque region
 // to draw transparent corners of default Gtk titlebar.
@@ -5401,7 +5361,7 @@ void nsWindow::UpdateTopLevelOpaqueRegionGtk(bool aSubtractCorners) {
   GdkWindow* window =
       (mDrawToContainer) ? gtk_widget_get_window(mShell) : mGdkWindow;
   MOZ_ASSERT(gdk_window_get_window_type(window) == GDK_WINDOW_TOPLEVEL);
-  GdkWindowSetOpaqueRegion(window, region);
+  gdk_window_set_opaque_region(window, region);
 
   cairo_region_destroy(region);
 }
@@ -5421,7 +5381,7 @@ void nsWindow::UpdatePopupOpaqueRegion(
 
   GdkWindow* window =
       (mDrawToContainer) ? gtk_widget_get_window(mShell) : mGdkWindow;
-  GdkWindowSetOpaqueRegion(window, region);
+  gdk_window_set_opaque_region(window, region);
 
   if (region) {
     cairo_region_destroy(region);
@@ -6935,7 +6895,6 @@ static void scale_changed_cb(GtkWidget* widget, GParamSpec* aPSpec,
   window->OnScaleChanged(&allocation);
 }
 
-#if GTK_CHECK_VERSION(3, 4, 0)
 static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent) {
   UpdateLastInputEventTime(aEvent);
 
@@ -6946,7 +6905,6 @@ static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent) {
 
   return window->OnTouchEvent(aEvent);
 }
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // These are all of our drag and drop operations
@@ -7745,31 +7703,15 @@ nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
 
   // The delta values are backwards on Linux compared to Windows and Cocoa,
   // hence the negation.
-#if GTK_CHECK_VERSION(3, 4, 0)
-  // TODO: is this correct? I don't have GTK 3.4+ so I can't check
   event.scroll.direction = GDK_SCROLL_SMOOTH;
   event.scroll.delta_x = -aDeltaX;
   event.scroll.delta_y = -aDeltaY;
-#else
-  if (aDeltaX < 0) {
-    event.scroll.direction = GDK_SCROLL_RIGHT;
-  } else if (aDeltaX > 0) {
-    event.scroll.direction = GDK_SCROLL_LEFT;
-  } else if (aDeltaY < 0) {
-    event.scroll.direction = GDK_SCROLL_DOWN;
-  } else if (aDeltaY > 0) {
-    event.scroll.direction = GDK_SCROLL_UP;
-  } else {
-    return NS_OK;
-  }
-#endif
 
   gdk_event_put(&event);
 
   return NS_OK;
 }
 
-#if GTK_CHECK_VERSION(3, 4, 0)
 nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                               TouchPointerState aPointerState,
                                               LayoutDeviceIntPoint aPoint,
@@ -7844,16 +7786,9 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 
   return NS_OK;
 }
-#endif
 
 nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
   if (sCSDSupportLevel != CSD_SUPPORT_UNKNOWN) {
-    return sCSDSupportLevel;
-  }
-
-  // Require GTK 3.10 for GtkHeaderBar support and compatible window manager.
-  if (gtk_check_version(3, 10, 0) != nullptr) {
-    sCSDSupportLevel = CSD_SUPPORT_NONE;
     return sCSDSupportLevel;
   }
 
