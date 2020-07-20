@@ -718,7 +718,7 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
   // If the range has visible text and start of the visible text is before
   // aPoint, return previous character in the text.
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
-      TextFragmentDataAtStart().VisibleWhiteSpacesDataRef();
+      TextFragmentDataAtStartRef().VisibleWhiteSpacesDataRef();
   if (visibleWhiteSpaces.IsInitialized() &&
       visibleWhiteSpaces.StartRef().IsBefore(aPoint)) {
     EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
@@ -733,15 +733,15 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
   }
 
   // Otherwise, return the start of the range.
-  if (TextFragmentDataAtStart().GetStartReasonContent() !=
-      TextFragmentDataAtStart().StartRef().GetContainer()) {
-    // In this case, TextFragmentDataAtStart().StartRef().Offset() is not
+  if (TextFragmentDataAtStartRef().GetStartReasonContent() !=
+      TextFragmentDataAtStartRef().StartRef().GetContainer()) {
+    // In this case, TextFragmentDataAtStartRef().StartRef().Offset() is not
     // meaningful.
-    return WSScanResult(TextFragmentDataAtStart().GetStartReasonContent(),
-                        TextFragmentDataAtStart().StartRawReason());
+    return WSScanResult(TextFragmentDataAtStartRef().GetStartReasonContent(),
+                        TextFragmentDataAtStartRef().StartRawReason());
   }
-  return WSScanResult(TextFragmentDataAtStart().StartRef(),
-                      TextFragmentDataAtStart().StartRawReason());
+  return WSScanResult(TextFragmentDataAtStartRef().StartRef(),
+                      TextFragmentDataAtStartRef().StartRawReason());
 }
 
 template <typename PT, typename CT>
@@ -752,7 +752,7 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
   // If the range has visible text and aPoint equals or is before the end of the
   // visible text, return inclusive next character in the text.
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
-      TextFragmentDataAtStart().VisibleWhiteSpacesDataRef();
+      TextFragmentDataAtStartRef().VisibleWhiteSpacesDataRef();
   if (visibleWhiteSpaces.IsInitialized() &&
       aPoint.EqualsOrIsBefore(visibleWhiteSpaces.EndRef())) {
     EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
@@ -767,15 +767,15 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
   }
 
   // Otherwise, return the end of the range.
-  if (TextFragmentDataAtStart().GetEndReasonContent() !=
-      TextFragmentDataAtStart().EndRef().GetContainer()) {
-    // In this case, TextFragmentDataAtStart().EndRef().Offset() is not
+  if (TextFragmentDataAtStartRef().GetEndReasonContent() !=
+      TextFragmentDataAtStartRef().EndRef().GetContainer()) {
+    // In this case, TextFragmentDataAtStartRef().EndRef().Offset() is not
     // meaningful.
-    return WSScanResult(TextFragmentDataAtStart().GetEndReasonContent(),
-                        TextFragmentDataAtStart().EndRawReason());
+    return WSScanResult(TextFragmentDataAtStartRef().GetEndReasonContent(),
+                        TextFragmentDataAtStartRef().EndRawReason());
   }
-  return WSScanResult(TextFragmentDataAtStart().EndRef(),
-                      TextFragmentDataAtStart().EndRawReason());
+  return WSScanResult(TextFragmentDataAtStartRef().EndRef(),
+                      TextFragmentDataAtStartRef().EndRawReason());
 }
 
 template <typename EditorDOMPointType>
