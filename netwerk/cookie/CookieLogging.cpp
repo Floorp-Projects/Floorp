@@ -163,16 +163,16 @@ void CookieLogging::LogMessageToConsole(nsIConsoleReportCollector* aCRC,
                                         const nsACString& aCategory,
                                         const nsACString& aMsg,
                                         const nsTArray<nsString>& aParams) {
-  MOZ_ASSERT(aURI);
-
   if (!aCRC) {
     return;
   }
 
   nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  if (aURI) {
+    nsresult rv = aURI->GetSpec(uri);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
   aCRC->AddConsoleReport(aErrorFlags, aCategory,

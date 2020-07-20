@@ -112,7 +112,7 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
   void NotifyChanged(nsISupports* aSubject, const char16_t* aData,
                      bool aOldCookieIsSession = false);
 
-  void AddCookie(const nsACString& aBaseDomain,
+  void AddCookie(nsIConsoleReportCollector* aCRC, const nsACString& aBaseDomain,
                  const OriginAttributes& aOriginAttributes, Cookie* aCookie,
                  int64_t aCurrentTimeInUsec, nsIURI* aHostURI,
                  const nsACString& aCookieHeader, bool aFromHttp);

@@ -71,15 +71,13 @@ class CookieService final : public nsICookieService,
                            CookieStatus aStatus, nsCString& aCookieHeader,
                            bool aFromHttp, bool aIsForeignAndNotAddon,
                            nsIConsoleReportCollector* aCRC, bool& aSetCookie);
-  static CookieStatus CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
-                                 nsIURI* aHostURI, bool aIsForeign,
-                                 bool aIsThirdPartyTrackingResource,
-                                 bool aIsThirdPartySocialTrackingResource,
-                                 bool aStorageAccessPermissionGranted,
-                                 const nsACString& aCookieHeader,
-                                 const int aNumOfCookies,
-                                 const OriginAttributes& aOriginAttrs,
-                                 uint32_t* aRejectedReason);
+  static CookieStatus CheckPrefs(
+      nsIConsoleReportCollector* aCRC, nsICookieJarSettings* aCookieJarSettings,
+      nsIURI* aHostURI, bool aIsForeign, bool aIsThirdPartyTrackingResource,
+      bool aIsThirdPartySocialTrackingResource,
+      bool aStorageAccessPermissionGranted, const nsACString& aCookieHeader,
+      const int aNumOfCookies, const OriginAttributes& aOriginAttrs,
+      uint32_t* aRejectedReason);
 
   void GetCookiesForURI(nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
                         bool aIsThirdPartyTrackingResource,
