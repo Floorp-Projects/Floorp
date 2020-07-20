@@ -20,7 +20,12 @@ class nsIURI;
   MOZ_LOG(UrlClassifierCommon::sLog, LogLevel::Debug, args)
 #define UC_LOG_WARN(args) \
   MOZ_LOG(UrlClassifierCommon::sLog, LogLevel::Warning, args)
-#define UC_LOG_ENABLED() MOZ_LOG_TEST(UrlClassifierCommon::sLog, LogLevel::Info)
+#define UC_LOG_LEAK(args) \
+  MOZ_LOG(UrlClassifierCommon::sLogLeak, LogLevel::Info, args)
+
+#define UC_LOG_ENABLED()                                     \
+  MOZ_LOG_TEST(UrlClassifierCommon::sLog, LogLevel::Info) || \
+      MOZ_LOG_TEST(UrlClassifierCommon::sLogLeak, LogLevel::Info)
 
 namespace mozilla {
 namespace net {
@@ -30,6 +35,7 @@ class UrlClassifierCommon final {
   static const nsCString::size_type sMaxSpecLength;
 
   static LazyLogModule sLog;
+  static LazyLogModule sLogLeak;
 
   static bool AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI);
 
@@ -87,6 +93,7 @@ class UrlClassifierCommon final {
   static uint32_t TableToClassificationFlag(
       const nsACString& aTable, const std::vector<ClassificationData>& aData);
 
+  friend class AsyncUrlChannelClassifier;
   static nsresult GetTopWindowURI(nsIChannel* aChannel, nsIURI** aURI);
 };
 

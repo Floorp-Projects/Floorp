@@ -56,7 +56,8 @@ UrlClassifierFeatureSocialTrackingProtection::
 
 /* static */
 void UrlClassifierFeatureSocialTrackingProtection::MaybeInitialize() {
-  UC_LOG(("UrlClassifierFeatureSocialTrackingProtection: MaybeInitialize"));
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureSocialTrackingProtection::MaybeInitialize"));
 
   if (!gFeatureSocialTrackingProtection) {
     gFeatureSocialTrackingProtection =
@@ -67,7 +68,7 @@ void UrlClassifierFeatureSocialTrackingProtection::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureSocialTrackingProtection::MaybeShutdown() {
-  UC_LOG(("UrlClassifierFeatureSocialTrackingProtection: MaybeShutdown"));
+  UC_LOG_LEAK(("UrlClassifierFeatureSocialTrackingProtection::MaybeShutdown"));
 
   if (gFeatureSocialTrackingProtection) {
     gFeatureSocialTrackingProtection->ShutdownPreferences();
@@ -81,9 +82,8 @@ UrlClassifierFeatureSocialTrackingProtection::MaybeCreate(
     nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG(
-      ("UrlClassifierFeatureSocialTrackingProtection: MaybeCreate for channel "
-       "%p",
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureSocialTrackingProtection::MaybeCreate - channel %p",
        aChannel));
 
   if (!StaticPrefs::privacy_trackingprotection_socialtracking_enabled()) {
@@ -92,21 +92,10 @@ UrlClassifierFeatureSocialTrackingProtection::MaybeCreate(
 
   bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
   if (!isThirdParty) {
-    if (UC_LOG_ENABLED()) {
-      nsCOMPtr<nsIURI> chanURI;
-      Unused << aChannel->GetURI(getter_AddRefs(chanURI));
-      if (chanURI) {
-        nsCString spec = chanURI->GetSpecOrDefault();
-        spec.Truncate(
-            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-        UC_LOG(
-            ("UrlClassifierFeatureSocialTrackingProtection: Skipping "
-             "socialtracking checks "
-             "for first party or top-level load channel[%p] "
-             "with uri %s",
-             aChannel, spec.get()));
-      }
-    }
+    UC_LOG(
+        ("UrlClassifierFeatureSocialTrackingProtection::MaybeCreate - "
+         "skipping first party or top-level load for channel %p",
+         aChannel));
     return nullptr;
   }
 
@@ -166,9 +155,8 @@ UrlClassifierFeatureSocialTrackingProtection::ProcessChannel(
                                          list, EmptyCString(), EmptyCString());
 
   UC_LOG(
-      ("UrlClassifierFeatureSocialTrackingProtection::ProcessChannel, "
-       "cancelling "
-       "channel[%p]",
+      ("UrlClassifierFeatureSocialTrackingProtection::ProcessChannel - "
+       "cancelling channel %p",
        aChannel));
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 

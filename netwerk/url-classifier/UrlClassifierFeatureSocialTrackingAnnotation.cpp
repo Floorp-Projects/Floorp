@@ -59,7 +59,8 @@ UrlClassifierFeatureSocialTrackingAnnotation::
 
 /* static */
 void UrlClassifierFeatureSocialTrackingAnnotation::MaybeInitialize() {
-  UC_LOG(("UrlClassifierFeatureSocialTrackingAnnotation: MaybeInitialize"));
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureSocialTrackingAnnotation::MaybeInitialize"));
 
   if (!gFeatureSocialTrackingAnnotation) {
     gFeatureSocialTrackingAnnotation =
@@ -70,7 +71,7 @@ void UrlClassifierFeatureSocialTrackingAnnotation::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureSocialTrackingAnnotation::MaybeShutdown() {
-  UC_LOG(("UrlClassifierFeatureSocialTrackingAnnotation: MaybeShutdown"));
+  UC_LOG_LEAK(("UrlClassifierFeatureSocialTrackingAnnotation::MaybeShutdown"));
 
   if (gFeatureSocialTrackingAnnotation) {
     gFeatureSocialTrackingAnnotation->ShutdownPreferences();
@@ -84,9 +85,8 @@ UrlClassifierFeatureSocialTrackingAnnotation::MaybeCreate(
     nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG(
-      ("UrlClassifierFeatureSocialTrackingAnnotation: MaybeCreate for channel "
-       "%p",
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureSocialTrackingAnnotation::MaybeCreate - channel %p",
        aChannel));
 
   MaybeInitialize();
@@ -124,8 +124,8 @@ UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel(
   *aShouldContinue = true;
 
   UC_LOG(
-      ("UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel, "
-       "annotating channel[%p]",
+      ("UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel"
+       "annotating channel %p",
        aChannel));
 
   static std::vector<UrlClassifierCommon::ClassificationData>
