@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import logging
 
-from slugid import nice as slugid
 from .util import (
     fetch_graph_and_labels,
     create_task_from_def,
@@ -166,6 +165,4 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
 
     logging.info("New task definition: %s", new_task_definition)
 
-    # actually create the new task
-    new_task_id = slugid()
-    create_task_from_def(new_task_id, new_task_definition, parameters['level'])
+    create_task_from_def(new_task_definition, parameters['level'])

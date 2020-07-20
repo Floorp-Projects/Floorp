@@ -17,6 +17,7 @@ import jsone
 import requests
 from requests.exceptions import HTTPError
 from six import text_type, string_types
+from slugid import nice as slugid
 
 from taskgraph import create
 from taskgraph.decision import read_artifact, write_artifact, rename_artifact
@@ -215,7 +216,7 @@ def fetch_graph_and_labels(parameters, graph_config):
     return (decision_task_id, full_task_graph, label_to_taskid)
 
 
-def create_task_from_def(task_id, task_def, level):
+def create_task_from_def(task_def, level):
     """Create a new task from a definition rather than from a label
     that is already in the full-task-graph. The task definition will
     have {relative-datestamp': '..'} rendered just like in a decision task.
@@ -225,6 +226,7 @@ def create_task_from_def(task_id, task_def, level):
     this yourself. Seeing how create_tasks handles it might prove helpful."""
     task_def['schedulerId'] = 'gecko-level-{}'.format(level)
     label = task_def['metadata']['name']
+    task_id = slugid().decode('ascii')
     session = get_session()
     create.create_task(session, task_id, label, task_def)
 

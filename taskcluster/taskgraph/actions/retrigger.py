@@ -11,7 +11,6 @@ import sys
 import logging
 import textwrap
 
-from slugid import nice as slugid
 from .util import (
     combine_task_graph_files,
     create_tasks,
@@ -67,7 +66,7 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
     # absolute timestamps relative to the current time.
     task = taskcluster.get_task_definition(task_id)
     task = relativize_datestamps(task)
-    create_task_from_def(slugid(), task, parameters['level'])
+    create_task_from_def(task, parameters['level'])
 
 
 @register_callback_action(
