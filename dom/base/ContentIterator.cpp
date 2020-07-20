@@ -317,9 +317,9 @@ nsresult ContentIteratorBase::Initializer::Run() {
 
   // Find last node in range.
 
-  bool endIsData = mEnd.Container()->IsCharacterData();
+  const bool endIsCharacterData = mEnd.Container()->IsCharacterData();
 
-  if (endIsData || !mEnd.Container()->HasChildren() ||
+  if (endIsCharacterData || !mEnd.Container()->HasChildren() ||
       mEnd.IsStartOfContainer()) {
     if (mIterator.mPre) {
       if (NS_WARN_IF(!mEnd.Container()->IsContent())) {
@@ -335,7 +335,8 @@ nsresult ContentIteratorBase::Initializer::Run() {
           endIsContainer =
               nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
         }
-        if (!endIsData && !endIsContainer && mEnd.IsStartOfContainer()) {
+        if (!endIsCharacterData && !endIsContainer &&
+            mEnd.IsStartOfContainer()) {
           mIterator.mLast = mIterator.PrevNode(mEnd.Container());
           NS_WARNING_ASSERTION(mIterator.mLast, "PrevNode returned null");
           if (mIterator.mLast && mIterator.mLast != mIterator.mFirst &&
@@ -354,7 +355,7 @@ nsresult ContentIteratorBase::Initializer::Run() {
       // XXX: In the future, if end offset is before the first character in the
       //      cdata node, should we set mLast to the prev sibling?
 
-      if (!endIsData) {
+      if (!endIsCharacterData) {
         mIterator.mLast = mIterator.GetPrevSibling(mEnd.Container());
         NS_WARNING_ASSERTION(mIterator.mLast, "GetPrevSibling returned null");
 
