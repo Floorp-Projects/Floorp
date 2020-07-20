@@ -59,6 +59,9 @@ hw-g5-applink-fenix:
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --browsertime-iterations 14
+            --profile-conditioned
+            --profile-conditioned-scenario settled
+            --profile-conditioned-platform g5-fenix.nightly
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_applink.js
 
@@ -90,6 +93,9 @@ hw-p2-applink-fenix:
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --browsertime-iterations 14
+            --profile-conditioned
+            --profile-conditioned-scenario settled
+            --profile-conditioned-platform p2_aarch64-fenix.nightly
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_applink.js
 
@@ -119,6 +125,9 @@ hw-g5-applink-gv:
             --perfherder-app geckoview
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --browsertime-iterations 14
+            --profile-conditioned
+            --profile-conditioned-scenario settled
+            --profile-conditioned-platform g5-geckoview_example
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_applink.js
 
@@ -149,6 +158,9 @@ hw-p2-applink-gv:
             --perfherder-app geckoview
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --browsertime-iterations 14
+            --profile-conditioned
+            --profile-conditioned-scenario settled
+            --profile-conditioned-platform p2_aarch64-geckoview_example
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_applink.js
 
@@ -182,6 +194,9 @@ hw-g5-main-fenix:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
             --browsertime-iterations 14
+            --profile-conditioned
+            --profile-conditioned-scenario settled
+            --profile-conditioned-platform g5-fenix.nightly
             testing/performance/perftest_home_activity.js
 
 hw-p2-main-fenix:
@@ -215,4 +230,7 @@ hw-p2-main-fenix:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
             --browsertime-iterations 14
+            --profile-conditioned
+            --profile-conditioned-scenario settled
+            --profile-conditioned-platform p2_aarch64-fenix.nightly
             testing/performance/perftest_home_activity.js
