@@ -11,8 +11,8 @@
 #include "gfxMatrix.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGPaintServerFrame.h"
 #include "mozilla/UniquePtr.h"
-#include "SVGPaintServerFrame.h"
 
 class nsIFrame;
 
@@ -35,6 +35,7 @@ class SVGPatternFrame final : public SVGPaintServerFrame {
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGPatternFrame)
+  NS_DECL_QUERYFRAME
 
   friend nsIFrame* ::NS_NewSVGPatternFrame(mozilla::PresShell* aPresShell,
                                            ComputedStyle* aStyle);

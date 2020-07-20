@@ -40,6 +40,10 @@ SVGGradientFrame::SVGGradientFrame(ComputedStyle* aStyle,
       mLoopFlag(false),
       mNoHRefURI(false) {}
 
+NS_QUERYFRAME_HEAD(SVGGradientFrame)
+  NS_QUERYFRAME_ENTRY(SVGGradientFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGPaintServerFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
@@ -341,15 +345,11 @@ SVGGradientFrame* SVGGradientFrame::GetReferencedGradient() {
 
   nsIFrame* tframe = SVGObserverUtils::GetAndObserveTemplate(this, GetHref);
   if (tframe) {
-    LayoutFrameType frameType = tframe->Type();
-    if (frameType == LayoutFrameType::SVGLinearGradient ||
-        frameType == LayoutFrameType::SVGRadialGradient) {
-      return static_cast<SVGGradientFrame*>(tframe);
-    }
-    // We don't call SVGObserverUtils::RemoveTemplateObserver and set
-    // `mNoHRefURI = false` here since we want to be invalidated if the ID
-    // specified by our href starts resolving to a different/valid element.
+    return static_cast<SVGGradientFrame*>(do_QueryFrame(tframe));
   }
+  // We don't call SVGObserverUtils::RemoveTemplateObserver and set
+  // `mNoHRefURI = false` here since we want to be invalidated if the ID
+  // specified by our href starts resolving to a different/valid element.
 
   return nullptr;
 }
@@ -387,6 +387,10 @@ void SVGGradientFrame::GetStopFrames(nsTArray<nsIFrame*>* aStopFrames) {
 // -------------------------------------------------------------------------
 // Linear Gradients
 // -------------------------------------------------------------------------
+
+NS_QUERYFRAME_HEAD(SVGLinearGradientFrame)
+  NS_QUERYFRAME_ENTRY(SVGLinearGradientFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGGradientFrame)
 
 #ifdef DEBUG
 void SVGLinearGradientFrame::Init(nsIContent* aContent,
@@ -473,6 +477,10 @@ already_AddRefed<gfxPattern> SVGLinearGradientFrame::CreateGradient() {
 // -------------------------------------------------------------------------
 // Radial Gradients
 // -------------------------------------------------------------------------
+
+NS_QUERYFRAME_HEAD(SVGRadialGradientFrame)
+  NS_QUERYFRAME_ENTRY(SVGRadialGradientFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGGradientFrame)
 
 #ifdef DEBUG
 void SVGRadialGradientFrame::Init(nsIContent* aContent,

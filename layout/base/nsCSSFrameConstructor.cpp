@@ -119,6 +119,7 @@
 
 #include "nsMathMLParts.h"
 #include "mozilla/dom/SVGTests.h"
+#include "mozilla/SVGGradientFrame.h"
 #include "mozilla/SVGUtils.h"
 
 #include "nsRefreshDriver.h"
@@ -4929,9 +4930,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
 
   // Ensure that a stop frame is a child of a gradient and that gradients
   // can only have stop children.
-  bool parentIsGradient =
-      aParentFrame && (aParentFrame->IsSVGLinearGradientFrame() ||
-                       aParentFrame->IsSVGRadialGradientFrame());
+  bool parentIsGradient = aParentFrame && static_cast<SVGGradientFrame*>(
+                                              do_QueryFrame(aParentFrame));
   bool stop = (tag == nsGkAtoms::stop);
   if ((parentIsGradient && !stop) || (!parentIsGradient && stop)) {
     return &sSuppressData;
