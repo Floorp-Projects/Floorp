@@ -68,6 +68,7 @@ job-defaults:
             - linux64-rust-android
             - linux64-rust-size
             - linux64-cbindgen
+            - linux64-dump-syms
             - linux64-nasm
             - linux64-node
 
