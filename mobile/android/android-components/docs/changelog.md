@@ -56,6 +56,16 @@ permalink: /changelog/
   * Added `EngineSession.goToHistoryIndex` to jump to a specific index in a session's history.
   * Adds `flags` parameter to `reload`.
 
+* **service-glean**
+  * Glean was updated to v31.4.1
+    * Remove locale from baseline ping. ([1609968](https://bugzilla.mozilla.org/show_bug.cgi?id=1609968), [#1016](https://github.com/mozilla/glean/pull/1016))
+    * Persist X-Debug-ID header on store ping. ([1605097](https://bugzilla.mozilla.org/show_bug.cgi?id=1605097), [#1042](https://github.com/mozilla/glean/pull/1042))
+    * BUGFIX: raise an error if Glean is initialized with an empty string as the `application_id` ([#1043](https://github.com/mozilla/glean/pull/1043)).
+    * Enable debugging features through environment variables. ([#1058](https://github.com/mozilla/glean/pull/1058))
+    * BUGFIX: fix `int32` to `ErrorType` mapping. The `InvalidOverflow` had a value mismatch between glean-core and the bindings. This would only be a problem in unit tests. ([#1063](https://github.com/mozilla/glean/pull/1063))
+    * Enable propagating options to the main product Activity when using the `GleanDebugActivity`.
+    * BUGFIX: Fix the metrics ping collection for startup pings such as `reason=upgrade` to occur in the same thread/task as Glean initialize. Otherwise, it gets collected after the application lifetime metrics are cleared such as experiments that should be in the ping. ([#1069](https://github.com/mozilla/glean/pull/1069))
+    
 * **service-location**
   * `LocationService.hasRegionCached()` is introduced to query if the region is already cached and a long running operation to fetch the region is not needed.
 
