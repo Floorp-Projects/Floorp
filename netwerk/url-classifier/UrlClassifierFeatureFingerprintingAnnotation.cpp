@@ -59,7 +59,8 @@ UrlClassifierFeatureFingerprintingAnnotation::
 
 /* static */
 void UrlClassifierFeatureFingerprintingAnnotation::MaybeInitialize() {
-  UC_LOG(("UrlClassifierFeatureFingerprintingAnnotation: MaybeInitialize"));
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureFingerprintingAnnotation::MaybeInitialize"));
 
   if (!gFeatureFingerprintingAnnotation) {
     gFeatureFingerprintingAnnotation =
@@ -70,7 +71,7 @@ void UrlClassifierFeatureFingerprintingAnnotation::MaybeInitialize() {
 
 /* static */
 void UrlClassifierFeatureFingerprintingAnnotation::MaybeShutdown() {
-  UC_LOG(("UrlClassifierFeatureFingerprintingAnnotation: MaybeShutdown"));
+  UC_LOG_LEAK(("UrlClassifierFeatureFingerprintingAnnotation::MaybeShutdown"));
 
   if (gFeatureFingerprintingAnnotation) {
     gFeatureFingerprintingAnnotation->ShutdownPreferences();
@@ -84,9 +85,8 @@ UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(
     nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG(
-      ("UrlClassifierFeatureFingerprintingAnnotation: MaybeCreate for channel "
-       "%p",
+  UC_LOG_LEAK(
+      ("UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate - channel %p",
        aChannel));
 
   if (UrlClassifierCommon::IsPassiveContent(aChannel)) {
@@ -128,8 +128,8 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
   *aShouldContinue = true;
 
   UC_LOG(
-      ("UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel, "
-       "annotating channel[%p]",
+      ("UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel - "
+       "annotating channel %p",
        aChannel));
 
   static std::vector<UrlClassifierCommon::ClassificationData>

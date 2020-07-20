@@ -110,12 +110,12 @@ NS_IMPL_ISUPPORTS(nsChannelClassifier, nsIURIClassifierCallback, nsIObserver)
 
 nsChannelClassifier::nsChannelClassifier(nsIChannel* aChannel)
     : mIsAllowListed(false), mSuspendedChannel(false), mChannel(aChannel) {
-  UC_LOG_DEBUG(("nsChannelClassifier::nsChannelClassifier %p", this));
+  UC_LOG_LEAK(("nsChannelClassifier::nsChannelClassifier [this=%p]", this));
   MOZ_ASSERT(mChannel);
 }
 
 nsChannelClassifier::~nsChannelClassifier() {
-  UC_LOG_DEBUG(("nsChannelClassifier::~nsChannelClassifier %p", this));
+  UC_LOG_LEAK(("nsChannelClassifier::~nsChannelClassifier [this=%p]", this));
 }
 
 void nsChannelClassifier::Start() {
@@ -176,8 +176,10 @@ nsresult nsChannelClassifier::StartInternal() {
   nsCString exceptionHostnames =
       CachedPrefs::GetInstance()->GetExceptionHostnames();
   if (!exceptionHostnames.IsEmpty()) {
-    UC_LOG(("nsChannelClassifier[%p]:StartInternal entitylisted hostnames = %s",
-            this, exceptionHostnames.get()));
+    UC_LOG(
+        ("nsChannelClassifier::StartInternal - entitylisted hostnames = %s "
+         "[this=%p]",
+         exceptionHostnames.get(), this));
     if (IsHostnameEntitylisted(uri, exceptionHostnames)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -206,8 +208,10 @@ nsresult nsChannelClassifier::StartInternal() {
     nsCString spec;
     principal->GetAsciiSpec(spec);
     spec.Truncate(std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-    UC_LOG(("nsChannelClassifier[%p]: Classifying principal %s on channel[%p]",
-            this, spec.get(), mChannel.get()));
+    UC_LOG(
+        ("nsChannelClassifier::StartInternal - classifying principal %s on "
+         "channel %p [this=%p]",
+         spec.get(), mChannel.get(), this));
   }
   // The classify is running in parent process, no need to give a valid event
   // target
@@ -224,15 +228,21 @@ nsresult nsChannelClassifier::StartInternal() {
       // Some channels (including nsJSChannel) fail on Suspend.  This
       // shouldn't be fatal, but will prevent malware from being
       // blocked on these channels.
-      UC_LOG_WARN(("nsChannelClassifier[%p]: Couldn't suspend channel", this));
+      UC_LOG_WARN(
+          ("nsChannelClassifier::StartInternal - couldn't suspend channel "
+           "[this=%p]",
+           this));
       return rv;
     }
 
     mSuspendedChannel = true;
-    UC_LOG_DEBUG(("nsChannelClassifier[%p]: suspended channel %p", this,
-                  mChannel.get()));
+    UC_LOG(
+        ("nsChannelClassifier::StartInternal - suspended channel %p [this=%p]",
+         mChannel.get(), this));
   } else {
-    UC_LOG(("nsChannelClassifier[%p]: not expecting callback", this));
+    UC_LOG_WARN((
+        "nsChannelClassifier::StartInternal - not expecting callback [this=%p]",
+        this));
     return NS_ERROR_FAILURE;
   }
 
@@ -255,8 +265,9 @@ bool nsChannelClassifier::IsHostnameEntitylisted(
     const nsACString& token = tokenizer.nextToken();
     if (token.Equals(host)) {
       UC_LOG(
-          ("nsChannelClassifier[%p]:StartInternal skipping %s (entitylisted)",
-           this, host.get()));
+          ("nsChannelClassifier::StartInternal - skipping %s (entitylisted) "
+           "[this=%p]",
+           host.get(), this));
       return true;
     }
   }
@@ -284,8 +295,10 @@ void nsChannelClassifier::MarkEntryClassified(nsresult status) {
     nsAutoCString spec;
     uri->GetAsciiSpec(spec);
     spec.Truncate(std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-    UC_LOG(("nsChannelClassifier::MarkEntryClassified[%s] %s", errorName.get(),
-            spec.get()));
+    UC_LOG(
+        ("nsChannelClassifier::MarkEntryClassified - result is %s "
+         "for uri %s [this=%p, channel=%p]",
+         errorName.get(), spec.get(), this, mChannel.get()));
   }
 
   nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(mChannel);
@@ -351,9 +364,10 @@ nsresult nsChannelClassifier::SendThreatHitReport(nsIChannel* aChannel,
   nsPrintfCString reportEnablePref(
       "browser.safebrowsing.provider.%s.dataSharing.enabled", provider.get());
   if (!Preferences::GetBool(reportEnablePref.get(), false)) {
-    UC_LOG((
-        "nsChannelClassifier::SendThreatHitReport data sharing disabled for %s",
-        provider.get()));
+    UC_LOG(
+        ("nsChannelClassifier::SendThreatHitReport - data sharing disabled for "
+         "%s",
+         provider.get()));
     return NS_OK;
   }
 
@@ -381,26 +395,23 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode,
       !UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode));
 
   if (mSuspendedChannel) {
-    nsAutoCString errorName;
-    if (UC_LOG_ENABLED() && NS_FAILED(aErrorCode)) {
-      GetErrorName(aErrorCode, errorName);
-      UC_LOG(
-          ("nsChannelClassifier[%p]:OnClassifyComplete %s (suspended channel)",
-           this, errorName.get()));
-    }
     MarkEntryClassified(aErrorCode);
 
     if (NS_FAILED(aErrorCode)) {
       if (UC_LOG_ENABLED()) {
+        nsAutoCString errorName;
+        GetErrorName(aErrorCode, errorName);
+
         nsCOMPtr<nsIURI> uri;
         mChannel->GetURI(getter_AddRefs(uri));
         nsCString spec = uri->GetSpecOrDefault();
         spec.Truncate(
             std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
         UC_LOG(
-            ("nsChannelClassifier[%p]: cancelling channel %p for %s "
-             "with error code %s",
-             this, mChannel.get(), spec.get(), errorName.get()));
+            ("nsChannelClassifier::OnClassifyComplete - cancelling channel %p "
+             "for %s "
+             "with error code %s [this=%p]",
+             mChannel.get(), spec.get(), errorName.get(), this));
       }
 
       // Channel will be cancelled (page element blocked) due to Safe Browsing.
@@ -418,10 +429,10 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode,
 
       mChannel->Cancel(aErrorCode);
     }
-    UC_LOG_DEBUG(
-        ("nsChannelClassifier[%p]: resuming channel[%p] from "
-         "OnClassifyComplete",
-         this, mChannel.get()));
+    UC_LOG(
+        ("nsChannelClassifier::OnClassifyComplete - resuming channel %p "
+         "[this=%p]",
+         mChannel.get(), this));
     mChannel->Resume();
   }
 
