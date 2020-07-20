@@ -9,6 +9,7 @@
 
 #include "mozilla/layers/AnimationStorageData.h"
 #include "mozilla/layers/LayersMessages.h"  // for TransformData, etc
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Variant.h"
 #include "X11UndefineNone.h"
 #include <unordered_map>

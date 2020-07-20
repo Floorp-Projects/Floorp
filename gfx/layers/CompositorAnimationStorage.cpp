@@ -7,6 +7,7 @@
 #include "CompositorAnimationStorage.h"
 
 #include "AnimationHelper.h"
+#include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/layers/APZSampler.h"              // for APZSampler
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
 #include "mozilla/layers/CompositorThread.h"       // for CompositorThreadHolder
@@ -20,6 +21,8 @@
 
 namespace mozilla {
 namespace layers {
+
+using gfx::Matrix4x4;
 
 void CompositorAnimationStorage::Clear() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
