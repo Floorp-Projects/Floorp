@@ -41,6 +41,20 @@ class Latin1Chars : public mozilla::Range<Latin1Char> {
 };
 
 /*
+ * Like Latin1Chars, but the chars are const.
+ */
+class ConstLatin1Chars : public mozilla::Range<const Latin1Char> {
+  typedef mozilla::Range<const Latin1Char> Base;
+
+ public:
+  using CharT = Latin1Char;
+
+  ConstLatin1Chars() = default;
+  ConstLatin1Chars(const Latin1Char* aChars, size_t aLength)
+      : Base(aChars, aLength) {}
+};
+
+/*
  * A Latin1Chars, but with \0 termination for C compatibility.
  */
 class Latin1CharsZ : public mozilla::RangedPtr<Latin1Char> {
