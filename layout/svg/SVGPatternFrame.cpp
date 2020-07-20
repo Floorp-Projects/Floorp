@@ -47,6 +47,10 @@ SVGPatternFrame::SVGPatternFrame(ComputedStyle* aStyle,
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGPatternFrame)
 
+NS_QUERYFRAME_HEAD(SVGPatternFrame)
+  NS_QUERYFRAME_ENTRY(SVGPatternFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGPaintServerFrame)
+
 //----------------------------------------------------------------------
 // nsIFrame methods:
 

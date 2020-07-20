@@ -25,6 +25,7 @@
 #include "nsStyleStructInlines.h"
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/SVGIntegrationUtils.h"
+#include "mozilla/SVGPaintServerFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 
 using namespace mozilla;
@@ -176,7 +177,8 @@ bool nsImageRenderer::PrepareImage() {
       // non-displayable SVG, then we have nothing valid to paint.
       if (!paintServerFrame ||
           (paintServerFrame->IsFrameOfType(nsIFrame::eSVG) &&
-           !paintServerFrame->IsFrameOfType(nsIFrame::eSVGPaintServer) &&
+           !static_cast<SVGPaintServerFrame*>(
+               do_QueryFrame(paintServerFrame)) &&
            !static_cast<ISVGDisplayableFrame*>(
                do_QueryFrame(paintServerFrame)))) {
         mPrepareResult = ImgDrawResult::BAD_IMAGE;

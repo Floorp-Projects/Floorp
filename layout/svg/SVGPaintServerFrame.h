@@ -59,6 +59,8 @@ class SVGPaintServerFrame : public SVGContainerFrame {
   using imgDrawingParams = image::imgDrawingParams;
 
   NS_DECL_ABSTRACT_FRAME(SVGPaintServerFrame)
+  NS_DECL_QUERYFRAME
+  NS_DECL_QUERYFRAME_TARGET(SVGPaintServerFrame)
 
   /**
    * Constructs a gfxPattern of the paint server rendering.
@@ -77,11 +79,6 @@ class SVGPaintServerFrame : public SVGContainerFrame {
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override {}
-
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return SVGContainerFrame::IsFrameOfType(aFlags &
-                                            ~nsIFrame::eSVGPaintServer);
-  }
 };
 
 }  // namespace mozilla

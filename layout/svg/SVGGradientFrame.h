@@ -8,12 +8,12 @@
 #define LAYOUT_SVG_SVGGRADIENTFRAME_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGPaintServerFrame.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
 #include "nsLiteralString.h"
-#include "SVGPaintServerFrame.h"
 
 class gfxPattern;
 class nsAtom;
@@ -45,6 +45,8 @@ class SVGGradientFrame : public SVGPaintServerFrame {
 
  public:
   NS_DECL_ABSTRACT_FRAME(SVGGradientFrame)
+  NS_DECL_QUERYFRAME
+  NS_DECL_QUERYFRAME_TARGET(SVGGradientFrame)
 
   // SVGPaintServerFrame methods:
   virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
@@ -125,6 +127,7 @@ class SVGLinearGradientFrame final : public SVGGradientFrame {
       : SVGGradientFrame(aStyle, aPresContext, kClassID) {}
 
  public:
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(SVGLinearGradientFrame)
 
   // nsIFrame interface:
@@ -165,6 +168,7 @@ class SVGRadialGradientFrame final : public SVGGradientFrame {
       : SVGGradientFrame(aStyle, aPresContext, kClassID) {}
 
  public:
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(SVGRadialGradientFrame)
 
   // nsIFrame interface:

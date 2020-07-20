@@ -3239,30 +3239,29 @@ class nsIFrame : public nsQueryFrame {
     eMathML = 1 << 0,
     eSVG = 1 << 1,
     eSVGContainer = 1 << 2,
-    eSVGPaintServer = 1 << 3,
-    eBidiInlineContainer = 1 << 4,
+    eBidiInlineContainer = 1 << 3,
     // the frame is for a replaced element, such as an image
-    eReplaced = 1 << 5,
+    eReplaced = 1 << 4,
     // Frame that contains a block but looks like a replaced element
     // from the outside
-    eReplacedContainsBlock = 1 << 6,
+    eReplacedContainsBlock = 1 << 5,
     // A frame that participates in inline reflow, i.e., one that
     // requires ReflowInput::mLineLayout.
-    eLineParticipant = 1 << 7,
-    eXULBox = 1 << 8,
-    eCanContainOverflowContainers = 1 << 9,
-    eTablePart = 1 << 10,
-    eSupportsCSSTransforms = 1 << 11,
+    eLineParticipant = 1 << 6,
+    eXULBox = 1 << 7,
+    eCanContainOverflowContainers = 1 << 8,
+    eTablePart = 1 << 9,
+    eSupportsCSSTransforms = 1 << 10,
 
     // A replaced element that has replaced-element sizing
     // characteristics (i.e., like images or iframes), as opposed to
     // inline-block sizing characteristics (like form controls).
-    eReplacedSizing = 1 << 12,
+    eReplacedSizing = 1 << 11,
 
     // Does this frame class support 'contain: layout' and
     // 'contain:paint' (supporting one is equivalent to supporting the
     // other).
-    eSupportsContainLayoutAndPaint = 1 << 13,
+    eSupportsContainLayoutAndPaint = 1 << 12,
 
     // These are to allow nsIFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
