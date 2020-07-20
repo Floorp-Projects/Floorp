@@ -479,10 +479,10 @@ def write_artifact(filename, data):
     elif filename.endswith('.json'):
         with open(path, 'w') as f:
             json.dump(data, f, sort_keys=True, indent=2, separators=(',', ': '))
-    elif filename.endswith('.gz'):
+    elif filename.endswith('.json.gz'):
         import gzip
         with gzip.open(path, 'wb') as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(data).encode('utf-8'))
     else:
         raise TypeError("Don't know how to write to {}".format(filename))
 
@@ -494,10 +494,10 @@ def read_artifact(filename):
     elif filename.endswith('.json'):
         with open(path, 'r') as f:
             return json.load(f)
-    elif filename.endswith('.gz'):
+    elif filename.endswith('.json.gz'):
         import gzip
         with gzip.open(path, 'rb') as f:
-            return json.load(f)
+            return json.load(f.decode('utf-8'))
     else:
         raise TypeError("Don't know how to read {}".format(filename))
 
