@@ -1125,14 +1125,9 @@ function waitForPageLoaded(msg) {
  * (in chrome space).
  */
 function navigateTo(msg) {
-  let { commandID, pageTimeout, url, loadEventExpected = null } = msg.json;
+  let { commandID, pageTimeout, url, loadEventExpected } = msg.json;
 
   try {
-    loadEventExpected = navigate.isLoadEventExpected(
-      curContainer.frame.location,
-      url
-    );
-
     loadListener.navigate(
       () => {
         curContainer.frame.location = url;
