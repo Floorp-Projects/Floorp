@@ -22,7 +22,7 @@ def _recurse(val, param_fns):
         elif isinstance(val, dict):
             if len(val) == 1:
                 for param_key, param_fn in param_fns.items():
-                    if val.keys() == [param_key]:
+                    if set(six.iterkeys(val)) == {param_key}:
                         return param_fn(val[param_key])
             return {k: recurse(v) for k, v in six.iteritems(val)}
         else:
