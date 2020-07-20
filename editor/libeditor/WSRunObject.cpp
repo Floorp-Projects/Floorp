@@ -1394,7 +1394,7 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtEndOfDeletionRange(
   // If end of the deleting range is followed by visible white-spaces which
   // is not preformatted, we might need to replace the following ASCII
   // white-spaces with an NBSP.
-  const VisibleWhiteSpacesData nonPreformattedVisibleWhiteSpacesAtEnd =
+  const VisibleWhiteSpacesData& nonPreformattedVisibleWhiteSpacesAtEnd =
       VisibleWhiteSpacesDataRef();
   if (!nonPreformattedVisibleWhiteSpacesAtEnd.IsInitialized()) {
     return ReplaceRangeData();
@@ -1472,7 +1472,7 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtStartOfDeletionRange(
   // If start of the deleting range follows visible white-spaces which is not
   // preformatted, we might need to replace previous ASCII white-spaces with
   // an NBSP.
-  const VisibleWhiteSpacesData nonPreformattedVisibleWhiteSpacesAtStart =
+  const VisibleWhiteSpacesData& nonPreformattedVisibleWhiteSpacesAtStart =
       VisibleWhiteSpacesDataRef();
   if (!nonPreformattedVisibleWhiteSpacesAtStart.IsInitialized()) {
     return ReplaceRangeData();
