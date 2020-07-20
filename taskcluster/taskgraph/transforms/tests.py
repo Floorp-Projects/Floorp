@@ -1807,11 +1807,7 @@ def make_job_description(config, tasks):
         elif set(schedules) & set(INCLUSIVE_COMPONENTS):
             jobdesc['optimization'] = {'test-inclusive': schedules}
         else:
-            # First arg goes to 'skip-unless-schedules', second goes to the
-            # main test strategy. Using an empty dict allows earlier
-            # substrategies (of a CompositeStrategy) to pass values by reference
-            # to later substrategies.
-            jobdesc['optimization'] = {'test': (schedules, {})}
+            jobdesc['optimization'] = {'test': schedules}
 
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
