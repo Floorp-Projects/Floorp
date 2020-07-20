@@ -2659,6 +2659,10 @@ AddonInstallWrapper.prototype = {
     return installFor(this).install();
   },
 
+  postpone(returnFn) {
+    return installFor(this).postpone(returnFn);
+  },
+
   cancel() {
     installFor(this).cancel();
   },
@@ -3824,6 +3828,14 @@ var XPIInstall = {
     }
 
     let addon = await loadManifestFromFile(source, location);
+
+    // Ensure a staged addon is compatible with the current running version of
+    // Firefox.  If a prior version of the addon is installed, it will remain.
+    if (!addon.isCompatible) {
+      throw new Error(
+        `Add-on ${addon.id} is not compatible with application version.`
+      );
+    }
 
     if (
       XPIDatabase.mustSign(addon.type) &&
