@@ -1464,7 +1464,7 @@ win64-aarch64-shippable-no-eme/opt:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
-    run-on-projects: []
+    run-on-projects: ['all']
     fetches:
         toolchain:
             - linux64-binutils
