@@ -67,7 +67,9 @@ Before you attempt to make a contribution please read the [Community Participati
 
 ## Build Instructions
 
-Note: Both Android SDK and NDK are required.
+Pre-requisites:
+* Android SDK
+* To run command line tools, you'll need to configure Java: see [our how-to guide](https://github.com/mozilla-mobile/shared-docs/blob/master/android/configure_java.md).
 
 1. Clone or Download the repository:
 
@@ -130,6 +132,9 @@ To reduce review turn-around time, we'd like all pushes to run tests locally. We
 recommend you use our provided pre-push hook in `config/pre-push-recommended.sh`.
 Using this hook will guarantee your hook gets updated as the repository changes.
 This hook tries to run as much as possible without taking too much time.
+
+Before you can run the hook, you'll need to configure Java properly because it relies on command line tools: see
+[our how-to guide](https://github.com/mozilla-mobile/shared-docs/blob/master/android/configure_java.md).
 
 To add it on Mac/Linux, run this command from the project root:
 ```sh
