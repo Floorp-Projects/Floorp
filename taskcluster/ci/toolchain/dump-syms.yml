@@ -27,6 +27,27 @@ linux64-dump-syms:
             - linux64-clang
             - linux64-rust
 
+macosx64-dump-syms:
+    treeherder:
+        symbol: TM(dump_syms)
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+    run:
+        arguments: ['x86_64-apple-darwin']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+        toolchain-artifact: public/build/dump_syms.tar.xz
+    fetches:
+        toolchain:
+            - linux64-rust-macos
+            - linux64-clang-9
+            - linux64-cctools-port-clang-9
+            - linux64-llvm-dsymutil
+            - linux64-binutils
+
 win64-dump-syms:
     treeherder:
         symbol: TW64(dump_syms)
