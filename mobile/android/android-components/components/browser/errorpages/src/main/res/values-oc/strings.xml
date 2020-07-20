@@ -35,6 +35,10 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avançat…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Qualqu’un poiriá usurpar l’identitat del site, deuriatz pas contunhar.</label>
+        <br><br>
+        <label>Los sites web pròvan lor identitat via de certificats. %1$s se fisa pas de <b>%2$s</b> perque lo seu emissor de certificats es desconegut, lo certificat es auto-signat, o lo servidor envia pas los certificats intermediari corrèctes.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Tornar (recomandat)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -43,8 +47,24 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">La connexion es estada interrompuda</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Lo navegador s’es corrèctament connectat, mas la connexion es estada interrompuda pendent lo transferiment d’informacions. Tornatz ensajar.</p>
+      <ul>
+        <li>Lo site es benlèu pas accessible o subrecargat. Tornatz ensajar dins un momenton</li>
+        <li>Se capitatz pas de navegar sus cap de site, verificatz la connexion de donadas del periferic o la connexion Wi-Fi</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Relambi d’espèra passat</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Lo navegador a esperat tròp longtemps al moment de la connexion al site e a arrestat d’esperar una responsa.</p>
+      <ul>
+        <li>Benlèu que lo servidor es en suscarga o es temporàriament en pana ? Ensajatz mai tard.</li>
+        <li>D’autres sites son tanben inaccessibles ? Verificatz la connexion a la ret de vòstre periferic.</li>
+        <li>Vòstre periferic o vòstra ret es protegida per un parafuòc o un proxy ? De paramètres incorrèctes pòdon interferir amb la navegacion sus lo Web.</li>
+        <li>Avètz totjorn de problèmas ? Consultatz l’administrator de la ret o vòstre provesidor d’accès a Internet per obténer d’ajuda.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Connexion impossibla</string>
@@ -87,6 +107,13 @@
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">La connexion es estada reïnicializada</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Lo ligam ret es estat copat pendent la negociacion d’una connexion. Tornatz ensajar.</p>
+      <ul>
+        <li>Lo site es benlèu pas accessible o subrecargat. Tornatz ensajar dins un momenton</li>
+        <li>Se capitatz pas de navegar sus cap de site, verificatz la connexion de donadas del periferic o la connexion Wi-Fi</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipe de fichièr pas segur</string>
@@ -181,6 +208,13 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Impossible de trobar lo servidor mandatari</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Lo navegador es configurat per utilizar un servidor mandatari mas lo proxy es introbable.</p>
+      <ul>
+        <li>La configuracion proxy del navegador es corrècta ? Verificatz los paramètres e tornatz ensajar.</li>
+        <li>Lo servici proxy autoriza las connexions a partir d’aquesta ret ?</li>
+        <li>Avètz encara de problèmas ? Consultatz vòstre administrator de ret o vòstre provesidor d’accès a Internet per obténer d’ajuda.</li>
+</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problèma de logicial malvolent</string>

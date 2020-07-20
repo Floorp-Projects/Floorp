@@ -61,6 +61,9 @@
     <string name="mozac_browser_errorpages_corrupted_content_title">Σφάλμα κατεστραμμένου περιεχομένου</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Το περιεχόμενο καταστράφηκε</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Σφάλμα κωδικοποίησης περιεχομένου</string>
 
     <!-- The document title and heading of an error page. -->

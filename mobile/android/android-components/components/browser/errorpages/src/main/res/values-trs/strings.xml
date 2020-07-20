@@ -215,4 +215,32 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nu nārì\'ij servidor proxy</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Huā nî\'nïn riña sā nana\'uî\'t dan da\' gārāsunj \'ngō servidor proxy, sanī nu nārì\'ij proxy.</p>
+      <ul>
+        <li>Huā hue\'ê proxy riña sa riñā nana\'uî\'t bè\'ej. Nātsij ni\'iājt nī ginù huin ñû gātūt.</li>
+        <li>Huā kōnektadô si āgâ\'t riña \'ngō red \'iaj sun anj.</li>
+        <li>Huā nï\' iaj chij aj. Gīni\'iāj gā\'mīnt ngà duguî\' dû\'uèj internet asi sû\' nīkāj ñu\'ūnj man da\' rūgûñu\'ūnj si sò\'.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sa huā a\'nan\' riña sitiô yī\'ì nan</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Sitiô %1$s nī \'ngō sitiô yī\'ìi huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Sa huā a\'nan\' riña sitiô nāsinùnj nan</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Sitiô %1$s nī \'ngō sitiô duguane\' software āhīi huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Sa huā a\'nan\' riña sitiô yī\'ìi</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Sitiô %1$s nī \'ngō sitiô yī\'ì hīa nïn\'in huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Sa huā a\'nan\' riña sitiô diga\'ñu\'ūnj un</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Pajinâ %1$s nī \'ngō pajinâ diga\'ñu\'ūnj un huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+</resources>

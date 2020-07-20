@@ -6,6 +6,8 @@
     <string name="mozac_feature_sitepermissions_camera_title">Дазволіць %1$s выкарыстоўваць вашу камеру?</string>
     <!-- Title of a dialog for a microphone permission request. -->
     <string name="mozac_feature_sitepermissions_microfone_title">Дазволіць %1$s выкарыстоўваць ваш мікрафон?</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">Дазволіць %1$s выкарыстоўваць ваша месцазнаходжанне?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
     <string name="mozac_feature_sitepermissions_camera_and_microphone">Дазволіць %1$s выкарыстоўваць вашу камеру і мікрафон?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
