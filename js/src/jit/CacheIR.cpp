@@ -10,6 +10,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Unused.h"
 
+#include "builtin/DataViewObject.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRSpewer.h"
@@ -5119,6 +5120,84 @@ AttachDecision CallIRGenerator::tryAttachArrayIsArray(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachDataViewGet(HandleFunction callee,
+                                                     Scalar::Type type) {
+  // Ensure |this| is a DataViewObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Expected arguments: offset (number), optional littleEndian (boolean).
+  if (argc_ < 1 || argc_ > 2) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[0].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+  if (argc_ > 1 && !args_[1].isBoolean()) {
+    return AttachDecision::NoAction;
+  }
+
+  DataViewObject* dv = &thisval_.toObject().as<DataViewObject>();
+
+  // Bounds check the offset.
+  int32_t offsetInt32;
+  if (!mozilla::NumberEqualsInt32(args_[0].toNumber(), &offsetInt32)) {
+    return AttachDecision::NoAction;
+  }
+  if (offsetInt32 < 0 ||
+      !dv->offsetIsInBounds(Scalar::byteSize(type), offsetInt32)) {
+    return AttachDecision::NoAction;
+  }
+
+  // For getUint32 we let the stub return a double only if the current result is
+  // a double, to allow better codegen in Warp.
+  bool allowDoubleForUint32 = false;
+  if (type == Scalar::Uint32) {
+    bool isLittleEndian = argc_ > 1 && args_[1].toBoolean();
+    uint32_t res = dv->read<uint32_t>(offsetInt32, isLittleEndian);
+    allowDoubleForUint32 = res >= INT32_MAX;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is this DataView native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard |this| is a DataViewObject.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardClass(objId, GuardClassKind::DataView);
+
+  // Convert offset to int32.
+  ValOperandId offsetId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  Int32OperandId int32OffsetId = writer.guardToInt32Index(offsetId);
+
+  // TODO(Warp): add BooleanOperandId (bug 1647602).
+  Int32OperandId boolLittleEndianId;
+  if (argc_ > 1) {
+    ValOperandId littleEndianId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+    boolLittleEndianId = writer.guardToBoolean(littleEndianId);
+  } else {
+    boolLittleEndianId = writer.loadInt32Constant(0);
+  }
+
+  writer.loadDataViewValueResult(objId, int32OffsetId, boolLittleEndianId, type,
+                                 allowDoubleForUint32);
+
+  // This stub does not need to be monitored, because it returns the same type
+  // as this call.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("DataViewGet");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachUnsafeGetReservedSlot(
     HandleFunction callee, InlinableNative native) {
   // Need an object and int32 slot argument.
@@ -6346,6 +6425,28 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachArrayJoin(callee);
     case InlinableNative::ArrayIsArray:
       return tryAttachArrayIsArray(callee);
+
+    // DataView natives.
+    case InlinableNative::DataViewGetInt8:
+      return tryAttachDataViewGet(callee, Scalar::Int8);
+    case InlinableNative::DataViewGetUint8:
+      return tryAttachDataViewGet(callee, Scalar::Uint8);
+    case InlinableNative::DataViewGetInt16:
+      return tryAttachDataViewGet(callee, Scalar::Int16);
+    case InlinableNative::DataViewGetUint16:
+      return tryAttachDataViewGet(callee, Scalar::Uint16);
+    case InlinableNative::DataViewGetInt32:
+      return tryAttachDataViewGet(callee, Scalar::Int32);
+    case InlinableNative::DataViewGetUint32:
+      return tryAttachDataViewGet(callee, Scalar::Uint32);
+    case InlinableNative::DataViewGetFloat32:
+      return tryAttachDataViewGet(callee, Scalar::Float32);
+    case InlinableNative::DataViewGetFloat64:
+      return tryAttachDataViewGet(callee, Scalar::Float64);
+    case InlinableNative::DataViewGetBigInt64:
+      return tryAttachDataViewGet(callee, Scalar::BigInt64);
+    case InlinableNative::DataViewGetBigUint64:
+      return tryAttachDataViewGet(callee, Scalar::BigUint64);
 
     // Intl natives.
     case InlinableNative::IntlGuardToCollator:
