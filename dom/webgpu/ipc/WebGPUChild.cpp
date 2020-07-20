@@ -90,8 +90,8 @@ UniquePtr<ffi::WGPUTextureViewDescriptor> WebGPUChild::GetDefaultViewDescriptor(
   desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
   // compute depth
   uint32_t depth = 0;
-  if (aDesc.mSize.IsUnsignedLongSequence()) {
-    const auto& seq = aDesc.mSize.GetAsUnsignedLongSequence();
+  if (aDesc.mSize.IsRangeEnforcedUnsignedLongSequence()) {
+    const auto& seq = aDesc.mSize.GetAsRangeEnforcedUnsignedLongSequence();
     depth = seq.Length() > 2 ? seq[2] : 1;
   } else {
     depth = aDesc.mSize.GetAsGPUExtent3DDict().mDepth;
@@ -120,8 +120,8 @@ UniquePtr<ffi::WGPUTextureViewDescriptor> WebGPUChild::GetDefaultViewDescriptor(
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
   ffi::WGPUTextureDescriptor desc = {};
-  if (aDesc.mSize.IsUnsignedLongSequence()) {
-    const auto& seq = aDesc.mSize.GetAsUnsignedLongSequence();
+  if (aDesc.mSize.IsRangeEnforcedUnsignedLongSequence()) {
+    const auto& seq = aDesc.mSize.GetAsRangeEnforcedUnsignedLongSequence();
     desc.size.width = seq.Length() > 0 ? seq[0] : 1;
     desc.size.height = seq.Length() > 1 ? seq[1] : 1;
     desc.size.depth = seq.Length() > 2 ? seq[2] : 1;

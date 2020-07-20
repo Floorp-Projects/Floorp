@@ -60,9 +60,10 @@ ffi::WGPURawPass BeginRenderPass(RawId aEncoderId,
     }
     dsDesc.depth_store_op = ConvertStoreOp(dsa.mDepthStoreOp);
 
-    if (dsa.mStencilLoadValue.IsUnsignedLong()) {
+    if (dsa.mStencilLoadValue.IsRangeEnforcedUnsignedLong()) {
       dsDesc.stencil_load_op = ffi::WGPULoadOp_Clear;
-      dsDesc.clear_stencil = dsa.mStencilLoadValue.GetAsUnsignedLong();
+      dsDesc.clear_stencil =
+          dsa.mStencilLoadValue.GetAsRangeEnforcedUnsignedLong();
     }
     if (dsa.mStencilLoadValue.IsGPULoadOp()) {
       dsDesc.stencil_load_op =
