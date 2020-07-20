@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 
-OPEN_LOCALES = "locales = ["
+OPEN_LOCALES = "release_locales = ["
 CLOSE_LOCALES = "]"
 
 def trim_to_locale(str):
@@ -42,7 +42,7 @@ def get_release_locales():
     for line in file:
         if line == OPEN_LOCALES:
             locales_opened = True
-        elif line == CLOSE_LOCALES:
+        elif line == CLOSE_LOCALES and locales_opened == True:
             locales_closed = True
             break
         elif locales_opened:
