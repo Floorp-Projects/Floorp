@@ -311,7 +311,7 @@ void ImageComposite::CountSkippedFrames(const TimedImage* aImage) {
 
 void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
 #if MOZ_GECKO_PROFILER
-  if (!profiler_can_accept_markers()) {
+  if (!profiler_can_accept_markers() || aNewImage->mTimeStamp.IsNull()) {
     return;
   }
 
@@ -325,7 +325,9 @@ void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
   for (const auto& img : mImages) {
     if (img.mProducerID == aNewImage->mProducerID &&
         img.mFrameID == aNewImage->mFrameID) {
-      jitter = Some(aNewImage->mTimeStamp - img.mTimeStamp);
+      if (!img.mTimeStamp.IsNull()) {
+        jitter = Some(aNewImage->mTimeStamp - img.mTimeStamp);
+      }
       break;
     }
   }
