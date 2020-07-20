@@ -62,14 +62,6 @@ add_task(async function test_save_reload() {
     })
   );
 
-  // This PDF download should not be serialized because it never succeeds.
-  let pdfDownload = await Downloads.createDownload({
-    source: { url: httpUrl("empty.txt"), referrerInfo },
-    target: getTempFile(TEST_TARGET_FILE_NAME),
-    saver: "pdf",
-  });
-  listForSave.add(pdfDownload);
-
   // If we used a callback to adjust the channel, the download should
   // not be serialized because we can't recreate it across sessions.
   let adjustedDownload = await Downloads.createDownload({
@@ -88,9 +80,8 @@ add_task(async function test_save_reload() {
   await storeForSave.save();
   await storeForLoad.load();
 
-  // Remove the PDF and adjusted downloads because they should not appear here.
+  // Remove the adjusted download because it should not appear here.
   listForSave.remove(adjustedDownload);
-  listForSave.remove(pdfDownload);
 
   let itemsForSave = await listForSave.getAll();
   let itemsForLoad = await listForLoad.getAll();
