@@ -581,6 +581,7 @@ class WarpSnapshot : public TempObject {
                         const WarpBailoutInfo& bailoutInfo);
 
   WarpScriptSnapshot* rootScript() { return scriptSnapshots_.getFirst(); }
+  const WarpScriptSnapshotList& scripts() const { return scriptSnapshots_; }
 
   LexicalEnvironmentObject* globalLexicalEnv() const {
     return globalLexicalEnv_;
