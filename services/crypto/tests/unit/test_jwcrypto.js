@@ -43,8 +43,8 @@ const generateKeyPair = promisify(jwcrypto.generateKeyPair);
 const generateAssertion = promisify(jwcrypto.generateAssertion);
 
 add_task(async function test_jwe_roundtrip_ecdh_es_encryption() {
-  const data = crypto.getRandomValues(new Uint8Array(123));
-  const localEpk = await crypto.subtle.generateKey(
+  const plaintext = crypto.getRandomValues(new Uint8Array(123));
+  const remoteKey = await crypto.subtle.generateKey(
     {
       name: "ECDH",
       namedCurve: "P-256",
@@ -52,7 +52,16 @@ add_task(async function test_jwe_roundtrip_ecdh_es_encryption() {
     true,
     ["deriveKey"]
   );
-  const remoteEpk = await crypto.subtle.generateKey(
+  const remoteJWK = await crypto.subtle.exportKey("jwk", remoteKey.publicKey);
+  delete remoteJWK.key_ops;
+  const jwe = await jwcrypto.generateJWE(remoteJWK, plaintext);
+  const decrypted = await jwcrypto.decryptJWE(jwe, remoteKey.privateKey);
+  Assert.deepEqual(plaintext, decrypted);
+});
+
+add_task(async function test_jwe_header_includes_key_id() {
+  const plaintext = crypto.getRandomValues(new Uint8Array(123));
+  const remoteKey = await crypto.subtle.generateKey(
     {
       name: "ECDH",
       namedCurve: "P-256",
@@ -60,9 +69,17 @@ add_task(async function test_jwe_roundtrip_ecdh_es_encryption() {
     true,
     ["deriveKey"]
   );
-  const jwe = await jwcrypto._generateJWE(localEpk, remoteEpk.publicKey, data);
-  const decryptedJWE = await jwcrypto.decryptJWE(jwe, remoteEpk.privateKey);
-  Assert.deepEqual(data, decryptedJWE);
+  const remoteJWK = await crypto.subtle.exportKey("jwk", remoteKey.publicKey);
+  delete remoteJWK.key_ops;
+  remoteJWK.kid = "key identifier";
+  const jwe = await jwcrypto.generateJWE(remoteJWK, plaintext);
+  let [header /* other items deliberately ignored */] = jwe.split(".");
+  header = JSON.parse(
+    new TextDecoder().decode(
+      ChromeUtils.base64URLDecode(header, { padding: "reject" })
+    )
+  );
+  Assert.equal(header.kid, "key identifier");
 });
 
 add_task(async function test_sanity() {
