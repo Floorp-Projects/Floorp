@@ -9,6 +9,7 @@
 #include <base/process.h>
 #include <stdint.h>
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/MozPromise.h"
 
 namespace mozilla {
@@ -83,24 +84,117 @@ struct ProcInfo {
   CopyableTArray<ThreadInfo> threads;
 };
 
-typedef MozPromise<ProcInfo, nsresult, true> ProcInfoPromise;
+typedef MozPromise<mozilla::HashMap<base::ProcessId, ProcInfo>, nsresult, true>
+    ProcInfoPromise;
 
-/*
- * GetProcInfo() uses a background thread to perform system calls.
+/**
+ * Data we need to request process info (e.g. CPU usage, memory usage)
+ * from the operating system and populate the resulting `ProcInfo`.
  *
- * Depending on the platform, this call can be quite expensive and the
- * promise may return after several ms.
+ * Note that this structure contains a mix of:
+ * - low-level handles that we need to request low-level process info
+ *    (`aChildTask` on macOS, `aPid` on other platforms); and
+ * - high-level data that we already acquired while looking for
+ * `aPid`/`aChildTask` and that we will need further down the road.
  */
+struct ProcInfoRequest {
+  ProcInfoRequest(base::ProcessId aPid, ProcType aProcessType,
+                  const nsACString& aOrigin, uint32_t aChildId = 0
 #ifdef XP_MACOSX
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& processType,
-                                    const nsACString& origin,
-                                    mach_port_t aChildTask = MACH_PORT_NULL);
-#else
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& processType,
-                                    const nsACString& origin);
-#endif
+                  ,
+                  mach_port_t aChildTask = 0
+#endif  // XP_MACOSX
+                  )
+      : pid(aPid),
+        processType(aProcessType),
+        origin(aOrigin),
+        childId(aChildId)
+#ifdef XP_MACOSX
+        ,
+        childTask(aChildTask)
+#endif  // XP_MACOSX
+  {
+  }
+  const base::ProcessId pid;
+  const ProcType processType;
+  const nsCString origin;
+  // If the process is a child, its child id, otherwise `0`.
+  const int32_t childId;
+#ifdef XP_MACOSX
+  const mach_port_t childTask;
+#endif  // XP_MACOSX
+};
+
+/**
+ * Batch a request for low-level information on Gecko processes.
+ *
+ * # Request
+ *
+ * Argument `aRequests` is a list of processes, along with high-level data
+ * we have already obtained on them and that we need to populate the
+ * resulting array of `ProcInfo`.
+ *
+ * # Result
+ *
+ * This call succeeds (possibly with missing data, see below) unless we
+ * cannot allocate memory.
+ *
+ * # Performance
+ *
+ * - This call is always executed on a background thread.
+ * - This call does NOT wake up children processes.
+ * - This function is sometimes observably slow to resolve, in particular
+ *   under Windows.
+ *
+ * # Error-handling and race conditions
+ *
+ * Requesting low-level information on a process and its threads is inherently
+ * subject to race conditions. Typically, if a process or a thread is killed
+ * while we're preparing to fetch information, we can easily end up with
+ * system/lib calls that return failures.
+ *
+ * For this reason, this API assumes that errors when placing a system/lib call
+ * are likely and normal. When some information cannot be obtained, the API will
+ * simply skip over said information.
+ *
+ * Note that due to different choices by OSes, the exact information we skip may
+ * vary across platforms. For instance, under Unix, failing to access the
+ * threads of a process will cause us to skip all data on the process, while
+ * under Windows, process information will be returned without thread
+ * information.
+ */
+RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests);
+
+/**
+ * Utility function: copy data from a `ProcInfo` and into either a
+ * `ParentProcInfoDictionary` or a `ChildProcInfoDictionary`.
+ */
+template <typename T>
+nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
+  // Copy system info.
+  dest->mPid = source.pid;
+  dest->mFilename.Assign(source.filename);
+  dest->mVirtualMemorySize = source.virtualMemorySize;
+  dest->mResidentSetSize = source.residentSetSize;
+  dest->mCpuUser = source.cpuUser;
+  dest->mCpuKernel = source.cpuKernel;
+
+  // Copy thread info.
+  mozilla::dom::Sequence<mozilla::dom::ThreadInfoDictionary> threads;
+  for (const ThreadInfo& entry : source.threads) {
+    mozilla::dom::ThreadInfoDictionary* thread =
+        threads.AppendElement(fallible);
+    if (NS_WARN_IF(!thread)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    thread->mCpuUser = entry.cpuUser;
+    thread->mCpuKernel = entry.cpuKernel;
+    thread->mTid = entry.tid;
+    thread->mName.Assign(entry.name);
+  }
+  dest->mThreads = std::move(threads);
+  return NS_OK;
+}
 
 }  // namespace mozilla
 #endif  // ProcInfo_h
