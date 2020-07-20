@@ -29,9 +29,9 @@
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">Gagal menyimpan info masuk</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Simpan log masuk ini?</string>
+    <string name="mozac_feature_prompt_login_save_headline">Simpan info masuk ini?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Perbarui log masuk ini?</string>
+    <string name="mozac_feature_prompt_login_update_headline">Perbarui info masuk ini?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Tambahkan nama pengguna ke kata sandi yang disimpan?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->

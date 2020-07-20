@@ -174,9 +174,7 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">유효하지 않은 주소</string>
-    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
-	<p>제시된 주소는 인정된 형식이 아닙니다. 주소창에 오류가 있지 않은지 확인한 다음 다시 시도해보십시오.</p>
-	]]></string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>제시된 주소는 인정된 형식이 아닙니다. 주소 표시줄에 오류가 있지 않은지 확인한 다음 다시 시도해보십시오.</p>]]></string>
     
 	<!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">유효하지 않은 주소입니다</string>

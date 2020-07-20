@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">Telechargiar la colliaziun</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Cundivider la colliaziun</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Cundivider la grafica</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Copiar la colliaziun</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->

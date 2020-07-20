@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">ಡೌನ್‌ಲೋಡ್ ಕೊಂಡಿ</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">ಕೊಂಡಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">ಚಿತ್ರವನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">ಕೊಂಡಿ ನಕಲಿಸು‍</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
@@ -22,12 +24,16 @@
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">ಹೊಸ ಹಾಳೆ ತೆರೆಯಲಾಗಿದೆ</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">ಹೊಸ ಖಾಸಗಿ ಹಾಳೆ ತೆಗೆಯಲಾಗಿದೆ</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">ಲಿಂಕ್ ಅನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">ಬದಲಾಯಿಸು</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">ಬಾಹ್ಯ ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿ ಲಿಂಕ್ ತೆರೆಯಿರಿ</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">%s ಹುಡುಕು</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
+    <string name="mozac_selection_context_menu_search_privately">%s ಖಾಸಗಿ ಹುಡುಕಾಟ</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">ಹಂಚು</string>
 </resources>

@@ -186,6 +186,12 @@
     <string name="mozac_browser_errorpages_file_not_found_title">फ़ाइल नहीं मिला</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">फ़ाइल के ऐक्सेस को रोक दिया गया</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>इसे हटाया, खिसकाया जा सकता है या फाइल अनुमति पहुँच प्रतिबाधित कर सकती हैं।</li> 
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">प्रॉक्सी सर्वर का कनेक्शन अस्वीकार किया गया</string>
 
     <!-- The document title and heading of an error page. -->
