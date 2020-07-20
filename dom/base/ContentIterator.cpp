@@ -190,7 +190,7 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
     return NS_ERROR_FAILURE;
   }
 
-  bool startIsData = aStart.Container()->IsCharacterData();
+  const bool startIsCharacterData = aStart.Container()->IsCharacterData();
 
   // Check to see if we have a collapsed range, if so, there is nothing to
   // iterate over.
@@ -199,13 +199,13 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
   //      we always want to be able to iterate text nodes at the end points
   //      of a range.
 
-  if (!startIsData && aStart == aEnd) {
+  if (!startIsCharacterData && aStart == aEnd) {
     MakeEmpty();
     return NS_OK;
   }
 
   // Handle ranges within a single character data node.
-  if (startIsData && aStart.Container() == aEnd.Container()) {
+  if (startIsCharacterData && aStart.Container() == aEnd.Container()) {
     mFirst = aStart.Container()->AsContent();
     mLast = mFirst;
     mCurNode = mFirst;
@@ -219,7 +219,7 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
 
   // Try to get the child at our starting point. This might return null if
   // aStart is immediately after the last node in aStart.Container().
-  if (!startIsData) {
+  if (!startIsCharacterData) {
     cChild = aStart.GetChildAtOffset();
   }
 
@@ -241,7 +241,8 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
         startIsContainer =
             nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
       }
-      if (!startIsData && (startIsContainer || !aStart.IsStartOfContainer())) {
+      if (!startIsCharacterData &&
+          (startIsContainer || !aStart.IsStartOfContainer())) {
         mFirst = GetNextSibling(aStart.Container());
         NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
 
