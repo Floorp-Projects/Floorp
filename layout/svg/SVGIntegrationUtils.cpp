@@ -578,7 +578,8 @@ static MaskPaintResult CreateAndPaintMaskSurface(
 
   if (!isMaskComplete ||
       (aParams.imgParams.result != ImgDrawResult::SUCCESS &&
-       aParams.imgParams.result != ImgDrawResult::SUCCESS_NOT_COMPLETE)) {
+       aParams.imgParams.result != ImgDrawResult::SUCCESS_NOT_COMPLETE &&
+       aParams.imgParams.result != ImgDrawResult::WRONG_SIZE)) {
     // Now we know the status of mask resource since we used it while painting.
     // According to the return value of PaintMaskSurface, we know whether mask
     // resource is resolvable or not.
