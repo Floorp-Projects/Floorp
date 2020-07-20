@@ -136,7 +136,7 @@
 
 - name: GuardToBigInt
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   custom_writer: true
   args:
