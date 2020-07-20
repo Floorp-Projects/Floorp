@@ -304,7 +304,8 @@ export class _DSCard extends React.PureComponent {
           pocket_id={this.props.pocket_id}
           shim={this.props.shim}
           bookmarkGuid={this.props.bookmarkGuid}
-          flightId={this.props.flightId}
+          flightId={!this.props.is_collection ? this.props.flightId : undefined}
+          showPrivacyInfo={!!this.props.flightId}
         />
       </div>
     );

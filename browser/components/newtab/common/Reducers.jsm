@@ -67,7 +67,6 @@ const INITIAL_STATE = {
     },
     spocs: {
       spocs_endpoint: "",
-      spocs_per_domain: 1,
       lastUpdated: null,
       data: {
         // "spocs": {title: "", context: "", items: []},
@@ -685,9 +684,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           spocs_endpoint:
             action.data.url ||
             INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint,
-          spocs_per_domain:
-            action.data.spocs_per_domain ||
-            INITIAL_STATE.DiscoveryStream.spocs.spocs_per_domain,
         },
       };
     case at.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
