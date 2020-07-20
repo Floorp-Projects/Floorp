@@ -133,8 +133,14 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
                      aValue) {
                // We no longer need the ShmemBuffer as the data has been
                // processed by the parent.
-               for (auto&& mem : mems) {
-                 mRawFramePool.Put(ShmemBuffer(std::move(mem)));
+               if (self->CanSend()) {
+                 for (auto&& mem : mems) {
+                   mRawFramePool.Put(ShmemBuffer(std::move(mem)));
+                 }
+               } else {
+                 for (auto mem : mems) {
+                   self->DeallocShmem(mem);
+                 }
                }
 
                if (aValue.IsReject()) {
