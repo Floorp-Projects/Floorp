@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import sys
+from functools import partial
 import unittest
 
 import pytest
@@ -211,7 +211,7 @@ class TestOptimize(unittest.TestCase):
     def assert_subgraph(self, graph, removed_tasks, replaced_tasks,
                         label_to_taskid, exp_subgraph, exp_label_to_taskid):
         self.maxDiff = None
-        optimize.slugid = ('tid{}'.format(i) for i in range(1, 10)).next
+        optimize.slugid = partial(next, ('tid{}'.format(i) for i in range(1, 10)))
         try:
             got_subgraph = optimize.get_subgraph(graph, removed_tasks,
                                                  replaced_tasks, label_to_taskid,
@@ -222,9 +222,6 @@ class TestOptimize(unittest.TestCase):
         self.assertEqual(got_subgraph.tasks, exp_subgraph.tasks)
         self.assertEqual(label_to_taskid, exp_label_to_taskid)
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_get_subgraph_no_change(self):
         "get_subgraph returns a similarly-shaped subgraph when nothing is removed"
         graph = self.make_triangle()
@@ -239,9 +236,6 @@ class TestOptimize(unittest.TestCase):
                 ('tid2', 'tid1', 'dep')),
             {'t1': 'tid1', 't2': 'tid2', 't3': 'tid3'})
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_get_subgraph_removed(self):
         "get_subgraph returns a smaller subgraph when tasks are removed"
         graph = self.make_triangle()
@@ -251,9 +245,6 @@ class TestOptimize(unittest.TestCase):
                 self.make_task('t1', task_id='tid1', dependencies={})),
             {'t1': 'tid1'})
 
-    @pytest.mark.xfail(
-        sys.version_info >= (3, 0), reason="python3 migration is not complete"
-    )
     def test_get_subgraph_replaced(self):
         "get_subgraph returns a smaller subgraph when tasks are replaced"
         graph = self.make_triangle()
