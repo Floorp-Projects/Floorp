@@ -1297,6 +1297,13 @@ bool WarpCacheIRTranspiler::emitCompareStringResult(JSOp op,
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_String);
 }
 
+bool WarpCacheIRTranspiler::emitCompareSymbolResult(JSOp op,
+                                                    SymbolOperandId lhsId,
+                                                    SymbolOperandId rhsId) {
+  MOZ_ASSERT(IsEqualityOp(op));
+  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Symbol);
+}
+
 bool WarpCacheIRTranspiler::emitMathHypot2NumberResult(
     NumberOperandId firstId, NumberOperandId secondId) {
   MDefinitionVector vector(alloc());
