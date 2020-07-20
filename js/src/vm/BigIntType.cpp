@@ -92,6 +92,7 @@
 #include <limits>
 #include <math.h>
 #include <memory>
+#include <type_traits>  // std::is_same_v
 
 #include "jsapi.h"
 #include "jsnum.h"
@@ -1554,6 +1555,11 @@ BigInt* BigInt::parseLiteralDigits(JSContext* cx,
                                    const Range<const CharT> chars,
                                    unsigned radix, bool isNegative,
                                    bool* haveParseError, gc::InitialHeap heap) {
+  static_assert(
+      std::is_same_v<CharT, JS::Latin1Char> || std::is_same_v<CharT, char16_t>,
+      "only the bare minimum character types are supported, to avoid "
+      "excessively instantiating this template");
+
   MOZ_ASSERT(chars.length());
 
   RangedPtr<const CharT> start = chars.begin();
