@@ -44,5 +44,4 @@ open class GithubDetailsTask : DefaultTask() {
         project.mkdir("/builds/worker/github")
         detailsFile.writeText(replaced + suffix)
     }
-
 }
