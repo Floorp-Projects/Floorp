@@ -16,6 +16,8 @@ const {
   TYPES: { CSS_MESSAGE },
 } = require("devtools/server/actors/resources/index");
 
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
+
 class CSSMessageWatcher extends nsIConsoleListenerWatcher {
   /**
    * Start watching for all CSS messages related to a given Target Actor.
@@ -50,7 +52,7 @@ class CSSMessageWatcher extends nsIConsoleListenerWatcher {
     if (
       // We only care about CSS Parser nsIScriptError
       !(message instanceof Ci.nsIScriptError) ||
-      message.category !== "CSS Parser"
+      message.category !== MESSAGE_CATEGORY.CSS_PARSER
     ) {
       return false;
     }

@@ -105,9 +105,18 @@ const SIMULATION_TYPE = {
   CONTRAST_LOSS: "CONTRAST_LOSS",
 };
 
-exports.accessibility = {
-  AUDIT_TYPE,
-  ISSUE_TYPE,
-  SCORES,
-  SIMULATION_TYPE,
+/* WebConsole Panel ====================================================== */
+
+const MESSAGE_CATEGORY = {
+  CSS_PARSER: "CSS Parser",
+};
+
+module.exports = {
+  accessibility: {
+    AUDIT_TYPE,
+    ISSUE_TYPE,
+    SCORES,
+    SIMULATION_TYPE,
+  },
+  MESSAGE_CATEGORY,
 };

@@ -20,6 +20,7 @@ const {
 const {
   TYPES: { ERROR_MESSAGE },
 } = require("devtools/server/actors/resources/index");
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 const PLATFORM_SPECIFIC_CATEGORIES = [
   "XPConnect JavaScript",
@@ -69,7 +70,7 @@ class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
    */
   isCategoryAllowed(targetActor, category) {
     // CSS Parser errors will be handled by the CSSMessageWatcher.
-    if (!category || category === "CSS Parser") {
+    if (!category || category === MESSAGE_CATEGORY.CSS_PARSER) {
       return false;
     }
 
