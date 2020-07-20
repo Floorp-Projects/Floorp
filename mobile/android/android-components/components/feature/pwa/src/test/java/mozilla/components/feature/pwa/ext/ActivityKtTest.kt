@@ -9,11 +9,11 @@ import android.content.pm.ActivityInfo
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.view.reportFullyDrawnSafe
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
@@ -82,7 +82,7 @@ class ActivityKtTest {
         `when`(activity.reportFullyDrawn()).thenThrow(expectedSecurityException)
         activity.reportFullyDrawnSafe(logger) // If an exception is thrown, this test will fail.
 
-        val msgArg = ArgumentCaptor.forClass(String::class.java)
+        val msgArg = argumentCaptor<String>()
         verify(logger).error(msgArg.capture(), eq(expectedSecurityException))
         assertTrue(msgArg.value, msgArg.value.contains("Fully drawn"))
     }
