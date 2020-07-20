@@ -180,6 +180,8 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // Iterates over all instances and calls aCallback with each one of them.
   // This method will lock any addition/removal of new processes
   // so you need to make sure the callback is as fast as possible.
+  //
+  // To reiterate: the callbacks are executed synchronously.
   static void GetAll(const GeckoProcessCallback& aCallback);
 
   friend class BaseProcessLauncher;
