@@ -220,7 +220,7 @@ def get_subgraph(
     # fill in label_to_taskid for anything not removed or replaced
     assert replaced_tasks <= set(label_to_taskid)
     for label in sorted(target_task_graph.graph.nodes - removed_tasks - set(label_to_taskid)):
-        label_to_taskid[label] = slugid()
+        label_to_taskid[label] = slugid().decode('ascii')
 
     # resolve labels to taskIds and populate task['dependencies']
     tasks_by_taskid = {}
