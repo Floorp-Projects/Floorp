@@ -7,9 +7,19 @@
  * https://gpuweb.github.io/gpuweb/
  */
 
-typedef long i32;
-typedef unsigned long u32;
-typedef unsigned long long u64;
+
+
+typedef [EnforceRange] unsigned long GPUBufferDynamicOffset;
+typedef [EnforceRange] unsigned long long GPUFenceValue;
+typedef [EnforceRange] unsigned long GPUStencilValue;
+typedef [EnforceRange] unsigned long GPUSampleMask;
+typedef [EnforceRange] long GPUDepthBias;
+
+typedef [EnforceRange] unsigned long long GPUSize64;
+typedef [EnforceRange] unsigned long GPUIntegerCoordinate;
+typedef [EnforceRange] unsigned long GPUIndex32;
+typedef [EnforceRange] unsigned long GPUSize32;
+typedef [EnforceRange] long GPUSignedOffset32;
 
 dictionary GPUColorDict {
     required double r;
@@ -19,26 +29,26 @@ dictionary GPUColorDict {
 };
 
 dictionary GPUOrigin2DDict {
-    u32 x = 0;
-    u32 y = 0;
+    GPUIntegerCoordinate x = 0;
+    GPUIntegerCoordinate y = 0;
 };
 
 dictionary GPUOrigin3DDict {
-    u32 x = 0;
-    u32 y = 0;
-    u32 z = 0;
+    GPUIntegerCoordinate x = 0;
+    GPUIntegerCoordinate y = 0;
+    GPUIntegerCoordinate z = 0;
 };
 
 dictionary GPUExtent3DDict {
-    required u32 width;
-    required u32 height;
-    required u32 depth;
+    required GPUIntegerCoordinate width;
+    required GPUIntegerCoordinate height;
+    required GPUIntegerCoordinate depth;
 };
 
 typedef (sequence<double> or GPUColorDict) GPUColor;
-typedef (sequence<u32> or GPUOrigin2DDict) GPUOrigin2D;
-typedef (sequence<u32> or GPUOrigin3DDict) GPUOrigin3D;
-typedef (sequence<u32> or GPUExtent3DDict) GPUExtent3D;
+typedef (sequence<GPUIntegerCoordinate> or GPUOrigin2DDict) GPUOrigin2D;
+typedef (sequence<GPUIntegerCoordinate> or GPUOrigin3DDict) GPUOrigin3D;
+typedef (sequence<GPUIntegerCoordinate> or GPUExtent3DDict) GPUExtent3D;
 
 interface mixin GPUObjectBase {
     attribute DOMString? label;
@@ -94,7 +104,15 @@ dictionary GPUExtensions {
 };
 
 dictionary GPULimits {
-    u32 maxBindGroups = 4;
+    GPUSize32 maxBindGroups = 4;
+    GPUSize32 maxDynamicUniformBuffersPerPipelineLayout = 8;
+    GPUSize32 maxDynamicStorageBuffersPerPipelineLayout = 4;
+    GPUSize32 maxSampledTexturesPerShaderStage = 16;
+    GPUSize32 maxSamplersPerShaderStage = 16;
+    GPUSize32 maxStorageBuffersPerShaderStage = 4;
+    GPUSize32 maxStorageTexturesPerShaderStage = 4;
+    GPUSize32 maxUniformBuffersPerShaderStage = 12;
+    GPUSize32 maxUniformBufferBindingSize = 16384;
 };
 
 // Device
@@ -182,24 +200,24 @@ partial interface GPUDevice {
 // ****************************************************************************
 
 // Buffer
-typedef u32 GPUBufferUsageFlags;
+typedef unsigned long GPUBufferUsageFlags;
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUBufferUsage {
-    const u32 NONE      = 0x0000;
-    const u32 MAP_READ  = 0x0001;
-    const u32 MAP_WRITE = 0x0002;
-    const u32 COPY_SRC  = 0x0004;
-    const u32 COPY_DST  = 0x0008;
-    const u32 INDEX     = 0x0010;
-    const u32 VERTEX    = 0x0020;
-    const u32 UNIFORM   = 0x0040;
-    const u32 STORAGE   = 0x0080;
-    const u32 INDIRECT  = 0x0100;
+    const GPUBufferUsageFlags MAP_READ      = 0x0001;
+    const GPUBufferUsageFlags MAP_WRITE     = 0x0002;
+    const GPUBufferUsageFlags COPY_SRC      = 0x0004;
+    const GPUBufferUsageFlags COPY_DST      = 0x0008;
+    const GPUBufferUsageFlags INDEX         = 0x0010;
+    const GPUBufferUsageFlags VERTEX        = 0x0020;
+    const GPUBufferUsageFlags UNIFORM       = 0x0040;
+    const GPUBufferUsageFlags STORAGE       = 0x0080;
+    const GPUBufferUsageFlags INDIRECT      = 0x0100;
+    const GPUBufferUsageFlags QUERY_RESOLVE = 0x0200;
 };
 
 dictionary GPUBufferDescriptor {
-    required u64 size;
+    required GPUSize64 size;
     required GPUBufferUsageFlags usage;
 };
 
@@ -278,22 +296,21 @@ enum GPUTextureFormat {
     "depth24plus-stencil8"
 };
 
-typedef u32 GPUTextureUsageFlags;
+typedef unsigned long GPUTextureUsageFlags;
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUTextureUsage {
-    const u32 NONE              = 0x00;
-    const u32 COPY_SRC          = 0x01;
-    const u32 COPY_DST          = 0x02;
-    const u32 SAMPLED           = 0x04;
-    const u32 STORAGE           = 0x08;
-    const u32 OUTPUT_ATTACHMENT = 0x10;
+    const GPUTextureUsageFlags COPY_SRC          = 0x01;
+    const GPUTextureUsageFlags COPY_DST          = 0x02;
+    const GPUTextureUsageFlags SAMPLED           = 0x04;
+    const GPUTextureUsageFlags STORAGE           = 0x08;
+    const GPUTextureUsageFlags OUTPUT_ATTACHMENT = 0x10;
 };
 
 dictionary GPUTextureDescriptor {
     required GPUExtent3D size;
-    u32 mipLevelCount = 1;
-    u32 sampleCount = 1;
+    GPUIntegerCoordinate mipLevelCount = 1;
+    GPUSize32 sampleCount = 1;
     GPUTextureDimension dimension = "2d";
     required GPUTextureFormat format;
     required GPUTextureUsageFlags usage;
@@ -329,10 +346,10 @@ dictionary GPUTextureViewDescriptor : GPUObjectDescriptorBase {
     GPUTextureFormat format;
     GPUTextureViewDimension dimension;
     GPUTextureAspect aspect = "all";
-    u32 baseMipLevel = 0;
-    u32 mipLevelCount = 1;
-    u32 baseArrayLayer = 0;
-    u32 arrayLayerCount = 1;
+    GPUIntegerCoordinate baseMipLevel = 0;
+    GPUIntegerCoordinate mipLevelCount = 1;
+    GPUIntegerCoordinate baseArrayLayer = 0;
+    GPUIntegerCoordinate arrayLayerCount = 1;
 };
 
 [Pref="dom.webgpu.enabled",
@@ -404,14 +421,13 @@ interface GPUPipelineLayout {
 GPUPipelineLayout includes GPUObjectBase;
 
 // BindGroupLayout
-typedef u32 GPUShaderStageFlags;
+typedef unsigned long GPUShaderStageFlags;
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUShaderStage {
-    const u32 NONE = 0;
-    const u32 VERTEX = 1;
-    const u32 FRAGMENT = 2;
-    const u32 COMPUTE = 4;
+    const GPUShaderStageFlags VERTEX = 1;
+    const GPUShaderStageFlags FRAGMENT = 2;
+    const GPUShaderStageFlags COMPUTE = 4;
 };
 
 enum GPUBindingType {
@@ -426,7 +442,7 @@ enum GPUBindingType {
 };
 
 dictionary GPUBindGroupLayoutEntry {
-    required u32 binding;
+    required GPUIndex32 binding;
     required GPUShaderStageFlags visibility;
     required GPUBindingType type;
     GPUTextureViewDimension viewDimension = "2d";
@@ -449,14 +465,14 @@ GPUBindGroupLayout includes GPUObjectBase;
 // BindGroup
 dictionary GPUBufferBinding {
     required GPUBuffer buffer;
-    u64 offset = 0;
-    u64 size;
+    GPUSize64 offset = 0;
+    GPUSize64 size;
 };
 
 typedef (GPUSampler or GPUTextureView or GPUBufferBinding) GPUBindingResource;
 
 dictionary GPUBindGroupEntry {
-    required u32 binding;
+    required GPUIndex32 binding;
     required GPUBindingResource resource;
 };
 
@@ -506,16 +522,15 @@ dictionary GPUBlendDescriptor {
     GPUBlendOperation operation = "add";
 };
 
-typedef u32 GPUColorWriteFlags;
+typedef unsigned long GPUColorWriteFlags;
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUColorWrite {
-    const u32 NONE = 0;
-    const u32 RED = 1;
-    const u32 GREEN = 2;
-    const u32 BLUE = 4;
-    const u32 ALPHA = 8;
-    const u32 ALL = 15;
+    const GPUColorWriteFlags RED    = 0x1;
+    const GPUColorWriteFlags GREEN  = 0x2;
+    const GPUColorWriteFlags BLUE   = 0x4;
+    const GPUColorWriteFlags ALPHA  = 0x8;
+    const GPUColorWriteFlags ALL    = 0xF;
 };
 
 dictionary GPUColorStateDescriptor {
@@ -554,8 +569,8 @@ dictionary GPUDepthStencilStateDescriptor {
     GPUStencilStateFaceDescriptor stencilFront = {};
     GPUStencilStateFaceDescriptor stencilBack = {};
 
-    u32 stencilReadMask = 0xFFFFFFFF;
-    u32 stencilWriteMask = 0xFFFFFFFF;
+    GPUStencilValue stencilReadMask = 0xFFFFFFFF;
+    GPUStencilValue stencilWriteMask = 0xFFFFFFFF;
 };
 
 // InputState
@@ -603,13 +618,13 @@ enum GPUInputStepMode {
 };
 
 dictionary GPUVertexAttributeDescriptor {
-    u64 offset = 0;
     required GPUVertexFormat format;
-    required u32 shaderLocation;
+    required GPUSize64 offset;
+    required GPUIndex32 shaderLocation;
 };
 
 dictionary GPUVertexBufferLayoutDescriptor {
-    required u64 arrayStride;
+    required GPUSize64 arrayStride;
     GPUInputStepMode stepMode = "vertex";
     required sequence<GPUVertexAttributeDescriptor> attributes;
 };
@@ -666,7 +681,7 @@ dictionary GPURasterizationStateDescriptor {
     GPUFrontFace frontFace = "ccw";
     GPUCullMode cullMode = "none";
 
-    i32 depthBias = 0;
+    GPUDepthBias depthBias = 0;
     float depthBiasSlopeScale = 0;
     float depthBiasClamp = 0;
 };
@@ -692,8 +707,8 @@ dictionary GPURenderPipelineDescriptor : GPUPipelineDescriptorBase {
     GPUDepthStencilStateDescriptor depthStencilState;
     GPUVertexStateDescriptor vertexState = {};
 
-    u32 sampleCount = 1;
-    u32 sampleMask = 0xFFFFFFFF;
+    GPUSize32 sampleCount = 1;
+    GPUSampleMask sampleMask = 0xFFFFFFFF;
     boolean alphaToCoverageEnabled = false;
 };
 
@@ -730,7 +745,7 @@ dictionary GPURenderPassDepthStencilAttachmentDescriptor {
     required (GPULoadOp or float) depthLoadValue;
     required GPUStoreOp depthStoreOp;
 
-    required (GPULoadOp or u32) stencilLoadValue;
+    required (GPULoadOp or GPUStencilValue) stencilLoadValue;
     required GPUStoreOp stencilStoreOp;
 };
 
@@ -739,17 +754,20 @@ dictionary GPURenderPassDescriptor : GPUObjectDescriptorBase {
     GPURenderPassDepthStencilAttachmentDescriptor depthStencilAttachment;
 };
 
-dictionary GPUBufferCopyView {
+dictionary GPUTextureDataLayout {
+    GPUSize64 offset = 0;
+    required GPUSize32 bytesPerRow;
+    GPUSize32 rowsPerImage = 0;
+};
+
+dictionary GPUBufferCopyView : GPUTextureDataLayout {
     required GPUBuffer buffer;
-    u64 offset = 0;
-    required u32 bytesPerRow;
-    u32 rowsPerImage = 0;
 };
 
 dictionary GPUTextureCopyView {
     required GPUTexture texture;
-    u32 mipLevel = 0;
-    u32 arrayLayer = 0;
+    GPUIntegerCoordinate mipLevel = 0;
+    GPUSize32 arrayLayer = 0;
     GPUOrigin3D origin;
 };
 
@@ -771,10 +789,10 @@ interface GPUCommandEncoder {
 
     void copyBufferToBuffer(
         GPUBuffer source,
-        u64 sourceOffset,
+        GPUSize64 sourceOffset,
         GPUBuffer destination,
-        u64 destinationOffset,
-        u64 size);
+        GPUSize64 destinationOffset,
+        GPUSize64 size);
 
     void copyBufferToTexture(
         GPUBufferCopyView source,
@@ -808,8 +826,8 @@ interface GPUCommandEncoder {
 GPUCommandEncoder includes GPUObjectBase;
 
 interface mixin GPUProgrammablePassEncoder {
-    void setBindGroup(unsigned long index, GPUBindGroup bindGroup,
-                      optional sequence<unsigned long> dynamicOffsets = []);
+    void setBindGroup(GPUIndex32 index, GPUBindGroup bindGroup,
+                      optional sequence<GPUBufferDynamicOffset> dynamicOffsets = []);
 
     //void pushDebugGroup(DOMString groupLabel);
     //void popDebugGroup();
@@ -820,16 +838,21 @@ interface mixin GPUProgrammablePassEncoder {
 interface mixin GPURenderEncoderBase {
     void setPipeline(GPURenderPipeline pipeline);
 
-    void setIndexBuffer(GPUBuffer buffer, optional u64 offset = 0, optional u64 size = 0);
-    void setVertexBuffer(u32 slot, GPUBuffer buffer, optional u64 offset = 0, optional u64 size = 0);
+    void setIndexBuffer(GPUBuffer buffer, optional GPUSize64 offset = 0, optional GPUSize64 size = 0);
+    void setVertexBuffer(GPUIndex32 slot, GPUBuffer buffer, optional GPUSize64 offset = 0, optional GPUSize64 size = 0);
 
-    void draw(u32 vertexCount, u32 instanceCount,
-              u32 firstVertex, u32 firstInstance);
-    void drawIndexed(u32 indexCount, u32 instanceCount,
-                     u32 firstIndex, i32 baseVertex, u32 firstInstance);
+    void draw(GPUSize32 vertexCount,
+              optional GPUSize32 instanceCount = 1,
+              optional GPUSize32 firstVertex = 0,
+              optional GPUSize32 firstInstance = 0);
+    void drawIndexed(GPUSize32 indexCount,
+                     optional GPUSize32 instanceCount = 1,
+                     optional GPUSize32 firstIndex = 0,
+                     optional GPUSignedOffset32 baseVertex = 0,
+                     optional GPUSize32 firstInstance = 0);
 
-    //void drawIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
-    //void drawIndexedIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
+    //void drawIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    //void drawIndexedIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 };
 
 [Pref="dom.webgpu.enabled",
@@ -860,8 +883,8 @@ dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
  Exposed=Window]
 interface GPUComputePassEncoder {
     void setPipeline(GPUComputePipeline pipeline);
-    void dispatch(u32 x, optional u32 y = 1, optional u32 z = 1);
-    //void dispatchIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
+    void dispatch(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
+    //void dispatchIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     [Throws]
     void endPass();
@@ -882,7 +905,7 @@ GPUCommandBuffer includes GPUObjectBase;
 dictionary GPURenderBundleEncoderDescriptor : GPUObjectDescriptorBase {
     required sequence<GPUTextureFormat> colorFormats;
     GPUTextureFormat depthStencilFormat;
-    u32 sampleCount = 1;
+    GPUSize32 sampleCount = 1;
 };
 
 // Render Bundle
@@ -909,14 +932,14 @@ GPURenderBundle includes GPUObjectBase;
 
 // Fence
 dictionary GPUFenceDescriptor : GPUObjectDescriptorBase {
-    u64 initialValue = 0;
+    GPUFenceValue initialValue = 0;
 };
 
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUFence {
-    //u64 getCompletedValue();
-    //Promise<void> onCompletion(u64 completionValue);
+    //GPUFenceValue getCompletedValue();
+    //Promise<void> onCompletion(GPUFenceValue completionValue);
 };
 GPUFence includes GPUObjectBase;
 
@@ -927,7 +950,7 @@ interface GPUQueue {
     void submit(sequence<GPUCommandBuffer> buffers);
 
     //GPUFence createFence(optional GPUFenceDescriptor descriptor = {});
-    //void signal(GPUFence fence, u64 signalValue);
+    //void signal(GPUFence fence, GPUFenceValue signalValue);
 };
 GPUQueue includes GPUObjectBase;
 
