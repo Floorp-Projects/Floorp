@@ -71,11 +71,10 @@ def fill_template(config, tasks):
         )
         task['treeherder'] = treeherder
 
-        if attributes.get('shippable'):
-            # For shippable builds, we want to run these tasks if the build is run.
-            # XXX Better to run this on promote phase instead?
-            task['run-on-projects'] = dep.attributes.get('run_on_projects')
-            task['optimization'] = dep.optimization
+        # We only want to run these tasks if the build is run.
+        # XXX Better to run this on promote phase instead?
+        task['run-on-projects'] = dep.attributes.get('run_on_projects')
+        task['optimization'] = dep.optimization
 
         # clear out the stuff that's not part of a task description
         del task['primary-dependency']
