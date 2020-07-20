@@ -49,4 +49,18 @@ var y = g.eval('this.y = {test: 13}; this.A.sx(this.x, this.y); this.y');
 assertEq(g.eval('this.A.gx(this.x)'), y);
 assertEq(A.gx(cross_compartment_target), y);
 
+
+if (typeof nukeCCW === 'function') {
+  // Nuke the CCW. Now things should throw.
+  nukeCCW(cross_compartment_target);
+  var threw = true;
+  try {
+    A.gx(cross_compartment_target);
+    threw = false;
+  } catch (e) {
+  }
+  assertEq(threw, true);
+}
+
+
 if (typeof reportCompare === 'function') reportCompare(0, 0);
