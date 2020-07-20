@@ -9238,7 +9238,8 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
 
   return maskIsComplete &&
          (imgParams.result == ImgDrawResult::SUCCESS ||
-          imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE);
+          imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE ||
+          imgParams.result == ImgDrawResult::WRONG_SIZE);
 }
 
 LayerState nsDisplayMasksAndClipPaths::GetLayerState(
