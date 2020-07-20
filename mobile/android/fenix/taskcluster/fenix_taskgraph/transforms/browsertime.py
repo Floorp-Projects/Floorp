@@ -94,7 +94,13 @@ def build_browsertime_task(config, tasks):
         run_visual_metrics = task.pop("run-visual-metrics", False)
         if run_visual_metrics:
             task["run"]["command"].append("--browsertime-video")
+            task["run"]["command"].append("--browsertime-no-ffwindowrecorder")
             task["attributes"]["run-visual-metrics"] = True
+
+        # taskcluster is merging task attributes with the default ones
+        # resulting the --cold extra option in the ytp warm tasks
+        if 'youtube-playback' in task["name"]:
+            task["run"]["command"].remove("--cold")
 
         yield task
 

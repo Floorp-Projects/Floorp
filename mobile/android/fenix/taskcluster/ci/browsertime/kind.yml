@@ -232,3 +232,15 @@ jobs:
         test-name: google-search-restaurants
         treeherder:
             symbol: 'Btime(tp6m-28-c)'
+
+    youtube-playback:
+        test-name: youtube-playback
+        run-visual-metrics: False
+        treeherder:
+            symbol: 'Btime(ytp)'
+        args:
+            by-abi:
+                # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
+                armeabi-v7a:
+                    - '--test-url-params=exclude=1,2,9,10,17,18,21,22,26,28,30,32,39,40,47,48,55,56,63,64,71,72,79,80,83,84,89,90,95,96'
+                default: []
