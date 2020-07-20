@@ -39,6 +39,9 @@ permalink: /changelog/
 * **feature-pwa**
   * Added `ManifestStorage.loadShareableManifests` to get manifest with a `WebAppManifest.ShareTarget`.
 
+* **support-ktx**
+  * Add `Activity.reportFullyDrawnSafe`, a function to call `Activity.reportFullyDrawn` while catching crashes under some circumstances.
+
 # 50.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...v50.0.0)
