@@ -3390,6 +3390,12 @@
   value: false
   mirror: always
 
+# Whether we should suspend inactive tabs or not
+- name: dom.suspend_inactive.enabled
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------

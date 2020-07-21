@@ -7361,7 +7361,8 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
       mNumOfOpenWebSockets(0),
       mEvent(nullptr),
       mStorageAccessPermissionGranted(false),
-      mWindowGlobalChild(aActor) {
+      mWindowGlobalChild(aActor),
+      mWasSuspendedByGroup(false) {
   MOZ_ASSERT(aOuterWindow);
   mBrowsingContext = aOuterWindow->GetBrowsingContext();
 
