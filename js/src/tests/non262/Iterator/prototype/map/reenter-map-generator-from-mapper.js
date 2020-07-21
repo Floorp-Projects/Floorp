@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Iterator'))
+
 // Re-entering the map() generator from the called mapper fails.
 
 let iterator;
