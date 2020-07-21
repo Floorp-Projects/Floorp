@@ -44,6 +44,7 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.StorageStatsMetrics
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
@@ -205,12 +206,24 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         }
 
+        fun queueMetrics() {
+            if (SDK_INT >= Build.VERSION_CODES.O) { // required by StorageStatsMetrics.
+                taskQueue.runIfReadyOrQueue {
+                    // Because it may be slow to capture the storage stats, it might be preferred to
+                    // create a WorkManager task for this metric, however, I ran out of
+                    // implementation time and WorkManager is harder to test.
+                    StorageStatsMetrics.report(this.applicationContext)
+                }
+            }
+        }
+
         initQueue()
 
         // We init these items in the visual completeness queue to avoid them initing in the critical
         // startup path, before the UI finishes drawing (i.e. visual completeness).
         queueInitExperiments()
         queueInitStorageAndServices()
+        queueMetrics()
     }
 
     private fun startMetricsIfEnabled() {

@@ -3236,3 +3236,82 @@ autoplay:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
+
+storage.stats:
+  query_stats_duration:
+    send_in_pings:
+      - metrics
+    type: timing_distribution
+    description: >
+      How long it took to query the device for the StorageStats that contain the
+      file size information. The docs say it may be expensive so we want to
+      ensure it's not too expensive.  This value is only available on Android
+      8+.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/12802
+    data_reviews:
+      - todo
+    notification_emails:
+      - fenix-core@mozilla.com
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2020-12-21"
+  app_bytes:
+    send_in_pings:
+      - metrics
+    type: memory_distribution
+    description: >
+      The size of the app's APK and related files as installed: this is expected
+      to be larger than download size. This is the output of
+      [StorageStats.getAppBytes](https://developer.android.com/reference/android/app/usage/StorageStats#getAppBytes())
+      so see that for details. This value is only available on Android 8+. A
+      similar value may be available on the Google Play dashboard: we can use
+      this value to see if that value is reliable enough.
+    memory_unit: byte
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/12802
+    data_reviews:
+      - todo
+    notification_emails:
+      - fenix-core@mozilla.com
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2020-12-21"
+  cache_bytes:
+    send_in_pings:
+      - metrics
+    type: memory_distribution
+    description: >
+      The size of all cached data in the app. This is the output of
+      [StorageStats.getCacheBytes](https://developer.android.com/reference/android/app/usage/StorageStats#getCacheBytes())
+      so see that for details. This value is only available on Android 8+.
+    memory_unit: byte
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/12802
+    data_reviews:
+      - todo
+    notification_emails:
+      - fenix-core@mozilla.com
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2020-12-21"
+  data_dir_bytes:
+    send_in_pings:
+      - metrics
+    type: memory_distribution
+    description: >
+      The size of all data minus `cache_bytes`. This is the output of
+      [StorageStats.getDataBytes](https://developer.android.com/reference/android/app/usage/StorageStats#getDataBytes())
+      except we subtract the value of `cache_bytes` so the cache is not measured
+      redundantly; see that method for details. This value is only available on
+      Android 8+.
+    memory_unit: byte
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/12802
+    data_reviews:
+      - todo
+    notification_emails:
+      - fenix-core@mozilla.com
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2020-12-21"
