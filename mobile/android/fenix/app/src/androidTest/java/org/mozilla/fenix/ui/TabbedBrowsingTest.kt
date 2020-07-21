@@ -9,6 +9,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -50,6 +51,16 @@ class TabbedBrowsingTest {
         mockWebServer = MockWebServer().apply {
             setDispatcher(AndroidAssetDispatcher())
             start()
+        }
+    }
+
+    // changing the device preference for Touch and Hold delay, to avoid long-clicks instead of a single-click
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setDevicePreference() {
+            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            mDevice.executeShellCommand("settings put secure long_press_timeout 3000")
         }
     }
 
@@ -104,7 +115,6 @@ class TabbedBrowsingTest {
         }
     }
 
-    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12752")
     @Test
     fun closeAllTabsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -119,7 +129,6 @@ class TabbedBrowsingTest {
             verifySaveCollection()
         }.closeAllTabs {
             verifyNoTabsOpened()
-        }.openHomeScreen {
         }
 
         // Repeat for Private Tabs
@@ -135,8 +144,6 @@ class TabbedBrowsingTest {
             verifyCloseAllTabsButton()
         }.closeAllTabs {
             verifyNoTabsOpened()
-        }.openHomeScreen {
-            verifyPrivateSessionMessage()
         }
     }
 

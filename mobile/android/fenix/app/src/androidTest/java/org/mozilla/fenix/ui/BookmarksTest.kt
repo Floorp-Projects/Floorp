@@ -322,7 +322,6 @@ class BookmarksTest {
         }
     }
 
-    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12752")
     @Test
     fun openSelectionInNewTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -331,7 +330,10 @@ class BookmarksTest {
             createBookmark(defaultWebPage.url)
         }.openTabDrawer {
             closeTab()
-        }.openHomeScreen { }.openThreeDotMenu {
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
         }.openBookmarks {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))

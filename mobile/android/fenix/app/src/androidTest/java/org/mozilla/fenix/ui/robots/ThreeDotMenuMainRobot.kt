@@ -253,12 +253,11 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
-        fun closeAllTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-//            mDevice.waitNotNull(Until.findObject(By.text("Close all tabs")), waitingTime)
+        fun closeAllTabs(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             closeAllTabsButton().click()
 
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
         }
 
         fun openFindInPage(interact: FindInPageRobot.() -> Unit): FindInPageRobot.Transition {

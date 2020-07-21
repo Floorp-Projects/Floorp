@@ -136,7 +136,7 @@ class MediaNotificationTest {
         }
     }
 
-    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12764")
+    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12645")
     @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
@@ -160,7 +160,7 @@ class MediaNotificationTest {
             verifyMediaIsPaused()
         }.openTabDrawer {
             closeTab()
-        }.openHomeScreen { }
+        }
 
         mDevice.openNotification()
 

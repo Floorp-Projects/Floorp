@@ -63,6 +63,7 @@ class HomeScreenRobot {
     fun verifyHomeToolbar() = assertHomeToolbar()
     fun verifyHomeComponent() = assertHomeComponent()
     fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
+    fun verifyNoTabsOpened() = assertNoTabsOpened()
 
     // First Run elements
     fun verifyWelcomeHeader() = assertWelcomeHeader()
@@ -528,6 +529,8 @@ private fun assertNoCollectionsText() =
 private fun assertHomeComponent() =
     onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertNoTabsOpened() = onView(withId(R.id.counter_text)).check(matches(withText("0")))
 
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
 
