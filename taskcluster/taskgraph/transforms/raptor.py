@@ -66,6 +66,7 @@ raptor_description_schema = Schema({
     ),
     Optional('variants'): optionally_keyed_by(
         'app',
+        'subtest',
         test_description_schema['variants']
     ),
     Optional('target'): optionally_keyed_by(
