@@ -21,6 +21,11 @@ add_task(async function extension_startup_early_error() {
 
   let startupPromise = extension.startup();
 
+  let policy = WebExtensionPolicy.getByID(EXTENSION_ID);
+  ok(policy, "WebExtensionPolicy instantiated at startup");
+  let readyPromise = policy.readyPromise;
+  ok(readyPromise, "WebExtensionPolicy.readyPromise is set");
+
   await Assert.rejects(
     startupPromise,
     /dummy error/,
@@ -31,5 +36,11 @@ add_task(async function extension_startup_early_error() {
     WebExtensionPolicy.getByID(EXTENSION_ID),
     null,
     "WebExtensionPolicy should be unregistered"
+  );
+
+  Assert.equal(
+    await readyPromise,
+    null,
+    "policy.readyPromise should be resolved with null"
   );
 });
