@@ -58,8 +58,13 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
             bindRecyclerView(view)
         }
 
-        findPreviousDialogFragment()?.let { dialog ->
-            dialog.onPositiveButtonClicked = onPositiveButtonClicked
+        findPreviousPermissionDialogFragment()?.let { dialog ->
+            dialog.onPositiveButtonClicked = onConfirmPermissionButtonClicked
+        }
+
+        findPreviousInstallationDialogFragment()?.let { dialog ->
+            dialog.onConfirmButtonClicked = onConfirmInstallationButtonClicked
+            dialog.addonCollectionProvider = requireContext().components.addonCollectionProvider
         }
     }
 
@@ -121,11 +126,15 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     }
 
     private fun isAlreadyADialogCreated(): Boolean {
-        return findPreviousDialogFragment() != null
+        return findPreviousPermissionDialogFragment() != null && findPreviousInstallationDialogFragment() != null
     }
 
-    private fun findPreviousDialogFragment(): PermissionsDialogFragment? {
+    private fun findPreviousPermissionDialogFragment(): PermissionsDialogFragment? {
         return fragmentManager?.findFragmentByTag(PERMISSIONS_DIALOG_FRAGMENT_TAG) as? PermissionsDialogFragment
+    }
+
+    private fun findPreviousInstallationDialogFragment(): AddonInstallationDialogFragment? {
+        return fragmentManager?.findFragmentByTag(INSTALLATION_DIALOG_FRAGMENT_TAG) as? AddonInstallationDialogFragment
     }
 
     private fun showPermissionDialog(addon: Addon) {
@@ -135,7 +144,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
         val dialog = PermissionsDialogFragment.newInstance(
             addon = addon,
-            onPositiveButtonClicked = onPositiveButtonClicked
+            onPositiveButtonClicked = onConfirmPermissionButtonClicked
         )
 
         if (!isAlreadyADialogCreated() && fragmentManager != null) {
@@ -151,14 +160,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         val dialog = AddonInstallationDialogFragment.newInstance(
             addon = addon,
             addonCollectionProvider = addonCollectionProvider,
-            onConfirmButtonClicked = { _, allowInPrivateBrowsing ->
-                if (allowInPrivateBrowsing) {
-                    requireContext().components.addonManager.setAddonAllowedInPrivateBrowsing(
-                        addon,
-                        allowInPrivateBrowsing
-                    )
-                }
-            }
+            onConfirmButtonClicked = onConfirmInstallationButtonClicked
         )
 
         if (!isAlreadyADialogCreated() && fragmentManager != null) {
@@ -166,17 +168,28 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         }
     }
 
-    private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
+    private val onConfirmInstallationButtonClicked: ((Addon, Boolean) -> Unit) = { addon, allowInPrivateBrowsing ->
+        if (allowInPrivateBrowsing) {
+            requireContext().components.addonManager.setAddonAllowedInPrivateBrowsing(
+                addon,
+                allowInPrivateBrowsing
+            )
+        }
+    }
+
+    private val onConfirmPermissionButtonClicked: ((Addon) -> Unit) = { addon ->
         addonProgressOverlay.visibility = View.VISIBLE
         isInstallationInProgress = true
 
         val installOperation = requireContext().components.addonManager.installAddon(
             addon,
-            onSuccess = {
-                adapter?.updateAddon(it)
-                addonProgressOverlay.visibility = View.GONE
-                isInstallationInProgress = false
-                showInstallationDialog(it)
+            onSuccess = { installedAddon ->
+                context?.let {
+                    adapter?.updateAddon(installedAddon)
+                    addonProgressOverlay.visibility = View.GONE
+                    isInstallationInProgress = false
+                    showInstallationDialog(installedAddon)
+                }
             },
             onError = { _, e ->
                 // No need to display an error message if installation was cancelled by the user.

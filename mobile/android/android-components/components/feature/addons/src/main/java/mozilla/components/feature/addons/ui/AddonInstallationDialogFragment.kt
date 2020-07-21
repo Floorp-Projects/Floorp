@@ -6,6 +6,7 @@ package mozilla.components.feature.addons.ui
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -25,6 +26,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentManager
 import kotlinx.android.synthetic.main.mozac_feature_addons_fragment_dialog_addon_installed.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,25 +40,32 @@ import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import java.io.IOException
 
+@VisibleForTesting internal const val KEY_INSTALLED_ADDON = "KEY_ADDON"
 private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
 private const val KEY_DIALOG_WIDTH_MATCH_PARENT = "KEY_DIALOG_WIDTH_MATCH_PARENT"
 private const val KEY_CONFIRM_BUTTON_BACKGROUND_COLOR = "KEY_CONFIRM_BUTTON_BACKGROUND_COLOR"
 private const val KEY_CONFIRM_BUTTON_TEXT_COLOR = "KEY_CONFIRM_BUTTON_TEXT_COLOR"
 private const val KEY_CONFIRM_BUTTON_RADIUS = "KEY_CONFIRM_BUTTON_RADIUS"
+@VisibleForTesting internal const val KEY_ICON = "KEY_ICON"
+
 private const val DEFAULT_VALUE = Int.MAX_VALUE
 
 /**
  * A dialog that shows [Addon] installation confirmation.
  */
-class AddonInstallationDialogFragment(
-    private val addonCollectionProvider: AddonCollectionProvider
-) : AppCompatDialogFragment() {
+class AddonInstallationDialogFragment : AppCompatDialogFragment() {
     private val scope = CoroutineScope(Dispatchers.IO)
+    @VisibleForTesting internal var iconJob: Job? = null
     private val logger = Logger("AddonInstallationDialogFragment")
     /**
      * A lambda called when the confirm button is clicked.
      */
     var onConfirmButtonClicked: ((Addon, Boolean) -> Unit)? = null
+
+    /**
+     * Reference to the application's [AddonCollectionProvider] to fetch add-on icons.
+     */
+    var addonCollectionProvider: AddonCollectionProvider? = null
 
     private val safeArguments get() = requireNotNull(arguments)
 
@@ -90,6 +99,11 @@ class AddonInstallationDialogFragment(
                 KEY_CONFIRM_BUTTON_TEXT_COLOR,
                 DEFAULT_VALUE
             )
+
+    override fun onStop() {
+        super.onStop()
+        iconJob?.cancel()
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val sheetDialog = Dialog(requireContext())
@@ -144,7 +158,12 @@ class AddonInstallationDialogFragment(
                 requireContext().appName
             )
 
-        fetchIcon(addon, rootView.icon)
+        val icon = safeArguments.getParcelable<Bitmap>(KEY_ICON)
+        if (icon != null) {
+            rootView.icon.setImageDrawable(BitmapDrawable(resources, icon))
+        } else {
+            iconJob = fetchIcon(addon, rootView.icon)
+        }
 
         val allowedInPrivateBrowsing = rootView.findViewById<AppCompatCheckBox>(R.id.allow_in_private_browsing)
         allowedInPrivateBrowsing.setOnCheckedChangeListener { _, isChecked ->
@@ -188,9 +207,10 @@ class AddonInstallationDialogFragment(
     internal fun fetchIcon(addon: Addon, iconView: ImageView, scope: CoroutineScope = this.scope): Job {
         return scope.launch {
             try {
-                val iconBitmap = addonCollectionProvider.getAddonIconBitmap(addon)
+                val iconBitmap = addonCollectionProvider?.getAddonIconBitmap(addon)
                 iconBitmap?.let {
                     scope.launch(Dispatchers.Main) {
+                        safeArguments.putParcelable(KEY_ICON, it)
                         iconView.setImageDrawable(BitmapDrawable(iconView.resources, it))
                     }
                 }
@@ -204,6 +224,19 @@ class AddonInstallationDialogFragment(
                 logger.error("Attempt to fetch the ${addon.id} icon failed", e)
             }
         }
+    }
+
+    override fun show(manager: FragmentManager, tag: String?) {
+        // This dialog is shown as a result of an async operation (installing
+        // an add-on). Once installation succeeds, the activity may already be
+        // in the process of being destroyed. Since the dialog doesn't have any
+        // state we need to keep, and since it's also fine to not display the
+        // dialog at all in case the user navigates away, we can simply use
+        // commitAllowingStateLoss here to prevent crashing on commit:
+        // https://github.com/mozilla-mobile/android-components/issues/7782
+        val ft = manager.beginTransaction()
+        ft.add(this, tag)
+        ft.commitAllowingStateLoss()
     }
 
     @Suppress("LongParameterList")
@@ -224,11 +257,11 @@ class AddonInstallationDialogFragment(
             onConfirmButtonClicked: ((Addon, Boolean) -> Unit)? = null
         ): AddonInstallationDialogFragment {
 
-            val fragment = AddonInstallationDialogFragment(addonCollectionProvider)
+            val fragment = AddonInstallationDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
             arguments.apply {
-                putParcelable(KEY_ADDON, addon)
+                putParcelable(KEY_INSTALLED_ADDON, addon)
 
                 promptsStyling?.gravity?.apply {
                     putInt(KEY_DIALOG_GRAVITY, this)
@@ -246,6 +279,7 @@ class AddonInstallationDialogFragment(
             }
             fragment.onConfirmButtonClicked = onConfirmButtonClicked
             fragment.arguments = arguments
+            fragment.addonCollectionProvider = addonCollectionProvider
             return fragment
         }
     }

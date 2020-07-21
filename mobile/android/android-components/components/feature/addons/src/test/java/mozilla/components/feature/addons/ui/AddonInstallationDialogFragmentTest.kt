@@ -14,6 +14,7 @@ import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -21,18 +22,24 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
+import mozilla.components.feature.addons.ui.KEY_ICON
+import mozilla.components.feature.addons.ui.KEY_INSTALLED_ADDON
 import mozilla.components.feature.addons.ui.translatedName
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -51,7 +58,10 @@ class AddonInstallationDialogFragmentTest {
             "id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
             permissions = listOf("privacy", "<all_urls>", "tabs")
         )
-        val fragment = createAddonInstallationDialogFragment(addon, mock())
+        val mockedCollectionProvider = mock<AddonCollectionProvider>()
+        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
+        assertSame(mockedCollectionProvider, fragment.addonCollectionProvider)
+        assertSame(addon, fragment.arguments?.getParcelable(KEY_INSTALLED_ADDON))
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -131,7 +141,7 @@ class AddonInstallationDialogFragmentTest {
     }
 
     @Test
-    fun `fetching the add-on icon() successfully `() {
+    fun `fetching the add-on icon successfully`() {
         val addon = mock<Addon>()
         val bitmap = mock<Bitmap>()
         val mockedImageView = spy(ImageView(testContext))
@@ -140,13 +150,15 @@ class AddonInstallationDialogFragmentTest {
 
         runBlocking {
             whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
+            assertNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
             fragment.fetchIcon(addon, mockedImageView, scope).join()
+            assertNotNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
             verify(mockedImageView).setImageDrawable(Mockito.any())
         }
     }
 
     @Test
-    fun `handle errors while fetching the add-on icon() `() {
+    fun `handle errors while fetching the add-on icon`() {
         val addon = mock<Addon>()
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
@@ -163,6 +175,32 @@ class AddonInstallationDialogFragmentTest {
                 fail("The exception must be handle in the adapter")
             }
         }
+    }
+
+    @Test
+    fun `allows state loss when committing`() {
+        val addon = mock<Addon>()
+        val mockedCollectionProvider = mock<AddonCollectionProvider>()
+        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
+
+        val fragmentManager = mock<FragmentManager>()
+        val fragmentTransaction = mock<FragmentTransaction>()
+        `when`(fragmentManager.beginTransaction()).thenReturn(fragmentTransaction)
+
+        fragment.show(fragmentManager, "test")
+        verify(fragmentTransaction).commitAllowingStateLoss()
+    }
+
+    @Test
+    fun `cancels icon job on stop`() {
+        val addon = mock<Addon>()
+        val mockedCollectionProvider = mock<AddonCollectionProvider>()
+        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
+
+        val job = mock<Job>()
+        fragment.iconJob = job
+        fragment.onStop()
+        verify(job).cancel()
     }
 
     private fun createAddonInstallationDialogFragment(
