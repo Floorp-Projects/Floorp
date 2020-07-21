@@ -18,8 +18,9 @@
 namespace mozilla {
 namespace layers {
 class Animation;
-class Layer;
 class CompositorBridgeParent;
+class Layer;
+class OMTAController;
 
 typedef nsTArray<layers::Animation> AnimationArray;
 
@@ -121,7 +122,9 @@ class CompositorAnimationStorage final {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorAnimationStorage)
  public:
-  CompositorAnimationStorage() : mLock("CompositorAnimationStorage::mLock") {}
+  explicit CompositorAnimationStorage(CompositorBridgeParent* aCompositorBridge)
+      : mLock("CompositorAnimationStorage::mLock"),
+        mCompositorBridge(aCompositorBridge) {}
 
   OMTAValue GetOMTAValue(const uint64_t& aId) const;
 
@@ -148,7 +151,8 @@ class CompositorAnimationStorage final {
    *
    * Note: This is called only by WebRender.
    */
-  bool SampleAnimations(TimeStamp aPreviousFrameTime,
+  bool SampleAnimations(const OMTAController* aOMTAController,
+                        TimeStamp aPreviousFrameTime,
                         TimeStamp aCurrentFrameTime);
 
   /**
@@ -168,7 +172,7 @@ class CompositorAnimationStorage final {
   void ClearById(const uint64_t& aId);
 
  private:
-  ~CompositorAnimationStorage(){};
+  ~CompositorAnimationStorage() = default;
 
   /**
    * Return the animated value if a given id can map to its animated value
@@ -220,6 +224,8 @@ class CompositorAnimationStorage final {
   AnimationsTable mAnimations;
   std::unordered_set<uint64_t> mNewAnimations;
   mutable Mutex mLock;
+  // CompositorBridgeParent owns this CompositorAnimationStorage instance.
+  CompositorBridgeParent* MOZ_NON_OWNING_REF mCompositorBridge;
 };
 
 }  // namespace layers
