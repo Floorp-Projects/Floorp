@@ -66,7 +66,7 @@ const lameMultiWindowState = {
 };
 
 function getOuterWindowID(aWindow) {
-  return aWindow.docShell.outerWindowID;
+  return aWindow.windowUtils.outerWindowID;
 }
 
 function test() {

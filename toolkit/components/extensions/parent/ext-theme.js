@@ -118,7 +118,7 @@ class Theme {
     if (this.windowId) {
       this.lwtData.window = windowTracker.getWindow(
         this.windowId
-      ).docShell.outerWindowID;
+      ).windowUtils.outerWindowID;
       windowOverrides.set(this.windowId, this);
     } else {
       windowOverrides.clear();
@@ -384,7 +384,9 @@ class Theme {
     };
 
     if (windowId) {
-      lwtData.window = windowTracker.getWindow(windowId).docShell.outerWindowID;
+      lwtData.window = windowTracker.getWindow(
+        windowId
+      ).windowUtils.outerWindowID;
       windowOverrides.delete(windowId);
     } else {
       windowOverrides.clear();
