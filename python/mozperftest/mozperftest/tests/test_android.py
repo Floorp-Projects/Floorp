@@ -133,9 +133,9 @@ def test_android_failure():
 def test_android_apk_alias(device):
     args = {
         "flavor": "mobile-browser",
-        "android-install-apk": ["fenix_fennec_nightly_armeabi_v7a"],
+        "android-install-apk": ["fenix_nightly_armeabi_v7a"],
         "android": True,
-        "android-app-name": "org.mozilla.fennec_aurora",
+        "android-app-name": "org.mozilla.fenix",
         "android-capture-adb": "stdout",
     }
 
@@ -144,7 +144,7 @@ def test_android_apk_alias(device):
     with system as android, silence(system):
         android(metadata)
     # XXX really ?
-    assert device.mock_calls[1][1][0] == "org.mozilla.fennec_aurora"
+    assert device.mock_calls[1][1][0] == "org.mozilla.fenix"
     assert device.mock_calls[2][1][0].endswith("target.apk")
 
 
