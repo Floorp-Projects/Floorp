@@ -15,6 +15,7 @@ EXAMPLE_TESTS_DIR = os.path.join(HERE, "data", "samples")
 EXAMPLE_TEST = os.path.join(EXAMPLE_TESTS_DIR, "perftest_example.js")
 EXAMPLE_XPCSHELL_TEST = Path(EXAMPLE_TESTS_DIR, "test_xpcshell.js")
 BT_DATA = Path(HERE, "data", "browsertime-results", "browsertime.json")
+DMG = Path(HERE, "data", "firefox.dmg")
 
 
 @contextlib.contextmanager

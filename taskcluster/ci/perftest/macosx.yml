@@ -25,18 +25,15 @@ domcount:
         cron: true
     run:
         command: >-
-            mkdir -p ${MOZ_FETCHES_DIR}/firefox &&
-            hdiutil attach -nobrowse -noautoopen -mountpoint ${MOZ_FETCHES_DIR}/firefox ${MOZ_FETCHES_DIR}/target.dmg &&
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
             python3 -m venv . &&
             bin/python3 python/mozperftest/mozperftest/runner.py
             browser/base/content/test/perftest_browser_xhtml_dom.js
-            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/Firefox\ Nightly.app/Contents/MacOS/firefox
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
             --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
             --flavor desktop-browser
             --perfherder
             --perfherder-metrics name:totalDOMCount,unit:count name:panelMenuCount,unit:count name:lightDOMCount,unit:count name:lightDOMDetails,unit:count
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --output $MOZ_FETCHES_DIR/../artifacts &&
-            hdiutil detach ${MOZ_FETCHES_DIR}/firefox -force
+            --output $MOZ_FETCHES_DIR/../artifacts
