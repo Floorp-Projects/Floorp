@@ -90,76 +90,97 @@ function updateTooltipContent(toolbox) {
   container.style.fontSize = "11px";
   container.classList.add("theme-body");
 
+  const headerContainer = toolbox.doc.createElement("header");
+  /**
+   * The grid layout of the header container is as follows:
+   *
+   *  +-------------------------+--------------+
+   *  | Header text             | Reset button |
+   *  +-------------------------+--------------+
+   */
+  headerContainer.style.display = "grid";
+  headerContainer.style.gridTemplateColumns = "auto max-content";
+
   const header = toolbox.doc.createElement("h1");
   header.style.fontSize = "11px";
   header.style.margin = "0";
   header.style.padding = "0";
   header.textContent = "DevTools Fission preferences";
-  container.appendChild(header);
+
+  const resetButton = toolbox.doc.createElement("button");
+  resetButton.addEventListener("click", () => {
+    for (const [name] of PREFERENCES) {
+      Services.prefs.clearUserPref(name);
+    }
+    updateTooltipContent(toolbox);
+  });
+  resetButton.textContent = "reset all";
+
+  headerContainer.append(header, resetButton);
 
   const prefList = toolbox.doc.createElement("ul");
   prefList.style.listStyle = "none";
   prefList.style.margin = "0";
   prefList.style.padding = "0";
-  container.appendChild(prefList);
 
   for (const [name, desc] of PREFERENCES) {
-    const isPrefEnabled = Services.prefs.getBoolPref(name, false);
-
-    const prefEl = toolbox.doc.createElement("li");
-    prefEl.classList.toggle("theme-comment", !isPrefEnabled);
-    prefEl.style.margin = "8px 0 0";
-    prefEl.style.lineHeight = "12px";
-
-    /**
-     * The grid layout of a preference line is as follows:
-     *
-     *  +------+-----------------------------+-------+---------------+
-     *  | Icon | Preference name             | Value | Toggle button |
-     *  +------+-----------------------------+-------+---------------+
-     */
-    prefEl.style.display = "grid";
-    prefEl.style.alignItems = "center";
-    prefEl.style.gridTemplateColumns =
-      "max-content minmax(300px, auto) max-content max-content";
-    prefEl.style.gridColumnGap = "8px";
-
-    const prefInfo = toolbox.doc.createElement("div");
-    prefInfo.title = desc;
-    prefInfo.style.width = "12px";
-    prefInfo.style.height = "12px";
-    prefInfo.classList.add("fission-pref-icon");
-
-    const prefTitle = toolbox.doc.createElement("span");
-    prefTitle.textContent = name;
-    prefTitle.style.userSelect = "text";
-    prefTitle.style.fontWeight = isPrefEnabled ? "bold" : "normal";
-
-    const prefValue = toolbox.doc.createElement("span");
-    prefValue.textContent = isPrefEnabled;
-
-    const toggleButton = toolbox.doc.createElement("button");
-    toggleButton.addEventListener("click", () => {
-      Services.prefs.setBoolPref(name, !isPrefEnabled);
-      updateTooltipContent(toolbox);
-    });
-    toggleButton.textContent = "toggle";
-
-    prefEl.appendChild(prefInfo);
-    prefEl.appendChild(prefTitle);
-    prefEl.appendChild(prefValue);
-    prefEl.appendChild(toggleButton);
-
+    const prefEl = createPreferenceListItem(toolbox, name, desc);
     prefList.appendChild(prefEl);
   }
 
-  toolbox._fissionPrefsTooltip.panel.innerHTML = "";
+  container.append(headerContainer, prefList);
 
+  toolbox._fissionPrefsTooltip.panel.innerHTML = "";
   // There is a hardcoded 320px max width for doorhanger tooltips,
   // see Bug 1654020.
   toolbox._fissionPrefsTooltip.panel.style.maxWidth = "unset";
-
   toolbox._fissionPrefsTooltip.panel.appendChild(container);
+}
+
+function createPreferenceListItem(toolbox, name, desc) {
+  const isPrefEnabled = Services.prefs.getBoolPref(name, false);
+
+  const prefEl = toolbox.doc.createElement("li");
+  prefEl.classList.toggle("theme-comment", !isPrefEnabled);
+  prefEl.style.margin = "8px 0 0";
+  prefEl.style.lineHeight = "12px";
+
+  /**
+   * The grid layout of a preference line is as follows:
+   *
+   *  +------+-----------------------------+-------+---------------+
+   *  | Icon | Preference name             | Value | Toggle button |
+   *  +------+-----------------------------+-------+---------------+
+   */
+  prefEl.style.display = "grid";
+  prefEl.style.alignItems = "center";
+  prefEl.style.gridTemplateColumns =
+    "max-content minmax(300px, auto) max-content max-content";
+  prefEl.style.gridColumnGap = "8px";
+
+  const prefInfo = toolbox.doc.createElement("div");
+  prefInfo.title = desc;
+  prefInfo.style.width = "12px";
+  prefInfo.style.height = "12px";
+  prefInfo.classList.add("fission-pref-icon");
+
+  const prefTitle = toolbox.doc.createElement("span");
+  prefTitle.textContent = name;
+  prefTitle.style.userSelect = "text";
+  prefTitle.style.fontWeight = isPrefEnabled ? "bold" : "normal";
+
+  const prefValue = toolbox.doc.createElement("span");
+  prefValue.textContent = isPrefEnabled;
+
+  const toggleButton = toolbox.doc.createElement("button");
+  toggleButton.addEventListener("click", () => {
+    Services.prefs.setBoolPref(name, !isPrefEnabled);
+    updateTooltipContent(toolbox);
+  });
+  toggleButton.textContent = "toggle";
+
+  prefEl.append(prefInfo, prefTitle, prefValue, toggleButton);
+  return prefEl;
 }
 
 function isAnyPreferenceEnabled() {
