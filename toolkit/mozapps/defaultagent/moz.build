@@ -8,6 +8,8 @@ Program("default-browser-agent")
 
 SPHINX_TREES['default-browser-agent'] = "docs"
 
+DIRS += ['rust']
+
 UNIFIED_SOURCES += [
     "/mfbt/Poison.cpp",
     "/mfbt/Unused.cpp",
@@ -30,6 +32,7 @@ SOURCES += [
 ]
 
 USE_LIBS += [
+    "defaultagent-static",
     "jsoncpp",
 ]
 
@@ -51,6 +54,9 @@ OS_LIBS += [
     "shell32",
     "shlwapi",
     "taskschd",
+    "userenv",
+    "wininet",
+    "ws2_32",
 ]
 
 DEFINES["NS_NO_XPCOM"] = True
