@@ -3550,6 +3550,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void debugAssertIsObject(const ValueOperand& val);
   void debugAssertObjHasFixedSlots(Register obj, Register scratch);
 
+  void setIsPackedArray(Register obj, Register output, Register temp);
+
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
 
   void iteratorMore(Register obj, ValueOperand output, Register temp);
