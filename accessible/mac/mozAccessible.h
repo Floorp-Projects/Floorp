@@ -62,6 +62,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // allows for gecko accessible access outside of the class
 - (mozilla::a11y::AccessibleOrProxy)geckoAccessible;
 
+- (mozilla::a11y::AccessibleOrProxy)geckoDocument;
+
 // override
 - (void)dealloc;
 
@@ -73,6 +75,10 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // Note: when overriding or adding new events, make sure your events aren't
 // filtered out in Platform::ProxyEvent or AccessibleWrap::HandleAccEvent!
 - (void)handleAccessibleEvent:(uint32_t)eventType;
+
+- (void)handleAccessibleTextChangeEvent:(NSString*)change
+                               inserted:(BOOL)isInserted
+                                     at:(int32_t)start;
 
 // internal method to retrieve a child at a given index.
 - (id)childAt:(uint32_t)i;

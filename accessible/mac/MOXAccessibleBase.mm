@@ -343,6 +343,10 @@ using namespace mozilla::a11y;
 }
 
 - (void)moxPostNotification:(NSString*)notification {
+  [self moxPostNotification:notification withUserInfo:nil];
+}
+
+- (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo {
   // This sends events via nsIObserverService to be consumed by our mochitests.
   xpcAccessibleMacInterface::FireEvent(self, notification);
 
@@ -357,7 +361,12 @@ using namespace mozilla::a11y;
     return;
   }
 
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self), notification);
+  if (userInfo) {
+    NSAccessibilityPostNotificationWithUserInfo(GetObjectOrRepresentedView(self), notification,
+                                                userInfo);
+  } else {
+    NSAccessibilityPostNotification(GetObjectOrRepresentedView(self), notification);
+  }
 }
 
 - (BOOL)moxBlockSelector:(SEL)selector {

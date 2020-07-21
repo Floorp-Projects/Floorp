@@ -108,7 +108,13 @@ void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset, bool aIsSele
   }
 }
 
-void ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t, bool, bool) {}
+void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr, int32_t aStart,
+                          uint32_t aLen, bool aIsInsert, bool aFromUser) {
+  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
+  [wrapper handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(aStr)
+                                  inserted:aIsInsert
+                                        at:aStart];
+}
 
 void ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool) {}
 

@@ -24,6 +24,9 @@
 // Sends a notification to any observing assistive applications.
 - (void)moxPostNotification:(NSString* _Nonnull)notification;
 
+- (void)moxPostNotification:(NSString* _Nonnull)notification
+               withUserInfo:(NSDictionary* _Nullable)userInfo;
+
 // Return YES if selector should be considered not supported.
 // Used in implementations such as:
 // - accessibilityAttributeNames
