@@ -6591,6 +6591,33 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayElementShift(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
+    HandleFunction callee) {
+  // Self-hosted code calls this with a single TypedArrayObject argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+
+  // Note: the "getter" argument is a hint for IonBuilder. Just pass |callee|,
+  // the field isn't used for this intrinsic call.
+  writer.loadTypedArrayLengthResult(objArgId, callee);
+
+  // This stub does not need to be monitored because it always returns int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("TypedArrayLength");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
@@ -6910,6 +6937,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachTypedArrayByteOffset(callee);
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return tryAttachTypedArrayElementShift(callee);
+    case InlinableNative::IntrinsicTypedArrayLength:
+      return tryAttachTypedArrayLength(callee);
 
     default:
       return AttachDecision::NoAction;
