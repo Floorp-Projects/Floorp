@@ -150,7 +150,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         val toolbarSessionObserver = TrackingProtectionOverlay(
             context = context,
-            settings = settings
+            settings = settings,
+            metrics = context.components.analytics.metrics
         ) {
             browserToolbarView.view
         }

@@ -6,7 +6,9 @@ package org.mozilla.fenix.trackingprotection
 
 import android.content.Context
 import android.view.View
+import io.mockk.MockKAnnotations
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -16,28 +18,27 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TrackingProtectionOverlayTest {
 
     private lateinit var context: Context
-    private lateinit var settings: Settings
-    private lateinit var toolbar: View
-    private lateinit var icon: View
-    private lateinit var session: Session
-    private lateinit var overlay: TrackingProtectionOverlay
+    @MockK(relaxed = true) private lateinit var settings: Settings
+    @MockK(relaxed = true) private lateinit var metrics: MetricController
+    @MockK(relaxed = true) private lateinit var toolbar: View
+    @MockK(relaxed = true) private lateinit var icon: View
+    @MockK(relaxed = true) private lateinit var session: Session
+    @MockK(relaxed = true) private lateinit var overlay: TrackingProtectionOverlay
 
     @Before
     fun setup() {
+        MockKAnnotations.init(this)
         context = spyk(testContext)
-        settings = mockk(relaxed = true)
-        toolbar = mockk(relaxed = true)
-        icon = mockk(relaxed = true)
-        session = mockk(relaxed = true)
 
-        overlay = TrackingProtectionOverlay(context, settings) { toolbar }
+        overlay = TrackingProtectionOverlay(context, settings, metrics) { toolbar }
         every { toolbar.findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator) } returns icon
     }
 

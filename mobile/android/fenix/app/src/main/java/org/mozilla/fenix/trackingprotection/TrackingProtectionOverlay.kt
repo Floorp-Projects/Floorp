@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.Settings
@@ -32,6 +33,7 @@ import org.mozilla.fenix.utils.Settings
 class TrackingProtectionOverlay(
     private val context: Context,
     private val settings: Settings,
+    private val metrics: MetricController,
     private val getToolbar: () -> View
 ) : Session.Observer {
 
@@ -62,7 +64,7 @@ class TrackingProtectionOverlay(
 
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
-        val isBottomToolbar = Settings.getInstance(context).shouldUseBottomToolbar
+        val isBottomToolbar = settings.shouldUseBottomToolbar
 
         layout.drop_down_triangle.isGone = isBottomToolbar
         layout.pop_up_triangle.isVisible = isBottomToolbar
@@ -76,7 +78,7 @@ class TrackingProtectionOverlay(
         val closeButton = layout.findViewById<ImageView>(R.id.close_onboarding)
         closeButton.increaseTapArea(BUTTON_INCREASE_DPS)
         closeButton.setOnClickListener {
-            context.components.analytics.metrics.track(Event.ContextualHintETPDismissed)
+            metrics.track(Event.ContextualHintETPDismissed)
             trackingOnboardingDialog.dismiss()
         }
 
@@ -115,12 +117,12 @@ class TrackingProtectionOverlay(
         val etpShield =
             getToolbar().findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
         trackingOnboardingDialog.message.setOnClickListener {
-            context.components.analytics.metrics.track(Event.ContextualHintETPInsideTap)
+            metrics.track(Event.ContextualHintETPInsideTap)
             trackingOnboardingDialog.dismiss()
             etpShield.performClick()
         }
 
-        context.components.analytics.metrics.track(Event.ContextualHintETPDisplayed)
+        metrics.track(Event.ContextualHintETPDisplayed)
         trackingOnboardingDialog.show()
         settings.incrementTrackingProtectionOnboardingCount()
     }

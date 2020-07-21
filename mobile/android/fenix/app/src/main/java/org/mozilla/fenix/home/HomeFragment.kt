@@ -375,7 +375,13 @@ class HomeFragment : Fragment() {
         // the CFR in.
         view.toolbar_wrapper.doOnLayout {
             if (!browsingModeManager.mode.isPrivate) {
-                SearchWidgetCFR(view.context) { view.toolbar_wrapper }.displayIfNecessary()
+                SearchWidgetCFR(
+                    context = view.context,
+                    settings = view.context.settings(),
+                    metrics = view.context.components.analytics.metrics
+                ) {
+                    view.toolbar_wrapper
+                }.displayIfNecessary()
             }
         }
 

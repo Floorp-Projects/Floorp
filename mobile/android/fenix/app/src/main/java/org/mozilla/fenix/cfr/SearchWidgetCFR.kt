@@ -20,8 +20,7 @@ import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -29,27 +28,29 @@ import org.mozilla.fenix.utils.Settings
  */
 class SearchWidgetCFR(
     private val context: Context,
+    private val settings: Settings,
+    private val metrics: MetricController,
     private val getToolbar: () -> View
 ) {
 
     fun displayIfNecessary() {
-        if (!context.settings().isInSearchWidgetExperiment ||
-            !context.settings().shouldDisplaySearchWidgetCFR() ||
-            isShown
-        ) { return }
-
-        isShown = true
-        showSearchWidgetCFR()
+        if (settings.isInSearchWidgetExperiment &&
+            settings.shouldDisplaySearchWidgetCFR() &&
+            !isShown
+        ) {
+            isShown = true
+            showSearchWidgetCFR()
+        }
     }
 
-    @Suppress("MagicNumber", "InflateParams")
+    @Suppress("InflateParams")
     private fun showSearchWidgetCFR() {
-        context.settings().incrementSearchWidgetCFRDisplayed()
+        settings.incrementSearchWidgetCFRDisplayed()
 
         val searchWidgetCFRDialog = Dialog(context)
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.search_widget_cfr, null)
-        val isBottomToolbar = Settings.getInstance(context).shouldUseBottomToolbar
+        val isBottomToolbar = settings.shouldUseBottomToolbar
 
         layout.drop_down_triangle.isGone = isBottomToolbar
         layout.pop_up_triangle.isVisible = isBottomToolbar
@@ -63,16 +64,16 @@ class SearchWidgetCFR(
         }
 
         layout.cfr_neg_button.setOnClickListener {
-            context.components.analytics.metrics.track(Event.SearchWidgetCFRNotNowPressed)
+            metrics.track(Event.SearchWidgetCFRNotNowPressed)
             searchWidgetCFRDialog.dismiss()
-            context.settings().manuallyDismissSearchWidgetCFR()
+            settings.manuallyDismissSearchWidgetCFR()
         }
 
         layout.cfr_pos_button.setOnClickListener {
-            context.components.analytics.metrics.track(Event.SearchWidgetCFRAddWidgetPressed)
+            metrics.track(Event.SearchWidgetCFRAddWidgetPressed)
             SearchWidgetCreator.createSearchWidget(context)
             searchWidgetCFRDialog.dismiss()
-            context.settings().manuallyDismissSearchWidgetCFR()
+            settings.manuallyDismissSearchWidgetCFR()
         }
 
         searchWidgetCFRDialog.apply {
@@ -90,16 +91,16 @@ class SearchWidgetCFR(
 
         searchWidgetCFRDialog.setOnCancelListener {
             isShown = false
-            context.components.analytics.metrics.track(Event.SearchWidgetCFRCanceled)
+            metrics.track(Event.SearchWidgetCFRCanceled)
         }
 
         searchWidgetCFRDialog.setOnDismissListener {
             isShown = false
-            context.settings().incrementSearchWidgetCFRDismissed()
+            settings.incrementSearchWidgetCFRDismissed()
         }
 
         searchWidgetCFRDialog.show()
-        context.components.analytics.metrics.track(Event.SearchWidgetCFRDisplayed)
+        metrics.track(Event.SearchWidgetCFRDisplayed)
     }
 
     companion object {
