@@ -1788,9 +1788,6 @@ pref("extensions.pocket.enabled", true);
 pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 pref("extensions.pocket.site", "getpocket.com");
 
-// Can be removed once Bug 1618058 is resolved.
-pref("signon.generation.confidenceThreshold", "0.75");
-
 #ifdef NIGHTLY_BUILD
 pref("signon.management.page.os-auth.enabled", true);
 #else
