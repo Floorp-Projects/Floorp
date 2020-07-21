@@ -14,6 +14,14 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/WebNavigationFrames.jsm"
 );
 
+function getDocShellOuterWindowId(docShell) {
+  if (!docShell) {
+    return undefined;
+  }
+
+  return docShell.domWindow.windowUtils.outerWindowID;
+}
+
 function loadListener(event) {
   let document = event.target;
   let window = document.defaultView;
@@ -87,7 +95,7 @@ var CreatedNavigationTargetListener = {
     const sourceFrameId = WebNavigationFrames.getFrameId(
       sourceDocShell.browsingContext
     );
-    const createdOuterWindowId = sourceDocShell?.outerWindowID;
+    const createdOuterWindowId = getDocShellOuterWindowId(sourceDocShell);
 
     let url;
     if (props.hasKey("url")) {

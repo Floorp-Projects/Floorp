@@ -135,7 +135,7 @@ class ReportSiteIssueHelperChild extends JSWindowActorChild {
   }
 
   _getLoggedMessages(includePrivate = false) {
-    const windowId = this.contentWindow.windowGlobalChild.innerWindowId;
+    const windowId = this.contentWindow.windowUtils.currentInnerWindowID;
     return this._getConsoleMessages(windowId).concat(
       this._getScriptErrors(windowId, includePrivate)
     );

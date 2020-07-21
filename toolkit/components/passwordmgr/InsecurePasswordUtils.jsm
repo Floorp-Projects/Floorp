@@ -51,7 +51,7 @@ this.InsecurePasswordUtils = {
    *         Inner ID for the given window.
    */
   _getInnerWindowId(window) {
-    return window.windowGlobalChild.innerWindowId;
+    return window.windowUtils.currentInnerWindowID;
   },
 
   _sendWebConsoleMessage(messageTag, domDoc) {

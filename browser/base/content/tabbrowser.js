@@ -5199,7 +5199,7 @@
         this._uniquePanelIDCounter = 0;
       }
 
-      let outerID = window.docShell.outerWindowID;
+      let outerID = window.windowUtils.outerWindowID;
 
       // We want panel IDs to be globally unique, that's why we include the
       // window ID. We switched to a monotonic counter as Date.now() lead

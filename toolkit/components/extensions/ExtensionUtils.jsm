@@ -109,7 +109,7 @@ class DefaultMap extends Map {
 }
 
 function getInnerWindowID(window) {
-  return window.windowGlobalChild?.innerWindowId;
+  return window.windowUtils.currentInnerWindowID;
 }
 
 /**

@@ -15,7 +15,7 @@ function frameScript() {
     ]);
   }
 
-  let outerID = content.docShell.outerWindowID;
+  let outerID = content.windowUtils.outerWindowID;
   function onOuterWindowDestroyed(subject, topic, data) {
     if (docShell) {
       sendAsyncMessage("Test:Fail", "docShell is non-null");
