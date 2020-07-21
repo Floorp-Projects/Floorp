@@ -229,6 +229,11 @@ EventStates SVGImageElement::IntrinsicState() const {
          nsImageLoadingContent::ImageState();
 }
 
+void SVGImageElement::DestroyContent() {
+  nsImageLoadingContent::Destroy();
+  SVGImageElementBase::DestroyContent();
+}
+
 NS_IMETHODIMP_(bool)
 SVGImageElement::IsAttributeMapped(const nsAtom* name) const {
   static const MappedAttributeEntry* const map[] = {
