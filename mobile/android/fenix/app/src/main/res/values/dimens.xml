@@ -156,6 +156,8 @@
 
     <!-- Tabs Tray -->
     <dimen name="tab_tray_top_offset">40dp</dimen>
+    <dimen name="tab_tray_thumbnail_width">92dp</dimen>
+    <dimen name="tab_tray_thumbnail_height">69dp</dimen>
 
     <!-- Saved Logins Fragment -->
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_margin_start">10dp</dimen>

@@ -7,11 +7,11 @@ package org.mozilla.fenix.tabtray
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
-import androidx.core.view.doOnNextLayout
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
@@ -21,7 +21,7 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.images.ext.loadIntoView
+import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
@@ -32,6 +32,7 @@ import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toTab
+import kotlin.math.max
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
@@ -73,10 +74,7 @@ class TabTrayViewHolder(
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         } else {
-            // Make sure we have the view's dimensions so we can load the image at the correct size
-            thumbnailView.doOnNextLayout {
-                imageLoader.loadIntoView(thumbnailView, tab.id)
-            }
+            loadIntoThumbnailView(thumbnailView, tab.id)
         }
 
         // Media state
@@ -180,6 +178,14 @@ class TabTrayViewHolder(
     private fun updateCloseButtonDescription(title: String) {
         closeView.contentDescription =
             closeView.context.getString(R.string.close_tab_title, title)
+    }
+
+    private fun loadIntoThumbnailView(thumbnailView: ImageView, id: String) {
+        val thumbnailSize = max(
+            itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_thumbnail_height),
+            itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_thumbnail_width)
+        )
+        imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize))
     }
 
     internal fun updateAccessibilityRowIndex(item: View, newIndex: Int) {

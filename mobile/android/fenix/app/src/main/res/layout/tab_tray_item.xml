@@ -25,8 +25,8 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/mozac_browser_tabstray_card"
-        android:layout_width="92dp"
-        android:layout_height="69dp"
+        android:layout_width="@dimen/tab_tray_thumbnail_width"
+        android:layout_height="@dimen/tab_tray_thumbnail_height"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:backgroundTint="?tabTrayThumbnailItemBackground"
