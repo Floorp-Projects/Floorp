@@ -144,10 +144,14 @@ async function testPrompt(Prompt) {
           !mockRequest._allowed,
           "The request should not have been allowed"
         );
-
-        SitePermissions.removeFromPrincipal(principal, permissionKey, browser);
-        mockRequest._cancelled = false;
       }
+
+      SitePermissions.removeFromPrincipal(
+        principal,
+        TestPrompt.permissionKey,
+        browser
+      );
+      mockRequest._cancelled = false;
 
       // Bring the PopupNotification back up now...
       shownPromise = BrowserTestUtils.waitForEvent(
@@ -196,10 +200,12 @@ async function testPrompt(Prompt) {
         );
       }
 
-      if (permissionKey) {
-        PermissionTestUtils.remove(principal.URI, permissionKey);
-        mockRequest._cancelled = false;
-      }
+      SitePermissions.removeFromPrincipal(
+        principal,
+        TestPrompt.permissionKey,
+        browser
+      );
+      mockRequest._cancelled = false;
 
       // Bring the PopupNotification back up now...
       shownPromise = BrowserTestUtils.waitForEvent(

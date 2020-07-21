@@ -983,6 +983,12 @@ PopupNotifications.prototype = {
         popupnotification.removeAttribute("secondendlabel");
       }
 
+      if (n.options.hintText) {
+        popupnotification.setAttribute("hinttext", n.options.hintText);
+      } else {
+        popupnotification.removeAttribute("hinttext");
+      }
+
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);
       popupnotification.setAttribute(
