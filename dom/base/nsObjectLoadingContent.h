@@ -306,7 +306,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   /**
    * Destroys all loaded documents/plugins and releases references
    */
-  void DestroyContent();
+  void Destroy();
 
   static void Traverse(nsObjectLoadingContent* tmp,
                        nsCycleCollectionTraversalCallback& cb);

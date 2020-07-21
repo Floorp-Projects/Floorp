@@ -2411,7 +2411,7 @@ uint32_t nsObjectLoadingContent::GetCapabilities() const {
   return eSupportImages | eSupportPlugins | eSupportDocuments;
 }
 
-void nsObjectLoadingContent::DestroyContent() {
+void nsObjectLoadingContent::Destroy() {
   if (mFrameLoader) {
     mFrameLoader->Destroy();
     mFrameLoader = nullptr;
