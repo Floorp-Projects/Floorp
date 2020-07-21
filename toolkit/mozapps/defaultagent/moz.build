@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     "Notification.cpp",
     "Policy.cpp",
     "Registry.cpp",
+    "RemoteSettings.cpp",
     "ScheduledTask.cpp",
     "Telemetry.cpp",
 ]
