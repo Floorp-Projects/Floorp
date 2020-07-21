@@ -740,8 +740,6 @@ struct JS_PUBLIC_API GCDescription {
   mozilla::TimeStamp lastSliceStart(JSContext* cx) const;
   mozilla::TimeStamp lastSliceEnd(JSContext* cx) const;
 
-  char16_t* formatJSONTelemetry(JSContext* cx, uint64_t timestamp) const;
-
   JS::UniqueChars sliceToJSONProfiler(JSContext* cx) const;
   JS::UniqueChars formatJSONProfiler(JSContext* cx) const;
 
