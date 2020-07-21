@@ -1294,11 +1294,6 @@ interface nsIDOMWindowUtils : nsISupports {
                                            in AString aPropertyName);
 
   /**
-   * Get the id of the outer window of this window.  This will never throw.
-   */
-  readonly attribute unsigned long long outerWindowID;
-
-  /**
    * Put the window into a state where scripts are frozen and events
    * suppressed, for use when the window has launched a modal prompt.
    */
