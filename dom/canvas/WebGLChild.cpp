@@ -11,67 +11,70 @@
 namespace mozilla {
 namespace dom {
 
-WebGLChild::WebGLChild(ClientWebGLContext& context)
-    : PcqActor(this), mContext(context) {}
+WebGLChild::WebGLChild(ClientWebGLContext& context) : mContext(&context) {}
 
 WebGLChild::~WebGLChild() { (void)Send__delete__(this); }
 
 // -
 
+static constexpr size_t kDefaultCmdsShmemSize = 100 * 1000;
+
 Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
-  if (!mPendingCmds) {
-    mPendingCmds.reset(new webgl::ShmemCmdBuffer);
-    size_t capacity = 1000 * 1000;
+  if (!mPendingCmdsShmem) {
+    size_t capacity = kDefaultCmdsShmemSize;
     if (capacity < size) {
       capacity = size;
     }
 
-    if (!PWebGLChild::AllocShmem(
-            capacity, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC,
-            &(mPendingCmds->mShmem))) {
-      return {};
-    }
+    auto shmem = webgl::RaiiShmem::Alloc(
+        this, capacity,
+        mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
+    MOZ_ASSERT(shmem);
+    if (!shmem) return {};
+    mPendingCmdsShmem = std::move(shmem);
+    mPendingCmdsPos = 0;
   }
 
-  auto remaining = mPendingCmds->Remaining();
+  const auto range = mPendingCmdsShmem.ByteRange();
+
+  const auto remaining =
+      Range<uint8_t>{range.begin() + mPendingCmdsPos, range.end()};
   if (size > remaining.length()) {
     FlushPendingCmds();
     return AllocPendingCmdBytes(size);
   }
-  mPendingCmds->mPos += size;
+  mPendingCmdsPos += size;
   return Some(Range<uint8_t>{remaining.begin(), remaining.begin() + size});
 }
 
 void WebGLChild::FlushPendingCmds() {
-  if (!mPendingCmds) return;
+  if (!mPendingCmdsShmem) return;
 
-  const auto cmdBytes = mPendingCmds->mPos;
-  SendDispatchCommands(std::move(mPendingCmds->mShmem), cmdBytes);
-  mPendingCmds = nullptr;
+  const auto byteSize = mPendingCmdsPos;
+  SendDispatchCommands(mPendingCmdsShmem.Extract(), byteSize);
 
   mFlushedCmdInfo.flushes += 1;
-  mFlushedCmdInfo.flushedCmdBytes += cmdBytes;
+  mFlushedCmdInfo.flushedCmdBytes += byteSize;
+
+  printf_stderr("[WebGLChild] Flushed %zu bytes. (%zu over %zu flushes)\n",
+                byteSize, mFlushedCmdInfo.flushedCmdBytes,
+                mFlushedCmdInfo.flushes);
 }
 
 // -
 
 mozilla::ipc::IPCResult WebGLChild::RecvJsWarning(
     const std::string& text) const {
-  mContext.JsWarning(text);
+  if (!mContext) return IPC_OK();
+  mContext->JsWarning(text);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
     const webgl::ContextLossReason reason) const {
-  mContext.OnContextLoss(reason);
+  if (!mContext) return IPC_OK();
+  mContext->OnContextLoss(reason);
   return IPC_OK();
-}
-
-/* static */
-IpdlQueueProtocol WebGLChild::GetIpdlQueueProtocol(size_t aCmd, ...) {
-  bool isSync =
-      WebGLMethodDispatcher<>::SyncType(aCmd) == CommandSyncType::SYNC;
-  return isSync ? IpdlQueueProtocol::kSync : IpdlQueueProtocol::kBufferedAsync;
 }
 
 }  // namespace dom

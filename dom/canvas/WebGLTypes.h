@@ -25,7 +25,6 @@
 #include "nsString.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
-//#include "WebGLStrongTypes.h"
 
 // Manual reflection of WebIDL typedefs that are different from their
 // OpenGL counterparts.
@@ -289,9 +288,9 @@ class UniqueBuffer {
 
   void* get() const { return mBuffer; }
 
-  UniqueBuffer(const UniqueBuffer& other) =
+  explicit UniqueBuffer(const UniqueBuffer& other) =
       delete;  // construct using std::move()!
-  void operator=(const UniqueBuffer& other) =
+  UniqueBuffer& operator=(const UniqueBuffer& other) =
       delete;  // assign using std::move()!
 };
 
@@ -349,19 +348,6 @@ struct FloatOrInt final  // For TexParameter[fi] and friends.
     memcpy(this, &x, sizeof(x));
     return *this;
   }
-};
-
-struct WebGLPixelStore final {
-  uint32_t mUnpackImageHeight = 0;
-  uint32_t mUnpackSkipImages = 0;
-  uint32_t mUnpackRowLength = 0;
-  uint32_t mUnpackSkipRows = 0;
-  uint32_t mUnpackSkipPixels = 0;
-  uint32_t mUnpackAlignment = 0;
-  GLenum mColorspaceConversion = 0;
-  bool mFlipY = false;
-  bool mPremultiplyAlpha = false;
-  bool mRequireFastPath = false;
 };
 
 using WebGLTexUnpackVariant =
@@ -692,7 +678,7 @@ struct GetUniformData final {
 
 struct FrontBufferSnapshotIpc final {
   uvec2 surfSize = {};
-  Maybe<mozilla::ipc::Shmem> shmem;
+  mozilla::ipc::Shmem shmem = {};
 };
 
 struct ReadPixelsResult {
@@ -733,7 +719,7 @@ struct ICRData {
  * inner data type must be trivially copyable by memcpy.
  */
 template <typename T = uint8_t>
-class RawBuffer {
+class RawBuffer final {
   const T* mBegin = nullptr;
   size_t mLen = 0;
   UniqueBuffer mOwned;
@@ -752,6 +738,7 @@ class RawBuffer {
   ~RawBuffer() = default;
 
   Range<const T> Data() const { return {mBegin, mLen}; }
+  const auto& begin() const { return mBegin; };
 
   RawBuffer() = default;
 
@@ -870,6 +857,17 @@ inline GLenum ImageToTexTarget(const GLenum imageTarget) {
   }
 }
 
+inline bool IsTexTarget3D(const GLenum texTarget) {
+  switch (texTarget) {
+    case LOCAL_GL_TEXTURE_2D_ARRAY:
+    case LOCAL_GL_TEXTURE_3D:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
 // -
 
 namespace dom {
@@ -892,14 +890,76 @@ struct TexImageSource {
   ErrorResult* mOut_error = nullptr;
 };
 
+struct WebGLPixelStore final {
+  uint32_t mUnpackImageHeight = 0;
+  uint32_t mUnpackSkipImages = 0;
+  uint32_t mUnpackRowLength = 0;
+  uint32_t mUnpackSkipRows = 0;
+  uint32_t mUnpackSkipPixels = 0;
+  uint32_t mUnpackAlignment = 4;
+  GLenum mColorspaceConversion =
+      dom::WebGLRenderingContext_Binding::BROWSER_DEFAULT_WEBGL;
+  bool mFlipY = false;
+  bool mPremultiplyAlpha = false;
+  bool mRequireFastPath = false;
+
+  void Apply(gl::GLContext&, bool isWebgl2, const uvec3& uploadSize) const;
+
+  WebGLPixelStore ForUseWith(
+      const GLenum target, const uvec3& uploadSize,
+      const Maybe<gfx::IntSize>& structuredSrcSize) const {
+    auto ret = *this;
+
+    if (!IsTexTarget3D(target)) {
+      ret.mUnpackSkipImages = 0;
+      ret.mUnpackImageHeight = 0;
+    }
+
+    if (structuredSrcSize) {
+      ret.mUnpackRowLength = structuredSrcSize->width;
+    }
+
+    if (!ret.mUnpackRowLength) {
+      ret.mUnpackRowLength = uploadSize.x;
+    }
+    if (!ret.mUnpackImageHeight) {
+      ret.mUnpackImageHeight = uploadSize.y;
+    }
+
+    return ret;
+  }
+};
+
+struct TexImageData final {
+  WebGLPixelStore unpackState;
+
+  Maybe<uint64_t> pboOffset;
+
+  RawBuffer<> data;
+
+  const dom::Element* domElem = nullptr;
+  ErrorResult* out_domElemError = nullptr;
+};
+
+namespace webgl {
+
+struct TexUnpackBlobDesc final {
+  GLenum imageTarget = LOCAL_GL_TEXTURE_2D;
+  uvec3 size;
+  gfxAlphaType srcAlphaType = gfxAlphaType::NonPremult;
+
+  Maybe<RawBuffer<>> cpuData;
+  Maybe<uint64_t> pboOffset;
+  RefPtr<layers::Image> image;
+  RefPtr<gfx::DataSourceSurface> surf;
+
+  WebGLPixelStore unpacking;
+};
+
+}  // namespace webgl
+
 // ---------------------------------------
 // MakeRange
-
-inline Range<uint8_t> ByteRange(const mozilla::ipc::Shmem& shmem) {
-  return {shmem.get<uint8_t>(), shmem.Size<uint8_t>()};
-}
-
-// -
 
 template <typename T, size_t N>
 inline Range<const T> MakeRange(T (&arr)[N]) {

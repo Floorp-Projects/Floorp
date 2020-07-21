@@ -39,17 +39,19 @@ mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
   return IPC_OK();
 }
 
-WebGLParent::WebGLParent() : PcqActor(this) {}
+WebGLParent::WebGLParent() = default;
 WebGLParent::~WebGLParent() = default;
 
 // -
 
 using IPCResult = mozilla::ipc::IPCResult;
 
-IPCResult WebGLParent::RecvDispatchCommands(Shmem&& shmem,
+IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
                                             const uint64_t cmdsByteSize) {
+  auto shmem = webgl::RaiiShmem(this, std::move(rawShmem));
+
   MOZ_ASSERT(cmdsByteSize);
-  const auto shmemBytes = ByteRange(shmem);
+  const auto shmemBytes = shmem.ByteRange();
   const auto byteSize = std::min<uint64_t>(shmemBytes.length(), cmdsByteSize);
   const auto cmdsBytes =
       Range<const uint8_t>{shmemBytes.begin(), shmemBytes.begin() + byteSize};
@@ -84,16 +86,19 @@ IPCResult WebGLParent::RecvGetFrontBufferSnapshot(
   const auto surfSize = mHost->GetFrontBufferSize();
   const auto byteSize = 4 * surfSize.x * surfSize.y;
 
-  Shmem shmem;
-  if (!PWebGLParent::AllocShmem(
-          byteSize, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC,
-          &shmem)) {
+  auto shmem = webgl::RaiiShmem::Alloc(
+      this, byteSize, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
+  MOZ_ASSERT(shmem);
+  if (!shmem) {
     return IPC_FAIL(this, "Failed to allocate shmem for result");
   }
 
-  auto shmemBytes = ByteRange(shmem);
-  if (!mHost->FrontBufferSnapshotInto(shmemBytes)) return IPC_OK();
-  *ret = {surfSize, Some(std::move(shmem))};
+  const auto range = shmem.ByteRange();
+  auto retSize = surfSize;
+  if (!mHost->FrontBufferSnapshotInto(range)) {
+    retSize = {0, 0};  // Zero means failure.
+  }
+  *ret = {retSize, shmem.Extract()};
   return IPC_OK();
 }
 
@@ -101,43 +106,45 @@ IPCResult WebGLParent::RecvGetBufferSubData(const GLenum target,
                                             const uint64_t srcByteOffset,
                                             const uint64_t byteSize,
                                             Shmem* const ret) {
-  Shmem shmem;
-  if (!PWebGLParent::AllocShmem(
-          byteSize, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC,
-          &shmem)) {
-    MOZ_ASSERT(false);
+  const auto allocSize = 1 + byteSize;
+  auto shmem = webgl::RaiiShmem::Alloc(
+      this, allocSize,
+      mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
+  MOZ_ASSERT(shmem);
+  if (!shmem) {
     return IPC_FAIL(this, "Failed to allocate shmem for result");
   }
 
-  const auto range = ByteRange(shmem);
-  memset(range.begin().get(), 0,
-         range.length());  // TODO: This is usually overkill.
+  const auto shmemRange = shmem.ByteRange();
+  const auto dataRange =
+      Range<uint8_t>{shmemRange.begin() + 1, shmemRange.end()};
 
-  if (mHost->GetBufferSubData(target, srcByteOffset, range)) {
-    *ret = std::move(shmem);
-  }
+  // We need to always send the shmem:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1463831#c2
+  const auto ok = mHost->GetBufferSubData(target, srcByteOffset, dataRange);
+  *(shmemRange.begin().get()) = ok;
+  *ret = shmem.Extract();
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
-                                      const uint64_t byteCount,
+                                      const uint64_t byteSize,
                                       webgl::ReadPixelsResultIpc* const ret) {
   *ret = {};
 
-  Shmem shmem;
-  if (!PWebGLParent::AllocShmem(
-          byteCount, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC,
-          &shmem)) {
-    MOZ_ASSERT(false);
+  const auto allocSize = std::max<uint64_t>(1, byteSize);
+  auto shmem = webgl::RaiiShmem::Alloc(
+      this, allocSize,
+      mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
+  MOZ_ASSERT(shmem);
+  if (!shmem) {
     return IPC_FAIL(this, "Failed to allocate shmem for result");
   }
 
-  auto range = ByteRange(shmem);
-  memset(range.begin().get(), 0,
-         range.length());  // TODO: This is usually overkill.
+  const auto range = shmem.ByteRange();
 
   const auto res = mHost->ReadPixelsInto(desc, range);
-  *ret = {res, std::move(shmem)};
+  *ret = {res, shmem.Extract()};
   return IPC_OK();
 }
 

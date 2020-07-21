@@ -145,17 +145,6 @@ void WebGLContext::TexParameter_base(GLenum texTarget, GLenum pname,
 //////////////////////////////////////////////////////////////////////////////////////////
 // Uploads
 
-static bool IsTexTarget3D(const GLenum texTarget) {
-  switch (texTarget) {
-    case LOCAL_GL_TEXTURE_2D_ARRAY:
-    case LOCAL_GL_TEXTURE_3D:
-      return true;
-
-    default:
-      return false;
-  }
-}
-
 WebGLTexture* WebGLContext::GetActiveTex(const GLenum texTarget) const {
   const auto* list = &mBound2DTextures;
   switch (texTarget) {
@@ -197,25 +186,19 @@ void WebGLContext::TexStorage(GLenum texTarget, uint32_t levels,
   tex->TexStorage(texTarget, levels, internalFormat, size);
 }
 
-void WebGLContext::TexImage(GLenum imageTarget, uint32_t level,
-                            GLenum respecFormat, uvec3 offset, uvec3 size,
+void WebGLContext::TexImage(uint32_t level, GLenum respecFormat, uvec3 offset,
                             const webgl::PackingInfo& pi,
-                            const TexImageSource& src,
-                            const dom::HTMLCanvasElement& canvas) const {
+                            const webgl::TexUnpackBlobDesc& src) const {
   const WebGLContext::FuncScope funcScope(
       *this, bool(respecFormat) ? "texImage" : "texSubImage");
 
   if (respecFormat) {
     offset = {0, 0, 0};
   }
-  const auto texTarget = ImageToTexTarget(imageTarget);
-  if (!IsTexTarget3D(texTarget)) {
-    size.z = 1;
-  }
+  const auto texTarget = ImageToTexTarget(src.imageTarget);
   const auto tex = GetActiveTex(texTarget);
   if (!tex) return;
-  tex->TexImage(imageTarget, level, respecFormat, offset, size, pi, src,
-                canvas);
+  tex->TexImage(level, respecFormat, offset, pi, src);
 }
 
 void WebGLContext::CompressedTexImage(bool sub, GLenum imageTarget,

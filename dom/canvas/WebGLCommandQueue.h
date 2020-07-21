@@ -26,18 +26,6 @@ using webgl::QueueStatus;
 
 namespace webgl {
 
-struct ShmemCmdBuffer final {
-  mozilla::ipc::Shmem mShmem = {};
-  size_t mPos = 0;
-
-  Range<uint8_t> Remaining() const {
-    const auto range = ByteRange(mShmem);
-    return {range.begin() + mPos, range.end()};
-  }
-};
-
-// -
-
 class RangeConsumerView final : public webgl::ConsumerView<RangeConsumerView> {
   RangedPtr<const uint8_t> mSrcItr;
   const RangedPtr<const uint8_t> mSrcEnd;

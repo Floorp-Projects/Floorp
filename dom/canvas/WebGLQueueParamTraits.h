@@ -44,6 +44,9 @@ template <>
 struct IsTriviallySerializable<webgl::GetUniformData> : std::true_type {};
 
 template <>
+struct IsTriviallySerializable<mozilla::webgl::PackingInfo> : std::true_type {};
+
+template <>
 struct IsTriviallySerializable<ICRData> : std::true_type {};
 
 template <>
@@ -202,7 +205,6 @@ struct QueueParamTraits<std::vector<U>> {
 
   template <typename V>
   static QueueStatus Read(ConsumerView<V>& aConsumerView, T* aArg) {
-    MOZ_CRASH("no way to fallibly resize vectors without exceptions");
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;

@@ -575,19 +575,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   mDefaultVertexArray = WebGLVertexArray::Create(this);
   mDefaultVertexArray->BindVertexArray();
 
-  mPixelStore.mFlipY = false;
-  mPixelStore.mPremultiplyAlpha = false;
-  mPixelStore.mColorspaceConversion = BROWSER_DEFAULT_WEBGL;
-  mPixelStore.mRequireFastPath = false;
-
-  // GLES 3.0.4, p259:
-  mPixelStore.mUnpackImageHeight = 0;
-  mPixelStore.mUnpackSkipImages = 0;
-  mPixelStore.mUnpackRowLength = 0;
-  mPixelStore.mUnpackSkipRows = 0;
-  mPixelStore.mUnpackSkipPixels = 0;
-  mPixelStore.mUnpackAlignment = 4;
-
   mPrimRestartTypeBytes = 0;
 
   mGenericVertexAttribTypes.assign(limits.maxVertexAttribs,
