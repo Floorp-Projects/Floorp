@@ -158,10 +158,10 @@ async function testDoorHanger(
       if (useEscape) {
         EventUtils.synthesizeKey("KEY_Escape", {}, window);
       } else {
-        await clickMainAction();
+        await clickSecondaryAction();
       }
     } else if (choice == ALLOW) {
-      await clickSecondaryAction(choice - 1);
+      await clickMainAction();
     }
     if (choice != BLOCK) {
       await permChanged;

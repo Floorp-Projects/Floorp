@@ -38,6 +38,11 @@
   margin-bottom: .3em !important;
 }
 
+.popup-notification-hint-text {
+  opacity: 0.6;
+  margin-top: .5em !important;
+}
+
 .popup-notification-learnmore-link {
   margin-top: .5em !important;
 }

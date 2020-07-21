@@ -1272,12 +1272,17 @@ StorageAccessPermissionPrompt.prototype = {
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "third-party-cookies";
+    let hostPort = this.prettifyHostPort(this.principal.hostPort);
+    let hintText = gBrowserBundle.formatStringFromName(
+      "storageAccess.hintText",
+      [hostPort]
+    );
     return {
       learnMoreURL,
       displayURI: false,
-      name: this.prettifyHostPort(this.principal.hostPort),
-      secondName: this.prettifyHostPort(this.topLevelPrincipal.hostPort),
-      escAction: "buttoncommand",
+      name: hostPort,
+      hintText,
+      escAction: "secondarybuttoncommand",
     };
   },
 
@@ -1290,9 +1295,10 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   get message() {
-    return gBrowserBundle.formatStringFromName("storageAccess2.message", [
+    return gBrowserBundle.formatStringFromName("storageAccess3.message", [
       "<>",
-      "{}",
+      this.prettifyHostPort(this.topLevelPrincipal.hostPort),
+      this.prettifyHostPort(this.principal.hostPort),
     ]);
   },
 
@@ -1300,6 +1306,16 @@ StorageAccessPermissionPrompt.prototype = {
     let self = this;
 
     return [
+      {
+        label: gBrowserBundle.GetStringFromName("storageAccess.Allow.label"),
+        accessKey: gBrowserBundle.GetStringFromName(
+          "storageAccess.Allow.accesskey"
+        ),
+        action: Ci.nsIPermissionManager.ALLOW_ACTION,
+        callback(state) {
+          self.allow({ "storage-access": "allow" });
+        },
+      },
       {
         label: gBrowserBundle.GetStringFromName(
           "storageAccess.DontAllow.label"
@@ -1310,16 +1326,6 @@ StorageAccessPermissionPrompt.prototype = {
         action: Ci.nsIPermissionManager.DENY_ACTION,
         callback(state) {
           self.cancel();
-        },
-      },
-      {
-        label: gBrowserBundle.GetStringFromName("storageAccess.Allow.label"),
-        accessKey: gBrowserBundle.GetStringFromName(
-          "storageAccess.Allow.accesskey"
-        ),
-        action: Ci.nsIPermissionManager.ALLOW_ACTION,
-        callback(state) {
-          self.allow({ "storage-access": "allow" });
         },
       },
     ];
