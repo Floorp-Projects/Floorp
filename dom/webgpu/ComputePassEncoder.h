@@ -42,6 +42,8 @@ class ComputePassEncoder final : public ObjectBase,
                     const dom::Sequence<uint32_t>& aDynamicOffsets);
   void SetPipeline(const ComputePipeline& aPipeline);
   void Dispatch(uint32_t x, uint32_t y, uint32_t z);
+  void DispatchIndirect(const Buffer& aIndirectBuffer,
+                        uint64_t aIndirectOffset);
   void EndPass(ErrorResult& aRv);
 };
 

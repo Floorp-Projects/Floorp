@@ -59,6 +59,14 @@ void ComputePassEncoder::Dispatch(uint32_t x, uint32_t y, uint32_t z) {
   }
 }
 
+void ComputePassEncoder::DispatchIndirect(const Buffer& aIndirectBuffer,
+                                          uint64_t aIndirectOffset) {
+  if (mValid) {
+    ffi::wgpu_compute_pass_dispatch_indirect(&mRaw, aIndirectBuffer.mId,
+                                             aIndirectOffset);
+  }
+}
+
 void ComputePassEncoder::EndPass(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
