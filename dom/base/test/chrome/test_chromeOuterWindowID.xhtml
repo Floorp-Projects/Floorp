@@ -28,7 +28,7 @@ windows.
   const TEST_PAGE_2 = "http://example.com/browser";
 
   function getOuterWindowID(win) {
-    return win.windowUtils.outerWindowID;
+    return win.docShell.outerWindowID;
   }
 
   /**
