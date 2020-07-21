@@ -24,7 +24,6 @@ static void NonIncrementalGCSliceCallback(JSContext* cx,
   if (progress == GC_CYCLE_END) {
     mozilla::UniquePtr<char16_t> summary(desc.formatSummaryMessage(cx));
     mozilla::UniquePtr<char16_t> message(desc.formatSliceMessage(cx));
-    mozilla::UniquePtr<char16_t> json(desc.formatJSONTelemetry(cx, 0));
   }
 }
 

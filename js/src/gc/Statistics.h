@@ -300,11 +300,11 @@ struct Statistics {
   // Print total profile times on shutdown.
   void printTotalProfileTimes();
 
-  enum JSONUse { TELEMETRY, PROFILER };
+  // These JSON strings are used by the firefox profiler to display the GC
+  // markers.
 
-  // Return JSON for a whole major GC.  If use == PROFILER then
-  // detailed per-slice data and some other fields will be included.
-  UniqueChars renderJsonMessage(uint64_t timestamp, JSONUse use) const;
+  // Return JSON for a whole major GC
+  UniqueChars renderJsonMessage() const;
 
   // Return JSON for the timings of just the given slice.
   UniqueChars renderJsonSlice(size_t sliceNum) const;
@@ -465,7 +465,7 @@ struct Statistics {
   UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
   UniqueChars formatDetailedTotals() const;
 
-  void formatJsonDescription(uint64_t timestamp, JSONPrinter&, JSONUse) const;
+  void formatJsonDescription(JSONPrinter&) const;
   void formatJsonSliceDescription(unsigned i, const SliceData& slice,
                                   JSONPrinter&) const;
   void formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes,
