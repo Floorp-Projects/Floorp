@@ -59,7 +59,6 @@ var policy = {
   },
 
   shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
-
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
@@ -75,7 +74,7 @@ var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICate
 categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
 
 // Try creating different request types
-var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "XMLHTTPREQUEST"];
+var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "XMLHTTPREQUEST"];
 var curTest = -1;
 var div;
 
@@ -157,4 +156,3 @@ function request_xmlhttprequest() {
 </pre>
 </body>
 </html>
-
