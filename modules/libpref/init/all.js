@@ -3720,8 +3720,7 @@ pref("signon.capture.inputChanges.enabled", true);
 pref("signon.formlessCapture.enabled",      true);
 pref("signon.generation.available",               true);
 pref("signon.backup.enabled",               false);
-// A value of "-1" disables new-password heuristics. Can be updated once Bug 1618058 is resolved.
-pref("signon.generation.confidenceThreshold",     "-1");
+pref("signon.generation.confidenceThreshold",     "0.75");
 pref("signon.generation.enabled",                 true);
 pref("signon.passwordEditCapture.enabled",        false);
 pref("signon.privateBrowsingCapture.enabled",     true);
