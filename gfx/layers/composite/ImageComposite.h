@@ -106,7 +106,7 @@ class ImageComposite {
   void CountSkippedFrames(const TimedImage* aImage);
 
   // Update mLastFrameID and mLastProducerID, and report dropped frames.
-  void UpdateCompositedFrame(const TimedImage* aImage,
+  void UpdateCompositedFrame(int aImageIndex,
                              bool aWasVisibleAtPreviousComposition);
 
   // Emit a profiler marker about video frame timestamp jitter.
