@@ -7,6 +7,7 @@ package mozilla.components.feature.awesomebar
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.view.View
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
@@ -31,11 +32,13 @@ import mozilla.components.feature.tabs.TabsUseCases
 /**
  * Connects an [AwesomeBar] with a [Toolbar] and allows adding multiple [AwesomeBar.SuggestionProvider] implementations.
  */
+@Suppress("LongParameterList")
 class AwesomeBarFeature(
     private val awesomeBar: AwesomeBar,
     private val toolbar: Toolbar,
     private val engineView: EngineView? = null,
     private val icons: BrowserIcons? = null,
+    private val indicatorIcon: Drawable? = null,
     onEditStart: (() -> Unit)? = null,
     onEditComplete: (() -> Unit)? = null
 ) {
@@ -59,7 +62,7 @@ class AwesomeBarFeature(
         store: BrowserStore,
         selectTabUseCase: TabsUseCases.SelectTabUseCase
     ): AwesomeBarFeature {
-        val provider = SessionSuggestionProvider(resources, store, selectTabUseCase, icons)
+        val provider = SessionSuggestionProvider(resources, store, selectTabUseCase, icons, indicatorIcon)
         awesomeBar.addProviders(provider)
         return this
     }

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import android.graphics.drawable.Drawable
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -32,6 +33,7 @@ class BookmarksStorageSuggestionProvider(
     private val bookmarksStorage: BookmarksStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
+    private val indicatorIcon: Drawable? = null,
     private val engine: Engine? = null
 ) : AwesomeBar.SuggestionProvider {
 
@@ -63,6 +65,8 @@ class BookmarksStorageSuggestionProvider(
                 provider = this@BookmarksStorageSuggestionProvider,
                 id = result.guid,
                 icon = icon?.await()?.bitmap,
+                indicatorIcon = indicatorIcon,
+                flags = setOf(AwesomeBar.Suggestion.Flag.BOOKMARK),
                 title = result.title,
                 description = result.url,
                 onSuggestionClicked = { loadUrlUseCase.invoke(result.url!!) }

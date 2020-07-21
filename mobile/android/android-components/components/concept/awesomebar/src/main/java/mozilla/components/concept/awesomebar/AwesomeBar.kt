@@ -5,6 +5,7 @@
 package mozilla.components.concept.awesomebar
 
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.view.View
 import java.util.UUID
 
@@ -77,6 +78,7 @@ interface AwesomeBar {
      * @property description A user-readable description for the [Suggestion].
      * @property icon A lambda that can be invoked by the [AwesomeBar] implementation to receive an icon [Bitmap] for
      * this [Suggestion]. The [AwesomeBar] will pass in its desired width and height for the Bitmap.
+     * @property indicatorIcon A drawable for indicating different types of [Suggestion].
      * @property chips A list of [Chip] instances to be displayed.
      * @property flags A set of [Flag] values for this [Suggestion].
      * @property onSuggestionClicked A callback to be executed when the [Suggestion] was clicked by the user.
@@ -90,6 +92,7 @@ interface AwesomeBar {
         val title: String? = null,
         val description: String? = null,
         val icon: Bitmap? = null,
+        val indicatorIcon: Drawable? = null,
         val chips: List<Chip> = emptyList(),
         val flags: Set<Flag> = emptySet(),
         val onSuggestionClicked: (() -> Unit)? = null,

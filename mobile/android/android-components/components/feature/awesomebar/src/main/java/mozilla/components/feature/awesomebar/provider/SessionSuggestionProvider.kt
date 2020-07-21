@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import kotlinx.coroutines.Deferred
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
@@ -21,11 +22,13 @@ import java.util.UUID
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions based on the sessions in the
  * [SessionManager] (Open tabs).
  */
+@Suppress("LongParameterList")
 class SessionSuggestionProvider(
     private val resources: Resources,
     private val store: BrowserStore,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
     private val icons: BrowserIcons? = null,
+    private val indicatorIcon: Drawable? = null,
     private val excludeSelectedSession: Boolean = false
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
@@ -53,7 +56,9 @@ class SessionSuggestionProvider(
                             id = result.id,
                             title = result.content.title,
                             description = resources.getString(R.string.switch_to_tab_description),
+                            flags = setOf(AwesomeBar.Suggestion.Flag.OPEN_TAB),
                             icon = icon?.await()?.bitmap,
+                            indicatorIcon = indicatorIcon,
                             onSuggestionClicked = { selectTabUseCase(result.id) }
                         )
                 )

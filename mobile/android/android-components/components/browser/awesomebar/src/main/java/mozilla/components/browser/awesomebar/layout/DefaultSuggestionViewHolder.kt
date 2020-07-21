@@ -38,12 +38,22 @@ internal sealed class DefaultSuggestionViewHolder {
         private val descriptionView = view.findViewById<TextView>(R.id.mozac_browser_awesomebar_description).apply {
             setTextColor(awesomeBar.styling.descriptionTextColor)
         }
-        private val iconView = view.findViewById<ImageView>(R.id.mozac_browser_awesomebar_icon)
+        private val iconView: ImageView = view.findViewById(R.id.mozac_browser_awesomebar_icon)
+        private val iconIndicatorView: ImageView = view.findViewById(R.id.mozac_browser_awesomebar_icon_indicator)
 
         override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) {
             val title = if (suggestion.title.isNullOrEmpty()) suggestion.description else suggestion.title
 
             iconView.setImageBitmap(suggestion.icon)
+
+            if (suggestion.indicatorIcon == null) {
+                iconIndicatorView.visibility = View.GONE
+            } else {
+                iconIndicatorView.apply {
+                    setImageDrawable(suggestion.indicatorIcon)
+                    visibility = View.VISIBLE
+                }
+            }
 
             titleView.text = title?.take(MAX_TEXT_LENGTH)
 
