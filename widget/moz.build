@@ -318,6 +318,12 @@ LOCAL_INCLUDES += [
     '/widget/headless',
 ]
 
+# We use the CUPS headers on Cocoa and GTK, but on GTK we don't depend on there being system headers.
+if toolkit == 'gtk':
+    LOCAL_INCLUDES += [
+        '/third_party/cups/include'
+    ]
+
 if toolkit == 'windows':
     IPDL_SOURCES = [
         'headless/HeadlessWidgetTypes.ipdlh',
