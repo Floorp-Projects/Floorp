@@ -21,7 +21,10 @@ function ignore({ getState }) {
     }
 
     if (getState()[IGNORING]) {
-      console.warn("IGNORED REDUX ACTION:", action);
+      // We only print the action type, and not the whole action object, as it can holds
+      // very complex data that would clutter stdout logs and make them impossible
+      // to parse for treeherder.
+      console.warn("IGNORED REDUX ACTION:", action.type);
       return null;
     }
 
