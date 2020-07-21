@@ -24,11 +24,6 @@ open class GithubDetailsTask : DefaultTask() {
     private val suffix = "\n\n_(404 if compilation failed)_"
 
     /**
-     * Finds instances of the string {reportsUrl}.
-     */
-    private val replacementRegex = """(\{reportsUrl})""".toRegex()
-
-    /**
      * Action called by Gradle that writes the "customCheckRunText.md" file.
      */
     @TaskAction
