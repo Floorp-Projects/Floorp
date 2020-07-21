@@ -589,7 +589,6 @@ class UrlbarInput {
         searchProvider: result.payload.url.match(
           /^https?:\/\/(?:www.)?([^.]*)/
         )[1],
-        siteURL: result.payload.url,
         source: "urlbar",
       });
     }

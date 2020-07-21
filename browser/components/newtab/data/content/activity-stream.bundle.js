@@ -10327,7 +10327,6 @@ class TopSite extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
           type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_ATTRIBUTION,
           data: {
             searchProvider: this.props.link.hostname,
-            siteURL: this.props.link.url,
             source: "newtab"
           }
         }));
