@@ -4,107 +4,14 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <html>
   <head>
-    <meta charset="utf-8">
-    <title data-l10n-id="printui-title"></title>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:;img-src data:; object-src 'none'">
-
-    <link rel="localization" href="toolkit/printing/printDialogs.ftl">
-    <link rel="localization" href="toolkit/printing/printUI.ftl">
-
-    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/print.css">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <script defer src="chrome://global/content/print.js"></script>
   </head>
 
   <body>
-    <template id="page-range-template">
-      <select id="range-picker" name="page-range-type" data-l10n-id="printui-page-range-picker">
-        <option value="all" selected data-l10n-id="printui-page-range-all"></option>
-        <option value="custom" data-l10n-id="printui-page-range-custom"></option>
-      </select>
-      <input id="custom-range" name="page-range" pattern="\d(-\d)?" type="text" hidden data-l10n-id="printui-page-custom-range">
-    </template>
-
-    <template id="orientation-template">
-      <span>
-        <input type="radio" name="orientation" id="portrait" value="0" checked>
-        <label for="portrait" data-l10n-id="printui-portrait"></label>
-      </span>
-      <span>
-        <input type="radio" name="orientation" id="landscape" value="1">
-        <label for="landscape" data-l10n-id="printui-landscape"></label>
-      </span>
-    </template>
-
-    <template id="twisty-summary-template">
-      <span class="label"></span>
-      <span class="twisty"></span>
-    </template>
-
-    <template id="scale-template">
-      <div role="radiogroup" aria-labelledby="scale-label">
-        <div>
-          <input type="radio" name="scale-choice" id="fit-choice" value="fit" checked>
-          <label for="fit-choice" data-l10n-id="printui-scale-fit-to-page"></label>
-        </div>
-        <div>
-          <input type="radio" name="scale-choice" id="percent-scale-choice">
-          <label for="percent-scale-choice" data-l10n-id="printui-scale-pcent"></label>
-          <input id="percent-scale" type="text" placeholder="100%" disabled>
-        </div>
-      </div>
-    </template>
-
-    <header class="row header-container">
-      <h2 data-l10n-id="printui-title"></h2>
-      <p id="sheets-count" data-deferred-l10n-id="printui-sheets-count"></p>
-    </header>
-
-    <form id="print">
-      <section class="body-container">
-        <section id="destination" class="row">
-          <label for="printer-picker" class="block-label" data-l10n-id="printui-destination-label"></label>
-          <select is="destination-picker" id="printer-picker"></select>
-        </section>
-        <section id="settings">
-          <section id="copies" class="row">
-            <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" type="number" min="1">
-          </section>
-
-          <section id="orientation" class="row">
-            <div role="radiogroup" aria-labelledby="orientation-label">
-              <label class="block-label" data-l10n-id="printui-orientation"></label>
-              <span id="orientation-input" is="orientation-input" class="orientation-input"></span>
-            </div>
-          </section>
-
-          <section id="pages" class="row">
-            <label for="page-range-input" class="block-label" data-l10n-id="printui-page-range-label"></label>
-            <span id="page-range-input" is="page-range-input" class="page-range-input"></span>
-          </section>
-
-          <details id="more-settings" class="twisty">
-            <summary class="block-label row" is="twisty-summary"
-                     data-open-l10n-id="printui-less-settings"
-                     data-closed-l10n-id="printui-more-settings"></summary>
-            <section id="scale" class="row">
-              <label for="scale-control" class="block-label" data-l10n-id="printui-scale"></label>
-              <div is="scale-input" id="scale-control" role="radiogroup"></div>
-            </section>
-          </details>
-        </section>
-      </section>
-
-      <footer class="footer-container">
-        <section id="system-print" class="row">
-          <a href="#" id="open-dialog-link" data-l10n-id="printui-system-dialog-link"></a>
-        </section>
-        <section id="button-container" class="row">
-          <button class="primary" name="print" data-l10n-id="printui-primary-button"></button>
-          <button name="cancel" data-l10n-id="printui-cancel-button"></button>
-        </section>
-      </footer>
-    </form>
+    <h1>Print</h1>
+    <h2 id="tab-title"></h2>
+    <a href="#" id="open-dialog-link">Open Native Dialog...</a>
   </body>
 </html>
