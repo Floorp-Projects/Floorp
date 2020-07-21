@@ -1209,8 +1209,11 @@ async function refresh(msg) {
 
   try {
     // We need to move to the top frame before navigating
-    sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
+    sendSyncMessage("Marionette:switchedToFrame", {
+      frameValue: null,
+      browsingContextId: curContainer.id,
+    });
 
     await loadListener.navigate(
       () => {
@@ -1478,6 +1481,7 @@ function switchToParentFrame(msg) {
 
   sendSyncMessage("Marionette:switchedToFrame", {
     frameValue: parentElement.uuid,
+    browsingContextId: curContainer.id,
   });
 
   sendOk(msg.json.commandID);
@@ -1513,8 +1517,11 @@ function switchToFrame({ json }) {
 
   // switch to top-level frame
   if (id == null && !element) {
-    sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
+    sendSyncMessage("Marionette:switchedToFrame", {
+      frameValue: null,
+      browsingContextId: curContainer.id,
+    });
 
     if (focus) {
       curContainer.frame.focus();
@@ -1575,8 +1582,11 @@ function switchToFrame({ json }) {
           } else {
             // If foundFrame is null at this point then we have the top
             // level browsing context so should treat it accordingly.
-            sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
             curContainer.frame = content;
+            sendSyncMessage("Marionette:switchedToFrame", {
+              frameValue: null,
+              browsingContextId: curContainer.id,
+            });
 
             if (focus) {
               curContainer.frame.focus();
@@ -1605,6 +1615,8 @@ function switchToFrame({ json }) {
     return;
   }
 
+  curContainer.frame = foundFrame;
+
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
   if (!frameWebEl) {
@@ -1612,9 +1624,9 @@ function switchToFrame({ json }) {
   }
   sendSyncMessage("Marionette:switchedToFrame", {
     frameValue: frameWebEl.uuid,
+    browsingContextId: curContainer.id,
   });
 
-  curContainer.frame = foundFrame;
   if (focus) {
     curContainer.frame.focus();
   }
