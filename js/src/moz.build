@@ -126,7 +126,6 @@ EXPORTS.js += [
     '../public/Array.h',
     '../public/ArrayBuffer.h',
     '../public/ArrayBufferMaybeShared.h',
-    '../public/BigInt.h',
     '../public/BuildId.h',
     '../public/CallArgs.h',
     '../public/CallNonGenericMethod.h',
