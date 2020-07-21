@@ -1463,12 +1463,7 @@ pref("identity.fxaccounts.remote.pairing.uri", "wss://channelserver.services.moz
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
 // Fetch Sync tokens using the OAuth token function
-#ifdef NIGHTLY_BUILD
-  // Only enabled in Nightly to avoid excessive / abnormal traffic to FxA
-  pref("identity.sync.useOAuthForSyncToken", true);
-#else
-  pref("identity.sync.useOAuthForSyncToken", false);
-#endif
+pref("identity.sync.useOAuthForSyncToken", true);
 
 // Using session tokens to fetch OAuth tokens
 pref("identity.fxaccounts.useSessionTokensForOAuth", true);
