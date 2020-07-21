@@ -11248,7 +11248,10 @@ nsSize PresShell::GetVisualViewportSizeUpdatedByDynamicToolbar() const {
   MOZ_ASSERT(GetDynamicToolbarState() == DynamicToolbarState::InTransition ||
              GetDynamicToolbarState() == DynamicToolbarState::Collapsed);
 
-  return mMobileViewportManager->GetVisualViewportSizeUpdatedByDynamicToolbar();
+  nsSize sizeUpdatedByDynamicToolbar =
+      mMobileViewportManager->GetVisualViewportSizeUpdatedByDynamicToolbar();
+  return sizeUpdatedByDynamicToolbar == nsSize() ? mVisualViewportSize
+                                                 : sizeUpdatedByDynamicToolbar;
 }
 
 void PresShell::RecomputeFontSizeInflationEnabled() {
