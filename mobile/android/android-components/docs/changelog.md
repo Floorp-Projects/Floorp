@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **support-images**
+  * ⚠️ **This is a breaking change**: Removed `ImageLoader.loadIntoView(view: ImageView, id: String)` extension function.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)
@@ -79,7 +82,7 @@ permalink: /changelog/
     * BUGFIX: fix `int32` to `ErrorType` mapping. The `InvalidOverflow` had a value mismatch between glean-core and the bindings. This would only be a problem in unit tests. ([#1063](https://github.com/mozilla/glean/pull/1063))
     * Enable propagating options to the main product Activity when using the `GleanDebugActivity`.
     * BUGFIX: Fix the metrics ping collection for startup pings such as `reason=upgrade` to occur in the same thread/task as Glean initialize. Otherwise, it gets collected after the application lifetime metrics are cleared such as experiments that should be in the ping. ([#1069](https://github.com/mozilla/glean/pull/1069))
-    
+
 * **service-location**
   * `LocationService.hasRegionCached()` is introduced to query if the region is already cached and a long running operation to fetch the region is not needed.
 
