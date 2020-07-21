@@ -1034,7 +1034,7 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
   // Ideally in the future we will only start loads from here, and we can
   // just set this directly instead.
   return net::DocumentLoadListener::LoadInParent(this, aLoadState,
-                                                 outerWindowId, aSetNavigating);
+                                                 aSetNavigating);
 }
 
 bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
@@ -1058,8 +1058,7 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
   // If we successfully open the DocumentChannel, then it'll register
   // itself using aLoadIdentifier and be kept alive until it completes
   // loading.
-  return net::DocumentLoadListener::SpeculativeLoadInParent(this, aLoadState,
-                                                            outerWindowId);
+  return net::DocumentLoadListener::SpeculativeLoadInParent(this, aLoadState);
 }
 
 bool CanonicalBrowsingContext::StartDocumentLoad(

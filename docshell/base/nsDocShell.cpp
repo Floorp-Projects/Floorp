@@ -9419,9 +9419,26 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel)) {
     timedChannel->SetTimingEnabled(true);
 
-    auto& embedderElementType = aBrowsingContext->GetEmbedderElementType();
-    if (embedderElementType) {
-      timedChannel->SetInitiatorType(*embedderElementType);
+    nsString initiatorType;
+    switch (aLoadInfo->InternalContentPolicyType()) {
+      case nsIContentPolicy::TYPE_INTERNAL_EMBED:
+        initiatorType = u"embed"_ns;
+        break;
+      case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
+        initiatorType = u"object"_ns;
+        break;
+      default: {
+        const auto& embedderElementType =
+            aBrowsingContext->GetEmbedderElementType();
+        if (embedderElementType) {
+          initiatorType = *embedderElementType;
+        }
+        break;
+      }
+    }
+
+    if (!initiatorType.IsEmpty()) {
+      timedChannel->SetInitiatorType(initiatorType);
     }
   }
 
@@ -9751,9 +9768,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIChannel> channel;
   if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
                                              aLoadState->LoadFlags())) {
-    channel = DocumentChannel::CreateDocumentChannel(aLoadState, loadInfo,
-                                                     loadFlags, this, cacheKey,
-                                                     uriModified, isXFOError);
+    channel = DocumentChannel::CreateForDocument(aLoadState, loadInfo,
+                                                 loadFlags, this, cacheKey,
+                                                 uriModified, isXFOError);
     MOZ_ASSERT(channel);
 
     // Disable keyword fixup when using DocumentChannel, since
