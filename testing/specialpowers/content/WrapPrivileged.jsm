@@ -132,7 +132,9 @@ function wrapPrivileged(obj, win) {
   let { windowID, proxies, handler } = perWindowInfo.get(win) || {};
   // |windowUtils| is undefined if |win| is a non-window object
   // such as a sandbox.
-  let currentID = win.windowUtils ? win.windowUtils.currentInnerWindowID : 0;
+  let currentID = win.windowGlobalChild
+    ? win.windowGlobalChild.innerWindowId
+    : 0;
   // Values are dead objects if the inner window is changed.
   if (windowID !== currentID) {
     windowID = currentID;

@@ -17,7 +17,7 @@ function test() {
   );
 
   function getInnerWindowId(aWindow) {
-    return aWindow.windowUtils.currentInnerWindowID;
+    return aWindow.windowGlobalChild.innerWindowId;
   }
 
   function whenNewWindowLoaded(aOptions, aCallback) {
