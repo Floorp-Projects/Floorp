@@ -188,16 +188,6 @@ const pageStyleSpec = generateActorSpec({
       },
       response: RetVal("appliedStylesReturn"),
     },
-    getAttributesInOwnerDocument: {
-      request: {
-        search: Arg(0, "string"),
-        attributeType: Arg(1, "string"),
-        node: Arg(2, "nullable:domnode"),
-      },
-      response: {
-        attributes: RetVal("array:string"),
-      },
-    },
   },
 });
 

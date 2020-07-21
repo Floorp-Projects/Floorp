@@ -193,24 +193,6 @@ class ClassList {
       }
     }
   }
-
-  /**
-   * Get the available classNames in the document where the current selected node lives:
-   * - the one already used on elements of the document
-   * - the one defined in Stylesheets of the document
-   *
-   * @param {String} filter: A string the classNames should start with (an insensitive
-   *                         case matching will be done).
-   * @returns {Promise<Array<String>>} A promise that resolves with an array of strings
-   *                                   matching the passed filter.
-   */
-  getClassNames(filter) {
-    return this.currentNode.inspectorFront.pageStyle.getAttributesInOwnerDocument(
-      filter,
-      "class",
-      this.currentNode
-    );
-  }
 }
 
 module.exports = ClassList;
