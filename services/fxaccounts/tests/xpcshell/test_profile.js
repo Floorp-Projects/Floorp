@@ -347,6 +347,119 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   Assert.equal(numFetches, 2);
 });
 
+add_task(async function test_ensureProfile() {
+  let client = new FxAccountsProfileClient({
+    serverURL: "http://127.0.0.1:1111/v1",
+    fxa: mockFxa(),
+  });
+  let profile = CreateFxAccountsProfile(null, client);
+
+  const testCases = [
+    // profile retrieval when there is no cached profile info
+    {
+      threshold: 1000,
+      hasRecentCachedProfile: false,
+      cachedProfile: null,
+      fetchedProfile: {
+        uid: ACCOUNT_UID,
+        email: ACCOUNT_EMAIL,
+        avatar: "myimg",
+      },
+    },
+    // profile retrieval when the cached profile is recent
+    {
+      // Note: The threshold for this test case is being set to an arbitrary value that will
+      // be greater than Date.now() so the retrieved cached profile will be deemed recent.
+      threshold: Date.now() + 5000,
+      hasRecentCachedProfile: true,
+      cachedProfile: {
+        uid: `${ACCOUNT_UID}2`,
+        email: `${ACCOUNT_EMAIL}2`,
+        avatar: "myimg2",
+      },
+    },
+    // profile retrieval when the cached profile is old and a new profile is fetched
+    {
+      threshold: 1000,
+      hasRecentCachedProfile: false,
+      cachedProfile: {
+        uid: `${ACCOUNT_UID}3`,
+        email: `${ACCOUNT_EMAIL}3`,
+        avatar: "myimg3",
+      },
+      fetchAndCacheProfileResolves: true,
+      fetchedProfile: {
+        uid: `${ACCOUNT_UID}4`,
+        email: `${ACCOUNT_EMAIL}4`,
+        avatar: "myimg4",
+      },
+    },
+    // profile retrieval when the cached profile is old and a null profile is fetched
+    {
+      threshold: 1000,
+      hasRecentCachedProfile: false,
+      cachedProfile: {
+        uid: `${ACCOUNT_UID}5`,
+        email: `${ACCOUNT_EMAIL}5`,
+        avatar: "myimg5",
+      },
+      fetchAndCacheProfileResolves: true,
+      fetchedProfile: null,
+    },
+    // profile retrieval when the cached profile is old and fetching a new profile errors
+    {
+      threshold: 1000,
+      hasRecentCachedProfile: false,
+      cachedProfile: {
+        uid: `${ACCOUNT_UID}6`,
+        email: `${ACCOUNT_EMAIL}6`,
+        avatar: "myimg6",
+      },
+      fetchAndCacheProfileResolves: false,
+    },
+  ];
+
+  for (const tc of testCases) {
+    let mockProfile = sinon.mock(profile);
+    mockProfile
+      .expects("_getProfileCache")
+      .once()
+      .returns({
+        profile: tc.cachedProfile,
+      });
+    profile.PROFILE_FRESHNESS_THRESHOLD = tc.threshold;
+
+    if (tc.hasRecentCachedProfile) {
+      mockProfile.expects("_fetchAndCacheProfile").never();
+
+      let actualProfile = await profile.ensureProfile();
+      mockProfile.verify();
+      Assert.equal(actualProfile, tc.cachedProfile);
+    } else if (tc.fetchAndCacheProfileResolves) {
+      mockProfile
+        .expects("_fetchAndCacheProfile")
+        .once()
+        .resolves(tc.fetchedProfile);
+
+      let actualProfile = await profile.ensureProfile();
+      let expectedProfile = tc.fetchedProfile
+        ? tc.fetchedProfile
+        : tc.cachedProfile;
+      mockProfile.verify();
+      Assert.equal(actualProfile, expectedProfile);
+    } else {
+      mockProfile
+        .expects("_fetchAndCacheProfile")
+        .once()
+        .rejects();
+
+      let actualProfile = await profile.ensureProfile();
+      mockProfile.verify();
+      Assert.equal(actualProfile, tc.cachedProfile);
+    }
+  }
+});
+
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one *does* kick off a new request if ON_PROFILE_CHANGE_NOTIFICATION
 // is sent.
