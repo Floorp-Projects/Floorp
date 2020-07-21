@@ -241,7 +241,7 @@ class Page extends ContentProcessDomain {
     const window = defaultContext.window;
 
     const executionContextId = Runtime._onContextCreated("context-created", {
-      windowId: window.windowGlobalChild.innerWindowId,
+      windowId: window.windowUtils.currentInnerWindowID,
       window,
       isDefault: false,
       contextName: worldName,
