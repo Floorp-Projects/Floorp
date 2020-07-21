@@ -197,6 +197,8 @@ var gSync = {
     EnsureFxAccountsWebChannel();
 
     this._initialized = true;
+
+    this.viewCacheTemplate = document.getElementById("appMenu-viewCache");
   },
 
   uninit() {
@@ -695,10 +697,8 @@ var gSync = {
   },
 
   updateSyncStatus(state) {
-    let viewCacheTemplate = document.getElementById("appMenu-viewCache");
-
     let syncNow =
-      viewCacheTemplate.content.querySelector(".syncNowBtn") ||
+      this.viewCacheTemplate.content.querySelector(".syncNowBtn") ||
       document.querySelector(".syncNowBtn");
     const syncingUI = syncNow.getAttribute("syncstatus") == "active";
     if (state.syncing != syncingUI) {
@@ -1241,6 +1241,15 @@ var gSync = {
   onActivityStart() {
     clearTimeout(this._syncAnimationTimer);
     this._syncStartTime = Date.now();
+
+    this.viewCacheTemplate.content
+      .querySelectorAll(".syncNowBtn")
+      .forEach(el => {
+        el.setAttribute("syncstatus", "active");
+        el.setAttribute("disabled", "true");
+        document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
+      });
+
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.setAttribute("syncstatus", "active");
       el.setAttribute("disabled", "true");
@@ -1252,6 +1261,14 @@ var gSync = {
     if (!gBrowser) {
       return;
     }
+
+    this.viewCacheTemplate.content
+      .querySelectorAll(".syncNowBtn")
+      .forEach(el => {
+        el.removeAttribute("syncstatus");
+        el.removeAttribute("disabled");
+        document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
+      });
 
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.removeAttribute("syncstatus");
@@ -1440,6 +1457,16 @@ var gSync = {
         el.removeAttribute("tooltiptext");
       }
     });
+
+    this.viewCacheTemplate.content
+      .querySelectorAll(".syncNowBtn")
+      .forEach(el => {
+        if (tooltiptext) {
+          el.setAttribute("tooltiptext", tooltiptext);
+        } else {
+          el.removeAttribute("tooltiptext");
+        }
+      });
   },
 
   get relativeTimeFormat() {
