@@ -312,9 +312,35 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
   if (count == 0) {
     mRefCnt = 1; /* stabilize */
-    delete this;
+
+    // We don't have a listener when AsyncOpen has failed or when this channel
+    // has been sucessfully redirected.
+    if (MOZ_LIKELY(mOnStartRequestCalled && mOnStopRequestCalled) ||
+        !mListener) {
+      delete this;
+      return 0;
+    }
+
+    // This makes sure we fulfill the stream listener contract all the time.
+    if (NS_SUCCEEDED(mStatus)) {
+      mStatus = NS_ERROR_ABORT;
+    }
+    nsresult rv = NS_DispatchToMainThread(
+        NewRunnableMethod("~HttpChannelChild>DoNotifyListener", this,
+                          &HttpChannelChild::DoNotifyListener));
+    if (NS_FAILED(rv)) {
+      // Prevent loops.
+      mOnStartRequestCalled = true;
+      mOnStopRequestCalled = true;
+      // This reverts the stabilization we have made above.  Instead of
+      // doing `delete this` it's safer to call Release() again in case the
+      // dispatch somehow leaks and there has been a reference added.
+      return Release();
+    }
+
     return 0;
   }
+
   return count;
 }
 
