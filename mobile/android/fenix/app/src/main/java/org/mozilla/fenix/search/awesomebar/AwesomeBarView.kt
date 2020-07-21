@@ -16,6 +16,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
@@ -28,51 +29,6 @@ import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
-
-/**
- * Interface for the AwesomeBarView Interactor. This interface is implemented by objects that want
- * to respond to user interaction on the AwesomebarView
- */
-interface AwesomeBarInteractor {
-
-    /**
-     * Called whenever a suggestion containing a URL is tapped
-     * @param url the url the suggestion was providing
-     */
-    fun onUrlTapped(url: String)
-
-    /**
-     * Called whenever a search engine suggestion is tapped
-     * @param searchTerms the query contained by the search suggestion
-     */
-    fun onSearchTermsTapped(searchTerms: String)
-
-    /**
-     * Called whenever a search engine shortcut is tapped
-     * @param searchEngine the searchEngine that was selected
-     */
-    fun onSearchShortcutEngineSelected(searchEngine: SearchEngine)
-
-    /**
-     * Called whenever the "Search Engine Settings" item is tapped
-     */
-    fun onClickSearchEngineSettings()
-
-    /**
-     * Called whenever an existing session is selected from the sessionSuggestionProvider
-     */
-    fun onExistingSessionSelected(session: Session)
-
-    /**
-     * Called whenever an existing session is selected from the sessionSuggestionProvider
-     */
-    fun onExistingSessionSelected(tabId: String)
-
-    /**
-     * Called whenever the Shortcuts button is clicked
-     */
-    fun onSearchShortcutsButtonClicked()
-}
 
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -88,7 +44,8 @@ class AwesomeBarView(
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
-    private val searchSuggestionProviderMap: MutableMap<SearchEngine, SearchSuggestionProvider>
+    private val defaultSearchActionProvider: SearchActionProvider
+    private val searchSuggestionProviderMap: MutableMap<SearchEngine, List<AwesomeBar.SuggestionProvider>>
     private var providersInUse = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
@@ -141,7 +98,8 @@ class AwesomeBarView(
         val draw = getDrawable(context, R.drawable.ic_link)!!
         draw.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
 
-        val engineForSpeculativeConnects = if (!isBrowsingModePrivate()) components.core.engine else null
+        val engineForSpeculativeConnects =
+            if (!isBrowsingModePrivate()) components.core.engine else null
         sessionProvider =
             SessionSuggestionProvider(
                 context.resources,
@@ -167,8 +125,9 @@ class AwesomeBarView(
                 engineForSpeculativeConnects
             )
 
-        val searchDrawable = getDrawable(context, R.drawable.ic_search)!!
-        searchDrawable.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
+        val searchBitmap = getDrawable(context, R.drawable.ic_search)!!.apply {
+            colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
+        }.toBitmap()
 
         defaultSearchSuggestionProvider =
             SearchSuggestionProvider(
@@ -178,9 +137,20 @@ class AwesomeBarView(
                 fetchClient = components.core.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                 limit = 3,
-                icon = searchDrawable.toBitmap(),
+                icon = searchBitmap,
                 showDescription = false,
-                engine = engineForSpeculativeConnects
+                engine = engineForSpeculativeConnects,
+                filterExactMatch = true
+            )
+
+        defaultSearchActionProvider =
+            SearchActionProvider(
+                searchEngineGetter = suspend {
+                    components.search.searchEngineManager.getDefaultSearchEngineAsync(context)
+                },
+                searchUseCase = searchUseCase,
+                icon = searchBitmap,
+                showDescription = false
             )
 
         shortcutsEnginePickerProvider =
@@ -248,9 +218,7 @@ class AwesomeBarView(
         }
 
         if (state.showSearchSuggestions) {
-            getSelectedSearchSuggestionProvider(state)?.let {
-                providersToAdd.add(it)
-            }
+            providersToAdd.addAll(getSelectedSearchSuggestionProvider(state))
         }
 
         if (!isBrowsingModePrivate()) {
@@ -274,9 +242,7 @@ class AwesomeBarView(
         }
 
         if (!state.showSearchSuggestions) {
-            getSelectedSearchSuggestionProvider(state)?.let {
-                providersToRemove.add(it)
-            }
+            providersToRemove.addAll(getSelectedSearchSuggestionProvider(state))
         }
 
         if (isBrowsingModePrivate()) {
@@ -291,9 +257,12 @@ class AwesomeBarView(
             ?: false
     }
 
-    private fun getSelectedSearchSuggestionProvider(state: SearchFragmentState): SearchSuggestionProvider? {
+    private fun getSelectedSearchSuggestionProvider(state: SearchFragmentState): List<AwesomeBar.SuggestionProvider> {
         return when (state.searchEngineSource) {
-            is SearchEngineSource.Default -> defaultSearchSuggestionProvider
+            is SearchEngineSource.Default -> listOf(
+                defaultSearchActionProvider,
+                defaultSearchSuggestionProvider
+            )
             is SearchEngineSource.Shortcut -> getSuggestionProviderForEngine(
                 state.searchEngineSource.searchEngine
             )
@@ -307,26 +276,38 @@ class AwesomeBarView(
         view.addProviders(shortcutsEnginePickerProvider)
     }
 
-    private fun getSuggestionProviderForEngine(engine: SearchEngine): SearchSuggestionProvider? {
+    private fun getSuggestionProviderForEngine(engine: SearchEngine): List<AwesomeBar.SuggestionProvider> {
         return searchSuggestionProviderMap.getOrPut(engine) {
             val context = container.context
             val components = context.components
             val primaryTextColor = context.getColorFromAttr(R.attr.primaryText)
 
-            val draw = getDrawable(context, R.drawable.ic_search)
-            draw?.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
+            val searchBitmap = getDrawable(context, R.drawable.ic_search)?.apply {
+                colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
+            }?.toBitmap()
 
-            val engineForSpeculativeConnects = if (!isBrowsingModePrivate()) components.core.engine else null
-
-            SearchSuggestionProvider(
+            val engineForSpeculativeConnects =
+                if (!isBrowsingModePrivate()) components.core.engine else null
+            val searchEngine =
                 components.search.provider.installedSearchEngines(context).list.find { it.name == engine.name }
-                    ?: components.search.provider.getDefaultEngine(context),
-                shortcutSearchUseCase,
-                components.core.client,
-                limit = 3,
-                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                icon = draw?.toBitmap(),
-                engine = engineForSpeculativeConnects
+                    ?: components.search.provider.getDefaultEngine(context)
+
+            listOf(
+                SearchActionProvider(
+                    searchEngineGetter = suspend { searchEngine },
+                    searchUseCase = shortcutSearchUseCase,
+                    icon = searchBitmap
+                ),
+                SearchSuggestionProvider(
+                    searchEngine,
+                    shortcutSearchUseCase,
+                    components.core.client,
+                    limit = 3,
+                    mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                    icon = searchBitmap,
+                    engine = engineForSpeculativeConnects,
+                    filterExactMatch = true
+                )
             )
         }
     }
