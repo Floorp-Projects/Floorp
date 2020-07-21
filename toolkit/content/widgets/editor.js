@@ -172,7 +172,7 @@
     }
 
     get outerWindowID() {
-      return this.contentWindow.windowUtils.outerWindowID;
+      return this.docShell.outerWindowID;
     }
 
     makeEditable(editortype, waitForUrlLoad) {
