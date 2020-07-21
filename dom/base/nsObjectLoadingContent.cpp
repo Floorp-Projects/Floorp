@@ -48,6 +48,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShellCID.h"
+#include "nsDocShellLoadState.h"
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
@@ -88,6 +89,7 @@
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
@@ -2267,38 +2269,28 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   RefPtr<ObjectInterfaceRequestorShim> shim =
       new ObjectInterfaceRequestorShim(this);
 
-  bool inherit = nsContentUtils::ChannelShouldInheritPrincipal(
-      thisContent->NodePrincipal(), mURI,
-      true,    // aInheritForAboutBlank
-      false);  // aForceInherit
-  nsSecurityFlags securityFlags =
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+  bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
+      thisContent->NodePrincipal(),  // aLoadState->PrincipalToInherit()
+      mURI,                          // aLoadState->URI()
+      true,                          // aInheritForAboutBlank
+      false);                        // aForceInherit
 
   bool isURIUniqueOrigin =
       StaticPrefs::security_data_uri_unique_opaque_origin() &&
-      mURI->SchemeIs("data");
+      SchemeIsData(mURI);
+  bool inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
 
-  if (inherit && !isURIUniqueOrigin) {
+  nsSecurityFlags securityFlags =
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+  if (inheritPrincipal) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
   nsContentPolicyType contentPolicyType = GetContentPolicyType();
-
-  rv = NS_NewChannel(getter_AddRefs(chan), mURI, thisContent, securityFlags,
-                     contentPolicyType,
-                     nullptr,  // aPerformanceStorage
-                     group,    // aLoadGroup
-                     shim,     // aCallbacks
-                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
-                         nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
-                         nsIRequest::LOAD_HTML_OBJECT_DATA,
-                     nullptr,  // aIoService
-                     doc->GetSandboxFlags());
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (inherit) {
-    nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
-    loadinfo->SetPrincipalToInherit(thisContent->NodePrincipal());
-  }
+  nsLoadFlags loadFlags = nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
+                          nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
+                          nsIRequest::LOAD_HTML_OBJECT_DATA;
+  uint32_t sandboxFlags = doc->GetSandboxFlags();
 
   // For object loads we store the CSP that potentially needs to
   // be inherited, e.g. in case we are loading an opaque origin
@@ -2307,13 +2299,79 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   // (do not share the same reference) otherwise a Meta CSP of an
   // opaque origin will incorrectly be propagated to the embedding
   // document.
-  nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
-  if (csp) {
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+  RefPtr<nsCSPContext> cspToInherit;
+  if (nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp()) {
+    cspToInherit = new nsCSPContext();
     cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
-    static_cast<LoadInfo*>(loadinfo.get())->SetCSPToInherit(cspToInherit);
   }
+
+  // --- Create LoadInfo
+  RefPtr<LoadInfo> loadInfo = new LoadInfo(
+      /*aLoadingPrincipal = aLoadingContext->NodePrincipal() */ nullptr,
+      /*aTriggeringPrincipal = aLoadingPrincipal */ nullptr,
+      /*aLoadingContext = */ thisContent,
+      /*aSecurityFlags = */ securityFlags,
+      /*aContentPolicyType = */ contentPolicyType,
+      /*aLoadingClientInfo = */ Nothing(),
+      /*aController = */ Nothing(),
+      /*aSandboxFlags = */ sandboxFlags);
+
+  if (inheritAttrs) {
+    loadInfo->SetPrincipalToInherit(thisContent->NodePrincipal());
+  }
+
+  if (cspToInherit) {
+    loadInfo->SetCSPToInherit(cspToInherit);
+  }
+
+  if (DocumentChannel::CanUseDocumentChannel(
+          mURI, nsIWebNavigation::LOAD_FLAGS_NONE)) {
+    // --- Create LoadState
+    RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(mURI);
+    loadState->SetPrincipalToInherit(thisContent->NodePrincipal());
+    loadState->SetTriggeringPrincipal(loadInfo->TriggeringPrincipal());
+    if (cspToInherit) {
+      loadState->SetCsp(cspToInherit);
+    }
+    // TODO(djg): This was httpChan->SetReferrerInfoWithoutClone(referrerInfo);
+    // Is the ...WithoutClone(...) important?
+    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
+    loadState->SetReferrerInfo(referrerInfo);
+
+    chan =
+        DocumentChannel::CreateForObject(loadState, loadInfo, loadFlags, shim);
+    MOZ_ASSERT(chan);
+    // NS_NewChannel sets the group on the channel.  CreateDocumentChannel does
+    // not.
+    chan->SetLoadGroup(group);
+  } else {
+    rv = NS_NewChannelInternal(getter_AddRefs(chan),  // outChannel
+                               mURI,                  // aUri
+                               loadInfo,              // aLoadInfo
+                               nullptr,               // aPerformanceStorage
+                               group,                 // aLoadGroup
+                               shim,                  // aCallbacks
+                               loadFlags,             // aLoadFlags
+                               nullptr);              // aIoService
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (inheritAttrs) {
+      nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
+      loadinfo->SetPrincipalToInherit(thisContent->NodePrincipal());
+    }
+
+    // For object loads we store the CSP that potentially needs to
+    // be inherited, e.g. in case we are loading an opaque origin
+    // like a data: URI. The actual inheritance check happens within
+    // Document::InitCSP(). Please create an actual copy of the CSP
+    // (do not share the same reference) otherwise a Meta CSP of an
+    // opaque origin will incorrectly be propagated to the embedding
+    // document.
+    if (cspToInherit) {
+      nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
+      static_cast<LoadInfo*>(loadinfo.get())->SetCSPToInherit(cspToInherit);
+    }
+  };
 
   // Referrer
   nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
