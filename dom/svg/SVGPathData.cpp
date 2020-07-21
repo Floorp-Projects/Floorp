@@ -135,25 +135,6 @@ uint32_t SVGPathData::CountItems() const {
 }
 #endif
 
-bool SVGPathData::GetSegmentLengths(nsTArray<double>* aLengths) const {
-  aLengths->Clear();
-  SVGPathTraversalState state;
-
-  uint32_t i = 0;
-  while (i < mData.Length()) {
-    state.length = 0.0;
-    SVGPathSegUtils::TraversePathSegment(&mData[i], state);
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
-    aLengths->AppendElement(state.length);
-    i += 1 + SVGPathSegUtils::ArgCountForType(mData[i]);
-  }
-
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
-
-  return true;
-}
-
 bool SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
     FallibleTArray<double>* aOutput) const {
   SVGPathTraversalState state;
