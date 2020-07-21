@@ -93,6 +93,9 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 - (void)moxPostNotification:(NSString*)notification;
 
 // override
+- (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo;
+
+// override
 - (BOOL)moxBlockSelector:(SEL)selector;
 
 // override
