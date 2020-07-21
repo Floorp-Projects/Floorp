@@ -78,8 +78,11 @@ nsresult BackgroundEventTarget::Init() {
   rv = pool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // For now just one thread. Can increase easily later if we want.
-  rv = pool->SetThreadLimit(1);
+  // Thread limit of 2 makes deadlock during synchronous dispatch less likely.
+  rv = pool->SetThreadLimit(2);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = pool->SetIdleThreadLimit(1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Leave threads alive for up to 5 minutes
@@ -97,8 +100,11 @@ nsresult BackgroundEventTarget::Init() {
   rv = ioPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // For now just one thread. Can increase easily later if we want.
-  rv = ioPool->SetThreadLimit(1);
+  // Thread limit of 4 makes deadlock during synchronous dispatch less likely.
+  rv = ioPool->SetThreadLimit(4);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ioPool->SetIdleThreadLimit(1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Leave threads alive for up to 5 minutes
