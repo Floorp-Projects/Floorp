@@ -2396,6 +2396,8 @@ class Extension extends ExtensionData {
   async startup() {
     this.state = "Startup";
 
+    // readyPromise is resolved with the policy upon success,
+    // and with null if startup was interrupted.
     let resolveReadyPromise;
     let readyPromise = new Promise(resolve => {
       resolveReadyPromise = resolve;
@@ -2560,6 +2562,9 @@ class Extension extends ExtensionData {
       throw e;
     } finally {
       ExtensionTelemetry.extensionStartup.stopwatchFinish(this);
+      // Mark readyPromise as resolved in case it has not happened before,
+      // e.g. due to an early return or an error.
+      resolveReadyPromise(null);
     }
   }
 
