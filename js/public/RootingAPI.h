@@ -831,7 +831,8 @@ struct JS_PUBLIC_API MovableCellHasher {
   static bool ensureHash(const Lookup& l);
   static HashNumber hash(const Lookup& l);
   static bool match(const Key& k, const Lookup& l);
-  static void rekey(Key& k, const Key& newKey) { k = newKey; }
+  // The rekey hash policy method is not provided since you dont't need to
+  // rekey any more when using this policy.
 };
 
 template <typename T>
@@ -851,7 +852,6 @@ struct JS_PUBLIC_API MovableCellHasher<JS::Heap<T>> {
   static bool match(const Key& k, const Lookup& l) {
     return MovableCellHasher<T>::match(k.unbarrieredGet(), l);
   }
-  static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
 }  // namespace js
