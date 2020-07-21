@@ -11,6 +11,7 @@
 #include <queue>
 
 #include "base/platform_thread.h"  // for PlatformThreadId
+#include "mozilla/layers/OMTAController.h"  // for OMTAController
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -42,7 +43,8 @@ class OMTASampler final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OMTASampler)
 
  public:
-  explicit OMTASampler(const RefPtr<CompositorAnimationStorage>& aAnimStorage);
+  OMTASampler(const RefPtr<CompositorAnimationStorage>& aAnimStorage,
+              LayersId aRootLayersId);
 
   // Whoever creates this sampler is responsible for calling Destroy() on it
   // before releasing the owning refptr.
@@ -110,6 +112,7 @@ class OMTASampler final {
   WrAnimations SampleAnimations(const TimeStamp& aPreviousSampleTime,
                                 const TimeStamp& aSampleTime);
 
+  RefPtr<OMTAController> mController;
   // Can only be accessed or modified while holding mStorageLock.
   RefPtr<CompositorAnimationStorage> mAnimStorage;
   mutable Mutex mStorageLock;

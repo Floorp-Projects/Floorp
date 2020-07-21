@@ -147,6 +147,27 @@ AsyncTransform APZSampler::GetCurrentAsyncTransform(
       AsyncPanZoomController::eForCompositing, aComponents);
 }
 
+AsyncTransform APZSampler::GetCurrentAsyncTransform(
+    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+    AsyncTransformComponents aComponents) const {
+  MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
+  RefPtr<AsyncPanZoomController> apzc =
+      mApz->GetTargetAPZC(aLayersId, aScrollId);
+  if (!apzc) {
+    // It's possible that this function can get called even after the target
+    // APZC has been already destroyed because destroying the animation which
+    // triggers this function call is basically processed later than the APZC,
+    // i.e. queue mCompositorAnimationsToDelete in WebRenderBridgeParent and
+    // then remove in WebRenderBridgeParent::RemoveEpochDataPriorTo.
+    return AsyncTransform{};
+  }
+
+  return apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
+                                        aComponents);
+}
+
 Maybe<CompositionPayload> APZSampler::NotifyScrollSampling(
     const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());

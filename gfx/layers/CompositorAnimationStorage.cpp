@@ -13,6 +13,7 @@
 #include "mozilla/layers/CompositorThread.h"       // for CompositorThreadHolder
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayerMetricsWrapper.h"    // for LayerMetricsWrapper
+#include "mozilla/layers/OMTAController.h"         // for OMTAController
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/webrender/WebRenderTypes.h"  // for ToWrTransformProperty, etc
 #include "nsDeviceContext.h"                   // for AppUnitsPerCSSPixel
@@ -174,8 +175,22 @@ void CompositorAnimationStorage::SetAnimations(uint64_t aId,
   }
 }
 
-bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
-                                                  TimeStamp aCurrentFrameTime) {
+// Returns clip rect in the scroll frame's coordinate space.
+static ParentLayerRect GetClipRectForPartialPrerender(
+    const LayersId aLayersId, const PartialPrerenderData& aPartialPrerenderData,
+    const RefPtr<APZSampler>& aSampler) {
+  if (aSampler &&
+      aPartialPrerenderData.scrollId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
+    return aSampler->GetCompositionBounds(aLayersId,
+                                          aPartialPrerenderData.scrollId());
+  }
+
+  return aPartialPrerenderData.clipRect();
+}
+
+bool CompositorAnimationStorage::SampleAnimations(
+    const OMTAController* aOMTAController, TimeStamp aPreviousFrameTime,
+    TimeStamp aCurrentFrameTime) {
   MutexAutoLock lock(mLock);
 
   bool isAnimating = false;
@@ -185,6 +200,10 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
   if (mAnimations.empty()) {
     return isAnimating;
   }
+
+  std::unordered_map<LayersId, nsTArray<uint64_t>, LayersId::HashFn> janked;
+
+  RefPtr<APZSampler> apzSampler = mCompositorBridge->GetAPZSampler();
 
   for (const auto& iter : mAnimations) {
     const auto& animationStorageData = iter.second;
@@ -242,6 +261,40 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
             AnimationHelper::ServoAnimationValueToMatrix4x4(
                 animationValues, transformData,
                 animationStorageData->mCachedMotionPath);
+
+        if (const Maybe<PartialPrerenderData>& partialPrerenderData =
+                transformData.partialPrerenderData()) {
+          gfx::Matrix4x4 transform = frameTransform;
+          transform.PostTranslate(
+              partialPrerenderData->position().ToUnknownPoint());
+
+          gfx::Matrix4x4 transformInClip =
+              partialPrerenderData->transformInClip();
+          if (apzSampler && partialPrerenderData->scrollId() !=
+                                ScrollableLayerGuid::NULL_SCROLL_ID) {
+            AsyncTransform asyncTransform =
+                apzSampler->GetCurrentAsyncTransform(
+                    animationStorageData->mLayersId,
+                    partialPrerenderData->scrollId(), LayoutAndVisual);
+            transformInClip.PostTranslate(
+                asyncTransform.mTranslation.ToUnknownPoint());
+          }
+          transformInClip = transform * transformInClip;
+
+          ParentLayerRect clipRect =
+              GetClipRectForPartialPrerender(animationStorageData->mLayersId,
+                                             *partialPrerenderData, apzSampler);
+          if (AnimationHelper::ShouldBeJank(
+                  partialPrerenderData->rect(),
+                  partialPrerenderData->overflowedSides(), transformInClip,
+                  clipRect)) {
+            if (previousValue) {
+              frameTransform = previousValue->Transform().mFrameTransform;
+            }
+            janked[animationStorageData->mLayersId].AppendElement(iter.first);
+          }
+        }
+
         SetAnimatedValueForWebRender(iter.first, previousValue, frameTransform,
                                      transformData);
         break;
@@ -249,6 +302,10 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
       default:
         MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
     }
+  }
+
+  if (!janked.empty() && aOMTAController) {
+    aOMTAController->NotifyJankedAnimations(std::move(janked));
   }
 
   return isAnimating;
@@ -353,19 +410,6 @@ static Matrix4x4 GetTransformForPartialPrerender(
   transform.PostTranslate(translationByApz.ToUnknownPoint());
 
   return transform;
-}
-
-// Returns clip rect in the scroll frame's coordinate space.
-static ParentLayerRect GetClipRectForPartialPrerender(
-    const LayersId aLayersId, const PartialPrerenderData& aPartialPrerenderData,
-    const RefPtr<APZSampler>& aSampler) {
-  if (aSampler &&
-      aPartialPrerenderData.scrollId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
-    return aSampler->GetCompositionBounds(aLayersId,
-                                          aPartialPrerenderData.scrollId());
-  }
-
-  return aPartialPrerenderData.clipRect();
 }
 
 bool CompositorAnimationStorage::ApplyAnimatedValue(
