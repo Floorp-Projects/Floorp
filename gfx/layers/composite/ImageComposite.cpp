@@ -151,6 +151,20 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
     // Frames older than the first frame in aNewImages that we haven't shown yet
     // will never be shown.
     CountSkippedFrames(&aNewImages[0]);
+
+#if MOZ_GECKO_PROFILER
+    if (profiler_can_accept_markers()) {
+      int len = aNewImages.Length();
+      const auto& first = aNewImages[0];
+      const auto& last = aNewImages.LastElement();
+      nsPrintfCString str("%d %s, frameID %" PRId32 " (prod %" PRId32
+                          ") to frameID %" PRId32 " (prod %" PRId32 ")",
+                          len, len == 1 ? "image" : "images", first.mFrameID,
+                          first.mProducerID, last.mFrameID, last.mProducerID);
+      AUTO_PROFILER_TEXT_MARKER_CAUSE("ImageComposite::SetImages", str,
+                                      GRAPHICS, Nothing(), nullptr);
+    }
+#endif
   }
   mImages = std::move(aNewImages);
 }
