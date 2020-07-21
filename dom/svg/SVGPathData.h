@@ -148,11 +148,6 @@ class SVGPathData {
   /**
    * Returns true, except on OOM, in which case returns false.
    */
-  bool GetSegmentLengths(nsTArray<double>* aLengths) const;
-
-  /**
-   * Returns true, except on OOM, in which case returns false.
-   */
   bool GetDistancesFromOriginToEndsOfVisibleSegments(
       FallibleTArray<double>* aOutput) const;
 
