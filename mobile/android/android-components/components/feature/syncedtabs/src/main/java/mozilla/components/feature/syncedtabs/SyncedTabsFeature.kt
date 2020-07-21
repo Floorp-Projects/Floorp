@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.syncedtabs
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.storage.sync.Tab
@@ -35,6 +36,7 @@ import kotlin.coroutines.CoroutineContext
  */
 @Suppress("LongParameterList")
 class SyncedTabsFeature(
+    context: Context,
     storage: SyncedTabsStorage,
     accountManager: FxaAccountManager,
     view: SyncedTabsView,
@@ -48,6 +50,7 @@ class SyncedTabsFeature(
         coroutineContext
     ),
     private val presenter: SyncedTabsPresenter = DefaultPresenter(
+        context,
         controller,
         accountManager,
         view,
