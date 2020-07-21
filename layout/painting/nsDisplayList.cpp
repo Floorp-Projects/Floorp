@@ -207,7 +207,8 @@ nsCString ActiveScrolledRoot::ToString(
 
 static uint64_t AddAnimationsForWebRender(
     nsDisplayItem* aItem, mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder) {
+    nsDisplayListBuilder* aDisplayListBuilder,
+    const Maybe<LayoutDevicePoint>& aPosition = Nothing()) {
   EffectSet* effects =
       EffectSet::GetEffectSetForFrame(aItem->Frame(), aItem->GetType());
   if (!effects || effects->IsEmpty()) {
@@ -227,9 +228,9 @@ static uint64_t AddAnimationsForWebRender(
       aManager->CommandBuilder()
           .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(aItem);
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
-  animationInfo.AddAnimationsForDisplayItem(aItem->Frame(), aDisplayListBuilder,
-                                            aItem, aItem->GetType(),
-                                            aManager->LayerManager());
+  animationInfo.AddAnimationsForDisplayItem(
+      aItem->Frame(), aDisplayListBuilder, aItem, aItem->GetType(),
+      aManager->LayerManager(), aPosition);
   animationInfo.StartPendingAnimations(
       aManager->LayerManager()->GetAnimationReadyTime());
 
@@ -7966,7 +7967,9 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   uint64_t animationsId =
       mIsTransformSeparator
           ? 0
-          : AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
+          : AddAnimationsForWebRender(
+                this, aManager, aDisplayListBuilder,
+                IsPartialPrerender() ? Some(position) : Nothing());
   wr::WrAnimationProperty prop{
       wr::WrAnimationType::Transform,
       animationsId,
