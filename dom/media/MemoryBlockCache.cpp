@@ -114,6 +114,10 @@ bool MemoryBlockCache::EnsureBufferCanContain(size_t aContentLength) {
     // possibly bypass some future growths that would fit in this new capacity.
     mBuffer.SetLength(capacity);
   }
+  const size_t newSizes = gCombinedSizes += (extra + extraCapacity);
+  LOG("EnsureBufferCanContain(%zu) - buffer size %zu + requested %zu + bonus "
+      "%zu = %zu; combined sizes %zu",
+      aContentLength, initialLength, extra, extraCapacity, capacity, newSizes);
   mHasGrown = true;
   return true;
 }
