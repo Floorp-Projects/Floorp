@@ -53,13 +53,6 @@ var FxAccountsProfileClient = function(options) {
   }
 
   this.fxai = options.fxai || fxAccounts._internal;
-  // This is a work-around for loop that manages its own oauth tokens.
-  // * If |token| is in options we use it and don't attempt any token refresh
-  //  on 401. This is for loop.
-  // * If |token| doesn't exist we will fetch our own token. This is for the
-  //   normal FxAccounts methods for obtaining the profile.
-  // We should nuke all |this.token| support once loop moves closer to FxAccounts.
-  this.token = options.token;
 
   try {
     this.serverURL = new URL(options.serverURL);
@@ -99,19 +92,12 @@ FxAccountsProfileClient.prototype = {
    * @private
    */
   async _createRequest(path, method = "GET", etag = null) {
-    let token = this.token;
-    if (!token) {
-      // tokens are cached, so getting them each request is cheap.
-      token = await this.fxai.getOAuthToken(this.oauthOptions);
-    }
+    // tokens are cached, so getting them each request is cheap.
+    let token = await this.fxai.getOAuthToken(this.oauthOptions);
     try {
       return await this._rawRequest(path, method, token, etag);
     } catch (ex) {
       if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
-        throw ex;
-      }
-      // If this object was instantiated with a token then we don't refresh it.
-      if (this.token) {
         throw ex;
       }
       // it's an auth error - assume our token expired and retry.

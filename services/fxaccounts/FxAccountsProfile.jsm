@@ -163,6 +163,24 @@ FxAccountsProfile.prototype = {
     return profileCache.profile;
   },
 
+  // Get the user's profile data, fetching from the network if necessary.
+  // Most callers should instead use `getProfile()`; this methods exists to support
+  // callers who need to await the underlying network request.
+  async ensureProfile() {
+    const profileCache = await this._getProfileCache();
+    if (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD) {
+      const profile = await this._fetchAndCacheProfile().catch(err => {
+        log.error("Background refresh of profile failed", err);
+      });
+      if (profile) {
+        return profile;
+      }
+    }
+    log.trace("not checking freshness of profile as it remains recent");
+
+    return profileCache.profile;
+  },
+
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
     "nsISupportsWeakReference",

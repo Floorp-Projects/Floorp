@@ -278,6 +278,7 @@ exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set([
   "authAt",
   "sessionToken",
   "uid",
+  "ecosystemUserId",
   "oauthTokens",
   "profile",
   "device",
