@@ -74,11 +74,14 @@ add_task(async function test_find_anon_content() {
     <style>
       div::before { content: "before content"; }
       div::after { content: "after content"; }
+      span::after { content: ","; }
     </style>
     <div> </div>
     <img alt="Some fallback text">
     <input type="submit" value="Some button text">
     <input type="password" value="password">
+    <p>1<span></span>234</p>
+
   `;
   await BrowserTestUtils.withNewTab(
     {
@@ -118,6 +121,10 @@ add_task(async function test_find_anon_content() {
       await assertFindable("fallback text");
       await assertFindable("button text");
       await assertFindable("password", false);
+
+      // TODO(emilio): In an ideal world we could select the comma as well and
+      // then you'd find it with "1,234" instead...
+      await assertFindable("1234");
 
       finder.removeResultListener(listener);
     }
