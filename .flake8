@@ -127,12 +127,8 @@ per-file-ignores =
     testing/mozharness/**: F821
     testing/talos/**: F821
     toolkit/components/telemetry/**: F821
-    tools/tryselect/**: F821
     testing/firefox-ui/tests/functional/safebrowsing/test_initial_download.py: F821
-    testing/gtest/rungtests.py: F633
-    testing/marionette/**: F821
     testing/mochitest/**: F821
-    testing/xpcshell/**: F633, F821
     xpcom/idl-parser/xpidl/**: F633, F821
 
 builtins =
