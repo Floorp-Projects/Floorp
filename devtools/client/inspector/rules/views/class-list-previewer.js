@@ -5,88 +5,60 @@
 "use strict";
 
 const ClassList = require("devtools/client/inspector/rules/models/class-list");
-
 const { LocalizationHelper } = require("devtools/shared/l10n");
+
 const L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
-const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
-const { debounce } = require("devtools/shared/debounce");
 
 /**
  * This UI widget shows a textfield and a series of checkboxes in the rule-view. It is
  * used to toggle classes on the current node selection, and add new classes.
+ *
+ * @param {Inspector} inspector
+ *        The current inspector instance.
+ * @param {DomNode} containerEl
+ *        The element in the rule-view where the widget should go.
  */
-class ClassListPreviewer {
-  /*
-   * @param {Inspector} inspector
-   *        The current inspector instance.
-   * @param {DomNode} containerEl
-   *        The element in the rule-view where the widget should go.
-   */
-  constructor(inspector, containerEl) {
-    this.inspector = inspector;
-    this.containerEl = containerEl;
-    this.model = new ClassList(inspector);
+function ClassListPreviewer(inspector, containerEl) {
+  this.inspector = inspector;
+  this.containerEl = containerEl;
+  this.model = new ClassList(inspector);
 
-    this.onNewSelection = this.onNewSelection.bind(this);
-    this.onCheckBoxChanged = this.onCheckBoxChanged.bind(this);
-    this.onKeyPress = this.onKeyPress.bind(this);
-    this.onAddElementInputModified = debounce(
-      this.onAddElementInputModified,
-      75,
-      this
-    );
-    this.onCurrentNodeClassChanged = this.onCurrentNodeClassChanged.bind(this);
+  this.onNewSelection = this.onNewSelection.bind(this);
+  this.onCheckBoxChanged = this.onCheckBoxChanged.bind(this);
+  this.onKeyPress = this.onKeyPress.bind(this);
+  this.onCurrentNodeClassChanged = this.onCurrentNodeClassChanged.bind(this);
 
-    // Create the add class text field.
-    this.addEl = this.doc.createElement("input");
-    this.addEl.classList.add("devtools-textinput");
-    this.addEl.classList.add("add-class");
-    this.addEl.setAttribute(
-      "placeholder",
-      L10N.getStr("inspector.classPanel.newClass.placeholder")
-    );
-    this.addEl.addEventListener("keypress", this.onKeyPress);
-    this.addEl.addEventListener("input", this.onAddElementInputModified);
-    this.containerEl.appendChild(this.addEl);
+  // Create the add class text field.
+  this.addEl = this.doc.createElement("input");
+  this.addEl.classList.add("devtools-textinput");
+  this.addEl.classList.add("add-class");
+  this.addEl.setAttribute(
+    "placeholder",
+    L10N.getStr("inspector.classPanel.newClass.placeholder")
+  );
+  this.addEl.addEventListener("keypress", this.onKeyPress);
+  this.containerEl.appendChild(this.addEl);
 
-    // Create the class checkboxes container.
-    this.classesEl = this.doc.createElement("div");
-    this.classesEl.classList.add("classes");
-    this.containerEl.appendChild(this.classesEl);
+  // Create the class checkboxes container.
+  this.classesEl = this.doc.createElement("div");
+  this.classesEl.classList.add("classes");
+  this.containerEl.appendChild(this.classesEl);
 
-    // Create the autocomplete popup
-    this.autocompletePopup = new AutocompletePopup(this.inspector.toolbox.doc, {
-      listId: "inspector_classListPreviewer_autocompletePopupListBox",
-      position: "bottom",
-      autoSelect: false,
-      useXulWrapper: true,
-      input: this.addEl,
-      onClick: (e, item) => {
-        if (item) {
-          this.addEl.value = item.label;
-          this.autocompletePopup.hidePopup();
-          this.autocompletePopup.clearItems();
-        }
-      },
-    });
+  // Start listening for interesting events.
+  this.inspector.selection.on("new-node-front", this.onNewSelection);
+  this.containerEl.addEventListener("input", this.onCheckBoxChanged);
+  this.model.on("current-node-class-changed", this.onCurrentNodeClassChanged);
 
-    // Start listening for interesting events.
-    this.inspector.selection.on("new-node-front", this.onNewSelection);
-    this.containerEl.addEventListener("input", this.onCheckBoxChanged);
-    this.model.on("current-node-class-changed", this.onCurrentNodeClassChanged);
+  this.onNewSelection();
+}
 
-    this.onNewSelection();
-  }
-
+ClassListPreviewer.prototype = {
   destroy() {
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.addEl.removeEventListener("keypress", this.onKeyPress);
-    this.addEl.removeEventListener("input", this.onAddElementInputModified);
     this.containerEl.removeEventListener("input", this.onCheckBoxChanged);
-
-    this.autocompletePopup.destroy();
 
     this.containerEl.innerHTML = "";
 
@@ -95,11 +67,11 @@ class ClassListPreviewer {
     this.inspector = null;
     this.addEl = null;
     this.classesEl = null;
-  }
+  },
 
   get doc() {
     return this.containerEl.ownerDocument;
-  }
+  },
 
   /**
    * Render the content of the panel. You typically don't need to call this as the panel
@@ -116,7 +88,7 @@ class ClassListPreviewer {
     if (!this.model.currentClasses.length) {
       this.classesEl.appendChild(this.renderNoClassesMessage());
     }
-  }
+  },
 
   /**
    * Render a single checkbox for a given classname.
@@ -145,7 +117,7 @@ class ClassListPreviewer {
     labelWrapper.appendChild(label);
 
     return labelWrapper;
-  }
+  },
 
   /**
    * Render the message displayed in the panel when the current element has no classes.
@@ -157,7 +129,7 @@ class ClassListPreviewer {
     msg.classList.add("no-classes");
     msg.textContent = L10N.getStr("inspector.classPanel.noClasses");
     return msg;
-  }
+  },
 
   /**
    * Focus the add-class text field.
@@ -166,7 +138,7 @@ class ClassListPreviewer {
     if (this.addEl) {
       this.addEl.focus();
     }
-  }
+  },
 
   onCheckBoxChanged({ target }) {
     if (!target.dataset.name) {
@@ -179,88 +151,34 @@ class ClassListPreviewer {
         console.error(e);
       }
     });
-  }
+  },
 
   onKeyPress(event) {
-    // If the popup is already open, all the keyboard interaction are handled
-    // directly by the popup component.
-    if (this.autocompletePopup.isOpen) {
+    if (event.key !== "Enter" || this.addEl.value === "") {
       return;
     }
 
-    // Open the autocomplete popup on Ctrl+Space / ArrowDown (when the input isn't empty)
-    if (
-      (this.addEl.value && event.key === " " && event.ctrlKey) ||
-      event.key === "ArrowDown"
-    ) {
-      this.onAddElementInputModified();
-      return;
-    }
-
-    if (this.addEl.value !== "" && event.key === "Enter") {
-      this.addClassName(this.addEl.value);
-    }
-  }
-
-  async onAddElementInputModified() {
-    const newValue = this.addEl.value;
-
-    // if the input is empty, let's close the popup, if it was open.
-    if (newValue === "") {
-      if (this.autocompletePopup.isOpen) {
-        this.autocompletePopup.hidePopup();
-        this.autocompletePopup.clearItems();
-      }
-      return;
-    }
-
-    // Otherwise, we need to update the popup items to match the new input.
-    let items = [];
-    try {
-      const classNames = await this.model.getClassNames(newValue);
-      items = classNames.map(className => {
-        return {
-          preLabel: className.substring(0, newValue.length),
-          label: className,
-        };
+    this.model
+      .addClassName(this.addEl.value)
+      .then(() => {
+        this.render();
+        this.addEl.value = "";
+      })
+      .catch(e => {
+        // Only log the error if the panel wasn't destroyed in the meantime.
+        if (this.containerEl) {
+          console.error(e);
+        }
       });
-    } catch (e) {
-      // If there was an error while retrieving the classNames, we silently bail out;
-      // we'll simply NOT show the popup, which is okay.
-    }
-
-    if (
-      items.length == 0 ||
-      (items.length == 1 && items[0].label === newValue)
-    ) {
-      this.autocompletePopup.clearItems();
-      this.autocompletePopup.hidePopup();
-    } else {
-      this.autocompletePopup.setItems(items);
-      this.autocompletePopup.openPopup();
-    }
-  }
-
-  async addClassName(className) {
-    try {
-      await this.model.addClassName(className);
-      this.render();
-      this.addEl.value = "";
-    } catch (e) {
-      // Only log the error if the panel wasn't destroyed in the meantime.
-      if (this.containerEl) {
-        console.error(e);
-      }
-    }
-  }
+  },
 
   onNewSelection() {
     this.render();
-  }
+  },
 
   onCurrentNodeClassChanged() {
     this.render();
-  }
-}
+  },
+};
 
 module.exports = ClassListPreviewer;
