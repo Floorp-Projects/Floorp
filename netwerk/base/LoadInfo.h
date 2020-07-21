@@ -244,58 +244,60 @@ class LoadInfo final : public nsILoadInfo {
   nsSecurityFlags mSecurityFlags;
   uint32_t mSandboxFlags;
   nsContentPolicyType mInternalContentPolicyType;
-  LoadTainting mTainting;
-  bool mBlockAllMixedContent;
-  bool mUpgradeInsecureRequests;
-  bool mBrowserUpgradeInsecureRequests;
-  bool mBrowserWouldUpgradeInsecureRequests;
-  bool mForceAllowDataURI;
-  bool mAllowInsecureRedirectToDataURI;
-  bool mBypassCORSChecks;
-  bool mSkipContentPolicyCheckForWebRequest;
-  bool mOriginalFrameSrcLoad;
-  bool mForceInheritPrincipalDropped;
-  uint64_t mInnerWindowID;
-  uint64_t mBrowsingContextID;
-  uint64_t mFrameBrowsingContextID;
-  bool mInitialSecurityCheckDone;
-  bool mIsThirdPartyContext;
-  bool mIsThirdPartyContextToTopWindow;
-  bool mIsFormSubmission;
-  bool mSendCSPViolationEvents;
+  LoadTainting mTainting = LoadTainting::Basic;
+  bool mBlockAllMixedContent = false;
+  bool mUpgradeInsecureRequests = false;
+  bool mBrowserUpgradeInsecureRequests = false;
+  bool mBrowserWouldUpgradeInsecureRequests = false;
+  bool mForceAllowDataURI = false;
+  bool mAllowInsecureRedirectToDataURI = false;
+  bool mBypassCORSChecks = false;
+  bool mSkipContentPolicyCheckForWebRequest = false;
+  bool mOriginalFrameSrcLoad = false;
+  bool mForceInheritPrincipalDropped = false;
+  uint64_t mInnerWindowID = 0;
+  uint64_t mBrowsingContextID = 0;
+  uint64_t mFrameBrowsingContextID = 0;
+  bool mInitialSecurityCheckDone = false;
+  // NB: TYPE_DOCUMENT implies !third-party.
+  bool mIsThirdPartyContext = false;
+  bool mIsThirdPartyContextToTopWindow = true;
+  bool mIsFormSubmission = false;
+  bool mSendCSPViolationEvents = true;
   OriginAttributes mOriginAttributes;
   RedirectHistoryArray mRedirectChainIncludingInternalRedirects;
   RedirectHistoryArray mRedirectChain;
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
   nsTArray<uint64_t> mAncestorBrowsingContextIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
-  uint32_t mRequestBlockingReason;
-  bool mForcePreflight;
-  bool mIsPreflight;
-  bool mLoadTriggeredFromExternal;
-  bool mServiceWorkerTaintingSynthesized;
-  bool mDocumentHasUserInteracted;
-  bool mDocumentHasLoaded;
-  bool mAllowListFutureDocumentsCreatedFromThisRedirectChain;
+  uint32_t mRequestBlockingReason = BLOCKING_REASON_NONE;
+  bool mForcePreflight = false;
+  bool mIsPreflight = false;
+  bool mLoadTriggeredFromExternal = false;
+  bool mServiceWorkerTaintingSynthesized = false;
+  bool mDocumentHasUserInteracted = false;
+  bool mDocumentHasLoaded = false;
+  bool mAllowListFutureDocumentsCreatedFromThisRedirectChain = false;
   nsString mCspNonce;
-  bool mSkipContentSniffing;
-  uint32_t mHttpsOnlyStatus;
-  bool mHasValidUserGestureActivation;
-  bool mAllowDeprecatedSystemRequests;
-  bool mIsInDevToolsContext;
-  bool mParserCreatedScript;
-  bool mHasStoragePermission;
+  bool mSkipContentSniffing = false;
+  uint32_t mHttpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
+  bool mHasValidUserGestureActivation = false;
+  bool mAllowDeprecatedSystemRequests = false;
+  bool mIsInDevToolsContext = false;
+  bool mParserCreatedScript = false;
+  bool mHasStoragePermission = false;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.
   // See nsILoadInfo.isFromProcessingFrameAttributes
-  bool mIsFromProcessingFrameAttributes;
+  bool mIsFromProcessingFrameAttributes = false;
 
   // The cross origin embedder policy that the loading need to respect.
   // If the value is nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP, CORP checking
   // must be performed for the loading.
   // See https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
-  nsILoadInfo::CrossOriginEmbedderPolicy mLoadingEmbedderPolicy;
+  nsILoadInfo::CrossOriginEmbedderPolicy mLoadingEmbedderPolicy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
 };
 
 }  // namespace net
