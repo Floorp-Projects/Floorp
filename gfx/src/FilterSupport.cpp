@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FilterSupport.h"
+#include "FilterDescription.h"
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
