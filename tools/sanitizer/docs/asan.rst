@@ -33,20 +33,36 @@ mozilla-central (updated at least daily):
    `windows <https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.latest.firefox.win64-asan-debug/artifacts/public/build/target.zip>`__
    (recommended for debugging if the optimized builds don't do the job)
 
+The fuzzing team also offers a tool called ``fuzzfetch`` to download these and many
+other CI builds. It makes downloading and unpacking these builds much easier and
+can be used not just for fuzzing but for all purposes that require a CI build download.
+
+You can install ``fuzzfetch`` from
+`Github <https://github.com/MozillaSecurity/fuzzfetch>`__ or
+`via pip <https://pypi.org/project/fuzzfetch/>`__.
+
+Afterwards, you can run e.g.
+
+::
+
+   $ python -m fuzzfetch --asan -n firefox-asan
+
+to get the optimized Linux ASan build mentioned above unpacked into a directory called ``firefox-asan``.
+The ``--debug`` and ``--os`` switches can be used to get the other variants listed above.
+
 Creating Try builds
 -------------------
 
 If for some reason you can't use the pre-built binaries mentioned in the
 previous section (e.g. you want a non-Linux build or you need to test a
 patch), you can either build Firefox yourself (see the following
-section) or use the `try
-server </tools/try/>`__ to
+section) or use the :ref:`try server <Try Server>` to
 create the customized build for you. Pushing to try requires L1 commit
 access. If you don't have this access yet you can request access (see
 `Becoming A Mozilla
-Committer <https://www.mozilla.org/en-US/about/governance/policies/commit/>`__
+Committer <https://www.mozilla.org/about/governance/policies/commit/>`__
 and `Mozilla Commit Access
-Policy <https://www.mozilla.org/en-US/about/governance/policies/commit/access-policy/>`__
+Policy <https://www.mozilla.org/about/governance/policies/commit/access-policy/>`__
 for the requirements).
 
 The tree contains `several mozconfig files for creating asan
@@ -371,3 +387,13 @@ page <https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer>`_
 
 A `meta bug called lsan <https://bugzilla.mozilla.org/show_bug.cgi?id=lsan>`__
 is maintained to keep track of all the bugs found with LSan.
+
+
+
+Frequently Asked Questions about ASan
+-------------------------------------
+
+How does ASan work exactly?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+More information on how ASan works can be found on `the Address Sanitizer wiki <https://github.com/google/sanitizers/wiki/AddressSanitizer>`__.
