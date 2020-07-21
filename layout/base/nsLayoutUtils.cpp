@@ -8686,7 +8686,8 @@ bool nsLayoutUtils::GetContentViewerSize(
   nsIntRect bounds;
   cv->GetBounds(bounds);
 
-  if (aSubtractDynamicToolbar == SubtractDynamicToolbar::Yes &&
+  if (aPresContext->IsRootContentDocumentCrossProcess() &&
+      aSubtractDynamicToolbar == SubtractDynamicToolbar::Yes &&
       aPresContext->HasDynamicToolbar() && !bounds.IsEmpty()) {
     MOZ_ASSERT(aPresContext->IsRootContentDocumentCrossProcess());
     bounds.height -= aPresContext->GetDynamicToolbarMaxHeight();
@@ -8704,9 +8705,31 @@ bool nsLayoutUtils::GetContentViewerSize(
 
 bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
     ParentLayerRect& aCompBounds, nsPresContext* aPresContext) {
+  SubtractDynamicToolbar shouldSubtractDynamicToolbar =
+      SubtractDynamicToolbar::Yes;
+
+  if (RefPtr<MobileViewportManager> MVM =
+          aPresContext->PresShell()->GetMobileViewportManager()) {
+    CSSSize intrinsicCompositionSize = MVM->GetIntrinsicCompositionSize();
+
+    if (nsIScrollableFrame* rootScrollableFrame =
+            aPresContext->PresShell()->GetRootScrollFrameAsScrollable()) {
+      // Expand the composition size to include the area initially covered by
+      // the dynamic toolbar only if the content is taller than the intrinsic
+      // composition size (i.e. the dynamic toolbar should be able to move only
+      // if the content is vertically scrollable).
+      if (intrinsicCompositionSize.height <
+          CSSPixel::FromAppUnits(
+              CalculateScrollableRectForFrame(rootScrollableFrame, nullptr)
+                  .Height())) {
+        shouldSubtractDynamicToolbar = SubtractDynamicToolbar::No;
+      }
+    }
+  }
+
   LayoutDeviceIntSize contentSize;
   if (!GetContentViewerSize(aPresContext, contentSize,
-                            SubtractDynamicToolbar::No)) {
+                            shouldSubtractDynamicToolbar)) {
     return false;
   }
   aCompBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(
