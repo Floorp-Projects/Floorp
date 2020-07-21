@@ -182,8 +182,8 @@ toolkit/components/telemetry/export: layout/style/ServoCSSPropList.py
 toolkit/components/updateagent/target: toolkit/mozapps/update/common/target
 
 ifeq ($(TARGET_ENDIANNESS),big)
-config/external/icu/data/target-objects: config/external/icu/data/icudt$(MOZ_ICU_VERSION)b.dat
-config/external/icu/data/icudt$(MOZ_ICU_VERSION)b.dat: config/external/icu/icupkg/host
+config/external/icu/data/target-objects: config/external/icu/data/$(MDDEPDIR)/icudt$(MOZ_ICU_VERSION)b.dat.stub
+config/external/icu/data/$(MDDEPDIR)/icudt$(MOZ_ICU_VERSION)b.dat.stub: config/external/icu/icupkg/host
 endif
 
 ifdef ENABLE_CLANG_PLUGIN
