@@ -10,9 +10,12 @@
 
 #include "mozilla/UniquePtr.h"
 
+// This is an easy way to expose `MOZ_APP_DISPLAYNAME` to Rust code.
+const wchar_t* gWinEventLogSourceName =
+    L"" MOZ_APP_DISPLAYNAME " Default Browser Agent";
+
 static void WriteEventLogErrorBuffer(const wchar_t* buffer, DWORD eventId) {
-  HANDLE source = RegisterEventSourceW(
-      nullptr, L"" MOZ_APP_DISPLAYNAME " Default Browser Agent");
+  HANDLE source = RegisterEventSourceW(nullptr, gWinEventLogSourceName);
   if (!source) {
     // Not much we can do about this.
     return;
