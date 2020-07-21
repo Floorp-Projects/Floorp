@@ -27,6 +27,15 @@ let TEST_ADDRESSES = [{
   tel: "+16509030800",
 }];
 
+add_task(async function setup_prefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.addresses.enabled", true],
+      ["extensions.formautofill.addresses.capture.enabled", true],
+    ],
+  });
+});
+
 initPopupListener();
 
 // Submit first address for saving.

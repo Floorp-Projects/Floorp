@@ -8,6 +8,7 @@ add_task(async function test_first_time_save() {
     set: [
       [FTU_PREF, true],
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
+      [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
     ],
   });
 
