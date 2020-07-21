@@ -447,7 +447,7 @@ uint32_t HTMLObjectElement::GetCapabilities() const {
 }
 
 void HTMLObjectElement::DestroyContent() {
-  nsObjectLoadingContent::DestroyContent();
+  nsObjectLoadingContent::Destroy();
   nsGenericHTMLFormElement::DestroyContent();
 }
 
