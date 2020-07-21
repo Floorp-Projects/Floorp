@@ -3716,7 +3716,11 @@ pref("signon.autofillForms",                true);
 pref("signon.autofillForms.autocompleteOff", true);
 pref("signon.autofillForms.http",           false);
 pref("signon.autologin.proxy",              false);
-pref("signon.capture.inputChanges.enabled", true);
+#ifdef NIGHTLY_BUILD
+  pref("signon.capture.inputChanges.enabled", true);
+#else
+  pref("signon.capture.inputChanges.enabled", false);
+#endif
 pref("signon.formlessCapture.enabled",      true);
 pref("signon.generation.available",               true);
 pref("signon.backup.enabled",               false);
