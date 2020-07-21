@@ -95,7 +95,13 @@ if (localProperties != null) {
 
     if (appServicesLocalPath != null) {
         logger.lifecycle("Enabling automatic publication of application-services from: $appServicesLocalPath")
-        def publishAppServicesCmd = ["./automation/publish_to_maven_local_if_modified.py"]
+        // Windows can't execute .py files directly, so we assume a "manually installed" python,
+        // which comes with a "py" launcher and respects the shebang line to specify the version.
+        def publishAppServicesCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishAppServicesCmd << "py";
+        }
+        publishAppServicesCmd << "./automation/publish_to_maven_local_if_modified.py";
         runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.")
     } else {
         logger.lifecycle("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
