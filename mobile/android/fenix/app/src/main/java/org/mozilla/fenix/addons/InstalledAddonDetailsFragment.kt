@@ -25,7 +25,6 @@ import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.utils.Settings
 
 /**
  * An activity to show the details of a installed add-on.
@@ -191,8 +190,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     val components = it.context.components
                     val shouldCreatePrivateSession =
                         components.core.store.state.selectedTab?.content?.private
-                            ?: Settings.instance?.openLinksInAPrivateTab
-                            ?: false
+                            ?: components.settings.openLinksInAPrivateTab
 
                     if (shouldCreatePrivateSession) {
                         components.useCases.tabsUseCases.addPrivateTab(settingUrl)

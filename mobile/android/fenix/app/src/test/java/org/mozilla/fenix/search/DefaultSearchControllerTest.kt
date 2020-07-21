@@ -35,7 +35,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.whatsnew.clear
 
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
@@ -48,10 +47,10 @@ class DefaultSearchControllerTest {
     private val searchEngine: SearchEngine = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val settings: Settings = mockk(relaxed = true)
     private val clearToolbarFocus: (() -> Unit) = mockk(relaxed = true)
 
     private lateinit var controller: DefaultSearchController
-    private lateinit var settings: Settings
 
     @Before
     fun setUp() {
@@ -60,6 +59,7 @@ class DefaultSearchControllerTest {
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
         every { activity.metrics } returns metrics
         every { activity.components.core.sessionManager } returns sessionManager
+        every { activity.components.settings } returns settings
 
         controller = DefaultSearchController(
             activity = activity,
@@ -67,8 +67,6 @@ class DefaultSearchControllerTest {
             navController = navController,
             clearToolbarFocus = clearToolbarFocus
         )
-
-        settings = testContext.settings().apply { testContext.settings().clear() }
     }
 
     @Test
@@ -154,10 +152,7 @@ class DefaultSearchControllerTest {
     @Test
     fun `show search shortcuts when setting enabled AND query empty`() {
         val text = ""
-        testContext.settings().preferences
-                .edit()
-                .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), true)
-                .apply()
+        every { settings.shouldShowSearchShortcuts } returns true
 
         controller.handleTextChanged(text)
 
@@ -168,10 +163,7 @@ class DefaultSearchControllerTest {
     fun `show search shortcuts when setting enabled AND query equals url`() {
         val text = "mozilla.org"
         every { store.state.url } returns "mozilla.org"
-        testContext.settings().preferences
-                .edit()
-                .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), true)
-                .apply()
+        every { settings.shouldShowSearchShortcuts } returns true
 
         controller.handleTextChanged(text)
 
@@ -189,10 +181,7 @@ class DefaultSearchControllerTest {
 
     @Test
     fun `do not show search shortcuts when setting disabled AND query empty AND url not matching query`() {
-        testContext.settings().preferences
-            .edit()
-            .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), false)
-            .apply()
+        every { settings.shouldShowSearchShortcuts } returns false
 
         assertFalse(testContext.settings().shouldShowSearchShortcuts)
 
@@ -205,10 +194,7 @@ class DefaultSearchControllerTest {
 
     @Test
     fun `do not show search shortcuts when setting disabled AND query non-empty`() {
-        testContext.settings().preferences
-            .edit()
-            .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), false)
-            .apply()
+        every { settings.shouldShowSearchShortcuts } returns false
 
         assertFalse(testContext.settings().shouldShowSearchShortcuts)
 

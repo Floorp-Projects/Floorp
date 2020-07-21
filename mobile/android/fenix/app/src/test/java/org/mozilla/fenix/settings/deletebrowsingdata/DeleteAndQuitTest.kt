@@ -16,7 +16,6 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
 import org.junit.Ignore
@@ -26,7 +25,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
@@ -38,8 +36,8 @@ class DeleteAndQuitTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
-    private var activity: HomeActivity = mockk(relaxed = true)
-    lateinit var settings: Settings
+    private val activity: HomeActivity = mockk(relaxed = true)
+    private val settings: Settings = mockk(relaxed = true)
     private val tabUseCases: TabsUseCases = mockk(relaxed = true)
     private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
     private val permissionStorage: PermissionStorage = mockk(relaxed = true)
@@ -49,25 +47,18 @@ class DeleteAndQuitTest {
 
     @Before
     fun setUp() {
-        settings = Settings.getInstance(testContext).apply {
-            clear()
-        }
-
         every { activity.components.core.historyStorage } returns historyStorage
         every { activity.components.core.permissionStorage } returns permissionStorage
         every { activity.components.useCases.tabsUseCases } returns tabUseCases
         every { tabUseCases.removeAllTabs } returns removeAllTabsUseCases
         every { activity.components.core.engine } returns engine
-    }
-
-    private fun Settings.clear() {
-        preferences.clearAndCommit()
+        every { activity.components.settings } returns settings
     }
 
     @Test
     fun `delete only tabs and quit`() = runBlockingTest {
         // When
-        settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.TABS, true)
+        every { settings.getDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.TABS) } returns true
 
         deleteAndQuit(activity, this, snackbar)
 
@@ -97,7 +88,7 @@ class DeleteAndQuitTest {
     fun `delete everything and quit`() = runBlockingTest {
         // When
         DeleteBrowsingDataOnQuitType.values().forEach {
-            settings.setDeleteDataOnQuit(it, true)
+            every { settings.getDeleteDataOnQuit(it) } returns true
         }
 
         deleteAndQuit(activity, this, snackbar)

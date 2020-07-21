@@ -36,6 +36,7 @@ interface BrowsingModeManager {
  */
 class DefaultBrowsingModeManager(
     private var _mode: BrowsingMode,
+    private val settings: Settings,
     private val modeDidChange: (BrowsingMode) -> Unit
 ) : BrowsingModeManager {
 
@@ -44,6 +45,6 @@ class DefaultBrowsingModeManager(
         set(value) {
             _mode = value
             modeDidChange(value)
-            Settings.instance?.lastKnownMode = value
+            settings.lastKnownMode = value
         }
 }

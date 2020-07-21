@@ -26,7 +26,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.WhatsNew
 
 class HomeMenu(
@@ -153,40 +152,29 @@ class HomeMenu(
             null
         }
 
+        val settings = context.components.settings
+
+        val menuItems = listOfNotNull(
+            if (settings.shouldDeleteBrowsingDataOnQuit) quitItem else null,
+            settingsItem,
+            BrowserMenuDivider(),
+            if (FeatureFlags.syncedTabs) syncedTabsItem else null,
+            bookmarksItem,
+            historyItem,
+            BrowserMenuDivider(),
+            addons,
+            BrowserMenuDivider(),
+            whatsNewItem,
+            helpItem,
+            accountAuthItem
+        ).also { items ->
+            items.getHighlight()?.let { onHighlightPresent(it) }
+        }
+
         if (shouldUseBottomToolbar) {
-            listOfNotNull(
-                accountAuthItem,
-                helpItem,
-                whatsNewItem,
-                BrowserMenuDivider(),
-                addons,
-                BrowserMenuDivider(),
-                historyItem,
-                bookmarksItem,
-                if (FeatureFlags.syncedTabs) syncedTabsItem else null,
-                BrowserMenuDivider(),
-                settingsItem,
-                if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null
-            ).also { items ->
-                items.getHighlight()?.let { onHighlightPresent(it) }
-            }
+            menuItems.reversed()
         } else {
-            listOfNotNull(
-                if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null,
-                settingsItem,
-                BrowserMenuDivider(),
-                if (FeatureFlags.syncedTabs) syncedTabsItem else null,
-                bookmarksItem,
-                historyItem,
-                BrowserMenuDivider(),
-                addons,
-                BrowserMenuDivider(),
-                whatsNewItem,
-                helpItem,
-                accountAuthItem
-            ).also { items ->
-                items.getHighlight()?.let { onHighlightPresent(it) }
-            }
+            menuItems
         }
     }
 

@@ -4,43 +4,43 @@
 
 package org.mozilla.fenix.components
 
-import android.content.Context
+import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.service.fxa.DeviceConfig
-import mozilla.components.service.fxa.ServerConfig
-import mozilla.components.service.fxa.SyncConfig
-import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.observer.ObserverRegistry
+import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.utils.Settings
 
 class BackgroundServicesTest {
-    class TestableBackgroundServices(
-        val context: Context
-    ) : BackgroundServices(context, mockk(), mockk(), mockk(), mockk(), mockk(), mockk()) {
-        override fun makeAccountManager(
-            context: Context,
-            serverConfig: ServerConfig,
-            deviceConfig: DeviceConfig,
-            syncConfig: SyncConfig?
-        ) = mockk<FxaAccountManager>(relaxed = true)
+
+    @MockK private lateinit var metrics: MetricController
+    @MockK private lateinit var settings: Settings
+
+    private lateinit var observer: TelemetryAccountObserver
+    private lateinit var registry: ObserverRegistry<AccountObserver>
+
+    @Before
+    fun setup() {
+        MockKAnnotations.init(this)
+        every { metrics.track(any()) } just Runs
+        every { settings.fxaSignedIn = any() } just Runs
+
+        observer = TelemetryAccountObserver(mockk(relaxed = true), metrics)
+        registry = ObserverRegistry<AccountObserver>().apply { register(observer) }
     }
 
     @Test
     fun `telemetry account observer`() {
-        val metrics = mockk<MetricController>()
-        every { metrics.track(any()) } just Runs
-        val observer = TelemetryAccountObserver(mockk(relaxed = true), metrics)
-        val registry = ObserverRegistry<AccountObserver>()
-        registry.register(observer)
         val account = mockk<OAuthAccount>()
 
         // Sign-in

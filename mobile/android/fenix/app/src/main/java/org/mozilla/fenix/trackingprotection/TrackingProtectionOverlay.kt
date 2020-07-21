@@ -22,7 +22,6 @@ import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.Settings
 
@@ -56,7 +55,7 @@ class TrackingProtectionOverlay(
             override fun onTouchEvent(event: MotionEvent): Boolean {
 
                 if (event.action == MotionEvent.ACTION_DOWN) {
-                    context.components.analytics.metrics.track(Event.ContextualHintETPOutsideTap)
+                    metrics.track(Event.ContextualHintETPOutsideTap)
                 }
                     return super.onTouchEvent(event)
                 }

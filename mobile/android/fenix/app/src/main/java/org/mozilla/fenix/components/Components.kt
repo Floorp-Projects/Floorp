@@ -20,6 +20,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Mockable
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit
 
@@ -107,4 +108,6 @@ class Components(private val context: Context) {
     val performance by lazy { PerformanceComponent() }
     val push by lazy { Push(context, analytics.crashReporter) }
     val wifiConnectionMonitor by lazy { WifiConnectionMonitor(context.getSystemService()!!) }
+
+    val settings by lazy { Settings(context) }
 }

@@ -7,15 +7,14 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 import android.view.LayoutInflater
 import android.view.View
 import io.mockk.every
-import io.mockk.mockk
 import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.*
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -27,16 +26,10 @@ class OnboardingToolbarPositionPickerViewHolderTest {
 
     @Before
     fun setup() {
+        val components = testContext.components
         view = LayoutInflater.from(testContext)
             .inflate(OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID, null)
-        settings = mockk(relaxed = true)
-
-        Settings.instance = settings
-    }
-
-    @After
-    fun teardown() {
-        Settings.instance = null
+        settings = components.settings
     }
 
     @Test

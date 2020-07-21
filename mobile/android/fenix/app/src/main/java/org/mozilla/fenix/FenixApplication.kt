@@ -47,7 +47,6 @@ import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
-import org.mozilla.fenix.utils.Settings
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -355,8 +354,7 @@ open class FenixApplication : LocaleAwareApplication() {
                     _, engineSession, url ->
                         val shouldCreatePrivateSession =
                             components.core.sessionManager.selectedSession?.private
-                                ?: Settings.instance?.openLinksInAPrivateTab
-                                ?: false
+                                ?: components.settings.openLinksInAPrivateTab
 
                         val session = Session(url, shouldCreatePrivateSession)
                         components.core.sessionManager.add(session, true, engineSession)

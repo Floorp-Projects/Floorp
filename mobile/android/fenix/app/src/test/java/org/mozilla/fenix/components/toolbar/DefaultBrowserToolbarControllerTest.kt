@@ -543,7 +543,10 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarNewTabPress() = runBlockingTest {
-        val browsingModeManager: BrowsingModeManager = DefaultBrowsingModeManager(BrowsingMode.Private) {}
+        val browsingModeManager: BrowsingModeManager = DefaultBrowsingModeManager(
+            BrowsingMode.Private,
+            mockk(relaxed = true)
+        ) {}
         val item = TabCounterMenuItem.NewTab(false)
 
         every { activity.browsingModeManager } returns browsingModeManager
@@ -556,7 +559,10 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarNewPrivateTabPress() = runBlockingTest {
-        val browsingModeManager: BrowsingModeManager = DefaultBrowsingModeManager(BrowsingMode.Normal) {}
+        val browsingModeManager: BrowsingModeManager = DefaultBrowsingModeManager(
+            BrowsingMode.Normal,
+            mockk(relaxed = true)
+        ) {}
         val item = TabCounterMenuItem.NewTab(true)
 
         every { activity.browsingModeManager } returns browsingModeManager

@@ -10,7 +10,7 @@ import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.components
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -48,9 +48,10 @@ object GeckoProvider {
             .debugLogging(Config.channel.isDebug)
             .build()
 
-        if (!Settings.getInstance(context).shouldUseAutoSize) {
+        val settings = context.components.settings
+        if (!settings.shouldUseAutoSize) {
             runtimeSettings.automaticFontSizeAdjustment = false
-            val fontSize = Settings.getInstance(context).fontSizeFactor
+            val fontSize = settings.fontSizeFactor
             runtimeSettings.fontSizeFactor = fontSize
         }
 

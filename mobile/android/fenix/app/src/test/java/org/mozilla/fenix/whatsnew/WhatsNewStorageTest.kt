@@ -4,25 +4,24 @@
 
 package org.mozilla.fenix.whatsnew
 
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import androidx.preference.PreferenceManager
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.clearAndCommit
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class WhatsNewStorageTest {
+
     private lateinit var storage: SharedPreferenceWhatsNewStorage
-    private lateinit var settings: Settings
 
     @Before
     fun setUp() {
         storage = SharedPreferenceWhatsNewStorage(testContext)
-        settings = Settings.getInstance(testContext)
-            .apply(Settings::clear)
+        PreferenceManager.getDefaultSharedPreferences(testContext).clearAndCommit()
     }
 
     @Test
@@ -56,8 +55,4 @@ class WhatsNewStorageTest {
     companion object {
         const val DAY_IN_MILLIS = 3600 * 1000 * 24
     }
-}
-
-fun Settings.clear() {
-    preferences.clearAndCommit()
 }

@@ -24,15 +24,14 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.mozilla.fenix.R
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
@@ -160,7 +159,7 @@ class DefaultToolbarMenu(
         // Predicates that are called once, during screen init
         val shouldShowSaveToCollection = (context.asActivity() as? HomeActivity)
             ?.browsingModeManager?.mode == BrowsingMode.Normal
-        val shouldDeleteDataOnQuit = Settings.getInstance(context)
+        val shouldDeleteDataOnQuit = context.components.settings
             .shouldDeleteBrowsingDataOnQuit
 
         val menuItems = listOfNotNull(

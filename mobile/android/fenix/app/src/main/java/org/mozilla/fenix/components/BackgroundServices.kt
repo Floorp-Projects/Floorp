@@ -40,6 +40,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.sync.SyncedTabsIntegration
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.RunWhenReadyQueue
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
@@ -103,7 +104,7 @@ class BackgroundServices(
     }
 
     private val telemetryAccountObserver = TelemetryAccountObserver(
-        context,
+        context.settings(),
         context.components.analytics.metrics
     )
 
@@ -178,8 +179,8 @@ class BackgroundServices(
 }
 
 @VisibleForTesting(otherwise = PRIVATE)
-class TelemetryAccountObserver(
-    private val context: Context,
+internal class TelemetryAccountObserver(
+    private val settings: Settings,
     private val metricController: MetricController
 ) : AccountObserver {
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
@@ -211,12 +212,12 @@ class TelemetryAccountObserver(
                 metricController.track(Event.SyncAuthOtherExternal)
         }
         // Used by Leanplum as a context variable.
-        context.settings().fxaSignedIn = true
+        settings.fxaSignedIn = true
     }
 
     override fun onLoggedOut() {
         metricController.track(Event.SyncAuthSignOut)
         // Used by Leanplum as a context variable.
-        context.settings().fxaSignedIn = false
+        settings.fxaSignedIn = false
     }
 }

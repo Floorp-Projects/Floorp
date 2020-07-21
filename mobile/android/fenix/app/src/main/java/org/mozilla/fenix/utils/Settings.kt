@@ -33,9 +33,9 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
-import org.mozilla.fenix.settings.logins.fragment.SavedLoginsFragment
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
+import org.mozilla.fenix.settings.logins.fragment.SavedLoginsFragment
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import java.security.InvalidParameterException
 
@@ -43,12 +43,11 @@ private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
+ * @param appContext Reference to application context.
  */
 @Suppress("LargeClass", "TooManyFunctions")
-class Settings private constructor(
-    context: Context,
-    private val isCrashReportEnabledInBuild: Boolean
-) : PreferencesHolder {
+class Settings(private val appContext: Context) : PreferencesHolder {
+
     companion object {
         const val showLoginsSecureWarningSyncMaxCount = 1
         const val showLoginsSecureWarningMaxCount = 1
@@ -88,24 +87,11 @@ class Settings private constructor(
             ASK_TO_ALLOW_INT -> AutoplayAction.BLOCKED
             else -> throw InvalidParameterException("$this is not a valid SitePermissionsRules.AutoplayAction")
         }
-
-        @VisibleForTesting
-        internal var instance: Settings? = null
-
-        @JvmStatic
-        @Synchronized
-        fun getInstance(
-            context: Context,
-            isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased
-        ): Settings {
-            if (instance == null) {
-                instance = Settings(context.applicationContext, isCrashReportEnabledInBuild)
-            }
-            return instance ?: throw AssertionError("Instance cleared")
-        }
     }
 
-    private val appContext = context.applicationContext
+    @VisibleForTesting
+    internal val isCrashReportEnabledInBuild: Boolean =
+        BuildConfig.CRASH_REPORTING && Config.channel.isReleased
 
     override val preferences: SharedPreferences =
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
@@ -372,7 +358,7 @@ class Settings private constructor(
             appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard_option),
             false
         ).apply()
-        appContext?.components?.let {
+        appContext.components.let {
             val policy = it.core.trackingProtectionPolicyFactory
                 .createTrackingProtectionPolicy()
             it.useCases.settingsUseCases.updateTrackingProtection.invoke(policy)

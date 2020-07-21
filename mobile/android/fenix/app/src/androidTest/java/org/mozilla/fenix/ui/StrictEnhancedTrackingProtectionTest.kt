@@ -46,7 +46,7 @@ class StrictEnhancedTrackingProtectionTest {
             start()
         }
 
-        InstrumentationRegistry.getInstrumentation().context.settings().setStrictETP()
+        activityTestRule.activity.settings().setStrictETP()
 
         // Reset on-boarding notification for each test
         TestHelper.setPreference(
