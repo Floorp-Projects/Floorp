@@ -348,6 +348,10 @@ body {
         border-top-right-radius: 4px;
         height: 91px;
 
+        &:dir(rtl) {
+          transform: scaleX(-1);
+        }
+
         &.light {
           background-image: url('chrome://mozapps/content/extensions/firefox-compact-light.svg');
         }
