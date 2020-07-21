@@ -5,9 +5,7 @@
 #ifndef mozilla_dom_CanvasPattern_h
 #define mozilla_dom_CanvasPattern_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
-#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -20,10 +18,11 @@ class SourceSurface;
 }  // namespace gfx
 
 namespace dom {
+class CanvasRenderingContext2D;
 struct DOMMatrix2DInit;
 
 class CanvasPattern final : public nsWrapperCache {
-  ~CanvasPattern() = default;
+  ~CanvasPattern();
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPattern)
@@ -34,14 +33,7 @@ class CanvasPattern final : public nsWrapperCache {
   CanvasPattern(CanvasRenderingContext2D* aContext,
                 gfx::SourceSurface* aSurface, RepeatMode aRepeat,
                 nsIPrincipal* principalForSecurityCheck, bool forceWriteOnly,
-                bool CORSUsed)
-      : mContext(aContext),
-        mSurface(aSurface),
-        mPrincipal(principalForSecurityCheck),
-        mTransform(),
-        mForceWriteOnly(forceWriteOnly),
-        mCORSUsed(CORSUsed),
-        mRepeat(aRepeat) {}
+                bool CORSUsed);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override {
