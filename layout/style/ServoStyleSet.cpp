@@ -919,14 +919,14 @@ bool ServoStyleSet::GetKeyframesForName(const Element& aElement,
 
 nsTArray<ComputedKeyframeValues> ServoStyleSet::GetComputedKeyframeValuesFor(
     const nsTArray<Keyframe>& aKeyframes, Element* aElement,
-    const ComputedStyle* aStyle) {
+    PseudoStyleType aPseudoType, const ComputedStyle* aStyle) {
   nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
 
   // Construct each nsTArray<PropertyStyleAnimationValuePair> here.
   result.AppendElements(aKeyframes.Length());
 
-  Servo_GetComputedKeyframeValues(&aKeyframes, aElement, aStyle, mRawSet.get(),
-                                  &result);
+  Servo_GetComputedKeyframeValues(&aKeyframes, aElement, aPseudoType, aStyle,
+                                  mRawSet.get(), &result);
   return result;
 }
 
