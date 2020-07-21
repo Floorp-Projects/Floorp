@@ -42,6 +42,9 @@ namespace mozilla {
  */
 template <typename T>
 class RangedPtr {
+  template <typename U>
+  friend class RangedPtr;
+
   T* mPtr;
 
 #ifdef DEBUG
@@ -119,7 +122,19 @@ class RangedPtr {
     checkSanity();
   }
 
-  MOZ_IMPLICIT RangedPtr(const RangedPtr<T>& aOther)
+  RangedPtr(const RangedPtr& aOther)
+      : mPtr(aOther.mPtr)
+#ifdef DEBUG
+        ,
+        mRangeStart(aOther.mRangeStart),
+        mRangeEnd(aOther.mRangeEnd)
+#endif
+  {
+    checkSanity();
+  }
+
+  template <typename U>
+  MOZ_IMPLICIT RangedPtr(const RangedPtr<U>& aOther)
       : mPtr(aOther.mPtr)
 #ifdef DEBUG
         ,

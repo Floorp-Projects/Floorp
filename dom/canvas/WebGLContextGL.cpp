@@ -920,18 +920,18 @@ static bool ValidatePackSize(const WebGLContext& webgl,
   return true;
 }
 
-void WebGLContext::ReadPixels(const webgl::ReadPixelsDesc& desc,
-                              const Range<uint8_t>& dest) {
+webgl::ReadPixelsResult WebGLContext::ReadPixelsInto(
+    const webgl::ReadPixelsDesc& desc, const Range<uint8_t>& dest) {
   const FuncScope funcScope(*this, "readPixels");
-  if (IsContextLost()) return;
+  if (IsContextLost()) return {};
 
   if (mBoundPixelPackBuffer) {
     ErrorInvalidOperation("PIXEL_PACK_BUFFER must be null.");
-    return;
+    return {};
   }
 
-  ReadPixelsImpl(desc, reinterpret_cast<uintptr_t>(dest.begin().get()),
-                 dest.length());
+  return ReadPixelsImpl(desc, reinterpret_cast<uintptr_t>(dest.begin().get()),
+                        dest.length());
 }
 
 void WebGLContext::ReadPixelsPbo(const webgl::ReadPixelsDesc& desc,
@@ -1077,22 +1077,22 @@ static bool ValidateReadPixelsFormatAndType(
   return false;
 }
 
-void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
-                                  const uintptr_t dest,
-                                  const uint64_t availBytes) {
+webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
+    const webgl::ReadPixelsDesc& desc, const uintptr_t dest,
+    const uint64_t availBytes) {
   const webgl::FormatUsageInfo* srcFormat;
   uint32_t srcWidth;
   uint32_t srcHeight;
-  if (!BindCurFBForColorRead(&srcFormat, &srcWidth, &srcHeight)) return;
+  if (!BindCurFBForColorRead(&srcFormat, &srcWidth, &srcHeight)) return {};
 
   //////
 
-  if (!ValidateReadPixelsFormatAndType(srcFormat, desc.pi, gl, this)) return;
+  if (!ValidateReadPixelsFormatAndType(srcFormat, desc.pi, gl, this)) return {};
 
   uint8_t bytesPerPixel;
   if (!webgl::GetBytesPerPixel(desc.pi, &bytesPerPixel)) {
     ErrorInvalidOperation("Unsupported format and type.");
-    return;
+    return {};
   }
 
   //////
@@ -1102,7 +1102,7 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
 
   if (!ivec2::From(size)) {
     ErrorInvalidValue("width and height must be non-negative.");
-    return;
+    return {};
   }
 
   const auto& packing = desc.packState;
@@ -1110,11 +1110,11 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
   uint32_t bytesNeeded;
   if (!ValidatePackSize(*this, packing, size, bytesPerPixel, &rowStride,
                         &bytesNeeded))
-    return;
+    return {};
 
   if (bytesNeeded > availBytes) {
     ErrorInvalidOperation("buffer too small");
-    return;
+    return {};
   }
 
   ////
@@ -1125,7 +1125,7 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
   if (!Intersect(srcWidth, srcOffset.x, size.x, &readX, &writeX, &rwWidth) ||
       !Intersect(srcHeight, srcOffset.y, size.y, &readY, &writeY, &rwHeight)) {
     ErrorOutOfMemory("Bad subrect selection.");
-    return;
+    return {};
   }
 
   ////////////////
@@ -1141,14 +1141,17 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
   if (!rwWidth || !rwHeight) {
     // Disjoint rects, so we're done already.
     DummyReadFramebufferOperation();
-    return;
+    return {};
   }
   const auto rwSize = *uvec2::From(rwWidth, rwHeight);
+
+  const auto res = webgl::ReadPixelsResult{
+      {{writeX, writeY}, {rwSize.x, rwSize.y}}, rowStride};
 
   if (rwSize == size) {
     DoReadPixelsAndConvert(srcFormat->format, desc, dest, bytesNeeded,
                            rowStride);
-    return;
+    return res;
   }
 
   // Read request contains out-of-bounds pixels. Unfortunately:
@@ -1195,6 +1198,8 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
       row += rowStride;
     }
   }
+
+  return res;
 }
 
 void WebGLContext::RenderbufferStorageMultisample(WebGLRenderbuffer& rb,

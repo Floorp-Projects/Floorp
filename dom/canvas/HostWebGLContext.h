@@ -191,11 +191,16 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ObjectId xrFb,
                                                   const bool webvr) const;
 
-  RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot() const {
-    return mContext->GetFrontBufferSnapshot();
+  // -
+
+  uvec2 GetFrontBufferSize() const { return mContext->DrawingBufferSize(); }
+  bool FrontBufferSnapshotInto(Range<uint8_t> dest) const {
+    return mContext->FrontBufferSnapshotInto(dest);
   }
 
-  void ClearVRSwapChain() { mContext->ClearVRSwapChain(); }
+  void ClearVRSwapChain() const { mContext->ClearVRSwapChain(); }
+
+  // -
 
   void Resize(const uvec2& size) { return mContext->Resize(size); }
 
@@ -258,7 +263,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 
   bool IsEnabled(GLenum cap) const { return mContext->IsEnabled(cap); }
 
-  Maybe<double> GetParameter(GLenum pname) const {
+  Maybe<double> GetNumber(GLenum pname) const {
     return mContext->GetParameter(pname);
   }
 
@@ -477,21 +482,21 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
                                           writeOffset, size);
   }
 
-  void GetBufferSubData(GLenum target, uint64_t srcByteOffset,
-                        RawBuffer<uint8_t>& dest) const {
-    const auto range = MakeRange(dest);
-    GetWebGL2Context()->GetBufferSubData(target, srcByteOffset, range);
+  bool GetBufferSubData(GLenum target, uint64_t srcByteOffset,
+                        const Range<uint8_t>& dest) const {
+    return GetWebGL2Context()->GetBufferSubData(target, srcByteOffset, dest);
   }
 
-  void BufferData(GLenum target, const RawBuffer<const uint8_t>& data,
-                  GLenum usage) const {
-    mContext->BufferData(target, data.Length(), data.Data(), usage);
+  void BufferData(GLenum target, const RawBuffer<>& data, GLenum usage) const {
+    const auto& range = data.Data();
+    mContext->BufferData(target, range.length(), range.begin().get(), usage);
   }
 
   void BufferSubData(GLenum target, uint64_t dstByteOffset,
-                     const RawBuffer<const uint8_t>& srcData) const {
-    mContext->BufferSubData(target, dstByteOffset, srcData.Length(),
-                            srcData.Data());
+                     const RawBuffer<>& srcData) const {
+    const auto& range = srcData.Data();
+    mContext->BufferSubData(target, dstByteOffset, range.length(),
+                            range.begin().get());
   }
 
   // -------------------------- Framebuffer Objects --------------------------
@@ -550,8 +555,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   // CompressedTexSubImage if `sub`
   void CompressedTexImage(bool sub, GLenum imageTarget, uint32_t level,
                           GLenum format, const uvec3& offset, const uvec3& size,
-                          const RawBuffer<const uint8_t>& src,
-                          const uint32_t pboImageSize,
+                          const RawBuffer<>& src, const uint32_t pboImageSize,
                           const Maybe<uint64_t>& pboOffset) const {
     mContext->CompressedTexImage(sub, imageTarget, level, format, offset, size,
                                  MakeRange(src), pboImageSize, pboOffset);
@@ -602,8 +606,8 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   // ------------------------ Uniforms and attributes ------------------------
 
   void UniformData(uint32_t loc, bool transpose,
-                   const RawBuffer<const uint8_t>& data) const {
-    mContext->UniformData(loc, transpose, MakeRange(data));
+                   const RawBuffer<>& data) const {
+    mContext->UniformData(loc, transpose, data.Data());
   }
 
   void VertexAttrib4T(GLuint index, const webgl::TypedQuad& data) const {
@@ -660,10 +664,9 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     mContext->ReadPixelsPbo(desc, offset);
   }
 
-  void ReadPixels(const webgl::ReadPixelsDesc& desc,
-                  RawBuffer<uint8_t>& dest) const {
-    const auto range = MakeRange(dest);
-    mContext->ReadPixels(desc, range);
+  webgl::ReadPixelsResult ReadPixelsInto(const webgl::ReadPixelsDesc& desc,
+                                         const Range<uint8_t>& dest) const {
+    return mContext->ReadPixelsInto(desc, dest);
   }
 
   // ----------------------------- Sampler -----------------------------------
