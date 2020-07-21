@@ -206,7 +206,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         }
 
         // Check if this is the last tab of this session type
-        val isLastOpenTab = sessionManager.sessions.filter { snapshot.session.private }.size == 1
+        val isLastOpenTab = sessionManager.sessions.filter { snapshot.session.private == it.private }.size == 1
         val rootView = if (isLastOpenTab) { requireActivity().getRootView()!! } else { requireView().tabLayout }
         val anchorView = if (isLastOpenTab) { null } else { snackbarAnchor }
 
