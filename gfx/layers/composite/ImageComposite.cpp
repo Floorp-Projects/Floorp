@@ -121,7 +121,7 @@ int ImageComposite::ChooseImageIndex() {
   if (compositionOpportunityId != mLastChooseImageIndexComposition) {
     bool wasVisibleAtPreviousComposition =
         compositionOpportunityId == mLastChooseImageIndexComposition.Next();
-    UpdateCompositedFrame(&mImages[result], wasVisibleAtPreviousComposition);
+    UpdateCompositedFrame(result, wasVisibleAtPreviousComposition);
     mLastChooseImageIndexComposition = compositionOpportunityId;
   }
 
@@ -156,7 +156,11 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
 }
 
 void ImageComposite::UpdateCompositedFrame(
-    const TimedImage* aImage, bool aWasVisibleAtPreviousComposition) {
+    int aImageIndex, bool aWasVisibleAtPreviousComposition) {
+  MOZ_RELEASE_ASSERT(aImageIndex >= 0);
+  MOZ_RELEASE_ASSERT(aImageIndex < static_cast<int>(mImages.Length()));
+  const TimedImage& image = mImages[aImageIndex];
+
   auto compositionOpportunityId = GetCompositionOpportunityId();
   TimeStamp compositionTime = GetCompositionTime();
   MOZ_RELEASE_ASSERT(compositionTime,
@@ -166,20 +170,22 @@ void ImageComposite::UpdateCompositedFrame(
   nsCString descr;
   if (profiler_can_accept_markers()) {
     nsCString relativeTimeString;
-    if (aImage->mTimeStamp) {
+    if (image.mTimeStamp) {
       relativeTimeString.AppendPrintf(
           " [relative timestamp %.1lfms]",
-          (aImage->mTimeStamp - compositionTime).ToMilliseconds());
+          (image.mTimeStamp - compositionTime).ToMilliseconds());
     }
+    int remainingImages = mImages.Length() - 1 - aImageIndex;
     static const char* kBiasStrings[] = {"NONE", "NEGATIVE", "POSITIVE"};
-    descr.AppendPrintf("frameID %" PRId32 " (producerID %" PRId32
-                       ") [composite %" PRIu64 "] [bias %s]%s",
-                       aImage->mFrameID, aImage->mProducerID,
-                       compositionOpportunityId.mId, kBiasStrings[mBias],
-                       relativeTimeString.get());
-    if (mLastProducerID != aImage->mProducerID) {
+    descr.AppendPrintf(
+        "frameID %" PRId32 " (producerID %" PRId32 ") [composite %" PRIu64
+        "] [bias %s] [%d remaining %s]%s",
+        image.mFrameID, image.mProducerID, compositionOpportunityId.mId,
+        kBiasStrings[mBias], remainingImages,
+        remainingImages == 1 ? "image" : "images", relativeTimeString.get());
+    if (mLastProducerID != image.mProducerID) {
       descr.AppendPrintf(", previous producerID: %" PRId32, mLastProducerID);
-    } else if (mLastFrameID != aImage->mFrameID) {
+    } else if (mLastFrameID != image.mFrameID) {
       descr.AppendPrintf(", previous frameID: %" PRId32, mLastFrameID);
     } else {
       descr.AppendLiteral(", no change");
@@ -189,12 +195,11 @@ void ImageComposite::UpdateCompositedFrame(
                                   Nothing(), nullptr);
 #endif
 
-  if (mLastFrameID == aImage->mFrameID &&
-      mLastProducerID == aImage->mProducerID) {
+  if (mLastFrameID == image.mFrameID && mLastProducerID == image.mProducerID) {
     return;
   }
 
-  CountSkippedFrames(aImage);
+  CountSkippedFrames(&image);
 
   int32_t dropped = mSkippedFramesSinceLastComposite;
   mSkippedFramesSinceLastComposite = 0;
@@ -215,16 +220,16 @@ void ImageComposite::UpdateCompositedFrame(
       const char* frameOrFrames = dropped == 1 ? "frame" : "frames";
       nsPrintfCString text("%" PRId32 " %s dropped: %" PRId32 " -> %" PRId32
                            " (producer %" PRId32 ")",
-                           dropped, frameOrFrames, mLastFrameID,
-                           aImage->mFrameID, mLastProducerID);
+                           dropped, frameOrFrames, mLastFrameID, image.mFrameID,
+                           mLastProducerID);
       profiler_add_text_marker("Video frames dropped", text,
                                JS::ProfilingCategoryPair::GRAPHICS, now, now);
     }
 #endif
   }
 
-  mLastFrameID = aImage->mFrameID;
-  mLastProducerID = aImage->mProducerID;
+  mLastFrameID = image.mFrameID;
+  mLastProducerID = image.mProducerID;
   mLastFrameUpdateComposition = compositionOpportunityId;
 }
 
