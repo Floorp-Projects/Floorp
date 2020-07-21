@@ -1967,7 +1967,7 @@ set_define('MOZ_RUST_FXA_CLIENT', True, when=rust_fxa_client)
 # ==============================================================
 
 check_prog('DUMP_SYMS', ['dump_syms'], allow_missing=True, paths=toolchain_search_path,
-           when=compile_environment & (target_is_windows | target_is_android))
+           when=compile_environment & (target_is_windows | target_is_android | target_is_linux))
 
 
 check_prog('PDBSTR', ['pdbstr.exe'], allow_missing=True, paths=toolchain_search_path,
