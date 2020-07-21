@@ -339,6 +339,8 @@ body {
         border-top-left-radius: 4px;
         border-top-right-radius: 4px;
         height: 91px; }
+        .multistageContainer .tiles-theme-section .theme .icon:dir(rtl) {
+          transform: scaleX(-1); }
         .multistageContainer .tiles-theme-section .theme .icon.light {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-light.svg"); }
         .multistageContainer .tiles-theme-section .theme .icon.dark {
