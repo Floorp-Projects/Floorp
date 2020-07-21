@@ -683,16 +683,28 @@ found.
 Strings
 -------
 
--  String arguments to functions should be declared as ``nsAString``.
--  Use ``EmptyString()`` and ``EmptyCString()`` instead of
-   ``NS_LITERAL_STRING("")`` or ``nsAutoString empty;``.
--  Use ``str.IsEmpty()`` instead of ``str.Length() == 0``.
--  Use ``str.Truncate()`` instead of ``str.SetLength(0)`` or
-   ``str.Assign(EmptyString())``.
--  For constant strings, use ``NS_LITERAL_STRING("...")`` instead of
-   ``NS_ConvertASCIItoUCS2("...")``, ``AssignWithConversion("...")``,
-   ``EqualsWithConversion("...")``, or ``nsAutoString()``
+.. note::
+
+   This section overlaps with the more verbose advice given in
+   `Internal strings <https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Guide/Internal_strings>`__.
+   These should eventually be merged. For now, please refer to that guide for
+   more advice.
+
+-  String arguments to functions should be declared as ``[const] nsA[C]String&``.
+-  Prefer using string literals. In particular, use empty string literals,
+   i.e. ``u""_ns`` or ``""_ns``, instead of ``Empty[C]String()`` or
+   ``const nsAuto[C]String empty;``. Use ``Empty[C]String()`` only if you
+   specifically need a ``const ns[C]String&``, e.g. with the ternary operator
+   or when you need to return/bind to a reference or take the address of the
+   empty string.
+-  For 16-bit literal strings, use ``u"..."_ns`` or, if necessary
+   ``NS_LITERAL_STRING_FROM_CSTRING(...)`` instead of ``nsAutoString()``
+   or other ways that would do a run-time conversion.
+   See :ref:`Avoid runtime conversion of string literals` below.
 -  To compare a string with a literal, use ``.EqualsLiteral("...")``.
+-  Use ``str.IsEmpty()`` instead of ``str.Length() == 0``.
+-  Use ``str.Truncate()`` instead of ``str.SetLength(0)``,
+   ``str.Assign(""_ns)`` or ``str.AssignLiteral("")``.
 -  Don't use functions from ``ctype.h`` (``isdigit()``, ``isalpha()``,
    etc.) or from ``strings.h`` (``strcasecmp()``, ``strncasecmp()``).
    These are locale-sensitive, which makes them inappropriate for
@@ -791,14 +803,16 @@ Free the string manually:
      nsMemory::Free(warning);
 
 
-Use MOZ_UTF16() or NS_LITERAL_STRING() to avoid runtime string conversion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Avoid runtime conversion of string literals
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is very common to need to assign the value of a literal string, such
 as ``"Some String"``, into a unicode buffer. Instead of using ``nsString``'s
-``AssignLiteral`` and ``AppendLiteral``, use ``NS_LITERAL_STRING()``
+``AssignLiteral`` and ``AppendLiteral``, use a user-defined literal like `u"foo"_ns`
 instead. On most platforms, this will force the compiler to compile in a
-raw unicode string, and assign it directly.
+raw unicode string, and assign it directly. In cases where the literal is defined
+via a macro that is used in both 8-bit and 16-bit ways, you can use
+`NS_LITERAL_STRING_FROM_CSTRING` to do the conversion at compile time.
 
 Incorrect:
 
@@ -815,7 +829,7 @@ Correct:
 
 .. code-block:: cpp
 
-   NS_NAMED_LITERAL_STRING(warning, "danger will robinson!");
+   constexpr auto warning = u"danger will robinson!"_ns;
    ...
    // if you'll be using the 'warning' string, you can still use it as before:
    foo->SetStringValue(warning);
@@ -823,13 +837,20 @@ Correct:
    bar->SetUnicodeValue(warning.get());
 
    // alternatively, use the wide string directly:
-   foo->SetStringValue(NS_LITERAL_STRING("danger will robinson!"));
+   foo->SetStringValue(u"danger will robinson!"_ns);
    ...
-   bar->SetUnicodeValue(MOZ_UTF16("danger will robinson!"));
 
-.. note::
+   // if a macro is the source of a 8-bit literal and you cannot change it, use
+   // NS_LITERAL_STRING_FROM_CSTRING, but only if necessary.
+   #define MY_MACRO_LITERAL "danger will robinson!"
+   foo->SetStringValue(NS_LITERAL_STRING_FROM_CSTRING(MY_MACRO_LITERAL));
 
-   Note: Named literal strings cannot yet be static.
+   // If you need to pass to a raw const char16_t *, there's no benefit to
+   // go through our string classes at all, just do...
+   bar->SetUnicodeValue(u"danger will robinson!");
+
+   // .. or, again, if a macro is the source of a 8-bit literal
+   bar->SetUnicodeValue(u"" MY_MACRO_LITERAL);
 
 
 Usage of PR_(MAX|MIN|ABS|ROUNDUP) macro calls
