@@ -261,7 +261,7 @@ uint32_t HTMLEmbedElement::GetCapabilities() const {
 }
 
 void HTMLEmbedElement::DestroyContent() {
-  nsObjectLoadingContent::DestroyContent();
+  nsObjectLoadingContent::Destroy();
   nsGenericHTMLElement::DestroyContent();
 }
 
