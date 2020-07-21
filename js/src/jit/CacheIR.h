@@ -1640,6 +1640,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                        bool isPossiblyWrapped);
   AttachDecision tryAttachTypedArrayByteOffset(HandleFunction callee);
   AttachDecision tryAttachTypedArrayElementShift(HandleFunction callee);
+  AttachDecision tryAttachTypedArrayLength(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
