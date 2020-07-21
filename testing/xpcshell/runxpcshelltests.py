@@ -1287,11 +1287,13 @@ class XPCShellTests(object):
         if sys.platform == 'win32':
             binSuffix = ".exe"
 
-        http3ServerPath = os.path.join(SCRIPT_DIR, "http3server",
-                                       "http3server" + binSuffix)
-        if build:
-            http3ServerPath = os.path.join(build.topobjdir, "dist", "bin",
+        http3ServerPath = self.http3server
+        if not http3ServerPath:
+            http3ServerPath = os.path.join(SCRIPT_DIR, "http3server",
                                            "http3server" + binSuffix)
+            if build:
+                http3ServerPath = os.path.join(build.topobjdir, "dist", "bin",
+                                               "http3server" + binSuffix)
 
         if not os.path.exists(http3ServerPath):
             self.log.warning("Http3 server not found at " + http3ServerPath +
@@ -1474,6 +1476,7 @@ class XPCShellTests(object):
             self.jsDebuggerInfo = JSDebuggerInfo(port=options['jsDebuggerPort'])
 
         self.xpcshell = options.get('xpcshell')
+        self.http3server = options.get('http3server')
         self.xrePath = options.get('xrePath')
         self.utility_path = options.get('utility_path')
         self.appPath = options.get('appPath')

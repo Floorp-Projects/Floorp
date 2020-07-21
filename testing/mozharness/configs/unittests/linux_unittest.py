@@ -6,6 +6,7 @@ ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 BINARY_PATH = os.path.join(ABS_WORK_DIR, "application", "firefox", "firefox-bin")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.tar.bz2")
 XPCSHELL_NAME = "xpcshell"
+HTTP3SERVER_NAME = "http3server"
 EXE_SUFFIX = ""
 DISABLE_SCREEN_SAVER = True
 ADJUST_MOUSE_AND_SCREEN = False
@@ -35,6 +36,7 @@ config = {
     "installer_path": INSTALLER_PATH,
     "binary_path": BINARY_PATH,
     "xpcshell_name": XPCSHELL_NAME,
+    "http3server_name": HTTP3SERVER_NAME,
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
         "mochitest": "runtests.py",
@@ -191,11 +193,13 @@ config = {
     "all_xpcshell_suites": {
         "xpcshell": {
             "options": ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
+                        "--http3server=%(abs_app_dir)s/" + HTTP3SERVER_NAME,
                         "--manifest=tests/xpcshell/tests/xpcshell.ini"],
             "tests": []
         },
         "xpcshell-coverage": {
             "options": ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
+                        "--http3server=%(abs_app_dir)s/" + HTTP3SERVER_NAME,
                         "--manifest=tests/xpcshell/tests/xpcshell.ini",
                         "--sequential"],
             "tests": []
