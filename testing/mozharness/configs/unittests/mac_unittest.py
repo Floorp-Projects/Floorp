@@ -7,6 +7,7 @@ if 'MOZ_FETCHES_DIR' in os.environ:
     NODEJS_PATH = os.path.join(os.environ["MOZ_FETCHES_DIR"], "node/bin/node")
 
 XPCSHELL_NAME = 'xpcshell'
+HTTP3SERVER_NAME = 'http3server'
 EXE_SUFFIX = ''
 DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = False
@@ -16,6 +17,7 @@ config = {
     ###
     "installer_path": INSTALLER_PATH,
     "xpcshell_name": XPCSHELL_NAME,
+    "http3server_name": HTTP3SERVER_NAME,
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
         "mochitest": "runtests.py",
@@ -154,6 +156,7 @@ config = {
     "all_xpcshell_suites": {
         "xpcshell": {
             'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
+                        "--http3server=%(abs_app_dir)s/" + HTTP3SERVER_NAME,
                         "--manifest=tests/xpcshell/tests/xpcshell.ini"],
             'tests': []
         },
