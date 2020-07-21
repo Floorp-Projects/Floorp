@@ -16,6 +16,8 @@ ac_add_options --disable-elf-hack
 # to analyze fuzzing bugs with rr.
 ac_add_options --enable-fuzzing
 
+export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
+
 # Include 'SourceRepository' in application.ini which
 # is used by Pernosco to locate source
 export MOZ_INCLUDE_SOURCE_INFO=1
