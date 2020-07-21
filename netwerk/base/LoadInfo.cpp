@@ -78,6 +78,15 @@ static nsContentPolicyType InternalContentPolicyTypeForFrame(
                                  aSecurityFlags, aSandboxFlags);
 }
 
+/* static */ already_AddRefed<LoadInfo> LoadInfo::CreateForNonDocument(
+    dom::WindowGlobalParent* aParentWGP, nsIPrincipal* aTriggeringPrincipal,
+    nsContentPolicyType aContentPolicyType, nsSecurityFlags aSecurityFlags,
+    uint32_t aSandboxFlags) {
+  return MakeAndAddRef<LoadInfo>(aParentWGP, aTriggeringPrincipal,
+                                 aContentPolicyType, aSecurityFlags,
+                                 aSandboxFlags);
+}
+
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
     nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,
@@ -1743,13 +1752,12 @@ PerformanceStorage* LoadInfo::GetPerformanceStorage() {
     return mPerformanceStorage;
   }
 
-  RefPtr<dom::Document> loadingDocument;
-  GetLoadingDocument(getter_AddRefs(loadingDocument));
-  if (!loadingDocument) {
+  auto* innerWindow = nsGlobalWindowInner::GetInnerWindowWithId(mInnerWindowID);
+  if (!innerWindow) {
     return nullptr;
   }
 
-  if (!TriggeringPrincipal()->Equals(loadingDocument->NodePrincipal())) {
+  if (!TriggeringPrincipal()->Equals(innerWindow->GetPrincipal())) {
     return nullptr;
   }
 
@@ -1758,11 +1766,6 @@ PerformanceStorage* LoadInfo::GetPerformanceStorage() {
       !GetIsFromProcessingFrameAttributes()) {
     // We only report loads caused by processing the attributes of the
     // browsing context container.
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> innerWindow = loadingDocument->GetInnerWindow();
-  if (!innerWindow) {
     return nullptr;
   }
 
