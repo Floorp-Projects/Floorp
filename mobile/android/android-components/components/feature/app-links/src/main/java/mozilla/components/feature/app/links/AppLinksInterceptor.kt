@@ -13,6 +13,10 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ALWAYS_DENY_SCHEMES
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+
+private const val WWW = "www."
+private const val MOBILE = "m."
 
 /**
  * This feature implements use cases for detecting and handling redirects to external apps. The user
@@ -40,7 +44,6 @@ import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SU
  * @param useCases These use cases allow for the detection of, and opening of links that other apps
  * have registered to open.
  * @param launchFromInterceptor If {true} then the interceptor will launch the link in third-party apps if available.
- * @param allowRedirectUrls A set of URLs that allows intercept when `onLoadRequest` is triggered by redirect.
  */
 @Suppress("LongParameterList")
 class AppLinksInterceptor(
@@ -57,6 +60,7 @@ class AppLinksInterceptor(
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
+        lastUri: String?,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
@@ -72,8 +76,8 @@ class AppLinksInterceptor(
             uriScheme == null -> true
             // If request not from an user gesture, allowed redirect and direct navigation
             // or if we're already on the site then let's not go to an external app.
-            ((!hasUserGesture && !isAllowedRedirect && !isDirectNavigation) || isSameDomain)
-                && engineSupportsScheme -> true
+            ((!hasUserGesture && !isAllowedRedirect && !isDirectNavigation) ||
+                isSameDomain(lastUri, uri)) && engineSupportsScheme -> true
             // If scheme not in whitelist then follow user preference
             (!interceptLinkClicks || !launchInApp()) && engineSupportsScheme -> true
             // Never go to an external app when scheme is in blacklist
@@ -130,5 +134,20 @@ class AppLinksInterceptor(
         }
 
         return null
+    }
+
+    // for app links interceptor any domains such as example.com, www.example.com and m.example.com
+    // are considered as the same domain
+    private fun isSameDomain(url1: String?, url2: String?): Boolean {
+        return stripCommonSubDomains(url1?.tryGetHostFromUrl()) == stripCommonSubDomains(url2?.tryGetHostFromUrl())
+    }
+
+    private fun stripCommonSubDomains(url: String?): String? {
+        return when {
+            url == null -> return null
+            url.startsWith(WWW) -> url.replaceFirst(WWW, "")
+            url.startsWith(MOBILE) -> url.replaceFirst(MOBILE, "")
+            else -> url
+        }
     }
 }

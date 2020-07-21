@@ -18,6 +18,7 @@ class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
+        lastUri: String?,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
@@ -28,13 +29,13 @@ class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
             "sample:about" -> InterceptionResponse.Content("<h1>I am the sample browser</h1>")
             else -> {
                 var response = context.components.appLinksInterceptor.onLoadRequest(
-                        engineSession, uri, hasUserGesture, isSameDomain, isRedirect,
+                        engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect,
                         isDirectNavigation, isSubframeRequest
                 )
 
                 if (response == null && !isDirectNavigation) {
                     response = context.components.webAppInterceptor.onLoadRequest(
-                        engineSession, uri, hasUserGesture, isSameDomain, isRedirect,
+                        engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect,
                         isDirectNavigation, isSubframeRequest
                     )
                 }

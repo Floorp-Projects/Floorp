@@ -21,6 +21,7 @@ class SampleUrlEncodedRequestInterceptor(val context: Context) : RequestIntercep
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
+        lastUri: String?,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
@@ -30,7 +31,8 @@ class SampleUrlEncodedRequestInterceptor(val context: Context) : RequestIntercep
         return when (uri) {
             "sample:about" -> InterceptionResponse.Content("<h1>I am the sample browser</h1>")
             else -> context.components.appLinksInterceptor.onLoadRequest(
-                engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation, isSubframeRequest)
+                engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect,
+                isDirectNavigation, isSubframeRequest)
         }
     }
 

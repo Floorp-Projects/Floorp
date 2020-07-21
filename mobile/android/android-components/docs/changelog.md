@@ -56,6 +56,9 @@ permalink: /changelog/
 * **feature-containers**
   * Adds a `ContainerMiddleware` that connects container browser actions with the `ContainerStorage`.
 
+* **feature-app-links**
+  * ⚠️ **This is a breaking change**: add `lastUri` as a parameter for `AppLinksInterceptor`.
+
 * **support-ktx**
   * Added `Vibrator.vibrateOneShot` compat method.
 

@@ -1267,6 +1267,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -1298,6 +1299,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -1334,6 +1336,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -1380,6 +1383,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -2048,6 +2052,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -2085,6 +2090,43 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onLoadRequest keep track of the last onLoadRequest uri correctly`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedUrl: String? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                lastUri: String?,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                observedUrl = lastUri
+                return null
+            }
+        }
+
+        navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("test1"))
+        assertEquals(null, observedUrl)
+
+        navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("test2"))
+        assertEquals("test1", observedUrl)
+
+        navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("test3"))
+        assertEquals("test2", observedUrl)
+    }
+
+    @Test
     fun `onSubframeLoadRequest will notify onLaunchIntent observers if request was intercepted with app intent`() {
         val engineSession = GeckoEngineSession(mock(),
             geckoSessionProvider = geckoSessionProvider)
@@ -2101,6 +2143,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -2159,6 +2202,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,
@@ -2283,6 +2327,7 @@ class GeckoEngineSessionTest {
             override fun onLoadRequest(
                 engineSession: EngineSession,
                 uri: String,
+                lastUri: String?,
                 hasUserGesture: Boolean,
                 isSameDomain: Boolean,
                 isRedirect: Boolean,

@@ -71,6 +71,7 @@ class GeckoEngineSession(
 
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
+    internal var lastLoadRequestUri: String? = null
     internal var scrollY: Int = 0
 
     internal var job: Job = Job()
@@ -483,7 +484,7 @@ class GeckoEngineSession(
             isSubframeRequest: Boolean
         ): InterceptionResponse? {
             val interceptor = settings.requestInterceptor
-            return if (
+            val interceptionResponse = if (
                 interceptor != null && (!request.isDirectNavigation || interceptor.interceptsAppInitiatedRequests())
             ) {
                 val engineSession = this@GeckoEngineSession
@@ -491,6 +492,7 @@ class GeckoEngineSession(
                 interceptor.onLoadRequest(
                     engineSession,
                     request.uri,
+                    lastLoadRequestUri,
                     request.hasUserGesture,
                     isSameDomain,
                     request.isRedirect,
@@ -510,6 +512,9 @@ class GeckoEngineSession(
             } else {
                 null
             }
+
+            lastLoadRequestUri = request.uri
+            return interceptionResponse
         }
     }
 
