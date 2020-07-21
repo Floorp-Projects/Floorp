@@ -10,9 +10,15 @@ Sanitizer
 
 **Address Sanitizer**
 
-Address Sanitizer (ASan) is a fast memory error detector that detects use-after-free and out-of-bound bugs in C/C++ programs. It uses a compile-time instrumentation to check all reads and writes during the execution. In addition, the runtime part replaces the malloc and free functions to check dynamically allocated memory. More information on how ASan works can be found on the Address Sanitizer wiki.
+Address Sanitizer (ASan) is a fast memory error detector that detects use-after-free and out-of-bound bugs in C/C++ programs. It uses a compile-time instrumentation to check all reads and writes during the execution. In addition, the runtime part replaces the malloc and free functions to check dynamically allocated memory.
 
 :ref:`More information <Address Sanitizer>`
+
+**Thread Sanitizer**
+
+Thread Sanitizer (TSan) is a fast data race detector for C/C++ programs. It uses a compile-time instrumentation to check all non-race-free memory access at runtime. Unlike other tools, it understands compiler-builtin atomics and synchronization and therefore provides very accurate results with no false positives (except if unsupported synchronization primitives like inline assembly or memory fences are used).
+
+:ref:`More information <Thread Sanitizer>`
 
 **ASan Nightly Project**
 
