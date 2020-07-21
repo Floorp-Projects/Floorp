@@ -209,10 +209,6 @@ void WebGLContext::DestroyResourcesAndContext() {
 
   mIndexedUniformBufferBindings.clear();
 
-  if (mAvailabilityRunnable) {
-    mAvailabilityRunnable->Run();
-  }
-
   //////
 
   if (mEmptyTFO) {
@@ -1393,48 +1389,6 @@ uint64_t IndexedBufferBinding::ByteCount() const {
 
 ////////////////////////////////////////
 
-ScopedUnpackReset::ScopedUnpackReset(const WebGLContext* const webgl)
-    : mWebGL(webgl) {
-  const auto& gl = mWebGL->gl;
-  // clang-format off
-  if (mWebGL->mPixelStore.mUnpackAlignment != 4) gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-
-  if (mWebGL->IsWebGL2()) {
-    if (mWebGL->mPixelStore.mUnpackRowLength   != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH  , 0);
-    if (mWebGL->mPixelStore.mUnpackImageHeight != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
-    if (mWebGL->mPixelStore.mUnpackSkipPixels  != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS , 0);
-    if (mWebGL->mPixelStore.mUnpackSkipRows    != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS   , 0);
-    if (mWebGL->mPixelStore.mUnpackSkipImages  != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES , 0);
-
-    if (mWebGL->mBoundPixelUnpackBuffer) gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-  }
-  // clang-format on
-}
-
-ScopedUnpackReset::~ScopedUnpackReset() {
-  const auto& gl = mWebGL->gl;
-  // clang-format off
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mWebGL->mPixelStore.mUnpackAlignment);
-
-  if (mWebGL->IsWebGL2()) {
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH  , mWebGL->mPixelStore.mUnpackRowLength  );
-    gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mWebGL->mPixelStore.mUnpackImageHeight);
-    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS , mWebGL->mPixelStore.mUnpackSkipPixels );
-    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS   , mWebGL->mPixelStore.mUnpackSkipRows   );
-    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES , mWebGL->mPixelStore.mUnpackSkipImages );
-
-    GLuint pbo = 0;
-    if (mWebGL->mBoundPixelUnpackBuffer) {
-        pbo = mWebGL->mBoundPixelUnpackBuffer->mGLName;
-    }
-
-    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, pbo);
-  }
-  // clang-format on
-}
-
-////////////////////
-
 ScopedFBRebinder::~ScopedFBRebinder() {
   const auto fnName = [&](WebGLFramebuffer* fb) {
     return fb ? fb->mGLName : 0;
@@ -1523,54 +1477,6 @@ uint64_t AvailGroups(const uint64_t totalAvailItems,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CheckedUint32 WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width,
-                                          uint32_t height, uint32_t depth,
-                                          uint8_t bytesPerPixel) {
-  if (!width || !height || !depth) return 0;
-
-  ////////////////
-
-  const auto& maybeRowLength = mPixelStore.mUnpackRowLength;
-  const auto& maybeImageHeight = mPixelStore.mUnpackImageHeight;
-
-  const auto usedPixelsPerRow =
-      CheckedUint32(mPixelStore.mUnpackSkipPixels) + width;
-  const auto stridePixelsPerRow =
-      (maybeRowLength ? CheckedUint32(maybeRowLength) : usedPixelsPerRow);
-
-  const auto usedRowsPerImage =
-      CheckedUint32(mPixelStore.mUnpackSkipRows) + height;
-  const auto strideRowsPerImage =
-      (maybeImageHeight ? CheckedUint32(maybeImageHeight) : usedRowsPerImage);
-
-  const uint32_t skipImages = (isFunc3D ? mPixelStore.mUnpackSkipImages : 0);
-  const CheckedUint32 usedImages = CheckedUint32(skipImages) + depth;
-
-  ////////////////
-
-  CheckedUint32 strideBytesPerRow = bytesPerPixel * stridePixelsPerRow;
-  strideBytesPerRow =
-      RoundUpToMultipleOf(strideBytesPerRow, mPixelStore.mUnpackAlignment);
-
-  const CheckedUint32 strideBytesPerImage =
-      strideBytesPerRow * strideRowsPerImage;
-
-  ////////////////
-
-  CheckedUint32 usedBytesPerRow = bytesPerPixel * usedPixelsPerRow;
-  // Don't round this to the alignment, since alignment here is really just used
-  // for establishing stride, particularly in WebGL 1, where you can't set
-  // ROW_LENGTH.
-
-  CheckedUint32 totalBytes = strideBytesPerImage * (usedImages - 1);
-  totalBytes += strideBytesPerRow * (usedRowsPerImage - 1);
-  totalBytes += usedBytesPerRow;
-
-  return totalBytes;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 const char* WebGLContext::FuncName() const {
   const char* ret;
   if (MOZ_LIKELY(mFuncScope)) {
@@ -1642,20 +1548,19 @@ already_AddRefed<dom::Promise> ClientWebGLContext::MakeXRCompatible(
 
 // --
 
-webgl::AvailabilityRunnable* WebGLContext::EnsureAvailabilityRunnable() {
+webgl::AvailabilityRunnable& ClientWebGLContext::EnsureAvailabilityRunnable()
+    const {
   if (!mAvailabilityRunnable) {
-    RefPtr<webgl::AvailabilityRunnable> runnable =
-        new webgl::AvailabilityRunnable(this);
-
-    NS_DispatchToCurrentThread(runnable.forget());
+    mAvailabilityRunnable = new webgl::AvailabilityRunnable(this);
+    auto forgettable = mAvailabilityRunnable;
+    NS_DispatchToCurrentThread(forgettable.forget());
   }
-  return mAvailabilityRunnable;
+  return *mAvailabilityRunnable;
 }
 
-webgl::AvailabilityRunnable::AvailabilityRunnable(WebGLContext* const webgl)
-    : Runnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {
-  mWebGL->mAvailabilityRunnable = this;
-}
+webgl::AvailabilityRunnable::AvailabilityRunnable(
+    const ClientWebGLContext* const webgl)
+    : Runnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
 
 webgl::AvailabilityRunnable::~AvailabilityRunnable() {
   MOZ_ASSERT(mQueries.empty());
@@ -1664,16 +1569,20 @@ webgl::AvailabilityRunnable::~AvailabilityRunnable() {
 
 nsresult webgl::AvailabilityRunnable::Run() {
   for (const auto& cur : mQueries) {
+    if (!cur) continue;
     cur->mCanBeAvailable = true;
   }
   mQueries.clear();
 
   for (const auto& cur : mSyncs) {
+    if (!cur) continue;
     cur->mCanBeAvailable = true;
   }
   mSyncs.clear();
 
-  mWebGL->mAvailabilityRunnable = nullptr;
+  if (mWebGL) {
+    mWebGL->mAvailabilityRunnable = nullptr;
+  }
   return NS_OK;
 }
 

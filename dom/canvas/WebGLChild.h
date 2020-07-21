@@ -33,9 +33,10 @@ struct FlushedCmdInfo final {
 };
 
 class WebGLChild final : public PWebGLChild,
-                         public SupportsWeakPtr<WebGLChild>,
-                         public mozilla::webgl::PcqActor {
-  std::unique_ptr<webgl::ShmemCmdBuffer> mPendingCmds;
+                         public SupportsWeakPtr<WebGLChild> {
+  const WeakPtr<ClientWebGLContext> mContext;
+  webgl::RaiiShmem mPendingCmdsShmem;
+  size_t mPendingCmdsPos = 0;
   FlushedCmdInfo mFlushedCmdInfo;
 
  public:
@@ -43,12 +44,7 @@ class WebGLChild final : public PWebGLChild,
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLChild, override);
   using OtherSideActor = WebGLParent;
 
-  ClientWebGLContext& mContext;
-
   explicit WebGLChild(ClientWebGLContext&);
-
-  // For SyncProducerActor:
-  static IpdlQueueProtocol GetIpdlQueueProtocol(size_t aCmd, ...);
 
   Maybe<Range<uint8_t>> AllocPendingCmdBytes(size_t);
   void FlushPendingCmds();

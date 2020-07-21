@@ -46,6 +46,7 @@ class WebGLChild;
 }
 
 namespace webgl {
+class AvailabilityRunnable;
 class TexUnpackBlob;
 class TexUnpackBytes;
 }  // namespace webgl
@@ -175,6 +176,7 @@ class ContextGenerationInfo final {
   std::array<float, 4> mBlendColor = {{0, 0, 0, 0}};
   std::array<float, 2> mDepthRange = {{0, 1}};
   webgl::PixelPackState mPixelPackState;
+  WebGLPixelStore mPixelUnpackState;
 
   std::vector<GLenum> mCompressedTextureFormats;
 
@@ -388,14 +390,19 @@ class WebGLProgramJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 // -
 
-class WebGLQueryJS final : public nsWrapperCache, public webgl::ObjectJS {
+class WebGLQueryJS final : public nsWrapperCache,
+                           public webgl::ObjectJS,
+                           public SupportsWeakPtr<WebGLQueryJS> {
   friend class ClientWebGLContext;
+  friend class webgl::AvailabilityRunnable;
 
   GLenum mTarget = 0;  // !IsQuery until Bind
+  bool mCanBeAvailable = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQueryJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQueryJS)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLQueryJS)
 
   explicit WebGLQueryJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
@@ -483,14 +490,19 @@ class WebGLShaderJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 // -
 
-class WebGLSyncJS final : public nsWrapperCache, public webgl::ObjectJS {
+class WebGLSyncJS final : public nsWrapperCache,
+                          public webgl::ObjectJS,
+                          public SupportsWeakPtr<WebGLSyncJS> {
   friend class ClientWebGLContext;
+  friend class webgl::AvailabilityRunnable;
 
+  bool mCanBeAvailable = false;
   bool mSignaled = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSyncJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSyncJS)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLSyncJS)
 
   explicit WebGLSyncJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
@@ -694,6 +706,7 @@ struct TexImageSourceAdapter final : public TexImageSource {
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                                  public nsWrapperCache,
                                  public SupportsWeakPtr<ClientWebGLContext> {
+  friend class webgl::AvailabilityRunnable;
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
   friend class webgl::ShaderKeepAlive;
@@ -750,6 +763,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   const auto& State() const {
     return const_cast<ClientWebGLContext*>(this)->State();
   }
+
+  // -
+
+ private:
+  mutable RefPtr<webgl::AvailabilityRunnable> mAvailabilityRunnable;
+
+ public:
+  webgl::AvailabilityRunnable& EnsureAvailabilityRunnable() const;
 
   // -
 
@@ -2105,9 +2126,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // -------------------------------------------------------------------------
 
  public:
-  WebGLPixelStore GetPixelStore() { return mPixelStore; }
-  const WebGLPixelStore GetPixelStore() const { return mPixelStore; }
-
   // https://immersive-web.github.io/webxr/#xr-compatible
   bool IsXRCompatible() const;
   already_AddRefed<dom::Promise> MakeXRCompatible(ErrorResult& aRv);
@@ -2125,7 +2143,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   bool mResetLayer = true;
   Maybe<const WebGLContextOptions> mInitialOptions;
-  WebGLPixelStore mPixelStore;
   bool mXRCompatible = false;
 };
 

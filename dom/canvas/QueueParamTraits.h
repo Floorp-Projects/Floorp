@@ -8,15 +8,17 @@
 #ifndef _QUEUEPARAMTRAITS_H_
 #define _QUEUEPARAMTRAITS_H_ 1
 
-#include "mozilla/ipc/SharedMemoryBasic.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/SharedMemoryBasic.h"
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
 #include "nsString.h"
+#include "WebGLTypes.h"
 
 namespace mozilla {
 namespace webgl {
@@ -168,6 +170,13 @@ class ProducerView {
                  reinterpret_cast<const uint8_t*>(end));
   }
 
+  template <typename T>
+  inline QueueStatus WritePod(const T& in) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    const auto begin = reinterpret_cast<const uint8_t*>(&in);
+    return Write(begin, begin + sizeof(T));
+  }
+
   /**
    * Serialize aArg using Arg's QueueParamTraits.
    */
@@ -213,6 +222,13 @@ class ConsumerView {
                 reinterpret_cast<uint8_t*>(end));
   }
 
+  template <typename T>
+  inline QueueStatus ReadPod(T* out) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    const auto begin = reinterpret_cast<uint8_t*>(out);
+    return Read(begin, begin + sizeof(T));
+  }
+
   /**
    * Deserialize aArg using Arg's QueueParamTraits.
    * If the return value is not Success then aArg is not changed.
@@ -234,19 +250,23 @@ class ConsumerView {
 };
 
 template <typename T>
-QueueStatus ProducerView<T>::Write(const uint8_t* begin, const uint8_t* end) {
-  MOZ_ASSERT(begin);
-  MOZ_ASSERT(begin < end);
-  if (IsSuccess(mStatus)) {
+QueueStatus ProducerView<T>::Write(const uint8_t* const begin,
+                                   const uint8_t* const end) {
+  MOZ_ASSERT(begin <= end);
+  if (!mStatus) return mStatus;
+  if (begin < end) {
+    MOZ_ASSERT(begin);
     mStatus = mProducer->WriteObject(mRead, mWrite, begin, end - begin);
   }
   return mStatus;
 }
 
 template <typename T>
-QueueStatus ConsumerView<T>::Read(uint8_t* begin, uint8_t* end) {
-  MOZ_ASSERT(begin < end);
-  if (IsSuccess(mStatus)) {
+QueueStatus ConsumerView<T>::Read(uint8_t* const begin, uint8_t* const end) {
+  MOZ_ASSERT(begin <= end);
+  if (!mStatus) return mStatus;
+  if (begin < end) {
+    MOZ_ASSERT(begin);
     mStatus = mConsumer->ReadObject(mRead, mWrite, begin, end - begin);
   }
   return mStatus;
@@ -333,6 +353,82 @@ template <>
 struct QueueParamTraits<QueueStatus>
     : public ContiguousEnumSerializerInclusive<
           QueueStatus, QueueStatus::kSuccess, QueueStatus::kOOMError> {};
+
+// ---------------------------------------------------------------
+
+template <>
+struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
+  using ParamType = webgl::TexUnpackBlobDesc;
+
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& view, const ParamType& in) {
+    MOZ_ASSERT(!in.image);
+    const bool isSurf = bool(in.surf);
+    if (!view.WriteParam(in.imageTarget) || !view.WriteParam(in.size) ||
+        !view.WriteParam(in.srcAlphaType) || !view.WriteParam(in.unpacking) ||
+        !view.WriteParam(in.cpuData) || !view.WriteParam(in.pboOffset) ||
+        !view.WriteParam(isSurf)) {
+      return view.GetStatus();
+    }
+    if (isSurf) {
+      gfx::DataSourceSurface::ScopedMap map(in.surf,
+                                            gfx::DataSourceSurface::READ);
+      if (!map.IsMapped()) {
+        return QueueStatus::kOOMError;
+      }
+      const auto& surfSize = in.surf->GetSize();
+      const auto stride = *MaybeAs<size_t>(map.GetStride());
+      if (!view.WriteParam(surfSize) ||
+          !view.WriteParam(in.surf->GetFormat()) || !view.WriteParam(stride)) {
+        return view.GetStatus();
+      }
+
+      const size_t dataSize = stride * surfSize.height;
+      const auto& begin = map.GetData();
+      if (!view.Write(begin, begin + dataSize)) {
+        return view.GetStatus();
+      }
+    }
+    return QueueStatus::kSuccess;
+  }
+
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& view, ParamType* const out) {
+    bool isSurf;
+    if (!view.ReadParam(&out->imageTarget) || !view.ReadParam(&out->size) ||
+        !view.ReadParam(&out->srcAlphaType) ||
+        !view.ReadParam(&out->unpacking) || !view.ReadParam(&out->cpuData) ||
+        !view.ReadParam(&out->pboOffset) || !view.ReadParam(&isSurf)) {
+      return view.GetStatus();
+    }
+    if (isSurf) {
+      gfx::IntSize surfSize;
+      gfx::SurfaceFormat format;
+      size_t stride;
+      if (!view.ReadParam(&surfSize) || !view.ReadParam(&format) ||
+          !view.ReadParam(&stride)) {
+        return view.GetStatus();
+      }
+      out->surf = gfx::Factory::CreateDataSourceSurfaceWithStride(
+          surfSize, format, stride, true);
+      if (!out->surf) {
+        return QueueStatus::kOOMError;
+      }
+
+      gfx::DataSourceSurface::ScopedMap map(out->surf,
+                                            gfx::DataSourceSurface::WRITE);
+      if (!map.IsMapped()) {
+        return QueueStatus::kOOMError;
+      }
+      const size_t dataSize = stride * surfSize.height;
+      const auto& begin = map.GetData();
+      if (!view.Read(begin, begin + dataSize)) {
+        return view.GetStatus();
+      }
+    }
+    return QueueStatus::kSuccess;
+  }
+};
 
 // ---------------------------------------------------------------
 
