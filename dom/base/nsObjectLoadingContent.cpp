@@ -642,7 +642,7 @@ nsObjectLoadingContent::~nsObjectLoadingContent() {
         "Should not be tearing down a plugin at this point!");
     StopPluginInstance();
   }
-  DestroyImageLoadingContent();
+  nsImageLoadingContent::Destroy();
 }
 
 nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
