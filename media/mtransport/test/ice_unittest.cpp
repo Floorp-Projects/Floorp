@@ -2627,6 +2627,8 @@ TEST_F(WebRtcIceConnectTest, TestConnectRestartIce) {
   SendReceive(p3_.get(), p2_.get(), true, true);  // p3 and p2 not yet connected
   p2_->SimulateTrickle(0);
   p3_->SimulateTrickle(0);
+  ASSERT_TRUE_WAIT(p3_->is_ready(0), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(p2_->is_ready(0), kDefaultTimeout);
   SendReceive(p1_.get(), p2_.get(), false, true);  // p1 and p2 not connected
   SendReceive(p3_.get(), p2_.get());  // p3 and p2 are now connected
 
