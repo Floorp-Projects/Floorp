@@ -194,4 +194,9 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   return geckoTextMarker.CreateAXTextMarker();
 }
 
+- (NSAttributedString*)moxAttributedStringForTextMarkerRange:(id)textMarkerRange {
+  return [[[NSAttributedString alloc]
+      initWithString:[self moxStringForTextMarkerRange:textMarkerRange]] autorelease];
+}
+
 @end

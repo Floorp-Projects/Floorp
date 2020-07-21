@@ -65,4 +65,7 @@
 // override
 - (id)moxPreviousTextMarkerForTextMarker:(id)textMarker;
 
+// override
+- (NSAttributedString*)moxAttributedStringForTextMarkerRange:(id)textMarkerRange;
+
 @end
