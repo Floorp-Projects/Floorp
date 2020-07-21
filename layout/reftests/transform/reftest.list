@@ -170,6 +170,7 @@ fails-if(webrender) test-pref(layout.animation.prerender.partial.jank,true) test
 test-pref(layout.animation.prerender.partial.jank,true) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") == partial-prerender-translate-8.html partial-prerender-translate-8-ref.html
 # This reftest doesn't fail on WebRender, this reftest fails only if there is a jank mechanism and the mechanism does inproperly handle position:fixed scroll target
 test-pref(layout.animation.prerender.partial.jank,true) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") == partial-prerender-translate-9.html partial-prerender-translate-5-ref.html
+test-pref(layout.animation.prerender.partial.jank,true) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") == partial-prerender-translate-10.html partial-prerender-translate-10-ref.html
 # This reftest heavily depends on layout.animation.prerender.viewport-ratio-limit
 # and reftest viewport size (800, 1000).
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||Android) test-pref(layout.animation.prerender.partial,true) test-pref(layout.animation.prerender.viewport-ratio-limit,"1.125") == partial-prerender-expansion-rotate.html partial-prerender-expansion-ref.html
